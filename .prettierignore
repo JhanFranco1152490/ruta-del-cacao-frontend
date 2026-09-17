@@ -1,0 +1,7 @@
+.next/
+node_modules/
+pnpm-lock.yaml
+
+# Prosa (AGENTS.md, README.md, etc.): el formateo de Markdown de Prettier reordena
+# listas y saltos de línea de forma que puede cambiar el sentido del texto.
+*.md
