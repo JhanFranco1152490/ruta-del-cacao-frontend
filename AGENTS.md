@@ -62,3 +62,44 @@ vive en `AGENTS.md` del workspace, si lo tienes al lado)
   dominio completo (actores, RF/RNF, modelo de datos con preguntas abiertas) y `specs/`
   tiene las features ya especificadas — leer antes de construir una pantalla nueva.
 
+## Interfaz
+
+La dirección visual aprobada es **Selva Viva**. Antes de crear o modificar cualquier pantalla,
+lee `docs/ui/design-system.md`; los tokens están en `src/app/globals.css` y las pantallas de
+referencia en `docs/ui/ref/*.html`.
+
+- No inventes colores, tamaños de fuente ni radios: usa las variables CSS. Si falta un token,
+  proponlo y agrégalo a `globals.css` y al documento, en el mismo cambio.
+- Componentes de shadcn/ui primero. Solo se crea un componente propio si está en la tabla de
+  «Componentes propios» del documento o si se justifica ahí antes de escribirlo.
+- Tipografía: DM Serif Display (`--font-serif`) para títulos y cifras destacadas; Karla
+  (`--font-sans`) para todo lo demás. Las etiquetas de sección van en versalitas color cobre.
+- **Dos densidades.** Pantallas de oficina: controles de 44 px, bordes de 1 px, sombra suave.
+  Pantallas de captura en campo: controles de 60 px o más (la acción principal 64–76 px, ancho
+  completo), bordes de 2.5 px en `--ink`, sin sombras.
+- **Estados.** Siempre color + ícono + texto, nunca color solo. Variantes tintadas en oficina y
+  sólidas en campo o para avisos críticos.
+- **Contraste.** Texto mínimo 4.5:1 (3:1 desde 24 px). Prohibido gris claro para datos
+  importantes. `--oro` nunca como color de texto sobre fondo claro.
+- **Accesibilidad.** Todo input con `<label>`; íconos solos con `aria-label`; errores con
+  `aria-invalid` más mensaje de texto; foco visible con el anillo cobre, nunca `outline: none`.
+- **Offline First (RNF-21).** Toda pantalla de captura muestra el estado de la conexión y el
+  número de registros en cola, y su botón principal dice qué va a pasar («Guardar en el teléfono»,
+  no «Enviar»). La cola de sincronización es parte de la UI, no un detalle oculto. Esto describe
+  cómo se ve una vez implementada — no autoriza construir pantallas de campo antes de que el spec
+  de arquitectura de Offline First quede `aprobado` (ver arriba).
+- **Datos personales (RNF-18).** Documentos y teléfonos se muestran enmascarados en listas
+  (`MaskedValue`). Revelarlos es una acción explícita que registra en la bitácora.
+- **Auditoría (RF-45/46).** Las fichas incluyen su historial de cambios; toda acción crítica
+  (descartar lote, desactivar usuario, cambiar umbrales) confirma nombrando la consecuencia y,
+  cuando el dominio lo exige, pide motivo.
+- **Sin datos falsos.** No inventes cifras, nombres de productores ni fotos. Lo que falta se
+  muestra como estado vacío. Lo que aparece entre `[CORCHETES]` en las referencias es contenido
+  real pendiente.
+- No hay modo oscuro. La app se usa bajo sol directo.
+- **Setup pendiente** (no bloquea leer/usar los documentos, sí bloquea construir pantallas):
+  fuentes DM Serif Display/Karla en `layout.tsx`, inicializar shadcn/ui (`npx shadcn init` +
+  agregar los componentes base) y las variantes propias de `button`/`badge` — todo detallado en
+  `docs/ui/README.md`. Se hace en la rama que construya la primera pantalla que los necesite,
+  no antes: no mezclar setup de dependencias con la integración de esta documentación.
+

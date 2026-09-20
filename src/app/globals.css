@@ -1,26 +1,199 @@
-@import "tailwindcss";
+/* Tokens de la dirección visual «Selva Viva» (ver docs/ui/design-system.md).
+ * Pensado para Tailwind CSS v4 + shadcn/ui.
+ *
+ * Fuentes esperadas en el layout con next/font/google:
+ *   DM_Serif_Display -> --font-serif      Karla -> --font-sans
+ * Hasta que el layout no exponga esas variables, el texto cae a system-ui.
+ */
+
+@import 'tailwindcss';
+/* @import "tw-animate-css"; — agregar cuando se inicialice shadcn/ui (npx shadcn init),
+   que instala el paquete; sin él, este import rompe el build. */
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* --- Marca ------------------------------------------------------------ */
+  --selva: #14362a;
+  --selva-2: #1f5c45;
+  --cobre: #9a5220;
+  --oro: #c9a24b; /* solo ornamento sobre fondo oscuro, nunca texto en claro */
+  --crema: #f7f2ea;
+  --ink: #231812;
+
+  /* Ilustración */
+  --amarillo-mazorca: #e3a92b;
+  --morado-cacao: #6b2a3a;
+  --hoja: #3f7a4e;
+  --mazorca-negra: #2e211b;
+  --monilia: #c9c58a;
+
+  /* --- Mapeo shadcn/ui ------------------------------------------------- */
+  --background: #f7f2ea;
+  --foreground: #231812;
+  --card: #ffffff;
+  --card-foreground: #231812;
+  --popover: #ffffff;
+  --popover-foreground: #231812;
+
+  --primary: #14362a;
+  --primary-foreground: #ffffff;
+  --secondary: #e1efe6;
+  --secondary-foreground: #14362a;
+  --accent: #9a5220;
+  --accent-foreground: #ffffff;
+
+  --muted: #f1ebe1;
+  --muted-foreground: #5a4a40;
+
+  --destructive: #9e1f1f;
+  --destructive-foreground: #ffffff;
+
+  --border: #ddd2c2;
+  --input: #8f7f70; /* borde de input en oficina */
+  --ring: #9a5220; /* anillo de foco */
+
+  --radius: 0.625rem; /* 10 px */
+
+  /* --- Estados semánticos · tintados (oficina) ------------------------- */
+  --ok: #1f6b45;
+  --ok-bg: #e1efe6;
+  --warn: #7d4e00;
+  --warn-bg: #f8e7c2;
+  --err: #9e1f1f;
+  --err-bg: #f6deda;
+  --info: #20507a;
+  --info-bg: #dfe9f2;
+
+  /* --- Estados semánticos · sólidos (campo / crítico) ------------------ */
+  --ok-solid: #1f6b45;
+  --ok-solid-fg: #ffffff;
+  --warn-solid: #f2c037;
+  --warn-solid-fg: #231812;
+  --err-solid: #a3161b;
+  --err-solid-fg: #ffffff;
+  --info-solid: #20507a;
+  --info-solid-fg: #ffffff;
+
+  /* --- Superficies auxiliares ----------------------------------------- */
+  --surface-alt: #fbf8f2; /* cabecera de tabla */
+  --divider: #eee7dc; /* separador de filas */
+
+  /* --- Elevación (una sola) ------------------------------------------- */
+  --shadow-card:
+    0 1px 2px rgba(35, 24, 18, 0.06), 0 8px 24px rgba(35, 24, 18, 0.07);
+  --overlay: rgba(20, 54, 42, 0.45);
+
+  /* --- Densidades ------------------------------------------------------ */
+  --control-h: 2.75rem; /* 44 px · oficina */
+  --control-h-field: 3.75rem; /* 60 px · campo */
+  --control-h-field-primary: 4rem; /* 64 px · acción principal en campo */
+  --field-border-w: 2.5px;
+  --radius-field: 0.75rem; /* 12 px */
+  --radius-card: 0.875rem; /* 14 px */
+  --radius-auth: 1.125rem; /* 18 px */
 }
 
 @theme inline {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-selva: var(--selva);
+  --color-selva-2: var(--selva-2);
+  --color-cobre: var(--cobre);
+  --color-oro: var(--oro);
+  --color-crema: var(--crema);
+  --color-ink: var(--ink);
+  --color-surface-alt: var(--surface-alt);
+  --color-divider: var(--divider);
+
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-err: var(--err);
+  --color-err-bg: var(--err-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-card);
+  --radius-xl: var(--radius-auth);
+
+  --shadow-card: var(--shadow-card);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  .font-display {
+    font-family: var(--font-serif), Georgia, serif;
+    font-weight: 400;
+  }
+
+  /* El foco nunca se oculta: se ve sobre claro y sobre oscuro. */
+  :focus-visible {
+    outline: 3px solid var(--cobre);
+    outline-offset: 2px;
+  }
+
+  /* Cifras siempre alineadas en tablas y KPIs */
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Etiqueta de sección: el sello del sistema */
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cobre);
+  }
+
+  /* Contenedor de captura en campo: borde grueso, área táctil grande */
+  .field-control {
+    min-height: var(--control-h-field);
+    border: var(--field-border-w) solid var(--ink);
+    border-radius: var(--radius-field);
+    background: var(--card);
+  }
 }
+
+/* Modo oscuro: NO se usa en este proyecto.
+ * La app se usa bajo sol directo y el oscuro pierde legibilidad; si algún día se agrega,
+ * debe pasar el mismo umbral de 4.5:1 y mantener los estados sólidos. */
