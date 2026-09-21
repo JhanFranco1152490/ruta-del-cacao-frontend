@@ -102,7 +102,7 @@ async function authenticatedRequest<T>(path: string, init?: RequestInit) {
   }
 }
 
-export type DocumentType = 'CC' | 'CE' | 'PPT';
+export type DocumentType = 'CC' | 'CE' | 'PPT' | 'NIT';
 
 export async function login(
   credentials:

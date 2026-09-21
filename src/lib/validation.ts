@@ -7,6 +7,29 @@ export function validateIdentifier(identifier: string) {
   return '';
 }
 
+export function validateDocument(
+  documentType: 'CC' | 'CE' | 'PPT' | 'NIT',
+  value: string,
+) {
+  const normalized = value
+    .trim()
+    .replace(/[.\s-]/g, '')
+    .toUpperCase();
+  if (!normalized) return 'Ingresa tu número de documento.';
+  if (
+    (documentType === 'CC' ||
+      documentType === 'CE' ||
+      documentType === 'NIT') &&
+    !/^\d+$/.test(normalized)
+  ) {
+    return 'El número de CC, CE o NIT debe contener solo dígitos.';
+  }
+  if (documentType === 'PPT' && !/^[A-Z0-9]+$/.test(normalized)) {
+    return 'El número de PPT debe contener letras y dígitos.';
+  }
+  return '';
+}
+
 export function validateEmail(email: string) {
   if (!email.trim()) return 'Ingresa tu correo electrónico.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {

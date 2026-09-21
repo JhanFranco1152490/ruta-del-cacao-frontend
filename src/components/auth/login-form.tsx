@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import { getApiErrorMessage, login, type DocumentType } from '@/lib/auth';
-import { validateEmail, validateIdentifier } from '@/lib/validation';
+import { validateDocument, validateEmail } from '@/lib/validation';
 import {
   Field,
   FormMessage,
@@ -28,7 +28,7 @@ export function LoginForm() {
       identifier:
         loginMethod === 'email'
           ? validateEmail(identifier)
-          : validateIdentifier(identifier),
+          : validateDocument(documentType, identifier),
       password: password ? '' : 'Ingresa tu contraseña.',
     };
     setErrors(nextErrors);
@@ -103,6 +103,9 @@ export function LoginForm() {
             <option value="CC">Cédula de ciudadanía (CC)</option>
             <option value="CE">Cédula de extranjería (CE)</option>
             <option value="PPT">Permiso por Protección Temporal (PPT)</option>
+            <option value="NIT">
+              Número de Identificación Tributaria (NIT)
+            </option>
           </select>
         </div>
       )}
