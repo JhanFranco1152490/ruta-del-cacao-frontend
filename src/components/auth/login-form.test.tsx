@@ -19,7 +19,7 @@ describe('LoginForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     expect(
-      screen.getByText('Ingresa tu documento o correo electrónico.'),
+      screen.getByText('Ingresa tu correo electrónico.'),
     ).toBeInTheDocument();
     expect(screen.getByText('Ingresa tu contraseña.')).toBeInTheDocument();
 
@@ -36,23 +36,27 @@ describe('LoginForm', () => {
 
   it('envía credenciales con cookies y redirige después del éxito', async () => {
     const user = userEvent.setup();
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          user: {
-            id: '1',
-            email: 'persona@example.com',
-            roles: ['producer'],
-            permissions: [],
-          },
-        }),
-        { status: 200 },
-      ),
-    );
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ csrf_token: 'test-csrf' })),
+      )
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            user: {
+              id: '1',
+              email: 'persona@example.com',
+              roles: ['producer'],
+              permissions: [],
+            },
+          }),
+          { status: 200 },
+        ),
+      );
     render(<LoginForm />);
 
     await user.type(
-      screen.getByLabelText('Documento o correo electrónico'),
+      screen.getByLabelText('Correo electrónico'),
       'persona@example.com',
     );
     await user.type(screen.getByLabelText('Contraseña'), 'cacao seguro');
@@ -67,17 +71,19 @@ describe('LoginForm', () => {
 
   it('presenta el mensaje devuelto por la API', async () => {
     const user = userEvent.setup();
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify({ detail: 'Usuario o contraseña incorrectos' }),
-        { status: 401 },
-      ),
-    );
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ csrf_token: 'test-csrf' })),
+      )
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ detail: 'Usuario o contraseña incorrectos' }),
+          { status: 401 },
+        ),
+      );
     render(<LoginForm />);
-    await user.type(
-      screen.getByLabelText('Documento o correo electrónico'),
-      '1090123456',
-    );
+    await user.selectOptions(screen.getByLabelText('Ingresar con'), 'document');
+    await user.type(screen.getByLabelText('Número de documento'), '1090123456');
     await user.type(screen.getByLabelText('Contraseña'), 'incorrecta');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(

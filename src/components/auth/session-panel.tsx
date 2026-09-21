@@ -3,12 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CacaoMark } from '@/components/brand/cacao-mark';
-import { getCurrentUser, logout, type User } from '@/lib/auth';
+import { ApiError, getCurrentUser, logout, type User } from '@/lib/auth';
 
 export function SessionPanel() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [pending, setPending] = useState(true);
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -16,8 +18,15 @@ export function SessionPanel() {
       .then(({ user: currentUser }) => {
         if (active) setUser(currentUser);
       })
-      .catch(() => {
-        if (active) router.replace('/');
+      .catch((error: unknown) => {
+        if (!active) return;
+        if (error instanceof ApiError && error.status === 401) {
+          router.replace('/');
+        } else {
+          setError(
+            'No pudimos validar tu sesión. Revisa la conexión e inténtalo de nuevo.',
+          );
+        }
       })
       .finally(() => {
         if (active) setPending(false);
@@ -25,14 +34,24 @@ export function SessionPanel() {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, attempt]);
 
   async function handleLogout() {
     setPending(true);
+    setError('');
     try {
       await logout();
-    } finally {
       router.replace('/');
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        router.replace('/');
+      } else {
+        setError(
+          'No pudimos cerrar tu sesión. Revisa la conexión e inténtalo de nuevo.',
+        );
+      }
+    } finally {
+      setPending(false);
     }
   }
 
@@ -50,7 +69,25 @@ export function SessionPanel() {
     );
   }
 
-  if (!user) return null;
+  if (!user)
+    return error ? (
+      <main className="grid min-h-screen place-items-center bg-[var(--cream)] px-5">
+        <div className="text-center text-[var(--forest)]">
+          <p role="alert">{error}</p>
+          <button
+            type="button"
+            className="mt-4 rounded-xl border px-4 py-2 font-bold"
+            onClick={() => {
+              setError('');
+              setPending(true);
+              setAttempt((value) => value + 1);
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      </main>
+    ) : null;
 
   return (
     <main className="min-h-screen bg-[var(--cream)] px-5 py-8 sm:px-10">
@@ -71,6 +108,11 @@ export function SessionPanel() {
         </button>
       </header>
       <section className="mx-auto max-w-6xl py-14">
+        {error && (
+          <p role="alert" className="mb-6 text-[var(--copper)]">
+            {error}
+          </p>
+        )}
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--copper)]">
           Sesión activa
         </p>

@@ -9,9 +9,11 @@ describe('password recovery', () => {
 
   it('mantiene una respuesta indistinguible al solicitar recuperación', async () => {
     const user = userEvent.setup();
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(null, { status: 202 }),
-    );
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ csrf_token: 'test-csrf' })),
+      )
+      .mockResolvedValue(new Response(null, { status: 202 }));
     render(<ResetRequestForm />);
     await user.type(
       screen.getByLabelText('Correo electrónico'),
@@ -45,12 +47,16 @@ describe('password recovery', () => {
   it('confirma la recuperación y evita envíos duplicados mientras espera', async () => {
     const user = userEvent.setup();
     let finishRequest: ((response: Response) => void) | undefined;
-    vi.spyOn(globalThis, 'fetch').mockImplementation(
-      () =>
-        new Promise<Response>((resolve) => {
-          finishRequest = resolve;
-        }),
-    );
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ csrf_token: 'test-csrf' })),
+      )
+      .mockImplementation(
+        () =>
+          new Promise<Response>((resolve) => {
+            finishRequest = resolve;
+          }),
+      );
     render(<ResetConfirmForm token="token-seguro" />);
     await user.type(screen.getByLabelText('Nueva contraseña'), 'Cacao seguro');
     await user.type(
