@@ -9,6 +9,7 @@ import type {
 } from './types';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+let csrfToken: string | undefined;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -60,6 +61,26 @@ function queryString(filters: ProducerListFilters) {
   return value ? `?${value}` : '';
 }
 
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+
+  const response = await request<{ csrf_token: string }>('/api/auth/csrf');
+  csrfToken = response.csrf_token;
+  return csrfToken;
+}
+
+async function mutationRequest<T>(path: string, init: RequestInit) {
+  const token = await getCsrfToken();
+
+  return request<T>(path, {
+    ...init,
+    headers: {
+      ...init.headers,
+      'X-CSRFToken': token,
+    },
+  });
+}
+
 export function getMunicipalities(signal?: AbortSignal) {
   return request<{ results: Municipality[] }>('/api/catalogs/municipalities', {
     signal,
@@ -71,7 +92,7 @@ export function getProducers(
   signal?: AbortSignal,
 ) {
   return request<ProducerListResponse>(
-    `/api/producers${queryString(filters)}`,
+    `/api/producers/${queryString(filters)}`,
     { signal },
   );
 }
@@ -89,7 +110,7 @@ function requestBody(body: object) {
 }
 
 export function createProducer(input: ProducerInput) {
-  return request<Producer>('/api/producers', requestBody(input));
+  return mutationRequest<Producer>('/api/producers/', requestBody(input));
 }
 
 export function updateProducer(
@@ -97,7 +118,7 @@ export function updateProducer(
   input: ProducerInput,
   expectedVersion: number,
 ) {
-  return request<Producer>(`/api/producers/${id}`, {
+  return mutationRequest<Producer>(`/api/producers/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...input, expected_version: expectedVersion }),
@@ -109,7 +130,7 @@ export function changeProducerStatus(
   status: ProducerStatus,
   expectedVersion: number,
 ) {
-  return request<Producer>(`/api/producers/${id}/status`, {
+  return mutationRequest<Producer>(`/api/producers/${id}/status`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status, expected_version: expectedVersion }),
