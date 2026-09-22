@@ -16,16 +16,11 @@ export function validateDocument(
     .replace(/[.\s-]/g, '')
     .toUpperCase();
   if (!normalized) return 'Ingresa tu número de documento.';
-  if (
-    (documentType === 'CC' ||
-      documentType === 'CE' ||
-      documentType === 'NIT') &&
-    !/^\d+$/.test(normalized)
-  ) {
-    return 'El número de CC, CE o NIT debe contener solo dígitos.';
+  if (!/^\d+$/.test(normalized)) {
+    return 'El número de documento debe contener solo dígitos.';
   }
-  if (documentType === 'PPT' && !/^[A-Z0-9]+$/.test(normalized)) {
-    return 'El número de PPT debe contener letras y dígitos.';
+  if (normalized.length > 15) {
+    return 'El número de documento debe tener máximo 15 dígitos.';
   }
   return '';
 }
