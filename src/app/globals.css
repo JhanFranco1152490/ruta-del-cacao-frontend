@@ -13,6 +13,19 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --forest: #14362a;
+  --copper: #9a5220;
+  --cacao-yellow: #e3a92b;
+  --old-gold: #c9a24b;
+  --cream: #f7f2ea;
+  --chocolate: #231812;
+  --paper: #fffdf9;
+  --muted: #6f655f;
+  --error: #a43a32;
+  --success: #34745b;
+  --border: #ded4c8;
+  --background: var(--cream);
+  --foreground: var(--chocolate);
   /* --- Marca ------------------------------------------------------------ */
   --selva: #14362a;
   --selva-2: #1f5c45;
@@ -100,6 +113,8 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --font-sans: var(--font-karla);
+  --font-display: var(--font-cormorant);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -142,6 +157,32 @@
   --radius-xl: var(--radius-auth);
 
   --shadow-card: var(--shadow-card);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-karla), Arial, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--cacao-yellow) 45%, transparent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--cacao-yellow);
+  outline-offset: 3px;
 }
 
 @layer base {
