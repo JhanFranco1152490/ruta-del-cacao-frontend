@@ -14,8 +14,8 @@ const validProducer = {
 };
 
 describe('normalizeIdentityDocument', () => {
-  it('removes presentation characters and preserves meaningful letters', () => {
-    expect(normalizeIdentityDocument('  ab-12. 34 ')).toBe('AB1234');
+  it('trims the document without changing its digits', () => {
+    expect(normalizeIdentityDocument(' 001234 ')).toBe('001234');
   });
 });
 
@@ -27,7 +27,7 @@ describe('validateProducer', () => {
   it('reports required and invalid contact fields', () => {
     const errors = validateProducer({
       ...validProducer,
-      identity_document: '  ',
+      identity_document: '12ABC',
       first_name: '',
       last_name: '',
       municipality_code: '',

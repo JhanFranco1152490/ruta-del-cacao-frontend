@@ -3,7 +3,7 @@ import type { ProducerInput } from './types';
 export type ProducerFieldErrors = Partial<Record<keyof ProducerInput, string>>;
 
 export function normalizeIdentityDocument(value: string) {
-  return value.replace(/[.\s-]/g, '').toUpperCase();
+  return value.trim();
 }
 
 function dateInBogota() {
@@ -23,8 +23,11 @@ function dateInBogota() {
 export function validateProducer(input: ProducerInput): ProducerFieldErrors {
   const errors: ProducerFieldErrors = {};
 
-  if (!normalizeIdentityDocument(input.identity_document)) {
-    errors.identity_document = 'Ingresa el número de documento.';
+  if (
+    !/^[0-9]{6,15}$/.test(normalizeIdentityDocument(input.identity_document))
+  ) {
+    errors.identity_document =
+      'Ingresa solo números, con una longitud entre 6 y 15 dígitos.';
   }
 
   if (!input.first_name.trim()) {

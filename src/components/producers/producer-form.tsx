@@ -187,10 +187,15 @@ export function ProducerForm({ producer }: ProducerFormProps) {
                 aria-invalid={Boolean(errors.identity_document)}
                 className="mt-2 h-11 border-input bg-card"
                 id="identity-document"
-                maxLength={30}
+                inputMode="numeric"
+                maxLength={15}
                 onChange={(event) =>
-                  update('identity_document', event.target.value)
+                  update(
+                    'identity_document',
+                    event.target.value.replace(/[^0-9]/g, ''),
+                  )
                 }
+                pattern="[0-9]{6,15}"
                 value={values.identity_document}
               />
             </FieldError>
