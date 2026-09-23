@@ -21,11 +21,13 @@ describe('normalizeProducerInput', () => {
         identity_document: ' 001234 ',
         first_name: ' Nombre ',
         email: ' CORREO@EJEMPLO.COM ',
+        phone: '300 123-4567',
       }),
     ).toMatchObject({
       identity_document: '001234',
       first_name: 'Nombre',
       email: 'correo@ejemplo.com',
+      phone: '3001234567',
     });
   });
 });
@@ -57,5 +59,20 @@ describe('producerFormSchema', () => {
       email: [expect.any(String)],
       phone: [expect.any(String)],
     });
+  });
+
+  it('rejects formatted and overlong phone numbers', () => {
+    expect(
+      producerFormSchema.safeParse({
+        ...validProducer,
+        phone: '300 123 4567',
+      }).success,
+    ).toBe(false);
+    expect(
+      producerFormSchema.safeParse({
+        ...validProducer,
+        phone: '30012345678',
+      }).success,
+    ).toBe(false);
   });
 });

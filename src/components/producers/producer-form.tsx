@@ -150,7 +150,7 @@ export function ProducerForm({ producer }: ProducerFormProps) {
         noValidate
         onSubmit={handleSubmit(saveProducer)}
       >
-        <section className="rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+        <section className="rounded-(--radius-card) bg-card p-5 shadow-card">
           <h2 className="text-2xl text-selva">Identificación</h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-3">
             <FieldError error={errors.document_type?.message}>
@@ -160,7 +160,7 @@ export function ProducerForm({ producer }: ProducerFormProps) {
                 name="document_type"
                 render={({ field }) => (
                   <select
-                    className="mt-2 h-11 w-full rounded-[var(--radius)] border border-input bg-card px-3 text-sm font-medium"
+                    className="mt-2 h-11 w-full rounded-(--radius) border border-input bg-card px-3 text-sm font-medium"
                     id="document-type"
                     onBlur={field.onBlur}
                     onChange={(event) => field.onChange(event.target.value)}
@@ -205,7 +205,7 @@ export function ProducerForm({ producer }: ProducerFormProps) {
           </div>
         </section>
 
-        <section className="rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+        <section className="rounded-(--radius-card) bg-card p-5 shadow-card">
           <h2 className="text-2xl text-selva">Datos del productor</h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
             <FieldError error={errors.first_name?.message}>
@@ -248,7 +248,7 @@ export function ProducerForm({ producer }: ProducerFormProps) {
                 render={({ field }) => (
                   <select
                     aria-invalid={Boolean(errors.municipality_code)}
-                    className="mt-2 h-11 w-full rounded-[var(--radius)] border border-input bg-card px-3 text-sm"
+                    className="mt-2 h-11 w-full rounded-(--radius) border border-input bg-card px-3 text-sm"
                     disabled={municipalities.length === 0}
                     id="municipality"
                     onBlur={field.onBlur}
@@ -294,7 +294,7 @@ export function ProducerForm({ producer }: ProducerFormProps) {
           </div>
         </section>
 
-        <section className="rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+        <section className="rounded-(--radius-card) bg-card p-5 shadow-card">
           <h2 className="text-2xl text-selva">
             Contacto{' '}
             <span className="text-base text-muted-foreground">(opcional)</span>
@@ -312,10 +312,15 @@ export function ProducerForm({ producer }: ProducerFormProps) {
                     id="phone"
                     onBlur={field.onBlur}
                     onChange={(event) =>
-                      field.onChange(event.target.value || null)
+                      field.onChange(
+                        event.target.value.replace(/[^0-9]/g, '') || null,
+                      )
                     }
                     ref={field.ref}
                     type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    pattern="[0-9]{7,10}"
                     value={field.value ?? ''}
                   />
                 )}
@@ -347,7 +352,7 @@ export function ProducerForm({ producer }: ProducerFormProps) {
 
         {formErrorMessage && (
           <p
-            className="rounded-[var(--radius)] bg-err-bg px-4 py-3 text-sm font-bold text-err"
+            className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
             role="alert"
           >
             {formErrorMessage}
@@ -356,7 +361,7 @@ export function ProducerForm({ producer }: ProducerFormProps) {
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Link
-            className="inline-flex h-11 items-center justify-center rounded-[var(--radius)] border border-input bg-card px-4 text-sm font-bold hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-(--radius) border border-input bg-card px-4 text-sm font-bold hover:bg-muted"
             href={producer ? `/producers/${producer.id}` : '/producers'}
           >
             Cancelar

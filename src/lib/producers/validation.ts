@@ -17,9 +17,7 @@ function dateInBogota() {
 }
 
 function isValidPhone(value: string | null) {
-  if (!value) return true;
-  const digits = value.replace(/\D/g, '');
-  return digits.length >= 7 && digits.length <= 15;
+  return !value || /^\d{7,10}$/.test(value);
 }
 
 function isValidEmail(value: string | null) {
@@ -37,7 +35,7 @@ export const producerFormSchema = z.object({
   phone: z
     .string()
     .nullable()
-    .refine(isValidPhone, 'El teléfono debe tener entre 7 y 15 dígitos.'),
+    .refine(isValidPhone, 'El teléfono debe tener entre 7 y 10 dígitos.'),
   email: z
     .string()
     .nullable()
@@ -58,7 +56,7 @@ export function normalizeProducerInput(input: ProducerInput): ProducerInput {
     identity_document: input.identity_document.trim(),
     first_name: input.first_name.trim(),
     last_name: input.last_name.trim(),
-    phone: input.phone?.trim() || null,
+    phone: input.phone?.replace(/\D/g, '') || null,
     email: input.email?.trim().toLowerCase() || null,
   };
 }
