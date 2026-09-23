@@ -7,8 +7,7 @@
  */
 
 @import 'tailwindcss';
-/* @import "tw-animate-css"; — agregar cuando se inicialice shadcn/ui (npx shadcn init),
-   que instala el paquete; sin él, este import rompe el build. */
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -113,7 +112,6 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-karla);
   --font-display: var(--font-cormorant);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
