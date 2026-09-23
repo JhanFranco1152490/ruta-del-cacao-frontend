@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeIdentityDocument, validateProducer } from './validation';
+import { normalizeProducerInput, producerFormSchema } from './validation';
 
 const validProducer = {
   document_type: 'CC' as const,
@@ -13,19 +13,30 @@ const validProducer = {
   joined_on: '2026-01-01',
 };
 
-describe('normalizeIdentityDocument', () => {
-  it('trims the document without changing its digits', () => {
-    expect(normalizeIdentityDocument(' 001234 ')).toBe('001234');
+describe('normalizeProducerInput', () => {
+  it('trims values without changing document digits', () => {
+    expect(
+      normalizeProducerInput({
+        ...validProducer,
+        identity_document: ' 001234 ',
+        first_name: ' Nombre ',
+        email: ' CORREO@EJEMPLO.COM ',
+      }),
+    ).toMatchObject({
+      identity_document: '001234',
+      first_name: 'Nombre',
+      email: 'correo@ejemplo.com',
+    });
   });
 });
 
-describe('validateProducer', () => {
+describe('producerFormSchema', () => {
   it('accepts a valid producer without optional contact information', () => {
-    expect(validateProducer(validProducer)).toEqual({});
+    expect(producerFormSchema.safeParse(validProducer).success).toBe(true);
   });
 
   it('reports required and invalid contact fields', () => {
-    const errors = validateProducer({
+    const result = producerFormSchema.safeParse({
       ...validProducer,
       identity_document: '12ABC',
       first_name: '',
@@ -35,13 +46,16 @@ describe('validateProducer', () => {
       phone: '123',
     });
 
-    expect(errors).toMatchObject({
-      identity_document: expect.any(String),
-      first_name: expect.any(String),
-      last_name: expect.any(String),
-      municipality_code: expect.any(String),
-      email: expect.any(String),
-      phone: expect.any(String),
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    expect(result.error.flatten().fieldErrors).toMatchObject({
+      identity_document: [expect.any(String)],
+      first_name: [expect.any(String)],
+      last_name: [expect.any(String)],
+      municipality_code: [expect.any(String)],
+      email: [expect.any(String)],
+      phone: [expect.any(String)],
     });
   });
 });

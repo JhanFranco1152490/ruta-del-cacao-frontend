@@ -1,10 +1,6 @@
-import type { ProducerInput } from './types';
+import { z } from 'zod';
 
-export type ProducerFieldErrors = Partial<Record<keyof ProducerInput, string>>;
-
-export function normalizeIdentityDocument(value: string) {
-  return value.trim();
-}
+import { documentTypes, type ProducerInput } from './types';
 
 function dateInBogota() {
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -20,44 +16,49 @@ function dateInBogota() {
   return `${value('year')}-${value('month')}-${value('day')}`;
 }
 
-export function validateProducer(input: ProducerInput): ProducerFieldErrors {
-  const errors: ProducerFieldErrors = {};
+function isValidPhone(value: string | null) {
+  if (!value) return true;
+  const digits = value.replace(/\D/g, '');
+  return digits.length >= 7 && digits.length <= 15;
+}
 
-  if (
-    !/^[0-9]{6,15}$/.test(normalizeIdentityDocument(input.identity_document))
-  ) {
-    errors.identity_document =
-      'Ingresa solo números, con una longitud entre 6 y 15 dígitos.';
-  }
+function isValidEmail(value: string | null) {
+  return !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
 
-  if (!input.first_name.trim()) {
-    errors.first_name = 'Ingresa los nombres.';
-  }
+export const producerFormSchema = z.object({
+  document_type: z.enum(documentTypes),
+  identity_document: z
+    .string()
+    .trim()
+    .regex(/^[0-9]{6,15}$/, 'Ingresa solo números, entre 6 y 15 dígitos.'),
+  first_name: z.string().trim().min(1, 'Ingresa los nombres.'),
+  last_name: z.string().trim().min(1, 'Ingresa los apellidos.'),
+  phone: z
+    .string()
+    .nullable()
+    .refine(isValidPhone, 'El teléfono debe tener entre 7 y 15 dígitos.'),
+  email: z
+    .string()
+    .nullable()
+    .refine(isValidEmail, 'Ingresa un correo electrónico válido.'),
+  municipality_code: z.string().min(1, 'Selecciona un municipio.'),
+  joined_on: z
+    .string()
+    .min(1, 'Ingresa la fecha de vinculación.')
+    .refine(
+      (value) => !value || value <= dateInBogota(),
+      'La fecha no puede ser posterior a hoy.',
+    ),
+});
 
-  if (!input.last_name.trim()) {
-    errors.last_name = 'Ingresa los apellidos.';
-  }
-
-  if (!input.municipality_code) {
-    errors.municipality_code = 'Selecciona un municipio.';
-  }
-
-  if (!input.joined_on) {
-    errors.joined_on = 'Ingresa la fecha de vinculación.';
-  } else if (input.joined_on > dateInBogota()) {
-    errors.joined_on = 'La fecha no puede ser posterior a hoy.';
-  }
-
-  if (input.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
-    errors.email = 'Ingresa un correo electrónico válido.';
-  }
-
-  if (input.phone) {
-    const digits = input.phone.replace(/\D/g, '');
-    if (digits.length < 7 || digits.length > 15) {
-      errors.phone = 'El teléfono debe tener entre 7 y 15 dígitos.';
-    }
-  }
-
-  return errors;
+export function normalizeProducerInput(input: ProducerInput): ProducerInput {
+  return {
+    ...input,
+    identity_document: input.identity_document.trim(),
+    first_name: input.first_name.trim(),
+    last_name: input.last_name.trim(),
+    phone: input.phone?.trim() || null,
+    email: input.email?.trim().toLowerCase() || null,
+  };
 }
