@@ -9,7 +9,6 @@ import type {
 } from './types';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-let csrfToken: string | undefined;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -61,12 +60,20 @@ function queryString(filters: ProducerListFilters) {
   return value ? `?${value}` : '';
 }
 
-async function getCsrfToken() {
-  if (csrfToken) return csrfToken;
+let csrfRequest: Promise<string> | undefined;
 
-  const response = await request<{ csrf_token: string }>('/api/auth/csrf');
-  csrfToken = response.csrf_token;
-  return csrfToken;
+function getCsrfToken() {
+  csrfRequest ??= request<{ csrf_token: string }>('/api/auth/csrf')
+    .then((response) => {
+      if (!response.csrf_token) {
+        throw new Error('No fue posible obtener un token CSRF válido.');
+      }
+      return response.csrf_token;
+    })
+    .finally(() => {
+      csrfRequest = undefined;
+    });
+  return csrfRequest;
 }
 
 async function mutationRequest<T>(path: string, init: RequestInit) {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createProducer, getProducers } from './api';
+import { createProducer, getProducers, updateProducer } from './api';
 import type { ProducerInput } from './types';
 
 const validProducer: ProducerInput = {
@@ -62,6 +62,33 @@ describe('producer API', () => {
       expect.objectContaining({
         headers: expect.objectContaining({ 'X-CSRFToken': 'csrf-token' }),
         method: 'POST',
+      }),
+    );
+  });
+
+  it('obtains a fresh CSRF token for each mutation', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ csrf_token: 'first-token' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'producer-id' }, 201))
+      .mockResolvedValueOnce(jsonResponse({ csrf_token: 'second-token' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'producer-id' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await createProducer(validProducer);
+    await updateProducer('producer-id', validProducer, 1);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      'http://localhost:8000/api/auth/csrf',
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      'http://localhost:8000/api/producers/producer-id',
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'X-CSRFToken': 'second-token' }),
+        method: 'PATCH',
       }),
     );
   });
