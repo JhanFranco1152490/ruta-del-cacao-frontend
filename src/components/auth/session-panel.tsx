@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CacaoMark } from '@/components/brand/cacao-mark';
@@ -123,7 +124,7 @@ export function SessionPanel() {
           Tu cuenta está lista. Los módulos disponibles aparecerán aquí a medida
           que se habiliten para tus roles y permisos.
         </p>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <article className="rounded-2xl border border-[var(--border)] bg-[var(--paper)] p-6 shadow-[0_14px_40px_rgba(35,24,18,0.06)]">
             <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-bold text-[var(--forest)]">
               Cuenta
@@ -148,6 +149,20 @@ export function SessionPanel() {
                 <span className="text-[var(--muted)]">Sin roles asignados</span>
               )}
             </div>
+          </article>
+          <article className="rounded-2xl border border-[var(--border)] bg-[var(--paper)] p-6 shadow-[0_14px_40px_rgba(35,24,18,0.06)]">
+            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-bold text-[var(--forest)]">
+              Productores
+            </h2>
+            <p className="mt-3 text-[var(--muted)]">
+              Consulta, registra y administra los productores de la asociación.
+            </p>
+            <Link
+              href="/producers"
+              className="mt-5 inline-flex rounded-xl bg-[var(--forest)] px-4 py-2 text-sm font-bold text-white hover:bg-[#254a39]"
+            >
+              Ir a productores
+            </Link>
           </article>
         </div>
       </section>
