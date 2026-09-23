@@ -1,13 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { CheckCircle2, CircleX, Search, UserRoundPlus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+  CheckCircle2,
+  CircleX,
+  ArrowLeft,
+  Eye,
+  Pencil,
+  Search,
+  UserRoundPlus,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getMunicipalities, getProducers } from '@/lib/producers/api';
+import { ApiError, getMunicipalities, getProducers } from '@/lib/producers/api';
 import type {
   Municipality,
   ProducerListResponse,
@@ -22,6 +31,7 @@ function maskDocument(documentType: string, value: string) {
 }
 
 export function ProducerList() {
+  const router = useRouter();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<ProducerStatus | ''>('');
@@ -34,22 +44,29 @@ export function ProducerList() {
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    const normalizedSearch = searchInput.trim();
+    if (normalizedSearch === search) return;
+
     const timer = window.setTimeout(() => {
       setPage(1);
-      setSearch(searchInput.trim());
       setIsLoading(true);
       setError('');
+      setSearch(normalizedSearch);
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [searchInput]);
+  }, [search, searchInput]);
 
   useEffect(() => {
     const controller = new AbortController();
     getMunicipalities(controller.signal)
       .then(setMunicipalities)
-      .catch(() => undefined);
+      .catch((requestError: unknown) => {
+        if (requestError instanceof ApiError && requestError.status === 401) {
+          router.replace('/');
+        }
+      });
     return () => controller.abort();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -65,6 +82,10 @@ export function ProducerList() {
           requestError.name === 'AbortError'
         )
           return;
+        if (requestError instanceof ApiError && requestError.status === 401) {
+          router.replace('/');
+          return;
+        }
         setError(
           'No fue posible cargar los productores. Inténtalo nuevamente.',
         );
@@ -72,7 +93,7 @@ export function ProducerList() {
       .finally(() => setIsLoading(false));
 
     return () => controller.abort();
-  }, [municipalityCode, page, reload, search, status]);
+  }, [municipalityCode, page, reload, router, search, status]);
 
   const totalPages = result
     ? Math.max(1, Math.ceil(result.count / pageSize))
@@ -80,7 +101,14 @@ export function ProducerList() {
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <Link
+        className="inline-flex items-center gap-2 text-sm font-extrabold text-selva hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selva"
+        href="/panel"
+      >
+        <ArrowLeft aria-hidden="true" className="size-4" />
+        Volver al panel
+      </Link>
+      <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="section-label">Administración</p>
           <h1 className="mt-2 text-4xl text-selva">Productores asociados</h1>
@@ -151,7 +179,7 @@ export function ProducerList() {
           </select>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-[var(--radius)] border border-border">
+        <div className="mt-5 overflow-x-auto rounded-[var(--radius)] border border-border">
           {isLoading ? (
             <ListSkeleton />
           ) : error ? (
@@ -170,19 +198,23 @@ export function ProducerList() {
               </Button>
             </div>
           ) : result?.results.length ? (
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[620px] table-fixed text-left text-sm lg:min-w-[900px]">
               <thead className="bg-surface-alt text-xs tracking-[0.1em] text-muted-foreground uppercase">
                 <tr>
-                  <th className="px-4 py-3 font-extrabold">Productor</th>
-                  <th className="hidden px-4 py-3 font-extrabold md:table-cell">
+                  <th className="w-[34%] px-4 py-3 font-extrabold lg:w-[32%]">
+                    Productor
+                  </th>
+                  <th className="hidden w-[20%] px-4 py-3 font-extrabold md:table-cell">
                     Documento
                   </th>
-                  <th className="hidden px-4 py-3 font-extrabold lg:table-cell">
+                  <th className="hidden w-[15%] px-4 py-3 font-extrabold lg:table-cell">
                     Municipio
                   </th>
-                  <th className="px-4 py-3 font-extrabold">Estado</th>
-                  <th className="px-4 py-3 text-right font-extrabold">
-                    Acción
+                  <th className="w-[16%] px-4 py-3 font-extrabold lg:w-[15%]">
+                    Estado
+                  </th>
+                  <th className="w-[18%] px-4 py-3 text-left font-extrabold">
+                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -211,17 +243,31 @@ export function ProducerList() {
                     <td className="px-4 py-4">
                       <StatusBadge status={producer.status} />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Link
-                        className="font-extrabold text-selva-2 hover:underline"
-                        href={`/producers/${producer.id}`}
-                      >
-                        Abrir
-                        <span className="sr-only">
-                          {' '}
-                          ficha de {producer.first_name} {producer.last_name}
-                        </span>
-                      </Link>
+                    <td className="px-4 py-4 text-left">
+                      <div className="flex justify-start gap-2">
+                        <Link
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-card px-3 text-xs font-extrabold text-selva hover:bg-surface-alt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selva"
+                          href={`/producers/${producer.id}`}
+                        >
+                          <Eye aria-hidden="true" className="size-4" />
+                          Ver
+                          <span className="sr-only">
+                            {' '}
+                            ficha de {producer.first_name} {producer.last_name}
+                          </span>
+                        </Link>
+                        <Link
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-selva px-3 text-xs font-extrabold text-white hover:bg-selva-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selva"
+                          href={`/producers/${producer.id}/edit`}
+                        >
+                          <Pencil aria-hidden="true" className="size-4" />
+                          Editar
+                          <span className="sr-only">
+                            {' '}
+                            ficha de {producer.first_name} {producer.last_name}
+                          </span>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
