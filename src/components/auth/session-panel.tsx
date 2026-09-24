@@ -59,11 +59,11 @@ export function SessionPanel() {
   if (pending && !user) {
     return (
       <main
-        className="grid min-h-screen place-items-center bg-[var(--cream)]"
+        className="grid min-h-screen place-items-center bg-background"
         role="status"
       >
-        <div className="text-center text-[var(--forest)]">
-          <CacaoMark className="mx-auto h-14 w-10 animate-pulse text-[var(--copper)]" />
+        <div className="text-center text-selva">
+          <CacaoMark className="mx-auto h-14 w-10 animate-pulse text-cobre" />
           <p className="mt-4 font-bold">Validando tu sesión…</p>
         </div>
       </main>
@@ -72,12 +72,12 @@ export function SessionPanel() {
 
   if (!user)
     return error ? (
-      <main className="grid min-h-screen place-items-center bg-[var(--cream)] px-5">
-        <div className="text-center text-[var(--forest)]">
+      <main className="grid min-h-screen place-items-center bg-background px-5">
+        <div className="text-center text-selva">
           <p role="alert">{error}</p>
           <button
             type="button"
-            className="mt-4 rounded-xl border px-4 py-2 font-bold"
+            className="mt-4 rounded-md border px-4 py-2 font-bold"
             onClick={() => {
               setError('');
               setPending(true);
@@ -91,75 +91,67 @@ export function SessionPanel() {
     ) : null;
 
   return (
-    <main className="min-h-screen bg-[var(--cream)] px-5 py-8 sm:px-10">
-      <header className="mx-auto flex max-w-6xl items-center justify-between border-b border-[var(--border)] pb-6">
-        <div className="flex items-center gap-3 text-[var(--forest)]">
-          <CacaoMark className="h-10 w-7 text-[var(--copper)]" />
-          <span className="font-[family-name:var(--font-cormorant)] text-2xl font-bold">
-            Ruta del Cacao
-          </span>
+    <main className="min-h-screen bg-background px-5 py-8 sm:px-10">
+      <header className="mx-auto flex max-w-6xl items-center justify-between border-b border-border pb-6">
+        <div className="flex items-center gap-3 text-selva">
+          <CacaoMark className="h-10 w-7 text-cobre" />
+          <span className="font-serif text-2xl">Ruta del Cacao</span>
         </div>
         <button
           type="button"
           onClick={handleLogout}
           disabled={pending}
-          className="rounded-xl border border-[var(--border)] bg-white px-4 py-2 text-sm font-bold text-[var(--copper)] hover:bg-[#fbf5ed] disabled:opacity-60"
+          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-bold text-cobre hover:bg-surface-alt disabled:opacity-60"
         >
           Cerrar sesión
         </button>
       </header>
       <section className="mx-auto max-w-6xl py-14">
         {error && (
-          <p role="alert" className="mb-6 text-[var(--copper)]">
+          <p role="alert" className="mb-6 text-cobre">
             {error}
           </p>
         )}
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--copper)]">
-          Sesión activa
-        </p>
-        <h1 className="mt-3 max-w-2xl font-[family-name:var(--font-cormorant)] text-4xl font-bold text-[var(--forest)] sm:text-5xl">
+        <p className="section-label">Sesión activa</p>
+        <h1 className="mt-3 max-w-2xl font-serif text-4xl text-selva sm:text-5xl">
           Bienvenido a Ruta del Cacao
         </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
           Tu cuenta está lista. Los módulos disponibles aparecerán aquí a medida
           que se habiliten para tus roles y permisos.
         </p>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <article className="rounded-2xl border border-[var(--border)] bg-[var(--paper)] p-6 shadow-[0_14px_40px_rgba(35,24,18,0.06)]">
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-bold text-[var(--forest)]">
-              Cuenta
-            </h2>
-            <p className="mt-3 break-all text-[var(--muted)]">{user.email}</p>
+          <article className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <h2 className="font-serif text-2xl text-selva">Cuenta</h2>
+            <p className="mt-3 break-all text-muted-foreground">{user.email}</p>
           </article>
-          <article className="rounded-2xl border border-[var(--border)] bg-[var(--paper)] p-6 shadow-[0_14px_40px_rgba(35,24,18,0.06)]">
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-bold text-[var(--forest)]">
-              Roles asignados
-            </h2>
+          <article className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <h2 className="font-serif text-2xl text-selva">Roles asignados</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {user.roles.length ? (
                 user.roles.map((role) => (
                   <span
                     key={role}
-                    className="rounded-full bg-[#e8f1ec] px-3 py-1 text-sm font-bold text-[var(--success)]"
+                    className="rounded-full bg-ok-bg px-3 py-1 text-sm font-bold text-ok"
                   >
                     {role}
                   </span>
                 ))
               ) : (
-                <span className="text-[var(--muted)]">Sin roles asignados</span>
+                <span className="text-muted-foreground">
+                  Sin roles asignados
+                </span>
               )}
             </div>
           </article>
-          <article className="rounded-2xl border border-[var(--border)] bg-[var(--paper)] p-6 shadow-[0_14px_40px_rgba(35,24,18,0.06)]">
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-bold text-[var(--forest)]">
-              Productores
-            </h2>
-            <p className="mt-3 text-[var(--muted)]">
+          <article className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <h2 className="font-serif text-2xl text-selva">Productores</h2>
+            <p className="mt-3 text-muted-foreground">
               Consulta, registra y administra los productores de la asociación.
             </p>
             <Link
               href="/producers"
-              className="mt-5 inline-flex rounded-xl bg-[var(--forest)] px-4 py-2 text-sm font-bold text-white hover:bg-[#254a39]"
+              className="mt-5 inline-flex rounded-md bg-selva px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-selva-2"
             >
               Ir a productores
             </Link>
