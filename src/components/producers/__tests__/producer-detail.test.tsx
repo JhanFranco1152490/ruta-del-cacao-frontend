@@ -178,6 +178,103 @@ describe('ProducerDetail', () => {
   });
 });
 
+describe('ProducerDetail - reactivación', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(getProducer).mockResolvedValue(producer({ status: 'inactive' }));
+  });
+
+  it('ofrece reactivar a un productor inactivo y no ofrece desactivar', async () => {
+    render(<ProducerDetail id="producer-1" />);
+
+    expect(
+      await screen.findByRole('button', { name: 'Reactivar' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Desactivar' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('no ofrece reactivar a un productor activo', async () => {
+    vi.mocked(getProducer).mockResolvedValue(producer());
+    render(<ProducerDetail id="producer-1" />);
+
+    await screen.findByRole('button', { name: 'Desactivar' });
+    expect(
+      screen.queryByRole('button', { name: 'Reactivar' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('reactiva al productor después de confirmar', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getProducer).mockResolvedValue(
+      producer({ status: 'inactive', version: 4 }),
+    );
+    vi.mocked(changeProducerStatus).mockResolvedValue(
+      producer({ status: 'active', version: 5 }),
+    );
+    render(<ProducerDetail id="producer-1" />);
+
+    await user.click(await screen.findByRole('button', { name: 'Reactivar' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByText('¿Reactivar productor?'),
+    ).toBeInTheDocument();
+    expect(changeProducerStatus).not.toHaveBeenCalled();
+
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Reactivar productor' }),
+    );
+
+    await waitFor(() =>
+      expect(changeProducerStatus).toHaveBeenCalledWith(
+        'producer-1',
+        'active',
+        4,
+      ),
+    );
+    expect(router.refresh).toHaveBeenCalled();
+    expect(await screen.findByText('Productor activo')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reactivar' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Desactivar' }),
+    ).toBeInTheDocument();
+  });
+
+  it('no reactiva si se cancela la confirmación', async () => {
+    const user = userEvent.setup();
+    render(<ProducerDetail id="producer-1" />);
+
+    await user.click(await screen.findByRole('button', { name: 'Reactivar' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    expect(changeProducerStatus).not.toHaveBeenCalled();
+    expect(screen.getByText('Productor inactivo')).toBeInTheDocument();
+  });
+
+  it('muestra el error del servidor si la reactivación falla', async () => {
+    const user = userEvent.setup();
+    vi.mocked(changeProducerStatus).mockRejectedValue(
+      new ApiError(409, { message: 'La ficha fue modificada.' }),
+    );
+    render(<ProducerDetail id="producer-1" />);
+
+    await user.click(await screen.findByRole('button', { name: 'Reactivar' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Reactivar productor' }),
+    );
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'La ficha fue modificada.',
+    );
+    expect(screen.getByText('Productor inactivo')).toBeInTheDocument();
+  });
+});
+
 describe('ProducerEditor', () => {
   beforeEach(() => {
     vi.resetAllMocks();
