@@ -75,7 +75,7 @@ export function ResetConfirmForm({ token }: { token: string }) {
       )}
       <Link
         href={success ? '/' : '/recuperar-contrasena'}
-        className="block text-center text-sm font-bold text-[var(--copper)] underline-offset-4 hover:underline"
+        className="block text-center text-sm font-bold text-cobre underline-offset-4 hover:underline"
       >
         {success ? 'Ir al inicio de sesión' : 'Solicitar un enlace nuevo'}
       </Link>

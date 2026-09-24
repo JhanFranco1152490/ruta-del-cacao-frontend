@@ -64,10 +64,7 @@ export function LoginForm() {
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
       <FormMessage>{message}</FormMessage>
       <div className="grid gap-2">
-        <label
-          htmlFor="login-method"
-          className="text-sm font-bold text-[var(--forest)]"
-        >
+        <label htmlFor="login-method" className="text-sm font-bold text-selva">
           Ingresar con
         </label>
         <select
@@ -78,7 +75,7 @@ export function LoginForm() {
             setIdentifier('');
             setErrors({ identifier: '', password: errors.password });
           }}
-          className="rounded-xl border border-[var(--border)] bg-white px-4 py-3"
+          className="rounded-xl border border-border bg-card px-4 py-3"
         >
           <option value="email">Correo electrónico</option>
           <option value="document">Documento de identidad</option>
@@ -88,7 +85,7 @@ export function LoginForm() {
         <div className="grid gap-2">
           <label
             htmlFor="document-type"
-            className="text-sm font-bold text-[var(--forest)]"
+            className="text-sm font-bold text-selva"
           >
             Tipo de documento
           </label>
@@ -98,7 +95,7 @@ export function LoginForm() {
             onChange={(event) =>
               setDocumentType(event.target.value as DocumentType)
             }
-            className="rounded-xl border border-[var(--border)] bg-white px-4 py-3"
+            className="rounded-xl border border-border bg-card px-4 py-3"
           >
             <option value="CC">Cédula de ciudadanía (CC)</option>
             <option value="CE">Cédula de extranjería (CE)</option>
@@ -138,14 +135,14 @@ export function LoginForm() {
         <div className="mt-3 text-right">
           <Link
             href="/recuperar-contrasena"
-            className="text-sm font-bold text-[var(--copper)] underline-offset-4 hover:underline"
+            className="text-sm font-bold text-cobre underline-offset-4 hover:underline"
           >
             ¿Olvidaste tu contraseña?
           </Link>
         </div>
       </div>
       <SubmitButton pending={pending}>Iniciar sesión</SubmitButton>
-      <p className="text-center text-sm leading-6 text-[var(--muted)]">
+      <p className="text-center text-sm leading-6 text-muted-foreground">
         El acceso es exclusivo para usuarios registrados por la organización.
       </p>
     </form>
