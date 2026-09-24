@@ -8,7 +8,7 @@ export function CacaoMark({ className = '' }: { className?: string }) {
       <path
         d="M24 8v48M13 19c7 4 15 4 22 0M10 33c9 5 19 5 28 0M12 47c8 4 16 4 24 0"
         fill="none"
-        stroke="var(--cream)"
+        stroke="var(--background)"
         strokeWidth="2"
         strokeLinecap="round"
         opacity=".75"

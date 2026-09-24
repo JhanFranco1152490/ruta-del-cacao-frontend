@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Cormorant_Garamond, DM_Serif_Display, Karla } from 'next/font/google';
+import { DM_Serif_Display, Karla } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
 
@@ -16,12 +16,6 @@ const sans = Karla({
   weight: ['400', '500', '700', '800'],
 });
 
-const cormorant = Cormorant_Garamond({
-  variable: '--font-cormorant',
-  subsets: ['latin'],
-  weight: ['600', '700'],
-});
-
 export const metadata: Metadata = {
   title: 'Ruta del Cacao',
   description: 'Sistema de trazabilidad de la producción de cacao',
@@ -33,7 +27,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${serif.variable} ${sans.variable} ${cormorant.variable} h-full antialiased`}
+      className={`${serif.variable} ${sans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

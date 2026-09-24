@@ -56,7 +56,7 @@ export function ResetRequestForm() {
       <SubmitButton pending={pending}>Enviar</SubmitButton>
       <Link
         href="/"
-        className="block text-center text-sm font-bold text-[var(--copper)] underline-offset-4 hover:underline"
+        className="block text-center text-sm font-bold text-cobre underline-offset-4 hover:underline"
       >
         Volver al inicio de sesión
       </Link>
