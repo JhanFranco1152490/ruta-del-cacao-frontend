@@ -23,9 +23,25 @@ function jsonResponse(body: object, status = 200) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.resetModules();
 });
 
 describe('producer API', () => {
+  it('does not duplicate the slash when the base URL ends with one', async () => {
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'http://localhost:8000/');
+    vi.resetModules();
+    const { getProducer } = await import('./api');
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 'abc' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await getProducer('abc');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'http://localhost:8000/api/producers/abc',
+    );
+  });
+
   it('uses the collection route with its required trailing slash', async () => {
     const fetchMock = vi
       .fn()
