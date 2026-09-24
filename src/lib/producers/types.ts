@@ -11,7 +11,6 @@ export type Municipality = {
 export type Producer = {
   id: string;
   member_code: string;
-  organization_id: string;
   document_type: DocumentType;
   identity_document: string;
   first_name: string;

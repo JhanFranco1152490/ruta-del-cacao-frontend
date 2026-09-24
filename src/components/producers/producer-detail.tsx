@@ -76,7 +76,7 @@ export function ProducerDetail({ id }: { id: string }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-8">
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
       <Link
         className="text-sm font-bold text-selva-2 hover:underline"
         href="/producers"
@@ -155,8 +155,8 @@ export function ProducerDetail({ id }: { id: string }) {
             <>
               <h2 className="mt-2 text-2xl text-selva">Productor activo</h2>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Si existe una cuenta vinculada, al desactivar este expediente
-                también se bloqueará su acceso al sistema.
+                Al desactivar este expediente dejará de figurar como activo. Sus
+                datos y relaciones se conservan.
               </p>
             </>
           ) : (
@@ -204,7 +204,7 @@ const statusActions = {
     trigger: 'Desactivar',
     title: '¿Desactivar productor?',
     description:
-      'El expediente conservará su historial. Si tiene una cuenta vinculada, también se bloqueará su acceso al sistema.',
+      'El expediente dejará de figurar como activo y conservará su historial. Esta acción no elimina información ni modifica cuentas de usuario.',
     confirm: 'Desactivar productor',
     pending: 'Desactivando…',
     triggerClassName: undefined,
@@ -215,7 +215,7 @@ const statusActions = {
     trigger: 'Reactivar',
     title: '¿Reactivar productor?',
     description:
-      'El productor volverá a figurar como activo y su expediente podrá editarse con normalidad.',
+      'El expediente volverá a figurar como activo y conservará su historial. Esta acción no crea ni reactiva una cuenta de usuario.',
     confirm: 'Reactivar productor',
     pending: 'Reactivando…',
     triggerClassName: 'bg-selva hover:bg-selva-2',

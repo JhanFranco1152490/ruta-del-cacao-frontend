@@ -27,7 +27,6 @@ function producer(overrides: Partial<Producer> = {}): Producer {
   return {
     id: 'producer-1',
     member_code: 'PROD-000001',
-    organization_id: 'org-1',
     document_type: 'CC',
     identity_document: '1234567890',
     first_name: 'Ana',
@@ -63,6 +62,11 @@ describe('ProducerDetail', () => {
     expect(screen.queryByText(/3001234567/)).not.toBeInTheDocument();
     expect(screen.queryByText(/ana\.prueba/)).not.toBeInTheDocument();
     expect(screen.getByText('Productor activo')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Al desactivar este expediente dejará de figurar como activo. Sus datos y relaciones se conservan.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('indica "Sin registrar" cuando faltan teléfono y correo', async () => {
@@ -219,6 +223,11 @@ describe('ProducerDetail - reactivación', () => {
     const dialog = await screen.findByRole('dialog');
     expect(
       within(dialog).getByText('¿Reactivar productor?'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        'El expediente volverá a figurar como activo y conservará su historial. Esta acción no crea ni reactiva una cuenta de usuario.',
+      ),
     ).toBeInTheDocument();
     expect(changeProducerStatus).not.toHaveBeenCalled();
 

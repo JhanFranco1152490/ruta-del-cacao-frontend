@@ -31,7 +31,6 @@ function savedProducer(overrides: Partial<Producer> = {}): Producer {
   return {
     id: 'producer-1',
     member_code: 'PROD-000001',
-    organization_id: 'org-1',
     document_type: 'CC',
     identity_document: '1234567890',
     first_name: 'Ana',
