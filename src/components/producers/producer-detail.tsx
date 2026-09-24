@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { CircleOff, Pencil, UserRoundX } from 'lucide-react';
+import { CircleOff, Pencil, UserRoundCheck, UserRoundX } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +22,7 @@ import {
   changeProducerStatus,
   getProducer,
 } from '@/lib/producers/api';
-import type { Producer } from '@/lib/producers/types';
+import type { Producer, ProducerStatus } from '@/lib/producers/types';
 
 import { ProducerForm } from './producer-form';
 import { StatusBadge } from './producer-list';
@@ -100,9 +100,11 @@ export function ProducerDetail({ id }: { id: string }) {
           >
             <Pencil aria-hidden="true" className="size-4" /> Editar datos
           </Link>
-          {producer.status === 'active' && (
-            <DeactivateProducer producer={producer} onUpdated={setProducer} />
-          )}
+          <ChangeProducerStatus
+            producer={producer}
+            onUpdated={setProducer}
+            target={producer.status === 'active' ? 'inactive' : 'active'}
+          />
         </div>
       </div>
 
@@ -197,26 +199,56 @@ export function ProducerEditor({ id }: { id: string }) {
   return <ProducerForm producer={producer} />;
 }
 
-function DeactivateProducer({
+const statusActions = {
+  inactive: {
+    trigger: 'Desactivar',
+    title: '¿Desactivar productor?',
+    description:
+      'El expediente conservará su historial. Si tiene una cuenta vinculada, también se bloqueará su acceso al sistema.',
+    confirm: 'Desactivar productor',
+    pending: 'Desactivando…',
+    triggerClassName: undefined,
+    Icon: UserRoundX,
+    variant: 'destructive',
+  },
+  active: {
+    trigger: 'Reactivar',
+    title: '¿Reactivar productor?',
+    description:
+      'El productor volverá a figurar como activo y su expediente podrá editarse con normalidad.',
+    confirm: 'Reactivar productor',
+    pending: 'Reactivando…',
+    triggerClassName: 'bg-selva hover:bg-selva-2',
+    Icon: UserRoundCheck,
+    variant: 'default',
+  },
+} as const;
+
+function ChangeProducerStatus({
   onUpdated,
   producer,
+  target,
 }: {
   onUpdated: (producer: Producer) => void;
   producer: Producer;
+  target: ProducerStatus;
 }) {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const action = statusActions[target];
 
-  async function deactivate() {
+  async function changeStatus() {
     setIsSaving(true);
     setError('');
     try {
       const updatedProducer = await changeProducerStatus(
         producer.id,
-        'inactive',
+        target,
         producer.version,
       );
+      setIsOpen(false);
       onUpdated(updatedProducer);
       router.refresh();
     } catch (requestError) {
@@ -227,17 +259,21 @@ function DeactivateProducer({
   }
 
   return (
-    <Dialog>
-      <DialogTrigger render={<Button className="h-11" variant="destructive" />}>
-        <UserRoundX aria-hidden="true" className="size-4" /> Desactivar
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
+      <DialogTrigger
+        render={
+          <Button
+            className={`h-11 ${action.triggerClassName ?? ''}`}
+            variant={action.variant}
+          />
+        }
+      >
+        <action.Icon aria-hidden="true" className="size-4" /> {action.trigger}
       </DialogTrigger>
       <DialogContent showCloseButton={!isSaving}>
         <DialogHeader>
-          <DialogTitle>¿Desactivar productor?</DialogTitle>
-          <DialogDescription>
-            El expediente conservará su historial. Si tiene una cuenta
-            vinculada, también se bloqueará su acceso al sistema.
-          </DialogDescription>
+          <DialogTitle>{action.title}</DialogTitle>
+          <DialogDescription>{action.description}</DialogDescription>
         </DialogHeader>
         {error && (
           <p className="text-sm font-bold text-err" role="alert">
@@ -252,11 +288,12 @@ function DeactivateProducer({
             Cancelar
           </DialogClose>
           <Button
+            className={action.triggerClassName}
             disabled={isSaving}
-            onClick={deactivate}
-            variant="destructive"
+            onClick={changeStatus}
+            variant={action.variant}
           >
-            {isSaving ? 'Desactivando…' : 'Desactivar productor'}
+            {isSaving ? action.pending : action.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>
