@@ -10,7 +10,7 @@ type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 const inputClass =
-  'h-13 w-full rounded-xl border bg-card px-4 text-base text-foreground transition placeholder:text-muted-foreground hover:border-input focus:border-selva focus:outline-none';
+  'h-11 w-full rounded-md border bg-card px-3 text-base text-foreground transition placeholder:text-muted-foreground focus-visible:border-ring';
 
 export function Field({
   label,
@@ -108,7 +108,7 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={pending}
-      className="flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-selva px-5 font-bold text-primary-foreground transition hover:bg-selva-2 disabled:cursor-not-allowed disabled:opacity-70"
+      className="flex h-12 w-full items-center justify-center gap-3 rounded-md bg-selva px-5 font-bold text-primary-foreground transition hover:bg-selva-2 disabled:cursor-not-allowed disabled:opacity-70"
     >
       {pending && (
         <span
@@ -132,7 +132,7 @@ export function FormMessage({
   return (
     <div
       role={variant === 'error' ? 'alert' : 'status'}
-      className={`rounded-xl border px-4 py-3 text-sm leading-6 ${variant === 'error' ? 'border-err/30 bg-err-bg text-err' : 'border-ok/30 bg-ok-bg text-ok'}`}
+      className={`rounded-md border px-4 py-3 text-sm leading-6 ${variant === 'error' ? 'border-err/30 bg-err-bg text-err' : 'border-ok/30 bg-ok-bg text-ok'}`}
     >
       {children}
     </div>

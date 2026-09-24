@@ -1,5 +1,6 @@
 'use client';
 
+import { Info } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
@@ -75,7 +76,7 @@ export function LoginForm() {
             setIdentifier('');
             setErrors({ identifier: '', password: errors.password });
           }}
-          className="rounded-xl border border-border bg-card px-4 py-3"
+          className="h-11 rounded-md border border-input bg-card px-3"
         >
           <option value="email">Correo electrónico</option>
           <option value="document">Documento de identidad</option>
@@ -95,7 +96,7 @@ export function LoginForm() {
             onChange={(event) =>
               setDocumentType(event.target.value as DocumentType)
             }
-            className="rounded-xl border border-border bg-card px-4 py-3"
+            className="h-11 rounded-md border border-input bg-card px-3"
           >
             <option value="CC">Cédula de ciudadanía (CC)</option>
             <option value="CE">Cédula de extranjería (CE)</option>
@@ -142,8 +143,15 @@ export function LoginForm() {
         </div>
       </div>
       <SubmitButton pending={pending}>Iniciar sesión</SubmitButton>
-      <p className="text-center text-sm leading-6 text-muted-foreground">
-        El acceso es exclusivo para usuarios registrados por la organización.
+      <div className="flex gap-2.5 rounded-md bg-info-bg px-3.5 py-3 text-sm font-semibold leading-[1.4] text-info">
+        <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+        <p>
+          Los usuarios los crea el administrador. Si no tienes uno, pídelo en la
+          asociación.
+        </p>
+      </div>
+      <p className="text-[13px] leading-normal text-muted-foreground">
+        Tras varios intentos fallidos la cuenta se bloquea temporalmente.
       </p>
     </form>
   );
