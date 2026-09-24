@@ -62,51 +62,56 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <FormMessage>{message}</FormMessage>
-      <div className="grid gap-2">
-        <label htmlFor="login-method" className="text-sm font-bold text-selva">
-          Ingresar con
-        </label>
-        <select
-          id="login-method"
-          value={loginMethod}
-          onChange={(event) => {
-            setLoginMethod(event.target.value as 'email' | 'document');
-            setIdentifier('');
-            setErrors({ identifier: '', password: errors.password });
-          }}
-          className="h-11 rounded-md border border-input bg-card px-3"
-        >
-          <option value="email">Correo electrónico</option>
-          <option value="document">Documento de identidad</option>
-        </select>
-      </div>
-      {loginMethod === 'document' && (
-        <div className="grid gap-2">
+      <div
+        className={`grid gap-3 ${loginMethod === 'document' ? 'grid-cols-[1fr_7rem]' : 'grid-cols-1'}`}
+      >
+        <div className="grid min-w-0 gap-1.5">
           <label
-            htmlFor="document-type"
+            htmlFor="login-method"
             className="text-sm font-bold text-selva"
           >
-            Tipo de documento
+            Ingresar con
           </label>
           <select
-            id="document-type"
-            value={documentType}
-            onChange={(event) =>
-              setDocumentType(event.target.value as DocumentType)
-            }
+            id="login-method"
+            value={loginMethod}
+            onChange={(event) => {
+              setLoginMethod(event.target.value as 'email' | 'document');
+              setIdentifier('');
+              setErrors({ identifier: '', password: errors.password });
+            }}
             className="h-11 rounded-md border border-input bg-card px-3"
           >
-            <option value="CC">Cédula de ciudadanía (CC)</option>
-            <option value="CE">Cédula de extranjería (CE)</option>
-            <option value="PPT">Permiso por Protección Temporal (PPT)</option>
-            <option value="NIT">
-              Número de Identificación Tributaria (NIT)
-            </option>
+            <option value="email">Correo electrónico</option>
+            <option value="document">Documento de identidad</option>
           </select>
         </div>
-      )}
+        {loginMethod === 'document' && (
+          <div className="grid gap-1.5">
+            <label
+              htmlFor="document-type"
+              className="whitespace-nowrap text-sm font-bold text-selva"
+            >
+              Documento
+            </label>
+            <select
+              id="document-type"
+              value={documentType}
+              onChange={(event) =>
+                setDocumentType(event.target.value as DocumentType)
+              }
+              className="h-11 w-full rounded-md border border-input bg-card pl-2 pr-1"
+            >
+              <option value="CC">CC</option>
+              <option value="CE">CE</option>
+              <option value="PPT">PPT</option>
+              <option value="NIT">NIT</option>
+            </select>
+          </div>
+        )}
+      </div>
       <Field
         id="identifier"
         label={
@@ -143,16 +148,14 @@ export function LoginForm() {
         </div>
       </div>
       <SubmitButton pending={pending}>Iniciar sesión</SubmitButton>
-      <div className="flex gap-2.5 rounded-md bg-info-bg px-3.5 py-3 text-sm font-semibold leading-[1.4] text-info">
-        <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+      <div className="flex gap-2 rounded-md bg-info-bg px-3.5 py-2.5 text-xs font-semibold leading-snug text-info">
+        <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         <p>
-          Los usuarios los crea el administrador. Si no tienes uno, pídelo en la
-          asociación.
+          Los usuarios los crea el administrador; pídelo en la asociación si no
+          tienes uno. Tras varios intentos fallidos la cuenta se bloquea
+          temporalmente.
         </p>
       </div>
-      <p className="text-[13px] leading-normal text-muted-foreground">
-        Tras varios intentos fallidos la cuenta se bloquea temporalmente.
-      </p>
     </form>
   );
 }

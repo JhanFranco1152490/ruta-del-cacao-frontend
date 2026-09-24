@@ -24,14 +24,58 @@ function Brand({ className = '' }: { className?: string }) {
   );
 }
 
+type Headline = { pre: string; italic: string; post: string };
+
+const ASIDE_HEADLINES: Headline[] = [
+  {
+    pre: 'La ruta del cacao de ',
+    italic: 'Norte de Santander',
+    post: ', registrada paso a paso.',
+  },
+  {
+    pre: 'De la parcela a la bodega: la trazabilidad del cacao de ',
+    italic: 'Norte de Santander',
+    post: '.',
+  },
+  {
+    pre: 'Cada lote de cacao, con su historia completa, de la ',
+    italic: 'finca',
+    post: ' a la venta.',
+  },
+  {
+    pre: 'El cacao de ',
+    italic: 'Norte de Santander',
+    post: ', documentado desde la primera cosecha.',
+  },
+  {
+    pre: 'El cacao de la asociación, con el respaldo de ',
+    italic: 'cada productor',
+    post: '.',
+  },
+];
+
+function todaysHeadline() {
+  const now = new Date();
+  const startOfYear = Date.UTC(now.getUTCFullYear(), 0, 1);
+  const startOfToday = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+  );
+  const dayOfYear = Math.floor((startOfToday - startOfYear) / 86_400_000);
+  return ASIDE_HEADLINES[dayOfYear % ASIDE_HEADLINES.length];
+}
+
 export function AuthShell({
   eyebrow,
   title,
   description,
   children,
 }: AuthShellProps) {
+  const headline = todaysHeadline();
+
   return (
-    <div className="min-h-dvh bg-background lg:flex">
+    <div className="h-dvh overflow-hidden bg-background lg:flex">
       <aside className="relative hidden w-[43%] max-w-[620px] shrink-0 flex-col overflow-hidden bg-selva p-10 text-primary-foreground lg:flex xl:p-12">
         <svg
           aria-hidden="true"
@@ -49,18 +93,15 @@ export function AuthShell({
         </svg>
         <Brand className="relative text-crema" />
         <h2 className="relative mt-auto max-w-md font-serif text-[46px] leading-[1.08]">
-          La ruta del cacao de{' '}
-          <span className="italic">Norte de Santander</span>, registrada paso a
-          paso.
+          {headline.pre}
+          <span className="italic">{headline.italic}</span>
+          {headline.post}
         </h2>
-        <p className="relative mt-10 text-[13px] text-primary-foreground/70">
-          Proyecto UFPS 2026
-        </p>
       </aside>
 
-      <main className="flex min-h-dvh flex-1 flex-col items-center justify-center px-5 py-10 sm:px-10">
-        <Brand className="mb-8 text-selva lg:hidden" />
-        <div className="w-full max-w-[420px] rounded-xl bg-card p-8 shadow-card">
+      <main className="flex h-dvh flex-1 flex-col items-center justify-center px-5 py-6 sm:px-10">
+        <Brand className="mb-5 text-selva lg:hidden" />
+        <div className="w-full max-w-[420px] rounded-xl bg-card p-7 shadow-card">
           {eyebrow && <p className="section-label">{eyebrow}</p>}
           <h1 className="mt-1.5 font-serif text-[34px] leading-tight text-selva">
             {title}
@@ -70,7 +111,7 @@ export function AuthShell({
               {description}
             </p>
           )}
-          <div className="mt-6">{children}</div>
+          <div className="mt-5">{children}</div>
         </div>
       </main>
     </div>
