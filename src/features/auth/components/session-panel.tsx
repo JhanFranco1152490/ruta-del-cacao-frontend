@@ -2,93 +2,17 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+
 import { CacaoMark } from '@/components/brand/cacao-mark';
-import { ApiError, getCurrentUser, logout, type User } from '@/lib/auth';
+
+import { useLogout, useSession } from '../api';
 
 export function SessionPanel() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [pending, setPending] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
+  const { data: user } = useSession();
+  const logout = useLogout();
 
-  useEffect(() => {
-    let active = true;
-    getCurrentUser()
-      .then(({ user: currentUser }) => {
-        if (active) setUser(currentUser);
-      })
-      .catch((error: unknown) => {
-        if (!active) return;
-        if (error instanceof ApiError && error.status === 401) {
-          router.replace('/');
-        } else {
-          setError(
-            'No pudimos validar tu sesión. Revisa la conexión e inténtalo de nuevo.',
-          );
-        }
-      })
-      .finally(() => {
-        if (active) setPending(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [router, attempt]);
-
-  async function handleLogout() {
-    setPending(true);
-    setError('');
-    try {
-      await logout();
-      router.replace('/');
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        router.replace('/');
-      } else {
-        setError(
-          'No pudimos cerrar tu sesión. Revisa la conexión e inténtalo de nuevo.',
-        );
-      }
-    } finally {
-      setPending(false);
-    }
-  }
-
-  if (pending && !user) {
-    return (
-      <main
-        className="grid min-h-screen place-items-center bg-background"
-        role="status"
-      >
-        <div className="text-center text-selva">
-          <CacaoMark className="mx-auto h-14 w-10 animate-pulse text-cobre" />
-          <p className="mt-4 font-bold">Validando tu sesión…</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (!user)
-    return error ? (
-      <main className="grid min-h-screen place-items-center bg-background px-5">
-        <div className="text-center text-selva">
-          <p role="alert">{error}</p>
-          <button
-            type="button"
-            className="mt-4 rounded-md border px-4 py-2 font-bold"
-            onClick={() => {
-              setError('');
-              setPending(true);
-              setAttempt((value) => value + 1);
-            }}
-          >
-            Reintentar
-          </button>
-        </div>
-      </main>
-    ) : null;
+  if (!user) return null;
 
   return (
     <main className="min-h-screen bg-background px-5 py-8 sm:px-10">
@@ -99,17 +23,20 @@ export function SessionPanel() {
         </div>
         <button
           type="button"
-          onClick={handleLogout}
-          disabled={pending}
+          onClick={() =>
+            logout.mutate(undefined, { onSuccess: () => router.replace('/') })
+          }
+          disabled={logout.isPending}
           className="rounded-md border border-border bg-card px-4 py-2 text-sm font-bold text-cobre hover:bg-surface-alt disabled:opacity-60"
         >
           Cerrar sesión
         </button>
       </header>
       <section className="mx-auto max-w-6xl py-14">
-        {error && (
+        {logout.isError && (
           <p role="alert" className="mb-6 text-cobre">
-            {error}
+            No pudimos cerrar tu sesión. Revisa la conexión e inténtalo de
+            nuevo.
           </p>
         )}
         <p className="section-label">Sesión activa</p>
@@ -150,7 +77,7 @@ export function SessionPanel() {
               Consulta, registra y administra los productores de la asociación.
             </p>
             <Link
-              href="/producers"
+              href="/productores"
               className="mt-5 inline-flex rounded-md bg-selva px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-selva-2"
             >
               Ir a productores

@@ -16,6 +16,11 @@ export const apiError = (
 export const sessionExpired = () =>
   apiError(401, 'authentication_failed', 'La sesión venció.');
 
+// El 401 de una petición sin cookie de acceso (sesión vencida o ausente): el backend real
+// lo responde tanto con este código como con authentication_failed.
+export const notAuthenticated = () =>
+  apiError(401, 'not_authenticated', 'No autenticado.');
+
 export const buildSession = (
   user: Partial<Schemas['SessionUser']> = {},
 ): Schemas['Session'] => ({

@@ -1,5 +1,5 @@
-import { AuthShell } from '@/components/auth/auth-shell';
-import { ResetRequestForm } from '@/components/auth/reset-request-form';
+import { AuthShell } from '@/features/auth/components/auth-shell';
+import { ResetRequestForm } from '@/features/auth/components/reset-request-form';
 
 export default function ResetRequestPage() {
   return (
