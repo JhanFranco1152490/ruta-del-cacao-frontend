@@ -305,7 +305,7 @@ function DataItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <dt className="text-sm font-bold text-muted-foreground">{label}</dt>
-      <dd className="mt-1 break-words font-bold text-foreground">{value}</dd>
+      <dd className="mt-1 font-bold break-words text-foreground">{value}</dd>
     </div>
   );
 }

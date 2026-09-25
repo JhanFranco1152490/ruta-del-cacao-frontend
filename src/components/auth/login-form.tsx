@@ -92,7 +92,7 @@ export function LoginForm() {
           <div className="grid gap-1.5">
             <label
               htmlFor="document-type"
-              className="whitespace-nowrap text-sm font-bold text-selva"
+              className="text-sm font-bold whitespace-nowrap text-selva"
             >
               Documento
             </label>
@@ -102,7 +102,7 @@ export function LoginForm() {
               onChange={(event) =>
                 setDocumentType(event.target.value as DocumentType)
               }
-              className="h-11 w-full rounded-md border border-input bg-card pl-2 pr-1"
+              className="h-11 w-full rounded-md border border-input bg-card pr-1 pl-2"
             >
               <option value="CC">CC</option>
               <option value="CE">CE</option>
@@ -148,7 +148,7 @@ export function LoginForm() {
         </div>
       </div>
       <SubmitButton pending={pending}>Iniciar sesión</SubmitButton>
-      <div className="flex gap-2 rounded-md bg-info-bg px-3.5 py-2.5 text-xs font-semibold leading-snug text-info">
+      <div className="flex gap-2 rounded-md bg-info-bg px-3.5 py-2.5 text-xs leading-snug font-semibold text-info">
         <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         <p>
           Los usuarios los crea el administrador; pídelo en la asociación si no
