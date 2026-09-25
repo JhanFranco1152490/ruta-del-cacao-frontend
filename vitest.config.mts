@@ -8,10 +8,19 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/test/**',
+        'src/lib/api/schema.d.ts',
+        'src/components/ui/**',
+        'src/app/**',
+      ],
+    },
   },
   resolve: {
-    alias: {
-      '@': path.resolve(import.meta.dirname, './src'),
-    },
+    alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
 });
