@@ -50,7 +50,7 @@ export function ResetConfirmForm({
             applyApiFieldErrors(error, setError, [
               'new_password',
               'new_password_confirmation',
-            ])
+            ]).applied
           ) {
             return;
           }

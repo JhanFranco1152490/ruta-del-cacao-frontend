@@ -14,7 +14,7 @@ describe('applyApiFieldErrors', () => {
 
     const applied = applyApiFieldErrors(error, setError, ['email', 'phone']);
 
-    expect(applied).toBe(true);
+    expect(applied).toEqual({ applied: true, unmatched: ['x'] });
     expect(setError).toHaveBeenCalledTimes(1);
     expect(setError).toHaveBeenCalledWith('email', {
       type: 'server',
@@ -22,7 +22,7 @@ describe('applyApiFieldErrors', () => {
     });
   });
 
-  it('returns false when nothing could be applied', () => {
+  it('reports nothing applied and gives back the messages of unknown fields', () => {
     const setError = vi.fn();
     const noField = new ApiError(409, {
       detail: 'Conflicto',
@@ -35,11 +35,46 @@ describe('applyApiFieldErrors', () => {
       fields: { other: ['y'] },
     });
 
-    expect(applyApiFieldErrors(noField, setError, ['email'])).toBe(false);
-    expect(applyApiFieldErrors(unknownOnly, setError, ['email'])).toBe(false);
-    expect(applyApiFieldErrors(new TypeError('x'), setError, ['email'])).toBe(
-      false,
-    );
+    expect(applyApiFieldErrors(noField, setError, ['email'])).toEqual({
+      applied: false,
+      unmatched: [],
+    });
+    expect(applyApiFieldErrors(unknownOnly, setError, ['email'])).toEqual({
+      applied: false,
+      unmatched: ['y'],
+    });
+    expect(
+      applyApiFieldErrors(new TypeError('x'), setError, ['email']),
+    ).toEqual({ applied: false, unmatched: [] });
+    expect(setError).not.toHaveBeenCalled();
+  });
+
+  it('gives back every message of every unknown field, in order', () => {
+    const setError = vi.fn();
+    const error = new ApiError(400, {
+      detail: 'Datos inválidos',
+      code: 'validation_error',
+      fields: { a: ['Uno.', 'Dos.'], email: ['Malo.'], b: ['Tres.'] },
+    });
+
+    expect(applyApiFieldErrors(error, setError, ['email'])).toEqual({
+      applied: true,
+      unmatched: ['Uno.', 'Dos.', 'Tres.'],
+    });
+  });
+
+  it('does not count a known field without messages as applied', () => {
+    const setError = vi.fn();
+    const error = new ApiError(400, {
+      detail: 'x',
+      code: 'validation_error',
+      fields: { email: [] },
+    });
+
+    expect(applyApiFieldErrors(error, setError, ['email'])).toEqual({
+      applied: false,
+      unmatched: [],
+    });
     expect(setError).not.toHaveBeenCalled();
   });
 });

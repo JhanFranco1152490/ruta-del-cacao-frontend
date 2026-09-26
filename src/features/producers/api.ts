@@ -54,10 +54,11 @@ export const useProducers = (query: ProducerQuery) =>
     placeholderData: keepPreviousData,
   });
 
-export const useProducer = (id: string) =>
+export const useProducer = (id: string, options?: { staleTime?: number }) =>
   useQuery({
     queryKey: queryKeys.producers.detail(id),
     queryFn: ({ signal }) => fetchProducer(id, signal),
+    ...options,
   });
 
 // El catálogo casi nunca cambia: se pide una vez y se comparte entre pantallas.

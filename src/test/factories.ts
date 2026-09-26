@@ -59,3 +59,8 @@ export const buildPage = <T>(results: T[], count = results.length) => ({
   previous: null,
   results,
 });
+
+export const buildMunicipalities = (): Schemas['Municipality'][] => [
+  { code: '54001', name: 'Cúcuta' },
+  { code: '54518', name: 'Pamplona' },
+];

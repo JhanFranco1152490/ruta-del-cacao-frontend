@@ -1,6 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, type RenderOptions } from '@testing-library/react';
-import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
+import {
+  NuqsTestingAdapter,
+  type OnUrlUpdateFunction,
+} from 'nuqs/adapters/testing';
 import type { ReactElement, ReactNode } from 'react';
 
 export function createTestQueryClient() {
@@ -17,6 +20,7 @@ export function createTestQueryClient() {
 type Options = Omit<RenderOptions, 'wrapper'> & {
   queryClient?: QueryClient;
   searchParams?: string | Record<string, string>;
+  onUrlUpdate?: OnUrlUpdateFunction;
 };
 
 export function renderWithProviders(
@@ -24,13 +28,18 @@ export function renderWithProviders(
   {
     queryClient = createTestQueryClient(),
     searchParams,
+    onUrlUpdate,
     ...options
   }: Options = {},
 ) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <NuqsTestingAdapter searchParams={searchParams} hasMemory>
+        <NuqsTestingAdapter
+          searchParams={searchParams}
+          onUrlUpdate={onUrlUpdate}
+          hasMemory
+        >
           {children}
         </NuqsTestingAdapter>
       </QueryClientProvider>
