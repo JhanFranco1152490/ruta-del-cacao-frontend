@@ -39,7 +39,7 @@ vive en `AGENTS.md` del workspace, si lo tienes al lado)
   nombrarlo de más ata el comentario a una decisión de infraestructura que puede cambiar.
   Un ejemplo con nombre de proveedor sí es válido en `.env.example`, nunca en código.
 - **Toda feature con código lleva tests.** Lint/formato limpio antes de commitear
-  (ESLint, ya configurado; Prettier si se añade).
+  (ESLint y Prettier, ya configurados).
 - **Nunca commitear secretos** (`.env*`, llaves de API).
 - **Seguridad y datos: activa desde el día uno.** Este sistema maneja datos personales
   reales de productores/usuarios y autenticación real — nunca loggear ni exponer en
@@ -53,6 +53,7 @@ vive en `AGENTS.md` del workspace, si lo tienes al lado)
   pantalla de captura de campo hasta que exista un spec de arquitectura que defina el
   enfoque** (Service Worker, almacenamiento local, cola de sincronización) — retroaplicarlo
   después es mucho más caro que decidirlo antes de la primera pantalla.
+
 ### Stack y estructura
 
 Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4 + shadcn/ui, con pnpm. Estado
@@ -72,7 +73,8 @@ src/
   features/<dominio>/  un dominio (hoy auth y producers): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
-  lib/                 código sin interfaz: api/ (cliente HTTP), dates, mask, env, query-client
+  lib/                 código sin interfaz: api/ (cliente HTTP), dates, mask, env, query-client,
+                       document-types, is-email
   test/                utilidades de pruebas
 ```
 
@@ -113,7 +115,10 @@ src/
   reintenta; login, renovación, cierre de sesión, csrf y recuperación de contraseña no se
   renuevan (`NO_RENEWAL_PREFIXES`). Si la renovación falla, el `401` llega al `QueryClient`
   (`lib/query-client.ts`), que invalida la consulta de la sesión; `SessionGuard` la vuelve
-  a comprobar y lleva a `/`.
+  a comprobar y lleva a `/`. El cierre de sesión espera a una renovación en vuelo y, mientras
+  dura, ninguna petición inicia otra (si no, la respuesta de la renovación devolvería una
+  cookie viva después de cerrar). Iniciar y cerrar sesión limpian toda la caché de Query: en
+  un equipo compartido no debe quedar nada de la persona anterior.
 - **Fetchers y hooks.** En `features/<dominio>/api.ts`: los fetchers son constantes fuera
   de los hooks (`fetchProducers`, `fetchProducer`...) y reciben el `signal`; los hooks
   (`useProducers`, `useUpdateProducer`...) los envuelven con `useQuery`/`useMutation`. Las
@@ -132,7 +137,7 @@ src/
   petición viven en el dominio (`features/<dominio>/schemas.ts`). Los errores de campo del
   servidor se vuelcan con `applyApiFieldErrors(error, setError, campos)`, que devuelve
   `{ applied, unmatched }`: lo que no corresponde a ningún campo se muestra en un aviso
-  general (`FormMessage`), no se pierde.
+  general, no se pierde.
 - Los filtros y la página de una lista viven en la URL con `nuqs` (compartibles, sobreviven
   a recargar y el botón atrás los respeta), con claves en español (`buscar`, `estado`,
   `municipio`, `pagina`); un valor malformado cae al valor por defecto. Ver
@@ -180,7 +185,7 @@ El agente corre y deja en verde, y si algo falla lo corrige o lo dice en el PR:
 3. `pnpm typecheck` (`next typegen && tsc --noEmit`: regenera los tipos de rutas antes de
    compilar los tipos).
 4. `pnpm test` (`pnpm test:coverage` si se quiere el porcentaje).
-5. `NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm build` (sin `.env`).
+5. `NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm build` (no hace falta `.env`).
 6. Si cambió la API, `pnpm gen:api` con el backend en marcha y `DEBUG=True`.
 7. Revisar el diff completo buscando bugs: casos borde, código duplicado, datos personales
    en logs o pruebas, tests que no afirman nada.
@@ -194,9 +199,15 @@ El agente corre y deja en verde, y si algo falla lo corrige o lo dice en el PR:
   sigue montado mientras redirige y la volvería a pedir en un ciclo sin fin.
 - No leer el texto de `detail` para decidir lógica (cambia con el idioma y la redacción):
   usar `code` o `status`.
-- No duplicar el estado del servidor en `useState`: se lee de la consulta. El único borrador
-  local aceptable es lo que la persona está escribiendo antes de que llegue a la URL o al
-  servidor.
+- No duplicar el estado del servidor en `useState`: se lee de la consulta. Los únicos
+  borradores locales aceptables son lo que la persona está escribiendo antes de que llegue a
+  la URL o al servidor, y la ficha con la que se abre un formulario de edición: se fija al
+  montar (la consulta del editor usa `staleTime: Infinity`) y no adopta lecturas posteriores,
+  porque guardar la versión nueva con los valores viejos haría que el servidor aceptara el
+  cambio y pisara lo que otra persona guardó (bloqueo optimista por `version`).
+- `pnpm dlx shadcn@latest add` escribe `import { cn } from '@/lib/utils'` (así lo dicta
+  `components.json`), pero aquí no existe `src/lib/utils.ts`: `cn` viene del paquete `cn`
+  (`import { cn } from 'cn'`). Corrige el import del archivo generado.
 
 ## Interfaz
 
