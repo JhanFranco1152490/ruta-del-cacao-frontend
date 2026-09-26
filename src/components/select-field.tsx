@@ -1,7 +1,6 @@
 'use client';
 
 import type { ComponentProps } from 'react';
-import { cn } from 'cn';
 
 import { FormField } from '@/components/form-field';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -36,7 +35,7 @@ export function SelectField({
       className={wrapperClassName}
     >
       {(control) => (
-        <NativeSelect {...control} className={cn(className)} {...selectProps}>
+        <NativeSelect {...control} className={className} {...selectProps}>
           {children}
         </NativeSelect>
       )}

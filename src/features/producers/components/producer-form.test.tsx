@@ -129,9 +129,11 @@ describe('ProducerForm', () => {
     expect(bodies).toEqual([]);
   });
 
-  it('rejects an email with an invalid format', async () => {
+  it('rejects an email with an invalid format and sends nothing', async () => {
     const user = userEvent.setup();
+    server.use(createHandler());
     await renderForm();
+    await fillRequiredFields(user);
 
     await user.type(
       screen.getByLabelText('Correo electrónico'),
@@ -142,6 +144,7 @@ describe('ProducerForm', () => {
     expect(
       await screen.findByText('Ingresa un correo electrónico válido.'),
     ).toBeInTheDocument();
+    expect(bodies).toEqual([]);
   });
 
   it('rejects a future joining date', async () => {

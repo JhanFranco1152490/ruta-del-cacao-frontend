@@ -4,12 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { StatusBadge } from './status-badge';
 
 describe('StatusBadge', () => {
-  it('always pairs the color with an icon and text', () => {
-    const { container } = render(<StatusBadge tone="ok">Activo</StatusBadge>);
+  it.each(['ok', 'warn', 'err', 'info'] as const)(
+    'always pairs the %s color with an icon and text',
+    (tone) => {
+      const { container } = render(
+        <StatusBadge tone={tone}>Estado</StatusBadge>,
+      );
 
-    expect(screen.getByText('Activo')).toBeInTheDocument();
-    expect(
-      container.querySelector('svg[aria-hidden="true"]'),
-    ).toBeInTheDocument();
-  });
+      expect(screen.getByText('Estado')).toBeInTheDocument();
+      expect(
+        container.querySelector('svg[aria-hidden="true"]'),
+      ).toBeInTheDocument();
+    },
+  );
 });

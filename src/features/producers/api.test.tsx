@@ -91,38 +91,44 @@ describe('producers api', () => {
     });
   });
 
-  it('caches the created producer and invalidates the lists', async () => {
+  it('sends the new producer, caches it and invalidates the lists', async () => {
     const client = createTestQueryClient();
+    let body: unknown;
     server.use(
-      http.post(apiUrl('/api/producers'), () =>
-        HttpResponse.json(producer, { status: 201 }),
-      ),
+      http.post(apiUrl('/api/producers'), async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(producer, { status: 201 });
+      }),
     );
     const { result } = renderHook(() => useCreateProducer(), {
       wrapper: wrapper(client),
     });
 
-    client.setQueryData(['producers', 'list', {}], PAGE);
+    client.setQueryData(queryKeys.producers.list({}), PAGE);
     await act(async () => {
       await result.current.mutateAsync(newProducer);
     });
 
-    expect(client.getQueryData(['producers', 'detail', 'p1'])).toEqual(
-      producer,
-    );
-    expect(client.getQueryState(['producers', 'list', {}])?.isInvalidated).toBe(
-      true,
-    );
+    expect(body).toEqual(newProducer);
+    expect(
+      client.getQueryData(queryKeys.producers.detail(producer.id)),
+    ).toEqual(producer);
+    expect(
+      client.getQueryState(queryKeys.producers.list({}))?.isInvalidated,
+    ).toBe(true);
   });
 
   it('sends the expected version with an update and refreshes the cache', async () => {
     const client = createTestQueryClient();
     let body: unknown;
     server.use(
-      http.patch(apiUrl('/api/producers/p1'), async ({ request }) => {
-        body = await request.json();
-        return HttpResponse.json({ ...producer, version: 5 });
-      }),
+      http.patch(
+        apiUrl(`/api/producers/${producer.id}`),
+        async ({ request }) => {
+          body = await request.json();
+          return HttpResponse.json({ ...producer, version: 5 });
+        },
+      ),
     );
     const { result } = renderHook(() => useUpdateProducer(), {
       wrapper: wrapper(client),
@@ -130,7 +136,7 @@ describe('producers api', () => {
 
     await act(async () => {
       await result.current.mutateAsync({
-        id: 'p1',
+        id: producer.id,
         input: { first_name: 'Bea' },
         expectedVersion: 4,
       });
@@ -138,43 +144,60 @@ describe('producers api', () => {
 
     expect(body).toEqual({ first_name: 'Bea', expected_version: 4 });
     expect(
-      client.getQueryData<{ version: number }>(['producers', 'detail', 'p1'])
-        ?.version,
+      client.getQueryData<{ version: number }>(
+        queryKeys.producers.detail(producer.id),
+      )?.version,
     ).toBe(5);
   });
 
-  it('changes the status with the expected version', async () => {
+  it('changes the status with the expected version, caches the result and invalidates the lists', async () => {
+    const client = createTestQueryClient();
+    const changed = { ...producer, status: 'inactive', version: 5 } as const;
     let body: unknown;
     server.use(
-      http.patch(apiUrl('/api/producers/p1/status'), async ({ request }) => {
-        body = await request.json();
-        return HttpResponse.json({ ...producer, status: 'inactive' });
-      }),
+      http.patch(
+        apiUrl(`/api/producers/${producer.id}/status`),
+        async ({ request }) => {
+          body = await request.json();
+          return HttpResponse.json(changed);
+        },
+      ),
     );
     const { result } = renderHook(() => useChangeProducerStatus(), {
-      wrapper: wrapper(),
+      wrapper: wrapper(client),
     });
+    client.setQueryData(queryKeys.producers.detail(producer.id), producer);
+    client.setQueryData(queryKeys.producers.list({}), PAGE);
 
     await act(async () => {
       await result.current.mutateAsync({
-        id: 'p1',
+        id: producer.id,
         status: 'inactive',
-        expectedVersion: 4,
+        expectedVersion: producer.version,
       });
     });
 
-    expect(body).toEqual({ status: 'inactive', expected_version: 4 });
+    expect(body).toEqual({
+      status: 'inactive',
+      expected_version: producer.version,
+    });
+    expect(
+      client.getQueryData(queryKeys.producers.detail(producer.id)),
+    ).toEqual(changed);
+    expect(
+      client.getQueryState(queryKeys.producers.list({}))?.isInvalidated,
+    ).toBe(true);
   });
 
   describe('after a stale version answer', () => {
     function failWith(status: number, code: string) {
       const client = createTestQueryClient();
-      client.setQueryData(queryKeys.producers.detail('p1'), producer);
+      client.setQueryData(queryKeys.producers.detail(producer.id), producer);
       server.use(
-        http.patch(apiUrl('/api/producers/p1'), () =>
+        http.patch(apiUrl(`/api/producers/${producer.id}`), () =>
           apiError(status, code, 'Error de prueba.'),
         ),
-        http.patch(apiUrl('/api/producers/p1/status'), () =>
+        http.patch(apiUrl(`/api/producers/${producer.id}/status`), () =>
           apiError(status, code, 'Error de prueba.'),
         ),
       );
@@ -187,14 +210,15 @@ describe('producers api', () => {
       return { client, update, change };
     }
     const isStale = (client: ReturnType<typeof createTestQueryClient>) =>
-      client.getQueryState(queryKeys.producers.detail('p1'))?.isInvalidated;
+      client.getQueryState(queryKeys.producers.detail(producer.id))
+        ?.isInvalidated;
 
     it('invalidates the record when an update is rejected as stale', async () => {
       const { client, update } = failWith(409, 'stale_version');
 
       await act(async () => {
         await update.result.current
-          .mutateAsync({ id: 'p1', input: {}, expectedVersion: 4 })
+          .mutateAsync({ id: producer.id, input: {}, expectedVersion: 4 })
           .catch(() => undefined);
       });
 
@@ -206,7 +230,11 @@ describe('producers api', () => {
 
       await act(async () => {
         await change.result.current
-          .mutateAsync({ id: 'p1', status: 'inactive', expectedVersion: 4 })
+          .mutateAsync({
+            id: producer.id,
+            status: 'inactive',
+            expectedVersion: 4,
+          })
           .catch(() => undefined);
       });
 
@@ -218,10 +246,14 @@ describe('producers api', () => {
 
       await act(async () => {
         await update.result.current
-          .mutateAsync({ id: 'p1', input: {}, expectedVersion: 4 })
+          .mutateAsync({ id: producer.id, input: {}, expectedVersion: 4 })
           .catch(() => undefined);
         await change.result.current
-          .mutateAsync({ id: 'p1', status: 'inactive', expectedVersion: 4 })
+          .mutateAsync({
+            id: producer.id,
+            status: 'inactive',
+            expectedVersion: 4,
+          })
           .catch(() => undefined);
       });
 

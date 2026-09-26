@@ -64,6 +64,18 @@ describe('producerFormSchema', () => {
     );
   });
 
+  it('accepts 15 digits in the document and rejects 16', () => {
+    expect(
+      producerFormSchema.safeParse({
+        ...valid,
+        identity_document: '123456789012345',
+      }).success,
+    ).toBe(true);
+    expect(
+      messages({ ...valid, identity_document: '1234567890123456' }),
+    ).toContain('Ingresa solo números, entre 6 y 15 dígitos.');
+  });
+
   it('rejects a joining date after today in Bogotá, and accepts today', () => {
     vi.useFakeTimers();
     // 03:30 UTC del 25 es el 24 en Bogotá.
