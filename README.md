@@ -1,12 +1,16 @@
-﻿# Ruta del Cacao — Frontend
+# Ruta del Cacao — Frontend
 
-Aplicación Next.js con formularios de autenticación conectados a Django.
+Aplicación Next.js (App Router) del sistema de trazabilidad de la producción de cacao. Se
+conecta al backend Django por HTTP: inicio y recuperación de sesión, panel y gestión de
+productores. La estructura del código, la capa de API y las reglas de trabajo están en
+`AGENTS.md`.
 
 ## Desarrollo local
 
 1. Instalar dependencias con `pnpm install`.
-2. Copiar `.env.example` a `.env.local` si se necesita cambiar la URL del backend.
-   El valor por defecto es `http://localhost:8000`.
+2. Copiar `.env.example` a `.env.local` si se necesita cambiar la URL del backend
+   (`NEXT_PUBLIC_API_URL`). En desarrollo y pruebas, si no está definida, se usa
+   `http://localhost:8000`.
 3. Configurar y levantar el backend con PostgreSQL y sus migraciones aplicadas.
    Para el frontend local, Django necesita estos valores en su `.env`:
 
@@ -24,23 +28,54 @@ Aplicación Next.js con formularios de autenticación conectados a Django.
 Usar `localhost` en ambos servidores; mezclarlo con `127.0.0.1` afecta el envío
 de cookies. Si cambia el puerto del frontend, actualizar ambos orígenes y
 `FRONTEND_URL` en Django. Reiniciar los servidores tras cambiar variables.
-`NEXT_PUBLIC_API_URL` se incorpora al compilar el frontend.
+
+## Variables de entorno
+
+| Variable              | Uso                                                                  |
+| --------------------- | -------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL` | URL base del backend (sin barra final). Se incrusta al compilar.     |
+
+`NEXT_PUBLIC_API_URL` es **obligatoria en producción**: `pnpm build` falla si no está
+definida, para no publicar una app que apunte a `localhost`. Para comprobar el build en
+local: `NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm build`.
+
+## Comandos
+
+| Comando              | Qué hace                                                                    |
+| -------------------- | --------------------------------------------------------------------------- |
+| `pnpm dev`           | Servidor de desarrollo en `http://localhost:3000`.                          |
+| `pnpm build`         | Compila para producción (requiere `NEXT_PUBLIC_API_URL`).                   |
+| `pnpm test`          | Corre todas las pruebas una vez (Vitest).                                   |
+| `pnpm test:watch`    | Pruebas en modo interactivo.                                                |
+| `pnpm test:coverage` | Pruebas con reporte de cobertura.                                           |
+| `pnpm lint`          | ESLint.                                                                     |
+| `pnpm typecheck`     | Regenera los tipos de rutas de Next.js y revisa los tipos con `tsc`.        |
+| `pnpm gen:api`       | Regenera `src/lib/api/schema.d.ts` desde el esquema OpenAPI del backend.    |
+
+### Regenerar los tipos de la API
+
+Los tipos de la API no se escriben a mano: salen de `src/lib/api/schema.d.ts`, generado
+con `pnpm gen:api`. El comando lee `http://localhost:8000/api/schema`, que el backend solo
+sirve con `DEBUG=True`, así que hay que tenerlo en marcha en ese modo. El archivo generado
+se commitea. Tras regenerarlo, `pnpm typecheck` muestra qué código hay que ajustar.
 
 ## Flujo de sesión
 
-Antes de cada POST, el cliente obtiene `/api/auth/csrf` con cookies y envía el
-`csrf_token` recibido como `X-CSRFToken`. Los tokens de acceso y renovación
-permanecen en cookies HttpOnly administradas por Django.
+Los tokens de acceso y renovación permanecen en cookies HttpOnly administradas por Django;
+el frontend nunca los guarda. Antes de cada petición que modifica datos, el cliente obtiene
+`/api/auth/csrf` y envía el `csrf_token` recibido como `X-CSRFToken`.
 
-El panel consulta `/api/auth/me`; ante un 401 intenta renovar la sesión una vez.
-Las consultas simultáneas comparten la renovación dentro de la pestaña. El cierre
-también renueva el acceso si es necesario. Los fallos de conexión permiten
-reintentar y no se presentan como un cierre exitoso.
+Las pantallas protegidas consultan `/api/auth/me`. Ante un 401 en un endpoint que usa el
+token de acceso, el cliente renueva la sesión una sola vez (las peticiones simultáneas
+comparten la renovación dentro de la pestaña) y repite la petición. Si la renovación
+falla, la persona vuelve al inicio de sesión. Un fallo de conexión al cerrar sesión no se
+presenta como un cierre exitoso: la persona sigue en el panel y puede reintentar.
 
 La recuperación envía el correo registrado y abre
-`/restablecer-contrasena?token=…` desde el enlace que genera Django. La nueva
-contraseña debe tener entre 8 y 50 caracteres; Django aplica las validaciones
-adicionales y sus errores se muestran en el formulario.
+`/restablecer-contrasena?uid=…&token=…` desde el enlace que genera Django (en desarrollo
+se imprime en la consola del backend). La nueva contraseña debe tener entre 8 y 50
+caracteres; Django aplica las validaciones adicionales y sus errores se muestran en el
+formulario.
 
 En despliegue se requiere HTTPS y cookies Secure. Frontend y API deben estar
 en un mismo sitio compatible con SameSite=Lax, como subdominios del mismo dominio.
@@ -49,14 +84,16 @@ Dominios independientes requieren evaluar las restricciones de cookies entre sit
 ## Verificación
 
 ```sh
-pnpm test
+pnpm exec prettier --write . && pnpm exec prettier --check .
 pnpm lint
-pnpm exec tsc --noEmit
-pnpm build
+pnpm typecheck
+pnpm test
+NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm build
 ```
 
-Las pruebas del frontend simulan HTTP; no sustituyen la comprobación con Django
+Las pruebas del frontend simulan HTTP con MSW; no sustituyen la comprobación con Django
 y PostgreSQL. Para comprobar el recorrido real: iniciar sesión con documento y
 correo, recargar el panel, cerrar sesión, solicitar recuperación y utilizar el
-enlace recibido. Verificar también credenciales incorrectas y desconexión del
-backend. Usar únicamente cuentas de prueba.
+enlace recibido; en Productores, filtrar, paginar y recargar (los filtros viven en la
+URL), crear, editar, desactivar y reactivar. Verificar también credenciales incorrectas y
+desconexión del backend. Usar únicamente cuentas de prueba.
