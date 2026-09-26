@@ -15,6 +15,7 @@ import {
   sessionExpired,
 } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
+import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
@@ -78,6 +79,19 @@ describe('ProducerListScreen', () => {
     expect(
       within(row).getByRole('link', { name: /Editar\s?ficha de Ana Prueba/ }),
     ).toHaveAttribute('href', '/productores/p1/editar');
+  });
+
+  it('keeps the visible focus outline on the register link, the empty-state link and the search field', async () => {
+    server.use(listHandler([]));
+    renderWithProviders(<ProducerListScreen />);
+
+    await screen.findByText('No hay productores para mostrar');
+    const links = screen.getAllByRole('link', {
+      name: /Registrar\s?productor/,
+    });
+    expect(links).toHaveLength(2);
+    for (const link of links) expectVisibleFocusOutline(link);
+    expectVisibleFocusOutline(screen.getByLabelText('Buscar productores'));
   });
 
   it('shows the empty state when there are no results', async () => {

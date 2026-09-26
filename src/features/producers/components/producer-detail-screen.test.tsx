@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '@/lib/api/query-keys';
 import { apiError, buildProducer } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
+import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
@@ -143,6 +144,14 @@ describe('ProducerDetailScreen', () => {
     expect(
       await screen.findByRole('link', { name: /Editar datos/ }),
     ).toHaveAttribute('href', '/productores/p1/editar');
+  });
+
+  it('keeps the visible focus outline on the edit link', async () => {
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+
+    expectVisibleFocusOutline(
+      await screen.findByRole('link', { name: /Editar datos/ }),
+    );
   });
 
   it('shows the error when the record cannot be loaded', async () => {

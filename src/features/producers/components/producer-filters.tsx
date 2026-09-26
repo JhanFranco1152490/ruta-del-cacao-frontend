@@ -1,7 +1,9 @@
 'use client';
 
+import { cn } from 'cn';
 import { Search } from 'lucide-react';
 
+import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 
@@ -29,7 +31,10 @@ export function ProducerFilters({
             className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
           />
           <Input
-            className="h-11 border-input bg-card pl-10"
+            className={cn(
+              'h-11 border-input bg-card pl-10',
+              FOCUS_OUTLINE_CLASS,
+            )}
             id="producer-search"
             onChange={(event) => filters.setSearchInput(event.target.value)}
             placeholder="Buscar por documento, nombre o código"

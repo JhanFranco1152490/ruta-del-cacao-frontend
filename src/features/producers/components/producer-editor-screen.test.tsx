@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '@/lib/api/query-keys';
 import { apiError, buildProducer } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
+import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
@@ -78,9 +79,9 @@ describe('ProducerEditorScreen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'El productor no existe.',
     );
-    expect(
-      screen.getByRole('link', { name: 'Volver a productores' }),
-    ).toHaveAttribute('href', '/productores');
+    const back = screen.getByRole('link', { name: 'Volver a productores' });
+    expect(back).toHaveAttribute('href', '/productores');
+    expectVisibleFocusOutline(back);
     expect(screen.queryByLabelText('Nombres')).not.toBeInTheDocument();
   });
 

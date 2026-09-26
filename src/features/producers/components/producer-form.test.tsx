@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { apiError, buildMunicipalities, buildProducer } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
+import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
@@ -525,6 +526,7 @@ describe('ProducerForm', () => {
     it('cancels back to the record', async () => {
       await renderForm(buildProducer());
 
+      expectVisibleFocusOutline(screen.getByRole('link', { name: 'Cancelar' }));
       expect(screen.getByRole('link', { name: 'Cancelar' })).toHaveAttribute(
         'href',
         '/productores/p1',
