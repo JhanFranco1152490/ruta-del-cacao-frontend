@@ -63,5 +63,19 @@ export function useProducerSave(
     }
   };
 
-  return { save, isSaving: create.isPending || update.isPending, generalError };
+  // Tras guardar bien el botón sigue deshabilitado: hasta que carga la ficha hay una ventana en
+  // la que un segundo clic repetiría la petición (y el servidor la rechazaría como duplicado o
+  // como versión obsoleta).
+  const isSaving =
+    create.isPending ||
+    create.isSuccess ||
+    update.isPending ||
+    update.isSuccess;
+
+  return {
+    save,
+    isSaving,
+    generalError,
+    clearError: () => setGeneralError(''),
+  };
 }

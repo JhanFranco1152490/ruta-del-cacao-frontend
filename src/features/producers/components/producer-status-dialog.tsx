@@ -46,16 +46,18 @@ export function ProducerStatusDialog({
   producer,
   target,
 }: ProducerStatusDialogProps) {
-  const { open, onOpenChange, confirm, isPending, error } =
+  const { open, dialogTarget, onOpenChange, confirm, isPending, error } =
     useProducerStatusChange(producer, target);
-  const action = ACTIONS[target];
+  // El botón de la ficha sigue a la ficha; el contenido del diálogo, a lo que se abrió.
+  const trigger = ACTIONS[target];
+  const action = ACTIONS[dialogTarget];
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogTrigger
-        render={<Button className="h-11" variant={action.variant} />}
+        render={<Button className="h-11" variant={trigger.variant} />}
       >
-        <action.Icon aria-hidden="true" className="size-4" /> {action.trigger}
+        <trigger.Icon aria-hidden="true" className="size-4" /> {trigger.trigger}
       </DialogTrigger>
       <DialogContent showCloseButton={!isPending}>
         <DialogHeader>

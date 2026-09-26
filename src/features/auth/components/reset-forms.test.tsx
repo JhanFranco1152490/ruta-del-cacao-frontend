@@ -58,6 +58,54 @@ describe('ResetRequestForm', () => {
     expect(body).toEqual({ email: 'persona@example.com' });
   });
 
+  it('disables the button while waiting and sends only one request', async () => {
+    let calls = 0;
+    server.use(
+      http.post(REQUEST, async () => {
+        calls += 1;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return new HttpResponse(null, { status: 202 });
+      }),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<ResetRequestForm />);
+    await user.type(
+      screen.getByLabelText('Correo electrónico'),
+      'persona@example.com',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Enviar' }));
+    const pending = await screen.findByRole('button', { name: 'Procesando…' });
+    expect(pending).toBeDisabled();
+    await user.click(pending);
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Si el correo está registrado',
+    );
+    expect(calls).toBe(1);
+  });
+
+  it('drops the success message when the next submit fails validation', async () => {
+    server.use(
+      http.post(REQUEST, () => new HttpResponse(null, { status: 202 })),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<ResetRequestForm />);
+    const email = screen.getByLabelText('Correo electrónico');
+    await user.type(email, 'persona@example.com');
+    await user.click(screen.getByRole('button', { name: 'Enviar' }));
+    await screen.findByRole('status');
+
+    await user.clear(email);
+    await user.type(email, 'no-es-correo');
+    await user.click(screen.getByRole('button', { name: 'Enviar' }));
+
+    expect(
+      screen.getByText('Ingresa un correo electrónico válido.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('shows the connection message under the email field on a network error', async () => {
     server.use(http.post(REQUEST, () => HttpResponse.error()));
     const user = userEvent.setup();
@@ -231,6 +279,32 @@ describe('ResetConfirmForm', () => {
       'aria-invalid',
       'true',
     );
+  });
+
+  it('drops the previous server message when the next submit fails validation', async () => {
+    server.use(
+      http.post(CONFIRM, () =>
+        apiError(
+          400,
+          'invalid_reset_token',
+          'El enlace de recuperación venció.',
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<ResetConfirmForm {...link} />);
+    await fill(user, 'Cacao seguro');
+    await screen.findByText('El enlace de recuperación venció.');
+
+    await user.clear(screen.getByLabelText('Nueva contraseña'));
+    await user.click(
+      screen.getByRole('button', { name: 'Actualizar contraseña' }),
+    );
+
+    expect(
+      screen.queryByText('El enlace de recuperación venció.'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Ingresa tu contraseña.')).toBeInTheDocument();
   });
 
   it('shows the fallback message when the request fails without a response', async () => {

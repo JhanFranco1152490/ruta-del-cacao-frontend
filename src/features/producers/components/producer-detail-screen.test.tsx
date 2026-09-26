@@ -278,6 +278,75 @@ describe('ProducerDetailScreen - deactivation', () => {
     expect(screen.queryByText('Productor inactivo')).not.toBeInTheDocument();
   });
 
+  it('keeps the action and the version the dialog opened with when the record changes underneath', async () => {
+    server.use(
+      statusHandler(() => apiError(409, 'stale_version', STALE_DETAIL)),
+    );
+    const { queryClient } = renderWithProviders(
+      <ProducerDetailScreen id="p1" />,
+    );
+    const { user, dialog } = await openDialog('Desactivar');
+
+    // Otra persona desactivó la ficha (versión 4) y la lectura en segundo plano la trae.
+    server.use(producerHandler({ status: 'inactive', version: 4 }));
+    await act(() =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.producers.detail('p1'),
+      }),
+    );
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<Producer>(queryKeys.producers.detail('p1'))
+          ?.version,
+      ).toBe(4),
+    );
+
+    expect(
+      within(dialog).getByText('¿Desactivar productor?'),
+    ).toBeInTheDocument();
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Desactivar productor' }),
+    );
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      STALE_DETAIL,
+    );
+    expect(statusBodies).toEqual([{ status: 'inactive', expected_version: 3 }]);
+  });
+
+  it('reloads the record after a stale version so the next attempt uses the current version', async () => {
+    let reads = 0;
+    server.use(
+      http.get(PRODUCER, () =>
+        HttpResponse.json(buildProducer({ version: ++reads === 1 ? 3 : 4 })),
+      ),
+      statusHandler(() => apiError(409, 'stale_version', STALE_DETAIL)),
+    );
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+    const { user, dialog } = await openDialog('Desactivar');
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Desactivar productor' }),
+    );
+    await within(dialog).findByRole('alert');
+    await waitFor(() => expect(reads).toBe(2));
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar' }));
+    const reopened = await screen.findByRole('dialog');
+    await user.click(
+      within(reopened).getByRole('button', { name: 'Desactivar productor' }),
+    );
+
+    await waitFor(() => expect(statusBodies).toHaveLength(2));
+    expect(statusBodies).toEqual([
+      { status: 'inactive', expected_version: 3 },
+      { status: 'inactive', expected_version: 4 },
+    ]);
+  });
+
   it('clears the error when the dialog is closed and opened again', async () => {
     server.use(
       statusHandler(() => apiError(409, 'stale_version', STALE_DETAIL)),

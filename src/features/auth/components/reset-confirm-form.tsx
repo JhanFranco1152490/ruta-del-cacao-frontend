@@ -72,7 +72,11 @@ export function ResetConfirmForm({
       : failure;
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate className="space-y-5">
+    <form
+      onSubmit={handleSubmit(submit, () => setFailure(''))}
+      noValidate
+      className="space-y-5"
+    >
       <FormMessage variant={confirm.isSuccess ? 'success' : 'error'}>
         {message}
       </FormMessage>

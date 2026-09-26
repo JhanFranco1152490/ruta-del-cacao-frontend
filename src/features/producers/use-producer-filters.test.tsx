@@ -83,4 +83,26 @@ describe('useProducerFilters', () => {
     expect(last.has('pagina')).toBe(false);
     await waitFor(() => expect(result.current.query.search).toBe('ana'));
   });
+
+  it('treats an empty municipality parameter as no filter', () => {
+    const { result } = setup('?municipio=');
+
+    expect(result.current.query.municipality).toBeUndefined();
+    expect(result.current.municipality).toBeNull();
+  });
+
+  it('coalesces several keystrokes within the delay into a single URL update', async () => {
+    const { result, onUrlUpdate } = setup();
+
+    act(() => result.current.setSearchInput('a'));
+    act(() => result.current.setSearchInput('an'));
+    act(() => result.current.setSearchInput('ana'));
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled(), {
+      timeout: 1500,
+    });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 500)));
+
+    expect(onUrlUpdate).toHaveBeenCalledTimes(1);
+    expect(onUrlUpdate.mock.calls[0][0].searchParams.get('buscar')).toBe('ana');
+  });
 });

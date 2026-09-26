@@ -386,6 +386,40 @@ describe('ProducerForm', () => {
     expect(bodies).toHaveLength(1);
   });
 
+  it('keeps the save button disabled after a successful save while the record loads', async () => {
+    const user = userEvent.setup();
+    server.use(createHandler());
+    await renderForm();
+    await fillRequiredFields(user);
+
+    await submitCreate(user);
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Guardando…' })).toBeDisabled();
+    expect(bodies).toHaveLength(1);
+  });
+
+  it('drops the general notice when the next submit fails validation', async () => {
+    const user = userEvent.setup();
+    server.use(
+      createHandler(() =>
+        apiError(500, 'internal_error', 'Ocurrió un error interno.'),
+      ),
+    );
+    await renderForm();
+    await fillRequiredFields(user);
+    await submitCreate(user);
+    await screen.findByText('Ocurrió un error interno.');
+
+    await user.clear(screen.getByLabelText('Nombres'));
+    await submitCreate(user);
+
+    expect(
+      screen.queryByText('Ocurrió un error interno.'),
+    ).not.toBeInTheDocument();
+    expect(bodies).toHaveLength(1);
+  });
+
   it('does not send two creations on a double click', async () => {
     const user = userEvent.setup();
     server.use(

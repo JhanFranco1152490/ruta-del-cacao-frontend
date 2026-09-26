@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
+import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 
@@ -85,6 +86,20 @@ function useCacheProducer() {
   };
 }
 
+// Una versión obsoleta significa que la ficha en caché ya no es la del servidor: se vuelve a
+// pedir para que cancelar muestre lo vigente y el siguiente intento use la versión nueva, en
+// vez de repetir el mismo 409 hasta recargar la página.
+function useRefreshOnStaleVersion() {
+  const queryClient = useQueryClient();
+  return (error: unknown, id: string) => {
+    if (isApiError(error) && error.code === 'stale_version') {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.producers.detail(id),
+      });
+    }
+  };
+}
+
 export function useCreateProducer() {
   const cacheProducer = useCacheProducer();
   return useMutation({
@@ -96,6 +111,7 @@ export function useCreateProducer() {
 
 export function useUpdateProducer() {
   const cacheProducer = useCacheProducer();
+  const refreshOnStaleVersion = useRefreshOnStaleVersion();
   return useMutation({
     mutationFn: ({
       id,
@@ -111,11 +127,13 @@ export function useUpdateProducer() {
         body: { ...input, expected_version: expectedVersion },
       }),
     onSuccess: cacheProducer,
+    onError: (error, { id }) => refreshOnStaleVersion(error, id),
   });
 }
 
 export function useChangeProducerStatus() {
   const cacheProducer = useCacheProducer();
+  const refreshOnStaleVersion = useRefreshOnStaleVersion();
   return useMutation({
     mutationFn: ({
       id,
@@ -131,5 +149,6 @@ export function useChangeProducerStatus() {
         body: { status, expected_version: expectedVersion },
       }),
     onSuccess: cacheProducer,
+    onError: (error, { id }) => refreshOnStaleVersion(error, id),
   });
 }

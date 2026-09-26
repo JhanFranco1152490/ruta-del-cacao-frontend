@@ -1,10 +1,11 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import type { OnUrlUpdateFunction } from 'nuqs/adapters/testing';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { SessionGuard } from '@/features/auth/components/session-guard';
+import { queryKeys } from '@/lib/api/query-keys';
 import { createQueryClient } from '@/lib/query-client';
 import {
   apiError,
@@ -103,6 +104,32 @@ describe('ProducerListScreen', () => {
     expect(
       within(empty).getByRole('link', { name: 'Registrar productor' }),
     ).toHaveAttribute('href', '/productores/nuevo');
+  });
+
+  it('keeps the table on screen when a background refresh fails', async () => {
+    const { queryClient } = renderWithProviders(<ProducerListScreen />);
+    await screen.findByText('Ana Prueba');
+    server.use(
+      http.get(PRODUCERS, () =>
+        apiError(500, 'internal_error', 'Falla interna.'),
+      ),
+    );
+
+    const listState = () =>
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: queryKeys.producers.lists() })[0].state;
+    await act(() =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.producers.lists() }),
+    );
+    await waitFor(() => expect(listState().status).toBe('error'));
+    // El re-render por el cambio de estado lo agenda la librería con un timeout.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+
+    expect(screen.getByText('Ana Prueba')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/No fue posible cargar los productores/),
+    ).not.toBeInTheDocument();
   });
 
   it('shows the error and retries the load', async () => {

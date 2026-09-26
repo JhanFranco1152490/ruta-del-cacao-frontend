@@ -47,7 +47,10 @@ export function ProducerForm({
     mode: 'onBlur',
     reValidateMode: 'onChange',
   });
-  const { save, isSaving, generalError } = useProducerSave(producer, setError);
+  const { save, isSaving, generalError, clearError } = useProducerSave(
+    producer,
+    setError,
+  );
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
@@ -58,7 +61,11 @@ export function ProducerForm({
         title={producer ? 'Editar productor' : 'Registrar productor'}
         description="Los campos marcados son obligatorios. El productor puede vincular una cuenta de acceso posteriormente."
       />
-      <form className="mt-8 space-y-6" noValidate onSubmit={handleSubmit(save)}>
+      <form
+        className="mt-8 space-y-6"
+        noValidate
+        onSubmit={handleSubmit(save, clearError)}
+      >
         <FormSection title="Identificación">
           <div className="grid gap-5 sm:grid-cols-3">
             <SelectField

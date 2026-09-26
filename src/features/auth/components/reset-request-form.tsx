@@ -40,7 +40,11 @@ export function ResetRequestForm() {
     });
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate className="space-y-5">
+    <form
+      onSubmit={handleSubmit(submit, () => request.reset())}
+      noValidate
+      className="space-y-5"
+    >
       <FormMessage variant="success">
         {request.isSuccess ? SUCCESS_MESSAGE : undefined}
       </FormMessage>

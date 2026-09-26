@@ -44,7 +44,11 @@ export function LoginForm() {
     });
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate className="space-y-4">
+    <form
+      onSubmit={handleSubmit(submit, () => login.reset())}
+      noValidate
+      className="space-y-4"
+    >
       <FormMessage>
         {login.isError
           ? getErrorMessage(
@@ -112,7 +116,11 @@ export function LoginForm() {
           </Link>
         </div>
       </div>
-      <SubmitButton pending={login.isPending}>Iniciar sesión</SubmitButton>
+      {/* Tras iniciar bien sigue deshabilitado mientras carga el panel: otro clic abriría una
+          segunda sesión. */}
+      <SubmitButton pending={login.isPending || login.isSuccess}>
+        Iniciar sesión
+      </SubmitButton>
       <div className="flex gap-2 rounded-md bg-info-bg px-3.5 py-2.5 text-xs leading-snug font-semibold text-info">
         <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         <p>

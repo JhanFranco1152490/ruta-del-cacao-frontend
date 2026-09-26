@@ -4,7 +4,8 @@ import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { buildPage, buildProducer } from '@/test/factories';
+import { queryKeys } from '@/lib/api/query-keys';
+import { apiError, buildPage, buildProducer } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
@@ -163,6 +164,69 @@ describe('producers api', () => {
     });
 
     expect(body).toEqual({ status: 'inactive', expected_version: 4 });
+  });
+
+  describe('after a stale version answer', () => {
+    function failWith(status: number, code: string) {
+      const client = createTestQueryClient();
+      client.setQueryData(queryKeys.producers.detail('p1'), producer);
+      server.use(
+        http.patch(apiUrl('/api/producers/p1'), () =>
+          apiError(status, code, 'Error de prueba.'),
+        ),
+        http.patch(apiUrl('/api/producers/p1/status'), () =>
+          apiError(status, code, 'Error de prueba.'),
+        ),
+      );
+      const update = renderHook(() => useUpdateProducer(), {
+        wrapper: wrapper(client),
+      });
+      const change = renderHook(() => useChangeProducerStatus(), {
+        wrapper: wrapper(client),
+      });
+      return { client, update, change };
+    }
+    const isStale = (client: ReturnType<typeof createTestQueryClient>) =>
+      client.getQueryState(queryKeys.producers.detail('p1'))?.isInvalidated;
+
+    it('invalidates the record when an update is rejected as stale', async () => {
+      const { client, update } = failWith(409, 'stale_version');
+
+      await act(async () => {
+        await update.result.current
+          .mutateAsync({ id: 'p1', input: {}, expectedVersion: 4 })
+          .catch(() => undefined);
+      });
+
+      expect(isStale(client)).toBe(true);
+    });
+
+    it('invalidates the record when a status change is rejected as stale', async () => {
+      const { client, change } = failWith(409, 'stale_version');
+
+      await act(async () => {
+        await change.result.current
+          .mutateAsync({ id: 'p1', status: 'inactive', expectedVersion: 4 })
+          .catch(() => undefined);
+      });
+
+      expect(isStale(client)).toBe(true);
+    });
+
+    it('leaves the record alone on any other error', async () => {
+      const { client, update, change } = failWith(500, 'internal_error');
+
+      await act(async () => {
+        await update.result.current
+          .mutateAsync({ id: 'p1', input: {}, expectedVersion: 4 })
+          .catch(() => undefined);
+        await change.result.current
+          .mutateAsync({ id: 'p1', status: 'inactive', expectedVersion: 4 })
+          .catch(() => undefined);
+      });
+
+      expect(isStale(client)).toBe(false);
+    });
   });
 
   it('resolves municipality names and falls back to a dash for unknown codes', async () => {

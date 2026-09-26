@@ -168,4 +168,49 @@ describe('LoginForm', () => {
     await waitFor(() => expect(router.replace).toHaveBeenCalled());
     expect(calls).toBe(1);
   });
+
+  it('keeps the button disabled after a successful login while the panel loads', async () => {
+    server.use(http.post(LOGIN, () => HttpResponse.json(session)));
+    const user = userEvent.setup();
+    renderWithProviders(<LoginForm />);
+    await user.type(
+      screen.getByLabelText('Correo electrónico'),
+      'persona@example.com',
+    );
+    await user.type(screen.getByLabelText('Contraseña'), 'cacao seguro');
+
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/panel'));
+    expect(screen.getByRole('button', { name: 'Procesando…' })).toBeDisabled();
+  });
+
+  it('drops the previous server message when the next submit fails validation', async () => {
+    server.use(
+      http.post(LOGIN, () =>
+        apiError(
+          401,
+          'invalid_credentials',
+          'Usuario o contraseña incorrectos.',
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<LoginForm />);
+    await user.type(
+      screen.getByLabelText('Correo electrónico'),
+      'persona@example.com',
+    );
+    await user.type(screen.getByLabelText('Contraseña'), 'incorrecta');
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    await screen.findByText('Usuario o contraseña incorrectos.');
+
+    await user.clear(screen.getByLabelText('Contraseña'));
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+
+    expect(screen.getByText('Ingresa tu contraseña.')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Usuario o contraseña incorrectos.'),
+    ).not.toBeInTheDocument();
+  });
 });

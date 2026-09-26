@@ -51,10 +51,12 @@ export function useProducerFilters() {
   }, [draft, params.search, setParams]);
 
   const page = Math.max(1, params.page);
+  // `?municipio=` vacío es "sin filtro", no un código vacío que llegue a la clave de la consulta.
+  const municipality = params.municipality || null;
   const query: ProducerQuery = {
     search: params.search.trim() || undefined,
     status: params.status ?? undefined,
-    municipality: params.municipality ?? undefined,
+    municipality: municipality ?? undefined,
     page,
   };
 
@@ -66,7 +68,7 @@ export function useProducerFilters() {
     setSearchInput: (value: string) =>
       setDraft(value === params.search ? null : value),
     status: params.status,
-    municipality: params.municipality,
+    municipality,
     page,
     setStatus: (status: ProducerStatus | null) =>
       setParams({ status, page: 1 }),

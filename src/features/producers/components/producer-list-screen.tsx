@@ -38,6 +38,8 @@ export function ProducerListScreen() {
     if (pageMissing) void setPage(1);
   }, [pageMissing, setPage]);
 
+  // El error reemplaza la tabla solo si la lista nunca cargó (`isLoadingError`): un refetch
+  // fallido en segundo plano conserva `data` y la tabla sigue a la vista.
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
       <BackLink href="/panel">Volver al panel</BackLink>
@@ -63,7 +65,7 @@ export function ProducerListScreen() {
         <div className="mt-5 overflow-x-auto rounded-[var(--radius)] border border-border">
           {list.isPending || pageMissing ? (
             <ProducerTableSkeleton />
-          ) : list.isError ? (
+          ) : list.isLoadingError ? (
             <ErrorState
               message="No fue posible cargar los productores. Inténtalo nuevamente."
               onRetry={() => list.refetch()}
