@@ -9,4 +9,4 @@ if (!apiUrl && process.env.NODE_ENV === 'production') {
   );
 }
 
-export const API_URL = (apiUrl ?? 'http://localhost:8000').replace(/\/+$/, '');
+export const API_URL = (apiUrl || 'http://localhost:8000').replace(/\/+$/, '');
