@@ -7,3 +7,8 @@ pnpm-lock.yaml
 # Prosa (AGENTS.md, README.md, etc.): el formateo de Markdown de Prettier reordena
 # listas y saltos de línea de forma que puede cambiar el sentido del texto.
 *.md
+
+# Maquetas de referencia del diseño: se conservan tal como se entregaron.
+docs/ui/ref/
+# Generado por openapi-typescript: se commitea tal como sale del generador.
+src/lib/api/schema.d.ts

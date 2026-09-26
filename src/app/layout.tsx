@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { DM_Serif_Display, Karla } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { Providers } from './providers';
 import './globals.css';
 
 const serif = DM_Serif_Display({
@@ -29,7 +30,9 @@ export default function RootLayout({
       lang="es"
       className={`${serif.variable} ${sans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
