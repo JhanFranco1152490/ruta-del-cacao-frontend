@@ -15,10 +15,11 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 // Endpoints que no usan el token de acceso: un 401 ahí no significa "acceso vencido"
 // (en login es credenciales incorrectas; en renovación es la renovación misma), así que
 // no se intenta renovar. /api/auth/me sí usa el token de acceso y sí se renueva.
+const LOGOUT_PATH = '/api/auth/logout';
 const NO_RENEWAL_PREFIXES = [
   '/api/auth/login',
   '/api/auth/refresh',
-  '/api/auth/logout',
+  LOGOUT_PATH,
   '/api/auth/csrf',
   '/api/auth/password-reset',
 ];
@@ -28,6 +29,7 @@ const UNEXPECTED_DETAIL =
 
 let csrfRequest: Promise<string> | undefined;
 let refreshRequest: Promise<void> | undefined;
+let logoutRequest: Promise<unknown> | undefined;
 
 function isApiErrorBody(value: unknown): value is ApiErrorBody {
   if (typeof value !== 'object' || value === null) return false;
@@ -40,14 +42,17 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   );
 }
 
-async function toApiError(response: Response) {
-  const body: unknown = await response.json().catch(() => undefined);
-  if (isApiErrorBody(body)) return new ApiError(response.status, body);
-  return new ApiError(response.status, {
+const unexpectedResponse = (status: number) =>
+  new ApiError(status, {
     detail: UNEXPECTED_DETAIL,
     code: UNEXPECTED_RESPONSE_CODE,
     fields: {},
   });
+
+async function toApiError(response: Response) {
+  const body: unknown = await response.json().catch(() => undefined);
+  if (isApiErrorBody(body)) return new ApiError(response.status, body);
+  return unexpectedResponse(response.status);
 }
 
 async function request<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
@@ -71,12 +76,25 @@ async function request<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
   if (!response.ok) throw await toApiError(response);
   if (response.status === 204) return undefined as T;
   const text = await response.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  if (!text) return undefined as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    // Un 2xx que no es JSON (p. ej. la página de un portal cautivo) no es una respuesta del API.
+    throw unexpectedResponse(response.status);
+  }
 }
 
 function getCsrfToken() {
-  csrfRequest ??= request<components['schemas']['CsrfToken']>('/api/auth/csrf')
-    .then(({ csrf_token }) => csrf_token)
+  csrfRequest ??= request<
+    Partial<components['schemas']['CsrfToken']> | undefined
+  >('/api/auth/csrf')
+    .then((body) => {
+      // Sin token no se envía la petición: mandar la cabecera vacía o "undefined" solo
+      // produciría un 403 confuso.
+      if (!body?.csrf_token) throw unexpectedResponse(200);
+      return body.csrf_token;
+    })
     .finally(() => {
       csrfRequest = undefined;
     });
@@ -92,16 +110,32 @@ function renewSession() {
   return refreshRequest;
 }
 
+// El cierre de sesión revoca la cookie de renovación que envía. Si una renovación sigue en
+// vuelo, su respuesta traería una cookie nueva después del cierre y la sesión reviviría en un
+// equipo compartido. Por eso el cierre espera a esa renovación, y mientras dura ninguna
+// petición inicia otra.
+function logout<T>(path: string, init: ApiRequestInit) {
+  const pending: Promise<T> = (async () => {
+    await refreshRequest?.catch(() => undefined);
+    return request<T>(path, init);
+  })().finally(() => {
+    if (logoutRequest === pending) logoutRequest = undefined;
+  });
+  logoutRequest = pending;
+  return pending;
+}
+
 export async function apiFetch<T>(
   path: string,
   init: ApiRequestInit = {},
 ): Promise<T> {
+  if (path.startsWith(LOGOUT_PATH)) return logout<T>(path, init);
   try {
     return await request<T>(path, init);
   } catch (error) {
-    const canRenew = !NO_RENEWAL_PREFIXES.some((prefix) =>
-      path.startsWith(prefix),
-    );
+    const canRenew =
+      !logoutRequest &&
+      !NO_RENEWAL_PREFIXES.some((prefix) => path.startsWith(prefix));
     if (!isUnauthorized(error) || !canRenew) throw error;
     await renewSession();
     return request<T>(path, init);

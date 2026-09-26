@@ -1,5 +1,5 @@
-import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { delay, http, HttpResponse } from 'msw';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   apiError,
@@ -17,6 +17,7 @@ const CSRF = apiUrl('/api/auth/csrf');
 const REFRESH = apiUrl('/api/auth/refresh');
 const ME = apiUrl('/api/auth/me');
 const LOGIN = apiUrl('/api/auth/login');
+const LOGOUT = apiUrl('/api/auth/logout');
 
 function count(method: 'get' | 'post', url: string, response: () => Response) {
   const state = { calls: 0 };
@@ -250,6 +251,183 @@ describe('apiFetch', () => {
     );
 
     await expect(apiFetch('/api/auth/me')).resolves.toEqual(session);
+    expect(refresh.calls).toBe(1);
+  });
+
+  it('does not send a CSRF token on GET requests', async () => {
+    const csrf = count('get', CSRF, () =>
+      HttpResponse.json({ csrf_token: 'a' }),
+    );
+    let sent: string | null | undefined;
+    server.use(
+      http.get(PRODUCERS, ({ request }) => {
+        sent = request.headers.get('x-csrftoken');
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    await apiFetch('/api/producers');
+
+    expect(sent).toBeNull();
+    expect(csrf.calls).toBe(0);
+  });
+
+  it('sends a fresh CSRF token when a mutation is retried after renewal', async () => {
+    let issued = 0;
+    server.use(
+      http.get(CSRF, () =>
+        HttpResponse.json({ csrf_token: `token-${++issued}` }),
+      ),
+      http.post(REFRESH, () => new HttpResponse(null, { status: 204 })),
+    );
+    const tokens: (string | null)[] = [];
+    server.use(
+      http.post(PRODUCERS, ({ request }) => {
+        tokens.push(request.headers.get('x-csrftoken'));
+        return tokens.length === 1
+          ? expired()
+          : HttpResponse.json({ id: '1' }, { status: 201 });
+      }),
+    );
+
+    await apiFetch('/api/producers', { method: 'POST', body: {} });
+
+    expect(tokens).toHaveLength(2);
+    expect(tokens[1]).not.toBe(tokens[0]);
+  });
+
+  it('renews only once: a second 401 after the retry surfaces without another renewal', async () => {
+    const refresh = count(
+      'post',
+      REFRESH,
+      () => new HttpResponse(null, { status: 204 }),
+    );
+    const producers = count('get', PRODUCERS, expired);
+
+    await expect(apiFetch('/api/producers')).rejects.toMatchObject({
+      status: 401,
+    });
+
+    expect(refresh.calls).toBe(1);
+    expect(producers.calls).toBe(2);
+  });
+
+  it.each([
+    ['logout', '/api/auth/logout'],
+    ['password reset request', '/api/auth/password-reset/request'],
+    ['password reset confirm', '/api/auth/password-reset/confirm'],
+  ])('does not renew on %s', async (_name, path) => {
+    const refresh = count(
+      'post',
+      REFRESH,
+      () => new HttpResponse(null, { status: 204 }),
+    );
+    server.use(http.post(apiUrl(path), () => expired()));
+
+    await expect(
+      apiFetch(path, { method: 'POST', body: {} }),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(refresh.calls).toBe(0);
+  });
+
+  it('wraps a successful response that is not JSON in an ApiError', async () => {
+    server.use(
+      http.get(
+        PRODUCERS,
+        () => new HttpResponse('<html>Portal</html>', { status: 200 }),
+      ),
+    );
+
+    await expect(apiFetch('/api/producers')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 200,
+      code: 'unexpected_response',
+    });
+  });
+
+  it('rejects a CSRF response without a token instead of sending "undefined"', async () => {
+    server.use(http.get(CSRF, () => HttpResponse.json({})));
+    const producers = count(
+      'post',
+      PRODUCERS,
+      () => new HttpResponse(null, { status: 204 }),
+    );
+
+    await expect(
+      apiFetch('/api/producers', { method: 'POST', body: {} }),
+    ).rejects.toMatchObject({ code: 'unexpected_response' });
+    expect(producers.calls).toBe(0);
+  });
+
+  it('waits for an in-flight renewal before logging out', async () => {
+    const order: string[] = [];
+    let attempts = 0;
+    server.use(
+      http.post(REFRESH, async () => {
+        order.push('refresh:start');
+        await delay(50);
+        order.push('refresh:end');
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.post(LOGOUT, () => {
+        order.push('logout');
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.get(PRODUCERS, () =>
+        attempts++ === 0 ? expired() : HttpResponse.json({ ok: true }),
+      ),
+    );
+
+    const read = apiFetch('/api/producers');
+    await vi.waitFor(() => expect(order).toContain('refresh:start'));
+    await apiFetch('/api/auth/logout', { method: 'POST' });
+    await read;
+
+    expect(order).toEqual(['refresh:start', 'refresh:end', 'logout']);
+  });
+
+  it('does not start a renewal while a logout is pending', async () => {
+    const refresh = count(
+      'post',
+      REFRESH,
+      () => new HttpResponse(null, { status: 204 }),
+    );
+    server.use(
+      http.post(LOGOUT, async () => {
+        await delay(50);
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.get(PRODUCERS, () => expired()),
+    );
+
+    const logout = apiFetch('/api/auth/logout', { method: 'POST' });
+    await expect(apiFetch('/api/producers')).rejects.toMatchObject({
+      status: 401,
+    });
+    await logout;
+
+    expect(refresh.calls).toBe(0);
+  });
+
+  it('renews again after a logout has finished', async () => {
+    server.use(
+      http.post(LOGOUT, () => new HttpResponse(null, { status: 204 })),
+    );
+    await apiFetch('/api/auth/logout', { method: 'POST' });
+
+    const refresh = count(
+      'post',
+      REFRESH,
+      () => new HttpResponse(null, { status: 204 }),
+    );
+    let attempts = 0;
+    server.use(
+      http.get(PRODUCERS, () =>
+        attempts++ === 0 ? expired() : HttpResponse.json({ ok: true }),
+      ),
+    );
+
+    await expect(apiFetch('/api/producers')).resolves.toEqual({ ok: true });
     expect(refresh.calls).toBe(1);
   });
 });

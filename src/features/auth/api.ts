@@ -38,8 +38,12 @@ export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: postLogin,
-    onSuccess: (session) =>
-      queryClient.setQueryData(queryKeys.session(), session),
+    onSuccess: (session) => {
+      // Si la sesión anterior terminó sin cerrar sesión en esta pestaña (venció o se cerró en
+      // otra), su caché sigue aquí: sin limpiarla, otra cuenta vería los datos de la anterior.
+      queryClient.clear();
+      queryClient.setQueryData(queryKeys.session(), session);
+    },
   });
 }
 
