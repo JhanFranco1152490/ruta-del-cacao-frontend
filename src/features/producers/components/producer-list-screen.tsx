@@ -41,7 +41,7 @@ export function ProducerListScreen() {
   // El error reemplaza la tabla solo si la lista nunca cargó (`isLoadingError`): un refetch
   // fallido en segundo plano conserva `data` y la tabla sigue a la vista.
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
       <BackLink href="/panel">Volver al panel</BackLink>
       <PageHeader
         eyebrow="Administración"
@@ -62,7 +62,7 @@ export function ProducerListScreen() {
           filters={filters}
           municipalities={municipalities.data ?? []}
         />
-        <div className="mt-5 overflow-x-auto rounded-[var(--radius)] border border-border">
+        <div className="relative mt-5 overflow-x-auto rounded-[var(--radius)] border border-border">
           {list.isPending || pageMissing ? (
             <ProducerTableSkeleton />
           ) : list.isLoadingError ? (
@@ -103,6 +103,6 @@ export function ProducerListScreen() {
           />
         )}
       </section>
-    </main>
+    </div>
   );
 }

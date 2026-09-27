@@ -73,6 +73,8 @@ src/
   features/<dominio>/  un dominio (hoy auth y producers): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
+  config/              configuración de la app sin lógica de dominio (hoy el registro del menú
+                       de navegación: cada sección nueva suma una entrada)
   lib/                 código sin interfaz: api/ (cliente HTTP), dates, mask, env, query-client,
                        document-types, is-email
   test/                utilidades de pruebas

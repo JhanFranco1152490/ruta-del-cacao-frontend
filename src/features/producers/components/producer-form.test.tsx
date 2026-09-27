@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -588,9 +588,7 @@ describe('ProducerForm', () => {
       '/productores',
     );
     expect(
-      within(screen.getByRole('main')).getByRole('link', {
-        name: '← Volver a productores',
-      }),
+      screen.getByRole('link', { name: '← Volver a productores' }),
     ).toHaveAttribute('href', '/productores');
   });
 });

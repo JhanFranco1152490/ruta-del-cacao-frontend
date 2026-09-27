@@ -5,7 +5,7 @@ import { buttonVariants } from '@/components/ui/button';
 
 export function ProducerPageError({ message }: { message: string }) {
   return (
-    <main className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-8">
+    <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-8">
       <CircleOff aria-hidden="true" className="mx-auto size-10 text-err" />
       <h1 className="mt-4 text-3xl text-selva">
         No fue posible abrir la ficha
@@ -19,6 +19,6 @@ export function ProducerPageError({ message }: { message: string }) {
       >
         Volver a productores
       </Link>
-    </main>
+    </div>
   );
 }
