@@ -53,7 +53,7 @@ export function ProducerForm({
   );
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
       <BackToProducersLink />
       <PageHeader
         className="mt-5"
@@ -191,6 +191,6 @@ export function ProducerForm({
           </Button>
         </div>
       </form>
-    </main>
+    </div>
   );
 }
