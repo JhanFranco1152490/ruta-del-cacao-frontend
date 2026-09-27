@@ -19,7 +19,7 @@ export function ProducerDetailScreen({ id }: { id: string }) {
   return (
     <ProducerLoadGate id={id}>
       {(producer) => (
-        <main className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-8">
+        <div className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-8">
           <BackToProducersLink />
           <PageHeader
             // Con dos acciones la cabecera se apila hasta pantallas anchas (lg): en tableta no
@@ -54,7 +54,7 @@ export function ProducerDetailScreen({ id }: { id: string }) {
             />
             <ProducerAccessNote status={producer.status} />
           </div>
-        </main>
+        </div>
       )}
     </ProducerLoadGate>
   );
