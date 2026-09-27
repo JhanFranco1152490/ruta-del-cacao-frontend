@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { CacaoMark } from '@/components/brand/cacao-mark';
 
 export function AppHeader({
@@ -5,16 +7,19 @@ export function AppHeader({
   onLogout,
   isLoggingOut,
   logoutFailed,
+  mobileNav,
 }: {
   email?: string;
   onLogout: () => void;
   isLoggingOut: boolean;
   logoutFailed: boolean;
+  mobileNav?: ReactNode;
 }) {
   return (
     <header className="border-b border-border bg-card">
       <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-8">
         <div className="flex items-center gap-3 text-selva">
+          {mobileNav}
           <CacaoMark className="h-9 w-6 text-cobre" />
           <span className="font-serif text-xl sm:text-2xl">Ruta del Cacao</span>
         </div>

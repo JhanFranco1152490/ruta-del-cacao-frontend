@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 
 import { AppHeader } from '@/components/layout/app-header';
 import { AppShell } from '@/components/layout/app-shell';
+import { MobileNav } from '@/components/layout/mobile-nav';
 import { NavList } from '@/components/layout/nav-list';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 
@@ -24,6 +25,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
           email={user?.email}
           isLoggingOut={logout.isPending}
           logoutFailed={logout.isError}
+          mobileNav={<MobileNav items={items} />}
           onLogout={() =>
             logout.mutate(undefined, { onSuccess: () => router.replace('/') })
           }
