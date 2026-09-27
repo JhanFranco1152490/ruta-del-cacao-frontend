@@ -37,5 +37,7 @@ describe('AppShell', () => {
     const target = skip.getAttribute('href')?.replace('#', '');
     expect(target).toBeTruthy();
     expect(screen.getByRole('main')).toHaveAttribute('id', target);
+    // Sin tabindex el salto mueve la vista pero el foco se queda en el enlace en algunos navegadores.
+    expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1');
   });
 });

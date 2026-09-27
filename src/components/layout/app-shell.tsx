@@ -24,7 +24,11 @@ export function AppShell({
         <aside className="hidden w-60 shrink-0 border-r border-border bg-card lg:block">
           <div className="sticky top-0 p-4">{sidebar}</div>
         </aside>
-        <main id="contenido" className="min-w-0 flex-1">
+        <main
+          id="contenido"
+          tabIndex={-1}
+          className="min-w-0 flex-1 outline-none"
+        >
           {children}
         </main>
       </div>
