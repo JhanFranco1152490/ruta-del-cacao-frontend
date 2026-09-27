@@ -7,6 +7,8 @@ import { AppHeader } from '@/components/layout/app-header';
 import { AppShell } from '@/components/layout/app-shell';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { NavList } from '@/components/layout/nav-list';
+import { SidebarToggle } from '@/components/layout/sidebar-toggle';
+import { useSidebarVisibility } from '@/components/layout/use-sidebar-visibility';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 
 import { useLogout, useSession } from '../api';
@@ -16,6 +18,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { data: user } = useSession();
   const logout = useLogout();
+  const sidebar = useSidebarVisibility();
   const items = visibleNavItems(NAV_ITEMS, user?.permissions);
 
   return (
@@ -26,12 +29,21 @@ export function SessionShell({ children }: { children: ReactNode }) {
           isLoggingOut={logout.isPending}
           logoutFailed={logout.isError}
           mobileNav={<MobileNav items={items} />}
+          sidebarToggle={
+            items.length > 0 && (
+              <SidebarToggle
+                hidden={sidebar.hidden}
+                onToggle={sidebar.toggle}
+              />
+            )
+          }
           onLogout={() =>
             logout.mutate(undefined, { onSuccess: () => router.replace('/') })
           }
         />
       }
       sidebar={<NavList items={items} />}
+      sidebarHidden={sidebar.hidden}
     >
       {children}
     </AppShell>

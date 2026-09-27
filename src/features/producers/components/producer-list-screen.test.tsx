@@ -82,6 +82,16 @@ describe('ProducerListScreen', () => {
     ).toHaveAttribute('href', '/productores/p1/editar');
   });
 
+  it('contains the visually hidden link labels inside the scrolling table wrapper', async () => {
+    renderWithProviders(<ProducerListScreen />);
+
+    const wrapper = (await screen.findByRole('table')).parentElement!;
+    // Sin position:relative, los textos sr-only (absolutos) escapan del contenedor con scroll y
+    // ensanchan toda la página en pantallas angostas.
+    expect(wrapper).toHaveClass('overflow-x-auto');
+    expect(wrapper).toHaveClass('relative');
+  });
+
   it('keeps the visible focus outline on the register link, the empty-state link and the search field', async () => {
     server.use(listHandler([]));
     renderWithProviders(<ProducerListScreen />);

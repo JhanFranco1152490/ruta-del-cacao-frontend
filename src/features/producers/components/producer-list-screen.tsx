@@ -62,7 +62,7 @@ export function ProducerListScreen() {
           filters={filters}
           municipalities={municipalities.data ?? []}
         />
-        <div className="mt-5 overflow-x-auto rounded-[var(--radius)] border border-border">
+        <div className="relative mt-5 overflow-x-auto rounded-[var(--radius)] border border-border">
           {list.isPending || pageMissing ? (
             <ProducerTableSkeleton />
           ) : list.isLoadingError ? (

@@ -29,7 +29,7 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
           <Button
             variant="outline"
             size="icon-lg"
-            className="size-11 lg:hidden"
+            className="size-11 shrink-0 lg:hidden"
           />
         }
       >

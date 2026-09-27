@@ -32,6 +32,7 @@ function signInWith(permissions: string[]) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
   signInWith([PERMISSIONS.PRODUCERS_VIEW]);
 });
 
@@ -83,6 +84,30 @@ describe('SessionShell', () => {
     expect(
       within(menu).queryByRole('link', { name: 'Productores' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('hides and shows the sidebar and remembers it on the next visit', async () => {
+    const first = renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Ocultar barra lateral' }),
+    );
+    expect(
+      screen.getByRole('button', { name: 'Mostrar barra lateral' }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    first.unmount();
+
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+    expect(
+      await screen.findByRole('button', { name: 'Mostrar barra lateral' }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mostrar barra lateral' }),
+    );
+    expect(
+      screen.getByRole('button', { name: 'Ocultar barra lateral' }),
+    ).toBeInTheDocument();
   });
 
   it('logs out and goes to the start', async () => {

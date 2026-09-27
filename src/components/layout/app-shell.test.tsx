@@ -3,9 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 import { AppShell } from './app-shell';
 
-function renderShell() {
+function renderShell(sidebarHidden?: boolean) {
   return render(
-    <AppShell header={<header>Cabecera</header>} sidebar={<p>Menú</p>}>
+    <AppShell
+      header={<header>Cabecera</header>}
+      sidebar={<p>Menú</p>}
+      sidebarHidden={sidebarHidden}
+    >
       <p>Contenido de la página</p>
     </AppShell>,
   );
@@ -39,5 +43,20 @@ describe('AppShell', () => {
     expect(screen.getByRole('main')).toHaveAttribute('id', target);
     // Sin tabindex el salto mueve la vista pero el foco se queda en el enlace en algunos navegadores.
     expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('keeps the sidebar available by default', () => {
+    renderShell();
+
+    const sidebar = screen.getByText('Menú').closest('aside');
+    expect(sidebar).toHaveAttribute('id', 'barra-lateral');
+    expect(sidebar).not.toHaveAttribute('inert');
+  });
+
+  it('makes the hidden sidebar inert so it cannot take focus', () => {
+    renderShell(true);
+
+    expect(screen.getByText('Menú').closest('aside')).toHaveAttribute('inert');
+    expect(screen.getByText('Contenido de la página')).toBeInTheDocument();
   });
 });

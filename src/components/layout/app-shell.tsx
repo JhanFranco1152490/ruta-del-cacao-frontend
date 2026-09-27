@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import type { ReactNode } from 'react';
 
 // Marco de las pantallas con sesión: recibe la cabecera y la navegación ya armadas para no
@@ -5,10 +6,12 @@ import type { ReactNode } from 'react';
 export function AppShell({
   header,
   sidebar,
+  sidebarHidden = false,
   children,
 }: {
   header: ReactNode;
   sidebar: ReactNode;
+  sidebarHidden?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -21,8 +24,20 @@ export function AppShell({
       </a>
       {header}
       <div className="flex flex-1">
-        <aside className="hidden w-60 shrink-0 border-r border-border bg-card lg:block">
-          <div className="sticky top-0 p-4">{sidebar}</div>
+        {/* Se colapsa por ancho y no con display:none para poder animarla; inert saca su
+            contenido del orden de tabulación y del árbol de accesibilidad mientras está
+            oculta. overflow-x-clip (no hidden) para que el sticky interno siga funcionando. */}
+        <aside
+          id="barra-lateral"
+          inert={sidebarHidden}
+          className={cn(
+            'hidden shrink-0 overflow-x-clip border-r border-border bg-card transition-[width,visibility,border-color] duration-200 ease-out motion-reduce:transition-none lg:block',
+            sidebarHidden
+              ? 'lg:invisible lg:w-0 lg:border-transparent'
+              : 'lg:w-60',
+          )}
+        >
+          <div className="sticky top-0 w-60 p-4">{sidebar}</div>
         </aside>
         <main
           id="contenido"
