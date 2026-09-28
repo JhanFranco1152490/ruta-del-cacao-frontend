@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { DM_Serif_Display, Karla } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { Providers } from './providers';
@@ -20,6 +20,11 @@ const sans = Karla({
 export const metadata: Metadata = {
   title: 'Ruta del Cacao',
   description: 'Sistema de trazabilidad de la producción de cacao',
+  manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#14362a',
 };
 
 export default function RootLayout({
