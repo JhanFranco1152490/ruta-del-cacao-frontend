@@ -5,13 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { getOfflineDb } from '@/lib/offline/db';
 import { isWithinOfflineWindow } from '@/lib/offline/session-clock';
-
-export interface SyncStatus {
-  isOnline: boolean;
-  pendingCount: number;
-  errorCount: number;
-  isWithinOfflineWindow: boolean;
-}
+import type { SyncStatus } from '@/types/sync';
 
 const DEFAULT_STATUS: SyncStatus = {
   isOnline: true,

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { SyncStatusBadge } from './sync-status-badge';
-import type { SyncStatus } from './use-sync-status';
+import type { SyncStatus } from '@/types/sync';
 
 const base: SyncStatus = {
   isOnline: true,

@@ -73,10 +73,15 @@ src/
   features/<dominio>/  un dominio (hoy auth y producers): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
+  hooks/               hooks de React compartidos entre dominios (sin JSX; si el hook es de
+                       un solo dominio, vive en features/<dominio>/ en vez de aquí)
   config/              configuración de la app sin lógica de dominio (hoy el registro del menú
                        de navegación: cada sección nueva suma una entrada)
-  lib/                 código sin interfaz: api/ (cliente HTTP), dates, mask, env, query-client,
-                       document-types, is-email
+  lib/                 código sin interfaz: api/ (cliente HTTP), offline/ (Dexie, cola de
+                       sincronización), format/ (dates, mask), validation/ (is-email), env,
+                       query-client, document-types, permissions
+  types/               types que cruzan más de un dominio o módulo (NavItem, SyncStatus); un
+                       type usado por un solo módulo se queda junto a ese módulo, no aquí
   test/                utilidades de pruebas
 ```
 
@@ -144,7 +149,7 @@ src/
   a recargar y el botón atrás los respeta), con claves en español (`buscar`, `estado`,
   `municipio`, `pagina`); un valor malformado cae al valor por defecto. Ver
   `useProducerFilters` como modelo.
-- Fechas solo con `lib/dates.ts` (`date-fns`, zona `America/Bogota`): los componentes no
+- Fechas solo con `lib/format/dates.ts` (`date-fns`, zona `America/Bogota`): los componentes no
   llaman a `Intl` ni a `new Date()` para formatear o comparar fechas de negocio.
 
 ### Reglas de diseño del código

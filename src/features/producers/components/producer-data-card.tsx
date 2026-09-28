@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { MaskedValue } from '@/components/masked-value';
-import { formatLongDate } from '@/lib/dates';
+import { formatLongDate } from '@/lib/format/dates';
 
 import type { Producer } from '../api';
 import { ProducerStatusBadge } from './producer-status-badge';

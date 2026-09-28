@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { Sprout } from 'lucide-react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { NavItem } from '@/config/navigation';
+import type { NavItem } from '@/types/navigation';
 
 import { MobileNav } from './mobile-nav';
 
