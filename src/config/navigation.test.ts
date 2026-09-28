@@ -2,13 +2,9 @@ import { Sprout } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
 import { PERMISSIONS } from '@/lib/permissions';
+import type { NavItem } from '@/types/navigation';
 
-import {
-  NAV_ITEMS,
-  isActiveRoute,
-  visibleNavItems,
-  type NavItem,
-} from './navigation';
+import { NAV_ITEMS, isActiveRoute, visibleNavItems } from './navigation';
 
 const open: NavItem = { href: '/abierta', label: 'Abierta', icon: Sprout };
 const guarded: NavItem = {

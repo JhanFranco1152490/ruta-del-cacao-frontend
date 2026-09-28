@@ -1,4 +1,4 @@
-import { maskValue } from '@/lib/mask';
+import { maskValue } from '@/lib/format/mask';
 
 export function MaskedValue({
   value,

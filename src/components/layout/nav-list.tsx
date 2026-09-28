@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 import { cn } from 'cn';
 
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
-import { isActiveRoute, type NavItem } from '@/config/navigation';
+import { isActiveRoute } from '@/config/navigation';
+import type { NavItem } from '@/types/navigation';
 
 export function NavList({
   items,

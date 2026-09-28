@@ -1,14 +1,7 @@
-import { LayoutDashboard, Sprout, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Sprout } from 'lucide-react';
 
-import { PERMISSIONS, type Permission } from '@/lib/permissions';
-
-export type NavItem = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  // Sin permiso, la entrada es para cualquier persona autenticada.
-  permission?: Permission;
-};
+import { PERMISSIONS } from '@/lib/permissions';
+import type { NavItem } from '@/types/navigation';
 
 // Cada sección nueva de la app se suma aquí con una entrada.
 export const NAV_ITEMS: readonly NavItem[] = [
