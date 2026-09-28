@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
+import { getOfflineDb } from '@/lib/offline/db';
 import { apiError, buildProducer, buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient } from '@/test/render';
@@ -112,5 +113,45 @@ describe('auth api', () => {
 
     expect(client.getQueryData(queryKeys.producers.detail('p1'))).toBeDefined();
     expect(client.getQueryData(queryKeys.session())).toBeDefined();
+  });
+
+  it('records the login moment for the offline session clock', async () => {
+    server.use(http.post(LOGIN, () => HttpResponse.json(session)));
+    const client = seededClient();
+    const { result } = renderHook(() => useLogin(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        login_method: 'email',
+        email: 'nueva@example.com',
+        password: 'cacao seguro',
+      });
+    });
+
+    const meta = await getOfflineDb('u1').meta.get('lastLoginAt');
+    expect(meta?.value).toBeDefined();
+  });
+
+  it('clears the offline cache of the signed-out user on logout', async () => {
+    server.use(
+      http.post(LOGOUT, () => new HttpResponse(null, { status: 204 })),
+    );
+    const client = seededClient();
+    await getOfflineDb('u1').cache.put({
+      key: 'farms:1',
+      value: {},
+      fetchedAt: Date.now(),
+    });
+    const { result } = renderHook(() => useLogout(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync();
+    });
+
+    expect(await getOfflineDb('u1').cache.toArray()).toHaveLength(0);
   });
 });
