@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PERMISSIONS } from '@/lib/permissions';
+import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
@@ -16,6 +17,8 @@ vi.mock('next/navigation', () => ({
   useRouter: () => router,
   usePathname: () => '/panel',
 }));
+
+vi.mock('@/lib/offline/bootstrap', () => ({ runOfflineBootstrap: vi.fn() }));
 
 const ME = apiUrl('/api/auth/me');
 const LOGOUT = apiUrl('/api/auth/logout');
@@ -168,5 +171,11 @@ describe('SessionShell', () => {
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(calls).toBe(1);
+  });
+
+  it('runs the offline bootstrap for the signed-in user', async () => {
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await waitFor(() => expect(runOfflineBootstrap).toHaveBeenCalledWith('u1'));
   });
 });
