@@ -1,25 +1,28 @@
-const CACHE_NAME = 'cacao-shell-v1';
-const APP_SHELL = ['/', '/manifest.json'];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)),
-  );
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches
-      .match(event.request)
-      .then((cached) => cached ?? fetch(event.request)),
+  // Ninguna versión anterior de este Service Worker debe dejar copias en caché: cachear el
+  // documento de la página serviría HTML de un despliegue anterior, con referencias a
+  // archivos que el siguiente despliegue ya borró (el nombre de esos archivos cambia en cada
+  // build). No se cachea nada aquí a propósito, pero esta limpieza cubre cualquier versión
+  // previa que sí lo haya hecho.
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key)))),
+    ]),
   );
 });
+
+// Sin responder nada propio: deja pasar cada petición a la red tal cual. Un Service Worker
+// registrado necesita un handler de `fetch` para que el navegador lo considere instalable,
+// pero cachear el shell aquí es justo lo que causó el problema de arriba — se retoma cuando
+// exista una pantalla que de verdad necesite leerse sin conexión.
+self.addEventListener('fetch', () => {});
 
 // El navegador dispara este evento al volver la conexión, incluso con la app cerrada (donde
 // lo soporte: hoy Chrome/Android). Sincronizar de verdad usa Dexie, que solo existe en la

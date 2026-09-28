@@ -11,6 +11,7 @@ import { SidebarToggle } from '@/components/layout/sidebar-toggle';
 import { useSidebarVisibility } from '@/components/layout/use-sidebar-visibility';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
+import { recordLogin } from '@/lib/offline/session-clock';
 
 import { useLogout, useSession } from '../api';
 
@@ -24,11 +25,15 @@ export function SessionShell({ children }: { children: ReactNode }) {
 
   // Arranca el motor offline con la sesión activa: purga lo huérfano, procesa lo pendiente y
   // vuelve a intentar cuando regresa la conexión o el Service Worker avisa que corrió una
-  // sincronización en segundo plano.
+  // sincronización en segundo plano. También toca el reloj de sesión cada vez que el
+  // servidor confirma la sesión (no solo cuando se escribe la contraseña): la sesión se
+  // renueva sola en segundo plano, así que exigir un inicio de sesión explícito para seguir
+  // contando la ventana offline purgaría el trabajo de alguien que sigue activo a diario.
   useEffect(() => {
     const userId = user?.id;
     if (!userId) return;
 
+    void recordLogin(userId);
     void runOfflineBootstrap(userId);
 
     const onOnline = () => void runOfflineBootstrap(userId);

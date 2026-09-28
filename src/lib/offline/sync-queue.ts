@@ -36,9 +36,27 @@ export async function enqueue(userId: string, input: EnqueueInput) {
   return item;
 }
 
+// Sin padre local: o no depende de nadie, o su padre ya sincronizó y salió de la cola (se
+// borra al tener éxito, ver más abajo) — en ambos casos está listo. Solo espera cuando el
+// padre sigue en la cola y todavía no llegó a `synced`.
 function isReady(item: QueueItem, byId: Map<string, QueueItem>) {
   if (!item.parentId) return true;
-  return byId.get(item.parentId)?.status === 'synced';
+  const parent = byId.get(item.parentId);
+  return !parent || parent.status === 'synced';
+}
+
+// Una llamada por usuario a la vez: sin esto, dos disparadores casi simultáneos (montar la
+// app y el evento `online`, o el efecto de React corriendo dos veces) leerían la cola antes
+// de que el primero alcanzara a marcar nada, y mandarían el mismo item dos veces.
+const inFlight = new Map<string, Promise<void>>();
+
+export function processQueue(userId: string) {
+  const running = inFlight.get(userId);
+  if (running) return running;
+
+  const run = runQueue(userId).finally(() => inFlight.delete(userId));
+  inFlight.set(userId, run);
+  return run;
 }
 
 // Procesa lo que esté listo, en cascada (un hijo puede sincronizar en la misma llamada que su
@@ -46,8 +64,16 @@ function isReady(item: QueueItem, byId: Map<string, QueueItem>) {
 // padre que falla no se reintenta en el mismo ciclo, para no martillar la red contra un error
 // persistente — el próximo disparador (montar la app, `online`, aviso del Service Worker) lo
 // vuelve a intentar.
-export async function processQueue(userId: string) {
+async function runQueue(userId: string) {
   const db = getOfflineDb(userId);
+  // Un item que sigue `syncing` al empezar una llamada nueva pertenece a un intento anterior
+  // que nunca terminó (la pestaña se cerró, se quedó sin batería): se retoma como pendiente
+  // en vez de quedar bloqueado para siempre.
+  await db.queue
+    .where('status')
+    .equals('syncing')
+    .modify({ status: 'pending' });
+
   const attempted = new Set<string>();
   let progressed = true;
 
@@ -70,13 +96,13 @@ export async function processQueue(userId: string) {
 
       try {
         await adapter.send(item);
-        await db.queue.update(item.id, {
-          status: 'synced',
-          updatedAt: Date.now(),
-        });
-        byId.set(item.id, { ...item, status: 'synced' });
+        // Se retira de la cola en vez de conservarse como `synced`: ya cumplió su función
+        // (encolar, reintentar, permitir que sus hijos lo esperen) y no hay razón para
+        // guardar para siempre un envío que ya terminó bien.
+        await db.queue.delete(item.id);
+        byId.delete(item.id);
       } catch (error) {
-        const conflict = adapter.parseConflict(error);
+        const conflict = safeParseConflict(adapter, error);
         if (conflict) {
           await db.queue.update(item.id, {
             status: 'error',
@@ -92,5 +118,15 @@ export async function processQueue(userId: string) {
         }
       }
     }
+  }
+}
+
+// Un adapter que revienta al clasificar el error no debe tumbar la cola entera: se trata
+// igual que un error de red (se reintenta), no como un conflicto real.
+function safeParseConflict(adapter: SyncAdapter, error: unknown) {
+  try {
+    return adapter.parseConflict(error);
+  } catch {
+    return null;
   }
 }

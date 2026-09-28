@@ -1,18 +1,24 @@
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/status-badge';
 
 import type { SyncStatus } from './use-sync-status';
 
 export function SyncStatusBadge({ status }: { status: SyncStatus }) {
   if (!status.isOnline) {
     return (
-      <Badge variant="warn">Sin conexión · {status.pendingCount} en cola</Badge>
+      <StatusBadge tone="warn">
+        Sin conexión · {status.pendingCount} en cola
+      </StatusBadge>
     );
   }
   if (status.errorCount > 0) {
-    return <Badge variant="err">{status.errorCount} con error</Badge>;
+    return <StatusBadge tone="err">{status.errorCount} con error</StatusBadge>;
   }
   if (status.pendingCount > 0) {
-    return <Badge variant="info">Sincronizando {status.pendingCount}…</Badge>;
+    return (
+      <StatusBadge tone="info">
+        Sincronizando {status.pendingCount}…
+      </StatusBadge>
+    );
   }
-  return <Badge variant="ok">Sincronizado</Badge>;
+  return <StatusBadge tone="ok">Sincronizado</StatusBadge>;
 }

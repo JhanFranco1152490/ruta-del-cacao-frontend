@@ -44,7 +44,7 @@ describe('enqueue', () => {
 });
 
 describe('processQueue', () => {
-  it('sends a pending item and marks it synced', async () => {
+  it('sends a pending item and removes it from the queue once synced', async () => {
     const userId = randomUserId();
     const adapter = fakeAdapter();
     registerAdapter(adapter);
@@ -58,7 +58,26 @@ describe('processQueue', () => {
     await processQueue(userId);
 
     expect(adapter.send).toHaveBeenCalledTimes(1);
-    expect((await getOfflineDb(userId).queue.get('a1'))?.status).toBe('synced');
+    expect(await getOfflineDb(userId).queue.get('a1')).toBeUndefined();
+  });
+
+  it('treats a child as ready when its parent already left the queue synced', async () => {
+    const userId = randomUserId();
+    const adapter = fakeAdapter();
+    registerAdapter(adapter);
+    // El padre nunca se encoló en este dispositivo (por ejemplo, ya existía en el servidor):
+    // no aparece en la cola, así que no puede bloquear a su hijo para siempre.
+    await enqueue(userId, {
+      id: 'child',
+      resource: 'farms',
+      operation: 'create',
+      parentId: 'parent-not-in-queue',
+      payload: {},
+    });
+
+    await processQueue(userId);
+
+    expect(adapter.send).toHaveBeenCalledTimes(1);
   });
 
   it('does not duplicate the request when a resource has no adapter yet', async () => {
@@ -180,5 +199,65 @@ describe('processQueue', () => {
       errorCode: 'stale_version',
       errorMessage: 'Alguien más lo editó.',
     });
+  });
+
+  it('does not send the same item twice when called concurrently for the same user', async () => {
+    const userId = randomUserId();
+    const adapter = fakeAdapter();
+    registerAdapter(adapter);
+    await enqueue(userId, {
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+
+    await Promise.all([processQueue(userId), processQueue(userId)]);
+
+    expect(adapter.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('resumes an item left syncing by a call that never finished', async () => {
+    const userId = randomUserId();
+    const adapter = fakeAdapter();
+    registerAdapter(adapter);
+    // Simula una pestaña que se cerró (o se quedó sin batería) a mitad del envío: el item
+    // queda marcado `syncing` sin que ninguna llamada a processQueue lo esté procesando.
+    await getOfflineDb(userId).queue.add({
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+      status: 'syncing',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await processQueue(userId);
+
+    expect(adapter.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats a parseConflict that throws as a retryable error, not a conflict', async () => {
+    const userId = randomUserId();
+    const adapter = fakeAdapter({
+      send: vi.fn().mockRejectedValue(new Error('unexpected')),
+      parseConflict: vi.fn(() => {
+        throw new Error('bug in the adapter');
+      }),
+    });
+    registerAdapter(adapter);
+    await enqueue(userId, {
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+
+    await processQueue(userId);
+
+    expect((await getOfflineDb(userId).queue.get('a1'))?.status).toBe(
+      'pending',
+    );
   });
 });

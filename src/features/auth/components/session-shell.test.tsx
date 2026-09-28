@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PERMISSIONS } from '@/lib/permissions';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
+import { recordLogin } from '@/lib/offline/session-clock';
 import { buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
@@ -19,6 +20,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/offline/bootstrap', () => ({ runOfflineBootstrap: vi.fn() }));
+vi.mock('@/lib/offline/session-clock', () => ({ recordLogin: vi.fn() }));
 
 const ME = apiUrl('/api/auth/me');
 const LOGOUT = apiUrl('/api/auth/logout');
@@ -177,5 +179,20 @@ describe('SessionShell', () => {
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
     await waitFor(() => expect(runOfflineBootstrap).toHaveBeenCalledWith('u1'));
+  });
+
+  it('touches the offline session clock every time the session is confirmed, not only at login', async () => {
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await waitFor(() => expect(recordLogin).toHaveBeenCalledWith('u1'));
+  });
+
+  it('retries the offline bootstrap when the connection comes back', async () => {
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+    await waitFor(() => expect(runOfflineBootstrap).toHaveBeenCalledTimes(1));
+
+    window.dispatchEvent(new Event('online'));
+
+    await waitFor(() => expect(runOfflineBootstrap).toHaveBeenCalledTimes(2));
   });
 });

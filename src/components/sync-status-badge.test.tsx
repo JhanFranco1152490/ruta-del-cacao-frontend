@@ -41,4 +41,12 @@ describe('SyncStatusBadge', () => {
 
     expect(screen.getByText('Sincronizado')).toBeInTheDocument();
   });
+
+  it('never shows color alone: every state pairs an icon with its text', () => {
+    const { container } = render(<SyncStatusBadge status={base} />);
+
+    expect(
+      container.querySelector('svg[aria-hidden="true"]'),
+    ).toBeInTheDocument();
+  });
 });
