@@ -50,4 +50,14 @@ describe('runOfflineBootstrap', () => {
 
     expect(await getOfflineDb(userId).queue.toArray()).toHaveLength(0);
   });
+
+  it('does not reject when the local database is unavailable', async () => {
+    const userId = randomUserId();
+    await recordLogin(userId);
+    vi.spyOn(getOfflineDb(userId).meta, 'get').mockRejectedValueOnce(
+      new Error('quota exceeded'),
+    );
+
+    await expect(runOfflineBootstrap(userId)).resolves.toBeUndefined();
+  });
 });

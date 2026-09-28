@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { clearOfflineCache, getOfflineDb } from './db';
 
@@ -46,5 +46,14 @@ describe('clearOfflineCache', () => {
 
     expect(await db.cache.toArray()).toHaveLength(0);
     expect(await db.queue.toArray()).toHaveLength(1);
+  });
+
+  it('does not reject when the local database clear fails', async () => {
+    const userId = randomUserId();
+    vi.spyOn(getOfflineDb(userId).cache, 'clear').mockRejectedValueOnce(
+      new Error('quota exceeded'),
+    );
+
+    await expect(clearOfflineCache(userId)).resolves.toBeUndefined();
   });
 });

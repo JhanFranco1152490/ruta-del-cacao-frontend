@@ -7,10 +7,15 @@ export const OFFLINE_WINDOW_DAYS = 7;
 export const ORPHAN_WINDOW_DAYS = 30;
 
 export async function recordLogin(userId: string, now = Date.now()) {
-  await getOfflineDb(userId).meta.put({
-    key: LAST_LOGIN_KEY,
-    value: String(now),
-  });
+  try {
+    await getOfflineDb(userId).meta.put({
+      key: LAST_LOGIN_KEY,
+      value: String(now),
+    });
+  } catch {
+    // Un fallo de guardado local (cuota llena, almacenamiento bloqueado) no debe convertirse
+    // en una promesa rechazada sin manejar: quien llama a `recordLogin` no la espera.
+  }
 }
 
 async function getLastLoginAt(userId: string) {

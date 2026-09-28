@@ -58,5 +58,10 @@ export function getOfflineDb(userId: string): OfflineDb {
 // Se borra al cerrar sesión: son solo lecturas cacheadas. `queue` (pendientes y bandeja de
 // error) se conserva a propósito, para no perder trabajo de campo sin sincronizar.
 export async function clearOfflineCache(userId: string) {
-  await getOfflineDb(userId).cache.clear();
+  try {
+    await getOfflineDb(userId).cache.clear();
+  } catch {
+    // Mismo motivo que session-clock.recordLogin: un fallo de almacenamiento local no debe
+    // quedar como una promesa rechazada sin manejar.
+  }
 }

@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { getOfflineDb } from './db';
 import {
   isOrphaned,
   isWithinOfflineWindow,
@@ -40,5 +41,14 @@ describe('session clock', () => {
 
     expect(await isOrphaned(userId, twentyNineDaysLater)).toBe(false);
     expect(await isOrphaned(userId, thirtyOneDaysLater)).toBe(true);
+  });
+
+  it('does not reject when the local database write fails', async () => {
+    const userId = randomUserId();
+    vi.spyOn(getOfflineDb(userId).meta, 'put').mockRejectedValueOnce(
+      new Error('quota exceeded'),
+    );
+
+    await expect(recordLogin(userId)).resolves.toBeUndefined();
   });
 });

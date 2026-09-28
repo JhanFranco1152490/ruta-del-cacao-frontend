@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
@@ -9,6 +9,10 @@ import { useSyncStatus } from './use-sync-status';
 function randomUserId() {
   return `test-${Math.random().toString(36).slice(2)}`;
 }
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('useSyncStatus', () => {
   it('counts pending and error items reactively', async () => {
@@ -94,5 +98,52 @@ describe('useSyncStatus', () => {
       errorCount: 0,
       isWithinOfflineWindow: true,
     });
+  });
+
+  it('resets to the default status immediately when the signed-in user changes', async () => {
+    const userA = randomUserId();
+    const userB = randomUserId();
+    await recordLogin(userA);
+    await getOfflineDb(userA).queue.add({
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+      status: 'pending',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    const { result, rerender } = renderHook(
+      ({ userId }: { userId: string }) => useSyncStatus(userId),
+      { initialProps: { userId: userA } },
+    );
+    await waitFor(() => expect(result.current.pendingCount).toBe(1));
+
+    rerender({ userId: userB });
+
+    // Sin esperar: el conteo de la persona anterior no debe verse ni un instante para la
+    // nueva, antes de que su propia consulta responda.
+    expect(result.current.pendingCount).toBe(0);
+  });
+
+  it('re-checks the offline window on a timer, not only when the queue changes', async () => {
+    const userId = randomUserId();
+    const sixDaysAgo = Date.now() - 6 * 24 * 60 * 60 * 1000;
+    await recordLogin(userId, sixDaysAgo);
+
+    const { result } = renderHook(() => useSyncStatus(userId));
+    await waitFor(() =>
+      expect(result.current.isWithinOfflineWindow).toBe(true),
+    );
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(Date.now() + 8 * 24 * 60 * 60 * 1000);
+    await vi.advanceTimersByTimeAsync(60_000);
+    vi.useRealTimers();
+
+    await waitFor(() =>
+      expect(result.current.isWithinOfflineWindow).toBe(false),
+    );
   });
 });
