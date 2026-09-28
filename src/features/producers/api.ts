@@ -11,7 +11,7 @@ import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 
 type Schemas = components['schemas'];
-export type Producer = Schemas['Producer'];
+export type Producer = Schemas['ProducerDetail'];
 export type ProducerListItem = Schemas['ProducerList'];
 export type ProducerPage = Schemas['PaginatedProducerListList'];
 export type ProducerRequest = Schemas['ProducerRequest'];

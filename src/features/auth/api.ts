@@ -69,3 +69,9 @@ export const useRequestPasswordReset = () =>
 
 export const useConfirmPasswordReset = () =>
   useMutation({ mutationFn: postPasswordResetConfirm });
+
+export const postActivationConfirm = (
+  body: components['schemas']['ActivationConfirmRequest'],
+) => apiFetch<void>('/api/auth/activation/confirm', { method: 'POST', body });
+export const useConfirmActivation = () =>
+  useMutation({ mutationFn: postActivationConfirm });

@@ -41,6 +41,14 @@ export const producerFormSchema = z.object({
 
 export type ProducerFormValues = z.infer<typeof producerFormSchema>;
 
+export const producerCreateFormSchema = producerFormSchema.extend({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Ingresa el correo para crear la cuenta de acceso.')
+    .refine(isEmail, 'Ingresa un correo electrónico válido.'),
+});
+
 export const PRODUCER_FORM_FIELDS = Object.keys(producerFormSchema.shape);
 
 export const emptyProducerForm: ProducerFormValues = {
@@ -65,9 +73,7 @@ export const toFormValues = (producer: Producer): ProducerFormValues => ({
   joined_on: producer.joined_on,
 });
 
-export const toProducerRequest = (
-  values: ProducerFormValues,
-): ProducerRequest => ({
+export const toProducerRequest = (values: ProducerFormValues) => ({
   document_type: values.document_type,
   identity_document: values.identity_document.trim(),
   first_name: values.first_name.trim(),
@@ -76,4 +82,11 @@ export const toProducerRequest = (
   email: values.email.trim().toLowerCase() || null,
   municipality_code: values.municipality_code,
   joined_on: values.joined_on,
+});
+
+export const toProducerCreateRequest = (
+  values: ProducerFormValues,
+): ProducerRequest => ({
+  ...toProducerRequest(values),
+  email: values.email.trim().toLowerCase(),
 });

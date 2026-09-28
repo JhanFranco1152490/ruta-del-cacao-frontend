@@ -30,10 +30,10 @@ export function SessionPanel() {
             {user.roles.length ? (
               user.roles.map((role) => (
                 <span
-                  key={role}
+                  key={role.id}
                   className="rounded-full bg-ok-bg px-3 py-1 text-sm font-bold text-ok"
                 >
-                  {role}
+                  {role.name}
                 </span>
               ))
             ) : (

@@ -17,6 +17,7 @@ import { useMunicipalities, type Producer } from '../api';
 import {
   emptyProducerForm,
   producerFormSchema,
+  producerCreateFormSchema,
   toFormValues,
   type ProducerFormValues,
 } from '../schemas';
@@ -42,7 +43,9 @@ export function ProducerForm({
     setError,
     formState: { errors },
   } = useForm<ProducerFormValues>({
-    resolver: zodResolver(producerFormSchema),
+    resolver: zodResolver(
+      producer ? producerFormSchema : producerCreateFormSchema,
+    ),
     defaultValues: producer ? toFormValues(producer) : emptyProducerForm,
     mode: 'onBlur',
     reValidateMode: 'onChange',
@@ -59,7 +62,11 @@ export function ProducerForm({
         className="mt-5"
         eyebrow="Administración"
         title={producer ? 'Editar productor' : 'Registrar productor'}
-        description="Los campos marcados son obligatorios. El productor puede vincular una cuenta de acceso posteriormente."
+        description={
+          producer
+            ? 'Actualiza los datos del expediente. El correo de contacto es independiente del correo de acceso.'
+            : 'El correo es obligatorio: al registrar el productor se crea también su cuenta de acceso.'
+        }
       />
       <form
         className="mt-8 space-y-6"
@@ -139,16 +146,7 @@ export function ProducerForm({
           </div>
         </FormSection>
 
-        <FormSection
-          title={
-            <>
-              Contacto{' '}
-              <span className="text-base text-muted-foreground">
-                (opcional)
-              </span>
-            </>
-          }
-        >
+        <FormSection title="Contacto">
           <div className="grid gap-5 sm:grid-cols-2">
             <DigitsField
               control={control}
@@ -160,6 +158,7 @@ export function ProducerForm({
             <TextField
               label="Correo electrónico"
               type="email"
+              required={!producer}
               error={errors.email?.message}
               {...register('email')}
             />

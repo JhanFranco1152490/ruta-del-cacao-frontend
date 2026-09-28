@@ -43,6 +43,10 @@ async function renderForm(producer?: Producer) {
 }
 
 async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(
+    screen.getByLabelText('Correo electrónico'),
+    'ana@example.com',
+  );
   await user.type(screen.getByLabelText('Número de documento'), '1234567890');
   await user.type(screen.getByLabelText('Nombres'), 'Ana');
   await user.type(screen.getByLabelText('Apellidos'), 'Prueba');
@@ -135,6 +139,7 @@ describe('ProducerForm', () => {
     await renderForm();
     await fillRequiredFields(user);
 
+    await user.clear(screen.getByLabelText('Correo electrónico'));
     await user.type(
       screen.getByLabelText('Correo electrónico'),
       'no-es-correo',
@@ -172,6 +177,7 @@ describe('ProducerForm', () => {
     await renderForm();
     await fillRequiredFields(user);
     await user.type(screen.getByLabelText('Teléfono'), '3001234567');
+    await user.clear(screen.getByLabelText('Correo electrónico'));
     await user.type(
       screen.getByLabelText('Correo electrónico'),
       '  Ana.Prueba@Example.com ',
@@ -196,18 +202,32 @@ describe('ProducerForm', () => {
     ]);
   });
 
-  it('sends the phone and the email as null when left empty', async () => {
+  it('requires an email to create the access account', async () => {
     const user = userEvent.setup();
     server.use(createHandler());
     await renderForm();
     await fillRequiredFields(user);
+    await user.clear(screen.getByLabelText('Correo electrónico'));
 
     await submitCreate(user);
 
+    expect(
+      await screen.findByText(
+        'Ingresa el correo para crear la cuenta de acceso.',
+      ),
+    ).toBeInTheDocument();
+    expect(bodies).toEqual([]);
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('still allows clearing the contact email when editing', async () => {
+    const user = userEvent.setup();
+    server.use(updateHandler());
+    await renderForm(buildProducer({ email: 'ana@example.com' }));
+    await user.clear(screen.getByLabelText('Correo electrónico'));
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalled());
-    expect(bodies).toEqual([
-      expect.objectContaining({ phone: null, email: null }),
-    ]);
+    expect(bodies).toEqual([expect.objectContaining({ email: null })]);
   });
 
   it('shows the field error from the server on its field and does not navigate', async () => {

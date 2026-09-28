@@ -11,6 +11,7 @@ import { useCreateProducer, useUpdateProducer, type Producer } from './api';
 import {
   PRODUCER_FORM_FIELDS,
   toProducerRequest,
+  toProducerCreateRequest,
   type ProducerFormValues,
 } from './schemas';
 
@@ -59,7 +60,7 @@ export function useProducerSave(
         options,
       );
     } else {
-      create.mutate(input, options);
+      create.mutate(toProducerCreateRequest(values), options);
     }
   };
 
