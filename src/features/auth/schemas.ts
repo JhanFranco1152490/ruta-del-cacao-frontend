@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { components } from '@/lib/api/schema';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
-import { isEmail } from '@/lib/is-email';
+import { isEmail } from '@/lib/validation/is-email';
 
 type LoginRequest = components['schemas']['LoginRequest'];
 

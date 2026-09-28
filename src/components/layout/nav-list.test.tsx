@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { Sprout } from 'lucide-react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { NavItem } from '@/config/navigation';
+import type { NavItem } from '@/types/navigation';
 
 import { NavList } from './nav-list';
 

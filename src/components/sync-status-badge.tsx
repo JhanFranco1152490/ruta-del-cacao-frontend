@@ -1,6 +1,5 @@
 import { StatusBadge } from '@/components/status-badge';
-
-import type { SyncStatus } from './use-sync-status';
+import type { SyncStatus } from '@/types/sync';
 
 export function SyncStatusBadge({ status }: { status: SyncStatus }) {
   if (!status.isOnline) {

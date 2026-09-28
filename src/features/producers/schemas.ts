@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 import { DOCUMENT_TYPES } from '@/lib/document-types';
-import { todayInBogota } from '@/lib/dates';
-import { isEmail } from '@/lib/is-email';
+import { todayInBogota } from '@/lib/format/dates';
+import { isEmail } from '@/lib/validation/is-email';
 
 import type { Producer, ProducerRequest } from './api';
 

@@ -11,7 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import type { NavItem } from '@/config/navigation';
+import type { NavItem } from '@/types/navigation';
 
 import { NavList } from './nav-list';
 
