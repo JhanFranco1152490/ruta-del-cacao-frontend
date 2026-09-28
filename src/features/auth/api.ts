@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
+import { clearOfflineCache } from '@/lib/offline/db';
+import { recordLogin } from '@/lib/offline/session-clock';
 
 export type Session = components['schemas']['Session'];
 export type SessionUser = components['schemas']['SessionUser'];
@@ -43,6 +45,7 @@ export function useLogin() {
       // otra), su caché sigue aquí: sin limpiarla, otra cuenta vería los datos de la anterior.
       queryClient.clear();
       queryClient.setQueryData(queryKeys.session(), session);
+      void recordLogin(session.user.id);
     },
   });
 }
@@ -53,7 +56,11 @@ export function useLogout() {
   // sigue en su panel y puede reintentar.
   return useMutation({
     mutationFn: postLogout,
-    onSuccess: () => queryClient.clear(),
+    onSuccess: () => {
+      const session = queryClient.getQueryData<Session>(queryKeys.session());
+      if (session) void clearOfflineCache(session.user.id);
+      queryClient.clear();
+    },
   });
 }
 
