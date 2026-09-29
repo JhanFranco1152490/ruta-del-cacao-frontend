@@ -18,7 +18,7 @@ export type FarmListItem = {
 };
 
 export function queuedFarmToListItem(item: QueueItem): FarmListItem {
-  // La cola de fincas solo la escribe enqueueFarmCreate, siempre con esta forma.
+  // La cola de fincas solo la escribe farm-queue.ts, siempre con esta forma.
   const payload = item.payload as FarmCreatePayload;
   return {
     id: payload.id,

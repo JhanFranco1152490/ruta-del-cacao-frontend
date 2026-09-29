@@ -108,6 +108,52 @@ describe('FarmListScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('lets a pending farm be corrected but not discarded', async () => {
+    await enqueueFarmCreate(userId, 'f1', farm);
+    renderScreen();
+
+    const [card] = await farmCards();
+    expect(
+      within(card).getByRole('link', { name: 'Corregir La Esperanza' }),
+    ).toHaveAttribute('href', '/fincas/f1/editar');
+    expect(
+      within(card).queryByRole('button', { name: 'Descartar' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('discards a failed farm only after explicit confirmation', async () => {
+    const user = userEvent.setup();
+    await enqueueFarmCreate(userId, 'f1', farm);
+    await getOfflineDb(userId).queue.update('f1', { status: 'error' });
+    renderScreen();
+
+    const [card] = await farmCards();
+    await user.click(within(card).getByRole('button', { name: 'Descartar' }));
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(await getOfflineDb(userId).queue.get('f1')).toBeDefined();
+
+    await user.click(within(card).getByRole('button', { name: 'Descartar' }));
+    expect(
+      screen.getByRole('heading', {
+        name: '¿Descartar la finca La Esperanza?',
+      }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Descartar finca' }));
+
+    expect(
+      await screen.findByText('Aún no tienes fincas registradas'),
+    ).toBeInTheDocument();
+    expect(await getOfflineDb(userId).queue.get('f1')).toBeUndefined();
+  });
+
+  it('shows no queue actions without the add permission', async () => {
+    await enqueueFarmCreate(userId, 'f1', farm);
+    renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW] });
+
+    const [card] = await farmCards();
+    expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+  });
+
   it('filters by municipality without accents and explains an empty result', async () => {
     const user = userEvent.setup();
     await enqueueFarmCreate(userId, 'f1', farm);

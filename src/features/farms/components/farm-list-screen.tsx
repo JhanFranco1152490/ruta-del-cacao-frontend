@@ -18,6 +18,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useLocalFarms } from '../use-local-farms';
 import { FarmCardList } from './farm-card-list';
+import { FarmQueueActions } from './farm-queue-actions';
 
 export function FarmListScreen() {
   const { data: user } = useSession();
@@ -76,6 +77,9 @@ export function FarmListScreen() {
           <FarmCardList
             farms={visibleFarms}
             municipalityName={municipalityName}
+            renderActions={
+              canAdd ? (farm) => <FarmQueueActions farm={farm} /> : undefined
+            }
           />
         ) : search ? (
           <EmptyState

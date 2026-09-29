@@ -1,5 +1,6 @@
 import { departmentCodeOf } from '@/features/catalogs/departments';
-import { enqueue } from '@/lib/offline/sync-queue';
+import { getOfflineDb, type QueueStatus } from '@/lib/offline/db';
+import { enqueue, resubmit } from '@/lib/offline/sync-queue';
 
 import type { FarmFormValues } from './schemas';
 
@@ -48,3 +49,41 @@ export const enqueueFarmCreate = (
     operation: 'create',
     payload: toCreatePayload(id, values),
   });
+
+export const toFormValues = (payload: FarmCreatePayload): FarmFormValues => ({
+  name: payload.name,
+  municipality_id: payload.municipality_id,
+  details: payload.details,
+  area_hectares: payload.area_hectares,
+  altitude_masl: String(payload.altitude_masl),
+  latitude: payload.latitude,
+  longitude: payload.longitude,
+});
+
+export type QueuedFarm = {
+  id: string;
+  values: FarmFormValues;
+  status: QueueStatus;
+  errorMessage?: string;
+};
+
+export async function getQueuedFarm(
+  userId: string,
+  id: string,
+): Promise<QueuedFarm | null> {
+  const item = await getOfflineDb(userId).queue.get(id);
+  if (!item || item.resource !== FARM_RESOURCE) return null;
+  return {
+    id,
+    // La cola de fincas solo la escribe este módulo, siempre con esta forma.
+    values: toFormValues(item.payload as FarmCreatePayload),
+    status: item.status,
+    errorMessage: item.errorMessage,
+  };
+}
+
+export const resubmitFarm = (
+  userId: string,
+  id: string,
+  values: FarmFormValues,
+) => resubmit(userId, id, toCreatePayload(id, values));

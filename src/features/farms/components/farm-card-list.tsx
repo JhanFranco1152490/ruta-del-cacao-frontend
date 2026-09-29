@@ -1,4 +1,5 @@
 import { MapPin } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import type { FarmListItem } from '../farm-list-item';
 import { FarmStatusBadge } from './farm-status-badge';
@@ -6,9 +7,11 @@ import { FarmStatusBadge } from './farm-status-badge';
 export function FarmCardList({
   farms,
   municipalityName,
+  renderActions,
 }: {
   farms: readonly FarmListItem[];
   municipalityName: (code: string) => string;
+  renderActions?: (farm: FarmListItem) => ReactNode;
 }) {
   return (
     <ul className="grid gap-4 md:grid-cols-2" aria-label="Fincas">
@@ -41,6 +44,9 @@ export function FarmCardList({
               <p className="rounded-(--radius) bg-err-bg px-3 py-2 text-sm font-bold text-err">
                 {farm.errorMessage}
               </p>
+            )}
+            {renderActions && (
+              <div className="mt-auto pt-2">{renderActions(farm)}</div>
             )}
           </article>
         </li>
