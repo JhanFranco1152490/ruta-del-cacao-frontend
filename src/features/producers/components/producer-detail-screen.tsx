@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
+import { useMunicipalityName } from '@/features/catalogs/api';
 
-import { useMunicipalityName } from '../api';
 import { BackToProducersLink } from './back-to-producers-link';
 import { ProducerAccessNote } from './producer-access-note';
 import { ProducerDataCard } from './producer-data-card';

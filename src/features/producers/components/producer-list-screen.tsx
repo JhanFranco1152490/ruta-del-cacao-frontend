@@ -10,14 +10,13 @@ import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { buttonVariants } from '@/components/ui/button';
-import { isApiError } from '@/lib/api/errors';
-
 import {
-  PAGE_SIZE,
   useMunicipalities,
   useMunicipalityName,
-  useProducers,
-} from '../api';
+} from '@/features/catalogs/api';
+import { isApiError } from '@/lib/api/errors';
+
+import { PAGE_SIZE, useProducers } from '../api';
 import { useProducerFilters } from '../use-producer-filters';
 import { ProducerFilters } from './producer-filters';
 import { ProducerTableSkeleton } from './producer-skeletons';

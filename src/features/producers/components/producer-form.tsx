@@ -11,9 +11,10 @@ import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { useMunicipalities } from '@/features/catalogs/api';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 
-import { useMunicipalities, type Producer } from '../api';
+import type { Producer } from '../api';
 import {
   emptyProducerForm,
   producerFormSchema,

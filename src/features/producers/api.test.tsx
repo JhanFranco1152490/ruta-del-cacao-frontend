@@ -13,7 +13,6 @@ import { server } from '@/test/server';
 import {
   useChangeProducerStatus,
   useCreateProducer,
-  useMunicipalityName,
   useProducers,
   useUpdateProducer,
 } from './api';
@@ -259,19 +258,5 @@ describe('producers api', () => {
 
       expect(isStale(client)).toBe(false);
     });
-  });
-
-  it('resolves municipality names and falls back to a dash for unknown codes', async () => {
-    server.use(
-      http.get(apiUrl('/api/catalogs/municipalities'), () =>
-        HttpResponse.json({ results: [{ code: '54001', name: 'Cúcuta' }] }),
-      ),
-    );
-    const { result } = renderHook(() => useMunicipalityName(), {
-      wrapper: wrapper(),
-    });
-
-    await waitFor(() => expect(result.current('54001')).toBe('Cúcuta'));
-    expect(result.current('99999')).toBe('—');
   });
 });
