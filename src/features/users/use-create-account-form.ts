@@ -1,14 +1,14 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCreateAccount, type AccountCreated } from './api';
+import { useCreateAccount, type AccountCreated } from '@/lib/api/accounts';
 import {
   accountSchema,
   emptyAccount,
   toAccountRequest,
   type AccountValues,
 } from './schemas';
-import { useAccountSubmit } from './use-account-submit';
+import { useAccountSubmit } from '@/hooks/use-account-submit';
 
 export function useCreateAccountForm({
   producer,

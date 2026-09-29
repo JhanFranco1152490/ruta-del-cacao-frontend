@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { useId, useState } from 'react';
 
 import { buttonVariants } from '@/components/ui/button';
-import { useSession } from '@/features/auth/api';
-import { AccountStatusBadge } from '@/features/users/components/account-status-badge';
-import { AccountStatusDialog } from '@/features/users/components/account-status-dialog';
-import { ActivationDelivery } from '@/features/users/components/activation-delivery';
+import { useSession } from '@/hooks/use-session';
+import { AccountStatusBadge } from '@/components/account-status-badge';
+import { AccountStatusDialog } from '@/components/account-status-dialog';
+import { ActivationDelivery } from '@/components/activation-delivery';
 import { useRoleOptions } from '@/lib/api/role-options';
 import { queryKeys } from '@/lib/api/query-keys';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';

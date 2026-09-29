@@ -9,9 +9,9 @@ import { useAccount, type Account } from '../api';
 import { hasFixedRole, isProducerAccount } from '../schemas';
 import { AccountEditForm } from './account-edit-form';
 import { AccountRolesPanel } from './account-roles-panel';
-import { AccountStatusBadge } from './account-status-badge';
-import { AccountStatusDialog } from './account-status-dialog';
-import { ActivationDelivery } from './activation-delivery';
+import { AccountStatusBadge } from '@/components/account-status-badge';
+import { AccountStatusDialog } from '@/components/account-status-dialog';
+import { ActivationDelivery } from '@/components/activation-delivery';
 
 type SessionUser = components['schemas']['SessionUser'];
 type Mode = 'view' | 'edit' | 'roles';

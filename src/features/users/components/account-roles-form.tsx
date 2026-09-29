@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import type { Role } from '@/lib/api/roles';
 import { useSetAccountRoles, type Account } from '../api';
 import { roleIdsSchema } from '../schemas';
-import { useAccountSubmit } from '../use-account-submit';
+import { useAccountSubmit } from '@/hooks/use-account-submit';
 import { RoleCheckboxes } from './role-checkboxes';
 
 const rolesSchema = z.object({ role_ids: roleIdsSchema });

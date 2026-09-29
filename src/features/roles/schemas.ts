@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isUuid } from '@/lib/is-uuid';
+import { isUuid } from '@/lib/validation/is-uuid';
 import type { PermissionItem, Role, RoleCreate } from './api';
 
 export const roleSchema = z.object({

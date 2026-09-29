@@ -7,7 +7,7 @@ import { apiUrl } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
-import { AccountListScreen } from '@/features/users/components/account-list-screen';
+import UsersPage from '@/app/(app)/usuarios/page';
 
 const producerPermissions = [
   PERMISSIONS.USERS_VIEW,
@@ -59,7 +59,7 @@ describe('AssociationAccessCard', () => {
         return HttpResponse.json(off);
       }),
     );
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     expect(
       await screen.findByText('No hay usuarios para mostrar'),
     ).toBeVisible();
@@ -68,7 +68,7 @@ describe('AssociationAccessCard', () => {
   });
 
   it('shows the current state and that it never changed', async () => {
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     const toggle = await findSwitch();
     expect(toggle).not.toBeChecked();
     expect(screen.getByText('Apagado')).toBeVisible();
@@ -79,7 +79,7 @@ describe('AssociationAccessCard', () => {
     server.use(
       http.get(apiUrl('/api/association-access'), () => HttpResponse.json(on)),
     );
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     expect(await findSwitch()).toBeChecked();
     expect(screen.getByText('Encendido')).toBeVisible();
     expect(
@@ -92,7 +92,7 @@ describe('AssociationAccessCard', () => {
       await delay(100);
       return HttpResponse.json(on);
     });
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     await userEvent.click(await findSwitch());
     const dialog = await screen.findByRole('dialog', {
       name: '¿Permitir el acceso de la asociación?',
@@ -108,7 +108,7 @@ describe('AssociationAccessCard', () => {
 
   it('sends nothing when the confirmation is cancelled', async () => {
     const bodies = recordPut(() => json(on));
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     await userEvent.click(await findSwitch());
     const dialog = await screen.findByRole('dialog');
     await userEvent.click(
@@ -126,7 +126,7 @@ describe('AssociationAccessCard', () => {
     const bodies = recordPut(() =>
       json({ enabled: false, changed_at: '2026-09-28T16:00:00Z' }),
     );
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     const toggle = await findSwitch();
     toggle.focus();
     await userEvent.keyboard(' ');
@@ -145,7 +145,7 @@ describe('AssociationAccessCard', () => {
         apiError(500, 'server_error', 'No fue posible guardar el cambio.'),
       ),
     );
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     await userEvent.click(await findSwitch());
     expect(
       await screen.findByText('No fue posible guardar el cambio.'),
@@ -164,7 +164,7 @@ describe('AssociationAccessCard', () => {
           : HttpResponse.json(off);
       }),
     );
-    renderWithProviders(<AccountListScreen />);
+    renderWithProviders(<UsersPage />);
     await userEvent.click(
       await screen.findByRole('button', { name: 'Reintentar' }),
     );

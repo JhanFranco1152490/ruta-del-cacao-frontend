@@ -1,5 +1,5 @@
 import { StatusBadge } from '@/components/status-badge';
-import type { Account } from '../api';
+import type { Account } from '@/lib/api/accounts';
 export function AccountStatusBadge({
   account,
 }: {

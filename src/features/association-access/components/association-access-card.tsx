@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { getErrorMessage } from '@/lib/api/errors';
-import { formatDateTime } from '@/lib/dates';
+import { formatDateTime } from '@/lib/format/dates';
 import { useAssociationAccess, useSetAssociationAccess } from '../api';
 
 // Interruptor con el que el productor deja (o no) que la asociación gestione sus cuentas y

@@ -5,7 +5,7 @@ import {
   parseAsStringLiteral,
   useQueryStates,
 } from 'nuqs';
-import { usePaginatedSearch } from '@/lib/use-paginated-search';
+import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import type { Role, RoleQuery } from './api';
 import { isRoleId } from './schemas';
 

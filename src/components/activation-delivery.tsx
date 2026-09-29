@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/status-badge';
 import { getErrorMessage } from '@/lib/api/errors';
-import { useResendActivation } from '../api';
+import { useResendActivation } from '@/lib/api/accounts';
 
 export function ActivationDelivery({
   id,

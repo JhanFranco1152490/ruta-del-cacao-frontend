@@ -8,7 +8,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { ErrorState } from '@/components/error-state';
-import { isUuid } from '@/lib/is-uuid';
+import { isUuid } from '@/lib/validation/is-uuid';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { components } from '@/lib/api/schema';
 import type { AccountCreated } from '../api';

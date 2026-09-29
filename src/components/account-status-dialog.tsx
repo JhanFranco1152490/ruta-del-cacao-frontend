@@ -6,7 +6,11 @@ import {
   type StatusChangeAction,
 } from '@/components/status-change-dialog';
 import { getErrorMessage } from '@/lib/api/errors';
-import { useSetAccountStatus, type Account, type AccountStatus } from '../api';
+import {
+  useSetAccountStatus,
+  type Account,
+  type AccountStatus,
+} from '@/lib/api/accounts';
 
 const ACTIONS: Record<AccountStatus, StatusChangeAction> = {
   inactive: {

@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Account } from '../api';
-import { AccountStatusBadge } from './account-status-badge';
+import { AccountStatusBadge } from '@/components/account-status-badge';
 
 export function AccountTable({
   accounts,

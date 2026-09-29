@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 import { todayInBogota } from '@/lib/format/dates';
 import { isEmail } from '@/lib/validation/is-email';
-import { optionalPhoneSchema } from '@/lib/form-schemas';
+import { optionalPhoneSchema } from '@/lib/validation/phone';
 
 import type { Producer, ProducerRequest } from './api';
 

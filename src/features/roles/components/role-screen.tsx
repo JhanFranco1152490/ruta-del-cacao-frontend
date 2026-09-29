@@ -5,7 +5,7 @@ import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
-import { useSession } from '@/features/auth/api';
+import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { useRoleFilters } from '../use-role-filters';
 import { useRolePanel } from '../use-role-panel';

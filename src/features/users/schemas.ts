@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
-import { isEmail } from '@/lib/is-email';
-import { optionalPhoneSchema } from '@/lib/form-schemas';
+import { isEmail } from '@/lib/validation/is-email';
+import { optionalPhoneSchema } from '@/lib/validation/phone';
 import type { Role } from '@/lib/api/roles';
-import type { Account, AccountCreate, AccountUpdate } from './api';
+import type { Account, AccountCreate, AccountUpdate } from '@/lib/api/accounts';
 
 // Datos personales: los comparten el alta y la edición.
 export const accountDataSchema = z.object({

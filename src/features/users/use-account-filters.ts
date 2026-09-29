@@ -5,9 +5,9 @@ import {
   parseAsStringLiteral,
   useQueryStates,
 } from 'nuqs';
-import { usePaginatedSearch } from '@/lib/use-paginated-search';
-import { isUuid } from '@/lib/is-uuid';
-import type { AccountQuery } from './api';
+import { usePaginatedSearch } from '@/hooks/use-paginated-search';
+import { isUuid } from '@/lib/validation/is-uuid';
+import type { AccountQuery } from '@/lib/api/accounts';
 
 const parsers = {
   search: parseAsString.withDefault(''),

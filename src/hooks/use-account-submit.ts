@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import type { FieldValues, UseFormSetError } from 'react-hook-form';
-import { presentAccountError } from './account-errors';
+import { presentAccountError } from '@/lib/api/account-errors';
 
 // Envío de un formulario de cuentas: una sola petición a la vez (el doble clic no repite),
 // el panel bloqueado mientras tanto y los errores en su campo o en el aviso general.

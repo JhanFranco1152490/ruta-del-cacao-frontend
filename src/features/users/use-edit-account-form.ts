@@ -1,7 +1,7 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useUpdateAccount, type Account } from './api';
+import { useUpdateAccount, type Account } from '@/lib/api/accounts';
 import {
   accountDataSchema,
   isProducerAccount,
@@ -9,7 +9,7 @@ import {
   toAccountUpdate,
   type AccountDataValues,
 } from './schemas';
-import { useAccountSubmit } from './use-account-submit';
+import { useAccountSubmit } from '@/hooks/use-account-submit';
 
 export function useEditAccountForm({
   account,

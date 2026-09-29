@@ -19,11 +19,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { useCreateAccount, type AccountCreated } from '@/features/users/api';
-import { accountDataSchema } from '@/features/users/schemas';
-import { useAccountSubmit } from '@/features/users/use-account-submit';
+import { useCreateAccount, type AccountCreated } from '@/lib/api/accounts';
+import { isEmail } from '@/lib/validation/is-email';
+import { useAccountSubmit } from '@/hooks/use-account-submit';
 
-const emailSchema = z.object({ email: accountDataSchema.shape.email });
+const emailSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .max(254)
+    .refine(isEmail, 'Ingresa un correo electrónico válido.'),
+});
 type EmailValues = z.infer<typeof emailSchema>;
 
 // Cuenta Productor de un expediente registrado antes de que se creara sola: solo se pide el
