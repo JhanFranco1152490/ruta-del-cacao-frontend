@@ -10,6 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-selva-2',
+        copper: 'bg-cobre text-primary-foreground hover:bg-cobre/90',
         outline:
           'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:
@@ -30,6 +31,10 @@ const buttonVariants = cva(
         // la base mostraban el anillo global de foco: se restituye porque la base lo apaga.
         office: cn(
           'h-11 gap-2 rounded-md px-5 text-sm font-bold',
+          FOCUS_OUTLINE_CLASS,
+        ),
+        field: cn(
+          'h-16 gap-3 rounded-[12px] border-[2.5px] border-ink px-6 text-lg font-extrabold',
           FOCUS_OUTLINE_CLASS,
         ),
         icon: 'size-8',

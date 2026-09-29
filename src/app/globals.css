@@ -134,6 +134,14 @@
   --color-err-bg: var(--err-bg);
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
+  --color-ok-solid: var(--ok-solid);
+  --color-ok-solid-fg: var(--ok-solid-fg);
+  --color-warn-solid: var(--warn-solid);
+  --color-warn-solid-fg: var(--warn-solid-fg);
+  --color-err-solid: var(--err-solid);
+  --color-err-solid-fg: var(--err-solid-fg);
+  --color-info-solid: var(--info-solid);
+  --color-info-solid-fg: var(--info-solid-fg);
 
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
