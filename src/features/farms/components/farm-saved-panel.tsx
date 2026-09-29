@@ -1,9 +1,10 @@
 'use client';
 
 import { CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 
 import { FarmStatusBadge } from './farm-status-badge';
 
@@ -44,15 +45,26 @@ export function FarmSavedPanel({
           </p>
         </div>
         <FarmStatusBadge status="pending" />
-        <Button
-          className="w-full sm:w-auto"
-          onClick={onRegisterAnother}
-          size="field"
-          type="button"
-          variant="outline"
-        >
-          Registrar otra finca
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            className={buttonVariants({
+              size: 'field',
+              className: 'w-full sm:w-auto',
+            })}
+            href="/fincas"
+          >
+            Ver mis fincas
+          </Link>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={onRegisterAnother}
+            size="field"
+            type="button"
+            variant="outline"
+          >
+            Registrar otra finca
+          </Button>
+        </div>
       </section>
     </div>
   );

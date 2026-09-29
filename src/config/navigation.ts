@@ -1,4 +1,4 @@
-import { LayoutDashboard, Sprout } from 'lucide-react';
+import { LayoutDashboard, MapPinned, Sprout } from 'lucide-react';
 
 import { PERMISSIONS } from '@/lib/permissions';
 import type { NavItem } from '@/types/navigation';
@@ -11,6 +11,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Productores',
     icon: Sprout,
     permission: PERMISSIONS.PRODUCERS_VIEW,
+  },
+  {
+    href: '/fincas',
+    label: 'Fincas',
+    icon: MapPinned,
+    permission: PERMISSIONS.FARMS_VIEW,
   },
 ];
 

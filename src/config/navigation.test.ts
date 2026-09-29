@@ -68,17 +68,19 @@ describe('isActiveRoute', () => {
 });
 
 describe('NAV_ITEMS', () => {
-  it('starts with the panel and the producers', () => {
+  it('starts with the panel, the producers and the farms', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([
       '/panel',
       '/productores',
+      '/fincas',
     ]);
   });
 
-  it('gates producers behind its view permission and leaves the panel open', () => {
+  it('gates producers and farms behind their view permission and leaves the panel open', () => {
     const byHref = Object.fromEntries(NAV_ITEMS.map((i) => [i.href, i]));
 
     expect(byHref['/panel'].permission).toBeUndefined();
     expect(byHref['/productores'].permission).toBe(PERMISSIONS.PRODUCERS_VIEW);
+    expect(byHref['/fincas'].permission).toBe(PERMISSIONS.FARMS_VIEW);
   });
 });
