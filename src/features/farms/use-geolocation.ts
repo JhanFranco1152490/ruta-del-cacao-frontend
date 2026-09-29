@@ -2,10 +2,11 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-export type Coordinates = {
-  latitude: string;
-  longitude: string;
-};
+import type { Coordinates } from '@/types/geo';
+
+// La API guarda las coordenadas con siete decimales (~1 cm) y rechaza más precisión, que
+// algunos navegadores sí entregan.
+const COORDINATE_DECIMALS = 7;
 
 const LOCATION_ERRORS: Record<number, string> = {
   1: 'No permitiste acceder a tu ubicación. Escribe las coordenadas o marca el punto en el mapa.',
@@ -36,8 +37,8 @@ export function useGeolocation(onCapture: (coordinates: Coordinates) => void) {
         isCapturingRef.current = false;
         setIsCapturing(false);
         onCapture({
-          latitude: String(coords.latitude),
-          longitude: String(coords.longitude),
+          latitude: coords.latitude.toFixed(COORDINATE_DECIMALS),
+          longitude: coords.longitude.toFixed(COORDINATE_DECIMALS),
         });
       },
       ({ code }) => {

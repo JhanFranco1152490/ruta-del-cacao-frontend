@@ -47,6 +47,29 @@ describe('useGeolocation', () => {
     expect(result.current.isCapturing).toBe(false);
   });
 
+  it('rounds the captured point to the precision the API stores', () => {
+    const getCurrentPosition = vi.fn();
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    const onSuccess = getCurrentPosition.mock.calls[0][0] as PositionCallback;
+    act(() => {
+      onSuccess({
+        coords: { latitude: 7.823456789123, longitude: -72.51 },
+      } as GeolocationPosition);
+    });
+
+    expect(onCapture).toHaveBeenCalledWith({
+      latitude: '7.8234568',
+      longitude: '-72.5100000',
+    });
+  });
+
   it('explains when the browser does not support location', () => {
     Reflect.deleteProperty(navigator, 'geolocation');
     const { result } = renderHook(() => useGeolocation(vi.fn()));

@@ -48,6 +48,36 @@ describe('farmFormSchema', () => {
     );
   });
 
+  it('accepts a decimal comma and sends a decimal point', () => {
+    const result = farmFormSchema.safeParse({
+      ...valid,
+      area_hectares: '12,5',
+      latitude: '7,8234567',
+      longitude: '-72,5123456',
+    });
+
+    expect(result.data).toMatchObject({
+      area_hectares: '12.5',
+      latitude: '7.8234567',
+      longitude: '-72.5123456',
+    });
+  });
+
+  it('limits decimals to the precision the API stores', () => {
+    expect(messages({ ...valid, latitude: '7.82345678' })).toEqual([
+      'Usa máximo 7 decimales.',
+    ]);
+    expect(messages({ ...valid, area_hectares: '12.505' })).toEqual([
+      'Usa máximo 2 decimales.',
+    ]);
+  });
+
+  it('reports only the missing point for an empty coordinate', () => {
+    expect(messages({ ...valid, latitude: '' })).toEqual([
+      'La georreferenciación es obligatoria',
+    ]);
+  });
+
   it('requires a positive decimal area', () => {
     expect(messages({ ...valid, area_hectares: '0' })).toContain(
       'El área debe ser mayor a 0',

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { FarmLocationCapture } from './farm-location-capture';
-import type { Coordinates } from '../use-geolocation';
+import type { Coordinates } from '@/types/geo';
 
 const originalGeolocation = Object.getOwnPropertyDescriptor(
   navigator,

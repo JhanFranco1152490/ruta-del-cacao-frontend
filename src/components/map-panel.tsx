@@ -3,11 +3,7 @@ import type { ReactNode } from 'react';
 
 import { ErrorState } from '@/components/error-state';
 import { Skeleton } from '@/components/ui/skeleton';
-
-export type MapCoordinates = {
-  latitude: string;
-  longitude: string;
-};
+import type { Coordinates } from '@/types/geo';
 
 export function MapPanel({
   children,
@@ -19,7 +15,7 @@ export function MapPanel({
   children?: ReactNode;
   error?: string;
   isLoading?: boolean;
-  location: MapCoordinates | null;
+  location: Coordinates | null;
   onRetry?: () => void;
 }) {
   if (isLoading) {

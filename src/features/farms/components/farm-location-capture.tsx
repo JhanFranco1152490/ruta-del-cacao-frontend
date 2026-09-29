@@ -5,8 +5,9 @@ import { MapPin } from 'lucide-react';
 import { FormMessage } from '@/components/form-message';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
+import type { Coordinates } from '@/types/geo';
 
-import { type Coordinates, useGeolocation } from '../use-geolocation';
+import { useGeolocation } from '../use-geolocation';
 
 const FIELD_CLASS =
   'h-[var(--control-h-field)] rounded-[12px] border-[2.5px] border-ink text-lg font-bold';
