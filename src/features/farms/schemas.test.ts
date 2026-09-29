@@ -5,7 +5,6 @@ import { emptyFarmForm, farmFormSchema } from './schemas';
 const valid = {
   ...emptyFarmForm,
   name: 'La Esperanza',
-  department_id: '54',
   municipality_id: '54001',
   area_hectares: '12.50',
   altitude_masl: '950',
@@ -23,11 +22,10 @@ describe('farmFormSchema', () => {
     expect(farmFormSchema.safeParse(valid).success).toBe(true);
   });
 
-  it('reports the required farm and territorial fields', () => {
+  it('reports the required farm and municipality fields', () => {
     expect(messages(emptyFarmForm)).toEqual(
       expect.arrayContaining([
         'Ingresa el nombre de la finca.',
-        'Selecciona un departamento.',
         'Selecciona un municipio.',
       ]),
     );

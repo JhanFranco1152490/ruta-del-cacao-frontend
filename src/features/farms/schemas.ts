@@ -41,7 +41,6 @@ const requiredCoordinate = (minimum: number, maximum: number) =>
 
 export const farmFormSchema = z.object({
   name: z.string().trim().min(1, 'Ingresa el nombre de la finca.'),
-  department_id: z.string().min(1, 'Selecciona un departamento.'),
   municipality_id: z.string().min(1, 'Selecciona un municipio.'),
   details: z.string().trim(),
   area_hectares: decimalText()
@@ -71,7 +70,6 @@ export const FARM_FORM_FIELDS = Object.keys(farmFormSchema.shape);
 
 export const emptyFarmForm: FarmFormValues = {
   name: '',
-  department_id: '',
   municipality_id: '',
   details: '',
   area_hectares: '',

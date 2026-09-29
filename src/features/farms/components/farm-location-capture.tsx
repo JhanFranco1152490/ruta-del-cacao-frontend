@@ -8,9 +8,7 @@ import { Button } from '@/components/ui/button';
 import type { Coordinates } from '@/types/geo';
 
 import { useGeolocation } from '../use-geolocation';
-
-const FIELD_CLASS =
-  'h-[var(--control-h-field)] rounded-[12px] border-[2.5px] border-ink text-lg font-bold';
+import { CAPTURE_FIELD_CLASS } from './capture-field-class';
 
 export function FarmLocationCapture({
   location,
@@ -35,7 +33,7 @@ export function FarmLocationCapture({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
-          className={FIELD_CLASS}
+          className={CAPTURE_FIELD_CLASS}
           error={latitudeError}
           inputMode="decimal"
           label="Latitud"
@@ -45,7 +43,7 @@ export function FarmLocationCapture({
           value={location.latitude}
         />
         <TextField
-          className={FIELD_CLASS}
+          className={CAPTURE_FIELD_CLASS}
           error={longitudeError}
           inputMode="decimal"
           label="Longitud"
