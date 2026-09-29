@@ -6,10 +6,14 @@ import { queryKeys } from '@/lib/api/query-keys';
 const SESSION_KEY = queryKeys.session();
 
 export function createQueryClient() {
-  // Un 401 (ya intentada la renovación) en cualquier consulta o mutación invalida la sesión:
-  // la guardia la vuelve a comprobar y lleva al inicio de sesión desde un solo lugar.
+  // Un 401 vuelve a comprobar la sesión; un permiso rechazado recarga sus permisos actuales.
   const invalidateSession = (error: unknown) => {
-    if (isUnauthorized(error))
+    if (
+      isUnauthorized(error) ||
+      (isApiError(error) &&
+        error.status === 403 &&
+        error.code === 'permission_denied')
+    )
       void client.invalidateQueries({ queryKey: SESSION_KEY });
   };
 

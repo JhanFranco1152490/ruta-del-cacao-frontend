@@ -72,6 +72,8 @@ describe('NAV_ITEMS', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([
       '/panel',
       '/productores',
+      '/roles',
+      '/usuarios',
     ]);
   });
 
@@ -80,5 +82,7 @@ describe('NAV_ITEMS', () => {
 
     expect(byHref['/panel'].permission).toBeUndefined();
     expect(byHref['/productores'].permission).toBe(PERMISSIONS.PRODUCERS_VIEW);
+    expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
+    expect(byHref['/usuarios'].permission).toBe(PERMISSIONS.USERS_VIEW);
   });
 });

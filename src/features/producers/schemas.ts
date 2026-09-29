@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 import { todayInBogota } from '@/lib/format/dates';
 import { isEmail } from '@/lib/validation/is-email';
+import { optionalPhoneSchema } from '@/lib/validation/phone';
 
 import type { Producer, ProducerRequest } from './api';
 
@@ -15,13 +16,7 @@ export const producerFormSchema = z.object({
   first_name: z.string().trim().min(1, 'Ingresa los nombres.').max(100),
   last_name: z.string().trim().min(1, 'Ingresa los apellidos.').max(100),
   // En el formulario los opcionales vacíos son '' y se envían como null.
-  phone: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === '' || /^[0-9]{7,10}$/.test(value),
-      'El teléfono debe tener entre 7 y 10 dígitos.',
-    ),
+  phone: optionalPhoneSchema,
   email: z
     .string()
     .trim()
@@ -40,6 +35,14 @@ export const producerFormSchema = z.object({
 });
 
 export type ProducerFormValues = z.infer<typeof producerFormSchema>;
+
+export const producerCreateFormSchema = producerFormSchema.extend({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Ingresa el correo para crear la cuenta de acceso.')
+    .refine(isEmail, 'Ingresa un correo electrónico válido.'),
+});
 
 export const PRODUCER_FORM_FIELDS = Object.keys(producerFormSchema.shape);
 
@@ -65,9 +68,7 @@ export const toFormValues = (producer: Producer): ProducerFormValues => ({
   joined_on: producer.joined_on,
 });
 
-export const toProducerRequest = (
-  values: ProducerFormValues,
-): ProducerRequest => ({
+export const toProducerRequest = (values: ProducerFormValues) => ({
   document_type: values.document_type,
   identity_document: values.identity_document.trim(),
   first_name: values.first_name.trim(),
@@ -76,4 +77,11 @@ export const toProducerRequest = (
   email: values.email.trim().toLowerCase() || null,
   municipality_code: values.municipality_code,
   joined_on: values.joined_on,
+});
+
+export const toProducerCreateRequest = (
+  values: ProducerFormValues,
+): ProducerRequest => ({
+  ...toProducerRequest(values),
+  email: values.email.trim().toLowerCase(),
 });

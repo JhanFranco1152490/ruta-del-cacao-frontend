@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useSession } from '../api';
 
@@ -20,6 +21,34 @@ export function SessionPanel() {
         que se habiliten para tus roles y permisos.
       </p>
       <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {hasPermission(user, PERMISSIONS.USERS_VIEW) && (
+          <article className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <h2 className="font-serif text-2xl text-selva">Usuarios</h2>
+            <p className="mt-3 text-muted-foreground">
+              Consulta las cuentas y crea usuarios con los roles de tu equipo.
+            </p>
+            <Link
+              href="/usuarios"
+              className="mt-5 inline-flex rounded-md bg-selva px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-selva-2"
+            >
+              Ir a usuarios
+            </Link>
+          </article>
+        )}
+        {hasPermission(user, PERMISSIONS.ROLES_VIEW) && (
+          <article className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <h2 className="font-serif text-2xl text-selva">Roles y permisos</h2>
+            <p className="mt-3 text-muted-foreground">
+              Consulta los roles y administra los permisos de tu equipo.
+            </p>
+            <Link
+              href="/roles"
+              className="mt-5 inline-flex rounded-md bg-selva px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-selva-2"
+            >
+              Ir a roles
+            </Link>
+          </article>
+        )}
         <article className="rounded-lg border border-border bg-card p-6 shadow-card">
           <h2 className="font-serif text-2xl text-selva">Cuenta</h2>
           <p className="mt-3 break-all text-muted-foreground">{user.email}</p>
@@ -30,10 +59,10 @@ export function SessionPanel() {
             {user.roles.length ? (
               user.roles.map((role) => (
                 <span
-                  key={role}
+                  key={role.id}
                   className="rounded-full bg-ok-bg px-3 py-1 text-sm font-bold text-ok"
                 >
-                  {role}
+                  {role.name}
                 </span>
               ))
             ) : (

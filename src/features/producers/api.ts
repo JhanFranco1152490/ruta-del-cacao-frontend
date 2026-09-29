@@ -9,15 +9,29 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
+import {
+  fetchMunicipalities,
+  useMunicipalities,
+  useMunicipalityName,
+  type Municipality,
+} from '@/lib/api/municipalities';
 
 type Schemas = components['schemas'];
-export type Producer = Schemas['Producer'];
+export type Producer = Schemas['ProducerDetail'];
 export type ProducerListItem = Schemas['ProducerList'];
 export type ProducerPage = Schemas['PaginatedProducerListList'];
 export type ProducerRequest = Schemas['ProducerRequest'];
 export type ProducerUpdate = Schemas['PatchedProducerUpdateRequest'];
 export type ProducerStatus = Schemas['StatusEnum'];
-export type Municipality = Schemas['Municipality'];
+
+// El catálogo de municipios vive en lib/api porque también lo usan las cuentas; aquí se
+// reexporta para las pantallas de productores.
+export {
+  fetchMunicipalities,
+  useMunicipalities,
+  useMunicipalityName,
+  type Municipality,
+};
 
 export const PAGE_SIZE = 20;
 
@@ -42,10 +56,6 @@ export const fetchProducers = (query: ProducerQuery, signal?: AbortSignal) =>
   apiFetch<ProducerPage>(listPath(query), { signal });
 export const fetchProducer = (id: string, signal?: AbortSignal) =>
   apiFetch<Producer>(`/api/producers/${id}`, { signal });
-export const fetchMunicipalities = (signal?: AbortSignal) =>
-  apiFetch<Schemas['MunicipalityList']>('/api/catalogs/municipalities', {
-    signal,
-  }).then((response) => response.results);
 
 export const useProducers = (query: ProducerQuery) =>
   useQuery({
@@ -61,20 +71,6 @@ export const useProducer = (id: string, options?: { staleTime?: number }) =>
     queryFn: ({ signal }) => fetchProducer(id, signal),
     ...options,
   });
-
-// El catálogo casi nunca cambia: se pide una vez y se comparte entre pantallas.
-export const useMunicipalities = () =>
-  useQuery({
-    queryKey: queryKeys.municipalities(),
-    queryFn: ({ signal }) => fetchMunicipalities(signal),
-    staleTime: Infinity,
-  });
-
-export function useMunicipalityName() {
-  const { data } = useMunicipalities();
-  return (code: string) =>
-    data?.find((municipality) => municipality.code === code)?.name ?? '—';
-}
 
 function useCacheProducer() {
   const queryClient = useQueryClient();
