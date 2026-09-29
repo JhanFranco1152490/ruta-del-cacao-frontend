@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -6,14 +6,19 @@ import type { components } from '@/lib/api/schema';
 import { clearOfflineCache } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
 
-export type Session = components['schemas']['Session'];
-export type SessionUser = components['schemas']['SessionUser'];
+import {
+  fetchSession,
+  useSession,
+  type Session,
+  type SessionUser,
+} from '@/hooks/use-session';
+
+// La sesión vive en hooks/ porque la consultan varios dominios; aquí se reexporta para auth.
+export { fetchSession, useSession, type Session, type SessionUser };
 type LoginRequest = components['schemas']['LoginRequest'];
 type PasswordResetConfirmRequest =
   components['schemas']['PasswordResetConfirmRequest'];
 
-export const fetchSession = (signal?: AbortSignal) =>
-  apiFetch<Session>('/api/auth/me', { signal });
 export const postLogin = (body: LoginRequest) =>
   apiFetch<Session>('/api/auth/login', { method: 'POST', body });
 export const postLogout = () =>
@@ -25,16 +30,6 @@ export const postPasswordResetRequest = (email: string) =>
   });
 export const postPasswordResetConfirm = (body: PasswordResetConfirmRequest) =>
   apiFetch<void>('/api/auth/password-reset/confirm', { method: 'POST', body });
-
-// La sesión es estado del servidor: una sola consulta que comparten la guardia y la pantalla.
-export const useSession = () =>
-  useQuery({
-    queryKey: queryKeys.session(),
-    queryFn: ({ signal }) => fetchSession(signal),
-    select: (session) => session.user,
-    retry: false,
-    staleTime: 5 * 60_000,
-  });
 
 export function useLogin() {
   const queryClient = useQueryClient();
@@ -69,3 +64,9 @@ export const useRequestPasswordReset = () =>
 
 export const useConfirmPasswordReset = () =>
   useMutation({ mutationFn: postPasswordResetConfirm });
+
+export const postActivationConfirm = (
+  body: components['schemas']['ActivationConfirmRequest'],
+) => apiFetch<void>('/api/auth/activation/confirm', { method: 'POST', body });
+export const useConfirmActivation = () =>
+  useMutation({ mutationFn: postActivationConfirm });

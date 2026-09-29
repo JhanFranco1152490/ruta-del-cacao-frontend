@@ -34,7 +34,7 @@ const newProducer = {
   first_name: 'Ana',
   last_name: 'Prueba',
   phone: null,
-  email: null,
+  email: 'ana@example.com',
   municipality_code: '54001',
   joined_on: '2026-03-15',
 } as const;

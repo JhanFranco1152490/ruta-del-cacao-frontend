@@ -21,21 +21,26 @@ export const sessionExpired = () =>
 export const notAuthenticated = () =>
   apiError(401, 'not_authenticated', 'No autenticado.');
 
+export const buildSessionUser = (
+  overrides: Partial<Schemas['SessionUser']> = {},
+): Schemas['SessionUser'] => ({
+  id: 'u1',
+  email: 'persona@example.com',
+  roles: [{ id: 'role-producer', code: 'producer', name: 'Productor' }],
+  producer_id: 'p1',
+  permissions: [],
+  ...overrides,
+});
+
 export const buildSession = (
   user: Partial<Schemas['SessionUser']> = {},
 ): Schemas['Session'] => ({
-  user: {
-    id: 'u1',
-    email: 'persona@example.com',
-    roles: ['producer'],
-    permissions: [],
-    ...user,
-  },
+  user: buildSessionUser(user),
 });
 
 export const buildProducer = (
-  overrides: Partial<Schemas['Producer']> = {},
-): Schemas['Producer'] => ({
+  overrides: Partial<Schemas['ProducerDetail']> = {},
+): Schemas['ProducerDetail'] => ({
   id: 'p1',
   member_code: 'PROD-000001',
   document_type: 'CC',
@@ -48,6 +53,8 @@ export const buildProducer = (
   joined_on: '2026-03-15',
   status: 'active',
   version: 3,
+  account: null,
+  association_access: false,
   created_at: '2026-03-15T12:00:00-05:00',
   updated_at: '2026-03-15T12:00:00-05:00',
   ...overrides,

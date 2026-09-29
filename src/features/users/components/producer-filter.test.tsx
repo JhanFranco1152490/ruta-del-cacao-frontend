@@ -1,0 +1,160 @@
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildPage, buildProducer, buildSession } from '@/test/factories';
+import { apiUrl } from '@/test/handlers';
+import { renderWithProviders } from '@/test/render';
+import { server } from '@/test/server';
+import { PERMISSIONS } from '@/lib/permissions';
+import { AccountListScreen } from './account-list-screen';
+
+const producerId = '33333333-3333-4333-8333-333333333333';
+const otherId = '55555555-5555-4555-8555-555555555555';
+const listItem = (id: string, first_name: string, member_code: string) => ({
+  id,
+  member_code,
+  document_type: 'CC',
+  identity_document: '1234567890',
+  first_name,
+  last_name: 'Prueba',
+  municipality_code: '54001',
+  status: 'active',
+});
+const associationPermissions = [
+  PERMISSIONS.USERS_VIEW,
+  PERMISSIONS.USERS_CREATE,
+  PERMISSIONS.PRODUCERS_VIEW,
+];
+
+function mockSession(producer_id: string | null, permissions: string[]) {
+  server.use(
+    http.get(apiUrl('/api/auth/me'), () =>
+      HttpResponse.json(buildSession({ producer_id, permissions })),
+    ),
+  );
+}
+function mockProducer(association_access: boolean) {
+  server.use(
+    http.get(apiUrl(`/api/producers/${producerId}`), () =>
+      HttpResponse.json(
+        buildProducer({
+          id: producerId,
+          first_name: 'Ana',
+          member_code: 'PROD-000007',
+          association_access,
+        }),
+      ),
+    ),
+  );
+}
+
+beforeEach(() => {
+  mockSession(null, associationPermissions);
+  server.use(
+    http.get(apiUrl('/api/users'), () => HttpResponse.json(buildPage([]))),
+  );
+});
+
+describe('producer filter of the association', () => {
+  it('offers the active producers and selects one through the URL', async () => {
+    const requests: URL[] = [];
+    const onUrlUpdate = vi.fn();
+    server.use(
+      http.get(apiUrl('/api/producers'), ({ request }) => {
+        requests.push(new URL(request.url));
+        return HttpResponse.json(
+          buildPage([
+            listItem(producerId, 'Ana', 'PROD-000007'),
+            listItem(otherId, 'Luis', 'PROD-000008'),
+          ]),
+        );
+      }),
+    );
+    mockProducer(true);
+    renderWithProviders(<AccountListScreen />, { onUrlUpdate });
+
+    expect(
+      await screen.findByRole('button', {
+        name: 'Crear cuenta de administrador',
+      }),
+    ).toBeVisible();
+    await screen.findByRole('option', { name: 'Ana Prueba · PROD-000007' });
+    expect(requests[0]?.searchParams.get('status')).toBe('active');
+    await userEvent.selectOptions(
+      screen.getByLabelText('Productor'),
+      producerId,
+    );
+
+    expect(onUrlUpdate.mock.lastCall?.[0].searchParams.get('productor')).toBe(
+      producerId,
+    );
+    expect(
+      await screen.findByText('Ana Prueba · PROD-000007', { selector: 'span' }),
+    ).toBeVisible();
+    expect(
+      await screen.findByRole('button', { name: 'Crear cuenta de empleado' }),
+    ).toBeVisible();
+    expect(screen.queryByText(producerId)).not.toBeInTheDocument();
+  });
+
+  it('searches producers by what the person types', async () => {
+    const searches: (string | null)[] = [];
+    server.use(
+      http.get(apiUrl('/api/producers'), ({ request }) => {
+        searches.push(new URL(request.url).searchParams.get('search'));
+        return HttpResponse.json(buildPage([]));
+      }),
+    );
+    renderWithProviders(<AccountListScreen />);
+    await userEvent.type(
+      await screen.findByLabelText('Buscar productor'),
+      'PROD-7',
+    );
+    await waitFor(() => expect(searches.at(-1)).toBe('PROD-7'));
+    expect(
+      await screen.findByRole('option', { name: 'Ningún productor coincide' }),
+    ).toBeInTheDocument();
+  });
+
+  it('warns and offers no creation when the producer has not allowed access', async () => {
+    mockProducer(false);
+    renderWithProviders(<AccountListScreen />, {
+      searchParams: `?productor=${producerId}`,
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Este productor no ha autorizado el acceso de la asociación',
+    );
+    expect(
+      screen.queryByRole('button', { name: /Crear cuenta/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('goes back to every producer when the filter is removed', async () => {
+    server.use(
+      http.get(apiUrl('/api/producers'), () =>
+        HttpResponse.json(buildPage([])),
+      ),
+    );
+    mockProducer(true);
+    renderWithProviders(<AccountListScreen />, {
+      searchParams: `?productor=${producerId}`,
+    });
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Quitar filtro de productor' }),
+    );
+    expect(await screen.findByLabelText('Buscar productor')).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Crear cuenta de administrador' }),
+    ).toBeVisible();
+  });
+
+  it('is not offered inside the space of a producer', async () => {
+    mockSession(producerId, associationPermissions);
+    renderWithProviders(<AccountListScreen />);
+    expect(
+      await screen.findByRole('button', { name: 'Crear cuenta de empleado' }),
+    ).toBeVisible();
+    expect(screen.queryByLabelText('Buscar productor')).not.toBeInTheDocument();
+  });
+});

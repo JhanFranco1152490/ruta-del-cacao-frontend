@@ -257,7 +257,7 @@ describe('ResetConfirmForm', () => {
     expect(calls).toBe(1);
   });
 
-  it('shows the server message for an invalid or expired token', async () => {
+  it('shows the server message and removes the form for a used or expired token', async () => {
     server.use(
       http.post(CONFIRM, () =>
         apiError(
@@ -275,35 +275,32 @@ describe('ResetConfirmForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'El enlace de recuperación venció.',
     );
-    expect(screen.getByLabelText('Nueva contraseña')).not.toHaveAttribute(
-      'aria-invalid',
-      'true',
-    );
+    expect(screen.queryByLabelText('Nueva contraseña')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Actualizar contraseña' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Solicitar un enlace nuevo' }),
+    ).toHaveAttribute('href', '/recuperar-contrasena');
   });
 
   it('drops the previous server message when the next submit fails validation', async () => {
     server.use(
       http.post(CONFIRM, () =>
-        apiError(
-          400,
-          'invalid_reset_token',
-          'El enlace de recuperación venció.',
-        ),
+        apiError(429, 'throttled', 'Request was throttled.'),
       ),
     );
     const user = userEvent.setup();
     renderWithProviders(<ResetConfirmForm {...link} />);
     await fill(user, 'Cacao seguro');
-    await screen.findByText('El enlace de recuperación venció.');
+    await screen.findByText(RATE_LIMIT_MESSAGE);
 
     await user.clear(screen.getByLabelText('Nueva contraseña'));
     await user.click(
       screen.getByRole('button', { name: 'Actualizar contraseña' }),
     );
 
-    expect(
-      screen.queryByText('El enlace de recuperación venció.'),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(RATE_LIMIT_MESSAGE)).not.toBeInTheDocument();
     expect(screen.getByText('Ingresa tu contraseña.')).toBeInTheDocument();
   });
 

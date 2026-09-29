@@ -1,5 +1,12 @@
 export const PERMISSIONS = {
   PRODUCERS_VIEW: 'producers.view',
+  USERS_VIEW: 'accounts.users_view',
+  USERS_CREATE: 'accounts.users_create',
+  USERS_UPDATE: 'accounts.users_update',
+  USERS_CHANGE_STATUS: 'accounts.users_change_status',
+  ROLES_VIEW: 'accounts.roles_view',
+  ROLES_MANAGE: 'accounts.roles_manage',
+  ASSOCIATION_ACCESS_MANAGE: 'accounts.association_access_manage',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

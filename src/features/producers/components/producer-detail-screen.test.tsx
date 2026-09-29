@@ -4,7 +4,7 @@ import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
-import { apiError, buildProducer } from '@/test/factories';
+import { apiError, buildProducer, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
@@ -46,7 +46,11 @@ async function openDialog(name: 'Desactivar' | 'Reactivar') {
 beforeEach(() => {
   vi.clearAllMocks();
   statusBodies = [];
-  server.use(municipalitiesHandler(), producerHandler());
+  server.use(
+    municipalitiesHandler(),
+    producerHandler(),
+    http.get(apiUrl('/api/auth/me'), () => HttpResponse.json(buildSession())),
+  );
 });
 
 describe('ProducerDetailScreen', () => {

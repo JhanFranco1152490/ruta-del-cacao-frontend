@@ -2,27 +2,20 @@
 
 import { UserRoundCheck, UserRoundX } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  StatusChangeDialog,
+  type StatusChangeAction,
+} from '@/components/status-change-dialog';
 
 import type { Producer, ProducerStatus } from '../api';
 import { useProducerStatusChange } from '../use-producer-status-change';
 
-const ACTIONS = {
+const ACTIONS: Record<ProducerStatus, StatusChangeAction> = {
   inactive: {
     trigger: 'Desactivar',
     title: '¿Desactivar productor?',
     description:
-      'El expediente conservará su historial. Si tiene una cuenta vinculada, también se bloqueará su acceso al sistema.',
+      'El expediente conservará su historial. Si tiene cuenta, también se bloqueará el acceso de su cuenta y el de sus empleados.',
     confirm: 'Desactivar productor',
     pending: 'Desactivando…',
     Icon: UserRoundX,
@@ -38,7 +31,7 @@ const ACTIONS = {
     Icon: UserRoundCheck,
     variant: 'default',
   },
-} as const;
+};
 
 type ProducerStatusDialogProps = { producer: Producer; target: ProducerStatus };
 
@@ -48,43 +41,15 @@ export function ProducerStatusDialog({
 }: ProducerStatusDialogProps) {
   const { open, dialogTarget, onOpenChange, confirm, isPending, error } =
     useProducerStatusChange(producer, target);
-  // El botón de la ficha sigue a la ficha; el contenido del diálogo, a lo que se abrió.
-  const trigger = ACTIONS[target];
-  const action = ACTIONS[dialogTarget];
-
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogTrigger
-        render={<Button className="h-11" variant={trigger.variant} />}
-      >
-        <trigger.Icon aria-hidden="true" className="size-4" /> {trigger.trigger}
-      </DialogTrigger>
-      <DialogContent showCloseButton={!isPending}>
-        <DialogHeader>
-          <DialogTitle>{action.title}</DialogTitle>
-          <DialogDescription>{action.description}</DialogDescription>
-        </DialogHeader>
-        {error && (
-          <p className="text-sm font-bold text-err" role="alert">
-            {error}
-          </p>
-        )}
-        <DialogFooter>
-          <DialogClose
-            disabled={isPending}
-            render={<Button variant="outline" />}
-          >
-            Cancelar
-          </DialogClose>
-          <Button
-            disabled={isPending}
-            onClick={confirm}
-            variant={action.variant}
-          >
-            {isPending ? action.pending : action.confirm}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <StatusChangeDialog
+      trigger={ACTIONS[target]}
+      action={ACTIONS[dialogTarget]}
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={confirm}
+      isPending={isPending}
+      error={error}
+    />
   );
 }
