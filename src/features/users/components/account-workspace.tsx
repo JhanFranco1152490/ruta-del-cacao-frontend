@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { BackLink } from '@/components/back-link';
 import { Button } from '@/components/ui/button';
+import { AssociationAccessCard } from '@/features/association-access/components/association-access-card';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { components } from '@/lib/api/schema';
 import { useAccountFilters } from '../use-account-filters';
@@ -46,6 +47,11 @@ export function AccountWorkspace({
           ) : undefined
         }
       />
+      {hasPermission(user, PERMISSIONS.ASSOCIATION_ACCESS_MANAGE) && (
+        <div className="mt-8">
+          <AssociationAccessCard />
+        </div>
+      )}
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
         <AccountFilters
           filters={filters}

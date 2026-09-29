@@ -5,6 +5,7 @@ export const queryKeys = {
     list: (query: object) => ['accounts', 'list', query] as const,
     detail: (id: string) => ['accounts', 'detail', id] as const,
   },
+  associationAccess: () => ['association-access'] as const,
   permissions: () => ['permissions'] as const,
   roles: {
     all: () => ['roles'] as const,
