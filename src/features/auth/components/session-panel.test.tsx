@@ -28,6 +28,32 @@ beforeEach(() => {
 });
 
 describe('SessionPanel', () => {
+  it('links to accounts when the session can view users', async () => {
+    server.use(
+      http.get(ME, () =>
+        HttpResponse.json(
+          buildSession({ permissions: ['accounts.users_view'] }),
+        ),
+      ),
+    );
+    renderWithProviders(<SessionPanel />);
+    expect(
+      await screen.findByRole('link', { name: 'Ir a usuarios' }),
+    ).toHaveAttribute('href', '/usuarios');
+  });
+  it('links to roles when the session has permission to view them', async () => {
+    server.use(
+      http.get(ME, () =>
+        HttpResponse.json(
+          buildSession({ permissions: ['accounts.roles_view'] }),
+        ),
+      ),
+    );
+    renderWithProviders(<SessionPanel />);
+    expect(
+      await screen.findByRole('link', { name: 'Ir a roles' }),
+    ).toHaveAttribute('href', '/roles');
+  });
   it('shows the email and the roles of the session', async () => {
     renderWithProviders(<SessionPanel />);
 

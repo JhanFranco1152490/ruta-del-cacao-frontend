@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 import { todayInBogota } from '@/lib/format/dates';
 import { isEmail } from '@/lib/validation/is-email';
+import { optionalPhoneSchema } from '@/lib/form-schemas';
 
 import type { Producer, ProducerRequest } from './api';
 
@@ -15,13 +16,7 @@ export const producerFormSchema = z.object({
   first_name: z.string().trim().min(1, 'Ingresa los nombres.').max(100),
   last_name: z.string().trim().min(1, 'Ingresa los apellidos.').max(100),
   // En el formulario los opcionales vacíos son '' y se envían como null.
-  phone: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === '' || /^[0-9]{7,10}$/.test(value),
-      'El teléfono debe tener entre 7 y 10 dígitos.',
-    ),
+  phone: optionalPhoneSchema,
   email: z
     .string()
     .trim()
