@@ -12,7 +12,8 @@ export function ActivationDelivery({
   onBusy,
 }: {
   id: string;
-  sent: boolean;
+  // Resultado del último envío conocido en esta visita; sin él solo se sabe que falta activar.
+  sent?: boolean;
   canResend: boolean;
   onBusy: (value: boolean) => void;
 }) {
@@ -46,13 +47,17 @@ export function ActivationDelivery({
       className="space-y-3 rounded-md border border-border p-4"
       aria-label="Envío de activación"
     >
-      <StatusBadge tone={delivered ? 'ok' : 'warn'}>
-        {delivered ? 'Correo enviado' : 'Correo pendiente de envío'}
-      </StatusBadge>
+      {delivered !== undefined && (
+        <StatusBadge tone={delivered ? 'ok' : 'warn'}>
+          {delivered ? 'Correo enviado' : 'Correo pendiente de envío'}
+        </StatusBadge>
+      )}
       <p role="status">
-        {delivered
-          ? 'Se envió el correo de activación. La persona debe abrir el enlace y elegir su contraseña.'
-          : 'La cuenta se creó, pero no se pudo enviar el correo de activación.'}
+        {delivered === undefined
+          ? 'La cuenta aún no se ha activado.'
+          : delivered
+            ? 'Se envió el correo de activación. La persona debe abrir el enlace y elegir su contraseña.'
+            : 'La cuenta se creó, pero no se pudo enviar el correo de activación.'}
       </p>
       {!delivered && canResend && (
         <Button disabled={mutation.isPending} onClick={resend}>

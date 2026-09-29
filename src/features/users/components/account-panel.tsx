@@ -53,7 +53,7 @@ export function AccountPanel({
               : 'Detalle de la cuenta'}
           </SheetTitle>
           <SheetDescription>
-            Consulta los datos, roles y estado de activación de la cuenta.
+            Consulta y administra los datos, roles y estado de la cuenta.
           </SheetDescription>
         </SheetHeader>
         {selected === 'nueva' ? (
@@ -71,11 +71,8 @@ export function AccountPanel({
         ) : isUuid(selected) ? (
           <AccountDetail
             id={selected}
+            user={user}
             receipt={receipt}
-            canResend={
-              hasPermission(user, PERMISSIONS.USERS_UPDATE) &&
-              selected !== user.id
-            }
             onBusy={onBusy}
           />
         ) : (

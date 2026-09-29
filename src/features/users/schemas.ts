@@ -3,9 +3,10 @@ import { DOCUMENT_TYPES } from '@/lib/document-types';
 import { isEmail } from '@/lib/is-email';
 import { optionalPhoneSchema } from '@/lib/form-schemas';
 import type { Role } from '@/lib/api/roles';
-import type { AccountCreate } from './api';
+import type { Account, AccountCreate, AccountUpdate } from './api';
 
-export const accountSchema = z.object({
+// Datos personales: los comparten el alta y la edición.
+export const accountDataSchema = z.object({
   email: z
     .string()
     .trim()
@@ -19,8 +20,14 @@ export const accountSchema = z.object({
   first_name: z.string().trim().min(1, 'Ingresa los nombres.').max(150),
   last_name: z.string().trim().min(1, 'Ingresa los apellidos.').max(150),
   phone: optionalPhoneSchema,
-  role_ids: z.array(z.string()).min(1, 'Selecciona al menos un rol.'),
 });
+export const roleIdsSchema = z
+  .array(z.string())
+  .min(1, 'Selecciona al menos un rol.');
+export const accountSchema = accountDataSchema.extend({
+  role_ids: roleIdsSchema,
+});
+export type AccountDataValues = z.infer<typeof accountDataSchema>;
 export type AccountValues = z.infer<typeof accountSchema>;
 export const emptyAccount: AccountValues = {
   email: '',
@@ -55,3 +62,29 @@ export function assignableRoles(
       role.permissions.every((code) => permissions.includes(code)),
   );
 }
+
+export const toAccountDataValues = (account: Account): AccountDataValues => ({
+  email: account.email,
+  document_type: account.document_type,
+  identity_document: account.identity_document,
+  first_name: account.first_name,
+  last_name: account.last_name,
+  phone: account.phone ?? '',
+});
+// En la cuenta Productor, documento y nombres los gobierna el expediente: no se envían.
+export const toAccountUpdate = (
+  values: AccountDataValues,
+  identityLocked: boolean,
+): AccountUpdate => {
+  const email = values.email.toLowerCase();
+  const phone = values.phone || null;
+  if (identityLocked) return { email, phone };
+  return { ...values, email, phone };
+};
+const hasRole = (account: Account, code: string) =>
+  account.roles.some((role) => role.code === code);
+export const isProducerAccount = (account: Account) =>
+  hasRole(account, 'producer');
+// Las cuentas Productor y Administrador no cambian de rol.
+export const hasFixedRole = (account: Account) =>
+  isProducerAccount(account) || hasRole(account, 'administrator');

@@ -52,6 +52,40 @@ export function useCreateAccount() {
     },
   });
 }
+export type AccountUpdate = Schemas['PatchedAccountUpdateRequest'];
+export type AccountStatus = Schemas['StatusEnum'];
+// La respuesta de cada cambio es la cuenta completa: reemplaza el detalle y refresca las listas.
+function useAccountMutation<T>(send: (value: T) => Promise<Account>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onSuccess: (account) => {
+      client.setQueryData(queryKeys.accounts.detail(account.id), account);
+      void client.invalidateQueries({ queryKey: queryKeys.accounts.lists() });
+    },
+  });
+}
+export const useUpdateAccount = (id: string) =>
+  useAccountMutation((body: AccountUpdate) =>
+    apiFetch<Account>(`/api/users/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+    }),
+  );
+export const useSetAccountRoles = (id: string) =>
+  useAccountMutation((roleIds: string[]) =>
+    apiFetch<Account>(`/api/users/${encodeURIComponent(id)}/roles`, {
+      method: 'PUT',
+      body: { role_ids: roleIds },
+    }),
+  );
+export const useSetAccountStatus = (id: string) =>
+  useAccountMutation((status: AccountStatus) =>
+    apiFetch<Account>(`/api/users/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      body: { status },
+    }),
+  );
 export function useResendActivation() {
   return useMutation({
     mutationFn: (id: string) =>
