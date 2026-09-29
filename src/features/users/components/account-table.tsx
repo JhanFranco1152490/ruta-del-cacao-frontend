@@ -14,9 +14,12 @@ import { AccountStatusBadge } from '@/components/account-status-badge';
 export function AccountTable({
   accounts,
   open,
+  municipalityName,
 }: {
   accounts: Account[];
   open: (id: string) => void;
+  // Solo la asociación ve cuentas de varios productores: sin esto no hay columna de municipio.
+  municipalityName?: (code: string) => string;
 }) {
   return (
     <Table>
@@ -25,6 +28,7 @@ export function AccountTable({
           <TableHead>Nombre</TableHead>
           <TableHead>Documento</TableHead>
           <TableHead>Roles</TableHead>
+          {municipalityName && <TableHead>Municipio</TableHead>}
           <TableHead>Estado</TableHead>
           <TableHead>
             <span className="sr-only">Acciones</span>
@@ -46,6 +50,13 @@ export function AccountTable({
             <TableCell className="max-w-64 break-words whitespace-normal">
               {account.roles.map((role) => role.name).join(', ')}
             </TableCell>
+            {municipalityName && (
+              <TableCell>
+                {account.producer
+                  ? municipalityName(account.producer.municipality_code)
+                  : '—'}
+              </TableCell>
+            )}
             <TableCell>
               <AccountStatusBadge account={account} />
             </TableCell>

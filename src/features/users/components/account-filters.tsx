@@ -2,14 +2,18 @@ import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
 import { useRoleOptions } from '@/lib/api/role-options';
+import type { Municipality } from '@/lib/api/municipalities';
 import type { useAccountFilters } from '../use-account-filters';
 
 export function AccountFilters({
   filters,
   canReadRoles,
+  municipalities,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   canReadRoles: boolean;
+  // Sin catálogo (el espacio de un productor) no se ofrece el filtro de municipio.
+  municipalities?: Municipality[];
 }) {
   const roles = useRoleOptions(canReadRoles);
   return (
@@ -69,6 +73,30 @@ export function AccountFilters({
             ))}
           </SelectField>
         )}
+        {municipalities && (
+          <SelectField
+            label="Municipio"
+            value={filters.municipality ?? ''}
+            onChange={(event) => {
+              void filters.setMunicipality(event.target.value || null);
+            }}
+          >
+            <option value="">Todos los municipios</option>
+            {filters.municipality &&
+              !municipalities.some(
+                (municipality) => municipality.code === filters.municipality,
+              ) && (
+                <option value={filters.municipality}>
+                  Municipio seleccionado
+                </option>
+              )}
+            {municipalities.map((municipality) => (
+              <option key={municipality.code} value={municipality.code}>
+                {municipality.name}
+              </option>
+            ))}
+          </SelectField>
+        )}
       </div>
       {canReadRoles && roles.isError && (
         <div role="alert">
@@ -80,21 +108,6 @@ export function AccountFilters({
             }}
           >
             Reintentar roles
-          </Button>
-        </div>
-      )}
-      {filters.producer && (
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm break-all">
-            Productor seleccionado: {filters.producer}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => {
-              void filters.clearProducer();
-            }}
-          >
-            Quitar filtro de productor
           </Button>
         </div>
       )}

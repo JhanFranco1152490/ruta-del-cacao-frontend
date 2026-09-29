@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { getErrorMessage } from '@/lib/api/errors';
+import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format/dates';
 import { useAssociationAccess, useSetAssociationAccess } from '../api';
 
@@ -23,6 +23,9 @@ export function AssociationAccessCard() {
   const access = useAssociationAccess();
   const change = useSetAssociationAccess();
   const [confirming, setConfirming] = useState(false);
+  // El sentido del cambio que se está confirmando. Se guarda aparte de `confirming` para que
+  // el diálogo no cambie de texto mientras se cierra.
+  const [target, setTarget] = useState(true);
   const labelId = useId();
   const helpId = useId();
   if (access.isPending)
@@ -30,10 +33,18 @@ export function AssociationAccessCard() {
   if (access.isError)
     return (
       <ErrorState
-        message="No fue posible consultar el acceso de la asociación."
-        onRetry={() => {
-          void access.refetch();
-        }}
+        message={getErrorMessage(
+          access.error,
+          'No fue posible consultar el acceso de la asociación.',
+        )}
+        // Un 404 (la cuenta no tiene productor) no cambia al reintentar.
+        onRetry={
+          isApiError(access.error) && access.error.status === 404
+            ? undefined
+            : () => {
+                void access.refetch();
+              }
+        }
       />
     );
   const { enabled, changed_at: changedAt } = access.data;
@@ -67,11 +78,12 @@ export function AssociationAccessCard() {
             disabled={change.isPending}
             aria-labelledby={labelId}
             aria-describedby={helpId}
-            // Encender pide confirmación; apagar no, porque devuelve el control al productor.
+            // Los dos sentidos piden confirmación: encender le da al Administrador la gestión
+            // de las cuentas y apagar se la quita.
             onCheckedChange={(next) => {
               change.reset();
-              if (next) setConfirming(true);
-              else send(false);
+              setTarget(next);
+              setConfirming(true);
             }}
           />
         </div>
@@ -99,10 +111,15 @@ export function AssociationAccessCard() {
       >
         <DialogContent showCloseButton={!change.isPending}>
           <DialogHeader>
-            <DialogTitle>¿Permitir el acceso de la asociación?</DialogTitle>
+            <DialogTitle>
+              {target
+                ? '¿Permitir el acceso de la asociación?'
+                : '¿Quitar el acceso de la asociación?'}
+            </DialogTitle>
             <DialogDescription>
-              El Administrador podrá ver, crear y modificar las cuentas de tus
-              empleados y tus roles propios. Puedes apagarlo cuando quieras.
+              {target
+                ? 'El Administrador podrá ver, crear y modificar las cuentas de tus empleados y tus roles propios. Puedes apagarlo cuando quieras.'
+                : 'El Administrador dejará de ver y gestionar las cuentas de tus empleados y tus roles propios. Puedes volver a encenderlo cuando quieras.'}
             </DialogDescription>
           </DialogHeader>
           {change.isError && (
@@ -120,8 +137,12 @@ export function AssociationAccessCard() {
             >
               Cancelar
             </DialogClose>
-            <Button disabled={change.isPending} onClick={() => send(true)}>
-              {change.isPending ? 'Guardando…' : 'Permitir acceso'}
+            <Button disabled={change.isPending} onClick={() => send(target)}>
+              {change.isPending
+                ? 'Guardando…'
+                : target
+                  ? 'Permitir acceso'
+                  : 'Quitar acceso'}
             </Button>
           </DialogFooter>
         </DialogContent>

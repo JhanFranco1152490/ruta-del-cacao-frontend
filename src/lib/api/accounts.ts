@@ -13,6 +13,7 @@ export type AccountQuery = {
   activation_pending?: boolean;
   role?: string;
   producer?: string;
+  municipality?: string;
   page?: number;
 };
 export const PAGE_SIZE = 20;
@@ -21,7 +22,13 @@ export const fetchAccounts = (query: AccountQuery, signal?: AbortSignal) => {
     page: String(query.page ?? 1),
     page_size: String(PAGE_SIZE),
   });
-  for (const key of ['search', 'status', 'role', 'producer'] as const)
+  for (const key of [
+    'search',
+    'status',
+    'role',
+    'producer',
+    'municipality',
+  ] as const)
     if (query[key]) params.set(key, query[key]);
   if (query.activation_pending !== undefined)
     params.set('activation_pending', String(query.activation_pending));

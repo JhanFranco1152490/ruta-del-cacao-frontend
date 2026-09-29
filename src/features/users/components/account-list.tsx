@@ -10,9 +10,11 @@ import { AccountTable } from './account-table';
 export function AccountList({
   filters,
   open,
+  municipalityName,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   open: (id: string) => void;
+  municipalityName?: (code: string) => string;
 }) {
   const list = useAccounts(filters.query);
   const missingPage =
@@ -42,7 +44,11 @@ export function AccountList({
         {list.data.count} usuarios encontrados
       </p>
       {list.data.results.length ? (
-        <AccountTable accounts={list.data.results} open={open} />
+        <AccountTable
+          accounts={list.data.results}
+          open={open}
+          municipalityName={municipalityName}
+        />
       ) : (
         <EmptyState
           title="No hay usuarios para mostrar"

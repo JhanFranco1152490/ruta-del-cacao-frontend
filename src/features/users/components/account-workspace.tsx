@@ -4,6 +4,11 @@ import { PageHeader } from '@/components/page-header';
 import { BackLink } from '@/components/back-link';
 import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { useProducerSummary } from '@/lib/api/producer-options';
+import {
+  useMunicipalities,
+  useMunicipalityName,
+} from '@/lib/api/municipalities';
 import type { components } from '@/lib/api/schema';
 import { useAccountFilters } from '../use-account-filters';
 import { useAccountPanel } from '../use-account-panel';
@@ -11,6 +16,7 @@ import type { AccountCreated } from '../api';
 import { AccountFilters } from './account-filters';
 import { AccountList } from './account-list';
 import { AccountPanel } from './account-panel';
+import { ProducerFilter } from './producer-filter';
 
 export function AccountWorkspace({
   user,
@@ -19,7 +25,22 @@ export function AccountWorkspace({
   user: components['schemas']['SessionUser'];
   accessCard?: ReactNode;
 }) {
-  const filters = useAccountFilters(!user.producer_id);
+  const association = !user.producer_id;
+  const filters = useAccountFilters(association);
+  const municipalities = useMunicipalities(association);
+  const municipalityName = useMunicipalityName(association);
+  const canPickProducer =
+    association && hasPermission(user, PERMISSIONS.PRODUCERS_VIEW);
+  const selectedProducer = useProducerSummary(
+    canPickProducer ? filters.producer : undefined,
+  );
+  // Con un productor elegido, crear solo tiene sentido si ese productor autorizó el acceso: el
+  // backend rechazaría la cuenta de empleado.
+  const canCreateHere =
+    !association ||
+    !filters.producer ||
+    !canPickProducer ||
+    selectedProducer.data?.association_access === true;
   const panel = useAccountPanel();
   const [receipt, setReceipt] = useState<{ id: string; sent: boolean }>();
   function onCreated(account: AccountCreated) {
@@ -34,14 +55,14 @@ export function AccountWorkspace({
         title="Usuarios y accesos"
         description="Consulta las cuentas y asigna los roles de tu equipo."
         actions={
-          hasPermission(user, PERMISSIONS.USERS_CREATE) ? (
+          hasPermission(user, PERMISSIONS.USERS_CREATE) && canCreateHere ? (
             <Button
               size="office"
               onClick={() => {
                 void panel.open('nueva');
               }}
             >
-              {!user.producer_id && !filters.producer
+              {association && !filters.producer
                 ? 'Crear cuenta de administrador'
                 : 'Crear cuenta de empleado'}
             </Button>
@@ -55,14 +76,33 @@ export function AccountWorkspace({
         <AccountFilters
           filters={filters}
           canReadRoles={hasPermission(user, PERMISSIONS.ROLES_VIEW)}
+          municipalities={association ? (municipalities.data ?? []) : undefined}
         />
-        {!user.producer_id && !filters.producer && (
-          <p className="text-sm text-muted-foreground">
-            Para crear empleados, entra desde el expediente de un productor que
-            haya autorizado el acceso de la asociación.
-          </p>
+        {canPickProducer ? (
+          <ProducerFilter
+            producer={filters.producer}
+            selected={selectedProducer}
+            onSelect={(id) => {
+              void filters.setProducer(id);
+            }}
+            onClear={() => {
+              void filters.clearProducer();
+            }}
+          />
+        ) : (
+          association &&
+          !filters.producer && (
+            <p className="text-sm text-muted-foreground">
+              Para crear empleados, entra desde el expediente de un productor
+              que haya autorizado el acceso de la asociación.
+            </p>
+          )
         )}
-        <AccountList filters={filters} open={panel.open} />
+        <AccountList
+          filters={filters}
+          open={panel.open}
+          municipalityName={association ? municipalityName : undefined}
+        />
       </section>
       {panel.selected !== null && (
         <AccountPanel

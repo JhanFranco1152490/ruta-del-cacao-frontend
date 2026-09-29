@@ -9,7 +9,7 @@ import { FormMessage } from '@/components/form-message';
 import { PasswordField } from '@/components/password-field';
 import { SubmitButton } from '@/components/submit-button';
 import { applyApiFieldErrors } from '@/lib/api/form-errors';
-import { getErrorMessage } from '@/lib/api/errors';
+import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import type { components } from '@/lib/api/schema';
 
 import { resetConfirmSchema, type ResetConfirmValues } from '../schemas';
@@ -25,6 +25,9 @@ export type NewPasswordFormProps = {
   successMessage: string;
   fallbackMessage: string;
   errorMessage?: (error: unknown) => string | undefined;
+  // Código con el que el servidor rechaza un enlace ya usado o vencido: al recibirlo se
+  // quita el formulario, porque ninguna contraseña nueva lo va a hacer funcionar.
+  invalidTokenCode: string;
   recovery?: boolean;
 };
 
@@ -37,9 +40,11 @@ export function NewPasswordForm({
   successMessage,
   fallbackMessage,
   errorMessage,
+  invalidTokenCode,
   recovery = false,
 }: NewPasswordFormProps) {
   const [isSuccess, setSuccess] = useState(false);
+  const [isLinkRejected, setLinkRejected] = useState(false);
   const [failure, setFailure] = useState('');
   const [isPending, setPending] = useState(false);
   const sending = useRef(false);
@@ -64,6 +69,11 @@ export function NewPasswordForm({
       setSuccess(true);
     } catch (error) {
       sending.current = false;
+      if (isApiError(error) && error.code === invalidTokenCode) {
+        setLinkRejected(true);
+        setFailure(errorMessage?.(error) ?? error.message);
+        return;
+      }
       const mapped = applyApiFieldErrors(error, setError, [
         'new_password',
         'new_password_confirmation',
@@ -93,7 +103,7 @@ export function NewPasswordForm({
       <FormMessage variant={isSuccess ? 'success' : 'error'}>
         {message}
       </FormMessage>
-      {validLink && !isSuccess && (
+      {validLink && !isSuccess && !isLinkRejected && (
         <>
           <PasswordField
             label="Nueva contraseña"

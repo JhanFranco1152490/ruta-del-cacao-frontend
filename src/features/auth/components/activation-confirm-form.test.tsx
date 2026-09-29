@@ -135,7 +135,7 @@ describe('ActivationConfirmForm', () => {
     expect(screen.queryByLabelText('Nueva contraseña')).not.toBeInTheDocument();
   });
 
-  it('explains how to replace an invalid token', async () => {
+  it('explains how to replace a used or expired token and removes the form', async () => {
     server.use(
       http.post(apiUrl('/api/auth/activation/confirm'), () =>
         apiError(400, 'invalid_activation_token'),
@@ -146,6 +146,10 @@ describe('ActivationConfirmForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'pide a quien creó tu cuenta',
     );
+    expect(screen.queryByLabelText('Nueva contraseña')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Activar cuenta' }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: 'Solicitar un enlace nuevo' }),
     ).not.toBeInTheDocument();

@@ -100,6 +100,37 @@ beforeEach(() => {
   mockAccount(account);
 });
 
+describe('account summary', () => {
+  it('shows the producer of an account that belongs to one', async () => {
+    openAccount();
+    const detail = await screen.findByRole('dialog', {
+      name: 'Detalle de la cuenta',
+    });
+    expect(await within(detail).findByText('Productor')).toBeInTheDocument();
+    expect(within(detail).getByText('PROD-000001')).toBeInTheDocument();
+  });
+
+  it('leaves out the producer row on an association account', async () => {
+    mockSession(allPermissions, 'u1', null);
+    mockAccount({
+      ...account,
+      producer: null,
+      roles: [
+        { id: 'role-admin', code: 'administrator', name: 'Administrador' },
+      ],
+    });
+    openAccount();
+    const detail = await screen.findByRole('dialog', {
+      name: 'Detalle de la cuenta',
+    });
+    await within(detail).findByText('Roles asignados');
+    expect(within(detail).queryByText('Productor')).not.toBeInTheDocument();
+    expect(
+      within(detail).queryByText('Cuenta de la asociación'),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe('account edition', () => {
   it('edits the data and shows the updated account', async () => {
     const update = record((body) => json({ ...account, ...body }));

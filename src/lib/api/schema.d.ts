@@ -401,6 +401,7 @@ export interface components {
             id: string;
             member_code: string;
             status: string;
+            municipality_code: string;
         };
         AccountRole: {
             /** Format: uuid */
@@ -572,6 +573,7 @@ export interface components {
             area: string;
             delegable: boolean;
             grantable: boolean;
+            requires: string | null;
         };
         PermissionList: {
             results: components["schemas"]["Permission"][];
@@ -648,6 +650,7 @@ export interface components {
             readonly description: string;
             /** Format: uuid */
             readonly producer_id: string | null;
+            readonly producer: components["schemas"]["RoleProducer"] | null;
             readonly permissions: string[];
         };
         RoleCreateRequest: {
@@ -657,6 +660,11 @@ export interface components {
             permission_codes?: string[];
             /** Format: uuid */
             producer_id?: string;
+        };
+        RoleProducer: {
+            /** Format: uuid */
+            id: string;
+            member_code: string;
         };
         Session: {
             user: components["schemas"]["SessionUser"];
@@ -1720,6 +1728,7 @@ export interface operations {
         parameters: {
             query?: {
                 activation_pending?: boolean;
+                municipality?: string;
                 /** @description Qué campo usar para ordenar los resultados. */
                 ordering?: string;
                 /** @description Un número de página dentro del conjunto de resultados paginado. */

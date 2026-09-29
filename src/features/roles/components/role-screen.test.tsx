@@ -214,6 +214,25 @@ describe('RoleScreen', () => {
       permission_codes: role.permissions,
     });
   });
+  it('explains self_role_lockout beside the permissions and keeps the form', async () => {
+    const lockout =
+      'Este cambio te dejaría sin poder gestionar roles. Pide que otra persona con ese permiso lo haga.';
+    server.use(
+      http.patch(apiUrl(`/api/roles/${id}`), () =>
+        apiError(409, 'self_role_lockout', lockout),
+      ),
+    );
+    renderWithProviders(<RoleScreen />, { searchParams: `?rol=${id}` });
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Editar rol' }),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar rol' }));
+    const permissions = screen.getByRole('group', { name: 'Permisos' });
+    expect(await within(permissions).findByRole('alert')).toHaveTextContent(
+      lockout,
+    );
+    expect(screen.getByLabelText('Nombre')).toHaveValue(role.name);
+  });
   it('confirms deletion, explains role_in_use and allows retry', async () => {
     let count = 0;
     server.use(
@@ -471,5 +490,135 @@ describe('RoleScreen', () => {
       await screen.findByText('Ya existe un rol con este nombre.'),
     ).toBeVisible();
     expect(screen.getByLabelText('Nombre')).toHaveValue('Duplicado');
+  });
+});
+
+describe('custom roles by producer', () => {
+  const otherProducer = '44444444-4444-4444-8444-444444444444';
+  const roles = [
+    {
+      ...role,
+      id: '55555555-5555-4555-8555-555555555555',
+      code: 'foreman',
+      kind: 'predefined',
+      name: 'Capataz',
+      producer_id: null,
+      producer: null,
+    },
+    { ...role, producer: { id, member_code: 'PROD-000001' } },
+    {
+      ...role,
+      id: '66666666-6666-4666-8666-666666666666',
+      name: 'Supervisor',
+      producer_id: otherProducer,
+      producer: { id: otherProducer, member_code: 'PROD-000002' },
+    },
+  ];
+  beforeEach(() => {
+    server.use(
+      http.get(apiUrl('/api/roles'), () => HttpResponse.json(buildPage(roles))),
+    );
+  });
+  const headings = async () =>
+    (await screen.findAllByRole('heading', { level: 2 })).map(
+      (heading) => heading.textContent,
+    );
+
+  it('groups the custom roles of each producer for the association', async () => {
+    server.use(
+      http.get(apiUrl('/api/auth/me'), () =>
+        HttpResponse.json(
+          buildSession({
+            producer_id: null,
+            permissions: [PERMISSIONS.ROLES_VIEW],
+          }),
+        ),
+      ),
+    );
+    renderWithProviders(<RoleScreen />);
+    expect(await headings()).toEqual([
+      'Roles del sistema',
+      'Roles propios de PROD-000001',
+      'Roles propios de PROD-000002',
+    ]);
+    const second = screen
+      .getByRole('heading', { name: 'Roles propios de PROD-000002' })
+      .closest('section')!;
+    expect(
+      within(second).getAllByRole('button', { name: 'Ver rol Supervisor' }),
+    ).toHaveLength(1);
+  });
+
+  it('keeps a single custom group inside the space of a producer', async () => {
+    renderWithProviders(<RoleScreen />);
+    expect(await headings()).toEqual(['Roles del sistema', 'Roles propios']);
+  });
+});
+
+describe('permissions that depend on another', () => {
+  beforeEach(() => {
+    server.use(
+      http.get(apiUrl('/api/permissions'), () =>
+        HttpResponse.json({
+          results: [
+            { ...catalog[0], requires: null },
+            {
+              ...catalog[1],
+              grantable: true,
+              requires: 'accounts.users_view',
+            },
+          ],
+        }),
+      ),
+    );
+  });
+
+  it('checks and locks the required permission while the dependent stays checked', async () => {
+    let payload: unknown;
+    server.use(
+      http.post(apiUrl('/api/roles'), async ({ request }) => {
+        payload = await request.json();
+        return HttpResponse.json(role, { status: 201 });
+      }),
+    );
+    renderWithProviders(<RoleScreen />, { searchParams: '?rol=nuevo' });
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.type(
+      await within(dialog).findByLabelText('Nombre'),
+      'Auxiliar',
+    );
+    const manage = within(dialog).getByRole('checkbox', {
+      name: 'Administrar roles',
+    });
+    const view = within(dialog).getByRole('checkbox', {
+      name: 'Consultar usuarios',
+    });
+
+    await userEvent.click(manage);
+    expect(view).toBeChecked();
+    expect(view).toHaveAttribute('aria-disabled', 'true');
+    expect(
+      within(dialog).getByText(
+        'Se incluye porque lo necesita: Administrar roles.',
+      ),
+    ).toBeVisible();
+
+    await userEvent.click(manage);
+    expect(view).toBeChecked();
+    expect(view).not.toHaveAttribute('aria-disabled', 'true');
+    await userEvent.click(view);
+    expect(view).not.toBeChecked();
+
+    await userEvent.click(manage);
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Guardar rol' }),
+    );
+    await waitFor(() =>
+      expect(payload).toEqual({
+        name: 'Auxiliar',
+        description: '',
+        permission_codes: ['accounts.roles_manage', 'accounts.users_view'],
+      }),
+    );
   });
 });

@@ -5,6 +5,7 @@ import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { components } from '@/lib/api/schema';
+import { useMunicipalityName } from '@/lib/api/municipalities';
 import { useAccount, type Account } from '../api';
 import { hasFixedRole, isProducerAccount } from '../schemas';
 import { AccountEditForm } from './account-edit-form';
@@ -106,6 +107,7 @@ export function AccountDetail({
 }
 
 function AccountSummary({ account }: { account: Account }) {
+  const municipalityName = useMunicipalityName(Boolean(account.producer));
   return (
     <>
       <h2 className="font-serif text-2xl break-words text-selva">
@@ -127,10 +129,18 @@ function AccountSummary({ account }: { account: Account }) {
           <dt className="font-bold">Teléfono</dt>
           <dd>{account.phone || 'No registrado'}</dd>
         </div>
-        <div>
-          <dt className="font-bold">Productor</dt>
-          <dd>{account.producer?.member_code || 'Cuenta de la asociación'}</dd>
-        </div>
+        {account.producer && (
+          <div>
+            <dt className="font-bold">Productor</dt>
+            <dd>{account.producer.member_code}</dd>
+          </div>
+        )}
+        {account.producer && (
+          <div>
+            <dt className="font-bold">Municipio</dt>
+            <dd>{municipalityName(account.producer.municipality_code)}</dd>
+          </div>
+        )}
         <div>
           <dt className="font-bold">Roles asignados</dt>
           <dd>

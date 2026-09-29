@@ -2,6 +2,7 @@
 import { useId } from 'react';
 import { CheckboxField } from '@/components/checkbox-field';
 import type { PermissionItem } from '../api';
+import { requiredBy, withRequirements } from '../schemas';
 
 export function RolePermissionPicker({
   catalog,
@@ -37,26 +38,32 @@ export function RolePermissionPicker({
           <legend className="px-1 font-bold">{area}</legend>
           {catalog
             .filter((item) => item.area === area)
-            .map((item) => (
-              <CheckboxField
-                key={item.code}
-                label={item.name}
-                checked={value.includes(item.code)}
-                disabled={disabled || !item.grantable || !item.delegable}
-                hint={
-                  !item.grantable || !item.delegable
-                    ? 'No puedes conceder este permiso.'
-                    : undefined
-                }
-                onCheckedChange={(checked) =>
-                  onChange(
-                    checked
-                      ? [...value, item.code]
-                      : value.filter((code) => code !== item.code),
-                  )
-                }
-              />
-            ))}
+            .map((item) => {
+              const ungrantable = !item.grantable || !item.delegable;
+              const dependents = requiredBy(item.code, value, catalog);
+              return (
+                <CheckboxField
+                  key={item.code}
+                  label={item.name}
+                  checked={value.includes(item.code)}
+                  disabled={disabled || ungrantable || dependents.length > 0}
+                  hint={
+                    ungrantable
+                      ? 'No puedes conceder este permiso.'
+                      : dependents.length
+                        ? `Se incluye porque lo necesita: ${dependents.map((p) => p.name).join(', ')}.`
+                        : undefined
+                  }
+                  onCheckedChange={(checked) =>
+                    onChange(
+                      checked
+                        ? withRequirements([...value, item.code], catalog)
+                        : value.filter((code) => code !== item.code),
+                    )
+                  }
+                />
+              );
+            })}
         </fieldset>
       ))}
     </fieldset>

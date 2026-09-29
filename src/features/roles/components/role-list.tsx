@@ -11,9 +11,11 @@ import { RoleTable } from './role-table';
 export function RoleList({
   filters,
   open,
+  byProducer,
 }: {
   filters: ReturnType<typeof useRoleFilters>;
   open: (id: string) => void;
+  byProducer: boolean;
 }) {
   const list = useRoles(filters.query);
   const missingPage =
@@ -43,7 +45,11 @@ export function RoleList({
         {list.data.count} roles encontrados
       </p>
       {list.data.results.length ? (
-        <RoleTable roles={list.data.results} open={open} />
+        <RoleTable
+          roles={list.data.results}
+          open={open}
+          byProducer={byProducer}
+        />
       ) : (
         <EmptyState
           title="No hay roles para mostrar"

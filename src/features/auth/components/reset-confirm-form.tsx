@@ -19,6 +19,7 @@ export function ResetConfirmForm({
       confirm={confirm.mutateAsync}
       submitLabel="Actualizar contraseña"
       invalidLinkMessage="El enlace de recuperación no es válido. Solicita uno nuevo."
+      invalidTokenCode="invalid_reset_token"
       successMessage="Tu contraseña fue actualizada. Ya puedes iniciar sesión."
       fallbackMessage="El enlace no es válido o venció. Solicita uno nuevo."
       recovery

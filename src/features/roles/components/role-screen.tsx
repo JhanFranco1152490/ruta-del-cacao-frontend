@@ -98,7 +98,11 @@ function RoleWorkspace({
             Para crear un rol propio, entra desde el expediente del productor.
           </p>
         )}
-        <RoleList filters={filters} open={panel.open} />
+        <RoleList
+          filters={filters}
+          open={panel.open}
+          byProducer={association}
+        />
       </section>
       {panel.selected !== null && (
         <RolePanel

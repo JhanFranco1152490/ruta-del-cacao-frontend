@@ -24,6 +24,7 @@ export function ActivationConfirmForm({
       confirm={confirm.mutateAsync}
       submitLabel="Activar cuenta"
       invalidLinkMessage={INVALID_LINK}
+      invalidTokenCode="invalid_activation_token"
       successMessage="Tu cuenta fue activada. Ya puedes iniciar sesión."
       fallbackMessage="No fue posible activar tu cuenta. Revisa tu conexión e inténtalo de nuevo."
       errorMessage={(error) =>

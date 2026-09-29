@@ -119,7 +119,7 @@ describe('AssociationAccessCard', () => {
     expect(bodies).toEqual([]);
   });
 
-  it('turns off without confirmation using the keyboard', async () => {
+  it('turns off only after confirmation using the keyboard', async () => {
     server.use(
       http.get(apiUrl('/api/association-access'), () => HttpResponse.json(on)),
     );
@@ -130,10 +130,35 @@ describe('AssociationAccessCard', () => {
     const toggle = await findSwitch();
     toggle.focus();
     await userEvent.keyboard(' ');
-    await waitFor(() => expect(bodies).toEqual([{ enabled: false }]));
-    expect(screen.queryByRole('dialog')).toBeNull();
+    const dialog = await screen.findByRole('dialog', {
+      name: '¿Quitar el acceso de la asociación?',
+    });
+    expect(bodies).toEqual([]);
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Quitar acceso' }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(bodies).toEqual([{ enabled: false }]);
     await waitFor(() => expect(toggle).not.toBeChecked());
     expect(screen.getByText('Apagado')).toBeVisible();
+  });
+
+  it('keeps the access on when turning it off is cancelled', async () => {
+    server.use(
+      http.get(apiUrl('/api/association-access'), () => HttpResponse.json(on)),
+    );
+    const bodies = recordPut(() => json(off));
+    renderWithProviders(<UsersPage />);
+    await userEvent.click(await findSwitch());
+    const dialog = await screen.findByRole('dialog', {
+      name: '¿Quitar el acceso de la asociación?',
+    });
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Cancelar' }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(await findSwitch()).toBeChecked();
+    expect(bodies).toEqual([]);
   });
 
   it('keeps the previous state and shows the error when the change fails', async () => {
@@ -147,9 +172,17 @@ describe('AssociationAccessCard', () => {
     );
     renderWithProviders(<UsersPage />);
     await userEvent.click(await findSwitch());
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Quitar acceso' }),
+    );
     expect(
-      await screen.findByText('No fue posible guardar el cambio.'),
+      await within(dialog).findByText('No fue posible guardar el cambio.'),
     ).toBeVisible();
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Cancelar' }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(await findSwitch()).toBeChecked();
     expect(screen.getByText('Encendido')).toBeVisible();
   });
@@ -169,5 +202,24 @@ describe('AssociationAccessCard', () => {
       await screen.findByRole('button', { name: 'Reintentar' }),
     );
     expect(await findSwitch()).not.toBeChecked();
+  });
+
+  it('shows the server message without a retry when the account has no producer', async () => {
+    server.use(
+      http.get(apiUrl('/api/association-access'), () =>
+        apiError(
+          404,
+          'not_found',
+          'Esta cuenta no tiene un productor asociado.',
+        ),
+      ),
+    );
+    renderWithProviders(<UsersPage />);
+    expect(
+      await screen.findByText('Esta cuenta no tiene un productor asociado.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reintentar' }),
+    ).not.toBeInTheDocument();
   });
 });

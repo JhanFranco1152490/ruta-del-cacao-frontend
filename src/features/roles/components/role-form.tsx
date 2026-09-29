@@ -71,6 +71,9 @@ export function RoleForm({
         setError('permission_codes', {
           message: 'No puedes conceder todos los permisos seleccionados.',
         });
+      } else if (isApiError(error) && error.code === 'self_role_lockout') {
+        // Editar un rol propio sin dejar de gestionar roles: el servidor explica qué hacer.
+        setError('permission_codes', { message: error.message });
       } else {
         const result = applyApiFieldErrors(error, setError, [
           'name',
