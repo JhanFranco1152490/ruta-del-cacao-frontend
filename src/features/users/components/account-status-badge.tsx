@@ -1,6 +1,12 @@
 import { StatusBadge } from '@/components/status-badge';
 import type { Account } from '../api';
-export function AccountStatusBadge({ account }: { account: Account }) {
+export function AccountStatusBadge({
+  account,
+}: {
+  account: Pick<Account, 'status' | 'activation_pending'> & {
+    producer?: Account['producer'];
+  };
+}) {
   if (account.status === 'inactive' || account.producer?.status === 'inactive')
     return <StatusBadge tone="err">Inactiva</StatusBadge>;
   if (account.activation_pending)

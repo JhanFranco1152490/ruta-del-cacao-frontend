@@ -14,6 +14,14 @@ const FIELD_ERRORS: Record<string, [field: string, message: string]> = {
   ],
 };
 
+// Errores sin campo propio: el texto se decide por el `code`, nunca por el `detail`.
+const GENERAL_ERRORS: Record<string, string> = {
+  producer_already_linked:
+    'Este productor ya tiene una cuenta de acceso. Recarga la ficha.',
+  producer_inactive:
+    'El productor está inactivo: reactívalo antes de crear su cuenta.',
+};
+
 // Lleva cada error a su campo según el `code` y devuelve el aviso general que quede, o ''
 // si todo quedó en algún campo. Lo que el formulario no tiene (por ejemplo el documento en
 // una cuenta Productor) termina en el aviso general para que no se pierda.
@@ -33,6 +41,7 @@ export function presentAccountError<T extends FieldValues>(
     }
     return message;
   }
+  if (GENERAL_ERRORS[error.code]) return GENERAL_ERRORS[error.code];
   const result = applyApiFieldErrors(error, setError, fields);
   if (result.applied && !result.unmatched.length) return '';
   if (result.unmatched.length) return result.unmatched.join(' ');

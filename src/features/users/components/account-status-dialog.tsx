@@ -35,9 +35,12 @@ const ACTIONS: Record<AccountStatus, StatusChangeAction> = {
 export function AccountStatusDialog({
   account,
   onBusy,
+  onChanged,
 }: {
-  account: Account;
+  account: Pick<Account, 'id' | 'status'>;
   onBusy: (value: boolean) => void;
+  // Quien muestra la cuenta en otra vista (la ficha del productor) la refresca aquí.
+  onChanged?: () => void;
 }) {
   const target: AccountStatus =
     account.status === 'inactive' ? 'active' : 'inactive';
@@ -55,7 +58,10 @@ export function AccountStatusDialog({
     if (change.isPending) return;
     onBusy(true);
     change.mutate(opened, {
-      onSuccess: () => setOpen(false),
+      onSuccess: () => {
+        setOpen(false);
+        onChanged?.();
+      },
       onSettled: () => onBusy(false),
     });
   }

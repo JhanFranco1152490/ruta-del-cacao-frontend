@@ -15,7 +15,7 @@ const ACTIONS: Record<ProducerStatus, StatusChangeAction> = {
     trigger: 'Desactivar',
     title: '¿Desactivar productor?',
     description:
-      'El expediente conservará su historial. Si tiene una cuenta vinculada, también se bloqueará su acceso al sistema.',
+      'El expediente conservará su historial. Si tiene cuenta, también se bloqueará el acceso de su cuenta y el de sus empleados.',
     confirm: 'Desactivar productor',
     pending: 'Desactivando…',
     Icon: UserRoundX,

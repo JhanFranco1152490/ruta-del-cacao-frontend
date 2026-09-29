@@ -47,11 +47,16 @@ const allPermissions = [
   PERMISSIONS.ROLES_VIEW,
 ];
 
-function mockSession(permissions: string[] = allPermissions, userId = 'u1') {
+// Por defecto, alguien del espacio del productor; `null` es una cuenta de la asociación.
+function mockSession(
+  permissions: string[] = allPermissions,
+  userId = 'u1',
+  producer: string | null = producerId,
+) {
   server.use(
     http.get(apiUrl('/api/auth/me'), () =>
       HttpResponse.json(
-        buildSession({ id: userId, producer_id: producerId, permissions }),
+        buildSession({ id: userId, producer_id: producer, permissions }),
       ),
     ),
   );
@@ -164,6 +169,7 @@ describe('account edition', () => {
   });
 
   it('keeps the document and names of a producer account read-only', async () => {
+    mockSession(allPermissions, 'u1', null);
     mockAccount(producerAccount);
     const update = record(() => json(producerAccount));
     server.use(http.patch(apiUrl(`/api/users/${id}`), update.handler));
@@ -190,6 +196,16 @@ describe('account edition', () => {
     );
     expect(await button('Editar datos')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Cambiar roles' })).toBeNull();
+  });
+
+  it('offers nothing to modify on the producer account from its own space', async () => {
+    mockAccount(producerAccount);
+    openAccount();
+    expect(
+      await screen.findByRole('heading', { name: 'Ana Prueba' }),
+    ).toBeVisible();
+    for (const name of ['Editar datos', 'Cambiar roles', 'Desactivar'])
+      expect(screen.queryByRole('button', { name })).toBeNull();
   });
 
   it('offers nothing to modify on the own account', async () => {

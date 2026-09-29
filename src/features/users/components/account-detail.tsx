@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { components } from '@/lib/api/schema';
 import { useAccount, type Account } from '../api';
-import { hasFixedRole } from '../schemas';
+import { hasFixedRole, isProducerAccount } from '../schemas';
 import { AccountEditForm } from './account-edit-form';
 import { AccountRolesPanel } from './account-roles-panel';
 import { AccountStatusBadge } from './account-status-badge';
@@ -52,11 +52,13 @@ export function AccountDetail({
         onBusy={onBusy}
       />
     );
-  // Nadie modifica su propia cuenta: el servidor lo rechaza con `self_modification`.
-  const own = data.id === user.id;
-  const canUpdate = !own && hasPermission(user, PERMISSIONS.USERS_UPDATE);
+  // Nadie modifica su propia cuenta (`self_modification`), y desde el espacio del productor
+  // nadie alcanza a la cuenta Productor: solo la asociación puede administrarla.
+  const reachable =
+    data.id !== user.id && !(isProducerAccount(data) && user.producer_id);
+  const canUpdate = reachable && hasPermission(user, PERMISSIONS.USERS_UPDATE);
   const canChangeStatus =
-    !own && hasPermission(user, PERMISSIONS.USERS_CHANGE_STATUS);
+    reachable && hasPermission(user, PERMISSIONS.USERS_CHANGE_STATUS);
   const canChangeRoles =
     canUpdate &&
     !hasFixedRole(data) &&
