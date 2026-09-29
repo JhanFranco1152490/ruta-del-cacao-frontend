@@ -4,9 +4,14 @@ import type { SyncAdapter } from './adapters';
 import { getOfflineDb, type QueueItem } from './db';
 import {
   clearAdapters,
+  discard,
   enqueue,
   processQueue,
+  QueueItemBusyError,
+  QueueItemHasDependentsError,
+  QueueItemMissingError,
   registerAdapter,
+  resubmit,
 } from './sync-queue';
 
 function randomUserId() {
@@ -259,5 +264,126 @@ describe('processQueue', () => {
     expect((await getOfflineDb(userId).queue.get('a1'))?.status).toBe(
       'pending',
     );
+  });
+
+  it('sends a correction made after the queue was read but before sending', async () => {
+    const userId = randomUserId();
+    const sent: unknown[] = [];
+    // El envío del primero corrige al segundo, que ya estaba en la lista leída.
+    const adapter = fakeAdapter({
+      send: vi.fn(async (item: QueueItem) => {
+        sent.push(item.payload);
+        if (item.id === 'a1') await resubmit(userId, 'a2', { name: 'Nuevo' });
+      }),
+    });
+    registerAdapter(adapter);
+    await enqueue(userId, {
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+    await enqueue(userId, {
+      id: 'a2',
+      resource: 'farms',
+      operation: 'create',
+      payload: { name: 'Viejo' },
+    });
+
+    await processQueue(userId);
+
+    expect(sent).toEqual([{}, { name: 'Nuevo' }]);
+  });
+});
+
+async function enqueueFailed(userId: string, id = 'a1') {
+  await enqueue(userId, {
+    id,
+    resource: 'farms',
+    operation: 'create',
+    payload: { name: 'Viejo' },
+  });
+  await getOfflineDb(userId).queue.update(id, {
+    status: 'error',
+    errorCode: 'duplicate_farm_name',
+    errorMessage: 'Ya existe una finca con este nombre.',
+  });
+}
+
+describe('resubmit', () => {
+  it('replaces the content, clears the error and returns the item to pending', async () => {
+    const userId = randomUserId();
+    await enqueueFailed(userId);
+
+    await resubmit(userId, 'a1', { name: 'Corregido' });
+
+    const item = await getOfflineDb(userId).queue.get('a1');
+    expect(item).toMatchObject({
+      status: 'pending',
+      payload: { name: 'Corregido' },
+    });
+    expect(item).not.toHaveProperty('errorCode');
+    expect(item).not.toHaveProperty('errorMessage');
+  });
+
+  it('refuses to change an item that is being sent', async () => {
+    const userId = randomUserId();
+    await enqueueFailed(userId);
+    await getOfflineDb(userId).queue.update('a1', { status: 'syncing' });
+
+    await expect(resubmit(userId, 'a1', {})).rejects.toBeInstanceOf(
+      QueueItemBusyError,
+    );
+    expect((await getOfflineDb(userId).queue.get('a1'))?.payload).toEqual({
+      name: 'Viejo',
+    });
+  });
+
+  it('reports an item that already left the queue', async () => {
+    await expect(resubmit(randomUserId(), 'a1', {})).rejects.toBeInstanceOf(
+      QueueItemMissingError,
+    );
+  });
+});
+
+describe('discard', () => {
+  it('removes the item from the queue', async () => {
+    const userId = randomUserId();
+    await enqueueFailed(userId);
+
+    await discard(userId, 'a1');
+
+    expect(await getOfflineDb(userId).queue.get('a1')).toBeUndefined();
+  });
+
+  it('keeps an item that other queued items depend on', async () => {
+    const userId = randomUserId();
+    await enqueueFailed(userId);
+    await enqueue(userId, {
+      id: 'c1',
+      resource: 'plots',
+      operation: 'create',
+      parentId: 'a1',
+      payload: {},
+    });
+
+    await expect(discard(userId, 'a1')).rejects.toBeInstanceOf(
+      QueueItemHasDependentsError,
+    );
+    expect(await getOfflineDb(userId).queue.get('a1')).toBeDefined();
+  });
+
+  it('refuses to discard an item that is being sent', async () => {
+    const userId = randomUserId();
+    await enqueueFailed(userId);
+    await getOfflineDb(userId).queue.update('a1', { status: 'syncing' });
+
+    await expect(discard(userId, 'a1')).rejects.toBeInstanceOf(
+      QueueItemBusyError,
+    );
+  });
+
+  it('does nothing when the item is already gone', async () => {
+    await expect(discard(randomUserId(), 'a1')).resolves.toBeUndefined();
   });
 });
