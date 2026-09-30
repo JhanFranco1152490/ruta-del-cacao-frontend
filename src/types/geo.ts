@@ -4,3 +4,9 @@ export type Coordinates = {
   latitude: string;
   longitude: string;
 };
+
+// Un punto ya validado, como lo necesitan el GPS y los mapas.
+export type GeoPoint = {
+  latitude: number;
+  longitude: number;
+};

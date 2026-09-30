@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
+import { COORDINATE_DECIMALS } from '@/lib/format/coordinates';
+
 // Los límites de decimales coinciden con los que guarda la API: más precisión la rechaza.
-const COORDINATE_DECIMALS = 7;
 const AREA_DECIMALS = 2;
 
 function decimalPattern(maxDecimals: number) {
