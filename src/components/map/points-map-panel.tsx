@@ -37,7 +37,12 @@ export function PointsMapPanel({
 
   return (
     <section aria-label={label} className="space-y-2">
-      <div className="h-64 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted md:h-80">
+      {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
+          quedaría por encima de los diálogos y del menú móvil (z-50). */}
+      <div
+        data-slot="map-frame"
+        className="isolate h-64 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted md:h-80"
+      >
         <Provider onError={map.fail} points={points} />
       </div>
       {points.length === 0 && (

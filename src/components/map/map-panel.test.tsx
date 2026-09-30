@@ -120,4 +120,21 @@ describe('MapPanel', () => {
       'Puedes seguir usando el GPS o escribir las coordenadas.',
     );
   });
+
+  it('keeps the map layers below dialogs', async () => {
+    render(
+      <MapPanel
+        loadProvider={loadFakeMap}
+        location={LOCATION}
+        onLocationChange={vi.fn()}
+      />,
+    );
+
+    const region = await screen.findByRole('region', {
+      name: 'Mapa de ubicación',
+    });
+    expect(region.querySelector('[data-slot="map-frame"]')).toHaveClass(
+      'isolate',
+    );
+  });
 });

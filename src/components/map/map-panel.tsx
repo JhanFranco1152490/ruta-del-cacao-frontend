@@ -45,7 +45,12 @@ export function MapPanel({
 
   return (
     <section aria-label="Mapa de ubicación" className="space-y-3">
-      <div className="h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted">
+      {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
+          quedaría por encima de los diálogos y del menú móvil (z-50). */}
+      <div
+        data-slot="map-frame"
+        className="isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted"
+      >
         <Provider
           disabled={disabled}
           onError={map.fail}

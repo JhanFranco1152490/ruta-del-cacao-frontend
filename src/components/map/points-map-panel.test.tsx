@@ -70,4 +70,17 @@ describe('PointsMapPanel', () => {
 
     expect(await screen.findByText(/La Esperanza/)).toBeInTheDocument();
   });
+
+  // Leaflet usa z-index de 400 a 1000: sin un contexto de apilamiento propio, el mapa tapaba
+  // los diálogos de confirmación (z-50) y no se podían usar.
+  it('keeps the map layers below dialogs', async () => {
+    renderPanel([POINT]);
+
+    const region = await screen.findByRole('region', {
+      name: 'Mapa de mis fincas',
+    });
+    expect(region.querySelector('[data-slot="map-frame"]')).toHaveClass(
+      'isolate',
+    );
+  });
 });
