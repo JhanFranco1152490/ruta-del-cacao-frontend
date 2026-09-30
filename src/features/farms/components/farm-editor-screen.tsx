@@ -4,12 +4,14 @@ import { CircleOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import { OfflineBanner } from '@/components/offline-banner';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import type { QueuedFarm } from '../farm-queue';
 import { queueErrorMessage } from '../queue-error-message';
 import { useFarmResubmit, useQueuedFarm } from '../use-farm-queue';
+import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { FarmFormFields } from './farm-form-fields';
 
 // Por ahora solo corrige fincas que siguen en la cola del dispositivo (pendientes o con
@@ -47,6 +49,7 @@ export function FarmEditorScreen({ id }: { id: string }) {
 function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
   const router = useRouter();
   const resubmit = useFarmResubmit();
+  const sync = useFarmSyncStatus();
 
   return (
     <FarmFormFields
@@ -65,6 +68,8 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
           </p>
         )
       }
+      banner={<OfflineBanner status={sync.status} />}
+      blockedMessage={sync.blockedMessage}
       submitLabel="Guardar y reenviar"
       isSaving={resubmit.isPending}
       error={

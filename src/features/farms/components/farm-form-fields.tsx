@@ -21,19 +21,24 @@ export function FarmFormFields({
   defaultValues,
   title,
   description,
+  banner,
   notice,
   submitLabel,
   isSaving,
   error,
+  blockedMessage,
   onSubmit,
 }: {
   defaultValues: FarmFormValues;
   title: string;
   description: string;
+  banner?: ReactNode;
   notice?: ReactNode;
   submitLabel: string;
   isSaving: boolean;
   error?: string | null;
+  // Si hay motivo, no se puede guardar: se explica junto al botón.
+  blockedMessage?: string | null;
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
@@ -67,6 +72,7 @@ export function FarmFormFields({
         title={title}
         description={description}
       />
+      {banner && <div className="mt-6">{banner}</div>}
       {notice}
       <form
         className="mt-8 space-y-6"
@@ -160,9 +166,15 @@ export function FarmFormFields({
           </p>
         )}
 
+        {blockedMessage && (
+          <p className="font-bold text-warn" id="farm-save-blocked">
+            {blockedMessage}
+          </p>
+        )}
         <Button
+          aria-describedby={blockedMessage ? 'farm-save-blocked' : undefined}
           className="w-full sm:w-auto"
-          disabled={isSaving}
+          disabled={isSaving || !!blockedMessage}
           size="field"
           type="submit"
         >

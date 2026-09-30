@@ -7,6 +7,7 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { TextField } from '@/components/text-field';
 import { buttonVariants } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { useMunicipalityName } from '@/features/catalogs/api';
 import { matchesSearch } from '@/lib/format/search';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
+import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { useLocalFarms } from '../use-local-farms';
 import { FarmCardList } from './farm-card-list';
 import { FarmQueueActions } from './farm-queue-actions';
@@ -24,6 +26,7 @@ export function FarmListScreen() {
   const { data: user } = useSession();
   const { farms, isError } = useLocalFarms(user?.id);
   const municipalityName = useMunicipalityName();
+  const sync = useFarmSyncStatus();
   // En la URL, como en los demás listados: se puede compartir y el botón atrás la respeta.
   const [search, setSearch] = useQueryState(
     'buscar',
@@ -53,6 +56,9 @@ export function FarmListScreen() {
         description="Consulta tus fincas y su estado de sincronización."
         actions={registerLink}
       />
+      <div className="mt-6">
+        <OfflineBanner status={sync.status} />
+      </div>
       <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
         <TextField
           label="Buscar finca"

@@ -1,9 +1,10 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
+import { recordLogin } from '@/lib/offline/session-clock';
 import { buildSession } from '@/test/factories';
 import { municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -15,8 +16,10 @@ type User = ReturnType<typeof userEvent.setup>;
 
 let userId: string;
 
-beforeEach(() => {
+beforeEach(async () => {
   userId = `farm-form-${crypto.randomUUID()}`;
+  // La app lo registra cada vez que el servidor confirma la sesión.
+  await recordLogin(userId);
   server.use(
     municipalitiesHandler([
       { code: '54001', name: 'Cúcuta' },
@@ -130,5 +133,29 @@ describe('FarmForm', () => {
 
     const items = await queuedFarms();
     expect(new Set(items.map((item) => item.id)).size).toBe(2);
+  });
+
+  it('shows the connection and sync status above the form', async () => {
+    await renderForm();
+
+    expect(
+      await screen.findByText('Sin registros pendientes de sincronización.'),
+    ).toBeInTheDocument();
+  });
+
+  it('blocks saving once the offline session window has expired', async () => {
+    const user = userEvent.setup();
+    await recordLogin(userId, Date.now() - 8 * 24 * 60 * 60 * 1000);
+    await renderForm();
+
+    const button = screen.getByRole('button', { name: 'Guardar finca' });
+    await waitFor(() => expect(button).toBeDisabled());
+    expect(button).toHaveAccessibleDescription(
+      /Pasaron más de 7 días sin confirmar tu sesión/,
+    );
+
+    await fillValidFarm(user);
+    await user.click(button);
+    expect(await queuedFarms()).toEqual([]);
   });
 });

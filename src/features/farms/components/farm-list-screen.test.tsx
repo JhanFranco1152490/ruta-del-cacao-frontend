@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
+import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
 import { buildSession } from '@/test/factories';
 import { municipalitiesHandler } from '@/test/handlers';
@@ -26,8 +27,10 @@ const farm: FarmFormValues = {
 
 let userId: string;
 
-beforeEach(() => {
+beforeEach(async () => {
   userId = `farm-list-${crypto.randomUUID()}`;
+  // La app lo registra cada vez que el servidor confirma la sesión.
+  await recordLogin(userId);
   server.use(
     municipalitiesHandler([
       { code: '54001', name: 'Cúcuta' },
@@ -90,6 +93,15 @@ describe('FarmListScreen', () => {
     expect(within(cards[0]).getByText('12.50 ha')).toBeInTheDocument();
     expect(
       within(cards[0]).getByText('Pendiente de sincronización'),
+    ).toBeInTheDocument();
+  });
+
+  it('reports how many farms are waiting to be synchronized', async () => {
+    await enqueueFarmCreate(userId, 'f1', farm);
+    renderScreen();
+
+    expect(
+      await screen.findByText('1 registro pendiente de sincronización.'),
     ).toBeInTheDocument();
   });
 

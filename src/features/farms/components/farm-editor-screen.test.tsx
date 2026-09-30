@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
+import { recordLogin } from '@/lib/offline/session-clock';
 import { buildSession } from '@/test/factories';
 import { municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -28,8 +29,10 @@ const farm: FarmFormValues = {
 
 let userId: string;
 
-beforeEach(() => {
+beforeEach(async () => {
   userId = `farm-editor-${crypto.randomUUID()}`;
+  // La app lo registra cada vez que el servidor confirma la sesión.
+  await recordLogin(userId);
   router.push.mockClear();
   server.use(
     municipalitiesHandler([

@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 
+import { OfflineBanner } from '@/components/offline-banner';
+
 import { emptyFarmForm } from '../schemas';
+import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { useFarmCreate } from '../use-farm-queue';
 import { FarmFormFields } from './farm-form-fields';
 import { FarmSavedPanel } from './farm-saved-panel';
@@ -13,6 +16,7 @@ export function FarmForm() {
   const [farmId, setFarmId] = useState(() => crypto.randomUUID());
   const [savedName, setSavedName] = useState<string | null>(null);
   const create = useFarmCreate();
+  const sync = useFarmSyncStatus();
 
   if (savedName) {
     return (
@@ -33,6 +37,8 @@ export function FarmForm() {
       defaultValues={emptyFarmForm}
       title="Registrar finca"
       description="Los campos marcados son obligatorios. Si no hay conexión, la finca se guarda en el teléfono y se envía cuando vuelva la señal."
+      banner={<OfflineBanner status={sync.status} />}
+      blockedMessage={sync.blockedMessage}
       submitLabel="Guardar finca"
       isSaving={create.isPending}
       error={
