@@ -17,6 +17,20 @@ describe('AppHeader', () => {
     expect(screen.getByText('Ruta del Cacao')).toHaveClass('sr-only');
   });
 
+  it('links the logo to the panel', () => {
+    render(
+      <AppHeader
+        isLoggingOut={false}
+        logoutFailed={false}
+        onLogout={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByRole('link', { name: 'Ruta del Cacao' }),
+    ).toHaveAttribute('href', '/panel');
+  });
+
   it('does not let the logout label wrap', () => {
     render(
       <AppHeader

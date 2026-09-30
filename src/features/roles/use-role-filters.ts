@@ -44,6 +44,7 @@ export function useRoleFilters(association: boolean) {
     kind: params.kind,
     ...search,
     setKind: (kind: Role['kind'] | null) => setParams({ kind, page: 1 }),
+    setProducer: (producer: string | null) => setParams({ producer, page: 1 }),
     clearProducer: () => setParams({ producer: null, page: 1 }),
     setPage: (page: number) => setParams({ page }),
   };
