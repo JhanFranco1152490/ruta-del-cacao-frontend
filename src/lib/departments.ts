@@ -8,3 +8,10 @@ export const OPERATING_DEPARTMENT = {
 // Derivarlo del municipio evita que ambos lleguen a la API sin corresponderse.
 export const departmentCodeOf = (municipalityCode: string) =>
   municipalityCode.slice(0, 2);
+
+// Vista inicial de los mapas cuando todavía no hay un punto que mostrar: el departamento
+// completo.
+export const OPERATING_AREA_VIEW = {
+  center: { latitude: 8.05, longitude: -72.85 },
+  zoom: 8,
+} as const;

@@ -1,22 +1,14 @@
 'use client';
 
 import { MapPinned } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
-import { Skeleton } from '@/components/ui/skeleton';
 import { formatGeoPoint, parseCoordinates } from '@/lib/format/coordinates';
 import type { Coordinates } from '@/types/geo';
 
-import type { LoadMapProvider, MapProvider } from './map-provider';
-
-type ProviderState = {
-  attempt: number;
-  // Dentro de un objeto: pasar el componente solo a setState lo tomaría como función de
-  // actualización.
-  Provider?: MapProvider;
-  failed?: boolean;
-};
+import type { LoadMapProvider } from './map-provider';
+import { MapSkeleton } from './map-states';
+import { useMapProvider } from './use-map-provider';
 
 export function MapPanel({
   location,
@@ -32,50 +24,23 @@ export function MapPanel({
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadMapProvider;
 }) {
-  const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<ProviderState>({ attempt: -1 });
+  const map = useMapProvider(loadProvider);
 
-  useEffect(() => {
-    let cancelled = false;
-    loadProvider().then(
-      (Provider) => {
-        if (!cancelled) setState({ attempt, Provider });
-      },
-      () => {
-        if (!cancelled) setState({ attempt, failed: true });
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [attempt, loadProvider]);
+  if (map.isLoading) return <MapSkeleton className="h-80" />;
 
-  const retry = () => {
-    setAttempt((current) => current + 1);
-    onRetry?.();
-  };
-
-  if (state.attempt !== attempt) {
-    return (
-      <section aria-label="Mapa de ubicación" className="space-y-3">
-        <Skeleton className="h-80 w-full rounded-[var(--radius-card)]" />
-        <p className="text-sm font-bold text-muted-foreground" role="status">
-          Cargando mapa…
-        </p>
-      </section>
-    );
-  }
-
-  if (state.failed || !state.Provider) {
+  if (!map.Provider) {
     return (
       <ErrorState
         message="No fue posible cargar el mapa. Puedes seguir usando el GPS o escribir las coordenadas."
-        onRetry={retry}
+        onRetry={() => {
+          map.retry();
+          onRetry?.();
+        }}
       />
     );
   }
 
-  const { Provider } = state;
+  const { Provider } = map;
   const point = parseCoordinates(location);
 
   return (
@@ -83,7 +48,7 @@ export function MapPanel({
       <div className="h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted">
         <Provider
           disabled={disabled}
-          onError={() => setState({ attempt, failed: true })}
+          onError={map.fail}
           onPointChange={(next) => onLocationChange(formatGeoPoint(next))}
           point={point}
         />

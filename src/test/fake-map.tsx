@@ -1,6 +1,8 @@
 import type {
   LoadMapProvider,
+  LoadPointsMapProvider,
   MapProviderProps,
+  PointsMapProviderProps,
 } from '@/components/map/map-provider';
 
 // Doble del proveedor: expone el marcador como texto y botones para simular un toque en el
@@ -34,3 +36,20 @@ export function FakeMap({
 }
 
 export const loadFakeMap: LoadMapProvider = () => Promise.resolve(FakeMap);
+
+// Doble del mapa de varios puntos: lista cada marcador como texto.
+export function FakePointsMap({ points }: PointsMapProviderProps) {
+  return (
+    <ul aria-label="Marcadores del mapa">
+      {points.map((point) => (
+        <li key={point.id}>
+          {point.label} ({point.tone}) {point.position.latitude},{' '}
+          {point.position.longitude}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export const loadFakePointsMap: LoadPointsMapProvider = () =>
+  Promise.resolve(FakePointsMap);

@@ -213,6 +213,27 @@ a {
     border-radius: var(--radius-field);
     background: var(--card);
   }
+
+  /* Marcador de los mapas: el color es el del estado; el borde claro lo separa de cualquier
+     mapa base. El estado también va en el título del marcador, no solo en el color. */
+  .map-pin {
+    display: block;
+    width: 1.375rem;
+    height: 1.375rem;
+    border: 3px solid #ffffff;
+    border-radius: 9999px;
+    background: var(--ok-solid);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+  }
+  .map-pin[data-tone='warn'] {
+    background: var(--warn-solid);
+  }
+  .map-pin[data-tone='err'] {
+    background: var(--err-solid);
+  }
+  .map-pin[data-tone='info'] {
+    background: var(--info-solid);
+  }
 }
 
 /* Modo oscuro: NO se usa en este proyecto.

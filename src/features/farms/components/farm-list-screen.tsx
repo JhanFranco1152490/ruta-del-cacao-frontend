@@ -27,6 +27,7 @@ import {
 import { FarmCardList } from './farm-card-list';
 import { FarmQueueActions } from './farm-queue-actions';
 import { FarmServerActions } from './farm-server-actions';
+import { FarmsMap } from './farms-map';
 
 const isQueued = (farm: FarmListItem) =>
   farm.status === 'pending' || farm.status === 'error';
@@ -112,6 +113,13 @@ export function FarmListScreen() {
           <ErrorState
             message="No fue posible cargar tus fincas del servidor. Las guardadas en este teléfono sí se muestran."
             onRetry={() => void list.refetch()}
+          />
+        )}
+        {!isLoading && (
+          <FarmsMap
+            farms={farms}
+            isFiltered={!!filters.query.search}
+            municipalityName={municipalityName}
           />
         )}
         {isLoading ? (

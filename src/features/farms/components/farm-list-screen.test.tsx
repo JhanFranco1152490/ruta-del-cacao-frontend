@@ -293,4 +293,28 @@ describe('FarmListScreen', () => {
     await screen.findByText('No hay fincas que coincidan');
     expect(requests.at(-1)?.get('search')).toBe('cucuta');
   });
+
+  it('places every listed farm on the map, colored by its state', async () => {
+    server.use(
+      farmsHandler([
+        buildFarm({ id: 's1', name: 'El Porvenir', is_active: false }),
+      ]),
+    );
+    await enqueueFarmCreate(userId, 'f1', farm);
+    renderScreen();
+
+    const map = await screen.findByRole('list', {
+      name: 'Marcadores del mapa',
+    });
+    expect(map).toHaveTextContent('La Esperanza (info) 7.8234567, -72.5123456');
+    expect(map).toHaveTextContent('El Porvenir (warn)');
+  });
+
+  it('shows an empty map when there are no farms yet', async () => {
+    renderScreen();
+
+    expect(
+      await screen.findByText('Aún no hay fincas para mostrar en el mapa.'),
+    ).toBeInTheDocument();
+  });
 });
