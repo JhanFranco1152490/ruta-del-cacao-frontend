@@ -67,7 +67,33 @@ export const buildPage = <T>(results: T[], count = results.length) => ({
   results,
 });
 
+const NORTE_DE_SANTANDER = { code: '54', name: 'Norte de Santander' };
+
+export const buildMunicipality = (
+  code: string,
+  name: string,
+): Schemas['Municipality'] => ({ code, name, department: NORTE_DE_SANTANDER });
+
 export const buildMunicipalities = (): Schemas['Municipality'][] => [
-  { code: '54001', name: 'Cúcuta' },
-  { code: '54518', name: 'Pamplona' },
+  buildMunicipality('54001', 'Cúcuta'),
+  buildMunicipality('54518', 'Pamplona'),
 ];
+
+export const buildFarm = (
+  overrides: Partial<Schemas['Farm']> = {},
+): Schemas['Farm'] => ({
+  id: 'f1',
+  name: 'La Esperanza',
+  department: { id: '54', name: 'Norte de Santander' },
+  municipality: { id: '54001', name: 'Cúcuta' },
+  details: '',
+  area_hectares: '12.50',
+  altitude_masl: 950,
+  location: { latitude: '7.8234567', longitude: '-72.5123456' },
+  version: 1,
+  is_active: true,
+  captured_at: null,
+  created_at: '2026-09-29T12:00:00-05:00',
+  updated_at: '2026-09-29T12:00:00-05:00',
+  ...overrides,
+});

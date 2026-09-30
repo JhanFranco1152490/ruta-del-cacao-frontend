@@ -2,12 +2,12 @@
 
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { parseAsString, useQueryState } from 'nuqs';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
+import { Pagination } from '@/components/pagination';
 import { TextField } from '@/components/text-field';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,34 +16,73 @@ import { useMunicipalityName } from '@/lib/api/municipalities';
 import { matchesSearch } from '@/lib/format/search';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
+import { PAGE_SIZE, useFarms } from '../api';
+import { type FarmListItem, serverFarmToListItem } from '../farm-list-item';
+import { useFarmFilters } from '../use-farm-filters';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
-import { useLocalFarms } from '../use-local-farms';
+import {
+  useLocalFarms,
+  useRefreshFarmsWhenQueueShrinks,
+} from '../use-local-farms';
 import { FarmCardList } from './farm-card-list';
 import { FarmQueueActions } from './farm-queue-actions';
+import { FarmServerActions } from './farm-server-actions';
+
+const isQueued = (farm: FarmListItem) =>
+  farm.status === 'pending' || farm.status === 'error';
 
 export function FarmListScreen() {
   const { data: user } = useSession();
-  const { farms, isError } = useLocalFarms(user?.id);
+  const filters = useFarmFilters();
+  const list = useFarms(filters.query);
+  const local = useLocalFarms(user?.id);
+  useRefreshFarmsWhenQueueShrinks(local.farms);
   const municipalityName = useMunicipalityName();
   const sync = useFarmSyncStatus();
-  // En la URL, como en los demás listados: se puede compartir y el botón atrás la respeta.
-  const [search, setSearch] = useQueryState(
-    'buscar',
-    parseAsString.withDefault(''),
-  );
   const canAdd = hasPermission(user, PERMISSIONS.FARMS_ADD);
+  const canChange = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
 
-  const visibleFarms = farms?.filter((farm) =>
+  // Lo que está en el teléfono va primero (necesita atención o aún no llega) y reemplaza a su
+  // copia del servidor: una edición pendiente muestra los datos nuevos, no los viejos.
+  const localFarms = (local.farms ?? []).filter((farm) =>
     matchesSearch(
       [farm.name, municipalityName(farm.municipalityCode), farm.details],
-      search,
+      filters.query.search ?? '',
     ),
   );
+  const localIds = new Set(local.farms?.map((farm) => farm.id));
+  const serverFarms = (list.data?.results ?? [])
+    .filter((farm) => !localIds.has(farm.id))
+    .map(serverFarmToListItem);
+  const farms = [...localFarms, ...serverFarms];
+
+  const isLoading =
+    (list.isPending && !list.isLoadingError) ||
+    (!local.farms && !local.isError);
+  const hasError = list.isLoadingError || local.isError;
 
   const registerLink = canAdd && (
     <Link className={buttonVariants({ size: 'office' })} href="/fincas/nueva">
       <Plus aria-hidden="true" className="size-5" /> Registrar finca
     </Link>
+  );
+
+  const renderActions = (farm: FarmListItem) =>
+    isQueued(farm)
+      ? (canAdd || canChange) && <FarmQueueActions farm={farm} />
+      : canChange && <FarmServerActions farm={farm} />;
+
+  const emptyState = filters.query.search ? (
+    <EmptyState
+      title="No hay fincas que coincidan"
+      description="Prueba con otro nombre, municipio o vereda."
+    />
+  ) : (
+    <EmptyState
+      title="Aún no tienes fincas registradas"
+      description="Registra tu primera finca con su ubicación. Puedes hacerlo sin conexión."
+      action={registerLink}
+    />
   );
 
   return (
@@ -60,15 +99,22 @@ export function FarmListScreen() {
       <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
         <TextField
           label="Buscar finca"
-          onChange={(event) => void setSearch(event.target.value || null)}
+          onChange={(event) => filters.setSearchInput(event.target.value)}
           placeholder="Nombre, municipio o vereda"
           type="search"
-          value={search}
+          value={filters.searchInput}
           wrapperClassName="max-w-md"
         />
-        {isError ? (
+        {local.isError && (
           <ErrorState message="No fue posible leer las fincas guardadas en este dispositivo." />
-        ) : !visibleFarms ? (
+        )}
+        {list.isLoadingError && (
+          <ErrorState
+            message="No fue posible cargar tus fincas del servidor. Las guardadas en este teléfono sí se muestran."
+            onRetry={() => void list.refetch()}
+          />
+        )}
+        {isLoading ? (
           <div
             aria-label="Cargando fincas"
             className="grid gap-4 md:grid-cols-2"
@@ -77,24 +123,22 @@ export function FarmListScreen() {
             <Skeleton className="h-40" />
             <Skeleton className="h-40" />
           </div>
-        ) : visibleFarms.length ? (
+        ) : farms.length ? (
           <FarmCardList
-            farms={visibleFarms}
+            farms={farms}
             municipalityName={municipalityName}
-            renderActions={
-              canAdd ? (farm) => <FarmQueueActions farm={farm} /> : undefined
-            }
-          />
-        ) : search ? (
-          <EmptyState
-            title="No hay fincas que coincidan"
-            description="Prueba con otro nombre, municipio o vereda."
+            renderActions={renderActions}
           />
         ) : (
-          <EmptyState
-            title="Aún no tienes fincas registradas"
-            description="Registra tu primera finca con su ubicación. Puedes hacerlo sin conexión."
-            action={registerLink}
+          !hasError && emptyState
+        )}
+        {list.data && (
+          <Pagination
+            page={filters.page}
+            pageSize={PAGE_SIZE}
+            total={list.data.count}
+            onPageChange={filters.setPage}
+            label="fincas"
           />
         )}
       </section>

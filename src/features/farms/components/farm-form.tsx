@@ -21,6 +21,7 @@ export function FarmForm() {
   if (savedName) {
     return (
       <FarmSavedPanel
+        farmId={farmId}
         name={savedName}
         onRegisterAnother={() => {
           setFarmId(crypto.randomUUID());

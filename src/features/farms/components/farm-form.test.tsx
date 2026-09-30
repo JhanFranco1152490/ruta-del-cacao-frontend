@@ -20,12 +20,7 @@ beforeEach(async () => {
   userId = `farm-form-${crypto.randomUUID()}`;
   // La app lo registra cada vez que el servidor confirma la sesión.
   await recordLogin(userId);
-  server.use(
-    municipalitiesHandler([
-      { code: '54001', name: 'Cúcuta' },
-      { code: '54518', name: 'Pamplona' },
-    ]),
-  );
+  server.use(municipalitiesHandler());
 });
 
 async function renderForm() {
@@ -164,5 +159,47 @@ describe('FarmForm', () => {
     await fillValidFarm(user);
     await user.click(button);
     expect(await queuedFarms()).toEqual([]);
+  });
+
+  it('tells when the saved farm reached the server', async () => {
+    const user = userEvent.setup();
+    await renderForm();
+    await fillValidFarm(user);
+    await save(user);
+    await screen.findByRole('heading', {
+      name: 'Finca registrada exitosamente',
+    });
+
+    // La cola la envió con éxito y la retiró.
+    const [item] = await queuedFarms();
+    await getOfflineDb(userId).queue.delete(item.id);
+
+    expect(
+      await screen.findByText('ya quedó guardada en el servidor.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Activa')).toBeInTheDocument();
+  });
+
+  it('offers to correct a saved farm the server rejected', async () => {
+    const user = userEvent.setup();
+    await renderForm();
+    await fillValidFarm(user);
+    await save(user);
+    await screen.findByRole('heading', {
+      name: 'Finca registrada exitosamente',
+    });
+
+    const [item] = await queuedFarms();
+    await getOfflineDb(userId).queue.update(item.id, {
+      status: 'error',
+      errorMessage: 'Ya existe una finca con este nombre.',
+    });
+
+    expect(
+      await screen.findByText(/Ya existe una finca con este nombre\./),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Corregir finca' }),
+    ).toHaveAttribute('href', `/fincas/${item.id}/editar`);
   });
 });

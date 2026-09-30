@@ -1,17 +1,18 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
-import { buildSession } from '@/test/factories';
-import { municipalitiesHandler } from '@/test/handlers';
+import { apiError, buildFarm, buildSession } from '@/test/factories';
+import { apiUrl, farmsHandler, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 
-import { enqueueFarmCreate } from '../farm-queue';
+import { enqueueFarmCreate, enqueueFarmUpdate } from '../farm-queue';
 import type { FarmFormValues } from '../schemas';
 import { FarmListScreen } from './farm-list-screen';
 
@@ -31,12 +32,7 @@ beforeEach(async () => {
   userId = `farm-list-${crypto.randomUUID()}`;
   // La app lo registra cada vez que el servidor confirma la sesión.
   await recordLogin(userId);
-  server.use(
-    municipalitiesHandler([
-      { code: '54001', name: 'Cúcuta' },
-      { code: '54518', name: 'Pamplona' },
-    ]),
-  );
+  server.use(municipalitiesHandler(), farmsHandler());
 });
 
 function renderScreen({
@@ -196,5 +192,105 @@ describe('FarmListScreen', () => {
     expect(
       await screen.findByText('Aún no tienes fincas registradas'),
     ).toBeInTheDocument();
+  });
+
+  it('lists the farms from the server with their state and actions', async () => {
+    server.use(
+      farmsHandler([
+        buildFarm({ id: 's1', name: 'El Porvenir', is_active: false }),
+      ]),
+    );
+    renderScreen({
+      permissions: [PERMISSIONS.FARMS_VIEW, PERMISSIONS.FARMS_CHANGE],
+    });
+
+    const [card] = await farmCards();
+    expect(within(card).getByText('El Porvenir')).toBeInTheDocument();
+    expect(within(card).getByText('Inactiva')).toBeInTheDocument();
+    expect(
+      within(card).getByRole('link', { name: 'Editar El Porvenir' }),
+    ).toHaveAttribute('href', '/fincas/s1/editar');
+    expect(
+      within(card).getByRole('button', { name: 'Activar' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows a pending edit instead of the outdated server copy', async () => {
+    server.use(farmsHandler([buildFarm({ id: 's1', name: 'Nombre viejo' })]));
+    await enqueueFarmUpdate(userId, 's1', { ...farm, name: 'Nombre nuevo' }, 1);
+    renderScreen();
+
+    const cards = await farmCards();
+    expect(cards).toHaveLength(1);
+    expect(within(cards[0]).getByText('Nombre nuevo')).toBeInTheDocument();
+    expect(
+      within(cards[0]).getByText('Pendiente de sincronización'),
+    ).toBeInTheDocument();
+  });
+
+  it('deactivates a server farm with the version it read', async () => {
+    const user = userEvent.setup();
+    const bodies: unknown[] = [];
+    server.use(
+      farmsHandler([buildFarm({ id: 's1', version: 3 })]),
+      http.patch(apiUrl('/api/farms/s1'), async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json(
+          buildFarm({ id: 's1', version: 4, is_active: false }),
+        );
+      }),
+    );
+    renderScreen({
+      permissions: [PERMISSIONS.FARMS_VIEW, PERMISSIONS.FARMS_CHANGE],
+    });
+
+    const [card] = await farmCards();
+    await user.click(within(card).getByRole('button', { name: 'Desactivar' }));
+    await user.click(screen.getByRole('button', { name: 'Desactivar finca' }));
+
+    await waitFor(() =>
+      expect(bodies).toEqual([{ is_active: false, expected_version: 3 }]),
+    );
+  });
+
+  it('explains a stale version when changing the state', async () => {
+    const user = userEvent.setup();
+    server.use(
+      farmsHandler([buildFarm({ id: 's1' })]),
+      http.patch(apiUrl('/api/farms/s1'), () =>
+        apiError(409, 'stale_version', 'La finca cambió.'),
+      ),
+    );
+    renderScreen({
+      permissions: [PERMISSIONS.FARMS_VIEW, PERMISSIONS.FARMS_CHANGE],
+    });
+
+    const [card] = await farmCards();
+    await user.click(within(card).getByRole('button', { name: 'Desactivar' }));
+    await user.click(screen.getByRole('button', { name: 'Desactivar finca' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Alguien cambió esta finca mientras tanto.',
+    );
+  });
+
+  it('keeps showing the farms on the device when the server cannot be reached', async () => {
+    server.use(http.get(apiUrl('/api/farms'), () => HttpResponse.error()));
+    await enqueueFarmCreate(userId, 'f1', farm);
+    renderScreen();
+
+    expect(
+      await screen.findByText(/No fue posible cargar tus fincas del servidor/),
+    ).toBeInTheDocument();
+    expect(await farmCards()).toHaveLength(1);
+  });
+
+  it('sends the search to the server', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(farmsHandler([], requests));
+    renderScreen({ searchParams: '?buscar=cucuta' });
+
+    await screen.findByText('No hay fincas que coincidan');
+    expect(requests.at(-1)?.get('search')).toBe('cucuta');
   });
 });

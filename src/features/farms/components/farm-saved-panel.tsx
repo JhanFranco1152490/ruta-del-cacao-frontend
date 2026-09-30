@@ -5,17 +5,50 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
+import { useSession } from '@/features/auth/api';
 
+import { useFarmSyncStatus } from '../use-farm-sync-status';
+import { type QueuedFarmState, useQueuedFarmState } from '../use-local-farms';
 import { FarmStatusBadge } from './farm-status-badge';
 
+function describe(state: QueuedFarmState, isOnline: boolean) {
+  switch (state.status) {
+    case 'synced':
+      return {
+        badge: 'active',
+        text: 'ya quedó guardada en el servidor.',
+      } as const;
+    case 'error':
+      return {
+        badge: 'error',
+        text: `quedó en este dispositivo, pero el servidor no la aceptó${
+          state.errorMessage ? `: ${state.errorMessage}` : '.'
+        } Corrígela para reenviarla.`,
+      } as const;
+    default:
+      return {
+        badge: 'pending',
+        text: isOnline
+          ? 'quedó guardada en este dispositivo y se está enviando al servidor.'
+          : 'quedó guardada en este dispositivo y se enviará al servidor cuando haya conexión.',
+      } as const;
+  }
+}
+
 export function FarmSavedPanel({
+  farmId,
   name,
   onRegisterAnother,
 }: {
+  farmId: string;
   name: string;
   onRegisterAnother: () => void;
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const { data: user } = useSession();
+  const state = useQueuedFarmState(user?.id, farmId);
+  const { status: sync } = useFarmSyncStatus();
+  const { badge, text } = describe(state, sync.isOnline);
 
   // El panel reemplaza al formulario: se lleva el foco al título para que el lector de
   // pantalla anuncie el resultado y el teclado no quede en un botón que ya no existe.
@@ -39,22 +72,34 @@ export function FarmSavedPanel({
           >
             Finca registrada exitosamente
           </h1>
-          <p className="text-muted-foreground">
-            <strong className="text-foreground">{name}</strong> quedó guardada
-            en este dispositivo y se enviará al servidor cuando haya conexión.
+          {/* Cambia sola cuando la cola envía la finca: se anuncia sin mover el foco. */}
+          <p aria-live="polite" className="text-muted-foreground">
+            <strong className="text-foreground">{name}</strong> {text}
           </p>
         </div>
-        <FarmStatusBadge status="pending" />
+        <FarmStatusBadge status={badge} />
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            className={buttonVariants({
-              size: 'field',
-              className: 'w-full sm:w-auto',
-            })}
-            href="/fincas"
-          >
-            Ver mis fincas
-          </Link>
+          {state.status === 'error' ? (
+            <Link
+              className={buttonVariants({
+                size: 'field',
+                className: 'w-full sm:w-auto',
+              })}
+              href={`/fincas/${farmId}/editar`}
+            >
+              Corregir finca
+            </Link>
+          ) : (
+            <Link
+              className={buttonVariants({
+                size: 'field',
+                className: 'w-full sm:w-auto',
+              })}
+              href="/fincas"
+            >
+              Ver mis fincas
+            </Link>
+          )}
           <Button
             className="w-full sm:w-auto"
             onClick={onRegisterAnother}

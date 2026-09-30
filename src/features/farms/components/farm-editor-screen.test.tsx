@@ -1,17 +1,18 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
-import { buildSession } from '@/test/factories';
-import { municipalitiesHandler } from '@/test/handlers';
+import { apiError, buildFarm, buildSession } from '@/test/factories';
+import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
 
-import { enqueueFarmCreate } from '../farm-queue';
+import { enqueueFarmCreate, enqueueFarmUpdate } from '../farm-queue';
 import type { FarmFormValues } from '../schemas';
 import { FarmEditorScreen } from './farm-editor-screen';
 
@@ -34,12 +35,7 @@ beforeEach(async () => {
   // La app lo registra cada vez que el servidor confirma la sesión.
   await recordLogin(userId);
   router.push.mockClear();
-  server.use(
-    municipalitiesHandler([
-      { code: '54001', name: 'Cúcuta' },
-      { code: '54518', name: 'Pamplona' },
-    ]),
-  );
+  server.use(municipalitiesHandler());
 });
 
 function renderEditor(id = 'f1') {
@@ -109,16 +105,71 @@ describe('FarmEditorScreen', () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
-  it('explains when the farm is no longer pending on the device', async () => {
+  it('explains when the farm is neither pending nor among the person farms', async () => {
+    server.use(
+      http.get(apiUrl('/api/farms/no-existe'), () =>
+        apiError(404, 'not_found', 'No encontrado.'),
+      ),
+    );
     renderEditor('no-existe');
 
     expect(
-      await screen.findByText(
-        'Esta finca no está pendiente en este teléfono: ya se sincronizó o se descartó.',
-      ),
+      await screen.findByText('No encontramos esta finca entre las tuyas.'),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Volver a mis fincas' }),
     ).toHaveAttribute('href', '/fincas');
+  });
+
+  it('edits a server farm through the queue with the version it read', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(apiUrl('/api/farms/s1'), () =>
+        HttpResponse.json(buildFarm({ id: 's1', version: 5 })),
+      ),
+    );
+    renderEditor('s1');
+
+    const name = await screen.findByLabelText('Nombre de la finca');
+    expect(name).toHaveValue('La Esperanza');
+    await user.clear(name);
+    await user.type(name, 'La Esperanza Alta');
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+    expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
+      operation: 'update',
+      status: 'pending',
+      payload: { name: 'La Esperanza Alta', expected_version: 5 },
+    });
+  });
+
+  it('shows the current server data after a stale version and resends with it', async () => {
+    const user = userEvent.setup();
+    await enqueueFarmUpdate(userId, 's1', farm, 2);
+    await getOfflineDb(userId).queue.update('s1', {
+      status: 'error',
+      errorCode: 'stale_version',
+      errorMessage: 'La finca cambió en el servidor.',
+    });
+    server.use(
+      http.get(apiUrl('/api/farms/s1'), () =>
+        HttpResponse.json(
+          buildFarm({ id: 's1', name: 'Nombre de otra persona', version: 4 }),
+        ),
+      ),
+    );
+    renderEditor('s1');
+
+    expect(
+      await screen.findByText(/Alguien la modificó mientras tanto/),
+    ).toHaveTextContent('Nombre de otra persona');
+    await save(user);
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+    expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
+      status: 'pending',
+      payload: { expected_version: 4 },
+    });
   });
 });

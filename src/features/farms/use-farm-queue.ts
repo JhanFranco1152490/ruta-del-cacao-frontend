@@ -6,7 +6,13 @@ import { useSession } from '@/features/auth/api';
 import { queryKeys } from '@/lib/api/query-keys';
 import { discard, processQueue } from '@/lib/offline/sync-queue';
 
-import { enqueueFarmCreate, getQueuedFarm, resubmitFarm } from './farm-queue';
+import {
+  enqueueFarmCreate,
+  enqueueFarmUpdate,
+  getQueuedFarm,
+  type QueuedFarm,
+  resubmitFarm,
+} from './farm-queue';
 import type { FarmFormValues } from './schemas';
 
 // Se lee una sola vez: el formulario se inicializa con esta lectura y no debe adoptar una
@@ -46,11 +52,35 @@ export const useFarmCreate = () =>
     if (navigator.onLine) void processQueue(userId);
   });
 
+export const useFarmUpdate = () =>
+  useQueueMutation(
+    async (
+      userId: string,
+      { id, values, expectedVersion }: FarmInput & { expectedVersion: number },
+    ) => {
+      await enqueueFarmUpdate(userId, id, values, expectedVersion);
+      if (navigator.onLine) void processQueue(userId);
+    },
+  );
+
 export const useFarmResubmit = () =>
-  useQueueMutation(async (userId: string, { id, values }: FarmInput) => {
-    await resubmitFarm(userId, id, values);
-    if (navigator.onLine) void processQueue(userId);
-  });
+  useQueueMutation(
+    async (
+      userId: string,
+      {
+        farm,
+        values,
+        expectedVersion,
+      }: {
+        farm: QueuedFarm;
+        values: FarmFormValues;
+        expectedVersion?: number;
+      },
+    ) => {
+      await resubmitFarm(userId, farm, values, expectedVersion);
+      if (navigator.onLine) void processQueue(userId);
+    },
+  );
 
 export const useFarmDiscard = () =>
   useQueueMutation((userId: string, id: string) => discard(userId, id));

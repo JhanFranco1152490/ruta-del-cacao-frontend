@@ -1,30 +1,38 @@
 import { departmentCodeOf } from '@/lib/departments';
-import { getOfflineDb, type QueueStatus } from '@/lib/offline/db';
+import {
+  getOfflineDb,
+  type QueueOperation,
+  type QueueStatus,
+} from '@/lib/offline/db';
 import { enqueue, resubmit } from '@/lib/offline/sync-queue';
 
+import type { Farm, FarmCreateRequest } from './api';
 import type { FarmFormValues } from './schemas';
 
 export const FARM_RESOURCE = 'farms';
 
-// Escrito a mano mientras la API no publica el esquema de fincas: cuando exista, se reemplaza
-// por el tipo generado en schema.d.ts y TypeScript señala lo que haya que ajustar.
-export type FarmCreatePayload = {
-  id: string;
-  name: string;
-  department_id: string;
-  municipality_id: string;
-  details: string;
-  area_hectares: string;
-  altitude_masl: number;
-  latitude: string;
-  longitude: string;
-};
+// Los datos de la finca tal como los recibe la API. La ubicación va siempre: el formulario no
+// deja guardar sin ella.
+export type FarmFields = Required<
+  Pick<
+    FarmCreateRequest,
+    | 'name'
+    | 'department_id'
+    | 'municipality_id'
+    | 'details'
+    | 'area_hectares'
+    | 'altitude_masl'
+    | 'latitude'
+    | 'longitude'
+  >
+>;
 
-export const toCreatePayload = (
-  id: string,
-  values: FarmFormValues,
-): FarmCreatePayload => ({
-  id,
+// Lo que guarda la cola. Una finca nueva lleva el id del dispositivo; la edición de una finca
+// del servidor, la versión que se leyó (el id de la finca es el del item de la cola).
+export type FarmCreatePayload = FarmFields & { id: string };
+export type FarmUpdatePayload = FarmFields & { expected_version: number };
+
+export const toFields = (values: FarmFormValues): FarmFields => ({
   name: values.name,
   department_id: departmentCodeOf(values.municipality_id),
   municipality_id: values.municipality_id,
@@ -33,6 +41,26 @@ export const toCreatePayload = (
   altitude_masl: Number(values.altitude_masl),
   latitude: values.latitude,
   longitude: values.longitude,
+});
+
+export const toFormValues = (fields: FarmFields): FarmFormValues => ({
+  name: fields.name,
+  municipality_id: fields.municipality_id,
+  details: fields.details,
+  area_hectares: fields.area_hectares,
+  altitude_masl: String(fields.altitude_masl),
+  latitude: fields.latitude,
+  longitude: fields.longitude,
+});
+
+export const farmToFormValues = (farm: Farm): FarmFormValues => ({
+  name: farm.name,
+  municipality_id: farm.municipality.id,
+  details: farm.details,
+  area_hectares: farm.area_hectares,
+  altitude_masl: String(farm.altitude_masl),
+  latitude: farm.location.latitude,
+  longitude: farm.location.longitude,
 });
 
 // Toda finca nueva se guarda primero en el dispositivo, con o sin conexión; la cola la envía
@@ -47,23 +75,35 @@ export const enqueueFarmCreate = (
     id,
     resource: FARM_RESOURCE,
     operation: 'create',
-    payload: toCreatePayload(id, values),
+    payload: { id, ...toFields(values) } satisfies FarmCreatePayload,
   });
 
-export const toFormValues = (payload: FarmCreatePayload): FarmFormValues => ({
-  name: payload.name,
-  municipality_id: payload.municipality_id,
-  details: payload.details,
-  area_hectares: payload.area_hectares,
-  altitude_masl: String(payload.altitude_masl),
-  latitude: payload.latitude,
-  longitude: payload.longitude,
-});
+// Editar una finca del servidor también pasa por la cola, con la versión que se leyó: si
+// alguien la cambió mientras tanto, la API responde `stale_version` y la edición espera en la
+// bandeja en vez de pisar el cambio ajeno.
+export const enqueueFarmUpdate = (
+  userId: string,
+  farmId: string,
+  values: FarmFormValues,
+  expectedVersion: number,
+) =>
+  enqueue(userId, {
+    id: farmId,
+    resource: FARM_RESOURCE,
+    operation: 'update',
+    payload: {
+      ...toFields(values),
+      expected_version: expectedVersion,
+    } satisfies FarmUpdatePayload,
+  });
 
 export type QueuedFarm = {
   id: string;
+  operation: QueueOperation;
   values: FarmFormValues;
   status: QueueStatus;
+  expectedVersion?: number;
+  errorCode?: string;
   errorMessage?: string;
 };
 
@@ -73,17 +113,35 @@ export async function getQueuedFarm(
 ): Promise<QueuedFarm | null> {
   const item = await getOfflineDb(userId).queue.get(id);
   if (!item || item.resource !== FARM_RESOURCE) return null;
+  // La cola de fincas solo la escribe este módulo, siempre con estas formas.
+  const payload = item.payload as FarmCreatePayload | FarmUpdatePayload;
   return {
     id,
-    // La cola de fincas solo la escribe este módulo, siempre con esta forma.
-    values: toFormValues(item.payload as FarmCreatePayload),
+    operation: item.operation,
+    values: toFormValues(payload),
     status: item.status,
+    expectedVersion:
+      'expected_version' in payload ? payload.expected_version : undefined,
+    errorCode: item.errorCode,
     errorMessage: item.errorMessage,
   };
 }
 
+// Corregir lo que sigue en la cola. Una edición puede reenviarse con otra versión: la de la
+// finca vigente en el servidor, después de revisar un `stale_version`.
 export const resubmitFarm = (
   userId: string,
-  id: string,
+  farm: QueuedFarm,
   values: FarmFormValues,
-) => resubmit(userId, id, toCreatePayload(id, values));
+  expectedVersion = farm.expectedVersion,
+) =>
+  resubmit(
+    userId,
+    farm.id,
+    farm.operation === 'create'
+      ? ({ id: farm.id, ...toFields(values) } satisfies FarmCreatePayload)
+      : ({
+          ...toFields(values),
+          expected_version: expectedVersion!,
+        } satisfies FarmUpdatePayload),
+  );

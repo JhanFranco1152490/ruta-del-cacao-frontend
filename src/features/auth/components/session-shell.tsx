@@ -10,10 +10,16 @@ import { NavList } from '@/components/layout/nav-list';
 import { SidebarToggle } from '@/components/layout/sidebar-toggle';
 import { useSidebarVisibility } from '@/components/layout/use-sidebar-visibility';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
+import { SYNC_ADAPTERS } from '@/config/sync-adapters';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { recordLogin } from '@/lib/offline/session-clock';
+import { registerAdapter } from '@/lib/offline/sync-queue';
 
 import { useLogout, useSession } from '../api';
+
+// Antes de arrancar la cola: sin su adapter, un recurso pendiente no se envía. Registrar dos
+// veces el mismo recurso lo reemplaza, así que volver a cargar el módulo no duplica nada.
+SYNC_ADAPTERS.forEach(registerAdapter);
 
 // Conecta el marco con la sesión: correo, cierre de sesión y menú según los permisos.
 export function SessionShell({ children }: { children: ReactNode }) {

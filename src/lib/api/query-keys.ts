@@ -23,6 +23,10 @@ export const queryKeys = {
     detail: (id: string) => ['producers', 'detail', id] as const,
   },
   farms: {
+    all: () => ['farms'] as const,
+    lists: () => ['farms', 'list'] as const,
+    list: (query: object) => ['farms', 'list', query] as const,
+    detail: (id: string) => ['farms', 'detail', id] as const,
     // Una finca que todavía está en la cola del dispositivo de esta persona.
     queued: (userId: string, id: string) =>
       ['farms', 'queued', userId, id] as const,
