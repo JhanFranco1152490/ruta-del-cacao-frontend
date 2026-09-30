@@ -17,6 +17,63 @@ import { server } from '@/test/server';
 import { createQueryClient } from './query-client';
 
 describe('createQueryClient', () => {
+  it.each(['query', 'mutation'])(
+    'invalidates permissions after a forbidden %s',
+    async (kind) => {
+      const client = createQueryClient();
+      client.setQueryData(queryKeys.session(), buildSession());
+      const fail = async () => {
+        throw new ApiError(403, {
+          code: 'permission_denied',
+          detail: 'Sin permiso.',
+          fields: {},
+        });
+      };
+
+      const request =
+        kind === 'query'
+          ? client.fetchQuery({
+              queryKey: ['probe'],
+              queryFn: fail,
+              retry: false,
+            })
+          : client
+              .getMutationCache()
+              .build(client, { mutationFn: fail })
+              .execute(undefined);
+      await expect(request).rejects.toMatchObject({
+        code: 'permission_denied',
+      });
+
+      expect(client.getQueryState(queryKeys.session())?.isInvalidated).toBe(
+        true,
+      );
+      client.clear();
+    },
+  );
+
+  it('does not invalidate the session for a different forbidden code', async () => {
+    const client = createQueryClient();
+    client.setQueryData(queryKeys.session(), buildSession());
+    await client
+      .fetchQuery({
+        queryKey: ['probe'],
+        retry: false,
+        queryFn: async () => {
+          throw new ApiError(403, {
+            code: 'self_modification',
+            detail: 'No permitido.',
+            fields: {},
+          });
+        },
+      })
+      .catch(() => undefined);
+    expect(client.getQueryState(queryKeys.session())?.isInvalidated).toBe(
+      false,
+    );
+    client.clear();
+  });
+
   it('invalidates the session when any query ends in a 401', async () => {
     const client = createQueryClient();
     client.setQueryData(queryKeys.session(), buildSession());
@@ -76,29 +133,39 @@ describe('createQueryClient', () => {
     );
   });
 
-  it('does not ask again for a session that itself answered 401', async () => {
-    const client = createQueryClient();
-    let calls = 0;
-    server.use(
-      // Tras 5 intentos responde bien: si hubiera un ciclo, termina y se puede contar.
-      http.get(apiUrl('/api/auth/me'), () =>
-        ++calls <= 5 ? unauthorized() : HttpResponse.json(buildSession()),
-      ),
-      http.post(apiUrl('/api/auth/refresh'), unauthorized),
-    );
-    const observer = new QueryObserver(client, {
-      queryKey: queryKeys.session(),
-      queryFn: () => apiFetch('/api/auth/me'),
-      retry: false,
-    });
-    const unsubscribe = observer.subscribe(() => undefined);
+  it.each([401, 403])(
+    'does not ask again for a session that itself answered %s',
+    async (status) => {
+      const client = createQueryClient();
+      let calls = 0;
+      server.use(
+        // Tras 5 intentos responde bien: si hubiera un ciclo, termina y se puede contar.
+        http.get(apiUrl('/api/auth/me'), () =>
+          ++calls <= 5
+            ? apiError(
+                status,
+                status === 401 ? 'authentication_failed' : 'permission_denied',
+              )
+            : HttpResponse.json(buildSession()),
+        ),
+        http.post(apiUrl('/api/auth/refresh'), unauthorized),
+      );
+      const observer = new QueryObserver(client, {
+        queryKey: queryKeys.session(),
+        queryFn: () => apiFetch('/api/auth/me'),
+        retry: false,
+      });
+      const unsubscribe = observer.subscribe(() => undefined);
 
-    await waitFor(() => expect(observer.getCurrentResult().isError).toBe(true));
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    unsubscribe();
+      await waitFor(() =>
+        expect(observer.getCurrentResult().isError).toBe(true),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      unsubscribe();
 
-    expect(calls).toBe(1);
-  });
+      expect(calls).toBe(1);
+    },
+  );
 
   it('retries server and network failures once, but never client errors', () => {
     const retry = createQueryClient().getDefaultOptions().queries!.retry as (

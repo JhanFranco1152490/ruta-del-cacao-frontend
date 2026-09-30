@@ -4,19 +4,19 @@ import { UserRoundPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
-import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { buttonVariants } from '@/components/ui/button';
-import {
-  useMunicipalities,
-  useMunicipalityName,
-} from '@/features/catalogs/api';
 import { isApiError } from '@/lib/api/errors';
 
-import { PAGE_SIZE, useProducers } from '../api';
+import {
+  PAGE_SIZE,
+  useMunicipalities,
+  useMunicipalityName,
+  useProducers,
+} from '../api';
 import { useProducerFilters } from '../use-producer-filters';
 import { ProducerFilters } from './producer-filters';
 import { ProducerTableSkeleton } from './producer-skeletons';
@@ -41,7 +41,6 @@ export function ProducerListScreen() {
   // fallido en segundo plano conserva `data` y la tabla sigue a la vista.
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <BackLink href="/panel">Volver al panel</BackLink>
       <PageHeader
         eyebrow="Administración"
         title="Productores asociados"

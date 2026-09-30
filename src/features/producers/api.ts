@@ -9,14 +9,29 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
+import {
+  fetchMunicipalities,
+  useMunicipalities,
+  useMunicipalityName,
+  type Municipality,
+} from '@/lib/api/municipalities';
 
 type Schemas = components['schemas'];
-export type Producer = Schemas['Producer'];
+export type Producer = Schemas['ProducerDetail'];
 export type ProducerListItem = Schemas['ProducerList'];
 export type ProducerPage = Schemas['PaginatedProducerListList'];
 export type ProducerRequest = Schemas['ProducerRequest'];
 export type ProducerUpdate = Schemas['PatchedProducerUpdateRequest'];
 export type ProducerStatus = Schemas['StatusEnum'];
+
+// El catálogo de municipios vive en lib/api porque también lo usan las cuentas; aquí se
+// reexporta para las pantallas de productores.
+export {
+  fetchMunicipalities,
+  useMunicipalities,
+  useMunicipalityName,
+  type Municipality,
+};
 
 export const PAGE_SIZE = 20;
 

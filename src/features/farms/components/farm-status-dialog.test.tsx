@@ -64,4 +64,31 @@ describe('FarmStatusDialog', () => {
       'No fue posible cambiar el estado de la finca. Inténtalo nuevamente.',
     );
   });
+
+  it('cannot be closed or confirmed again while the change is running', async () => {
+    const user = userEvent.setup();
+    let finish!: () => void;
+    const onChangeStatus = vi.fn(
+      () => new Promise<void>((resolve) => (finish = resolve)),
+    );
+    render(
+      <FarmStatusDialog
+        farm={{ name: 'La Esperanza', status: 'active' }}
+        onChangeStatus={onChangeStatus}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar' }));
+    await user.click(screen.getByRole('button', { name: 'Desactivar finca' }));
+
+    expect(
+      screen.getByRole('button', { name: 'Desactivando…' }),
+    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
+    finish();
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    expect(onChangeStatus).toHaveBeenCalledOnce();
+  });
 });

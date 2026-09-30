@@ -17,7 +17,10 @@ beforeEach(() => {
       HttpResponse.json(
         buildSession({
           email: 'ana@example.com',
-          roles: ['producer', 'admin'],
+          roles: [
+            { id: 'role-1', code: 'foreman', name: 'Capataz/Operario' },
+            { id: 'role-2', code: null, name: 'Gestión de finca' },
+          ],
         }),
       ),
     ),
@@ -25,12 +28,38 @@ beforeEach(() => {
 });
 
 describe('SessionPanel', () => {
+  it('links to accounts when the session can view users', async () => {
+    server.use(
+      http.get(ME, () =>
+        HttpResponse.json(
+          buildSession({ permissions: ['accounts.users_view'] }),
+        ),
+      ),
+    );
+    renderWithProviders(<SessionPanel />);
+    expect(
+      await screen.findByRole('link', { name: 'Ir a usuarios' }),
+    ).toHaveAttribute('href', '/usuarios');
+  });
+  it('links to roles when the session has permission to view them', async () => {
+    server.use(
+      http.get(ME, () =>
+        HttpResponse.json(
+          buildSession({ permissions: ['accounts.roles_view'] }),
+        ),
+      ),
+    );
+    renderWithProviders(<SessionPanel />);
+    expect(
+      await screen.findByRole('link', { name: 'Ir a roles' }),
+    ).toHaveAttribute('href', '/roles');
+  });
   it('shows the email and the roles of the session', async () => {
     renderWithProviders(<SessionPanel />);
 
     expect(await screen.findByText('ana@example.com')).toBeInTheDocument();
-    expect(screen.getByText('producer')).toBeInTheDocument();
-    expect(screen.getByText('admin')).toBeInTheDocument();
+    expect(screen.getByText('Capataz/Operario')).toBeInTheDocument();
+    expect(screen.getByText('Gestión de finca')).toBeInTheDocument();
   });
 
   it('says so when the account has no roles', async () => {

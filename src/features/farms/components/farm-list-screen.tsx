@@ -4,7 +4,6 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { parseAsString, useQueryState } from 'nuqs';
 
-import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { OfflineBanner } from '@/components/offline-banner';
@@ -13,7 +12,7 @@ import { TextField } from '@/components/text-field';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/features/auth/api';
-import { useMunicipalityName } from '@/features/catalogs/api';
+import { useMunicipalityName } from '@/lib/api/municipalities';
 import { matchesSearch } from '@/lib/format/search';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -49,7 +48,6 @@ export function FarmListScreen() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <BackLink href="/panel">Volver al panel</BackLink>
       <PageHeader
         eyebrow="Gestión de fincas"
         title="Mis fincas"

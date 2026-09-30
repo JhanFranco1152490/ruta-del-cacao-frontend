@@ -31,6 +31,26 @@ function count(method: 'get' | 'post', url: string, response: () => Response) {
 }
 
 describe('apiFetch', () => {
+  it('does not renew the session when public activation returns 401', async () => {
+    const refresh = count(
+      'post',
+      REFRESH,
+      () => new HttpResponse(null, { status: 204 }),
+    );
+    let csrf: string | null = null;
+    server.use(
+      http.post(apiUrl('/api/auth/activation/confirm'), ({ request }) => {
+        csrf = request.headers.get('x-csrftoken');
+        return expired();
+      }),
+    );
+    await expect(
+      apiFetch('/api/auth/activation/confirm', { method: 'POST', body: {} }),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(refresh.calls).toBe(0);
+    expect(csrf).toBe('test-csrf');
+  });
+
   it('returns parsed JSON and sends cookies', async () => {
     let seen: { credentials: string; accept: string | null } | undefined;
     server.use(

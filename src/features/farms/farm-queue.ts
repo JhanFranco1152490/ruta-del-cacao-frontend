@@ -1,4 +1,4 @@
-import { departmentCodeOf } from '@/features/catalogs/departments';
+import { departmentCodeOf } from '@/lib/departments';
 import { getOfflineDb, type QueueStatus } from '@/lib/offline/db';
 import { enqueue, resubmit } from '@/lib/offline/sync-queue';
 

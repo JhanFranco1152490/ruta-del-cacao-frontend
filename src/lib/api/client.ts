@@ -22,6 +22,7 @@ const NO_RENEWAL_PREFIXES = [
   LOGOUT_PATH,
   '/api/auth/csrf',
   '/api/auth/password-reset',
+  '/api/auth/activation',
 ];
 
 const UNEXPECTED_DETAIL =

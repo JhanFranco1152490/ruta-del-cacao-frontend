@@ -5,10 +5,11 @@ import Link from 'next/link';
 
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
-import { useMunicipalityName } from '@/features/catalogs/api';
 
+import { useMunicipalityName } from '../api';
 import { BackToProducersLink } from './back-to-producers-link';
 import { ProducerAccessNote } from './producer-access-note';
+import { ProducerAccountCard } from './producer-account-card';
 import { ProducerDataCard } from './producer-data-card';
 import { ProducerLoadGate } from './producer-load-gate';
 import { ProducerStatusDialog } from './producer-status-dialog';
@@ -52,7 +53,10 @@ export function ProducerDetailScreen({ id }: { id: string }) {
               producer={producer}
               municipalityName={municipalityName}
             />
-            <ProducerAccessNote status={producer.status} />
+            <div className="space-y-6">
+              <ProducerAccessNote status={producer.status} />
+              <ProducerAccountCard producer={producer} />
+            </div>
           </div>
         </div>
       )}

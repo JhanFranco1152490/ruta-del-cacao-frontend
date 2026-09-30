@@ -36,13 +36,20 @@ async function renderForm() {
   return result;
 }
 
+// Pegar en vez de teclear: mismos eventos de entrada para el formulario, sin el costo de un
+// evento por tecla (el test que registra dos fincas se acercaba al límite de tiempo).
+async function fillField(user: User, label: string, text: string) {
+  await user.click(screen.getByLabelText(label));
+  await user.paste(text);
+}
+
 async function fillValidFarm(user: User) {
-  await user.type(screen.getByLabelText('Nombre de la finca'), 'La Esperanza');
+  await fillField(user, 'Nombre de la finca', 'La Esperanza');
   await user.selectOptions(screen.getByLabelText('Municipio'), '54001');
-  await user.type(screen.getByLabelText('Área total (hectáreas)'), '12,5');
-  await user.type(screen.getByLabelText('Altitud (m s. n. m.)'), '950');
-  await user.type(screen.getByLabelText('Latitud'), '7.8234567');
-  await user.type(screen.getByLabelText('Longitud'), '-72.5123456');
+  await fillField(user, 'Área total (hectáreas)', '12,5');
+  await fillField(user, 'Altitud (m s. n. m.)', '950');
+  await fillField(user, 'Latitud', '7.8234567');
+  await fillField(user, 'Longitud', '-72.5123456');
 }
 
 const save = (user: User) =>

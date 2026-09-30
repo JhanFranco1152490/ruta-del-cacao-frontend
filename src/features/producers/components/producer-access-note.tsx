@@ -3,7 +3,7 @@ import type { ProducerStatus } from '../api';
 const NOTES = {
   active: {
     title: 'Productor activo',
-    body: 'Si existe una cuenta vinculada, al desactivar este expediente también se bloqueará su acceso al sistema.',
+    body: 'Al desactivar este expediente también se bloqueará el acceso de su cuenta y el de sus empleados.',
   },
   inactive: {
     title: 'Productor inactivo',

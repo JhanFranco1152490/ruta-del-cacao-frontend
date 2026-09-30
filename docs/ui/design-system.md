@@ -147,6 +147,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `FieldStepper` | Menos / número grande / más, 64 px | Captura en campo |
 | `DiseaseTile` | Tarjeta ilustrada de estado sanitario | Monitoreo fitosanitario |
 | `PermissionMatrix` | Matriz permisos × roles | Roles y permisos |
+| `CheckboxField` | Compone la casilla de shadcn/ui con `FormField`: etiqueta, ayuda o error, explicación de deshabilitado y foco cobre; reutiliza la accesibilidad de Base UI | Selección de roles y permisos |
 | `MaskedValue` | Muestra `CC ••••4821` y registra en bitácora al revelar | Productores, usuarios |
 
 ### Iconografía

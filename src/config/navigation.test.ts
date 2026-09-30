@@ -68,19 +68,23 @@ describe('isActiveRoute', () => {
 });
 
 describe('NAV_ITEMS', () => {
-  it('starts with the panel, the producers and the farms', () => {
+  it('lists the panel, the domain sections and then administration', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([
       '/panel',
       '/productores',
       '/fincas',
+      '/roles',
+      '/usuarios',
     ]);
   });
 
-  it('gates producers and farms behind their view permission and leaves the panel open', () => {
+  it('gates every section behind its view permission and leaves the panel open', () => {
     const byHref = Object.fromEntries(NAV_ITEMS.map((i) => [i.href, i]));
 
     expect(byHref['/panel'].permission).toBeUndefined();
     expect(byHref['/productores'].permission).toBe(PERMISSIONS.PRODUCERS_VIEW);
     expect(byHref['/fincas'].permission).toBe(PERMISSIONS.FARMS_VIEW);
+    expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
+    expect(byHref['/usuarios'].permission).toBe(PERMISSIONS.USERS_VIEW);
   });
 });

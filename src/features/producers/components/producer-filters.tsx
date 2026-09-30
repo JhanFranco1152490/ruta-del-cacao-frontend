@@ -6,9 +6,8 @@ import { Search } from 'lucide-react';
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
-import type { Municipality } from '@/features/catalogs/api';
 
-import type { ProducerStatus } from '../api';
+import type { Municipality, ProducerStatus } from '../api';
 import type { useProducerFilters } from '../use-producer-filters';
 
 type ProducerFiltersProps = {

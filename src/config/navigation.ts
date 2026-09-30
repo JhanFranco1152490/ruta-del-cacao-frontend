@@ -1,4 +1,10 @@
-import { LayoutDashboard, MapPinned, Sprout } from 'lucide-react';
+import {
+  LayoutDashboard,
+  MapPinned,
+  ShieldCheck,
+  Sprout,
+  Users,
+} from 'lucide-react';
 
 import { PERMISSIONS } from '@/lib/permissions';
 import type { NavItem } from '@/types/navigation';
@@ -17,6 +23,18 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Fincas',
     icon: MapPinned,
     permission: PERMISSIONS.FARMS_VIEW,
+  },
+  {
+    href: '/roles',
+    label: 'Roles y permisos',
+    icon: ShieldCheck,
+    permission: PERMISSIONS.ROLES_VIEW,
+  },
+  {
+    href: '/usuarios',
+    label: 'Usuarios',
+    icon: Users,
+    permission: PERMISSIONS.USERS_VIEW,
   },
 ];
 

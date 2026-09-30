@@ -9,8 +9,8 @@ import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
-import { useMunicipalities } from '@/features/catalogs/api';
-import { OPERATING_DEPARTMENT } from '@/features/catalogs/departments';
+import { useMunicipalities } from '@/lib/api/municipalities';
+import { OPERATING_DEPARTMENT } from '@/lib/departments';
 import type { Coordinates } from '@/types/geo';
 
 import { farmFormSchema, type FarmFormValues } from '../schemas';

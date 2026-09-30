@@ -3,6 +3,13 @@ export const PERMISSIONS = {
   FARMS_VIEW: 'farms.view_farm',
   FARMS_ADD: 'farms.add_farm',
   FARMS_CHANGE: 'farms.change_farm',
+  USERS_VIEW: 'accounts.users_view',
+  USERS_CREATE: 'accounts.users_create',
+  USERS_UPDATE: 'accounts.users_update',
+  USERS_CHANGE_STATUS: 'accounts.users_change_status',
+  ROLES_VIEW: 'accounts.roles_view',
+  ROLES_MANAGE: 'accounts.roles_manage',
+  ASSOCIATION_ACCESS_MANAGE: 'accounts.association_access_manage',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
