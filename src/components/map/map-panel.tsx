@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import { MapPinned } from 'lucide-react';
 
 import { ErrorState } from '@/components/error-state';
@@ -15,18 +16,23 @@ export function MapPanel({
   onLocationChange,
   onRetry,
   disabled = false,
+  frameClassName,
   loadProvider,
 }: {
   location: Coordinates;
   onLocationChange: (location: Coordinates) => void;
   onRetry?: () => void;
   disabled?: boolean;
+  // Ajustes del recuadro del mapa, p. ej. más alto en escritorio.
+  frameClassName?: string;
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadMapProvider;
 }) {
   const map = useMapProvider(loadProvider);
 
-  if (map.isLoading) return <MapSkeleton className="h-80" />;
+  if (map.isLoading) {
+    return <MapSkeleton className={cn('h-80', frameClassName)} />;
+  }
 
   if (!map.Provider) {
     return (
@@ -49,7 +55,10 @@ export function MapPanel({
           quedaría por encima de los diálogos y del menú móvil (z-50). */}
       <div
         data-slot="map-frame"
-        className="isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted"
+        className={cn(
+          'isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
+          frameClassName,
+        )}
       >
         <Provider
           disabled={disabled}

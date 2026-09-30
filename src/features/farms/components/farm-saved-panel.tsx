@@ -9,6 +9,7 @@ import { useSession } from '@/hooks/use-session';
 
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { type QueuedFarmState, useQueuedFarmState } from '../use-local-farms';
+import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
 import { FarmStatusBadge } from './farm-status-badge';
 
 function describe(state: QueuedFarmState, isOnline: boolean) {
@@ -82,8 +83,8 @@ export function FarmSavedPanel({
           {state.status === 'error' ? (
             <Link
               className={buttonVariants({
-                size: 'field',
-                className: 'w-full sm:w-auto',
+                size: 'office',
+                className: CAPTURE_BUTTON_CLASS,
               })}
               href={`/fincas/${farmId}/editar`}
             >
@@ -92,8 +93,8 @@ export function FarmSavedPanel({
           ) : (
             <Link
               className={buttonVariants({
-                size: 'field',
-                className: 'w-full sm:w-auto',
+                size: 'office',
+                className: CAPTURE_BUTTON_CLASS,
               })}
               href="/fincas"
             >
@@ -101,9 +102,9 @@ export function FarmSavedPanel({
             </Link>
           )}
           <Button
-            className="w-full sm:w-auto"
+            className={CAPTURE_BUTTON_CLASS}
             onClick={onRegisterAnother}
-            size="field"
+            size="office"
             type="button"
             variant="outline"
           >

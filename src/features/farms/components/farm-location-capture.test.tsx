@@ -7,7 +7,8 @@ import type { LoadMapProvider } from '@/components/map/map-provider';
 import { loadFakeMap } from '@/test/fake-map';
 import type { Coordinates } from '@/types/geo';
 
-import { FarmLocationCapture } from './farm-location-capture';
+import { useGeolocation } from '../use-geolocation';
+import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 
 const originalGeolocation = Object.getOwnPropertyDescriptor(
   navigator,
@@ -38,16 +39,27 @@ function Harness({
     onLocationChange?.(nextLocation);
   };
 
+  // Igual que el formulario: los campos y el mapa comparten la misma captura GPS.
+  const geolocation = useGeolocation(handleLocationChange);
+
   return (
-    <FarmLocationCapture
-      loadMapProvider={loadMapProvider}
-      location={location}
-      onLocationChange={handleLocationChange}
-    />
+    <>
+      <FarmLocationFields
+        geolocation={geolocation}
+        location={location}
+        onLocationChange={handleLocationChange}
+      />
+      <FarmLocationMap
+        disabled={geolocation.isCapturing}
+        loadMapProvider={loadMapProvider}
+        location={location}
+        onLocationChange={handleLocationChange}
+      />
+    </>
   );
 }
 
-describe('FarmLocationCapture', () => {
+describe('farm location capture', () => {
   it('keeps coordinate fields editable and asks for GPS only after a click', async () => {
     const user = userEvent.setup();
     const getCurrentPosition = vi.fn();
@@ -78,12 +90,7 @@ describe('FarmLocationCapture', () => {
       value: { getCurrentPosition },
     });
 
-    render(
-      <FarmLocationCapture
-        location={{ latitude: '', longitude: '' }}
-        onLocationChange={vi.fn()}
-      />,
-    );
+    render(<Harness />);
 
     await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
     const onError = getCurrentPosition.mock
@@ -119,5 +126,20 @@ describe('FarmLocationCapture', () => {
     await user.clear(screen.getByLabelText('Latitud'));
     await user.type(screen.getByLabelText('Latitud'), '8.5');
     expect(screen.getByText('Marcador: 8.5, -72.5')).toBeInTheDocument();
+  });
+
+  it('keeps the map still while the GPS is capturing', async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition: vi.fn() },
+    });
+    render(<Harness loadMapProvider={loadFakeMap} />);
+
+    await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
+
+    expect(
+      await screen.findByRole('button', { name: 'Tocar el mapa' }),
+    ).toBeDisabled();
   });
 });

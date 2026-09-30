@@ -61,7 +61,7 @@ export function OfflineBanner({ status }: { status: SyncStatus }) {
 
   return (
     <section
-      className="flex gap-3 rounded-[12px] border-[2.5px] border-ink bg-card p-4"
+      className="flex gap-3 rounded-[var(--radius-card)] border border-border bg-card p-4"
       role="status"
     >
       <Icon aria-hidden="true" className="mt-0.5 size-6 shrink-0" />

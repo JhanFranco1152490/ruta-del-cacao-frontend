@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import { CircleOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,6 +19,7 @@ import {
   useQueuedFarm,
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
+import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
 import { FarmFormFields } from './farm-form-fields';
 
 // Sin revalidación automática: el formulario se inicializa una sola vez con esta lectura, y
@@ -185,7 +187,10 @@ function FarmUnavailable({ message }: { message: string }) {
         {message}
       </p>
       <Link
-        className={buttonVariants({ size: 'office', className: 'mt-6 px-4' })}
+        className={buttonVariants({
+          size: 'office',
+          className: cn(CAPTURE_BUTTON_CLASS, 'mt-6'),
+        })}
         href="/fincas"
       >
         Volver a mis fincas
