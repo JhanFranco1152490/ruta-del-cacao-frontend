@@ -1,7 +1,6 @@
 'use client';
 import { useState, type ReactNode } from 'react';
 import { PageHeader } from '@/components/page-header';
-import { BackLink } from '@/components/back-link';
 import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { useProducerSummary } from '@/lib/api/producer-options';
@@ -16,7 +15,7 @@ import type { AccountCreated } from '../api';
 import { AccountFilters } from './account-filters';
 import { AccountList } from './account-list';
 import { AccountPanel } from './account-panel';
-import { ProducerFilter } from './producer-filter';
+import { ProducerFilter } from '@/components/producer-filter';
 
 export function AccountWorkspace({
   user,
@@ -49,7 +48,6 @@ export function AccountWorkspace({
   }
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
-      <BackLink href="/panel">Volver al panel</BackLink>
       <PageHeader
         eyebrow="Administración"
         title="Usuarios y accesos"
@@ -69,34 +67,39 @@ export function AccountWorkspace({
           ) : undefined
         }
       />
-      {hasPermission(user, PERMISSIONS.ASSOCIATION_ACCESS_MANAGE) && (
-        <div className="mt-8">{accessCard}</div>
-      )}
+      {hasPermission(user, PERMISSIONS.ASSOCIATION_ACCESS_MANAGE) &&
+        user.producer_id && <div className="mt-8">{accessCard}</div>}
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
         <AccountFilters
           filters={filters}
           canReadRoles={hasPermission(user, PERMISSIONS.ROLES_VIEW)}
           municipalities={association ? (municipalities.data ?? []) : undefined}
+          producerFilter={
+            canPickProducer && (
+              <ProducerFilter
+                producer={filters.producer}
+                selected={selectedProducer}
+                onSelect={(id) => {
+                  void filters.setProducer(id);
+                }}
+                onClear={() => {
+                  void filters.clearProducer();
+                }}
+                className="min-w-56 flex-1"
+              />
+            )
+          }
         />
-        {canPickProducer ? (
-          <ProducerFilter
-            producer={filters.producer}
-            selected={selectedProducer}
-            onSelect={(id) => {
-              void filters.setProducer(id);
-            }}
-            onClear={() => {
-              void filters.clearProducer();
-            }}
-          />
-        ) : (
-          association &&
-          !filters.producer && (
-            <p className="text-sm text-muted-foreground">
-              Para crear empleados, entra desde el expediente de un productor
-              que haya autorizado el acceso de la asociación.
-            </p>
-          )
+        {canPickProducer && !filters.producer && (
+          <p className="text-sm text-muted-foreground">
+            Elige un productor para crear sus empleados.
+          </p>
+        )}
+        {!canPickProducer && association && !filters.producer && (
+          <p className="text-sm text-muted-foreground">
+            Para crear empleados, entra desde el expediente de un productor que
+            haya autorizado el acceso de la asociación.
+          </p>
         )}
         <AccountList
           filters={filters}

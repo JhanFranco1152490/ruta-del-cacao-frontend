@@ -1,10 +1,12 @@
 'use client';
-import { BackLink } from '@/components/back-link';
+import { cn } from 'cn';
 import { PageHeader } from '@/components/page-header';
 import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
+import { ProducerFilter } from '@/components/producer-filter';
+import { useProducerSummary } from '@/lib/api/producer-options';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { useRoleFilters } from '../use-role-filters';
@@ -22,22 +24,28 @@ export function RoleScreen() {
     <RoleWorkspace
       association={!session.data?.producer_id}
       manage={hasPermission(session.data, PERMISSIONS.ROLES_MANAGE)}
+      canPickProducer={hasPermission(session.data, PERMISSIONS.PRODUCERS_VIEW)}
     />
   );
 }
 function RoleWorkspace({
   association,
   manage,
+  canPickProducer,
 }: {
   association: boolean;
   manage: boolean;
+  canPickProducer: boolean;
 }) {
   const filters = useRoleFilters(association);
   const panel = useRolePanel();
+  const pickProducer = association && canPickProducer;
+  const selectedProducer = useProducerSummary(
+    pickProducer ? filters.producer : undefined,
+  );
   const canCreate = manage && (!association || !!filters.producer);
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
-      <BackLink href="/panel">Volver al panel</BackLink>
       <PageHeader
         eyebrow="Administración"
         title="Roles y permisos"
@@ -56,7 +64,12 @@ function RoleWorkspace({
         }
       />
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div
+          className={cn(
+            'grid gap-4',
+            pickProducer ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
+          )}
+        >
           <TextField
             label="Buscar roles"
             value={filters.searchInput}
@@ -77,23 +90,26 @@ function RoleWorkspace({
             <option value="predefined">Predefinidos</option>
             <option value="custom">Propios</option>
           </SelectField>
-        </div>
-        {filters.producer && (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm break-all">
-              Productor seleccionado: {filters.producer}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => {
+          {pickProducer && (
+            <ProducerFilter
+              producer={filters.producer}
+              selected={selectedProducer}
+              onSelect={(id) => {
+                void filters.setProducer(id);
+              }}
+              onClear={() => {
                 void filters.clearProducer();
               }}
-            >
-              Quitar filtro de productor
-            </Button>
-          </div>
+              deniedMessage="Este productor no ha autorizado el acceso de la asociación: no puedes ver ni administrar sus roles propios."
+            />
+          )}
+        </div>
+        {pickProducer && !filters.producer && (
+          <p className="text-sm text-muted-foreground">
+            Elige un productor para administrar sus roles propios.
+          </p>
         )}
-        {association && manage && !filters.producer && (
+        {!pickProducer && association && manage && !filters.producer && (
           <p className="text-sm text-muted-foreground">
             Para crear un rol propio, entra desde el expediente del productor.
           </p>

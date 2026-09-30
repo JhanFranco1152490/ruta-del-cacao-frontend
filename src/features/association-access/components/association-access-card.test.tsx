@@ -67,6 +67,30 @@ describe('AssociationAccessCard', () => {
     expect(requested).toBe(false);
   });
 
+  it('is not shown for an account without its own producer, even with the permission', async () => {
+    // Un superusuario de Django recibe todos los permisos del sistema, incluido este, aunque
+    // no tenga productor propio del que la asociación pueda gestionar cuentas: el interruptor
+    // no le sirve, así que ni se muestra ni se consulta.
+    let requested = false;
+    server.use(
+      http.get(apiUrl('/api/auth/me'), () =>
+        HttpResponse.json(
+          buildSession({ producer_id: null, permissions: producerPermissions }),
+        ),
+      ),
+      http.get(apiUrl('/api/association-access'), () => {
+        requested = true;
+        return HttpResponse.json(off);
+      }),
+    );
+    renderWithProviders(<UsersPage />);
+    expect(
+      await screen.findByText('No hay usuarios para mostrar'),
+    ).toBeVisible();
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect(requested).toBe(false);
+  });
+
   it('shows the current state and that it never changed', async () => {
     renderWithProviders(<UsersPage />);
     const toggle = await findSwitch();

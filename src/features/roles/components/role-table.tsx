@@ -35,7 +35,7 @@ function groupRoles(roles: Role[], byProducer: boolean): RoleGroup[] {
       group = {
         key,
         name: role.producer
-          ? `Roles propios de ${role.producer.member_code}`
+          ? `Roles propios de ${role.producer.first_name} ${role.producer.last_name} · ${role.producer.member_code}`
           : 'Roles propios',
         items: [],
       };

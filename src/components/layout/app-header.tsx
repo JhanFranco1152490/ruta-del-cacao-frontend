@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { CacaoMark } from '@/components/brand/cacao-mark';
@@ -23,10 +24,15 @@ export function AppHeader({
         <div className="flex min-w-0 items-center gap-3 text-selva">
           {mobileNav}
           {sidebarToggle}
-          <CacaoMark className="h-9 w-6 shrink-0 text-cobre" />
-          <span className="sr-only font-serif text-xl whitespace-nowrap min-[400px]:not-sr-only sm:text-2xl">
-            Ruta del Cacao
-          </span>
+          <Link
+            href="/panel"
+            className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-cobre"
+          >
+            <CacaoMark className="h-9 w-6 shrink-0 text-cobre" />
+            <span className="sr-only font-serif text-xl whitespace-nowrap min-[400px]:not-sr-only sm:text-2xl">
+              Ruta del Cacao
+            </span>
+          </Link>
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden max-w-56 truncate text-sm text-muted-foreground sm:inline">

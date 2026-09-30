@@ -53,6 +53,9 @@ beforeEach(() => {
   mockSession(null, associationPermissions);
   server.use(
     http.get(apiUrl('/api/users'), () => HttpResponse.json(buildPage([]))),
+    // El combobox de productor está siempre montado (aunque ya haya uno elegido), así que
+    // siempre pide esta lista; cada prueba la sobreescribe si le importa la respuesta.
+    http.get(apiUrl('/api/producers'), () => HttpResponse.json(buildPage([]))),
   );
 });
 
@@ -79,19 +82,16 @@ describe('producer filter of the association', () => {
         name: 'Crear cuenta de administrador',
       }),
     ).toBeVisible();
-    await screen.findByRole('option', { name: 'Ana Prueba · PROD-000007' });
+    const combobox = screen.getByLabelText('Productor');
+    await userEvent.click(combobox);
     expect(requests[0]?.searchParams.get('status')).toBe('active');
-    await userEvent.selectOptions(
-      screen.getByLabelText('Productor'),
-      producerId,
+    await userEvent.click(
+      await screen.findByRole('option', { name: 'Ana Prueba · PROD-000007' }),
     );
 
     expect(onUrlUpdate.mock.lastCall?.[0].searchParams.get('productor')).toBe(
       producerId,
     );
-    expect(
-      await screen.findByText('Ana Prueba · PROD-000007', { selector: 'span' }),
-    ).toBeVisible();
     expect(
       await screen.findByRole('button', { name: 'Crear cuenta de empleado' }),
     ).toBeVisible();
@@ -107,14 +107,13 @@ describe('producer filter of the association', () => {
       }),
     );
     renderWithProviders(<AccountListScreen />);
-    await userEvent.type(
-      await screen.findByLabelText('Buscar productor'),
-      'PROD-7',
-    );
+    const combobox = await screen.findByLabelText('Productor');
+    await userEvent.click(combobox);
+    await userEvent.type(combobox, 'PROD-7');
     await waitFor(() => expect(searches.at(-1)).toBe('PROD-7'));
     expect(
-      await screen.findByRole('option', { name: 'Ningún productor coincide' }),
-    ).toBeInTheDocument();
+      await screen.findByText('Ningún productor coincide con la búsqueda.'),
+    ).toBeVisible();
   });
 
   it('warns and offers no creation when the producer has not allowed access', async () => {
@@ -131,22 +130,42 @@ describe('producer filter of the association', () => {
   });
 
   it('goes back to every producer when the filter is removed', async () => {
+    mockProducer(true);
+    renderWithProviders(<AccountListScreen />, {
+      searchParams: `?productor=${producerId}`,
+    });
+    await screen.findByRole('button', { name: 'Crear cuenta de empleado' });
+    await userEvent.click(screen.getByRole('button', { name: 'Borrar' }));
+    expect(
+      await screen.findByRole('button', {
+        name: 'Crear cuenta de administrador',
+      }),
+    ).toBeVisible();
+  });
+
+  it('switches directly to another producer without clearing the filter first', async () => {
+    const onUrlUpdate = vi.fn();
     server.use(
       http.get(apiUrl('/api/producers'), () =>
-        HttpResponse.json(buildPage([])),
+        HttpResponse.json(
+          buildPage([listItem(otherId, 'Luis', 'PROD-000008')]),
+        ),
       ),
     );
     mockProducer(true);
     renderWithProviders(<AccountListScreen />, {
       searchParams: `?productor=${producerId}`,
+      onUrlUpdate,
     });
+    const combobox = await screen.findByLabelText('Productor');
+    await userEvent.click(combobox);
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Quitar filtro de productor' }),
+      await screen.findByRole('option', { name: 'Luis Prueba · PROD-000008' }),
     );
-    expect(await screen.findByLabelText('Buscar productor')).toBeVisible();
-    expect(
-      screen.getByRole('button', { name: 'Crear cuenta de administrador' }),
-    ).toBeVisible();
+
+    expect(onUrlUpdate.mock.lastCall?.[0].searchParams.get('productor')).toBe(
+      otherId,
+    );
   });
 
   it('is not offered inside the space of a producer', async () => {
@@ -155,6 +174,6 @@ describe('producer filter of the association', () => {
     expect(
       await screen.findByRole('button', { name: 'Crear cuenta de empleado' }),
     ).toBeVisible();
-    expect(screen.queryByLabelText('Buscar productor')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Productor')).not.toBeInTheDocument();
   });
 });
