@@ -1,12 +1,15 @@
-import { screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { onlineManager } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { fetchMunicipalities } from '@/lib/api/municipalities';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { buildSession } from '@/test/factories';
-import { municipalitiesHandler } from '@/test/handlers';
+import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 
@@ -201,5 +204,38 @@ describe('FarmForm', () => {
     expect(
       screen.getByRole('link', { name: 'Corregir finca' }),
     ).toHaveAttribute('href', `/fincas/${item.id}/editar`);
+  });
+
+  describe('without connection', () => {
+    beforeEach(() => onlineManager.setOnline(false));
+    // Desmontar antes de reconectar: si no, lo que quedó en pausa se reanuda al volver la red y
+    // hace peticiones cuando el test ya terminó.
+    afterEach(() => {
+      cleanup();
+      onlineManager.setOnline(true);
+    });
+
+    // Guardar en el dispositivo no usa la red: antes quedaba "Guardando…" hasta volver la señal.
+    it('saves the farm on the device right away', async () => {
+      const user = userEvent.setup();
+      // El catálogo se descargó alguna vez con señal; ahora la red no responde.
+      await fetchMunicipalities();
+      server.use(
+        http.get(apiUrl('/api/catalogs/municipalities'), () =>
+          HttpResponse.error(),
+        ),
+      );
+      await renderForm();
+
+      await fillValidFarm(user);
+      await save(user);
+
+      expect(
+        await screen.findByRole('heading', {
+          name: 'Finca registrada exitosamente',
+        }),
+      ).toBeInTheDocument();
+      expect(await queuedFarms()).toHaveLength(1);
+    });
   });
 });

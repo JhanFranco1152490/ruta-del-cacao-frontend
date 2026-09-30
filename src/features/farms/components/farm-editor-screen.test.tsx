@@ -1,7 +1,8 @@
-import { screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { onlineManager } from '@tanstack/react-query';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -170,6 +171,40 @@ describe('FarmEditorScreen', () => {
     expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
       status: 'pending',
       payload: { expected_version: 4 },
+    });
+  });
+
+  describe('without connection', () => {
+    beforeEach(() => onlineManager.setOnline(false));
+    // Desmontar antes de reconectar: si no, lo que quedó en pausa se reanuda al volver la red y
+    // hace peticiones cuando el test ya terminó.
+    afterEach(() => {
+      cleanup();
+      onlineManager.setOnline(true);
+    });
+
+    it('explains that editing a server farm needs a connection', async () => {
+      renderEditor('s1');
+
+      expect(
+        await screen.findByText(/Necesitas conexión para editar esta finca/),
+      ).toBeInTheDocument();
+    });
+
+    it('still corrects a farm saved on the device', async () => {
+      const user = userEvent.setup();
+      await enqueueFailedFarm();
+      renderEditor();
+
+      const name = await screen.findByLabelText('Nombre de la finca');
+      await user.clear(name);
+      await user.type(name, 'Corregida sin red');
+      await save(user);
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(
+        (await getOfflineDb(userId).queue.get('f1'))?.payload,
+      ).toMatchObject({ name: 'Corregida sin red' });
     });
   });
 });

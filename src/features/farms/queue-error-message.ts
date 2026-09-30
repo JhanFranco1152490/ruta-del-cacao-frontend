@@ -9,7 +9,7 @@ export function queueErrorMessage(error: unknown, fallback: string) {
     return 'La finca se está enviando en este momento. Espera unos segundos e inténtalo de nuevo.';
   }
   if (error instanceof QueueItemMissingError) {
-    return 'Esta finca ya no está pendiente en el teléfono: se sincronizó o se descartó.';
+    return 'Esta finca ya no está pendiente en este dispositivo: se sincronizó o se descartó.';
   }
   if (error instanceof QueueItemHasDependentsError) {
     return 'No se puede descartar: hay registros pendientes que dependen de esta finca.';

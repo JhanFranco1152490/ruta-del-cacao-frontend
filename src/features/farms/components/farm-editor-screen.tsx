@@ -45,6 +45,12 @@ export function FarmEditorScreen({ id }: { id: string }) {
 function ServerFarmEditor({ id }: { id: string }) {
   const farm = useFarm(id, EDITOR_QUERY_OPTIONS);
 
+  // Sin conexión la consulta queda en pausa: se explica en vez de cargar sin fin.
+  if (farm.isPending && farm.fetchStatus === 'paused') {
+    return (
+      <FarmUnavailable message="Necesitas conexión para editar esta finca: sus datos no están guardados en este dispositivo." />
+    );
+  }
   if (farm.isPending) return <EditorSkeleton />;
   if (farm.isError) {
     return (
@@ -69,7 +75,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
     <FarmFormFields
       defaultValues={farmToFormValues(farm)}
       title="Editar finca"
-      description="Los cambios se guardan en el teléfono y se envían cuando haya conexión."
+      description="Los cambios se guardan en este dispositivo y se envían cuando haya conexión."
       banner={<OfflineBanner status={sync.status} />}
       blockedMessage={sync.blockedMessage}
       submitLabel="Guardar cambios"
@@ -104,7 +110,7 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
     <FarmFormFields
       defaultValues={farm.values}
       title={failed ? 'Corregir finca' : 'Editar finca'}
-      description="Los cambios se guardan en el teléfono y la finca se vuelve a enviar cuando haya conexión."
+      description="Los cambios se guardan en este dispositivo y la finca se vuelve a enviar cuando haya conexión."
       banner={<OfflineBanner status={sync.status} />}
       notice={
         failed && (

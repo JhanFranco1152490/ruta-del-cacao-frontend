@@ -15,6 +15,11 @@ import {
 } from './farm-queue';
 import type { FarmFormValues } from './schemas';
 
+// Leer y escribir la cola del dispositivo no usa la red. Por defecto TanStack Query pausa todo
+// mientras no hay conexión (espera a que vuelva): aquí eso dejaba "Guardando…" colgado y la
+// finca sin guardar hasta recuperar la señal, justo lo contrario de lo que se busca.
+const LOCAL_ONLY = 'always' as const;
+
 // Se lee una sola vez: el formulario se inicializa con esta lectura y no debe adoptar una
 // posterior mientras la persona corrige.
 export function useQueuedFarm(id: string) {
@@ -26,6 +31,7 @@ export function useQueuedFarm(id: string) {
     enabled: !!userId,
     staleTime: Infinity,
     gcTime: 0,
+    networkMode: LOCAL_ONLY,
   });
 }
 
@@ -34,6 +40,7 @@ function useQueueMutation<T>(
 ) {
   const { data: user } = useSession();
   return useMutation({
+    networkMode: LOCAL_ONLY,
     mutationFn: async (input: T) => {
       if (!user) throw new Error('No hay una sesión activa.');
       await action(user.id, input);

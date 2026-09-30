@@ -37,7 +37,7 @@ export function FarmForm() {
       key={farmId}
       defaultValues={emptyFarmForm}
       title="Registrar finca"
-      description="Los campos marcados son obligatorios. Si no hay conexión, la finca se guarda en el teléfono y se envía cuando vuelva la señal."
+      description="Los campos marcados son obligatorios. Si no hay conexión, la finca se guarda en este dispositivo y se envía cuando vuelva la conexión."
       banner={<OfflineBanner status={sync.status} />}
       blockedMessage={sync.blockedMessage}
       submitLabel="Guardar finca"

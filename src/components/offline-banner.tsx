@@ -28,7 +28,7 @@ function getBannerContent(status: SyncStatus): BannerContent {
     return {
       tone: 'info',
       title: 'Sin conexión',
-      detail: `${countLabel(status.pendingCount, 'registro en cola', 'registros en cola')}. Los cambios se guardarán en el teléfono.`,
+      detail: `${countLabel(status.pendingCount, 'registro en cola', 'registros en cola')}. Los cambios se guardarán en este dispositivo.`,
       Icon: CloudOff,
     };
   }

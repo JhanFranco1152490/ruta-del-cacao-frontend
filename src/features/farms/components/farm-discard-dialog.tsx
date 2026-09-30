@@ -26,7 +26,7 @@ export function FarmDiscardDialog({ farm }: { farm: FarmListItem }) {
     trigger: 'Descartar',
     title: `¿Descartar la finca ${farm.name}?`,
     description:
-      'Se borrará de este teléfono y no se enviará al servidor. Esta acción no se puede deshacer.',
+      'Se borrará de este dispositivo y no se enviará al servidor. Esta acción no se puede deshacer.',
     confirm: 'Descartar finca',
     pending: 'Descartando…',
     Icon: Trash2,

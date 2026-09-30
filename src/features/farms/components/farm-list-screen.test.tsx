@@ -1,7 +1,8 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { onlineManager } from '@tanstack/react-query';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -316,5 +317,28 @@ describe('FarmListScreen', () => {
     expect(
       await screen.findByText('Aún no hay fincas para mostrar en el mapa.'),
     ).toBeInTheDocument();
+  });
+
+  describe('without connection', () => {
+    beforeEach(() => onlineManager.setOnline(false));
+    // Desmontar antes de reconectar: si no, lo que quedó en pausa se reanuda al volver la red y
+    // hace peticiones cuando el test ya terminó.
+    afterEach(() => {
+      cleanup();
+      onlineManager.setOnline(true);
+    });
+
+    it('shows the farms on the device instead of loading forever', async () => {
+      await enqueueFarmCreate(userId, 'f1', farm);
+      renderScreen();
+
+      expect(
+        await screen.findByText(/Sin conexión: se muestran solo las fincas/),
+      ).toBeInTheDocument();
+      expect(await farmCards()).toHaveLength(1);
+      expect(
+        screen.queryByRole('status', { name: 'Cargando fincas' }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

@@ -22,7 +22,7 @@ describe('OfflineBanner', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Sin conexión');
     expect(screen.getByRole('status')).toHaveTextContent('2 registros en cola');
     expect(screen.getByRole('status')).toHaveTextContent(
-      'Los cambios se guardarán en el teléfono.',
+      'Los cambios se guardarán en este dispositivo.',
     );
   });
 

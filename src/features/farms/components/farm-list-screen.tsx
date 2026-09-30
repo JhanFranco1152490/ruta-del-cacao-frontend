@@ -43,7 +43,7 @@ export function FarmListScreen() {
   const canAdd = hasPermission(user, PERMISSIONS.FARMS_ADD);
   const canChange = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
 
-  // Lo que está en el teléfono va primero (necesita atención o aún no llega) y reemplaza a su
+  // Lo que está en el dispositivo va primero (necesita atención o aún no llega) y reemplaza a su
   // copia del servidor: una edición pendiente muestra los datos nuevos, no los viejos.
   const localFarms = (local.farms ?? []).filter((farm) =>
     matchesSearch(
@@ -57,8 +57,11 @@ export function FarmListScreen() {
     .map(serverFarmToListItem);
   const farms = [...localFarms, ...serverFarms];
 
+  // Sin conexión la consulta al servidor queda en pausa hasta que vuelva la red: no es una
+  // carga en curso, así que se muestra lo del dispositivo en vez de un esqueleto sin fin.
+  const serverUnreachable = list.isPending && list.fetchStatus === 'paused';
   const isLoading =
-    (list.isPending && !list.isLoadingError) ||
+    (list.isPending && !list.isLoadingError && !serverUnreachable) ||
     (!local.farms && !local.isError);
   const hasError = list.isLoadingError || local.isError;
 
@@ -111,7 +114,7 @@ export function FarmListScreen() {
         )}
         {list.isLoadingError && (
           <ErrorState
-            message="No fue posible cargar tus fincas del servidor. Las guardadas en este teléfono sí se muestran."
+            message="No fue posible cargar tus fincas del servidor. Las guardadas en este dispositivo sí se muestran."
             onRetry={() => void list.refetch()}
           />
         )}
@@ -121,6 +124,12 @@ export function FarmListScreen() {
             isFiltered={!!filters.query.search}
             municipalityName={municipalityName}
           />
+        )}
+        {serverUnreachable && (
+          <p className="font-bold text-muted-foreground" role="status">
+            Sin conexión: se muestran solo las fincas guardadas en este
+            dispositivo. Las demás aparecerán al recuperar la conexión.
+          </p>
         )}
         {isLoading ? (
           <div
@@ -138,7 +147,7 @@ export function FarmListScreen() {
             renderActions={renderActions}
           />
         ) : (
-          !hasError && emptyState
+          !hasError && !serverUnreachable && emptyState
         )}
         {list.data && (
           <Pagination
