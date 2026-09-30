@@ -11,7 +11,7 @@ import { Pagination } from '@/components/pagination';
 import { TextField } from '@/components/text-field';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSession } from '@/features/auth/api';
+import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { matchesSearch } from '@/lib/format/search';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';

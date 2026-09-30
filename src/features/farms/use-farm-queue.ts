@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { useSession } from '@/features/auth/api';
+import { useSession } from '@/hooks/use-session';
 import { queryKeys } from '@/lib/api/query-keys';
 import { discard, processQueue } from '@/lib/offline/sync-queue';
 

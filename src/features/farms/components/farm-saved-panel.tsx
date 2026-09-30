@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
-import { useSession } from '@/features/auth/api';
+import { useSession } from '@/hooks/use-session';
 
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { type QueuedFarmState, useQueuedFarmState } from '../use-local-farms';

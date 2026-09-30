@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from '@/features/auth/api';
+import { useSession } from '@/hooks/use-session';
 import { useSyncStatus } from '@/hooks/use-sync-status';
 import { OFFLINE_WINDOW_DAYS } from '@/lib/offline/session-clock';
 
