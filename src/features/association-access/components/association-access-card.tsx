@@ -1,6 +1,5 @@
 'use client';
 import { useId, useState } from 'react';
-import { ErrorState } from '@/components/error-state';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,20 +31,28 @@ export function AssociationAccessCard() {
     return <p role="status">Cargando acceso de la asociación…</p>;
   if (access.isError)
     return (
-      <ErrorState
-        message={getErrorMessage(
-          access.error,
-          'No fue posible consultar el acceso de la asociación.',
+      // Tarjeta compacta, no el ErrorState de página completa: esto es un widget más de una
+      // pantalla con lista, no todo el contenido reemplazado por un error.
+      <div role="alert" className="rounded-lg bg-card p-5 shadow-card">
+        <p className="font-bold text-err">
+          {getErrorMessage(
+            access.error,
+            'No fue posible consultar el acceso de la asociación.',
+          )}
+        </p>
+        {/* Un 404 (la cuenta no tiene productor) no cambia al reintentar. */}
+        {!(isApiError(access.error) && access.error.status === 404) && (
+          <Button
+            className="mt-3 h-10"
+            variant="outline"
+            onClick={() => {
+              void access.refetch();
+            }}
+          >
+            Reintentar
+          </Button>
         )}
-        // Un 404 (la cuenta no tiene productor) no cambia al reintentar.
-        onRetry={
-          isApiError(access.error) && access.error.status === 404
-            ? undefined
-            : () => {
-                void access.refetch();
-              }
-        }
-      />
+      </div>
     );
   const { enabled, changed_at: changedAt } = access.data;
   function send(next: boolean) {

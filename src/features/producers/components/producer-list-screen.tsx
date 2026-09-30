@@ -4,7 +4,6 @@ import { UserRoundPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
-import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
@@ -42,7 +41,6 @@ export function ProducerListScreen() {
   // fallido en segundo plano conserva `data` y la tabla sigue a la vista.
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <BackLink href="/panel">Volver al panel</BackLink>
       <PageHeader
         eyebrow="Administración"
         title="Productores asociados"

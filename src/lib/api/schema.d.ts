@@ -665,6 +665,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             member_code: string;
+            first_name: string;
+            last_name: string;
         };
         Session: {
             user: components["schemas"]["SessionUser"];

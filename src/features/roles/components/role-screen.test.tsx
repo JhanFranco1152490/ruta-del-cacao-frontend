@@ -505,13 +505,26 @@ describe('custom roles by producer', () => {
       producer_id: null,
       producer: null,
     },
-    { ...role, producer: { id, member_code: 'PROD-000001' } },
+    {
+      ...role,
+      producer: {
+        id,
+        member_code: 'PROD-000001',
+        first_name: 'Ana',
+        last_name: 'Prueba',
+      },
+    },
     {
       ...role,
       id: '66666666-6666-4666-8666-666666666666',
       name: 'Supervisor',
       producer_id: otherProducer,
-      producer: { id: otherProducer, member_code: 'PROD-000002' },
+      producer: {
+        id: otherProducer,
+        member_code: 'PROD-000002',
+        first_name: 'Beto',
+        last_name: 'Prueba',
+      },
     },
   ];
   beforeEach(() => {
@@ -538,11 +551,13 @@ describe('custom roles by producer', () => {
     renderWithProviders(<RoleScreen />);
     expect(await headings()).toEqual([
       'Roles del sistema',
-      'Roles propios de PROD-000001',
-      'Roles propios de PROD-000002',
+      'Roles propios de Ana Prueba · PROD-000001',
+      'Roles propios de Beto Prueba · PROD-000002',
     ]);
     const second = screen
-      .getByRole('heading', { name: 'Roles propios de PROD-000002' })
+      .getByRole('heading', {
+        name: 'Roles propios de Beto Prueba · PROD-000002',
+      })
       .closest('section')!;
     expect(
       within(second).getAllByRole('button', { name: 'Ver rol Supervisor' }),
