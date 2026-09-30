@@ -3,8 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { FarmLocationCapture } from './farm-location-capture';
+import type { LoadMapProvider } from '@/components/map/map-provider';
+import { loadFakeMap } from '@/test/fake-map';
 import type { Coordinates } from '@/types/geo';
+
+import { FarmLocationCapture } from './farm-location-capture';
 
 const originalGeolocation = Object.getOwnPropertyDescriptor(
   navigator,
@@ -21,8 +24,10 @@ afterEach(() => {
 
 function Harness({
   onLocationChange,
+  loadMapProvider = null,
 }: {
   onLocationChange?: (location: Coordinates) => void;
+  loadMapProvider?: LoadMapProvider | null;
 }) {
   const [location, setLocation] = useState<Coordinates>({
     latitude: '',
@@ -35,6 +40,7 @@ function Harness({
 
   return (
     <FarmLocationCapture
+      loadMapProvider={loadMapProvider}
       location={location}
       onLocationChange={handleLocationChange}
     />
@@ -89,5 +95,29 @@ describe('FarmLocationCapture', () => {
     );
     expect(screen.getByLabelText('Latitud')).toBeEnabled();
     expect(screen.getByLabelText('Longitud')).toBeEnabled();
+  });
+
+  it('shows no map while no provider is configured', () => {
+    render(<Harness />);
+
+    expect(
+      screen.queryByRole('region', { name: 'Mapa de ubicación' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Latitud')).toBeInTheDocument();
+  });
+
+  it('keeps the map marker and the coordinate fields in step', async () => {
+    const user = userEvent.setup();
+    render(<Harness loadMapProvider={loadFakeMap} />);
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Tocar el mapa' }),
+    );
+    expect(screen.getByLabelText('Latitud')).toHaveValue('7.1234568');
+    expect(screen.getByLabelText('Longitud')).toHaveValue('-72.5000000');
+
+    await user.clear(screen.getByLabelText('Latitud'));
+    await user.type(screen.getByLabelText('Latitud'), '8.5');
+    expect(screen.getByText('Marcador: 8.5, -72.5')).toBeInTheDocument();
   });
 });

@@ -3,8 +3,11 @@
 import { MapPin } from 'lucide-react';
 
 import { FormMessage } from '@/components/form-message';
+import { MapPanel } from '@/components/map/map-panel';
+import type { LoadMapProvider } from '@/components/map/map-provider';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
+import { loadMapProvider as appMapProvider } from '@/config/map';
 import type { Coordinates } from '@/types/geo';
 
 import { useGeolocation } from '../use-geolocation';
@@ -15,11 +18,14 @@ export function FarmLocationCapture({
   onLocationChange,
   latitudeError,
   longitudeError,
+  loadMapProvider = appMapProvider,
 }: {
   location: Coordinates;
   onLocationChange: (location: Coordinates) => void;
   latitudeError?: string;
   longitudeError?: string;
+  // Sin proveedor configurado no hay mapa: el GPS y las coordenadas escritas bastan.
+  loadMapProvider?: LoadMapProvider | null;
 }) {
   const geolocation = useGeolocation(onLocationChange);
 
@@ -65,6 +71,14 @@ export function FarmLocationCapture({
         {geolocation.isCapturing ? 'Capturando GPS…' : 'Capturar GPS'}
       </Button>
       <FormMessage>{geolocation.error ?? undefined}</FormMessage>
+      {loadMapProvider && (
+        <MapPanel
+          disabled={geolocation.isCapturing}
+          loadProvider={loadMapProvider}
+          location={location}
+          onLocationChange={onLocationChange}
+        />
+      )}
     </section>
   );
 }
