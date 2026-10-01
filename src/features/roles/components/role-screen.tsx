@@ -1,7 +1,7 @@
 'use client';
 import { cn } from 'cn';
 import { PageHeader } from '@/components/page-header';
-import { ErrorState } from '@/components/error-state';
+import { PermissionGate } from '@/components/permission-gate';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
@@ -16,15 +16,19 @@ import { RolePanel } from './role-panel';
 import { RoleList } from './role-list';
 
 export function RoleScreen() {
-  const session = useSession();
-  if (session.isPending) return <p role="status">Cargando sesión…</p>;
-  if (!hasPermission(session.data, PERMISSIONS.ROLES_VIEW))
-    return <ErrorState message="Acceso no disponible" />;
+  return (
+    <PermissionGate anyOf={[PERMISSIONS.ROLES_VIEW]}>
+      <RoleScreenContent />
+    </PermissionGate>
+  );
+}
+function RoleScreenContent() {
+  const { data: user } = useSession();
   return (
     <RoleWorkspace
-      association={!session.data?.producer_id}
-      manage={hasPermission(session.data, PERMISSIONS.ROLES_MANAGE)}
-      canPickProducer={hasPermission(session.data, PERMISSIONS.PRODUCERS_VIEW)}
+      association={!user?.producer_id}
+      manage={hasPermission(user, PERMISSIONS.ROLES_MANAGE)}
+      canPickProducer={hasPermission(user, PERMISSIONS.PRODUCERS_VIEW)}
     />
   );
 }

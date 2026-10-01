@@ -1,14 +1,20 @@
 'use client';
 import type { ReactNode } from 'react';
-import { ErrorState } from '@/components/error-state';
+import { PermissionGate } from '@/components/permission-gate';
 import { useSession } from '@/hooks/use-session';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { PERMISSIONS } from '@/lib/permissions';
 import { AccountWorkspace } from './account-workspace';
 // `accessCard` lo compone la página: la tarjeta del interruptor es de otro dominio.
 export function AccountListScreen({ accessCard }: { accessCard?: ReactNode }) {
-  const session = useSession();
-  if (session.isPending) return <p role="status">Cargando sesión…</p>;
-  if (!session.data || !hasPermission(session.data, PERMISSIONS.USERS_VIEW))
-    return <ErrorState message="Acceso no disponible" />;
-  return <AccountWorkspace user={session.data} accessCard={accessCard} />;
+  return (
+    <PermissionGate anyOf={[PERMISSIONS.USERS_VIEW]}>
+      <AccountListContent accessCard={accessCard} />
+    </PermissionGate>
+  );
+}
+function AccountListContent({ accessCard }: { accessCard?: ReactNode }) {
+  // El guardián ya esperó la sesión y comprobó el permiso: aquí la sesión está cargada.
+  const { data: user } = useSession();
+  if (!user) return null;
+  return <AccountWorkspace user={user} accessCard={accessCard} />;
 }

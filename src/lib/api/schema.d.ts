@@ -164,6 +164,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/farms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["farms_list"];
+        put?: never;
+        /** @description Crea una finca del productor de la sesión. `id` es opcional: el dispositivo lo genera al registrar sin conexión. Reenviar el mismo `id` con el mismo contenido responde 200 con la finca ya creada; con otro contenido, 409 `farm_id_conflict`. Si la finca es del mismo productor, el 409 trae la del servidor en `current`, para enviar el cambio como un PATCH con su `version`; si es de otro productor, no. */
+        post: operations["farms_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/farms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["farms_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Edición parcial, incluida la activación o desactivación con `is_active`. Requiere `expected_version`; si la finca cambió responde 409 `stale_version` con la versión del servidor en `current`. */
+        patch: operations["farms_partial_update"];
+        trace?: never;
+    };
     "/api/permissions": {
         parameters: {
             query?: never;
@@ -439,6 +473,10 @@ export interface components {
         CsrfToken: {
             csrf_token: string;
         };
+        Department: {
+            code: string;
+            name: string;
+        };
         Detail: {
             detail: string;
         };
@@ -450,6 +488,52 @@ export interface components {
          * @enum {string}
          */
         DocumentTypeEnum: "CC" | "CE" | "PPT" | "NIT";
+        Farm: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly department: components["schemas"]["TerritoryReference"];
+            readonly municipality: components["schemas"]["TerritoryReference"];
+            readonly details: string;
+            /** Format: decimal */
+            readonly area_hectares: string;
+            readonly altitude_masl: number;
+            readonly location: components["schemas"]["Location"];
+            readonly version: number;
+            readonly is_active: boolean;
+            /** Format: date-time */
+            readonly captured_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        FarmConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["Farm"];
+        };
+        FarmCreateRequest: {
+            name: string;
+            department_id: string;
+            municipality_id: string;
+            /** @default  */
+            details: string;
+            /** Format: decimal */
+            area_hectares: string;
+            altitude_masl: number;
+            /** Format: decimal */
+            latitude?: string;
+            /** Format: decimal */
+            longitude?: string;
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
         /**
          * @description * `fixed` - Fijo
          *     * `predefined` - Predefinido
@@ -457,6 +541,12 @@ export interface components {
          * @enum {string}
          */
         KindEnum: "fixed" | "predefined" | "custom";
+        Location: {
+            /** Format: decimal */
+            latitude: string;
+            /** Format: decimal */
+            longitude: string;
+        };
         /**
          * @description * `email` - email
          *     * `document` - document
@@ -474,6 +564,7 @@ export interface components {
         Municipality: {
             code: string;
             name: string;
+            department: components["schemas"]["Department"];
         };
         MunicipalityList: {
             results: components["schemas"]["Municipality"][];
@@ -492,6 +583,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Account"][];
+        };
+        PaginatedFarmList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Farm"][];
         };
         PaginatedProducerListList: {
             /** @example 123 */
@@ -544,6 +650,21 @@ export interface components {
             first_name?: string;
             last_name?: string;
             phone?: string | null;
+        };
+        PatchedFarmUpdateRequest: {
+            name?: string;
+            department_id?: string;
+            municipality_id?: string;
+            details?: string;
+            /** Format: decimal */
+            area_hectares?: string;
+            altitude_masl?: number;
+            /** Format: decimal */
+            latitude?: string;
+            /** Format: decimal */
+            longitude?: string;
+            is_active?: boolean;
+            expected_version: number;
         };
         PatchedProducerStatusRequest: {
             status: components["schemas"]["StatusEnum"];
@@ -687,6 +808,10 @@ export interface components {
          * @enum {string}
          */
         StatusEnum: "active" | "inactive";
+        TerritoryReference: {
+            id: string;
+            name: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -1112,6 +1237,245 @@ export interface operations {
                 };
             };
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    farms_list: {
+        parameters: {
+            query?: {
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Busca en nombre, municipio o detalles, sin distinguir tildes. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedFarmList"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    farms_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FarmCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Farm"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Farm"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    farms_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Farm"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    farms_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchedFarmUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Farm"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmConflictError"];
+                };
+            };
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

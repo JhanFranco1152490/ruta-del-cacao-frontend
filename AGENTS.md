@@ -47,12 +47,11 @@ vive en `AGENTS.md` del workspace, si lo tienes al lado)
 
 ## Específico de este repo
 
-- **Offline First (RNF-21) es una restricción de arquitectura pendiente de decidir**, no un
-  detalle de UI. Las pantallas de captura en campo (empezando por fincas/parcelas, Sprint
-  1) probablemente necesiten seguir funcionando sin conexión. **No implementar ninguna
-  pantalla de captura de campo hasta que exista un spec de arquitectura que defina el
-  enfoque** (Service Worker, almacenamiento local, cola de sincronización) — retroaplicarlo
-  después es mucho más caro que decidirlo antes de la primera pantalla.
+- **Offline First (RNF-21) ya está definido por arquitectura**, no es un detalle de UI. Las
+  pantallas de captura en campo (empezando por fincas/parcelas, Sprint 1) deben funcionar sin
+  conexión con el mecanismo aprobado: PWA, Service Worker, Dexie/IndexedDB y cola de
+  sincronización. La base técnica compartida ya existe; cada dominio de captura debe cablear
+  su recurso a ella desde su primera pantalla, sin retroajustar el flujo después.
 
 ### Stack y estructura
 
