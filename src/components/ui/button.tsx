@@ -34,7 +34,7 @@ const buttonVariants = cva(
           FOCUS_OUTLINE_CLASS,
         ),
         field: cn(
-          'h-16 gap-3 rounded-[12px] px-6 text-lg font-extrabold',
+          'h-16 gap-3 rounded-(--radius-field) px-6 text-lg font-extrabold',
           FOCUS_OUTLINE_CLASS,
         ),
         icon: 'size-8',
