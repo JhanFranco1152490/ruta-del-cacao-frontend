@@ -3,6 +3,7 @@ import type { SyncAdapter } from '@/lib/offline/adapters';
 
 import { patchFarm, postFarm } from './api';
 import {
+  createToUpdate,
   FARM_RESOURCE,
   type FarmCreatePayload,
   type FarmUpdatePayload,
@@ -27,6 +28,24 @@ export const farmSyncAdapter: SyncAdapter = {
     } else {
       await patchFarm(item.id, item.payload as FarmUpdatePayload);
     }
+  },
+
+  // El alta llegó al servidor pero se perdió la respuesta, y luego se editó en el dispositivo:
+  // el reenvío choca con la finca ya creada (`farm_id_conflict`). La API solo incluye `current`
+  // si esa finca es del mismo productor; sin `current` es un choque real y va a la bandeja.
+  recover(item, error) {
+    if (
+      item.operation !== 'create' ||
+      !isApiError(error) ||
+      error.code !== 'farm_id_conflict' ||
+      !error.body.current
+    ) {
+      return null;
+    }
+    return {
+      operation: 'update',
+      payload: createToUpdate(item.payload as FarmCreatePayload),
+    };
   },
 
   // Sin respuesta de la API (sin red) o con una que puede cambiar sola, se reintenta. El resto

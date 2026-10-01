@@ -1,4 +1,4 @@
-import type { SyncAdapter } from './adapters';
+import type { SyncAdapter, SyncRecovery } from './adapters';
 import { getOfflineDb, type QueueItem, type QueueOperation } from './db';
 
 const adapters = new Map<string, SyncAdapter>();
@@ -148,6 +148,9 @@ async function runQueue(userId: string) {
     .modify({ status: 'pending' });
 
   const attempted = new Set<string>();
+  // Una sola recuperación por item y pasada: si el reintento convertido también falla, sigue
+  // el camino normal (bandeja o reintento) en vez de girar sin fin.
+  const recovered = new Set<string>();
   let progressed = true;
 
   while (progressed) {
@@ -177,6 +180,20 @@ async function runQueue(userId: string) {
         await db.queue.delete(item.id);
         byId.delete(item.id);
       } catch (error) {
+        const recovery = recovered.has(item.id)
+          ? null
+          : safeRecover(adapter, claimed, error);
+        if (recovery) {
+          recovered.add(item.id);
+          attempted.delete(item.id);
+          await db.queue.update(item.id, {
+            operation: recovery.operation,
+            payload: recovery.payload,
+            status: 'pending',
+            updatedAt: Date.now(),
+          });
+          continue;
+        }
         const conflict = safeParseConflict(adapter, error);
         if (conflict) {
           await db.queue.update(item.id, {
@@ -198,6 +215,19 @@ async function runQueue(userId: string) {
 
 // Un adapter que revienta al clasificar el error no debe tumbar la cola entera: se trata
 // igual que un error de red (se reintenta), no como un conflicto real.
+// Igual que safeParseConflict: un adapter que revienta al intentar recuperar no tumba la cola.
+function safeRecover(
+  adapter: SyncAdapter,
+  item: QueueItem,
+  error: unknown,
+): SyncRecovery | null {
+  try {
+    return adapter.recover?.(item, error) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function safeParseConflict(adapter: SyncAdapter, error: unknown) {
   try {
     return adapter.parseConflict(error);

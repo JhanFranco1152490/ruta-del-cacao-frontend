@@ -32,6 +32,27 @@ export type FarmFields = Required<
 export type FarmCreatePayload = FarmFields & { id: string };
 export type FarmUpdatePayload = FarmFields & { expected_version: number };
 
+// Versión con la que el servidor crea toda finca. Es la única que conoce el dispositivo que la
+// creó: editarla esperando esa versión aplica el cambio si nadie la tocó desde entonces, y si
+// alguien la cambió, el servidor responde `stale_version` en vez de pisar ese cambio.
+export const CREATED_FARM_VERSION = 1;
+
+// Un alta pendiente que en realidad ya existe en el servidor (se perdió la respuesta) se
+// reenvía como edición de esa finca, con el contenido que tiene ahora en el dispositivo.
+export const createToUpdate = (
+  payload: FarmCreatePayload,
+): FarmUpdatePayload => ({
+  name: payload.name,
+  department_id: payload.department_id,
+  municipality_id: payload.municipality_id,
+  details: payload.details,
+  area_hectares: payload.area_hectares,
+  altitude_masl: payload.altitude_masl,
+  latitude: payload.latitude,
+  longitude: payload.longitude,
+  expected_version: CREATED_FARM_VERSION,
+});
+
 export const toFields = (values: FarmFormValues): FarmFields => ({
   name: values.name,
   department_id: departmentCodeOf(values.municipality_id),

@@ -387,3 +387,88 @@ describe('discard', () => {
     await expect(discard(randomUserId(), 'a1')).resolves.toBeUndefined();
   });
 });
+
+describe('processQueue recovery', () => {
+  it('retries a recovered item right away as its new operation', async () => {
+    const userId = randomUserId();
+    const sent: QueueItem[] = [];
+    registerAdapter(
+      fakeAdapter({
+        send: vi.fn(async (item: QueueItem) => {
+          sent.push(item);
+          if (item.operation === 'create') throw new Error('ya existe');
+        }),
+        recover: (item) =>
+          item.operation === 'create'
+            ? { operation: 'update', payload: { cambiado: true } }
+            : null,
+      }),
+    );
+    await enqueue(userId, {
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+
+    await processQueue(userId);
+
+    expect(sent.map((item) => [item.operation, item.payload])).toEqual([
+      ['create', {}],
+      ['update', { cambiado: true }],
+    ]);
+    expect(await getOfflineDb(userId).queue.get('a1')).toBeUndefined();
+  });
+
+  it('recovers an item only once per call, then follows the normal path', async () => {
+    const userId = randomUserId();
+    const send = vi.fn().mockRejectedValue(new Error('sigue fallando'));
+    registerAdapter(
+      fakeAdapter({
+        send,
+        recover: () => ({ operation: 'update', payload: {} }),
+        parseConflict: () => ({ code: 'conflict', message: 'No se pudo.' }),
+      }),
+    );
+    await enqueue(userId, {
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+
+    await processQueue(userId);
+
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(await getOfflineDb(userId).queue.get('a1')).toMatchObject({
+      operation: 'update',
+      status: 'error',
+      errorCode: 'conflict',
+    });
+  });
+
+  it('treats a recover that throws as no recovery', async () => {
+    const userId = randomUserId();
+    registerAdapter(
+      fakeAdapter({
+        send: vi.fn().mockRejectedValue(new Error('sin red')),
+        recover: () => {
+          throw new Error('adapter roto');
+        },
+      }),
+    );
+    await enqueue(userId, {
+      id: 'a1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+
+    await processQueue(userId);
+
+    expect(await getOfflineDb(userId).queue.get('a1')).toMatchObject({
+      operation: 'create',
+      status: 'pending',
+    });
+  });
+});

@@ -1,12 +1,18 @@
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
-import type { QueueItem } from '@/lib/offline/db';
-import { buildFarm } from '@/test/factories';
+import { getOfflineDb, type QueueItem } from '@/lib/offline/db';
+import {
+  clearAdapters,
+  processQueue,
+  registerAdapter,
+} from '@/lib/offline/sync-queue';
+import { apiError as apiErrorResponse, buildFarm } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
+import { enqueueFarmCreate } from './farm-queue';
 import { farmSyncAdapter } from './sync-adapter';
 
 const fields = {
@@ -107,5 +113,123 @@ describe('farmSyncAdapter.parseConflict', () => {
     expect(
       farmSyncAdapter.parseConflict(new TypeError('Failed to fetch')),
     ).toBeNull();
+  });
+});
+
+// Alta que llegó al servidor pero cuya respuesta se perdió, editada después en el dispositivo:
+// el reenvío choca con la finca ya creada.
+const idConflict = (current?: unknown) =>
+  new ApiError(409, {
+    detail: 'El identificador ya pertenece a otra finca.',
+    code: 'farm_id_conflict',
+    fields: {},
+    ...(current ? { current } : {}),
+  });
+
+const editedValues = {
+  name: 'Nombre corregido',
+  municipality_id: '54001',
+  details: '',
+  area_hectares: '12.50',
+  altitude_masl: '950',
+  latitude: '7.8234567',
+  longitude: '-72.5123456',
+};
+
+const idConflictResponse = (version: number) =>
+  HttpResponse.json(
+    {
+      detail: 'El identificador ya pertenece a otra finca.',
+      code: 'farm_id_conflict',
+      fields: {},
+      current: buildFarm({ id: 'f1', name: 'Nombre original', version }),
+    },
+    { status: 409 },
+  );
+
+describe('farmSyncAdapter.recover', () => {
+  it('turns a create that already reached the server into an edit of the created version', () => {
+    expect(
+      farmSyncAdapter.recover?.(
+        queueItem({}),
+        idConflict(buildFarm({ id: 'f1', version: 3 })),
+      ),
+    ).toEqual({
+      operation: 'update',
+      // Siempre la versión de creación, no la actual del servidor: si alguien la cambió
+      // (versión 3), la edición debe caer en stale_version en vez de pisar ese cambio.
+      payload: { ...fields, expected_version: 1 },
+    });
+  });
+
+  it('leaves a real id clash for the error tray', () => {
+    expect(farmSyncAdapter.recover?.(queueItem({}), idConflict())).toBeNull();
+  });
+
+  it('only recovers creates that hit an id conflict', () => {
+    expect(
+      farmSyncAdapter.recover?.(
+        queueItem({
+          operation: 'update',
+          payload: { ...fields, expected_version: 1 },
+        }),
+        idConflict(buildFarm({ id: 'f1' })),
+      ),
+    ).toBeNull();
+    expect(
+      farmSyncAdapter.recover?.(
+        queueItem({}),
+        apiError(409, 'duplicate_farm_name'),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('a create edited after its response was lost', () => {
+  afterEach(() => clearAdapters());
+
+  it('is applied as an edit instead of getting stuck in the error tray', async () => {
+    const userId = `farm-recover-${crypto.randomUUID()}`;
+    const patches: unknown[] = [];
+    registerAdapter(farmSyncAdapter);
+    server.use(
+      http.post(apiUrl('/api/farms'), () => idConflictResponse(1)),
+      http.patch(apiUrl('/api/farms/f1'), async ({ request }) => {
+        patches.push(await request.json());
+        return HttpResponse.json(buildFarm({ id: 'f1', version: 2 }));
+      }),
+    );
+    await enqueueFarmCreate(userId, 'f1', editedValues);
+
+    await processQueue(userId);
+
+    expect(patches).toEqual([
+      expect.objectContaining({
+        name: 'Nombre corregido',
+        expected_version: 1,
+      }),
+    ]);
+    expect(await getOfflineDb(userId).queue.get('f1')).toBeUndefined();
+  });
+
+  it('waits for review when someone changed the farm in the meantime', async () => {
+    const userId = `farm-recover-${crypto.randomUUID()}`;
+    registerAdapter(farmSyncAdapter);
+    server.use(
+      http.post(apiUrl('/api/farms'), () => idConflictResponse(2)),
+      http.patch(apiUrl('/api/farms/f1'), () =>
+        apiErrorResponse(409, 'stale_version', 'La finca cambió.'),
+      ),
+    );
+    await enqueueFarmCreate(userId, 'f1', editedValues);
+
+    await processQueue(userId);
+
+    expect(await getOfflineDb(userId).queue.get('f1')).toMatchObject({
+      operation: 'update',
+      status: 'error',
+      errorCode: 'stale_version',
+      payload: { expected_version: 1 },
+    });
   });
 });
