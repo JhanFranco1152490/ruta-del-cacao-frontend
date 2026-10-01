@@ -21,6 +21,7 @@ import {
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
 import { FarmFormFields } from './farm-form-fields';
+import { FarmStaleVersionSummary } from './farm-stale-version-summary';
 
 // Sin revalidación automática: el formulario se inicializa una sola vez con esta lectura, y
 // volver a pedir la finca (foco, reconexión) solo produciría datos que el formulario no adopta.
@@ -125,7 +126,10 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
               {farm.errorMessage ? `: ${farm.errorMessage}` : '.'}
             </p>
             {isStale && current.data ? (
-              <StaleVersionSummary farm={current.data} />
+              <FarmStaleVersionSummary
+                current={current.data}
+                mine={farm.values}
+              />
             ) : (
               <p>Corrige los datos y guarda para reenviarla.</p>
             )}
@@ -150,16 +154,6 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
         )
       }
     />
-  );
-}
-
-function StaleVersionSummary({ farm }: { farm: Farm }) {
-  return (
-    <p className="font-normal text-foreground">
-      Alguien la modificó mientras tanto. Hoy en el servidor figura como{' '}
-      <strong>{farm.name}</strong>, en {farm.municipality.name}, con{' '}
-      {farm.area_hectares} ha. Revisa tus cambios y guarda para reemplazarla.
-    </p>
   );
 }
 

@@ -162,9 +162,10 @@ describe('FarmEditorScreen', () => {
     );
     renderEditor('s1');
 
-    expect(
-      await screen.findByText(/Alguien la modificó mientras tanto/),
-    ).toHaveTextContent('Nombre de otra persona');
+    await screen.findByText(/Alguien la modificó mientras tanto/);
+    expect(screen.getByText(/^Nombre:/).closest('li')).toHaveTextContent(
+      'en el servidor Nombre de otra persona, en tu formulario La Esperanza.',
+    );
     await save(user);
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
@@ -172,6 +173,40 @@ describe('FarmEditorScreen', () => {
       status: 'pending',
       payload: { expected_version: 4 },
     });
+  });
+
+  // Lo que se reenvía son todos los campos: un cambio ajeno en un campo poco visible también
+  // se reemplazaría, así que debe aparecer en el aviso.
+  it('lists every field the other person changed before resending over it', async () => {
+    await enqueueFarmUpdate(userId, 's1', farm, 2);
+    await getOfflineDb(userId).queue.update('s1', {
+      status: 'error',
+      errorCode: 'stale_version',
+      errorMessage: 'La finca cambió en el servidor.',
+    });
+    server.use(
+      http.get(apiUrl('/api/farms/s1'), () =>
+        HttpResponse.json(
+          buildFarm({
+            id: 's1',
+            municipality: { id: '54518', name: 'Pamplona' },
+            details: 'Km 4',
+            location: { latitude: '7.9000000', longitude: '-72.5123456' },
+            version: 4,
+          }),
+        ),
+      ),
+    );
+    renderEditor('s1');
+
+    await screen.findByText(/Alguien la modificó mientras tanto/);
+    const changed = screen
+      .getAllByRole('listitem')
+      .map((item) => item.textContent);
+    expect(changed).toEqual([
+      'Detalles: en el servidor Km 4, en tu formulario (vacío).',
+      'Latitud: en el servidor 7.9000000, en tu formulario 7.8234567.',
+    ]);
   });
 
   describe('without connection', () => {
