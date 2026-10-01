@@ -101,22 +101,28 @@ export const enqueueFarmCreate = (
 
 // Editar una finca del servidor también pasa por la cola, con la versión que se leyó: si
 // alguien la cambió mientras tanto, la API responde `stale_version` y la edición espera en la
-// bandeja en vez de pisar el cambio ajeno.
+// bandeja en vez de pisar el cambio ajeno. Si la finca ya tiene una edición esperando (otra
+// pestaña la guardó mientras esta seguía abierta), se rechaza: esta no es un reintento de
+// aquella, y guardarla en silencio la perdería.
 export const enqueueFarmUpdate = (
   userId: string,
   farmId: string,
   values: FarmFormValues,
   expectedVersion: number,
 ) =>
-  enqueue(userId, {
-    id: farmId,
-    resource: FARM_RESOURCE,
-    operation: 'update',
-    payload: {
-      ...toFields(values),
-      expected_version: expectedVersion,
-    } satisfies FarmUpdatePayload,
-  });
+  enqueue(
+    userId,
+    {
+      id: farmId,
+      resource: FARM_RESOURCE,
+      operation: 'update',
+      payload: {
+        ...toFields(values),
+        expected_version: expectedVersion,
+      } satisfies FarmUpdatePayload,
+    },
+    { rejectExisting: true },
+  );
 
 export type QueuedFarm = {
   id: string;

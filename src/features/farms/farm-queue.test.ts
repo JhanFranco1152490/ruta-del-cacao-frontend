@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { getOfflineDb } from '@/lib/offline/db';
+import { QueueItemExistsError } from '@/lib/offline/sync-queue';
 
-import { enqueueFarmCreate, FARM_RESOURCE } from './farm-queue';
+import {
+  enqueueFarmCreate,
+  enqueueFarmUpdate,
+  FARM_RESOURCE,
+} from './farm-queue';
 import type { FarmFormValues } from './schemas';
 
 const values: FarmFormValues = {
@@ -47,5 +52,21 @@ describe('enqueueFarmCreate', () => {
     await enqueueFarmCreate(userId, 'f1', { ...values, name: 'Otra' });
 
     expect(await getOfflineDb(userId).queue.count()).toBe(1);
+  });
+});
+
+describe('enqueueFarmUpdate', () => {
+  // Dos pestañas abiertas en el editor de la misma finca del servidor: la segunda en guardar no
+  // debe creer que guardó mientras la cola conserva solo la primera edición.
+  it('refuses a second edit of a farm that already has one waiting', async () => {
+    const userId = `farm-queue-${crypto.randomUUID()}`;
+    await enqueueFarmUpdate(userId, 'f1', values, 3);
+
+    await expect(
+      enqueueFarmUpdate(userId, 'f1', { ...values, name: 'Otra' }, 3),
+    ).rejects.toBeInstanceOf(QueueItemExistsError);
+    expect(await getOfflineDb(userId).queue.get('f1')).toMatchObject({
+      payload: { name: 'La Esperanza', expected_version: 3 },
+    });
   });
 });

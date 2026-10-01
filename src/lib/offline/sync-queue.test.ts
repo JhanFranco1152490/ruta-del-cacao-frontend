@@ -8,6 +8,7 @@ import {
   enqueue,
   processQueue,
   QueueItemBusyError,
+  QueueItemExistsError,
   QueueItemHasDependentsError,
   QueueItemMissingError,
   registerAdapter,
@@ -45,6 +46,28 @@ describe('enqueue', () => {
     await enqueue(userId, input);
 
     expect(await getOfflineDb(userId).queue.toArray()).toHaveLength(1);
+  });
+
+  it('can refuse an id already in the queue instead of keeping the old item silently', async () => {
+    const userId = randomUserId();
+    const input = {
+      id: 'a1',
+      resource: 'farms',
+      operation: 'update' as const,
+      payload: { name: 'Primera' },
+    };
+    await enqueue(userId, input);
+
+    await expect(
+      enqueue(
+        userId,
+        { ...input, payload: { name: 'Segunda' } },
+        { rejectExisting: true },
+      ),
+    ).rejects.toBeInstanceOf(QueueItemExistsError);
+    expect(await getOfflineDb(userId).queue.get('a1')).toMatchObject({
+      payload: { name: 'Primera' },
+    });
   });
 });
 

@@ -19,21 +19,41 @@ export interface EnqueueInput {
   payload: unknown;
 }
 
-// Mismo id + reintento no duplica: si ya existe, se devuelve el item guardado sin tocarlo.
-export async function enqueue(userId: string, input: EnqueueInput) {
-  const db = getOfflineDb(userId);
-  const existing = await db.queue.get(input.id);
-  if (existing) return existing;
+// Ya hay un item con ese id y quien encola pidió no conservarlo en silencio: el contenido nuevo
+// no se guardó.
+export class QueueItemExistsError extends Error {
+  constructor() {
+    super('Ya hay un registro pendiente con este identificador.');
+    this.name = 'QueueItemExistsError';
+  }
+}
 
-  const now = Date.now();
-  const item: QueueItem = {
-    ...input,
-    status: 'pending',
-    createdAt: now,
-    updatedAt: now,
-  };
-  await db.queue.add(item);
-  return item;
+// Mismo id + reintento no duplica: si ya existe, se devuelve el item guardado sin tocarlo. Con
+// `rejectExisting` se lanza `QueueItemExistsError` en su lugar, para cuando el contenido nuevo
+// no es un reintento sino un cambio distinto que se perdería sin avisar.
+export async function enqueue(
+  userId: string,
+  input: EnqueueInput,
+  { rejectExisting = false } = {},
+) {
+  const db = getOfflineDb(userId);
+  return db.transaction('rw', db.queue, async () => {
+    const existing = await db.queue.get(input.id);
+    if (existing) {
+      if (rejectExisting) throw new QueueItemExistsError();
+      return existing;
+    }
+
+    const now = Date.now();
+    const item: QueueItem = {
+      ...input,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    };
+    await db.queue.add(item);
+    return item;
+  });
 }
 
 // Se está enviando en este momento: corregirlo o descartarlo ahora podría perderse (el envío

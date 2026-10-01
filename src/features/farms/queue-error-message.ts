@@ -1,5 +1,6 @@
 import {
   QueueItemBusyError,
+  QueueItemExistsError,
   QueueItemHasDependentsError,
   QueueItemMissingError,
 } from '@/lib/offline/sync-queue';
@@ -10,6 +11,9 @@ export function queueErrorMessage(error: unknown, fallback: string) {
   }
   if (error instanceof QueueItemMissingError) {
     return 'Esta finca ya no está pendiente en este dispositivo: se sincronizó o se descartó.';
+  }
+  if (error instanceof QueueItemExistsError) {
+    return 'Esta finca ya tiene cambios guardados en este dispositivo que aún no se envían. Vuelve a abrirla desde Mis fincas para editarlos.';
   }
   if (error instanceof QueueItemHasDependentsError) {
     return 'No se puede descartar: hay registros pendientes que dependen de esta finca.';
