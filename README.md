@@ -7,6 +7,24 @@ productores. La estructura del código, la capa de API y las reglas de trabajo e
 
 ## Desarrollo local
 
+La versión de pnpm está fijada en el campo `packageManager` de `package.json`, y Corepack
+(incluido con Node) la instala sola. Una vez por máquina, activa el comando `pnpm`:
+
+```bash
+corepack enable
+```
+
+En Windows, si falla por permisos (Node instalado en `C:\Program Files`), usa una carpeta
+de tu usuario que ya esté en el `PATH` (en PowerShell; la carpeta puede no existir aún):
+
+```powershell
+New-Item -ItemType Directory -Force "$env:APPDATA\npm"
+corepack enable --install-directory "$env:APPDATA\npm"
+```
+
+Comprueba con `pnpm -v`: debe mostrar la versión de `packageManager`. Sin este paso, el
+hook de pre-commit no encuentra `pnpm` y el commit falla.
+
 1. Instalar dependencias con `pnpm install`.
 2. Copiar `.env.example` a `.env.local` si se necesita cambiar la URL del backend
    (`NEXT_PUBLIC_API_URL`). En desarrollo y pruebas, si no está definida, se usa
