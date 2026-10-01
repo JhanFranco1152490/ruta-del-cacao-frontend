@@ -10,3 +10,11 @@ export type GeoPoint = {
   latitude: number;
   longitude: number;
 };
+
+// Rectángulo geográfico, en grados decimales.
+export type GeoBounds = {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+};
