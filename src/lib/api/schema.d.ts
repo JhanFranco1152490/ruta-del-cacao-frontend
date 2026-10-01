@@ -173,7 +173,7 @@ export interface paths {
         };
         get: operations["farms_list"];
         put?: never;
-        /** @description Crea una finca del productor de la sesión. `id` es opcional: el dispositivo lo genera al registrar sin conexión. Reenviar el mismo `id` con el mismo contenido responde 200 con la finca ya creada; con otro contenido, 409 `farm_id_conflict`. */
+        /** @description Crea una finca del productor de la sesión. `id` es opcional: el dispositivo lo genera al registrar sin conexión. Reenviar el mismo `id` con el mismo contenido responde 200 con la finca ya creada; con otro contenido, 409 `farm_id_conflict`. Si la finca es del mismo productor, el 409 trae la del servidor en `current`, para enviar el cambio como un PATCH con su `version`; si es de otro productor, no. */
         post: operations["farms_create"];
         delete?: never;
         options?: never;
