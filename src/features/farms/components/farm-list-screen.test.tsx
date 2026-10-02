@@ -8,8 +8,19 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
-import { apiError, buildFarm, buildSession } from '@/test/factories';
-import { apiUrl, farmsHandler, municipalitiesHandler } from '@/test/handlers';
+import {
+  apiError,
+  buildFarm,
+  buildFarmMapPoint,
+  buildSession,
+} from '@/test/factories';
+import {
+  apiUrl,
+  farmMapCountsHandler,
+  farmMapPointsHandler,
+  farmsHandler,
+  municipalitiesHandler,
+} from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 
@@ -33,17 +44,24 @@ beforeEach(async () => {
   userId = `farm-list-${crypto.randomUUID()}`;
   // La app lo registra cada vez que el servidor confirma la sesión.
   await recordLogin(userId);
-  server.use(municipalitiesHandler(), farmsHandler());
+  server.use(
+    municipalitiesHandler(),
+    farmsHandler(),
+    farmMapCountsHandler(),
+    farmMapPointsHandler(),
+  );
 });
 
 function renderScreen({
   permissions = [PERMISSIONS.FARMS_VIEW, PERMISSIONS.FARMS_ADD] as string[],
   searchParams = '',
+  // `null`: una cuenta de la asociación, sin productor.
+  producerId = 'p1' as string | null,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
-    buildSession({ id: userId, permissions }),
+    buildSession({ id: userId, permissions, producer_id: producerId }),
   );
   return renderWithProviders(<FarmListScreen />, { queryClient, searchParams });
 }
@@ -174,7 +192,11 @@ describe('FarmListScreen', () => {
     });
     renderScreen({ searchParams: '?buscar=cucuta' });
 
-    await screen.findByText('Cúcuta');
+    expect(
+      within(await screen.findByRole('list', { name: 'Fincas' })).getByText(
+        'Cúcuta',
+      ),
+    ).toBeInTheDocument();
     expect(await farmCards()).toHaveLength(1);
     expect(screen.getByText('La Esperanza')).toBeInTheDocument();
 
@@ -295,30 +317,6 @@ describe('FarmListScreen', () => {
     expect(requests.at(-1)?.get('search')).toBe('cucuta');
   });
 
-  it('places every listed farm on the map, colored by its state', async () => {
-    server.use(
-      farmsHandler([
-        buildFarm({ id: 's1', name: 'El Porvenir', is_active: false }),
-      ]),
-    );
-    await enqueueFarmCreate(userId, 'f1', farm);
-    renderScreen();
-
-    const map = await screen.findByRole('list', {
-      name: 'Marcadores del mapa',
-    });
-    expect(map).toHaveTextContent('La Esperanza (info) 7.8234567, -72.5123456');
-    expect(map).toHaveTextContent('El Porvenir (warn)');
-  });
-
-  it('shows an empty map when there are no farms yet', async () => {
-    renderScreen();
-
-    expect(
-      await screen.findByText('Aún no hay fincas para mostrar en el mapa.'),
-    ).toBeInTheDocument();
-  });
-
   describe('without connection', () => {
     beforeEach(() => onlineManager.setOnline(false));
     // Desmontar antes de reconectar: si no, lo que quedó en pausa se reanuda al volver la red y
@@ -340,5 +338,192 @@ describe('FarmListScreen', () => {
         screen.queryByRole('status', { name: 'Cargando fincas' }),
       ).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('FarmListScreen map', () => {
+  it('applies the search box to the map too', async () => {
+    const countRequests: URLSearchParams[] = [];
+    server.use(farmMapCountsHandler([], countRequests));
+    renderScreen({ searchParams: '?buscar=porvenir' });
+
+    await screen.findByRole('list', { name: 'Municipios del mapa' });
+    expect(countRequests.at(-1)?.get('search')).toBe('porvenir');
+  });
+
+  it('counts every farm per municipality, including the ones saved on the device', async () => {
+    server.use(
+      farmMapCountsHandler([
+        { municipality_id: '54001', farm_count: 3 },
+        { municipality_id: '54518', farm_count: 1 },
+      ]),
+    );
+    await enqueueFarmCreate(userId, 'f1', farm);
+    renderScreen();
+
+    const map = await screen.findByRole('list', {
+      name: 'Municipios del mapa',
+    });
+    await waitFor(() => expect(map).toHaveTextContent('54001: 4'));
+    expect(
+      screen.getByText('Norte de Santander · 5 fincas'),
+    ).toBeInTheDocument();
+  });
+
+  it('enters a municipality and lists only its farms', async () => {
+    const user = userEvent.setup();
+    const farmRequests: URLSearchParams[] = [];
+    const pointRequests: URLSearchParams[] = [];
+    server.use(
+      farmMapCountsHandler([
+        { municipality_id: '54001', farm_count: 1 },
+        { municipality_id: '54518', farm_count: 1 },
+      ]),
+      farmsHandler([], farmRequests),
+      farmMapPointsHandler(
+        [buildFarmMapPoint({ id: 's1', name: 'El Porvenir' })],
+        pointRequests,
+      ),
+    );
+    renderScreen();
+
+    await user.click(await screen.findByRole('button', { name: '54001: 1' }));
+
+    expect(
+      await screen.findByText('Municipio del mapa: 54001'),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(farmRequests.at(-1)?.get('municipality')).toBe('54001'),
+    );
+    expect(pointRequests.at(-1)?.get('municipality')).toBe('54001');
+    expect(
+      await screen.findByRole('button', { name: /El Porvenir/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('enters the only municipality on the map without filtering the list', async () => {
+    const farmRequests: URLSearchParams[] = [];
+    server.use(
+      farmMapCountsHandler([{ municipality_id: '54001', farm_count: 2 }]),
+      farmsHandler([], farmRequests),
+    );
+    renderScreen();
+
+    expect(
+      await screen.findByText('Municipio del mapa: 54001'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: 'Filtrar por municipio' }),
+    ).toHaveValue('');
+    expect(farmRequests.every((request) => !request.has('municipality'))).toBe(
+      true,
+    );
+  });
+
+  it('goes back to every municipality without entering again', async () => {
+    const user = userEvent.setup();
+    server.use(
+      farmMapCountsHandler([{ municipality_id: '54001', farm_count: 2 }]),
+    );
+    renderScreen();
+
+    // Un solo municipio con fincas: entra directo.
+    expect(
+      await screen.findByText('Municipio del mapa: 54001'),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'Volver a municipios' }),
+    );
+
+    expect(
+      await screen.findByRole('list', { name: 'Municipios del mapa' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Municipio del mapa: 54001'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a farm on the map from its card', async () => {
+    const user = userEvent.setup();
+    server.use(
+      farmsHandler([buildFarm({ id: 's1', name: 'El Porvenir' })]),
+      farmMapPointsHandler([
+        buildFarmMapPoint({ id: 's1', name: 'El Porvenir' }),
+      ]),
+    );
+    renderScreen({ searchParams: '?municipio=54001' });
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Ver El Porvenir en el mapa' }),
+    );
+
+    expect(await screen.findByText('Enfocada: s1')).toBeInTheDocument();
+  });
+
+  it('filters the list and the map by municipality from the select', async () => {
+    const user = userEvent.setup();
+    const farmRequests: URLSearchParams[] = [];
+    server.use(
+      farmMapCountsHandler([
+        { municipality_id: '54001', farm_count: 1 },
+        { municipality_id: '54518', farm_count: 1 },
+      ]),
+      farmsHandler([], farmRequests),
+    );
+    renderScreen();
+
+    await screen.findByRole('option', { name: 'Pamplona' });
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Filtrar por municipio' }),
+      '54518',
+    );
+
+    expect(
+      await screen.findByText('Municipio del mapa: 54518'),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(farmRequests.at(-1)?.get('municipality')).toBe('54518'),
+    );
+  });
+
+  it('names the producer of each farm for the association', async () => {
+    server.use(
+      farmMapPointsHandler([buildFarmMapPoint({ name: 'El Porvenir' })]),
+    );
+    renderScreen({ searchParams: '?municipio=54001', producerId: null });
+
+    expect(
+      await screen.findByRole('button', {
+        name: 'El Porvenir (ok) Activa · Ana Rojas',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not name the producer to the producer itself', async () => {
+    server.use(
+      farmMapPointsHandler([buildFarmMapPoint({ name: 'El Porvenir' })]),
+    );
+    renderScreen({ searchParams: '?municipio=54001' });
+
+    expect(
+      await screen.findByRole('button', { name: 'El Porvenir (ok) Activa' }),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the list when the map data cannot load', async () => {
+    server.use(
+      http.get(apiUrl('/api/farms/map/municipalities'), () =>
+        apiError(500, 'internal_error'),
+      ),
+      farmsHandler([buildFarm({ name: 'El Porvenir' })]),
+    );
+    renderScreen();
+
+    expect(
+      await screen.findByText(
+        'No fue posible cargar el mapa. La lista sigue disponible.',
+      ),
+    ).toBeInTheDocument();
+    expect(await farmCards()).toHaveLength(1);
   });
 });

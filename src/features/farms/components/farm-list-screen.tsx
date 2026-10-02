@@ -2,13 +2,13 @@
 
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
-import { TextField } from '@/components/text-field';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
@@ -25,9 +25,10 @@ import {
   useRefreshFarmsWhenQueueShrinks,
 } from '../use-local-farms';
 import { FarmCardList } from './farm-card-list';
+import { FarmFiltersBar } from './farm-filters-bar';
 import { FarmQueueActions } from './farm-queue-actions';
 import { FarmServerActions } from './farm-server-actions';
-import { FarmsMap } from './farms-map';
+import { FarmsMunicipalityMap } from './farms-municipality-map';
 
 const isQueued = (farm: FarmListItem) =>
   farm.status === 'pending' || farm.status === 'error';
@@ -42,14 +43,23 @@ export function FarmListScreen() {
   const sync = useFarmSyncStatus();
   const canAdd = hasPermission(user, PERMISSIONS.FARMS_ADD);
   const canChange = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
+  // Estado de la interfaz, no del servidor: qué finca enfocar en el mapa y qué tarjeta resaltar.
+  const [focus, setFocus] = useState<{ pointId: string }>();
+  const [highlightedId, setHighlightedId] = useState<string>();
+  // La asociación mirando a todos los productores necesita saber de quién es cada finca.
+  const showProducer = !user?.producer_id && !filters.producer;
 
   // Lo que está en el dispositivo va primero (necesita atención o aún no llega) y reemplaza a su
   // copia del servidor: una edición pendiente muestra los datos nuevos, no los viejos.
-  const localFarms = (local.farms ?? []).filter((farm) =>
+  const searchedLocalFarms = (local.farms ?? []).filter((farm) =>
     matchesSearch(
       [farm.name, municipalityName(farm.municipalityCode), farm.details],
       filters.query.search ?? '',
     ),
+  );
+  const localFarms = searchedLocalFarms.filter(
+    (farm) =>
+      !filters.municipality || farm.municipalityCode === filters.municipality,
   );
   const localIds = new Set(local.farms?.map((farm) => farm.id));
   const serverFarms = (list.data?.results ?? [])
@@ -76,18 +86,19 @@ export function FarmListScreen() {
       ? (canAdd || canChange) && <FarmQueueActions farm={farm} />
       : canChange && <FarmServerActions farm={farm} />;
 
-  const emptyState = filters.query.search ? (
-    <EmptyState
-      title="No hay fincas que coincidan"
-      description="Prueba con otro nombre, municipio o vereda."
-    />
-  ) : (
-    <EmptyState
-      title="Aún no tienes fincas registradas"
-      description="Registra tu primera finca con su ubicación. Puedes hacerlo sin conexión."
-      action={registerLink}
-    />
-  );
+  const emptyState =
+    filters.query.search || filters.municipality ? (
+      <EmptyState
+        title="No hay fincas que coincidan"
+        description="Prueba con otro nombre, municipio o vereda."
+      />
+    ) : (
+      <EmptyState
+        title="Aún no tienes fincas registradas"
+        description="Registra tu primera finca con su ubicación. Puedes hacerlo sin conexión."
+        action={registerLink}
+      />
+    );
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
@@ -100,65 +111,86 @@ export function FarmListScreen() {
       <div className="mt-6">
         <OfflineBanner status={sync.status} />
       </div>
-      <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
-        <TextField
-          label="Buscar finca"
-          onChange={(event) => filters.setSearchInput(event.target.value)}
-          placeholder="Nombre, municipio o vereda"
-          type="search"
-          value={filters.searchInput}
-          wrapperClassName="max-w-md"
-        />
-        {local.isError && (
-          <ErrorState message="No fue posible leer las fincas guardadas en este dispositivo." />
-        )}
-        {list.isLoadingError && (
-          <ErrorState
-            message="No fue posible cargar tus fincas del servidor. Las guardadas en este dispositivo sí se muestran."
-            onRetry={() => void list.refetch()}
-          />
-        )}
-        {!isLoading && (
-          <FarmsMap
-            farms={farms}
-            isFiltered={!!filters.query.search}
-            municipalityName={municipalityName}
-          />
-        )}
-        {serverUnreachable && (
-          <p className="font-bold text-muted-foreground" role="status">
-            Sin conexión: se muestran solo las fincas guardadas en este
-            dispositivo. Las demás aparecerán al recuperar la conexión.
-          </p>
-        )}
-        {isLoading ? (
-          <div
-            aria-label="Cargando fincas"
-            className="grid gap-4 md:grid-cols-2"
-            role="status"
-          >
-            <Skeleton className="h-40" />
-            <Skeleton className="h-40" />
-          </div>
-        ) : farms.length ? (
-          <FarmCardList
-            farms={farms}
-            municipalityName={municipalityName}
-            renderActions={renderActions}
-          />
-        ) : (
-          !hasError && !serverUnreachable && emptyState
-        )}
-        {list.data && (
-          <Pagination
-            page={filters.page}
-            pageSize={PAGE_SIZE}
-            total={list.data.count}
-            onPageChange={filters.setPage}
-            label="fincas"
-          />
-        )}
-      </section>
+      <div className="mt-8">
+        <FarmFiltersBar filters={filters} />
+      </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:items-start">
+        <div className="lg:sticky lg:top-6">
+          {!isLoading && (
+            <FarmsMunicipalityMap
+              focus={focus}
+              localFarms={searchedLocalFarms}
+              municipality={filters.municipality}
+              municipalityName={municipalityName}
+              onMunicipalityChange={(code) =>
+                void filters.setMunicipality(code)
+              }
+              onSelectFarm={(id) => {
+                setHighlightedId(id);
+                document
+                  .getElementById(`farm-${id}-name`)
+                  ?.closest('article')
+                  ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              }}
+              query={{
+                search: filters.query.search,
+                producer: filters.query.producer,
+              }}
+              showProducer={showProducer}
+              userId={user?.id}
+            />
+          )}
+        </div>
+        <section className="space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+          {local.isError && (
+            <ErrorState message="No fue posible leer las fincas guardadas en este dispositivo." />
+          )}
+          {list.isLoadingError && (
+            <ErrorState
+              message="No fue posible cargar tus fincas del servidor. Las guardadas en este dispositivo sí se muestran."
+              onRetry={() => void list.refetch()}
+            />
+          )}
+          {serverUnreachable && (
+            <p className="font-bold text-muted-foreground" role="status">
+              Sin conexión: se muestran solo las fincas guardadas en este
+              dispositivo. Las demás aparecerán al recuperar la conexión.
+            </p>
+          )}
+          {isLoading ? (
+            <div
+              aria-label="Cargando fincas"
+              className="grid gap-4 md:grid-cols-2"
+              role="status"
+            >
+              <Skeleton className="h-40" />
+              <Skeleton className="h-40" />
+            </div>
+          ) : farms.length ? (
+            <FarmCardList
+              farms={farms}
+              highlightedId={highlightedId}
+              municipalityName={municipalityName}
+              onShowOnMap={(farm) => {
+                void filters.setMunicipality(farm.municipalityCode);
+                setFocus({ pointId: farm.id });
+              }}
+              renderActions={renderActions}
+            />
+          ) : (
+            !hasError && !serverUnreachable && emptyState
+          )}
+          {list.data && (
+            <Pagination
+              page={filters.page}
+              pageSize={PAGE_SIZE}
+              total={list.data.count}
+              onPageChange={filters.setPage}
+              label="fincas"
+            />
+          )}
+        </section>
+      </div>
     </div>
   );
 }

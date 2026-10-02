@@ -18,11 +18,18 @@ export type FarmUpdateRequest = Schemas['PatchedFarmUpdateRequest'];
 
 export const PAGE_SIZE = 20;
 
-export type FarmQuery = { search?: string; page?: number };
+export type FarmQuery = {
+  search?: string;
+  page?: number;
+  municipality?: string;
+  producer?: string;
+};
 
 function listPath(query: FarmQuery) {
   const params = new URLSearchParams();
   if (query.search) params.set('search', query.search);
+  if (query.municipality) params.set('municipality', query.municipality);
+  if (query.producer) params.set('producer', query.producer);
   params.set('page', String(query.page ?? 1));
   params.set('page_size', String(PAGE_SIZE));
   return `/api/farms?${params}`;
