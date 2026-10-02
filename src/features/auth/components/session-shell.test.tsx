@@ -202,10 +202,16 @@ describe('SessionShell', () => {
 
   it('does not log out twice while the request is in flight', async () => {
     let calls = 0;
+    // La respuesta queda retenida hasta después del segundo clic: así el envío sigue en curso
+    // mientras se intenta de nuevo, sin depender de cuánto tarde el menú en abrirse.
+    let release!: () => void;
+    const answered = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     server.use(
       http.post(LOGOUT, async () => {
         calls += 1;
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await answered;
         return new HttpResponse(null, { status: 204 });
       }),
     );
@@ -218,9 +224,23 @@ describe('SessionShell', () => {
     const item = await screen.findByRole('menuitem', { name: 'Cerrar sesión' });
     expect(item).toHaveAttribute('aria-disabled', 'true');
     await userEvent.click(item);
+    release();
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(calls).toBe(1);
+  });
+
+  it('shows the device records indicator when there is no connection', async () => {
+    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    try {
+      renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+      expect(
+        await screen.findByRole('button', { name: 'Sin conexión' }),
+      ).toBeInTheDocument();
+    } finally {
+      onLine.mockRestore();
+    }
   });
 
   it('runs the offline bootstrap for the signed-in user', async () => {

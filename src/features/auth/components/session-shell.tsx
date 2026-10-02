@@ -11,7 +11,11 @@ import { NavList } from '@/components/layout/nav-list';
 import { SidebarToggle } from '@/components/layout/sidebar-toggle';
 import { useSidebarVisibility } from '@/components/layout/use-sidebar-visibility';
 import { SectionGate } from '@/components/section-gate';
+import type { QueueView } from '@/components/sync-tray/queue-view';
+import { SyncTray } from '@/components/sync-tray/sync-tray';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
+import { useQueueItems } from '@/hooks/use-queue-items';
+import { useSyncStatus } from '@/hooks/use-sync-status';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
@@ -20,13 +24,22 @@ import { useLogout, useSession, useSessionConfirmed } from '../api';
 import { AccountDialog } from './account-dialog';
 
 // Conecta el marco con la sesión: correo, cierre de sesión y menú según los permisos.
-export function SessionShell({ children }: { children: ReactNode }) {
+export function SessionShell({
+  children,
+  queueViews = [],
+}: {
+  children: ReactNode;
+  // Cómo se ve cada recurso en la bandeja de registros del dispositivo.
+  queueViews?: readonly QueueView[];
+}) {
   const router = useRouter();
   const { data: user } = useSession();
   const confirmed = useSessionConfirmed();
   const logout = useLogout();
   const sidebar = useSidebarVisibility();
   const [accountOpen, setAccountOpen] = useState(false);
+  const syncStatus = useSyncStatus(user?.id);
+  const queueItems = useQueueItems(user?.id);
   const items = visibleNavItems(NAV_ITEMS, user?.permissions);
 
   // Toca el reloj de sesión y guarda la copia del dispositivo cada vez que el servidor confirma
@@ -68,16 +81,23 @@ export function SessionShell({ children }: { children: ReactNode }) {
       header={
         <AppHeader
           actions={
-            <AccountMenu
-              email={user?.email}
-              isLoggingOut={logout.isPending}
-              onOpenAccount={() => setAccountOpen(true)}
-              onLogout={() =>
-                logout.mutate(undefined, {
-                  onSuccess: () => router.replace('/'),
-                })
-              }
-            />
+            <>
+              <SyncTray
+                status={syncStatus}
+                items={queueItems}
+                views={queueViews}
+              />
+              <AccountMenu
+                email={user?.email}
+                isLoggingOut={logout.isPending}
+                onOpenAccount={() => setAccountOpen(true)}
+                onLogout={() =>
+                  logout.mutate(undefined, {
+                    onSuccess: () => router.replace('/'),
+                  })
+                }
+              />
+            </>
           }
           logoutFailed={logout.isError}
           mobileNav={<MobileNav items={items} />}
