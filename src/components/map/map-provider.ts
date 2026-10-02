@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 
-import type { GeoPoint } from '@/types/geo';
+import type { GeoBounds, GeoPoint } from '@/types/geo';
 
 import type { BaseLayerKind } from './base-layers';
 
@@ -12,6 +12,9 @@ export type MapProviderProps = {
   onPointChange: (point: GeoPoint) => void;
   disabled: boolean;
   baseLayer: BaseLayerKind;
+  // Área que el mapa encuadra cuando cambia (p. ej. el municipio elegido). Quien lo pasa decide
+  // cuándo: el formulario solo lo manda si todavía no hay punto, para no mover el de la persona.
+  focusBounds?: GeoBounds | null;
   // Falla después de cargar (p. ej. el mapa base no responde sin conexión).
   onError: () => void;
 };

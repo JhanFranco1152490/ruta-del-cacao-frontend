@@ -14,11 +14,18 @@ export function FakeMap({
   onPointChange,
   disabled,
   baseLayer,
+  focusBounds,
   onError,
 }: MapProviderProps) {
   return (
     <div>
       <p>Capa: {baseLayer}</p>
+      {focusBounds && (
+        <p>
+          Encuadre: {focusBounds.south}, {focusBounds.west} a{' '}
+          {focusBounds.north}, {focusBounds.east}
+        </p>
+      )}
       <p>
         Marcador:{' '}
         {point ? `${point.latitude}, ${point.longitude}` : 'sin marcador'}

@@ -6,6 +6,8 @@ import L from 'leaflet';
 import { useEffect, useRef } from 'react';
 
 import { OPERATING_AREA_VIEW } from '@/lib/departments';
+import { OPERATING_AREA_BOUNDS } from '@/lib/geo/operating-area';
+import type { GeoBounds } from '@/types/geo';
 
 import {
   pinIcon,
@@ -19,15 +21,45 @@ import {
 import type { MapProviderProps, PointsMapProviderProps } from './map-provider';
 import { MAX_FIT_ZOOM, POINT_ZOOM, pointsKey, viewFor } from './map-view';
 
+const toLatLngBounds = ({ south, west, north, east }: GeoBounds) =>
+  L.latLngBounds([south, west], [north, east]);
+
+// Margen alrededor del departamento al arrastrar el mapa del formulario: deja ver el borde sin
+// perderse en los departamentos vecinos.
+const AREA_MARGIN = 0.05;
+
 export function LeafletPointMap({
   point,
   onPointChange,
   disabled,
   onError,
   baseLayer,
+  focusBounds,
 }: MapProviderProps) {
   const { containerRef, map } = useLeafletMap();
   useBaseLayer(map, baseLayer, onError);
+
+  // Solo en este mapa y no en el hook compartido: el mapa por municipios maneja sus propios
+  // límites. No se puede arrastrar fuera de Norte de Santander ni alejar más que el departamento.
+  useEffect(() => {
+    if (!map) return;
+    const limits = toLatLngBounds(OPERATING_AREA_BOUNDS).pad(AREA_MARGIN);
+    map.setMaxBounds(limits);
+    // Viscosidad 1: el borde frena el arrastre en seco en vez de dejar pasarse y rebotar.
+    L.Util.setOptions(map, { maxBoundsViscosity: 1 });
+    map.setMinZoom(map.getBoundsZoom(limits));
+  }, [map]);
+
+  const focusKey = focusBounds
+    ? `${focusBounds.south},${focusBounds.west},${focusBounds.north},${focusBounds.east}`
+    : null;
+  const focusRef = useLatest(focusBounds);
+  // Solo cuando cambia el área pedida, no en cada render ni cuando la persona mueve el mapa.
+  useEffect(() => {
+    const bounds = focusRef.current;
+    if (!map || !bounds) return;
+    map.fitBounds(toLatLngBounds(bounds));
+  }, [map, focusKey, focusRef]);
   const markerRef = useRef<L.Marker | null>(null);
   const onPointChangeRef = useLatest(onPointChange);
   const disabledRef = useLatest(disabled);

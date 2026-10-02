@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
 import { formatGeoPoint, parseCoordinates } from '@/lib/format/coordinates';
-import type { Coordinates } from '@/types/geo';
+import type { Coordinates, GeoBounds } from '@/types/geo';
 
 import { BaseLayerToggle } from './base-layer-toggle';
 import type { BaseLayerKind } from './base-layers';
@@ -20,6 +20,7 @@ export function MapPanel({
   onRetry,
   disabled = false,
   frameClassName,
+  focusBounds,
   loadProvider,
 }: {
   location: Coordinates;
@@ -28,6 +29,7 @@ export function MapPanel({
   disabled?: boolean;
   // Ajustes del recuadro del mapa, p. ej. más alto en escritorio.
   frameClassName?: string;
+  focusBounds?: GeoBounds | null;
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadMapProvider;
 }) {
@@ -71,6 +73,7 @@ export function MapPanel({
         <Provider
           baseLayer={baseLayer}
           disabled={disabled}
+          focusBounds={focusBounds}
           onError={map.fail}
           onPointChange={(next) => onLocationChange(formatGeoPoint(next))}
           point={point}

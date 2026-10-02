@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { FormSection } from '@/components/form-section';
@@ -19,7 +19,12 @@ import {
   CAPTURE_FIELD_CLASS,
 } from './capture-field-class';
 import { useGeolocation } from '../use-geolocation';
+import { useMunicipalityHints } from '../use-municipality-hints';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
+import {
+  FarmMunicipalityMismatch,
+  FarmMunicipalitySuggestion,
+} from './farm-municipality-notice';
 
 export function FarmFormFields({
   defaultValues,
@@ -50,6 +55,7 @@ export function FarmFormFields({
     register,
     control,
     handleSubmit,
+    getValues,
     setValue,
     formState: { errors, isSubmitted },
   } = useForm<FarmFormValues>({
@@ -58,9 +64,9 @@ export function FarmFormFields({
     mode: 'onBlur',
     reValidateMode: 'onChange',
   });
-  const [latitude, longitude] = useWatch({
+  const [latitude, longitude, municipalityId] = useWatch({
     control,
-    name: ['latitude', 'longitude'],
+    name: ['latitude', 'longitude', 'municipality_id'],
   });
 
   const changeLocation = (location: Coordinates) => {
@@ -68,8 +74,30 @@ export function FarmFormFields({
     setValue('latitude', location.latitude, options);
     setValue('longitude', location.longitude, options);
   };
-  const geolocation = useGeolocation(changeLocation);
   const location = { latitude, longitude };
+  const hints = useMunicipalityHints(location, municipalityId);
+  const municipalityName = (code: string) =>
+    municipalities.data?.find((municipality) => municipality.code === code)
+      ?.name ?? code;
+  const chooseMunicipality = (code: string) =>
+    setValue('municipality_id', code, {
+      shouldDirty: true,
+      shouldValidate: isSubmitted,
+    });
+
+  // Municipio que se completó con el GPS: se avisa mientras siga siendo el elegido.
+  const [suggested, setSuggested] = useState<string | null>(null);
+  const captureLocation = (captured: Coordinates) => {
+    changeLocation(captured);
+    const code = hints.municipalityAt(captured);
+    // Solo si estaba vacío: un municipio elegido a propósito no se cambia solo (si no
+    // coincide, aparece la advertencia).
+    if (code && !getValues('municipality_id')) {
+      chooseMunicipality(code);
+      setSuggested(code);
+    }
+  };
+  const geolocation = useGeolocation(captureLocation);
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
@@ -158,7 +186,7 @@ export function FarmFormFields({
             </div>
           </FormSection>
 
-          <div className="rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+          <div className="space-y-4 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
             <FarmLocationFields
               geolocation={geolocation}
               latitudeError={errors.latitude?.message}
@@ -166,12 +194,27 @@ export function FarmFormFields({
               longitudeError={errors.longitude?.message}
               onLocationChange={changeLocation}
             />
+            {suggested && suggested === municipalityId && (
+              <FarmMunicipalitySuggestion
+                municipality={municipalityName(suggested)}
+              />
+            )}
+            {hints.mismatch && (
+              <FarmMunicipalityMismatch
+                chosenMunicipality={municipalityName(municipalityId)}
+                onUsePointMunicipality={() => {
+                  if (hints.mismatch) chooseMunicipality(hints.mismatch);
+                }}
+                pointMunicipality={municipalityName(hints.mismatch)}
+              />
+            )}
           </div>
         </div>
 
         <div className="rounded-[var(--radius-card)] bg-card p-4 shadow-card empty:hidden lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <FarmLocationMap
             disabled={geolocation.isCapturing}
+            focusBounds={hints.focusBounds}
             frameClassName="lg:h-[34rem]"
             location={location}
             onLocationChange={changeLocation}
