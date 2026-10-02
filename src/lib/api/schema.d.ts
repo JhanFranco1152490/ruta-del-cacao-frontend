@@ -207,7 +207,7 @@ export interface paths {
         get: operations["farms_retrieve"];
         put?: never;
         post?: never;
-        /** @description Elimina una finca creada por error. Requiere `expected_version`. Si la finca tiene registros del negocio responde 409 `farm_has_records` (se desactiva en su lugar); si cambió, 409 `stale_version` con la versión del servidor en `current`. La auditoría de la finca se conserva. */
+        /** @description Elimina una finca creada por error. Requiere `expected_version` en la URL. Si la finca tiene registros del negocio responde 409 `farm_has_records` (se desactiva en su lugar); si cambió, 409 `stale_version` con la versión del servidor en `current`. La auditoría de la finca se conserva. */
         delete: operations["farms_destroy"];
         options?: never;
         head?: never;
@@ -1407,7 +1407,7 @@ export interface operations {
                 page_size?: number;
                 /** @description Solo las de este productor. */
                 producer?: string;
-                /** @description Busca en nombre, municipio o detalles, sin distinguir tildes. */
+                /** @description Busca en el nombre, sin distinguir tildes. */
                 search?: string;
             };
             header?: never;
@@ -1576,7 +1576,10 @@ export interface operations {
     };
     farms_destroy: {
         parameters: {
-            query?: never;
+            query: {
+                /** @description La `version` de la finca que se leyó. */
+                expected_version: number;
+            };
             header?: never;
             path: {
                 id: string;
@@ -1718,7 +1721,7 @@ export interface operations {
                 page_size?: number;
                 /** @description Solo las de este productor. */
                 producer?: string;
-                /** @description Busca en nombre, municipio o detalles, sin distinguir tildes. */
+                /** @description Busca en el nombre, sin distinguir tildes. */
                 search?: string;
             };
             header?: never;
@@ -1772,7 +1775,7 @@ export interface operations {
                 page_size?: number;
                 /** @description Solo las de este productor. */
                 producer?: string;
-                /** @description Busca en nombre, municipio o detalles, sin distinguir tildes. */
+                /** @description Busca en el nombre, sin distinguir tildes. */
                 search?: string;
             };
             header?: never;

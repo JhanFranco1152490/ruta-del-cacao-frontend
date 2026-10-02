@@ -8,7 +8,7 @@ import {
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { components } from '@/lib/api/schema';
+import type { components, operations } from '@/lib/api/schema';
 import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
 type Schemas = components['schemas'];
@@ -97,15 +97,17 @@ export function useChangeFarmStatus() {
   });
 }
 
-// El esquema OpenAPI no documenta el cuerpo del DELETE (la API sí lo exige): se tipa aquí hasta
-// que el backend lo declare y el tipo salga generado.
-type FarmDeleteRequest = { expected_version: number };
+type FarmDeleteQuery = operations['farms_destroy']['parameters']['query'];
 
-export const deleteFarm = (id: string, expectedVersion: number) =>
-  apiFetch<void>(`/api/farms/${id}`, {
-    method: 'DELETE',
-    body: { expected_version: expectedVersion } satisfies FarmDeleteRequest,
+// La versión leída va en la URL y no en un cuerpo: un DELETE con cuerpo no tiene significado
+// definido en HTTP y algunos intermediarios lo descartan.
+export const deleteFarm = (id: string, expectedVersion: number) => {
+  const query: FarmDeleteQuery = { expected_version: expectedVersion };
+  const params = new URLSearchParams({
+    expected_version: String(query.expected_version),
   });
+  return apiFetch<void>(`/api/farms/${id}?${params}`, { method: 'DELETE' });
+};
 
 // Eliminar una finca creada por error es solo en línea: no pasa por la cola del dispositivo.
 export function useDeleteFarm() {

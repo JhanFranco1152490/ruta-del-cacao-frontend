@@ -285,14 +285,17 @@ describe('FarmEditorScreen', () => {
     function deleteHandler(
       respond: () => Response = () => new HttpResponse(null, { status: 204 }),
     ) {
-      const bodies: unknown[] = [];
+      const requests: { version: string | null; body: string }[] = [];
       server.use(
         http.delete(apiUrl('/api/farms/s1'), async ({ request }) => {
-          bodies.push(await request.json());
+          requests.push({
+            version: new URL(request.url).searchParams.get('expected_version'),
+            body: await request.text(),
+          });
           return respond();
         }),
       );
-      return bodies;
+      return requests;
     }
 
     it('is offered only to whoever can delete farms', async () => {
@@ -308,7 +311,7 @@ describe('FarmEditorScreen', () => {
     it('deletes after confirmation with the version it read, without saving the form', async () => {
       const user = userEvent.setup();
       server.use(serverFarm({ version: 5 }));
-      const bodies = deleteHandler();
+      const requests = deleteHandler();
       renderEditor('s1', canDelete());
 
       await user.click(
@@ -328,7 +331,7 @@ describe('FarmEditorScreen', () => {
       );
 
       await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
-      expect(bodies).toEqual([{ expected_version: 5 }]);
+      expect(requests).toEqual([{ version: '5', body: '' }]);
     });
 
     it('offers to deactivate a farm that has records', async () => {
