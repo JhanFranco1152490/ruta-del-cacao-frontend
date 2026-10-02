@@ -73,6 +73,10 @@ export const useFarm = (
 export function useChangeFarmStatus() {
   const queryClient = useQueryClient();
   return useMutation({
+    // Es solo en línea y la persona espera la respuesta: sin red debe fallar en el acto con un
+    // aviso. Por defecto TanStack la dejaría en pausa y la ejecutaría sola al volver la red,
+    // cuando ya nadie lo está pidiendo.
+    networkMode: 'always',
     mutationFn: ({
       id,
       isActive,
@@ -113,6 +117,10 @@ export const deleteFarm = (id: string, expectedVersion: number) => {
 export function useDeleteFarm() {
   const queryClient = useQueryClient();
   return useMutation({
+    // Es solo en línea y la persona espera la respuesta: sin red debe fallar en el acto con un
+    // aviso. Por defecto TanStack la dejaría en pausa y la ejecutaría sola al volver la red,
+    // cuando ya nadie lo está pidiendo.
+    networkMode: 'always',
     mutationFn: ({
       id,
       expectedVersion,

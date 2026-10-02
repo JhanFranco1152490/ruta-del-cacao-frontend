@@ -334,6 +334,37 @@ describe('FarmEditorScreen', () => {
       expect(requests).toEqual([{ version: '5', body: '' }]);
     });
 
+    it('says it needs a connection instead of waiting, and never deletes later on its own', async () => {
+      const user = userEvent.setup();
+      server.use(serverFarm({ version: 5 }));
+      const requests = deleteHandler(() => HttpResponse.error());
+      renderEditor('s1', canDelete());
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      // La red se pierde con el diálogo ya abierto.
+      onlineManager.setOnline(false);
+      try {
+        const dialog = screen.getByRole('dialog');
+        await user.click(
+          within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+        );
+
+        expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+          'Revisa tu conexión',
+        );
+        expect(
+          within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+        ).toBeEnabled();
+      } finally {
+        cleanup();
+        onlineManager.setOnline(true);
+      }
+      // Se intentó una sola vez: al volver la red no queda nada en espera que borre la finca.
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(requests).toHaveLength(1);
+    });
+
     it('offers to deactivate a farm that has records', async () => {
       const user = userEvent.setup();
       const patches: unknown[] = [];
