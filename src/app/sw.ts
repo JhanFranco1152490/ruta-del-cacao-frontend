@@ -8,7 +8,10 @@ import type {
 } from 'serwist';
 import { NetworkOnly, Serwist } from 'serwist';
 
-import { OFFLINE_FALLBACK_ROUTE } from '../config/offline-routes';
+import {
+  OFFLINE_FALLBACK_ROUTE,
+  OFFLINE_PRECACHE_ROUTES,
+} from '../config/offline-routes';
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -23,11 +26,27 @@ interface BackgroundSyncEvent extends ExtendableEvent {
   tag: string;
 }
 
+const networkOnly = new NetworkOnly();
+
 // Nada de otro origen se guarda: la API (datos personales, siempre del servidor) y las teselas
 // del mapa base (su política de uso no permite descargarlas en masa).
 const otherOrigins: RuntimeCaching = {
   matcher: ({ url }) => url.origin !== self.location.origin,
-  handler: new NetworkOnly(),
+  handler: networkOnly,
+};
+
+// Estas pantallas leen su consulta (?id=, filtros) en el navegador: el HTML guardado de la ruta
+// sirve para cualquier consulta. Solo navegaciones: una petición de datos de la misma URL no es
+// HTML y nunca debe recibirlo.
+const savedScreens = new Set<string>(OFFLINE_PRECACHE_ROUTES);
+const savedScreenWithQuery: RuntimeCaching = {
+  matcher: ({ request, url }) =>
+    request.mode === 'navigate' &&
+    url.origin === self.location.origin &&
+    savedScreens.has(url.pathname),
+  handler: async (options) =>
+    (await serwist.matchPrecache(options.url.pathname)) ??
+    networkOnly.handle(options),
 };
 
 const serwist = new Serwist({
@@ -36,7 +55,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [otherOrigins, ...defaultCache],
+  runtimeCaching: [otherOrigins, savedScreenWithQuery, ...defaultCache],
   fallbacks: {
     entries: [
       {
