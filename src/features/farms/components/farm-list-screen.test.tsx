@@ -587,8 +587,11 @@ describe('FarmListScreen free map', () => {
     const pointRequests: URLSearchParams[] = [];
     server.use(farmMapPointsHandler([], pointRequests));
     renderScreen({ producerId: null, searchParams: '?municipio=54001' });
+    // Con el mapa ya cargado: mientras carga, el botón se reemplaza y un clic en ese instante se
+    // pierde.
+    await screen.findByText('Municipio del mapa: 54001');
 
-    await user.click(await screen.findByRole('button', { name: 'Libre' }));
+    await user.click(screen.getByRole('button', { name: 'Libre' }));
 
     expect(await screen.findByText('Mapa libre')).toBeInTheDocument();
     await waitFor(() =>
