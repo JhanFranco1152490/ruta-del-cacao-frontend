@@ -36,7 +36,7 @@ export function MunicipalityMapPanel({
   title: string;
   view: MunicipalityMapView;
   notice?: ReactNode;
-  // Controles de quien usa el panel (p. ej. la vista del mapa), junto al selector del mapa base.
+  // Controles de quien usa el panel (p. ej. la vista del mapa), después del selector del mapa base.
   controls?: ReactNode;
   onBack: () => void;
   describeMunicipality: (code: string, count: number) => string;
@@ -86,7 +86,6 @@ export function MunicipalityMapPanel({
           <p className="font-bold text-selva">{title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {controls}
           {hasBaseLayer && (
             <BaseLayerToggle
               onChange={(next) => {
@@ -96,6 +95,7 @@ export function MunicipalityMapPanel({
               value={baseLayer}
             />
           )}
+          {controls}
         </div>
       </div>
       {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
