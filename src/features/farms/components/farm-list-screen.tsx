@@ -5,7 +5,6 @@ import Link from 'next/link';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { TextField } from '@/components/text-field';
@@ -19,7 +18,6 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { PAGE_SIZE, useFarms } from '../api';
 import { type FarmListItem, serverFarmToListItem } from '../farm-list-item';
 import { useFarmFilters } from '../use-farm-filters';
-import { useFarmSyncStatus } from '../use-farm-sync-status';
 import {
   useLocalFarms,
   useRefreshFarmsWhenQueueShrinks,
@@ -39,7 +37,6 @@ export function FarmListScreen() {
   const local = useLocalFarms(user?.id);
   useRefreshFarmsWhenQueueShrinks(local.farms);
   const municipalityName = useMunicipalityName();
-  const sync = useFarmSyncStatus();
   const canAdd = hasPermission(user, PERMISSIONS.FARMS_ADD);
   const canChange = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
 
@@ -97,9 +94,6 @@ export function FarmListScreen() {
         description="Consulta tus fincas y su estado de sincronización."
         actions={registerLink}
       />
-      <div className="mt-6">
-        <OfflineBanner status={sync.status} />
-      </div>
       <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
         <TextField
           label="Buscar finca"

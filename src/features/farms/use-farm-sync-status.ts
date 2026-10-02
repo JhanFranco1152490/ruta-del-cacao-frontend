@@ -17,5 +17,8 @@ export function useFarmSyncStatus() {
     blockedMessage: status.isWithinOfflineWindow
       ? null
       : OFFLINE_WINDOW_EXPIRED,
+    // Mientras se llena un formulario solo importa saber que se guardará en el dispositivo o que
+    // la ventana venció; el resto lo cuenta el indicador de la cabecera.
+    showBanner: !status.isOnline || !status.isWithinOfflineWindow,
   };
 }

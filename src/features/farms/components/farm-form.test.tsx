@@ -2,7 +2,7 @@ import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { onlineManager } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchMunicipalities } from '@/lib/api/municipalities';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -140,12 +140,23 @@ describe('FarmForm', () => {
     expect(new Set(items.map((item) => item.id)).size).toBe(2);
   });
 
-  it('shows the connection and sync status above the form', async () => {
+  it('leaves the connection state to the header while there is a connection', async () => {
     await renderForm();
 
     expect(
-      await screen.findByText('Sin registros pendientes de sincronización.'),
-    ).toBeInTheDocument();
+      screen.queryByText('Sin registros pendientes de sincronización.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('warns above the form that the farm stays on the device without a connection', async () => {
+    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    try {
+      await renderForm();
+
+      expect(await screen.findByText('Sin conexión')).toBeInTheDocument();
+    } finally {
+      onLine.mockRestore();
+    }
   });
 
   it('blocks saving once the offline session window has expired', async () => {
