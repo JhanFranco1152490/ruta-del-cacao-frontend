@@ -26,7 +26,7 @@ export function FarmFiltersBar({
       />
       <NativeSelect
         aria-label="Filtrar por municipio"
-        className="text-sm"
+        className="text-sm sm:w-64"
         onChange={(event) =>
           void filters.setMunicipality(event.target.value || null)
         }
