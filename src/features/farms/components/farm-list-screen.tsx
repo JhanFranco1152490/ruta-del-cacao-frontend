@@ -41,6 +41,7 @@ export function FarmListScreen() {
   const municipalityName = useMunicipalityName();
   const canAdd = hasPermission(user, PERMISSIONS.FARMS_ADD);
   const canChange = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
+  const canPickProducer = hasPermission(user, PERMISSIONS.PRODUCERS_VIEW);
   // Estado de la interfaz, no del servidor: qué finca enfocar en el mapa y qué tarjeta resaltar.
   const [focus, setFocus] = useState<{ pointId: string }>();
   const [highlightedId, setHighlightedId] = useState<string>();
@@ -85,10 +86,14 @@ export function FarmListScreen() {
       : canChange && <FarmServerActions farm={farm} />;
 
   const emptyState =
-    filters.query.search || filters.municipality ? (
+    filters.query.search || filters.municipality || filters.producer ? (
       <EmptyState
         title="No hay fincas que coincidan"
-        description="Prueba con otro nombre o con otro municipio."
+        description={
+          isAssociation
+            ? 'Prueba con otro nombre, municipio o productor.'
+            : 'Prueba con otro nombre o con otro municipio.'
+        }
       />
     ) : isAssociation ? (
       <EmptyState
@@ -116,7 +121,10 @@ export function FarmListScreen() {
         actions={registerLink}
       />
       <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
-        <FarmFiltersBar filters={filters} />
+        <FarmFiltersBar
+          filters={filters}
+          pickProducer={isAssociation && canPickProducer}
+        />
         {local.isError && (
           <ErrorState message="No fue posible leer las fincas guardadas en este dispositivo." />
         )}

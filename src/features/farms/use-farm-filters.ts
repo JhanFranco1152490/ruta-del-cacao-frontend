@@ -43,6 +43,7 @@ export function useFarmFilters() {
     ...search,
     setMunicipality: (code: string | null) =>
       setParams({ municipality: code, page: 1 }),
+    setProducer: (id: string | null) => setParams({ producer: id, page: 1 }),
     setPage: (next: number) => setParams({ page: next }),
   };
 }

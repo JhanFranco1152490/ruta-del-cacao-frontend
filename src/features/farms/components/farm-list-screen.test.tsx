@@ -12,6 +12,8 @@ import {
   apiError,
   buildFarm,
   buildFarmMapPoint,
+  buildPage,
+  buildProducer,
   buildSession,
 } from '@/test/factories';
 import {
@@ -566,6 +568,136 @@ describe('FarmListScreen map', () => {
       ),
     ).toBeInTheDocument();
     expect(await farmCards()).toHaveLength(1);
+  });
+});
+
+describe('FarmListScreen for the association', () => {
+  const producerId = '33333333-3333-4333-8333-333333333333';
+  const associationPermissions = [
+    PERMISSIONS.FARMS_VIEW,
+    PERMISSIONS.PRODUCERS_VIEW,
+  ];
+  const producerListItem = {
+    id: producerId,
+    member_code: 'PROD-000007',
+    document_type: 'CC',
+    identity_document: '1234567890',
+    first_name: 'Ana',
+    last_name: 'Prueba',
+    municipality_code: '54001',
+    status: 'active',
+  };
+
+  beforeEach(() => {
+    server.use(
+      http.get(apiUrl('/api/producers'), () =>
+        HttpResponse.json(buildPage([producerListItem])),
+      ),
+      http.get(apiUrl(`/api/producers/${producerId}`), () =>
+        HttpResponse.json(
+          buildProducer({
+            id: producerId,
+            first_name: 'Ana',
+            last_name: 'Prueba',
+            member_code: 'PROD-000007',
+            association_access: false,
+          }),
+        ),
+      ),
+    );
+  });
+
+  it('shows every producer until one is typed and chosen, then narrows list and map', async () => {
+    const user = userEvent.setup();
+    const farmRequests: URLSearchParams[] = [];
+    const countRequests: URLSearchParams[] = [];
+    const producerSearches: (string | null)[] = [];
+    server.use(
+      farmsHandler([], farmRequests),
+      farmMapCountsHandler([], countRequests),
+      http.get(apiUrl('/api/producers'), ({ request }) => {
+        producerSearches.push(new URL(request.url).searchParams.get('search'));
+        return HttpResponse.json(buildPage([producerListItem]));
+      }),
+    );
+    renderScreen({
+      permissions: associationPermissions,
+      producerId: null,
+      searchParams: '?vista=municipios',
+    });
+
+    const combobox = await screen.findByLabelText('Filtrar por productor');
+    expect(combobox).toHaveAttribute(
+      'placeholder',
+      'Nombre, documento o código',
+    );
+    await waitFor(() => expect(farmRequests.length).toBeGreaterThan(0));
+    expect(farmRequests.at(-1)?.has('producer')).toBe(false);
+
+    await user.type(combobox, 'PROD-7');
+    await waitFor(() => expect(producerSearches.at(-1)).toBe('PROD-7'));
+    await user.click(
+      await screen.findByRole('option', { name: 'Ana Prueba · PROD-000007' }),
+    );
+
+    await waitFor(() =>
+      expect(farmRequests.at(-1)?.get('producer')).toBe(producerId),
+    );
+    await waitFor(() =>
+      expect(countRequests.at(-1)?.get('producer')).toBe(producerId),
+    );
+  });
+
+  // La asociación lee las fincas de todos los productores, sin depender de su interruptor.
+  it('does not warn about a producer without association access', async () => {
+    const farmRequests: URLSearchParams[] = [];
+    let summaryServed = false;
+    server.use(
+      farmsHandler([buildFarm({ name: 'El Porvenir' })], farmRequests),
+      http.get(apiUrl(`/api/producers/${producerId}`), () => {
+        summaryServed = true;
+        return HttpResponse.json(
+          buildProducer({ id: producerId, association_access: false }),
+        );
+      }),
+    );
+    renderScreen({
+      permissions: associationPermissions,
+      producerId: null,
+      searchParams: `?productor=${producerId}`,
+    });
+
+    await waitFor(() => expect(summaryServed).toBe(true));
+    expect(await farmCards()).toHaveLength(1);
+    expect(farmRequests.at(-1)?.get('producer')).toBe(producerId);
+    expect(screen.queryByText(/no ha autorizado/)).not.toBeInTheDocument();
+  });
+
+  it('only lets the association look, never manage', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen({ permissions: associationPermissions, producerId: null });
+
+    expect(await farmCards()).toHaveLength(1);
+    expect(
+      screen.queryByRole('link', { name: /Registrar finca/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Editar El Porvenir' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Desactivar|Activar|Eliminar/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('is not offered to a producer', async () => {
+    renderScreen({
+      permissions: [...associationPermissions, PERMISSIONS.FARMS_ADD],
+    });
+
+    await screen.findByText('Aún no tienes fincas registradas');
+    expect(
+      screen.queryByLabelText('Filtrar por productor'),
+    ).not.toBeInTheDocument();
   });
 });
 
