@@ -4,6 +4,7 @@ import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
+import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
 type Schemas = components['schemas'];
 export type FarmMunicipalityCount = Schemas['FarmMunicipalityCount'];
@@ -54,6 +55,7 @@ export const useFarmMunicipalityCounts = (
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
+    refetchInterval: LIST_REFETCH_INTERVAL_MS,
     placeholderData: keepPreviousData,
   });
 
@@ -74,4 +76,5 @@ export const useFarmMapPoints = (
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
+    refetchInterval: LIST_REFETCH_INTERVAL_MS,
   });

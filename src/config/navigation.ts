@@ -56,7 +56,7 @@ export function isActiveRoute(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-// La sección a la que pertenece una ruta, o ninguna (como /panel).
+// La sección a la que pertenece una ruta, o ninguna (como la entrada, `/`).
 export function navItemForPath(
   items: readonly NavItem[],
   pathname: string,
