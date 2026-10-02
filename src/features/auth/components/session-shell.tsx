@@ -23,7 +23,8 @@ import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
 import { useLogout, useSession, useSessionConfirmed } from '../api';
 import { AccountDialog } from './account-dialog';
 
-// Conecta el marco con la sesión: correo, cierre de sesión y menú según los permisos.
+// Conecta el marco con la sesión: menú según los permisos, cuenta, bandeja del dispositivo y la
+// comprobación de permiso y conexión de cada sección.
 export function SessionShell({
   children,
   queueViews = [],
