@@ -28,10 +28,12 @@ interface BackgroundSyncEvent extends ExtendableEvent {
 
 const networkOnly = new NetworkOnly();
 
-// Nada de otro origen se guarda: la API (datos personales, siempre del servidor) y las teselas
-// del mapa base (su política de uso no permite descargarlas en masa).
-const otherOrigins: RuntimeCaching = {
-  matcher: ({ url }) => url.origin !== self.location.origin,
+// Nunca se guarda la API (datos personales, siempre del servidor) ni nada de otro origen, como las
+// teselas del mapa base (su política de uso no permite descargarlas en masa). La API se excluye
+// también por su ruta: si algún día se sirve desde el mismo origen, sigue sin guardarse.
+const neverStored: RuntimeCaching = {
+  matcher: ({ url, sameOrigin }) =>
+    !sameOrigin || url.pathname.startsWith('/api/'),
   handler: networkOnly,
 };
 
@@ -55,7 +57,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [otherOrigins, savedScreenWithQuery, ...defaultCache],
+  runtimeCaching: [neverStored, savedScreenWithQuery, ...defaultCache],
   fallbacks: {
     entries: [
       {
