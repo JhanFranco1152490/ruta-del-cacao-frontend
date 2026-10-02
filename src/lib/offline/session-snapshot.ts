@@ -44,3 +44,13 @@ export async function clearSessionSnapshot(userId: string) {
     // Igual que al guardar: un fallo local no debe romper el cierre de sesión.
   }
 }
+
+// El servidor rechazó la sesión: la copia de la última cuenta ya no abre la app sin conexión.
+export async function forgetLastSession() {
+  try {
+    const userId = window.localStorage.getItem(LAST_USER_KEY);
+    if (userId) await clearSessionSnapshot(userId);
+  } catch {
+    // Sin acceso al almacenamiento no hay copia que olvidar.
+  }
+}

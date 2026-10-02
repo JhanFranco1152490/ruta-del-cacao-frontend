@@ -5,10 +5,13 @@ import {
 } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
-import { isApiError } from '@/lib/api/errors';
+import { isApiError, isUnauthorized } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
-import { readSessionSnapshot } from '@/lib/offline/session-snapshot';
+import {
+  forgetLastSession,
+  readSessionSnapshot,
+} from '@/lib/offline/session-snapshot';
 
 export type Session = components['schemas']['Session'];
 export type SessionUser = components['schemas']['SessionUser'];
@@ -16,14 +19,16 @@ export type SessionUser = components['schemas']['SessionUser'];
 export type ResolvedSession = Session & { fromDevice?: true };
 
 // Sin respuesta del servidor (sin red) se entra con la última cuenta confirmada en este
-// dispositivo, dentro de la ventana sin conexión. Un error de la API (un 401) nunca usa la copia,
-// ni una consulta cancelada.
+// dispositivo, dentro de la ventana sin conexión. Un error de la API nunca usa la copia, ni una
+// consulta cancelada; un 401 además la borra: la sesión terminó (venció o se revocó el acceso) y
+// sin red no debe poder abrirse de nuevo.
 export async function fetchSession(
   signal?: AbortSignal,
 ): Promise<ResolvedSession> {
   try {
     return await apiFetch<Session>('/api/auth/me', { signal });
   } catch (error) {
+    if (isUnauthorized(error)) await forgetLastSession();
     if (isApiError(error) || signal?.aborted) throw error;
     const user = await readSessionSnapshot();
     if (!user) throw error;

@@ -26,6 +26,7 @@ vi.mock('@/lib/offline/session-clock', () => ({ recordLogin: vi.fn() }));
 vi.mock('@/lib/offline/session-snapshot', () => ({
   saveSessionSnapshot: vi.fn(),
   clearSessionSnapshot: vi.fn(),
+  forgetLastSession: vi.fn(),
   readSessionSnapshot: vi.fn().mockResolvedValue(null),
 }));
 

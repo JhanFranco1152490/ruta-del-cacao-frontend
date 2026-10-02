@@ -5,7 +5,10 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { recordLogin } from '@/lib/offline/session-clock';
-import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
+import {
+  readSessionSnapshot,
+  saveSessionSnapshot,
+} from '@/lib/offline/session-snapshot';
 import {
   buildSession,
   buildSessionUser,
@@ -65,6 +68,18 @@ describe('fetchSession', () => {
     );
 
     await expect(fetchSession()).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('forgets the device copy once the server rejects the session', async () => {
+    await deviceAccount();
+    server.use(
+      http.get(ME, () => notAuthenticated()),
+      http.post(apiUrl('/api/auth/refresh'), () => notAuthenticated()),
+    );
+
+    await expect(fetchSession()).rejects.toMatchObject({ status: 401 });
+
+    expect(await readSessionSnapshot()).toBeNull();
   });
 
   it('does not fall back when the request was cancelled', async () => {
