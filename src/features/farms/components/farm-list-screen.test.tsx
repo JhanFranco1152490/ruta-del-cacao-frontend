@@ -93,12 +93,13 @@ describe('FarmListScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('reports how many farms are waiting to be synchronized', async () => {
+  it('marks the farms that are still waiting to be synchronized', async () => {
     await enqueueFarmCreate(userId, 'f1', farm);
     renderScreen();
 
+    const [card] = await farmCards();
     expect(
-      await screen.findByText('1 registro pendiente de sincronización.'),
+      within(card).getByText('Pendiente de sincronización'),
     ).toBeInTheDocument();
   });
 
@@ -193,6 +194,13 @@ describe('FarmListScreen', () => {
     expect(
       await screen.findByText('Aún no tienes fincas registradas'),
     ).toBeInTheDocument();
+  });
+
+  it('leaves the connection state to the header', async () => {
+    renderScreen();
+
+    await screen.findByText('Aún no tienes fincas registradas');
+    expect(screen.queryByText('Con conexión')).not.toBeInTheDocument();
   });
 
   it('lists the farms from the server with their state and actions', async () => {

@@ -4,7 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { PERMISSIONS } from '@/lib/permissions';
 import type { NavItem } from '@/types/navigation';
 
-import { NAV_ITEMS, isActiveRoute, visibleNavItems } from './navigation';
+import {
+  NAV_ITEMS,
+  homeNavItem,
+  isActiveRoute,
+  navItemForPath,
+  visibleNavItems,
+} from './navigation';
 
 const open: NavItem = { href: '/abierta', label: 'Abierta', icon: Sprout };
 const guarded: NavItem = {
@@ -68,23 +74,88 @@ describe('isActiveRoute', () => {
 });
 
 describe('NAV_ITEMS', () => {
-  it('lists the panel, the domain sections and then administration', () => {
+  it('lists the domain sections and then administration', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([
-      '/panel',
       '/productores',
       '/fincas',
       '/roles',
       '/usuarios',
+      '/mi-productor',
     ]);
   });
 
-  it('gates every section behind its view permission and leaves the panel open', () => {
+  it('gates every section behind its view permission', () => {
     const byHref = Object.fromEntries(NAV_ITEMS.map((i) => [i.href, i]));
 
-    expect(byHref['/panel'].permission).toBeUndefined();
     expect(byHref['/productores'].permission).toBe(PERMISSIONS.PRODUCERS_VIEW);
     expect(byHref['/fincas'].permission).toBe(PERMISSIONS.FARMS_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
     expect(byHref['/usuarios'].permission).toBe(PERMISSIONS.USERS_VIEW);
+  });
+
+  it('marks the office sections as needing a connection', () => {
+    expect(
+      NAV_ITEMS.filter((item) => item.needsConnection).map((item) => item.href),
+    ).toEqual(['/productores', '/roles', '/usuarios', '/mi-productor']);
+  });
+
+  it('shows Mi productor only to whoever manages the association access', () => {
+    const byHref = Object.fromEntries(NAV_ITEMS.map((i) => [i.href, i]));
+
+    expect(byHref['/mi-productor'].permission).toBe(
+      PERMISSIONS.ASSOCIATION_ACCESS_MANAGE,
+    );
+  });
+});
+
+const office: NavItem = {
+  href: '/oficina',
+  label: 'Oficina',
+  icon: Sprout,
+  permission: PERMISSIONS.PRODUCERS_VIEW,
+  needsConnection: true,
+};
+const field: NavItem = {
+  href: '/campo',
+  label: 'Campo',
+  icon: Sprout,
+  permission: PERMISSIONS.FARMS_VIEW,
+};
+
+describe('navItemForPath', () => {
+  it('finds the section of a child route', () => {
+    expect(navItemForPath([office, field], '/campo/editar')).toBe(field);
+  });
+
+  it('finds nothing for a route outside the registry', () => {
+    expect(navItemForPath([office, field], '/panel')).toBeUndefined();
+  });
+});
+
+describe('homeNavItem', () => {
+  const both = [PERMISSIONS.PRODUCERS_VIEW, PERMISSIONS.FARMS_VIEW];
+
+  it('starts in the first section the person can see', () => {
+    expect(homeNavItem([office, field], both, true)).toBe(office);
+  });
+
+  it('skips the sections the person cannot see', () => {
+    expect(homeNavItem([office, field], [PERMISSIONS.FARMS_VIEW], true)).toBe(
+      field,
+    );
+  });
+
+  it('prefers a section that works without a connection when there is none', () => {
+    expect(homeNavItem([office, field], both, false)).toBe(field);
+  });
+
+  it('falls back to the first section when none works without a connection', () => {
+    expect(
+      homeNavItem([office, field], [PERMISSIONS.PRODUCERS_VIEW], false),
+    ).toBe(office);
+  });
+
+  it('has no start when the person can see no section', () => {
+    expect(homeNavItem([office, field], [], true)).toBeUndefined();
   });
 });

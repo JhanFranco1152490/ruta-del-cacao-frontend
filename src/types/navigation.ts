@@ -8,4 +8,7 @@ export type NavItem = {
   icon: LucideIcon;
   // Sin permiso, la entrada es para cualquier persona autenticada.
   permission?: Permission;
+  // Sección de oficina: sus datos solo están en el servidor, así que sin conexión avisa en vez
+  // de fallar.
+  needsConnection?: boolean;
 };

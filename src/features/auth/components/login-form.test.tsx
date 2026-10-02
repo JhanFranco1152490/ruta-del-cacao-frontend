@@ -64,7 +64,7 @@ describe('LoginForm', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'cacao seguro');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/panel'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(body).toEqual({
       login_method: 'email',
       email: 'persona@example.com',
@@ -89,7 +89,7 @@ describe('LoginForm', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'cacao seguro');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/panel'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(body).toEqual({
       login_method: 'document',
       document_type: 'CE',
@@ -187,7 +187,7 @@ describe('LoginForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/panel'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(screen.getByRole('button', { name: 'Procesando…' })).toBeDisabled();
   });
 

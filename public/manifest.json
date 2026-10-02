@@ -2,7 +2,7 @@
   "name": "Ruta del Cacao",
   "short_name": "Ruta del Cacao",
   "description": "Trazabilidad de la producción de cacao en Norte de Santander",
-  "start_url": "/panel",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f7f2ea",
   "theme_color": "#14362a",

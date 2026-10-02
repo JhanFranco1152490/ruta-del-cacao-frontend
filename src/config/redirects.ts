@@ -1,5 +1,7 @@
 // Rutas viejas que siguen funcionando: enlaces guardados o compartidos no deben romperse.
 export const LEGACY_REDIRECTS = [
+  // La entrada de la app era /panel antes de quitar esa pantalla.
+  { source: '/panel', destination: '/', permanent: false },
   { source: '/producers', destination: '/productores', permanent: false },
   {
     source: '/producers/new',

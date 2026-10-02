@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { CacaoMark } from '@/components/brand/cacao-mark';
+import { HOME_PATH } from '@/config/routes';
 
 type AuthShellProps = {
   eyebrow: string;
@@ -12,7 +13,7 @@ type AuthShellProps = {
 function Brand({ className = '' }: { className?: string }) {
   return (
     <Link
-      href="/"
+      href={HOME_PATH}
       className={`flex w-fit items-center gap-3 ${className}`}
       aria-label="Ruta del Cacao, inicio"
     >
