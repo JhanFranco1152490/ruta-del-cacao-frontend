@@ -1,5 +1,5 @@
 'use client';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -19,10 +19,8 @@ import { ProducerFilter } from '@/components/producer-filter';
 
 export function AccountWorkspace({
   user,
-  accessCard,
 }: {
   user: components['schemas']['SessionUser'];
-  accessCard?: ReactNode;
 }) {
   const association = !user.producer_id;
   const filters = useAccountFilters(association);
@@ -67,8 +65,6 @@ export function AccountWorkspace({
           ) : undefined
         }
       />
-      {hasPermission(user, PERMISSIONS.ASSOCIATION_ACCESS_MANAGE) &&
-        user.producer_id && <div className="mt-8">{accessCard}</div>}
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
         <AccountFilters
           filters={filters}

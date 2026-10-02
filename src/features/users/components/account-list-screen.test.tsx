@@ -8,6 +8,8 @@ import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
 import { createQueryClient } from '@/lib/query-client';
+import UsersPage from '@/app/(app)/usuarios/page';
+
 import { AccountListScreen } from './account-list-screen';
 
 const id = '11111111-1111-4111-8111-111111111111';
@@ -213,6 +215,32 @@ describe('AccountListScreen', () => {
     });
     expect(await screen.findByText('Cuenta no disponible')).toBeVisible();
   });
+  it('no longer shows the association access switch', async () => {
+    let requested = false;
+    server.use(
+      http.get(apiUrl('/api/auth/me'), () =>
+        HttpResponse.json(
+          buildSession({
+            producer_id: id,
+            permissions: [
+              ...permissions,
+              PERMISSIONS.ASSOCIATION_ACCESS_MANAGE,
+            ],
+          }),
+        ),
+      ),
+      http.get(apiUrl('/api/association-access'), () => {
+        requested = true;
+        return HttpResponse.json({ enabled: false, changed_at: null });
+      }),
+    );
+    renderWithProviders(<UsersPage />);
+
+    await screen.findByRole('heading', { name: 'Usuarios y accesos' });
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(requested).toBe(false);
+  });
+
   it('hides creation when users_create is missing', async () => {
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
