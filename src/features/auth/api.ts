@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -69,6 +69,20 @@ export function useLogout() {
     },
   });
 }
+
+export type Profile = components['schemas']['Profile'];
+
+export const fetchProfile = (signal?: AbortSignal) =>
+  apiFetch<Profile>('/api/auth/profile', { signal });
+
+// Los datos personales de la cuenta se piden al abrir "Mi cuenta" y nunca se guardan en el
+// dispositivo: sin conexión no se piden.
+export const useProfile = (enabled: boolean) =>
+  useQuery({
+    queryKey: queryKeys.profile(),
+    queryFn: ({ signal }) => fetchProfile(signal),
+    enabled,
+  });
 
 export const useRequestPasswordReset = () =>
   useMutation({ mutationFn: postPasswordResetRequest });

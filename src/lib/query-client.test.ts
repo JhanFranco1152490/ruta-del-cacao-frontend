@@ -113,6 +113,60 @@ describe('createQueryClient', () => {
     expect(client.getQueryState(queryKeys.session())?.isInvalidated).toBe(true);
   });
 
+  it.each(['query', 'mutation'])(
+    'asks for the session again when a %s gets no answer from the server',
+    async (kind) => {
+      const client = createQueryClient();
+      client.setQueryData(queryKeys.session(), buildSession());
+      server.use(
+        http.get(apiUrl('/api/producers'), () => HttpResponse.error()),
+        http.post(apiUrl('/api/producers'), () => HttpResponse.error()),
+      );
+
+      const request =
+        kind === 'query'
+          ? client.fetchQuery({
+              queryKey: ['probe'],
+              queryFn: () => apiFetch('/api/producers'),
+              retry: false,
+            })
+          : client
+              .getMutationCache()
+              .build(client, {
+                mutationFn: () =>
+                  apiFetch('/api/producers', { method: 'POST', body: {} }),
+              })
+              .execute(undefined);
+      await request.catch(() => undefined);
+
+      expect(client.getQueryState(queryKeys.session())?.isInvalidated).toBe(
+        true,
+      );
+      client.clear();
+    },
+  );
+
+  it('does not ask again while the session already comes from the device copy', async () => {
+    const client = createQueryClient();
+    client.setQueryData(queryKeys.session(), {
+      ...buildSession(),
+      fromDevice: true,
+    });
+    server.use(http.get(apiUrl('/api/producers'), () => HttpResponse.error()));
+
+    await client
+      .fetchQuery({
+        queryKey: ['probe'],
+        queryFn: () => apiFetch('/api/producers'),
+        retry: false,
+      })
+      .catch(() => undefined);
+
+    expect(client.getQueryState(queryKeys.session())?.isInvalidated).toBe(
+      false,
+    );
+  });
+
   it('does not touch the session for other errors', async () => {
     const client = createQueryClient();
     client.setQueryData(queryKeys.session(), buildSession());

@@ -1,5 +1,5 @@
 'use client';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -19,10 +19,8 @@ import { ProducerFilter } from '@/components/producer-filter';
 
 export function AccountWorkspace({
   user,
-  accessCard,
 }: {
   user: components['schemas']['SessionUser'];
-  accessCard?: ReactNode;
 }) {
   const association = !user.producer_id;
   const filters = useAccountFilters(association);
@@ -33,13 +31,6 @@ export function AccountWorkspace({
   const selectedProducer = useProducerSummary(
     canPickProducer ? filters.producer : undefined,
   );
-  // Con un productor elegido, crear solo tiene sentido si ese productor autorizó el acceso: el
-  // backend rechazaría la cuenta de empleado.
-  const canCreateHere =
-    !association ||
-    !filters.producer ||
-    !canPickProducer ||
-    selectedProducer.data?.association_access === true;
   const panel = useAccountPanel();
   const [receipt, setReceipt] = useState<{ id: string; sent: boolean }>();
   function onCreated(account: AccountCreated) {
@@ -53,22 +44,18 @@ export function AccountWorkspace({
         title="Usuarios y accesos"
         description="Consulta las cuentas y asigna los roles de tu equipo."
         actions={
-          hasPermission(user, PERMISSIONS.USERS_CREATE) && canCreateHere ? (
+          hasPermission(user, PERMISSIONS.USERS_CREATE) ? (
             <Button
               size="office"
               onClick={() => {
                 void panel.open('nueva');
               }}
             >
-              {association && !filters.producer
-                ? 'Crear cuenta de administrador'
-                : 'Crear cuenta de empleado'}
+              {association ? 'Crear cuenta' : 'Crear cuenta de empleado'}
             </Button>
           ) : undefined
         }
       />
-      {hasPermission(user, PERMISSIONS.ASSOCIATION_ACCESS_MANAGE) &&
-        user.producer_id && <div className="mt-8">{accessCard}</div>}
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
         <AccountFilters
           filters={filters}
@@ -90,17 +77,6 @@ export function AccountWorkspace({
             )
           }
         />
-        {canPickProducer && !filters.producer && (
-          <p className="text-sm text-muted-foreground">
-            Elige un productor para crear sus empleados.
-          </p>
-        )}
-        {!canPickProducer && association && !filters.producer && (
-          <p className="text-sm text-muted-foreground">
-            Para crear empleados, entra desde el expediente de un productor que
-            haya autorizado el acceso de la asociación.
-          </p>
-        )}
         <AccountList
           filters={filters}
           open={panel.open}

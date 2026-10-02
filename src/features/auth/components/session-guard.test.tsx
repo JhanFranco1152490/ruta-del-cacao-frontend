@@ -39,7 +39,9 @@ describe('SessionGuard', () => {
     );
     renderWithProviders(<SessionGuard>contenido protegido</SessionGuard>);
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+    );
     expect(screen.queryByText('contenido protegido')).not.toBeInTheDocument();
   });
 
@@ -50,7 +52,9 @@ describe('SessionGuard', () => {
     );
     renderWithProviders(<SessionGuard>contenido protegido</SessionGuard>);
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+    );
     expect(screen.queryByText('contenido protegido')).not.toBeInTheDocument();
   });
 
@@ -102,7 +106,9 @@ describe('SessionGuard', () => {
     );
     await queryClient.invalidateQueries({ queryKey: ['session'] });
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+    );
   });
 
   it.each([

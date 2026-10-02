@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { FormMessage } from '@/components/form-message';
 import { SubmitButton } from '@/components/submit-button';
 import { TextField } from '@/components/text-field';
+import { SIGN_IN_PATH } from '@/config/routes';
 import { getErrorMessage } from '@/lib/api/errors';
 
 import { useRequestPasswordReset } from '../api';
@@ -59,7 +60,7 @@ export function ResetRequestForm() {
       />
       <SubmitButton pending={request.isPending}>Enviar</SubmitButton>
       <Link
-        href="/"
+        href={SIGN_IN_PATH}
         className="block text-center text-sm font-bold text-cobre underline-offset-4 hover:underline"
       >
         Volver al inicio de sesión

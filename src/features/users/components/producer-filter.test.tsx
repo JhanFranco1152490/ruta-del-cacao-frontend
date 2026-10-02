@@ -78,9 +78,7 @@ describe('producer filter of the association', () => {
     renderWithProviders(<AccountListScreen />, { onUrlUpdate });
 
     expect(
-      await screen.findByRole('button', {
-        name: 'Crear cuenta de administrador',
-      }),
+      await screen.findByRole('button', { name: 'Crear cuenta' }),
     ).toBeVisible();
     const combobox = screen.getByLabelText('Productor');
     await userEvent.click(combobox);
@@ -93,7 +91,7 @@ describe('producer filter of the association', () => {
       producerId,
     );
     expect(
-      await screen.findByRole('button', { name: 'Crear cuenta de empleado' }),
+      await screen.findByRole('button', { name: 'Crear cuenta' }),
     ).toBeVisible();
     expect(screen.queryByText(producerId)).not.toBeInTheDocument();
   });
@@ -116,7 +114,7 @@ describe('producer filter of the association', () => {
     ).toBeVisible();
   });
 
-  it('warns and offers no creation when the producer has not allowed access', async () => {
+  it('warns when the producer has not allowed access, and still offers to create other accounts', async () => {
     mockProducer(false);
     renderWithProviders(<AccountListScreen />, {
       searchParams: `?productor=${producerId}`,
@@ -124,9 +122,8 @@ describe('producer filter of the association', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Este productor no ha autorizado el acceso de la asociación',
     );
-    expect(
-      screen.queryByRole('button', { name: /Crear cuenta/ }),
-    ).not.toBeInTheDocument();
+    // El bloqueo de cuentas para ese productor está en el paso del tipo de cuenta.
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeVisible();
   });
 
   it('goes back to every producer when the filter is removed', async () => {
@@ -134,12 +131,10 @@ describe('producer filter of the association', () => {
     renderWithProviders(<AccountListScreen />, {
       searchParams: `?productor=${producerId}`,
     });
-    await screen.findByRole('button', { name: 'Crear cuenta de empleado' });
+    await screen.findByRole('button', { name: 'Crear cuenta' });
     await userEvent.click(screen.getByRole('button', { name: 'Borrar' }));
     expect(
-      await screen.findByRole('button', {
-        name: 'Crear cuenta de administrador',
-      }),
+      await screen.findByRole('button', { name: 'Crear cuenta' }),
     ).toBeVisible();
   });
 

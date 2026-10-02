@@ -15,6 +15,8 @@ export const queryKeys = {
     detail: (id: string) => ['roles', 'detail', id] as const,
   },
   session: () => ['session'] as const,
+  // Aparte de la sesión: la sesión se guarda en el dispositivo y el perfil no.
+  profile: () => ['profile'] as const,
   municipalities: () => ['municipalities'] as const,
   producers: {
     all: () => ['producers'] as const,

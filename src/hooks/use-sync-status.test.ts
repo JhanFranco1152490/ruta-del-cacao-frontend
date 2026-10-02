@@ -1,10 +1,24 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
+import { buildSession } from '@/test/factories';
+import { createTestQueryClient } from '@/test/render';
 
 import { useSyncStatus } from './use-sync-status';
+
+// La conexión depende también de la sesión: va ya cargada para no pedirla al servidor.
+function withSession(session: object = buildSession()) {
+  const client = createTestQueryClient();
+  client.setQueryData(queryKeys.session(), session);
+  return function SessionLoaded({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client }, children);
+  };
+}
 
 function randomUserId() {
   return `test-${Math.random().toString(36).slice(2)}`;
@@ -15,12 +29,25 @@ afterEach(() => {
 });
 
 describe('useSyncStatus', () => {
+  it('reports no connection when the server did not answer, even with a network', async () => {
+    const userId = randomUserId();
+    await recordLogin(userId);
+    const { result } = renderHook(() => useSyncStatus(userId), {
+      wrapper: withSession({ ...buildSession(), fromDevice: true }),
+    });
+
+    expect(navigator.onLine).toBe(true);
+    expect(result.current.isOnline).toBe(false);
+  });
+
   it('counts pending and error items reactively', async () => {
     const userId = randomUserId();
     await recordLogin(userId);
     const db = getOfflineDb(userId);
 
-    const { result } = renderHook(() => useSyncStatus(userId));
+    const { result } = renderHook(() => useSyncStatus(userId), {
+      wrapper: withSession(),
+    });
     await waitFor(() => expect(result.current.pendingCount).toBe(0));
 
     await db.queue.add({
@@ -48,7 +75,9 @@ describe('useSyncStatus', () => {
     const userId = randomUserId();
     await recordLogin(userId);
 
-    const { result } = renderHook(() => useSyncStatus(userId));
+    const { result } = renderHook(() => useSyncStatus(userId), {
+      wrapper: withSession(),
+    });
 
     await waitFor(() =>
       expect(result.current.isWithinOfflineWindow).toBe(true),
@@ -60,7 +89,9 @@ describe('useSyncStatus', () => {
     const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
     await recordLogin(userId, eightDaysAgo);
 
-    const { result } = renderHook(() => useSyncStatus(userId));
+    const { result } = renderHook(() => useSyncStatus(userId), {
+      wrapper: withSession(),
+    });
 
     await waitFor(() =>
       expect(result.current.isWithinOfflineWindow).toBe(false),
@@ -71,7 +102,9 @@ describe('useSyncStatus', () => {
     const userId = randomUserId();
     await recordLogin(userId);
 
-    const { result } = renderHook(() => useSyncStatus(userId));
+    const { result } = renderHook(() => useSyncStatus(userId), {
+      wrapper: withSession(),
+    });
     await waitFor(() => expect(result.current.isOnline).toBe(true));
 
     Object.defineProperty(navigator, 'onLine', {
@@ -90,7 +123,9 @@ describe('useSyncStatus', () => {
   });
 
   it('returns the default status without a signed-in user', () => {
-    const { result } = renderHook(() => useSyncStatus(undefined));
+    const { result } = renderHook(() => useSyncStatus(undefined), {
+      wrapper: withSession(),
+    });
 
     expect(result.current).toEqual({
       isOnline: true,
@@ -116,7 +151,7 @@ describe('useSyncStatus', () => {
 
     const { result, rerender } = renderHook(
       ({ userId }: { userId: string }) => useSyncStatus(userId),
-      { initialProps: { userId: userA } },
+      { initialProps: { userId: userA }, wrapper: withSession() },
     );
     await waitFor(() => expect(result.current.pendingCount).toBe(1));
 
@@ -144,7 +179,9 @@ describe('useSyncStatus', () => {
       updatedAt: Date.now(),
     });
 
-    const { result } = renderHook(() => useSyncStatus(userId));
+    const { result } = renderHook(() => useSyncStatus(userId), {
+      wrapper: withSession(),
+    });
     // El conteo prueba que la consulta a la base ya respondió: el `true` inicial es solo el valor
     // por defecto.
     await waitFor(() => expect(result.current.pendingCount).toBe(1));
