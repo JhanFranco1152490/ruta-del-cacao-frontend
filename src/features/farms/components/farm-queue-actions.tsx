@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 
 import type { FarmListItem } from '../farm-list-item';
-import { FarmDiscardDialog } from './farm-discard-dialog';
 import { farmEditPath } from '../farm-paths';
+import { FarmDiscardDialog } from './farm-discard-dialog';
 
 // Acciones sobre una finca que sigue en el dispositivo: corregirla mientras está pendiente o
 // con error, y descartarla solo cuando falló (una pendiente todavía puede llegar bien).

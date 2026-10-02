@@ -8,8 +8,8 @@ import { getErrorMessage, isApiError } from '@/lib/api/errors';
 
 import { useChangeFarmStatus } from '../api';
 import type { FarmListItem } from '../farm-list-item';
-import { FarmStatusDialog } from './farm-status-dialog';
 import { farmEditPath } from '../farm-paths';
+import { FarmStatusDialog } from './farm-status-dialog';
 
 function statusErrorMessage(error: unknown) {
   if (isApiError(error) && error.code === 'stale_version') {

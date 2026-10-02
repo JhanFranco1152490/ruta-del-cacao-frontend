@@ -7,11 +7,11 @@ import { useEffect, useRef } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 
+import { farmEditPath } from '../farm-paths';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { type QueuedFarmState, useQueuedFarmState } from '../use-local-farms';
 import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
 import { FarmStatusBadge } from './farm-status-badge';
-import { farmEditPath } from '../farm-paths';
 
 function describe(state: QueuedFarmState, isOnline: boolean) {
   switch (state.status) {
