@@ -16,7 +16,7 @@ import type {
 import { MapSkeleton } from './map-states';
 import { useMapProvider } from './use-map-provider';
 
-const FRAME_HEIGHT = 'h-80 lg:h-[34rem]';
+export const MUNICIPALITY_MAP_HEIGHT = 'h-80 lg:h-[28rem]';
 
 // El departamento por municipios y, al elegir uno, ese municipio; o el mapa libre. Es un apoyo
 // visual: la lista que lo acompaña es la forma accesible de recorrer las mismas fincas.
@@ -46,7 +46,7 @@ export function MunicipalityMapPanel({
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
   const [baseLayerMissing, setBaseLayerMissing] = useState(false);
 
-  if (map.isLoading) return <MapSkeleton className={FRAME_HEIGHT} />;
+  if (map.isLoading) return <MapSkeleton className={MUNICIPALITY_MAP_HEIGHT} />;
 
   if (!map.Provider) {
     return (
@@ -94,7 +94,7 @@ export function MunicipalityMapPanel({
       <div
         className={cn(
           'isolate overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
-          FRAME_HEIGHT,
+          MUNICIPALITY_MAP_HEIGHT,
         )}
         data-slot="map-frame"
       >

@@ -112,7 +112,10 @@ export function LeafletMunicipalityMap({
   onBaseLayerUnavailable,
   onError,
 }: MunicipalityMapProviderProps) {
-  const { containerRef, map } = useLeafletMap({ zoomControl: false });
+  const { containerRef, map } = useLeafletMap({
+    zoomControl: false,
+    zoomSnap: 0.25,
+  });
   const outlines = useOutlines(onError);
   const [zoom] = useState(() => L.control.zoom());
   const latest = useLatest({
@@ -215,5 +218,13 @@ export function LeafletMunicipalityMap({
     };
   }, [map, focus, focusReady, latest]);
 
-  return <div className="h-full w-full" ref={containerRef} />;
+  // Sin mapa base (nivel del departamento) se ve el fondo: el tono claro del mapa, no el gris de
+  // la librería.
+  return (
+    <div
+      className="h-full w-full"
+      ref={containerRef}
+      style={{ background: 'var(--map-mask)' }}
+    />
+  );
 }

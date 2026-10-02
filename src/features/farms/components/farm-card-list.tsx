@@ -22,11 +22,7 @@ export function FarmCardList({
   highlightedId?: string;
 }) {
   return (
-    // Una columna en escritorio ancho: ahí la lista comparte el ancho con el mapa.
-    <ul
-      className="grid gap-4 md:grid-cols-2 lg:grid-cols-1"
-      aria-label="Fincas"
-    >
+    <ul className="grid gap-4 md:grid-cols-2" aria-label="Fincas">
       {farms.map((farm) => (
         <li key={farm.id}>
           <article

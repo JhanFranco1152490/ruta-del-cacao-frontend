@@ -61,7 +61,9 @@ export function popupContent(label: string, detail?: string) {
 
 // Crea el mapa sobre su contenedor y lo destruye al desmontar. El mapa base va aparte
 // (`useBaseLayer`): así un mapa puede cambiarlo, o no tenerlo, sin volver a crearse.
-export function useLeafletMap({ zoomControl = true } = {}) {
+// `zoomSnap` menor que 1 deja encuadrar con zoom fraccionario: una figura alta y angosta (el
+// departamento) llena el recuadro en vez de quedar pequeña al redondear hacia abajo.
+export function useLeafletMap({ zoomControl = true, zoomSnap = 1 } = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<L.Map | null>(null);
 
@@ -72,13 +74,14 @@ export function useLeafletMap({ zoomControl = true } = {}) {
       center: toLatLng(OPERATING_AREA_VIEW.center),
       zoom: OPERATING_AREA_VIEW.zoom,
       zoomControl,
+      zoomSnap,
     });
     setMap(instance);
     return () => {
       instance.remove();
       setMap(null);
     };
-  }, [zoomControl]);
+  }, [zoomControl, zoomSnap]);
 
   return { containerRef, map };
 }

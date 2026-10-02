@@ -2,7 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
@@ -47,6 +47,7 @@ export function FarmListScreen() {
   // Estado de la interfaz, no del servidor: qué finca enfocar en el mapa y qué tarjeta resaltar.
   const [focus, setFocus] = useState<{ pointId: string }>();
   const [highlightedId, setHighlightedId] = useState<string>();
+  const mapRef = useRef<HTMLDivElement>(null);
   const isAssociation = !user?.producer_id;
   const mapMode = useFarmMapMode(isAssociation);
   // La asociación mirando a todos los productores necesita saber de quién es cada finca.
@@ -114,11 +115,18 @@ export function FarmListScreen() {
       <div className="mt-6">
         <OfflineBanner status={sync.status} />
       </div>
-      <div className="mt-8">
+      <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
         <FarmFiltersBar filters={filters} />
-      </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:items-start">
-        <div className="lg:sticky lg:top-6">
+        {local.isError && (
+          <ErrorState message="No fue posible leer las fincas guardadas en este dispositivo." />
+        )}
+        {list.isLoadingError && (
+          <ErrorState
+            message="No fue posible cargar tus fincas del servidor. Las guardadas en este dispositivo sí se muestran."
+            onRetry={() => void list.refetch()}
+          />
+        )}
+        <div className="scroll-mt-6" ref={mapRef}>
           {!isLoading && (
             <FarmsMap
               focus={focus}
@@ -146,59 +154,53 @@ export function FarmListScreen() {
             />
           )}
         </div>
-        <section className="space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
-          {local.isError && (
-            <ErrorState message="No fue posible leer las fincas guardadas en este dispositivo." />
-          )}
-          {list.isLoadingError && (
-            <ErrorState
-              message="No fue posible cargar tus fincas del servidor. Las guardadas en este dispositivo sí se muestran."
-              onRetry={() => void list.refetch()}
-            />
-          )}
-          {serverUnreachable && (
-            <p className="font-bold text-muted-foreground" role="status">
-              Sin conexión: se muestran solo las fincas guardadas en este
-              dispositivo. Las demás aparecerán al recuperar la conexión.
-            </p>
-          )}
-          {isLoading ? (
-            <div
-              aria-label="Cargando fincas"
-              className="grid gap-4 md:grid-cols-2"
-              role="status"
-            >
-              <Skeleton className="h-40" />
-              <Skeleton className="h-40" />
-            </div>
-          ) : farms.length ? (
-            <FarmCardList
-              farms={farms}
-              highlightedId={highlightedId}
-              municipalityName={municipalityName}
-              onShowOnMap={(farm) => {
-                // Por municipios hay que entrar al suyo; el mapa libre ya la tiene a la vista.
-                if (mapMode.mode === 'municipalities') {
-                  void filters.setMunicipality(farm.municipalityCode);
-                }
-                setFocus({ pointId: farm.id });
-              }}
-              renderActions={renderActions}
-            />
-          ) : (
-            !hasError && !serverUnreachable && emptyState
-          )}
-          {list.data && (
-            <Pagination
-              page={filters.page}
-              pageSize={PAGE_SIZE}
-              total={list.data.count}
-              onPageChange={filters.setPage}
-              label="fincas"
-            />
-          )}
-        </section>
-      </div>
+        {serverUnreachable && (
+          <p className="font-bold text-muted-foreground" role="status">
+            Sin conexión: se muestran solo las fincas guardadas en este
+            dispositivo. Las demás aparecerán al recuperar la conexión.
+          </p>
+        )}
+        {isLoading ? (
+          <div
+            aria-label="Cargando fincas"
+            className="grid gap-4 md:grid-cols-2"
+            role="status"
+          >
+            <Skeleton className="h-40" />
+            <Skeleton className="h-40" />
+          </div>
+        ) : farms.length ? (
+          <FarmCardList
+            farms={farms}
+            highlightedId={highlightedId}
+            municipalityName={municipalityName}
+            onShowOnMap={(farm) => {
+              // Por municipios hay que entrar al suyo; el mapa libre ya la tiene a la vista.
+              if (mapMode.mode === 'municipalities') {
+                void filters.setMunicipality(farm.municipalityCode);
+              }
+              setFocus({ pointId: farm.id });
+              // La tarjeta está debajo del mapa: se sube hasta él para ver la finca.
+              mapRef.current?.scrollIntoView({
+                block: 'start',
+                behavior: 'smooth',
+              });
+            }}
+            renderActions={renderActions}
+          />
+        ) : (
+          !hasError && !serverUnreachable && emptyState
+        )}
+        {list.data && (
+          <Pagination
+            page={filters.page}
+            pageSize={PAGE_SIZE}
+            total={list.data.count}
+            onPageChange={filters.setPage}
+            label="fincas"
+          />
+        )}
+      </section>
     </div>
   );
 }

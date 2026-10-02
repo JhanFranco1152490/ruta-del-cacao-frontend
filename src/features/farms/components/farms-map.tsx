@@ -9,7 +9,10 @@ import type {
   MunicipalityMapView,
 } from '@/components/map/map-provider';
 import { MapSkeleton } from '@/components/map/map-states';
-import { MunicipalityMapPanel } from '@/components/map/municipality-map-panel';
+import {
+  MUNICIPALITY_MAP_HEIGHT,
+  MunicipalityMapPanel,
+} from '@/components/map/municipality-map-panel';
 import { SegmentedControl } from '@/components/segmented-control';
 import { loadMunicipalityMapProvider as appMunicipalityMap } from '@/config/map';
 import { formatDateTime } from '@/lib/format/dates';
@@ -111,7 +114,7 @@ export function FarmsMap({
             onRetry={() => void main.refetch()}
           />
         ) : (
-          <MapSkeleton className="h-80 lg:h-[34rem]" />
+          <MapSkeleton className={MUNICIPALITY_MAP_HEIGHT} />
         )}
       </div>
     );
