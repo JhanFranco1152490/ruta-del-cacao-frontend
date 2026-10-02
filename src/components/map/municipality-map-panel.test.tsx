@@ -22,6 +22,7 @@ function renderPanel(view: MunicipalityMapView) {
   const onBack = vi.fn();
   renderWithProviders(
     <MunicipalityMapPanel
+      controls={<button type="button">Control extra</button>}
       describeMunicipality={(code, count) => `${code} · ${count}`}
       label="Mapa de fincas"
       loadProvider={loadFakeMunicipalityMap}
@@ -102,5 +103,16 @@ describe('MunicipalityMapPanel', () => {
     expect(
       screen.queryByRole('button', { name: 'Volver a municipios' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('places extra controls in the header, also without a base layer', async () => {
+    renderPanel(department);
+
+    const header = (await screen.findByText('Tibú · 3 fincas')).closest(
+      '[data-slot="map-header"]',
+    );
+    expect(header).toContainElement(
+      screen.getByRole('button', { name: 'Control extra' }),
+    );
   });
 });

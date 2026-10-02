@@ -25,6 +25,7 @@ export function MunicipalityMapPanel({
   title,
   view,
   notice,
+  controls,
   onBack,
   describeMunicipality,
   onSelectMunicipality,
@@ -35,6 +36,8 @@ export function MunicipalityMapPanel({
   title: string;
   view: MunicipalityMapView;
   notice?: ReactNode;
+  // Controles de quien usa el panel (p. ej. la vista del mapa), junto al selector del mapa base.
+  controls?: ReactNode;
   onBack: () => void;
   describeMunicipality: (code: string, count: number) => string;
   onSelectMunicipality: (code: string) => void;
@@ -64,7 +67,10 @@ export function MunicipalityMapPanel({
 
   return (
     <section aria-label={label} className="space-y-3">
-      <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
+      <div
+        className="flex min-h-11 flex-wrap items-center justify-between gap-3"
+        data-slot="map-header"
+      >
         <div className="flex items-center gap-3">
           {inMunicipality && (
             <Button
@@ -79,15 +85,18 @@ export function MunicipalityMapPanel({
           )}
           <p className="font-bold text-selva">{title}</p>
         </div>
-        {hasBaseLayer && (
-          <BaseLayerToggle
-            onChange={(next) => {
-              setBaseLayer(next);
-              setBaseLayerMissing(false);
-            }}
-            value={baseLayer}
-          />
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {controls}
+          {hasBaseLayer && (
+            <BaseLayerToggle
+              onChange={(next) => {
+                setBaseLayer(next);
+                setBaseLayerMissing(false);
+              }}
+              value={baseLayer}
+            />
+          )}
+        </div>
       </div>
       {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
           quedaría por encima de los diálogos y del menú móvil (z-50). */}

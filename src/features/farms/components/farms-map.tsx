@@ -143,42 +143,40 @@ export function FarmsMap({
     : 'Norte de Santander';
 
   return (
-    <div className="space-y-3">
-      {switcher}
-      <MunicipalityMapPanel
-        describeMunicipality={(code, count) =>
-          `${municipalityName(code)} · ${farmsLabel(count)}`
-        }
-        label="Mapa de fincas"
-        loadProvider={loadProvider}
-        notice={
-          <>
-            <SavedNotice
-              savedAt={
-                view.level === 'department'
-                  ? counts.data?.savedAt
-                  : points.data?.savedAt
-              }
-            />
-            {view.level === 'municipality' && points.isLoadingError && (
-              <p
-                className="text-sm font-bold text-muted-foreground"
-                role="status"
-              >
-                Las fincas de este municipio se verán al recuperar la conexión.
-              </p>
-            )}
-          </>
-        }
-        onBack={() => {
-          if (municipality) onMunicipalityChange(null);
-          else setShortcutDismissed(true);
-        }}
-        onSelectMunicipality={onMunicipalityChange}
-        onSelectPoint={onSelectFarm}
-        title={`${place} · ${farmsLabel(total)}`}
-        view={view}
-      />
-    </div>
+    <MunicipalityMapPanel
+      describeMunicipality={(code, count) =>
+        `${municipalityName(code)} · ${farmsLabel(count)}`
+      }
+      controls={switcher}
+      label="Mapa de fincas"
+      loadProvider={loadProvider}
+      notice={
+        <>
+          <SavedNotice
+            savedAt={
+              view.level === 'department'
+                ? counts.data?.savedAt
+                : points.data?.savedAt
+            }
+          />
+          {view.level === 'municipality' && points.isLoadingError && (
+            <p
+              className="text-sm font-bold text-muted-foreground"
+              role="status"
+            >
+              Las fincas de este municipio se verán al recuperar la conexión.
+            </p>
+          )}
+        </>
+      }
+      onBack={() => {
+        if (municipality) onMunicipalityChange(null);
+        else setShortcutDismissed(true);
+      }}
+      onSelectMunicipality={onMunicipalityChange}
+      onSelectPoint={onSelectFarm}
+      title={`${place} · ${farmsLabel(total)}`}
+      view={view}
+    />
   );
 }
