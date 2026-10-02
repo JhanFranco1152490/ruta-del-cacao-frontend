@@ -71,10 +71,10 @@ y Prettier; Husky + lint-staged corrigen y formatean lo que se va a commitear.
 ```
 src/
   app/                 rutas y layouts, delgados: solo montan una pantalla de features/
-    (auth)/            sin sesión: / (inicio de sesión), /recuperar-contrasena,
-                       /restablecer-contrasena
-    (app)/             con sesión (lo garantiza SessionGuard en su layout): /panel (puerta
-                       de entrada: lleva a la primera sección permitida), /productores,
+    (auth)/            sin sesión: /iniciar-sesion, /recuperar-contrasena,
+                       /restablecer-contrasena, /activar-cuenta
+    (app)/             con sesión (lo garantiza SessionGuard en su layout): / (puerta de
+                       entrada: lleva a la primera sección permitida), /productores,
                        /fincas, /usuarios, /roles, /mi-productor y sus pantallas hijas. El
                        permiso y la conexión de cada sección se comprueban en el shell a
                        partir de config/navigation.ts: una sección nueva solo se suma ahí
