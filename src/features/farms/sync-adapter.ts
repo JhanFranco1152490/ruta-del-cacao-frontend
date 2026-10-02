@@ -9,6 +9,10 @@ import {
   type FarmUpdatePayload,
 } from './farm-queue';
 
+export const FARM_DELETED_CODE = 'farm_deleted';
+export const FARM_DELETED_MESSAGE =
+  'Esta finca fue eliminada. Descarta esta edición.';
+
 // Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se
 // renueva (401), el límite de solicitudes pasa (429) o el servidor se recupera (5xx).
 function isRetryable(status: number) {
@@ -53,6 +57,11 @@ export const farmSyncAdapter: SyncAdapter = {
   // reintentando: va a la bandeja con el mensaje del servidor para que la persona lo revise.
   parseConflict(error) {
     if (!isApiError(error) || isRetryable(error.status)) return null;
+    // Solo una edición puede encontrar su finca inexistente (un alta nunca responde 404): la
+    // eliminaron mientras la edición esperaba en el dispositivo.
+    if (error.status === 404) {
+      return { code: FARM_DELETED_CODE, message: FARM_DELETED_MESSAGE };
+    }
     return { code: error.code, message: error.message };
   },
 };

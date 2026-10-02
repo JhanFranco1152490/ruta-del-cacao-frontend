@@ -18,6 +18,7 @@ export type FarmListItem = {
   // Solo las del servidor: con ella se activa o desactiva sin pisar un cambio ajeno.
   version?: number;
   errorMessage?: string;
+  errorCode?: string;
   // Solo las de la cola: un alta todavía no existe en el servidor; una edición sí.
   queuedAs?: QueueOperation;
 };
@@ -35,6 +36,7 @@ export function queuedFarmToListItem(item: QueueItem): FarmListItem {
     location: { latitude: payload.latitude, longitude: payload.longitude },
     status: item.status === 'error' ? 'error' : 'pending',
     errorMessage: item.errorMessage,
+    errorCode: item.errorCode,
     queuedAs: item.operation,
   };
 }

@@ -13,7 +13,7 @@ import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
 import { enqueueFarmCreate } from './farm-queue';
-import { farmSyncAdapter } from './sync-adapter';
+import { FARM_DELETED_CODE, farmSyncAdapter } from './sync-adapter';
 
 const fields = {
   name: 'La Esperanza',
@@ -89,7 +89,7 @@ describe('farmSyncAdapter.parseConflict', () => {
     [422, 'municipality_department_mismatch'],
     [400, 'validation_error'],
     [403, 'permission_denied'],
-    [404, 'not_found'],
+    [422, 'location_outside_operating_area'],
   ])(
     'sends %i %s to the error tray with the server message',
     (status, code) => {
@@ -99,6 +99,14 @@ describe('farmSyncAdapter.parseConflict', () => {
       });
     },
   );
+
+  // Solo una edición puede encontrar su finca inexistente: la eliminaron mientras esperaba.
+  it('explains that the farm was deleted instead of the generic not found', () => {
+    expect(farmSyncAdapter.parseConflict(apiError(404, 'not_found'))).toEqual({
+      code: FARM_DELETED_CODE,
+      message: 'Esta finca fue eliminada. Descarta esta edición.',
+    });
+  });
 
   it.each([
     [401, 'not_authenticated'],
