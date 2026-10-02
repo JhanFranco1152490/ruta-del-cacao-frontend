@@ -1,8 +1,8 @@
 # Ruta del Cacao — Frontend
 
 Aplicación Next.js (App Router) del sistema de trazabilidad de la producción de cacao. Se
-conecta al backend Django por HTTP: inicio y recuperación de sesión, panel y gestión de
-productores. La estructura del código, la capa de API y las reglas de trabajo están en
+conecta al backend Django por HTTP: inicio y recuperación de sesión, gestión de productores,
+fincas, usuarios y roles. La estructura del código, la capa de API y las reglas de trabajo están en
 `AGENTS.md`.
 
 ## Desarrollo local
@@ -87,7 +87,7 @@ Las pantallas protegidas consultan `/api/auth/me`. Ante un 401 en un endpoint qu
 token de acceso, el cliente renueva la sesión una sola vez (las peticiones simultáneas
 comparten la renovación dentro de la pestaña) y repite la petición. Si la renovación
 falla, la persona vuelve al inicio de sesión. Un fallo de conexión al cerrar sesión no se
-presenta como un cierre exitoso: la persona sigue en el panel y puede reintentar.
+presenta como un cierre exitoso: la persona sigue en su pantalla y puede reintentar.
 
 La recuperación envía el correo registrado y abre
 `/restablecer-contrasena?uid=…&token=…` desde el enlace que genera Django (en desarrollo
@@ -111,7 +111,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm build
 
 Las pruebas del frontend simulan HTTP con MSW; no sustituyen la comprobación con Django
 y PostgreSQL. Para comprobar el recorrido real: iniciar sesión con documento y
-correo, recargar el panel, cerrar sesión, solicitar recuperación y utilizar el
+correo, recargar la pantalla de inicio, cerrar sesión, solicitar recuperación y utilizar el
 enlace recibido; en Productores, filtrar, paginar y recargar (los filtros viven en la
 URL), crear, editar, desactivar y reactivar. Verificar también credenciales incorrectas y
 desconexión del backend. Usar únicamente cuentas de prueba.
