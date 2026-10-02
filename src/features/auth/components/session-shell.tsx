@@ -12,28 +12,37 @@ import { useSidebarVisibility } from '@/components/layout/use-sidebar-visibility
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { recordLogin } from '@/lib/offline/session-clock';
+import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
 
-import { useLogout, useSession } from '../api';
+import { useLogout, useSession, useSessionConfirmed } from '../api';
 
 // Conecta el marco con la sesión: correo, cierre de sesión y menú según los permisos.
 export function SessionShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { data: user } = useSession();
+  const confirmed = useSessionConfirmed();
   const logout = useLogout();
   const sidebar = useSidebarVisibility();
   const items = visibleNavItems(NAV_ITEMS, user?.permissions);
 
+  // Toca el reloj de sesión y guarda la copia del dispositivo cada vez que el servidor confirma
+  // la sesión (no solo cuando se escribe la contraseña): la sesión se renueva sola en segundo
+  // plano, así que exigir un inicio de sesión explícito para seguir contando la ventana offline
+  // purgaría el trabajo de alguien que sigue activo a diario. Con la copia del dispositivo no:
+  // la copia no puede renovarse a sí misma.
+  useEffect(() => {
+    if (!user || !confirmed) return;
+    void recordLogin(user.id);
+    void saveSessionSnapshot(user);
+  }, [user, confirmed]);
+
   // Arranca el motor offline con la sesión activa: purga lo huérfano, procesa lo pendiente y
   // vuelve a intentar cuando regresa la conexión o el Service Worker avisa que corrió una
-  // sincronización en segundo plano. También toca el reloj de sesión cada vez que el
-  // servidor confirma la sesión (no solo cuando se escribe la contraseña): la sesión se
-  // renueva sola en segundo plano, así que exigir un inicio de sesión explícito para seguir
-  // contando la ventana offline purgaría el trabajo de alguien que sigue activo a diario.
+  // sincronización en segundo plano.
   useEffect(() => {
     const userId = user?.id;
     if (!userId) return;
 
-    void recordLogin(userId);
     void runOfflineBootstrap(userId);
 
     const onOnline = () => void runOfflineBootstrap(userId);

@@ -8,6 +8,7 @@ import { getErrorMessage, isApiError } from '@/lib/api/errors';
 
 import { useChangeFarmStatus } from '../api';
 import type { FarmListItem } from '../farm-list-item';
+import { farmEditPath } from '../farm-paths';
 import { FarmStatusDialog } from './farm-status-dialog';
 
 function statusErrorMessage(error: unknown) {
@@ -36,7 +37,7 @@ export function FarmServerActions({ farm }: { farm: FarmListItem }) {
       <Link
         aria-label={`Editar ${farm.name}`}
         className={buttonVariants({ variant: 'outline', className: 'h-11' })}
-        href={`/fincas/${farm.id}/editar`}
+        href={farmEditPath(farm.id)}
       >
         <Pencil aria-hidden="true" className="size-4" /> Editar
       </Link>

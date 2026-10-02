@@ -7,6 +7,8 @@ import { getOfflineDb } from '@/lib/offline/db';
 import { isWithinOfflineWindow } from '@/lib/offline/session-clock';
 import type { SyncStatus } from '@/types/sync';
 
+import { useIsOnline } from './use-is-online';
+
 const DEFAULT_STATUS: SyncStatus = {
   isOnline: true,
   pendingCount: 0,
@@ -24,6 +26,7 @@ export function useSyncStatus(userId: string | undefined): SyncStatus {
   // conteo de la persona anterior no debe alcanzar a pintarse ni un instante para la nueva.
   const [trackedUserId, setTrackedUserId] = useState(userId);
   const [status, setStatus] = useState<SyncStatus>(DEFAULT_STATUS);
+  const isOnline = useIsOnline();
   if (userId !== trackedUserId) {
     setTrackedUserId(userId);
     setStatus(DEFAULT_STATUS);
@@ -31,12 +34,6 @@ export function useSyncStatus(userId: string | undefined): SyncStatus {
 
   useEffect(() => {
     if (!userId) return;
-
-    const updateOnline = () =>
-      setStatus((current) => ({ ...current, isOnline: navigator.onLine }));
-    updateOnline();
-    window.addEventListener('online', updateOnline);
-    window.addEventListener('offline', updateOnline);
 
     const db = getOfflineDb(userId);
     const subscription = liveQuery(async () => ({
@@ -57,12 +54,10 @@ export function useSyncStatus(userId: string | undefined): SyncStatus {
     }, OFFLINE_WINDOW_CHECK_MS);
 
     return () => {
-      window.removeEventListener('online', updateOnline);
-      window.removeEventListener('offline', updateOnline);
       subscription.unsubscribe();
       clearInterval(windowCheck);
     };
   }, [userId]);
 
-  return userId ? status : DEFAULT_STATUS;
+  return userId ? { ...status, isOnline } : DEFAULT_STATUS;
 }

@@ -2,7 +2,7 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { onlineManager } from '@tanstack/react-query';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -124,7 +124,7 @@ describe('FarmListScreen', () => {
     const [card] = await farmCards();
     expect(
       within(card).getByRole('link', { name: 'Corregir La Esperanza' }),
-    ).toHaveAttribute('href', '/fincas/f1/editar');
+    ).toHaveAttribute('href', '/fincas/editar?id=f1');
     expect(
       within(card).queryByRole('button', { name: 'Descartar' }),
     ).not.toBeInTheDocument();
@@ -210,7 +210,7 @@ describe('FarmListScreen', () => {
     expect(within(card).getByText('Inactiva')).toBeInTheDocument();
     expect(
       within(card).getByRole('link', { name: 'Editar El Porvenir' }),
-    ).toHaveAttribute('href', '/fincas/s1/editar');
+    ).toHaveAttribute('href', '/fincas/editar?id=s1');
     expect(
       within(card).getByRole('button', { name: 'Activar' }),
     ).toBeInTheDocument();
@@ -284,6 +284,23 @@ describe('FarmListScreen', () => {
       await screen.findByText(/No fue posible cargar tus fincas del servidor/),
     ).toBeInTheDocument();
     expect(await farmCards()).toHaveLength(1);
+  });
+
+  it('asks the server again every two minutes while visible', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const requests: URLSearchParams[] = [];
+      server.use(farmsHandler([], requests));
+      renderScreen();
+      await screen.findByText('Aún no tienes fincas registradas');
+      const before = requests.length;
+
+      await vi.advanceTimersByTimeAsync(120_000);
+
+      await waitFor(() => expect(requests.length).toBeGreaterThan(before));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('sends the search to the server', async () => {

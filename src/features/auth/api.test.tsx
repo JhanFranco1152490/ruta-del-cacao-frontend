@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -153,5 +153,26 @@ describe('auth api', () => {
     });
 
     expect(await getOfflineDb('u1').cache.toArray()).toHaveLength(0);
+  });
+
+  it('forgets the device copy of the session on logout', async () => {
+    server.use(
+      http.post(LOGOUT, () => new HttpResponse(null, { status: 204 })),
+    );
+    const client = seededClient();
+    await getOfflineDb('u1').meta.put({ key: 'session', value: '{}' });
+    window.localStorage.setItem('cacao-last-user', 'u1');
+    const { result } = renderHook(() => useLogout(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync();
+    });
+
+    await waitFor(async () =>
+      expect(await getOfflineDb('u1').meta.get('session')).toBeUndefined(),
+    );
+    expect(window.localStorage.getItem('cacao-last-user')).toBeNull();
   });
 });
