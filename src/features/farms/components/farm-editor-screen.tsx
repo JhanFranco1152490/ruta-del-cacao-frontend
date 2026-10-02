@@ -23,9 +23,21 @@ import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
 import { FarmFormFields } from './farm-form-fields';
 import { FarmStaleVersionSummary } from './farm-stale-version-summary';
 
-// Sin revalidación automática: el formulario se inicializa una sola vez con esta lectura, y
-// volver a pedir la finca (foco, reconexión) solo produciría datos que el formulario no adopta.
-const EDITOR_QUERY_OPTIONS = { staleTime: Infinity };
+// El formulario se inicializa una sola vez con la finca, así que esa lectura tiene que ser del
+// momento en que se abre: se pide siempre al montar (una copia guardada de una visita anterior
+// tendría otra versión y el envío chocaría con `stale_version` hasta recargar la página). Con la
+// pantalla abierta no se vuelve a pedir: el formulario no adoptaría la lectura nueva.
+const EDITOR_QUERY_OPTIONS = {
+  staleTime: Infinity,
+  refetchOnMount: 'always',
+} as const;
+
+// La finca leída al abrir esta pantalla, o nada mientras esa lectura no termine bien.
+function freshFarm(query: ReturnType<typeof useFarm>) {
+  return query.isFetchedAfterMount && !query.isError && !query.isRefetchError
+    ? query.data
+    : undefined;
+}
 
 const SAVE_FAILED =
   'No fue posible guardar los cambios en el dispositivo. Inténtalo nuevamente.';
@@ -47,15 +59,17 @@ export function FarmEditorScreen({ id }: { id: string }) {
 
 function ServerFarmEditor({ id }: { id: string }) {
   const farm = useFarm(id, EDITOR_QUERY_OPTIONS);
+  const fresh = freshFarm(farm);
 
-  // Sin conexión la consulta queda en pausa: se explica en vez de cargar sin fin.
-  if (farm.isPending && farm.fetchStatus === 'paused') {
+  // Sin conexión la lectura queda en pausa: se explica en vez de cargar sin fin (ni de editar
+  // sobre una copia de otra visita).
+  if (!fresh && farm.fetchStatus === 'paused') {
     return (
       <FarmUnavailable message="Necesitas conexión para editar esta finca: sus datos no están guardados en este dispositivo." />
     );
   }
-  if (farm.isPending) return <EditorSkeleton />;
-  if (farm.isError) {
+  if (!farm.isFetchedAfterMount) return <EditorSkeleton />;
+  if (!fresh) {
     return (
       <FarmUnavailable
         message={
@@ -66,7 +80,7 @@ function ServerFarmEditor({ id }: { id: string }) {
       />
     );
   }
-  return <SavedFarmEditor farm={farm.data} />;
+  return <SavedFarmEditor farm={fresh} />;
 }
 
 function SavedFarmEditor({ farm }: { farm: Farm }) {
@@ -103,10 +117,9 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
   const isStale = farm.errorCode === 'stale_version';
   // Una edición rechazada por versión obsoleta se reenvía con la versión vigente, y solo
   // después de que la persona la vea: así decide a conciencia en vez de pisar el cambio ajeno.
-  const current = useFarm(farm.id, {
-    enabled: isStale,
-    ...EDITOR_QUERY_OPTIONS,
-  });
+  const current = freshFarm(
+    useFarm(farm.id, { enabled: isStale, ...EDITOR_QUERY_OPTIONS }),
+  );
   const failed = farm.status === 'error';
 
   return (
@@ -125,11 +138,8 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
               No se pudo sincronizar
               {farm.errorMessage ? `: ${farm.errorMessage}` : '.'}
             </p>
-            {isStale && current.data ? (
-              <FarmStaleVersionSummary
-                current={current.data}
-                mine={farm.values}
-              />
+            {isStale && current ? (
+              <FarmStaleVersionSummary current={current} mine={farm.values} />
             ) : (
               <p>Corrige los datos y guarda para reenviarla.</p>
             )}
@@ -138,7 +148,7 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
       }
       blockedMessage={
         sync.blockedMessage ??
-        (isStale && !current.data
+        (isStale && !current
           ? 'Necesitas conexión para ver la versión vigente de la finca antes de reenviar tus cambios.'
           : null)
       }
@@ -149,7 +159,7 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
       }
       onSubmit={(values) =>
         resubmit.mutate(
-          { farm, values, expectedVersion: current.data?.version },
+          { farm, values, expectedVersion: current?.version },
           { onSuccess: () => router.push('/fincas') },
         )
       }

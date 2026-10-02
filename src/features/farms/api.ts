@@ -56,7 +56,11 @@ export const useFarms = (query: FarmQuery) =>
 
 export const useFarm = (
   id: string,
-  options?: { enabled?: boolean; staleTime?: number },
+  options?: {
+    enabled?: boolean;
+    staleTime?: number;
+    refetchOnMount?: boolean | 'always';
+  },
 ) =>
   useQuery({
     queryKey: queryKeys.farms.detail(id),

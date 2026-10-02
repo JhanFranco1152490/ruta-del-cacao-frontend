@@ -39,11 +39,21 @@ beforeEach(async () => {
   server.use(municipalitiesHandler());
 });
 
-function renderEditor(id = 'f1') {
+function sessionClient() {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(queryKeys.session(), buildSession({ id: userId }));
+  return queryClient;
+}
+
+// `queryClient` compartido entre aperturas = la misma pestaña, sin recargar la página.
+function renderEditor(id = 'f1', queryClient = sessionClient()) {
   return renderWithProviders(<FarmEditorScreen id={id} />, { queryClient });
 }
+
+const serverFarm = (overrides: Parameters<typeof buildFarm>[0]) =>
+  http.get(apiUrl('/api/farms/s1'), () =>
+    HttpResponse.json(buildFarm({ id: 's1', ...overrides })),
+  );
 
 async function enqueueFailedFarm() {
   await enqueueFarmCreate(userId, 'f1', farm);
@@ -207,6 +217,62 @@ describe('FarmEditorScreen', () => {
       'Detalles: en el servidor Km 4, en tu formulario (vacío).',
       'Latitud: en el servidor 7.9000000, en tu formulario 7.8234567.',
     ]);
+  });
+
+  // Bug de la revisión: un conflicto solo se corregía recargando la página. El editor reusaba
+  // la finca que había leído antes, aunque el servidor ya tuviera otra versión.
+  describe('reopened without reloading the page', () => {
+    it('edits again with the version the server has now', async () => {
+      const user = userEvent.setup();
+      const queryClient = sessionClient();
+      server.use(serverFarm({ version: 5 }));
+      const first = renderEditor('s1', queryClient);
+      await screen.findByLabelText('Nombre de la finca');
+      first.unmount();
+
+      // Mientras tanto, la edición anterior se sincronizó: la finca ya va en la versión 6.
+      server.use(serverFarm({ version: 6 }));
+      renderEditor('s1', queryClient);
+      const name = await screen.findByLabelText('Nombre de la finca');
+      await user.clear(name);
+      await user.type(name, 'Segunda edición');
+      await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
+        payload: { name: 'Segunda edición', expected_version: 6 },
+      });
+    });
+
+    it('reviews a conflict against the current server data, not an earlier read', async () => {
+      const user = userEvent.setup();
+      const queryClient = sessionClient();
+      // La finca se abrió antes en esta misma pestaña, cuando iba en la versión 2.
+      queryClient.setQueryData(
+        queryKeys.farms.detail('s1'),
+        buildFarm({ id: 's1', name: 'Lectura vieja', version: 2 }),
+      );
+      await enqueueFarmUpdate(userId, 's1', farm, 2);
+      await getOfflineDb(userId).queue.update('s1', {
+        status: 'error',
+        errorCode: 'stale_version',
+        errorMessage: 'La finca cambió en el servidor.',
+      });
+      server.use(serverFarm({ name: 'Nombre de otra persona', version: 4 }));
+      renderEditor('s1', queryClient);
+
+      await screen.findByText(/Alguien la modificó mientras tanto/);
+      expect(screen.getByText(/^Nombre:/).closest('li')).toHaveTextContent(
+        'en el servidor Nombre de otra persona',
+      );
+      await save(user);
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
+        status: 'pending',
+        payload: { expected_version: 4 },
+      });
+    });
   });
 
   describe('without connection', () => {
