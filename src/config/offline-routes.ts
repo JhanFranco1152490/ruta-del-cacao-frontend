@@ -1,8 +1,9 @@
 // Pantallas fijas que el Service Worker guarda al instalarse: abren sin conexión aunque nunca se
 // hayan visitado. Las rutas con parámetros en la ruta no van aquí: no hay una sola página que
-// guardar (por eso las de captura usan el id como parámetro de la URL).
+// guardar (por eso las de captura usan el id como parámetro de la URL). El inicio de sesión y la
+// recuperación de contraseña tampoco: sin red no sirven, y el inicio de sesión se regenera en el
+// servidor cada día, así que guardado quedaría fijo hasta el siguiente despliegue.
 export const OFFLINE_PRECACHE_ROUTES = [
-  '/',
   '/panel',
   '/fincas',
   '/fincas/nueva',
@@ -11,7 +12,6 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/productores/nuevo',
   '/usuarios',
   '/roles',
-  '/recuperar-contrasena',
   '/sin-conexion',
 ] as const;
 
