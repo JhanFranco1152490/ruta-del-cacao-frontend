@@ -22,6 +22,26 @@ describe('MapPanel', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Cargando mapa…');
   });
 
+  it('switches between the street map and the satellite view', async () => {
+    const user = userEvent.setup();
+    render(
+      <MapPanel
+        loadProvider={loadFakeMap}
+        location={LOCATION}
+        onLocationChange={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText('Capa: map')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Satélite' }));
+
+    expect(screen.getByText('Capa: satellite')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Satélite' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
   it('places the marker on the typed point and reports a tapped point with API precision', async () => {
     const user = userEvent.setup();
     const onLocationChange = vi.fn();

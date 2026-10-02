@@ -2,6 +2,8 @@ import type { ComponentType } from 'react';
 
 import type { GeoPoint } from '@/types/geo';
 
+import type { BaseLayerKind } from './base-layers';
+
 // Lo que debe cumplir cualquier mapa real para usarse dentro de MapPanel. El formulario y sus
 // pruebas solo conocen esta forma, nunca la librería de mapas.
 export type MapProviderProps = {
@@ -9,6 +11,7 @@ export type MapProviderProps = {
   // Un punto elegido con un toque/clic o arrastrando el marcador.
   onPointChange: (point: GeoPoint) => void;
   disabled: boolean;
+  baseLayer: BaseLayerKind;
   // Falla después de cargar (p. ej. el mapa base no responde sin conexión).
   onError: () => void;
 };

@@ -11,10 +11,12 @@ export function FakeMap({
   point,
   onPointChange,
   disabled,
+  baseLayer,
   onError,
 }: MapProviderProps) {
   return (
     <div>
+      <p>Capa: {baseLayer}</p>
       <p>
         Marcador:{' '}
         {point ? `${point.latitude}, ${point.longitude}` : 'sin marcador'}
