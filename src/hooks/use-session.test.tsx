@@ -1,5 +1,8 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import type { ReactNode } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { recordLogin } from '@/lib/offline/session-clock';
 import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
@@ -9,9 +12,10 @@ import {
   notAuthenticated,
 } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
+import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
 
-import { fetchSession } from './use-session';
+import { fetchSession, useSessionSource } from './use-session';
 
 const ME = apiUrl('/api/auth/me');
 const DAY = 24 * 60 * 60 * 1000;
@@ -74,5 +78,43 @@ describe('fetchSession', () => {
     );
 
     await expect(fetchSession(controller.signal)).rejects.toThrow();
+  });
+});
+
+describe('useSessionSource', () => {
+  function renderSource() {
+    const queryClient = createTestQueryClient();
+    return renderHook(() => useSessionSource(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      ),
+    });
+  }
+
+  it('says the session was confirmed by the server', async () => {
+    server.use(http.get(ME, () => HttpResponse.json(buildSession())));
+
+    const { result } = renderSource();
+
+    await waitFor(() => expect(result.current).toBe('server'));
+  });
+
+  it('asks the server again while on the device copy, and confirms it when it answers', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      await deviceAccount();
+      server.use(http.get(ME, () => HttpResponse.error()));
+      const { result } = renderSource();
+      await waitFor(() => expect(result.current).toBe('device'));
+
+      server.use(http.get(ME, () => HttpResponse.json(buildSession())));
+      await vi.advanceTimersByTimeAsync(30_000);
+
+      await waitFor(() => expect(result.current).toBe('server'));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

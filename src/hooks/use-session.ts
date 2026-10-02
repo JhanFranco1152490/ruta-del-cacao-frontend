@@ -1,4 +1,8 @@
-import { type QueryFunctionContext, useQuery } from '@tanstack/react-query';
+import {
+  type Query,
+  type QueryFunctionContext,
+  useQuery,
+} from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
@@ -27,6 +31,10 @@ export async function fetchSession(
   }
 }
 
+// Con la copia se vuelve a preguntar al servidor seguido: el navegador no avisa cuando una red sin
+// internet vuelve a tenerlo, y hasta confirmar la sesión no se renueva la ventana sin conexión.
+const DEVICE_SESSION_RECHECK_MS = 30_000;
+
 // La sesión es estado del servidor: una sola consulta que comparten la guardia y las pantallas
 // de cualquier dominio que decidan qué mostrar según los permisos. `offlineFirst`: sin red se
 // intenta igual (y cae a la copia) en vez de quedar en pausa.
@@ -35,13 +43,20 @@ const sessionQuery = {
   queryFn: ({ signal }: QueryFunctionContext) => fetchSession(signal),
   retry: false,
   staleTime: 5 * 60_000,
+  refetchInterval: (query: Query<ResolvedSession>) =>
+    query.state.data?.fromDevice ? DEVICE_SESSION_RECHECK_MS : false,
   networkMode: 'offlineFirst',
 } as const;
 
 export const useSession = () =>
   useQuery({ ...sessionQuery, select: (session) => session.user });
 
+// 'device' también cuando el navegador dice tener red: el servidor no respondió.
+export const useSessionSource = () =>
+  useQuery({
+    ...sessionQuery,
+    select: (session) => (session.fromDevice ? 'device' : 'server'),
+  }).data;
+
 // Solo una sesión que confirmó el servidor renueva la ventana sin conexión.
-export const useSessionConfirmed = () =>
-  useQuery({ ...sessionQuery, select: (session) => !session.fromDevice })
-    .data === true;
+export const useSessionConfirmed = () => useSessionSource() === 'server';
