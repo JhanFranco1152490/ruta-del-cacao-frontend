@@ -4,17 +4,25 @@ import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { clearOfflineCache } from '@/lib/offline/db';
+import { clearSessionSnapshot } from '@/lib/offline/session-snapshot';
 import { recordLogin } from '@/lib/offline/session-clock';
 
 import {
   fetchSession,
   useSession,
+  useSessionConfirmed,
   type Session,
   type SessionUser,
 } from '@/hooks/use-session';
 
 // La sesión vive en hooks/ porque la consultan varios dominios; aquí se reexporta para auth.
-export { fetchSession, useSession, type Session, type SessionUser };
+export {
+  fetchSession,
+  useSession,
+  useSessionConfirmed,
+  type Session,
+  type SessionUser,
+};
 type LoginRequest = components['schemas']['LoginRequest'];
 type PasswordResetConfirmRequest =
   components['schemas']['PasswordResetConfirmRequest'];
@@ -53,7 +61,10 @@ export function useLogout() {
     mutationFn: postLogout,
     onSuccess: () => {
       const session = queryClient.getQueryData<Session>(queryKeys.session());
-      if (session) void clearOfflineCache(session.user.id);
+      if (session) {
+        void clearOfflineCache(session.user.id);
+        void clearSessionSnapshot(session.user.id);
+      }
       queryClient.clear();
     },
   });

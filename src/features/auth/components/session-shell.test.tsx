@@ -3,12 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { recordLogin } from '@/lib/offline/session-clock';
+import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
 import { buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
-import { renderWithProviders } from '@/test/render';
+import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
 
@@ -21,6 +23,11 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/offline/bootstrap', () => ({ runOfflineBootstrap: vi.fn() }));
 vi.mock('@/lib/offline/session-clock', () => ({ recordLogin: vi.fn() }));
+vi.mock('@/lib/offline/session-snapshot', () => ({
+  saveSessionSnapshot: vi.fn(),
+  clearSessionSnapshot: vi.fn(),
+  readSessionSnapshot: vi.fn().mockResolvedValue(null),
+}));
 
 const ME = apiUrl('/api/auth/me');
 const LOGOUT = apiUrl('/api/auth/logout');
@@ -42,6 +49,31 @@ beforeEach(() => {
 });
 
 describe('SessionShell', () => {
+  it('records the session clock and saves the copy when the server confirms it', async () => {
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await waitFor(() => expect(recordLogin).toHaveBeenCalled());
+    expect(saveSessionSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'ana@example.com' }),
+    );
+  });
+
+  it('does not renew the offline window with the device copy', async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(queryKeys.session(), {
+      ...buildSession({ email: 'ana@example.com' }),
+      fromDevice: true,
+    });
+    server.use(http.get(ME, () => HttpResponse.error()));
+    renderWithProviders(<SessionShell>contenido</SessionShell>, {
+      queryClient,
+    });
+
+    await screen.findByText('ana@example.com');
+    expect(recordLogin).not.toHaveBeenCalled();
+    expect(saveSessionSnapshot).not.toHaveBeenCalled();
+  });
+
   it('shows the email of the session and the page content', async () => {
     renderWithProviders(
       <SessionShell>
