@@ -36,6 +36,7 @@ export function FarmFormFields({
   isSaving,
   error,
   blockedMessage,
+  secondaryAction,
   onSubmit,
 }: {
   defaultValues: FarmFormValues;
@@ -48,6 +49,8 @@ export function FarmFormFields({
   error?: string | null;
   // Si hay motivo, no se puede guardar: se explica junto al botón.
   blockedMessage?: string | null;
+  // Otra acción junto a guardar (p. ej. eliminar la finca en la edición).
+  secondaryAction?: ReactNode;
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
@@ -236,15 +239,20 @@ export function FarmFormFields({
               {blockedMessage}
             </p>
           )}
-          <Button
-            aria-describedby={blockedMessage ? 'farm-save-blocked' : undefined}
-            className={CAPTURE_BUTTON_CLASS}
-            disabled={isSaving || !!blockedMessage}
-            size="office"
-            type="submit"
-          >
-            {isSaving ? 'Guardando…' : submitLabel}
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              aria-describedby={
+                blockedMessage ? 'farm-save-blocked' : undefined
+              }
+              className={CAPTURE_BUTTON_CLASS}
+              disabled={isSaving || !!blockedMessage}
+              size="office"
+              type="submit"
+            >
+              {isSaving ? 'Guardando…' : submitLabel}
+            </Button>
+            {secondaryAction}
+          </div>
         </div>
       </form>
     </div>

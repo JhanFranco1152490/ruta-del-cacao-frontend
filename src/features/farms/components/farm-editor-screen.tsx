@@ -8,7 +8,9 @@ import { useRouter } from 'next/navigation';
 import { OfflineBanner } from '@/components/offline-banner';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSession } from '@/hooks/use-session';
 import { isApiError } from '@/lib/api/errors';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Farm, useFarm } from '../api';
 import { farmToFormValues, type QueuedFarm } from '../farm-queue';
@@ -20,6 +22,7 @@ import {
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
+import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
 import { FarmStaleVersionSummary } from './farm-stale-version-summary';
 
@@ -87,6 +90,10 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
   const router = useRouter();
   const update = useFarmUpdate();
   const sync = useFarmSyncStatus();
+  const { data: user } = useSession();
+  // Solo quien tiene el permiso (el productor y los empleados a quienes él lo delegue); nunca
+  // la asociación.
+  const canDelete = hasPermission(user, PERMISSIONS.FARMS_DELETE);
 
   return (
     <FarmFormFields
@@ -96,6 +103,11 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
       banner={sync.showBanner && <OfflineBanner status={sync.status} />}
       blockedMessage={sync.blockedMessage}
       submitLabel="Guardar cambios"
+      secondaryAction={
+        canDelete && (
+          <FarmDeleteDialog farm={farm} onDone={() => router.push('/fincas')} />
+        )
+      }
       isSaving={update.isPending}
       error={
         update.isError ? queueErrorMessage(update.error, SAVE_FAILED) : null

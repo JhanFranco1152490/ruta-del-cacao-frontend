@@ -1,4 +1,4 @@
-import { cleanup, screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { onlineManager } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
+import { PERMISSIONS } from '@/lib/permissions';
 import { apiError, buildFarm, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -39,9 +40,12 @@ beforeEach(async () => {
   server.use(municipalitiesHandler());
 });
 
-function sessionClient() {
+function sessionClient(permissions: string[] = []) {
   const queryClient = createTestQueryClient();
-  queryClient.setQueryData(queryKeys.session(), buildSession({ id: userId }));
+  queryClient.setQueryData(
+    queryKeys.session(),
+    buildSession({ id: userId, permissions }),
+  );
   return queryClient;
 }
 
@@ -272,6 +276,115 @@ describe('FarmEditorScreen', () => {
         status: 'pending',
         payload: { expected_version: 4 },
       });
+    });
+  });
+
+  describe('deleting a farm created by mistake', () => {
+    const canDelete = () => sessionClient([PERMISSIONS.FARMS_DELETE]);
+
+    function deleteHandler(
+      respond: () => Response = () => new HttpResponse(null, { status: 204 }),
+    ) {
+      const bodies: unknown[] = [];
+      server.use(
+        http.delete(apiUrl('/api/farms/s1'), async ({ request }) => {
+          bodies.push(await request.json());
+          return respond();
+        }),
+      );
+      return bodies;
+    }
+
+    it('is offered only to whoever can delete farms', async () => {
+      server.use(serverFarm({ version: 5 }));
+      renderEditor('s1');
+
+      await screen.findByLabelText('Nombre de la finca');
+      expect(
+        screen.queryByRole('button', { name: 'Eliminar finca' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('deletes after confirmation with the version it read, without saving the form', async () => {
+      const user = userEvent.setup();
+      server.use(serverFarm({ version: 5 }));
+      const bodies = deleteHandler();
+      renderEditor('s1', canDelete());
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      expect(
+        screen.getByRole('heading', {
+          name: '¿Eliminar la finca La Esperanza?',
+        }),
+      ).toBeInTheDocument();
+      // Abrir el diálogo no envía el formulario de edición.
+      expect(await getOfflineDb(userId).queue.count()).toBe(0);
+
+      const dialog = screen.getByRole('dialog');
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+      );
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(bodies).toEqual([{ expected_version: 5 }]);
+    });
+
+    it('offers to deactivate a farm that has records', async () => {
+      const user = userEvent.setup();
+      const patches: unknown[] = [];
+      server.use(
+        serverFarm({ version: 5 }),
+        http.patch(apiUrl('/api/farms/s1'), async ({ request }) => {
+          patches.push(await request.json());
+          return HttpResponse.json(
+            buildFarm({ id: 's1', version: 6, is_active: false }),
+          );
+        }),
+      );
+      deleteHandler(() =>
+        apiError(409, 'farm_has_records', 'La finca tiene registros.'),
+      );
+      renderEditor('s1', canDelete());
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      const dialog = screen.getByRole('dialog');
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+      );
+
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Esta finca tiene registros asociados',
+      );
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Desactivar finca' }),
+      );
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(patches).toEqual([{ is_active: false, expected_version: 5 }]);
+    });
+
+    it('asks to reopen when someone changed the farm in the meantime', async () => {
+      const user = userEvent.setup();
+      server.use(serverFarm({ version: 5 }));
+      deleteHandler(() => apiError(409, 'stale_version', 'La finca cambió.'));
+      renderEditor('s1', canDelete());
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      const dialog = screen.getByRole('dialog');
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+      );
+
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Alguien cambió esta finca mientras tanto.',
+      );
+      expect(router.push).not.toHaveBeenCalled();
     });
   });
 

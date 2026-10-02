@@ -96,3 +96,32 @@ export function useChangeFarmStatus() {
     },
   });
 }
+
+// El esquema OpenAPI no documenta el cuerpo del DELETE (la API sí lo exige): se tipa aquí hasta
+// que el backend lo declare y el tipo salga generado.
+type FarmDeleteRequest = { expected_version: number };
+
+export const deleteFarm = (id: string, expectedVersion: number) =>
+  apiFetch<void>(`/api/farms/${id}`, {
+    method: 'DELETE',
+    body: { expected_version: expectedVersion } satisfies FarmDeleteRequest,
+  });
+
+// Eliminar una finca creada por error es solo en línea: no pasa por la cola del dispositivo.
+export function useDeleteFarm() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      expectedVersion,
+    }: {
+      id: string;
+      expectedVersion: number;
+    }) => deleteFarm(id, expectedVersion),
+    onSuccess: (_, { id }) => {
+      queryClient.removeQueries({ queryKey: queryKeys.farms.detail(id) });
+      // La lista y el mapa (conteos y puntos) dejan de mostrarla.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.farms.all() });
+    },
+  });
+}
