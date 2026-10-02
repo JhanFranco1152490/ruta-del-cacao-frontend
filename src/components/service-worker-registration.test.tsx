@@ -17,7 +17,7 @@ describe('ServiceWorkerRegistration', () => {
 
     render(<ServiceWorkerRegistration />);
 
-    expect(register).toHaveBeenCalledWith('/sw.js');
+    expect(register).toHaveBeenCalledWith('/serwist/sw.js', { scope: '/' });
   });
 
   it('does nothing when the browser has no service worker support', () => {
@@ -50,5 +50,29 @@ describe('ServiceWorkerRegistration', () => {
 
     expect(() => render(<ServiceWorkerRegistration />)).not.toThrow();
     await waitFor(() => expect(register).toHaveBeenCalled());
+  });
+
+  it('handles a background sync registration that fails', async () => {
+    // Una promesa rechazada que anota si alguien se encarga del rechazo: sin manejarlo, quedaría
+    // como una promesa rechazada sin manejar.
+    let handled = false;
+    const failing = {
+      then(_onFulfilled: unknown, onRejected?: (reason: unknown) => void) {
+        if (!onRejected) return;
+        handled = true;
+        onRejected(new Error('no active service worker'));
+      },
+    };
+    const register = vi
+      .fn()
+      .mockResolvedValue({ sync: { register: () => failing } });
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { register },
+      configurable: true,
+    });
+
+    render(<ServiceWorkerRegistration />);
+
+    await waitFor(() => expect(handled).toBe(true));
   });
 });

@@ -5,6 +5,10 @@ import { queryKeys } from '@/lib/api/query-keys';
 
 const SESSION_KEY = queryKeys.session();
 
+// Cada cuánto se vuelve a pedir una lista mientras la pestaña está visible: lo que otra persona
+// cambió aparece solo. Solo en listas: en un formulario, un refresco pisaría lo que se escribe.
+export const LIST_REFETCH_INTERVAL_MS = 2 * 60_000;
+
 export function createQueryClient() {
   // Un 401 vuelve a comprobar la sesión; un permiso rechazado recarga sus permisos actuales.
   const invalidateSession = (error: unknown) => {

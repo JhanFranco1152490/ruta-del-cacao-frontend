@@ -128,19 +128,30 @@ describe('useSyncStatus', () => {
   });
 
   it('re-checks the offline window on a timer, not only when the queue changes', async () => {
+    // Antes de montar: el intervalo del hook tiene que nacer con el reloj falso para poder
+    // adelantarlo.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const userId = randomUserId();
-    const sixDaysAgo = Date.now() - 6 * 24 * 60 * 60 * 1000;
-    await recordLogin(userId, sixDaysAgo);
+    const day = 24 * 60 * 60 * 1000;
+    await recordLogin(userId, Date.now() - 6 * day);
+    await getOfflineDb(userId).queue.add({
+      id: 'w1',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+      status: 'pending',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
 
     const { result } = renderHook(() => useSyncStatus(userId));
-    await waitFor(() =>
-      expect(result.current.isWithinOfflineWindow).toBe(true),
-    );
+    // El conteo prueba que la consulta a la base ya respondió: el `true` inicial es solo el valor
+    // por defecto.
+    await waitFor(() => expect(result.current.pendingCount).toBe(1));
+    expect(result.current.isWithinOfflineWindow).toBe(true);
 
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    vi.setSystemTime(Date.now() + 8 * 24 * 60 * 60 * 1000);
+    vi.setSystemTime(Date.now() + 2 * day);
     await vi.advanceTimersByTimeAsync(60_000);
-    vi.useRealTimers();
 
     await waitFor(() =>
       expect(result.current.isWithinOfflineWindow).toBe(false),

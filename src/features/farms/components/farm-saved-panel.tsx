@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 
+import { farmEditPath } from '../farm-paths';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { type QueuedFarmState, useQueuedFarmState } from '../use-local-farms';
 import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
@@ -86,7 +87,7 @@ export function FarmSavedPanel({
                 size: 'office',
                 className: CAPTURE_BUTTON_CLASS,
               })}
-              href={`/fincas/${farmId}/editar`}
+              href={farmEditPath(farmId)}
             >
               Corregir finca
             </Link>

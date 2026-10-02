@@ -44,7 +44,9 @@ export function LoginForm() {
     });
 
   return (
+    // `post`: si la página cargara sin JavaScript, el navegador no enviaría la contraseña en la URL.
     <form
+      method="post"
       onSubmit={handleSubmit(submit, () => login.reset())}
       noValidate
       className="space-y-4"
