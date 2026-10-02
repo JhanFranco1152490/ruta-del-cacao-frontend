@@ -1,5 +1,5 @@
-import { SessionPanel } from '@/features/auth/components/session-panel';
+import { HomeRedirect } from '@/features/auth/components/home-redirect';
 
 export default function PanelPage() {
-  return <SessionPanel />;
+  return <HomeRedirect />;
 }
