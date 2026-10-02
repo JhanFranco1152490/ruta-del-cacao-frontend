@@ -44,6 +44,15 @@ describe('municipality geometry', () => {
     }
   });
 
+  it('places every label inside its municipality', () => {
+    const geometry = createMunicipalityGeometry(municipalities);
+
+    expect(geometry.outlines).toHaveLength(40);
+    for (const outline of geometry.outlines) {
+      expect(geometry.municipalityAt(outline.labelPoint)).toBe(outline.code);
+    }
+  });
+
   it('finds the municipality of known points', async () => {
     const geometry = await loadMunicipalityGeometry();
     expect(geometry.municipalityAt(CUCUTA)).toBe('54001');

@@ -1,5 +1,6 @@
 import type { GeoBounds, GeoPoint } from '@/types/geo';
 
+import { labelPointOf } from './label-point';
 import { boundsContain } from './operating-area';
 import {
   type MultiPolygonCoordinates,
@@ -23,7 +24,16 @@ export type MunicipalityCollection = {
   features: readonly MunicipalityFeature[];
 };
 
+export type MunicipalityOutline = {
+  code: string;
+  bounds: GeoBounds;
+  polygons: MultiPolygonCoordinates;
+  labelPoint: GeoPoint;
+};
+
 export type MunicipalityGeometry = {
+  // Para dibujar los municipios.
+  outlines: readonly MunicipalityOutline[];
   boundsOf: (code: string) => GeoBounds | null;
   // `null` fuera de los municipios del departamento.
   municipalityAt: (point: GeoPoint) => string | null;
@@ -57,6 +67,12 @@ export function createMunicipalityGeometry(
   const byCode = new Map(municipalities.map((entry) => [entry.code, entry]));
 
   return {
+    outlines: municipalities.map(({ code, bounds, polygons }) => ({
+      code,
+      bounds,
+      polygons,
+      labelPoint: labelPointOf(polygons),
+    })),
     boundsOf: (code) => byCode.get(code)?.bounds ?? null,
     // El rectángulo descarta casi todos los municipios antes de recorrer sus polígonos.
     municipalityAt: (point) =>
