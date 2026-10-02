@@ -8,12 +8,13 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/ui/menu';
 // El correo de la cabecera abre las opciones de la cuenta. Recibe todo por props: el layout no
 // lee la sesión.
 export function AccountMenu({
-  email,
+  label,
   onOpenAccount,
   onLogout,
   isLoggingOut,
 }: {
-  email?: string;
+  // El nombre de la cuenta, o su correo si no tiene nombre.
+  label?: string;
   onOpenAccount: () => void;
   onLogout: () => void;
   isLoggingOut: boolean;
@@ -21,13 +22,13 @@ export function AccountMenu({
   return (
     <Menu>
       <MenuTrigger
-        aria-label={email ? `Cuenta de ${email}` : 'Tu cuenta'}
+        aria-label={label ? `Cuenta de ${label}` : 'Tu cuenta'}
         render={
           <Button variant="outline" className="h-11 max-w-64 gap-2 px-3" />
         }
       >
         <UserRound aria-hidden="true" className="size-5 shrink-0" />
-        <span className="hidden truncate sm:inline">{email}</span>
+        <span className="hidden truncate sm:inline">{label}</span>
         <ChevronDown aria-hidden="true" className="size-4 shrink-0" />
       </MenuTrigger>
       <MenuContent>

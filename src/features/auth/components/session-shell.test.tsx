@@ -169,6 +169,25 @@ describe('SessionShell', () => {
     );
   });
 
+  it('shows the name of the account in the header', async () => {
+    server.use(
+      http.get(ME, () =>
+        HttpResponse.json(
+          buildSession({
+            email: 'ana@example.com',
+            first_name: 'Ana',
+            last_name: 'Rojas',
+          }),
+        ),
+      ),
+    );
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    expect(
+      await screen.findByRole('button', { name: 'Cuenta de Ana Rojas' }),
+    ).toHaveTextContent('Ana Rojas');
+  });
+
   it('opens Mi cuenta from the account menu', async () => {
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 

@@ -8,7 +8,7 @@ function renderMenu(props: Partial<Parameters<typeof AccountMenu>[0]> = {}) {
   const handlers = { onOpenAccount: vi.fn(), onLogout: vi.fn() };
   render(
     <AccountMenu
-      email="ana@example.com"
+      label="ana@example.com"
       isLoggingOut={false}
       {...handlers}
       {...props}

@@ -10,8 +10,10 @@ import {
 } from '@/components/ui/dialog';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import type { SessionUser } from '@/hooks/use-session';
+import { fullName } from '@/lib/format/person-name';
 
 import { useRequestPasswordReset } from '../api';
+import { AccountProfileDetails } from './account-profile-details';
 
 // Los datos de la cuenta con la que se entró y el cambio de contraseña. Cambiarla usa el mismo
 // enlace por correo que "¿Olvidaste tu contraseña?": no hace falta escribir la actual.
@@ -46,6 +48,12 @@ export function AccountDialog({
         </DialogHeader>
         <dl className="space-y-4">
           <div>
+            <dt className="text-sm text-muted-foreground">Nombre</dt>
+            <dd className="font-bold">
+              {fullName(user) || 'Sin nombre registrado'}
+            </dd>
+          </div>
+          <div>
             <dt className="text-sm text-muted-foreground">Correo</dt>
             <dd className="font-bold break-all">{user.email}</dd>
           </div>
@@ -69,6 +77,7 @@ export function AccountDialog({
             </dd>
           </div>
         </dl>
+        <AccountProfileDetails />
         <section className="space-y-2 border-t border-border pt-4">
           <h3 className="font-bold text-selva">Contraseña</h3>
           {reset.isSuccess ? (

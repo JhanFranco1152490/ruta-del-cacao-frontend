@@ -17,6 +17,7 @@ import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 import { SIGN_IN_PATH } from '@/config/routes';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useSyncStatus } from '@/hooks/use-sync-status';
+import { fullName } from '@/lib/format/person-name';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
@@ -90,7 +91,7 @@ export function SessionShell({
                 views={queueViews}
               />
               <AccountMenu
-                email={user?.email}
+                label={user && (fullName(user) || user.email)}
                 isLoggingOut={logout.isPending}
                 onOpenAccount={() => setAccountOpen(true)}
                 onLogout={() =>
