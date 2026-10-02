@@ -132,6 +132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["auth_profile_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/refresh": {
         parameters: {
             query?: never;
@@ -762,6 +778,25 @@ export interface components {
             /** Format: date */
             joined_on: string;
         };
+        Profile: {
+            /** Format: email */
+            readonly email: string;
+            /** Nombre */
+            readonly first_name: string;
+            /** Apellidos */
+            readonly last_name: string;
+            readonly document_type: components["schemas"]["DocumentTypeEnum"];
+            readonly identity_document: string;
+            readonly phone: string | null;
+            readonly producer: components["schemas"]["ProfileProducer"] | null;
+        };
+        ProfileProducer: {
+            /** Format: uuid */
+            id: string;
+            member_code: string;
+            first_name: string;
+            last_name: string;
+        };
         Role: {
             /** Format: uuid */
             readonly id: string;
@@ -797,6 +832,10 @@ export interface components {
             readonly id: string;
             /** Format: email */
             email: string;
+            /** Nombre */
+            first_name?: string;
+            /** Apellidos */
+            last_name?: string;
             readonly roles: components["schemas"]["AccountRole"][];
             readonly permissions: string[];
             /** Format: uuid */
@@ -1176,6 +1215,33 @@ export interface operations {
                 };
             };
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    auth_profile_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
