@@ -53,10 +53,7 @@ export function FarmListScreen() {
   // Lo que está en el dispositivo va primero (necesita atención o aún no llega) y reemplaza a su
   // copia del servidor: una edición pendiente muestra los datos nuevos, no los viejos.
   const searchedLocalFarms = (local.farms ?? []).filter((farm) =>
-    matchesSearch(
-      [farm.name, municipalityName(farm.municipalityCode), farm.details],
-      filters.query.search ?? '',
-    ),
+    matchesSearch([farm.name], filters.query.search ?? ''),
   );
   const localFarms = searchedLocalFarms.filter(
     (farm) =>
@@ -91,7 +88,12 @@ export function FarmListScreen() {
     filters.query.search || filters.municipality ? (
       <EmptyState
         title="No hay fincas que coincidan"
-        description="Prueba con otro nombre, municipio o vereda."
+        description="Prueba con otro nombre o con otro municipio."
+      />
+    ) : isAssociation ? (
+      <EmptyState
+        title="Aún no hay fincas registradas"
+        description="Las fincas que registren los productores aparecerán aquí."
       />
     ) : (
       <EmptyState
@@ -105,8 +107,12 @@ export function FarmListScreen() {
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
       <PageHeader
         eyebrow="Gestión de fincas"
-        title="Mis fincas"
-        description="Consulta tus fincas y su estado de sincronización."
+        title={isAssociation ? 'Fincas' : 'Mis fincas'}
+        description={
+          isAssociation
+            ? 'Consulta las fincas de los productores de la asociación.'
+            : 'Consulta tus fincas y su estado de sincronización.'
+        }
         actions={registerLink}
       />
       <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
@@ -116,7 +122,11 @@ export function FarmListScreen() {
         )}
         {list.isLoadingError && (
           <ErrorState
-            message="No fue posible cargar tus fincas del servidor. Las guardadas en este dispositivo sí se muestran."
+            message={
+              isAssociation
+                ? 'No fue posible cargar las fincas del servidor.'
+                : 'No fue posible cargar tus fincas del servidor. Las guardadas en este dispositivo sí se muestran.'
+            }
             onRetry={() => void list.refetch()}
           />
         )}

@@ -19,7 +19,7 @@ export function FarmFiltersBar({
       <TextField
         label="Buscar finca"
         onChange={(event) => filters.setSearchInput(event.target.value)}
-        placeholder="Nombre, municipio o vereda"
+        placeholder="Nombre de la finca"
         type="search"
         value={filters.searchInput}
         wrapperClassName="w-full max-w-md"

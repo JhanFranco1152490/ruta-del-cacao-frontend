@@ -92,6 +92,24 @@ describe('FarmListScreen', () => {
     ).not.toBeInTheDocument();
   });
 
+  // La asociación consulta las fincas de los productores: no son suyas ni le toca registrarlas.
+  it('speaks of the producers farms to the association', async () => {
+    renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW], producerId: null });
+
+    expect(
+      await screen.findByText('Aún no hay fincas registradas'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Fincas' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Consulta las fincas de los productores de la asociación.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/tus fincas/)).not.toBeInTheDocument();
+  });
+
   it('lists the farms saved on the device, sorted by name, as pending', async () => {
     await enqueueFarmCreate(userId, 'f1', { ...farm, name: 'Villa Rosa' });
     await enqueueFarmCreate(userId, 'f2', farm);
@@ -182,7 +200,7 @@ describe('FarmListScreen', () => {
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it('filters by municipality without accents and explains an empty result', async () => {
+  it('searches device farms by name only, without accents, and explains an empty result', async () => {
     const user = userEvent.setup();
     await enqueueFarmCreate(userId, 'f1', farm);
     await enqueueFarmCreate(userId, 'f2', {
@@ -191,22 +209,20 @@ describe('FarmListScreen', () => {
       municipality_id: '54518',
       details: '',
     });
-    renderScreen({ searchParams: '?buscar=cucuta' });
+    renderScreen({ searchParams: '?buscar=ESPERANZA' });
 
-    expect(
-      within(await screen.findByRole('list', { name: 'Fincas' })).getByText(
-        'Cúcuta',
-      ),
-    ).toBeInTheDocument();
     expect(await farmCards()).toHaveLength(1);
     expect(screen.getByText('La Esperanza')).toBeInTheDocument();
 
+    // El municipio tiene su propio filtro y los detalles no son criterio de búsqueda.
     const search = screen.getByLabelText('Buscar finca');
-    await user.clear(search);
-    await user.type(search, 'no existe');
-    expect(
-      await screen.findByText('No hay fincas que coincidan'),
-    ).toBeInTheDocument();
+    for (const term of ['cucuta', 'portico']) {
+      await user.clear(search);
+      await user.type(search, term);
+      expect(
+        await screen.findByText('No hay fincas que coincidan'),
+      ).toBeInTheDocument();
+    }
   });
 
   it('does not show farms saved by another person on the same device', async () => {
