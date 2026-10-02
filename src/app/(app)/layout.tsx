@@ -1,3 +1,7 @@
+'use client';
+
+// Del lado del cliente: entrega a la sesión las vistas de la bandeja, que son funciones y
+// componentes, y eso no puede cruzar desde un componente de servidor.
 import type { ReactNode } from 'react';
 
 import { QUEUE_VIEWS } from '@/config/queue-views';
