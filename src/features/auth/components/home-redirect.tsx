@@ -9,9 +9,8 @@ import { useHasConnection } from '@/hooks/use-has-connection';
 
 import { useSession } from '../api';
 
-// Puerta de entrada: lleva a la primera sección que la persona puede ver. Sigue siendo el
-// destino del logo, del inicio de sesión y de la app instalada, así que ninguna dirección
-// guardada se rompe.
+// Puerta de entrada (`/`): lleva a la primera sección que la persona puede ver. Es el destino
+// del logo, del inicio de sesión y de la app instalada.
 export function HomeRedirect() {
   const router = useRouter();
   const { data: user } = useSession();

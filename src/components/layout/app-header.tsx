@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { CacaoMark } from '@/components/brand/cacao-mark';
+import { HOME_PATH } from '@/config/routes';
 
 export function AppHeader({
   actions,
@@ -21,7 +22,7 @@ export function AppHeader({
           {mobileNav}
           {sidebarToggle}
           <Link
-            href="/panel"
+            href={HOME_PATH}
             className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-cobre"
           >
             <CacaoMark className="h-9 w-6 shrink-0 text-cobre" />

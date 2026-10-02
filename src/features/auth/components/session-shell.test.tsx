@@ -164,7 +164,9 @@ describe('SessionShell', () => {
 
     await chooseFromAccountMenu('Cerrar sesión');
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+    );
   });
 
   it('opens Mi cuenta from the account menu', async () => {
@@ -197,7 +199,9 @@ describe('SessionShell', () => {
 
     failing = false;
     await chooseFromAccountMenu('Cerrar sesión');
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+    );
   });
 
   it('does not log out twice while the request is in flight', async () => {
@@ -226,7 +230,9 @@ describe('SessionShell', () => {
     await userEvent.click(item);
     release();
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+    );
     expect(calls).toBe(1);
   });
 

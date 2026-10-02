@@ -11,12 +11,12 @@ describe('AppHeader', () => {
     expect(screen.getByText('Ruta del Cacao')).toHaveClass('sr-only');
   });
 
-  it('links the logo to the panel', () => {
+  it('links the logo to the entry of the app', () => {
     render(<AppHeader logoutFailed={false} />);
 
     expect(
       screen.getByRole('link', { name: 'Ruta del Cacao' }),
-    ).toHaveAttribute('href', '/panel');
+    ).toHaveAttribute('href', '/');
   });
 
   it('shows the actions it receives', () => {

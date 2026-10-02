@@ -16,6 +16,14 @@ const REQUEST = apiUrl('/api/auth/password-reset/request');
 const CONFIRM = apiUrl('/api/auth/password-reset/confirm');
 
 describe('ResetRequestForm', () => {
+  it('links back to the sign-in page', () => {
+    renderWithProviders(<ResetRequestForm />);
+
+    expect(
+      screen.getByRole('link', { name: 'Volver al inicio de sesión' }),
+    ).toHaveAttribute('href', '/iniciar-sesion');
+  });
+
   it('validates the email before sending', async () => {
     const user = userEvent.setup();
     renderWithProviders(<ResetRequestForm />);
@@ -225,7 +233,7 @@ describe('ResetConfirmForm', () => {
     );
     expect(
       screen.getByRole('link', { name: 'Ir al inicio de sesión' }),
-    ).toHaveAttribute('href', '/');
+    ).toHaveAttribute('href', '/iniciar-sesion');
     expect(screen.queryByLabelText('Nueva contraseña')).not.toBeInTheDocument();
     expect(body).toEqual({
       ...link,

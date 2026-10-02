@@ -14,6 +14,7 @@ import { SectionGate } from '@/components/section-gate';
 import type { QueueView } from '@/components/sync-tray/queue-view';
 import { SyncTray } from '@/components/sync-tray/sync-tray';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
+import { SIGN_IN_PATH } from '@/config/routes';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useSyncStatus } from '@/hooks/use-sync-status';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
@@ -94,7 +95,7 @@ export function SessionShell({
                 onOpenAccount={() => setAccountOpen(true)}
                 onLogout={() =>
                   logout.mutate(undefined, {
-                    onSuccess: () => router.replace('/'),
+                    onSuccess: () => router.replace(SIGN_IN_PATH),
                   })
                 }
               />

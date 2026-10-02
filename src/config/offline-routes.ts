@@ -4,7 +4,7 @@
 // recuperación de contraseña tampoco: sin red no sirven, y el inicio de sesión se regenera en el
 // servidor cada día, así que guardado quedaría fijo hasta el siguiente despliegue.
 export const OFFLINE_PRECACHE_ROUTES = [
-  '/panel',
+  '/',
   '/fincas',
   '/fincas/nueva',
   '/fincas/editar',

@@ -131,7 +131,7 @@ describe('ActivationConfirmForm', () => {
     });
     expect(
       screen.getByRole('link', { name: 'Ir al inicio de sesión' }),
-    ).toHaveAttribute('href', '/');
+    ).toHaveAttribute('href', '/iniciar-sesion');
     expect(screen.queryByLabelText('Nueva contraseña')).not.toBeInTheDocument();
   });
 

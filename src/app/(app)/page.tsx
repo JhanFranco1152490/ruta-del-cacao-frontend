@@ -1,5 +1,5 @@
 import { HomeRedirect } from '@/features/auth/components/home-redirect';
 
-export default function PanelPage() {
+export default function HomePage() {
   return <HomeRedirect />;
 }
