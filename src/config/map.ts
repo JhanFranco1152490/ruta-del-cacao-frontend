@@ -1,5 +1,6 @@
 import type {
   LoadMapProvider,
+  LoadMunicipalityMapProvider,
   LoadPointsMapProvider,
 } from '@/components/map/map-provider';
 
@@ -15,3 +16,9 @@ export const loadPointsMapProvider: LoadPointsMapProvider | null = () =>
   import('@/components/map/leaflet-maps').then(
     (module) => module.LeafletPointsMap,
   );
+
+export const loadMunicipalityMapProvider: LoadMunicipalityMapProvider | null =
+  () =>
+    import('@/components/map/leaflet-municipality-map').then(
+      (module) => module.LeafletMunicipalityMap,
+    );

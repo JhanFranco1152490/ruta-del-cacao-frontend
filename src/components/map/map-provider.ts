@@ -41,3 +41,34 @@ export type PointsMapProviderProps = {
 export type PointsMapProvider = ComponentType<PointsMapProviderProps>;
 
 export type LoadPointsMapProvider = () => Promise<PointsMapProvider>;
+
+export type MunicipalityCount = { code: string; count: number };
+
+export type MunicipalityMapView =
+  | { level: 'department'; counts: readonly MunicipalityCount[] }
+  | {
+      level: 'municipality';
+      code: string;
+      points: readonly MapPoint[];
+      // Un objeto nuevo por pedido: enfocar dos veces la misma finca vuelve a llevar el mapa.
+      focus?: { pointId: string };
+    };
+
+// Mapa en dos niveles: el departamento por municipios y, al elegir uno, ese municipio.
+export type MunicipalityMapProviderProps = {
+  view: MunicipalityMapView;
+  baseLayer: BaseLayerKind;
+  describeMunicipality: (code: string, count: number) => string;
+  onSelectMunicipality: (code: string) => void;
+  onSelectPoint: (id: string) => void;
+  // El mapa base no carga: el mapa sigue con contorno y puntos.
+  onBaseLayerUnavailable: () => void;
+  // El mapa no puede dibujarse (p. ej. no cargaron los contornos).
+  onError: () => void;
+};
+
+export type MunicipalityMapProvider =
+  ComponentType<MunicipalityMapProviderProps>;
+
+export type LoadMunicipalityMapProvider =
+  () => Promise<MunicipalityMapProvider>;

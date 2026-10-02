@@ -1,7 +1,9 @@
 import type {
   LoadMapProvider,
+  LoadMunicipalityMapProvider,
   LoadPointsMapProvider,
   MapProviderProps,
+  MunicipalityMapProviderProps,
   PointsMapProviderProps,
 } from '@/components/map/map-provider';
 
@@ -55,3 +57,53 @@ export function FakePointsMap({ points }: PointsMapProviderProps) {
 
 export const loadFakePointsMap: LoadPointsMapProvider = () =>
   Promise.resolve(FakePointsMap);
+
+// Doble del mapa por municipios: cada municipio y cada punto como un botón.
+export function FakeMunicipalityMap({
+  view,
+  baseLayer,
+  onSelectMunicipality,
+  onSelectPoint,
+  onBaseLayerUnavailable,
+  onError,
+}: MunicipalityMapProviderProps) {
+  return (
+    <div>
+      <p>Capa: {baseLayer}</p>
+      {view.level === 'department' ? (
+        <ul aria-label="Municipios del mapa">
+          {view.counts.map(({ code, count }) => (
+            <li key={code}>
+              <button onClick={() => onSelectMunicipality(code)} type="button">
+                {code}: {count}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <>
+          <p>Municipio del mapa: {view.code}</p>
+          {view.focus && <p>Enfocada: {view.focus.pointId}</p>}
+          <ul aria-label="Marcadores del mapa">
+            {view.points.map((point) => (
+              <li key={point.id}>
+                <button onClick={() => onSelectPoint(point.id)} type="button">
+                  {point.label} ({point.tone}) {point.detail}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <button onClick={onBaseLayerUnavailable} type="button">
+        Fallar mapa base
+      </button>
+      <button onClick={onError} type="button">
+        Fallar mapa
+      </button>
+    </div>
+  );
+}
+
+export const loadFakeMunicipalityMap: LoadMunicipalityMapProvider = () =>
+  Promise.resolve(FakeMunicipalityMap);

@@ -12,6 +12,7 @@ vi.mock('@/config/map', async () => {
   return {
     loadMapProvider: fake.loadFakeMap,
     loadPointsMapProvider: fake.loadFakePointsMap,
+    loadMunicipalityMapProvider: fake.loadFakeMunicipalityMap,
   };
 });
 
