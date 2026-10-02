@@ -92,7 +92,9 @@ describe('SessionShell', () => {
     expect(
       await screen.findByRole('link', { name: 'Productores' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Panel' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Fincas' }),
+    ).not.toBeInTheDocument();
   });
 
   it('still draws the shell when the session has no permissions', async () => {
@@ -101,14 +103,13 @@ describe('SessionShell', () => {
 
     expect(await screen.findByText('ana@example.com')).toBeInTheDocument();
     expect(screen.getByText('contenido')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Panel' })).toBeInTheDocument();
     expect(
-      screen.queryByRole('link', { name: 'Productores' }),
+      screen.queryByRole('navigation', { name: 'Principal' }),
     ).not.toBeInTheDocument();
   });
 
   it('offers the mobile menu with only the allowed sections', async () => {
-    signInWith([]);
+    signInWith([PERMISSIONS.FARMS_VIEW]);
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
     await userEvent.click(
@@ -118,7 +119,7 @@ describe('SessionShell', () => {
     const menu = await screen.findByRole('dialog', {
       name: 'Menú de navegación',
     });
-    expect(within(menu).getByRole('link', { name: 'Panel' })).toBeVisible();
+    expect(within(menu).getByRole('link', { name: 'Fincas' })).toBeVisible();
     expect(
       within(menu).queryByRole('link', { name: 'Productores' }),
     ).not.toBeInTheDocument();
