@@ -11,6 +11,7 @@ import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { type QueuedFarmState, useQueuedFarmState } from '../use-local-farms';
 import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
 import { FarmStatusBadge } from './farm-status-badge';
+import { farmEditPath } from '../farm-paths';
 
 function describe(state: QueuedFarmState, isOnline: boolean) {
   switch (state.status) {
@@ -86,7 +87,7 @@ export function FarmSavedPanel({
                 size: 'office',
                 className: CAPTURE_BUTTON_CLASS,
               })}
-              href={`/fincas/${farmId}/editar`}
+              href={farmEditPath(farmId)}
             >
               Corregir finca
             </Link>

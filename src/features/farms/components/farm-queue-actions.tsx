@@ -5,6 +5,7 @@ import { buttonVariants } from '@/components/ui/button';
 
 import type { FarmListItem } from '../farm-list-item';
 import { FarmDiscardDialog } from './farm-discard-dialog';
+import { farmEditPath } from '../farm-paths';
 
 // Acciones sobre una finca que sigue en el dispositivo: corregirla mientras está pendiente o
 // con error, y descartarla solo cuando falló (una pendiente todavía puede llegar bien).
@@ -16,7 +17,7 @@ export function FarmQueueActions({ farm }: { farm: FarmListItem }) {
       <Link
         aria-label={`Corregir ${farm.name}`}
         className={buttonVariants({ variant: 'outline', className: 'h-11' })}
-        href={`/fincas/${farm.id}/editar`}
+        href={farmEditPath(farm.id)}
       >
         <Pencil aria-hidden="true" className="size-4" /> Corregir
       </Link>

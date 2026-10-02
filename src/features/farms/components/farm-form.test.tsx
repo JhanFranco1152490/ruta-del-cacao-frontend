@@ -203,7 +203,7 @@ describe('FarmForm', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Corregir finca' }),
-    ).toHaveAttribute('href', `/fincas/${item.id}/editar`);
+    ).toHaveAttribute('href', `/fincas/editar?id=${item.id}`);
   });
 
   describe('without connection', () => {

@@ -124,7 +124,7 @@ describe('FarmListScreen', () => {
     const [card] = await farmCards();
     expect(
       within(card).getByRole('link', { name: 'Corregir La Esperanza' }),
-    ).toHaveAttribute('href', '/fincas/f1/editar');
+    ).toHaveAttribute('href', '/fincas/editar?id=f1');
     expect(
       within(card).queryByRole('button', { name: 'Descartar' }),
     ).not.toBeInTheDocument();
@@ -210,7 +210,7 @@ describe('FarmListScreen', () => {
     expect(within(card).getByText('Inactiva')).toBeInTheDocument();
     expect(
       within(card).getByRole('link', { name: 'Editar El Porvenir' }),
-    ).toHaveAttribute('href', '/fincas/s1/editar');
+    ).toHaveAttribute('href', '/fincas/editar?id=s1');
     expect(
       within(card).getByRole('button', { name: 'Activar' }),
     ).toBeInTheDocument();
