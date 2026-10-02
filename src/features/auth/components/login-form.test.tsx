@@ -19,6 +19,12 @@ const session = buildSession();
 beforeEach(() => vi.clearAllMocks());
 
 describe('LoginForm', () => {
+  it('posts the form so a password never ends up in the address', () => {
+    const { container } = renderWithProviders(<LoginForm />);
+
+    expect(container.querySelector('form')).toHaveAttribute('method', 'post');
+  });
+
   it('shows validation messages and toggles password visibility', async () => {
     const user = userEvent.setup();
     renderWithProviders(<LoginForm />);
