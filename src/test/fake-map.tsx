@@ -82,7 +82,11 @@ export function FakeMunicipalityMap({
         </ul>
       ) : (
         <>
-          <p>Municipio del mapa: {view.code}</p>
+          <p>
+            {view.level === 'free'
+              ? 'Mapa libre'
+              : `Municipio del mapa: ${view.code}`}
+          </p>
           {view.focus && <p>Enfocada: {view.focus.pointId}</p>}
           <ul aria-label="Marcadores del mapa">
             {view.points.map((point) => (

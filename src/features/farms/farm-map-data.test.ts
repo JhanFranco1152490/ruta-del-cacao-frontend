@@ -73,6 +73,17 @@ describe('farmMapPoints', () => {
     expect(points).toEqual([]);
   });
 
+  it('keeps device farms of every municipality when none is chosen', () => {
+    const points = farmMapPoints(
+      [buildFarmMapPoint({ id: 's1' })],
+      [local({ municipalityCode: '54001' })],
+      null,
+      { showProducer: false },
+    );
+
+    expect(points.map((point) => point.id)).toEqual(['l1', 's1']);
+  });
+
   it('names the producer only when asked', () => {
     const server = [buildFarmMapPoint({ is_active: false })];
 

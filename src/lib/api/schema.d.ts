@@ -222,7 +222,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Las fincas de un municipio (`municipality`, obligatorio) con lo justo para dibujarlas, sin paginar, con el alcance y filtros del listado. */
+        /** @description Las fincas con lo justo para dibujarlas, sin paginar, con el alcance y filtros del listado: de un municipio con `municipality`, o todas las del alcance sin él. */
         get: operations["farms_map_points_list"];
         put?: never;
         post?: never;

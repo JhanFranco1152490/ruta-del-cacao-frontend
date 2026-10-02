@@ -34,16 +34,16 @@ export function withLocalCounts(
 }
 
 // Lo del dispositivo va primero y reemplaza a su copia del servidor, también si la edición
-// pendiente la sacó de este municipio.
+// pendiente la sacó de este municipio. Sin municipio (mapa libre) entra todo lo del dispositivo.
 export function farmMapPoints(
   server: readonly FarmMapPoint[],
   local: readonly FarmListItem[],
-  municipality: string,
+  municipality: string | null,
   { showProducer }: { showProducer: boolean },
 ): MapPoint[] {
   const localIds = new Set(local.map((farm) => farm.id));
   const fromDevice = local
-    .filter((farm) => farm.municipalityCode === municipality)
+    .filter((farm) => !municipality || farm.municipalityCode === municipality)
     .flatMap((farm) => {
       const position = parseCoordinates(farm.location);
       if (!position) return [];

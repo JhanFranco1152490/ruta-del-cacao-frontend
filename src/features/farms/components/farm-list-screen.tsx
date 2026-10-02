@@ -19,6 +19,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { PAGE_SIZE, useFarms } from '../api';
 import { type FarmListItem, serverFarmToListItem } from '../farm-list-item';
 import { useFarmFilters } from '../use-farm-filters';
+import { useFarmMapMode } from '../use-farm-map-mode';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import {
   useLocalFarms,
@@ -28,7 +29,7 @@ import { FarmCardList } from './farm-card-list';
 import { FarmFiltersBar } from './farm-filters-bar';
 import { FarmQueueActions } from './farm-queue-actions';
 import { FarmServerActions } from './farm-server-actions';
-import { FarmsMunicipalityMap } from './farms-municipality-map';
+import { FarmsMap } from './farms-map';
 
 const isQueued = (farm: FarmListItem) =>
   farm.status === 'pending' || farm.status === 'error';
@@ -46,8 +47,10 @@ export function FarmListScreen() {
   // Estado de la interfaz, no del servidor: qué finca enfocar en el mapa y qué tarjeta resaltar.
   const [focus, setFocus] = useState<{ pointId: string }>();
   const [highlightedId, setHighlightedId] = useState<string>();
+  const isAssociation = !user?.producer_id;
+  const mapMode = useFarmMapMode(isAssociation);
   // La asociación mirando a todos los productores necesita saber de quién es cada finca.
-  const showProducer = !user?.producer_id && !filters.producer;
+  const showProducer = isAssociation && !filters.producer;
 
   // Lo que está en el dispositivo va primero (necesita atención o aún no llega) y reemplaza a su
   // copia del servidor: una edición pendiente muestra los datos nuevos, no los viejos.
@@ -117,8 +120,10 @@ export function FarmListScreen() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:items-start">
         <div className="lg:sticky lg:top-6">
           {!isLoading && (
-            <FarmsMunicipalityMap
+            <FarmsMap
               focus={focus}
+              mode={mapMode.mode}
+              onModeChange={mapMode.setMode}
               localFarms={searchedLocalFarms}
               municipality={filters.municipality}
               municipalityName={municipalityName}
@@ -172,7 +177,10 @@ export function FarmListScreen() {
               highlightedId={highlightedId}
               municipalityName={municipalityName}
               onShowOnMap={(farm) => {
-                void filters.setMunicipality(farm.municipalityCode);
+                // Por municipios hay que entrar al suyo; el mapa libre ya la tiene a la vista.
+                if (mapMode.mode === 'municipalities') {
+                  void filters.setMunicipality(farm.municipalityCode);
+                }
                 setFocus({ pointId: farm.id });
               }}
               renderActions={renderActions}

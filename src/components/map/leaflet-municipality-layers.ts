@@ -96,3 +96,18 @@ export function municipalityLayer(outline: MunicipalityOutline) {
     }),
   ]);
 }
+
+// Mapa libre: los límites de los municipios como una línea tenue, solo para orientarse.
+export function outlinesLayer(outlines: readonly MunicipalityOutline[]) {
+  return L.layerGroup(
+    outlines.map((outline) =>
+      L.polygon(toRings(outline), {
+        color: cssVar('--selva'),
+        weight: 1,
+        opacity: 0.35,
+        fill: false,
+        interactive: false,
+      }),
+    ),
+  );
+}

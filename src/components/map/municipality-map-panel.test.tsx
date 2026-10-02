@@ -73,7 +73,7 @@ describe('MunicipalityMapPanel', () => {
 
     expect(screen.getByText('Municipio del mapa: 54810')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(
-      'No cargó el mapa base: se ven solo el contorno y las fincas.',
+      'No cargó el mapa base: se ven solo los límites y las fincas.',
     );
   });
 
@@ -90,5 +90,17 @@ describe('MunicipalityMapPanel', () => {
         'No fue posible cargar el mapa. La lista sigue disponible.',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('offers the base layer but no way back on the free map', async () => {
+    renderPanel({ level: 'free', points: [] });
+
+    expect(await screen.findByText('Mapa libre')).toBeInTheDocument();
+    expect(
+      screen.getByRole('group', { name: 'Mapa base' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Volver a municipios' }),
+    ).not.toBeInTheDocument();
   });
 });

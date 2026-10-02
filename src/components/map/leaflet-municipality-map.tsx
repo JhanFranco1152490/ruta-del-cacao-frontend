@@ -14,6 +14,7 @@ import { OPERATING_AREA_BOUNDS } from '@/lib/geo/operating-area';
 import {
   departmentLayer,
   municipalityLayer,
+  outlinesLayer,
   toLatLngBounds,
 } from './leaflet-municipality-layers';
 import { pointsLayer } from './leaflet-point-clusters';
@@ -27,6 +28,8 @@ import type { MapPoint, MunicipalityMapProviderProps } from './map-provider';
 
 const MAX_ZOOM = 17;
 const FOCUS_ZOOM = 15;
+// Al encuadrar varias fincas del mapa libre: cerca, sin perder las veredas vecinas.
+const FIT_MAX_ZOOM = 14;
 const INTERACTIONS = [
   'dragging',
   'touchZoom',
@@ -59,23 +62,26 @@ function useOutlines(onError: () => void) {
   return outlines;
 }
 
-// El departamento se ve completo y quieto; un municipio permite acercar y arrastrar sin salir
-// de él.
+// El departamento por municipios se ve completo y quieto. Un municipio, o el mapa libre,
+// permiten acercar y arrastrar sin salir de él o del departamento.
 function frame(
   map: L.Map,
   zoom: L.Control.Zoom,
-  outline?: MunicipalityOutline,
+  target: MunicipalityOutline | 'department' | 'free',
 ) {
   map.setMaxBounds(undefined);
   map.setMinZoom(0);
   map.setMaxZoom(MAX_ZOOM);
-  const bounds = toLatLngBounds(outline?.bounds ?? OPERATING_AREA_BOUNDS);
+  const bounds = toLatLngBounds(
+    typeof target === 'string' ? OPERATING_AREA_BOUNDS : target.bounds,
+  );
   map.fitBounds(bounds, { animate: false, padding: [12, 12] });
+  const interactive = target !== 'department';
   for (const name of INTERACTIONS) {
-    if (outline) map[name].enable();
+    if (interactive) map[name].enable();
     else map[name].disable();
   }
-  if (!outline) {
+  if (!interactive) {
     zoom.remove();
     return;
   }
@@ -116,48 +122,61 @@ export function LeafletMunicipalityMap({
     onSelectPoint,
   });
   const code = view.level === 'municipality' ? view.code : null;
-  const points = view.level === 'municipality' ? view.points : NO_POINTS;
-  const focus = view.level === 'municipality' ? view.focus : undefined;
+  const free = view.level === 'free';
+  const points = view.level === 'department' ? NO_POINTS : view.points;
+  const focus = view.level === 'department' ? undefined : view.focus;
   const counts = countsKey(view);
   const drawn = pointsKey(points);
   // "Ver en el mapa" puede cambiar de municipio: el enfoque espera a que lleguen sus puntos.
   const focusReady =
     !!focus && points.some((point) => point.id === focus.pointId);
 
-  useBaseLayer(map, code ? baseLayer : null, onBaseLayerUnavailable);
+  useBaseLayer(map, code || free ? baseLayer : null, onBaseLayerUnavailable);
 
   useEffect(() => {
     if (!map || !outlines) return;
     const outline = outlines.find((item) => item.code === code);
-    frame(map, zoom, outline);
+    frame(map, zoom, outline ?? (free ? 'free' : 'department'));
     const current = latest.current.view;
     const layer = outline
       ? municipalityLayer(outline)
-      : departmentLayer(
-          outlines,
-          current.level === 'department' ? current.counts : [],
-          {
-            describe: (...args) => latest.current.describeMunicipality(...args),
-            onSelect: (selected) =>
-              latest.current.onSelectMunicipality(selected),
-          },
-        );
+      : free
+        ? outlinesLayer(outlines)
+        : departmentLayer(
+            outlines,
+            current.level === 'department' ? current.counts : [],
+            {
+              describe: (...args) =>
+                latest.current.describeMunicipality(...args),
+              onSelect: (selected) =>
+                latest.current.onSelectMunicipality(selected),
+            },
+          );
     layer.addTo(map);
     return () => {
       layer.remove();
     };
-  }, [map, outlines, code, counts, zoom, latest]);
+  }, [map, outlines, code, free, counts, zoom, latest]);
 
   useEffect(() => {
-    if (!map || !outlines || !code) return;
+    if (!map || !outlines || (!code && !free)) return;
+    const pointsNow = () => {
+      const current = latest.current.view;
+      return current.level === 'department' ? NO_POINTS : current.points;
+    };
+    // El mapa libre se encuadra en las fincas que muestra (cambian con la búsqueda y los filtros).
+    const shown = pointsNow();
+    if (free && shown.length) {
+      map.fitBounds(
+        L.latLngBounds(shown.map((point) => toLatLng(point.position))),
+        { animate: false, padding: [32, 32], maxZoom: FIT_MAX_ZOOM },
+      );
+    }
     let layer: L.LayerGroup | null = null;
     const draw = () => {
       layer?.remove();
-      const current = latest.current.view;
-      layer = pointsLayer(
-        map,
-        current.level === 'municipality' ? current.points : NO_POINTS,
-        (id) => latest.current.onSelectPoint(id),
+      layer = pointsLayer(map, pointsNow(), (id) =>
+        latest.current.onSelectPoint(id),
       ).addTo(map);
     };
     draw();
@@ -166,15 +185,15 @@ export function LeafletMunicipalityMap({
       map.off('zoomend', draw);
       layer?.remove();
     };
-  }, [map, outlines, code, drawn, latest]);
+  }, [map, outlines, code, free, drawn, latest]);
 
   useEffect(() => {
     if (!map || !focus || !focusReady) return;
     const current = latest.current.view;
     const point =
-      current.level === 'municipality'
-        ? current.points.find((item) => item.id === focus.pointId)
-        : undefined;
+      current.level === 'department'
+        ? undefined
+        : current.points.find((item) => item.id === focus.pointId);
     if (!point) return;
     const position = toLatLng(point.position);
     // El anillo sigue a su coordenada mientras el mapa vuela: no hace falta esperar al final.

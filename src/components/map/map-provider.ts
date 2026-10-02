@@ -44,17 +44,21 @@ export type LoadPointsMapProvider = () => Promise<PointsMapProvider>;
 
 export type MunicipalityCount = { code: string; count: number };
 
+// Un objeto nuevo por pedido: enfocar dos veces la misma finca vuelve a llevar el mapa.
+export type MapFocus = { pointId: string };
+
 export type MunicipalityMapView =
   | { level: 'department'; counts: readonly MunicipalityCount[] }
   | {
       level: 'municipality';
       code: string;
       points: readonly MapPoint[];
-      // Un objeto nuevo por pedido: enfocar dos veces la misma finca vuelve a llevar el mapa.
-      focus?: { pointId: string };
-    };
+      focus?: MapFocus;
+    }
+  // Mapa libre: todo el departamento con zoom y arrastre, y los municipios solo como referencia.
+  | { level: 'free'; points: readonly MapPoint[]; focus?: MapFocus };
 
-// Mapa en dos niveles: el departamento por municipios y, al elegir uno, ese municipio.
+// El departamento por municipios y, al elegir uno, ese municipio; o el mapa libre.
 export type MunicipalityMapProviderProps = {
   view: MunicipalityMapView;
   baseLayer: BaseLayerKind;

@@ -345,7 +345,7 @@ describe('FarmListScreen map', () => {
   it('applies the search box to the map too', async () => {
     const countRequests: URLSearchParams[] = [];
     server.use(farmMapCountsHandler([], countRequests));
-    renderScreen({ searchParams: '?buscar=porvenir' });
+    renderScreen({ searchParams: '?buscar=porvenir&vista=municipios' });
 
     await screen.findByRole('list', { name: 'Municipios del mapa' });
     expect(countRequests.at(-1)?.get('search')).toBe('porvenir');
@@ -359,7 +359,7 @@ describe('FarmListScreen map', () => {
       ]),
     );
     await enqueueFarmCreate(userId, 'f1', farm);
-    renderScreen();
+    renderScreen({ searchParams: '?vista=municipios' });
 
     const map = await screen.findByRole('list', {
       name: 'Municipios del mapa',
@@ -385,7 +385,7 @@ describe('FarmListScreen map', () => {
         pointRequests,
       ),
     );
-    renderScreen();
+    renderScreen({ searchParams: '?vista=municipios' });
 
     await user.click(await screen.findByRole('button', { name: '54001: 1' }));
 
@@ -407,7 +407,7 @@ describe('FarmListScreen map', () => {
       farmMapCountsHandler([{ municipality_id: '54001', farm_count: 2 }]),
       farmsHandler([], farmRequests),
     );
-    renderScreen();
+    renderScreen({ searchParams: '?vista=municipios' });
 
     expect(
       await screen.findByText('Municipio del mapa: 54001'),
@@ -425,7 +425,7 @@ describe('FarmListScreen map', () => {
     server.use(
       farmMapCountsHandler([{ municipality_id: '54001', farm_count: 2 }]),
     );
-    renderScreen();
+    renderScreen({ searchParams: '?vista=municipios' });
 
     // Un solo municipio con fincas: entra directo.
     expect(
@@ -451,7 +451,7 @@ describe('FarmListScreen map', () => {
         buildFarmMapPoint({ id: 's1', name: 'El Porvenir' }),
       ]),
     );
-    renderScreen({ searchParams: '?municipio=54001' });
+    renderScreen({ searchParams: '?municipio=54001&vista=municipios' });
 
     await user.click(
       await screen.findByRole('button', { name: 'Ver El Porvenir en el mapa' }),
@@ -470,7 +470,7 @@ describe('FarmListScreen map', () => {
       ]),
       farmsHandler([], farmRequests),
     );
-    renderScreen();
+    renderScreen({ searchParams: '?vista=municipios' });
 
     await screen.findByRole('option', { name: 'Pamplona' });
     await user.selectOptions(
@@ -517,7 +517,7 @@ describe('FarmListScreen map', () => {
       ),
       farmsHandler([buildFarm({ name: 'El Porvenir' })]),
     );
-    renderScreen();
+    renderScreen({ searchParams: '?vista=municipios' });
 
     expect(
       await screen.findByText(
@@ -525,5 +525,85 @@ describe('FarmListScreen map', () => {
       ),
     ).toBeInTheDocument();
     expect(await farmCards()).toHaveLength(1);
+  });
+});
+
+describe('FarmListScreen free map', () => {
+  it('opens the free map with every farm for a producer', async () => {
+    const pointRequests: URLSearchParams[] = [];
+    server.use(
+      farmMapPointsHandler(
+        [buildFarmMapPoint({ name: 'El Porvenir' })],
+        pointRequests,
+      ),
+    );
+    renderScreen();
+
+    expect(await screen.findByText('Mapa libre')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'El Porvenir (ok) Activa' }),
+    ).toBeInTheDocument();
+    expect(pointRequests.at(-1)?.has('municipality')).toBe(false);
+  });
+
+  it('opens the municipality map for the association', async () => {
+    renderScreen({ producerId: null });
+
+    expect(
+      await screen.findByRole('list', { name: 'Municipios del mapa' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Por municipios' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('switches to the free map keeping the list filters', async () => {
+    const user = userEvent.setup();
+    const pointRequests: URLSearchParams[] = [];
+    server.use(farmMapPointsHandler([], pointRequests));
+    renderScreen({ producerId: null, searchParams: '?municipio=54001' });
+
+    await user.click(await screen.findByRole('button', { name: 'Libre' }));
+
+    expect(await screen.findByText('Mapa libre')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(pointRequests.at(-1)?.get('municipality')).toBe('54001'),
+    );
+  });
+
+  it('applies the search box to the free map', async () => {
+    const pointRequests: URLSearchParams[] = [];
+    server.use(farmMapPointsHandler([], pointRequests));
+    renderScreen({ searchParams: '?buscar=porvenir' });
+
+    await screen.findByText('Mapa libre');
+    await waitFor(() =>
+      expect(pointRequests.at(-1)?.get('search')).toBe('porvenir'),
+    );
+  });
+
+  it('shows a farm on the free map without filtering the list', async () => {
+    const user = userEvent.setup();
+    const farmRequests: URLSearchParams[] = [];
+    server.use(
+      farmsHandler(
+        [buildFarm({ id: 's1', name: 'El Porvenir' })],
+        farmRequests,
+      ),
+      farmMapPointsHandler([
+        buildFarmMapPoint({ id: 's1', name: 'El Porvenir' }),
+      ]),
+    );
+    renderScreen();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Ver El Porvenir en el mapa' }),
+    );
+
+    expect(await screen.findByText('Enfocada: s1')).toBeInTheDocument();
+    expect(screen.getByText('Mapa libre')).toBeInTheDocument();
+    expect(farmRequests.every((request) => !request.has('municipality'))).toBe(
+      true,
+    );
   });
 });

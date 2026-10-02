@@ -18,8 +18,8 @@ import { useMapProvider } from './use-map-provider';
 
 const FRAME_HEIGHT = 'h-80 lg:h-[34rem]';
 
-// Mapa en dos niveles: el departamento por municipios y, al elegir uno, ese municipio. Es un
-// apoyo visual: la lista que lo acompaña es la forma accesible de recorrer las mismas fincas.
+// El departamento por municipios y, al elegir uno, ese municipio; o el mapa libre. Es un apoyo
+// visual: la lista que lo acompaña es la forma accesible de recorrer las mismas fincas.
 export function MunicipalityMapPanel({
   label,
   title,
@@ -59,6 +59,8 @@ export function MunicipalityMapPanel({
 
   const { Provider } = map;
   const inMunicipality = view.level === 'municipality';
+  // Solo el nivel del departamento va sin mapa base.
+  const hasBaseLayer = view.level !== 'department';
 
   return (
     <section aria-label={label} className="space-y-3">
@@ -77,7 +79,7 @@ export function MunicipalityMapPanel({
           )}
           <p className="font-bold text-selva">{title}</p>
         </div>
-        {inMunicipality && (
+        {hasBaseLayer && (
           <BaseLayerToggle
             onChange={(next) => {
               setBaseLayer(next);
@@ -106,9 +108,9 @@ export function MunicipalityMapPanel({
           view={view}
         />
       </div>
-      {inMunicipality && baseLayerMissing && (
+      {hasBaseLayer && baseLayerMissing && (
         <p className="text-sm font-bold text-muted-foreground" role="status">
-          No cargó el mapa base: se ven solo el contorno y las fincas.
+          No cargó el mapa base: se ven solo los límites y las fincas.
         </p>
       )}
       {notice}

@@ -30,12 +30,12 @@ export const fetchFarmMunicipalityCounts = (
   );
 
 export const fetchFarmMapPoints = (
-  municipality: string,
+  municipality: string | null,
   query: FarmMapQuery,
   signal?: AbortSignal,
 ) =>
   apiFetch<FarmMapPoint[]>(
-    `/api/farms/map/points?${params(query, municipality)}`,
+    `/api/farms/map/points?${params(query, municipality ?? undefined)}`,
     { signal },
   );
 
@@ -44,6 +44,7 @@ export const fetchFarmMapPoints = (
 export const useFarmMunicipalityCounts = (
   userId: string | undefined,
   query: FarmMapQuery,
+  { enabled = true } = {},
 ) =>
   useQuery({
     queryKey: queryKeys.farms.mapCounts(query),
@@ -51,24 +52,26 @@ export const useFarmMunicipalityCounts = (
       readThroughCache(userId!, `farm-map:counts:${params(query)}`, () =>
         fetchFarmMunicipalityCounts(query, signal),
       ),
-    enabled: !!userId,
+    enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
     placeholderData: keepPreviousData,
   });
 
+// Sin municipio: todos los puntos del alcance (mapa libre).
 export const useFarmMapPoints = (
   userId: string | undefined,
   municipality: string | null,
   query: FarmMapQuery,
+  { enabled = true } = {},
 ) =>
   useQuery({
     queryKey: queryKeys.farms.mapPoints(municipality ?? '', query),
     queryFn: ({ signal }) =>
       readThroughCache(
         userId!,
-        `farm-map:points:${params(query, municipality!)}`,
-        () => fetchFarmMapPoints(municipality!, query, signal),
+        `farm-map:points:${params(query, municipality ?? undefined)}`,
+        () => fetchFarmMapPoints(municipality, query, signal),
       ),
-    enabled: !!userId && !!municipality,
+    enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
   });
