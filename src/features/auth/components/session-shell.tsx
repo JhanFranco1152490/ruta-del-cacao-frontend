@@ -9,6 +9,7 @@ import { MobileNav } from '@/components/layout/mobile-nav';
 import { NavList } from '@/components/layout/nav-list';
 import { SidebarToggle } from '@/components/layout/sidebar-toggle';
 import { useSidebarVisibility } from '@/components/layout/use-sidebar-visibility';
+import { SectionGate } from '@/components/section-gate';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { recordLogin } from '@/lib/offline/session-clock';
@@ -83,7 +84,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
       sidebar={<NavList items={items} />}
       sidebarHidden={sidebar.hidden}
     >
-      {children}
+      <SectionGate items={NAV_ITEMS}>{children}</SectionGate>
     </AppShell>
   );
 }
