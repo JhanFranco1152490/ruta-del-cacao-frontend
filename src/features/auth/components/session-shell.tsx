@@ -77,7 +77,9 @@ export function SessionShell({
       window.removeEventListener('online', onOnline);
       navigator.serviceWorker?.removeEventListener('message', onMessage);
     };
-  }, [user?.id]);
+    // `confirmed` también: cuando el servidor vuelve a responder (sin que el navegador avise que
+    // volvió la red, como en un wifi que recupera internet), se envía lo pendiente.
+  }, [user?.id, confirmed]);
 
   return (
     <AppShell

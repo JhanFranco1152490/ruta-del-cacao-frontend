@@ -7,7 +7,7 @@ import { getOfflineDb } from '@/lib/offline/db';
 import { isWithinOfflineWindow } from '@/lib/offline/session-clock';
 import type { SyncStatus } from '@/types/sync';
 
-import { useIsOnline } from './use-is-online';
+import { useHasConnection } from './use-has-connection';
 
 const DEFAULT_STATUS: SyncStatus = {
   isOnline: true,
@@ -26,7 +26,7 @@ export function useSyncStatus(userId: string | undefined): SyncStatus {
   // conteo de la persona anterior no debe alcanzar a pintarse ni un instante para la nueva.
   const [trackedUserId, setTrackedUserId] = useState(userId);
   const [status, setStatus] = useState<SyncStatus>(DEFAULT_STATUS);
-  const isOnline = useIsOnline();
+  const isOnline = useHasConnection();
   if (userId !== trackedUserId) {
     setTrackedUserId(userId);
     setStatus(DEFAULT_STATUS);

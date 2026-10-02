@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -266,6 +266,44 @@ describe('SessionShell', () => {
     } finally {
       onLine.mockRestore();
     }
+  });
+
+  it('says there is no connection when the server does not answer, even with a network', async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(queryKeys.session(), {
+      ...buildSession({ email: 'ana@example.com' }),
+      fromDevice: true,
+    });
+    server.use(http.get(ME, () => HttpResponse.error()));
+    renderWithProviders(<SessionShell>contenido</SessionShell>, {
+      queryClient,
+    });
+
+    expect(
+      await screen.findByRole('button', { name: 'Sin conexión' }),
+    ).toBeInTheDocument();
+  });
+
+  it('sends what is pending when the server answers again', async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(queryKeys.session(), {
+      ...buildSession({ email: 'ana@example.com' }),
+      fromDevice: true,
+    });
+    server.use(http.get(ME, () => HttpResponse.error()));
+    renderWithProviders(<SessionShell>contenido</SessionShell>, {
+      queryClient,
+    });
+    await waitFor(() => expect(runOfflineBootstrap).toHaveBeenCalledTimes(1));
+
+    act(() => {
+      queryClient.setQueryData(
+        queryKeys.session(),
+        buildSession({ email: 'ana@example.com' }),
+      );
+    });
+
+    await waitFor(() => expect(runOfflineBootstrap).toHaveBeenCalledTimes(2));
   });
 
   it('runs the offline bootstrap for the signed-in user', async () => {

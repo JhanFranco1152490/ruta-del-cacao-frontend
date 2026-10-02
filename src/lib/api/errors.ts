@@ -26,6 +26,10 @@ export class ApiError extends Error {
 export const isApiError = (error: unknown): error is ApiError =>
   error instanceof ApiError;
 
+// fetch rechaza con TypeError cuando no llega ninguna respuesta: sin red, señal débil, wifi sin
+// internet o servidor caído.
+export const isNetworkFailure = (error: unknown) => error instanceof TypeError;
+
 export const isUnauthorized = (error: unknown) =>
   isApiError(error) && error.status === 401;
 

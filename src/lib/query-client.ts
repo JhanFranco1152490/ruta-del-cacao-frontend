@@ -1,6 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
-import { isApiError, isUnauthorized } from '@/lib/api/errors';
+import { isApiError, isNetworkFailure, isUnauthorized } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 
 const SESSION_KEY = queryKeys.session();
@@ -17,9 +17,23 @@ export function createQueryClient() {
       (isApiError(error) &&
         error.status === 403 &&
         error.code === 'permission_denied')
-    )
+    ) {
       void client.invalidateQueries({ queryKey: SESSION_KEY });
+    } else if (isNetworkFailure(error) && !sessionFromDevice()) {
+      // Sin respuesta del servidor, aunque el navegador diga tener red (señal débil, wifi sin
+      // internet): si la sesión tampoco responde, la app sigue con la copia del dispositivo y
+      // toda ella sabe que no hay conexión. Varias peticiones fallan a la vez: no se cancela la
+      // consulta de la sesión que ya esté en curso.
+      void client.invalidateQueries(
+        { queryKey: SESSION_KEY },
+        { cancelRefetch: false },
+      );
+    }
   };
+  // Con la copia ya en uso la sesión se vuelve a pedir sola cada pocos segundos.
+  const sessionFromDevice = () =>
+    client.getQueryData<{ fromDevice?: boolean }>(SESSION_KEY)?.fromDevice ===
+    true;
 
   const client: QueryClient = new QueryClient({
     queryCache: new QueryCache({
