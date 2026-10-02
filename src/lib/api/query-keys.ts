@@ -27,6 +27,9 @@ export const queryKeys = {
     lists: () => ['farms', 'list'] as const,
     list: (query: object) => ['farms', 'list', query] as const,
     detail: (id: string) => ['farms', 'detail', id] as const,
+    mapCounts: (query: object) => ['farms', 'map', 'counts', query] as const,
+    mapPoints: (municipality: string, query: object) =>
+      ['farms', 'map', 'points', municipality, query] as const,
     // Una finca que todavía está en la cola del dispositivo de esta persona.
     queued: (userId: string, id: string) =>
       ['farms', 'queued', userId, id] as const,
