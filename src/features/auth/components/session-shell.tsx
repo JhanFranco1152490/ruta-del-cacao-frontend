@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
+import { AccountMenu } from '@/components/layout/account-menu';
 import { AppHeader } from '@/components/layout/app-header';
 import { AppShell } from '@/components/layout/app-shell';
 import { MobileNav } from '@/components/layout/mobile-nav';
@@ -16,6 +17,7 @@ import { recordLogin } from '@/lib/offline/session-clock';
 import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
 
 import { useLogout, useSession, useSessionConfirmed } from '../api';
+import { AccountDialog } from './account-dialog';
 
 // Conecta el marco con la sesión: correo, cierre de sesión y menú según los permisos.
 export function SessionShell({ children }: { children: ReactNode }) {
@@ -24,6 +26,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
   const confirmed = useSessionConfirmed();
   const logout = useLogout();
   const sidebar = useSidebarVisibility();
+  const [accountOpen, setAccountOpen] = useState(false);
   const items = visibleNavItems(NAV_ITEMS, user?.permissions);
 
   // Toca el reloj de sesión y guarda la copia del dispositivo cada vez que el servidor confirma
@@ -64,8 +67,18 @@ export function SessionShell({ children }: { children: ReactNode }) {
     <AppShell
       header={
         <AppHeader
-          email={user?.email}
-          isLoggingOut={logout.isPending}
+          actions={
+            <AccountMenu
+              email={user?.email}
+              isLoggingOut={logout.isPending}
+              onOpenAccount={() => setAccountOpen(true)}
+              onLogout={() =>
+                logout.mutate(undefined, {
+                  onSuccess: () => router.replace('/'),
+                })
+              }
+            />
+          }
           logoutFailed={logout.isError}
           mobileNav={<MobileNav items={items} />}
           sidebarToggle={
@@ -76,15 +89,19 @@ export function SessionShell({ children }: { children: ReactNode }) {
               />
             )
           }
-          onLogout={() =>
-            logout.mutate(undefined, { onSuccess: () => router.replace('/') })
-          }
         />
       }
       sidebar={<NavList items={items} />}
       sidebarHidden={sidebar.hidden}
     >
       <SectionGate items={NAV_ITEMS}>{children}</SectionGate>
+      {user && (
+        <AccountDialog
+          user={user}
+          open={accountOpen}
+          onOpenChange={setAccountOpen}
+        />
+      )}
     </AppShell>
   );
 }

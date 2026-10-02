@@ -5,43 +5,28 @@ import { AppHeader } from './app-header';
 
 describe('AppHeader', () => {
   it('keeps the product name available to assistive technology at every width', () => {
-    render(
-      <AppHeader
-        isLoggingOut={false}
-        logoutFailed={false}
-        onLogout={() => {}}
-      />,
-    );
+    render(<AppHeader logoutFailed={false} />);
 
     // En pantallas muy angostas el nombre se oculta a la vista, pero no del lector de pantalla.
     expect(screen.getByText('Ruta del Cacao')).toHaveClass('sr-only');
   });
 
   it('links the logo to the panel', () => {
-    render(
-      <AppHeader
-        isLoggingOut={false}
-        logoutFailed={false}
-        onLogout={() => {}}
-      />,
-    );
+    render(<AppHeader logoutFailed={false} />);
 
     expect(
       screen.getByRole('link', { name: 'Ruta del Cacao' }),
     ).toHaveAttribute('href', '/panel');
   });
 
-  it('does not let the logout label wrap', () => {
+  it('shows the actions it receives', () => {
     render(
       <AppHeader
-        isLoggingOut={false}
         logoutFailed={false}
-        onLogout={() => {}}
+        actions={<button type="button">Acción</button>}
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toHaveClass(
-      'whitespace-nowrap',
-    );
+    expect(screen.getByRole('button', { name: 'Acción' })).toBeInTheDocument();
   });
 });

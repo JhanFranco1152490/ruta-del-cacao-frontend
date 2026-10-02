@@ -43,6 +43,13 @@ function signInWith(permissions: string[]) {
   );
 }
 
+async function chooseFromAccountMenu(name: string) {
+  await userEvent.click(
+    await screen.findByRole('button', { name: 'Cuenta de ana@example.com' }),
+  );
+  await userEvent.click(await screen.findByRole('menuitem', { name }));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   window.localStorage.clear();
@@ -155,11 +162,19 @@ describe('SessionShell', () => {
     );
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await chooseFromAccountMenu('Cerrar sesión');
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+  });
+
+  it('opens Mi cuenta from the account menu', async () => {
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await chooseFromAccountMenu('Mi cuenta');
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Mi cuenta' }),
+    ).toBeVisible();
   });
 
   it('keeps the shell and allows retrying when the logout fails', async () => {
@@ -173,9 +188,7 @@ describe('SessionShell', () => {
     );
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await chooseFromAccountMenu('Cerrar sesión');
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'No pudimos cerrar tu sesión',
     );
@@ -183,13 +196,11 @@ describe('SessionShell', () => {
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
 
     failing = false;
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await chooseFromAccountMenu('Cerrar sesión');
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
   });
 
-  it('disables the logout button while the request is in flight', async () => {
+  it('does not log out twice while the request is in flight', async () => {
     let calls = 0;
     server.use(
       http.post(LOGOUT, async () => {
@@ -200,10 +211,13 @@ describe('SessionShell', () => {
     );
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
-    const button = await screen.findByRole('button', { name: 'Cerrar sesión' });
-    await userEvent.click(button);
-    expect(button).toBeDisabled();
-    await userEvent.click(button);
+    await chooseFromAccountMenu('Cerrar sesión');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Cuenta de ana@example.com' }),
+    );
+    const item = await screen.findByRole('menuitem', { name: 'Cerrar sesión' });
+    expect(item).toHaveAttribute('aria-disabled', 'true');
+    await userEvent.click(item);
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(calls).toBe(1);

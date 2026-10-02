@@ -4,16 +4,12 @@ import type { ReactNode } from 'react';
 import { CacaoMark } from '@/components/brand/cacao-mark';
 
 export function AppHeader({
-  email,
-  onLogout,
-  isLoggingOut,
+  actions,
   logoutFailed,
   mobileNav,
   sidebarToggle,
 }: {
-  email?: string;
-  onLogout: () => void;
-  isLoggingOut: boolean;
+  actions?: ReactNode;
   logoutFailed: boolean;
   mobileNav?: ReactNode;
   sidebarToggle?: ReactNode;
@@ -34,19 +30,7 @@ export function AppHeader({
             </span>
           </Link>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden max-w-56 truncate text-sm text-muted-foreground sm:inline">
-            {email}
-          </span>
-          <button
-            type="button"
-            onClick={onLogout}
-            disabled={isLoggingOut}
-            className="min-h-11 shrink-0 rounded-md border border-border bg-card px-3 text-sm font-bold whitespace-nowrap text-cobre hover:bg-surface-alt focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-cobre disabled:opacity-60 sm:px-4"
-          >
-            Cerrar sesión
-          </button>
-        </div>
+        <div className="flex items-center gap-2 sm:gap-3">{actions}</div>
       </div>
       {logoutFailed && (
         <p
