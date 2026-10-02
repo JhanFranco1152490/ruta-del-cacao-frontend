@@ -207,7 +207,8 @@ export interface paths {
         get: operations["farms_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Elimina una finca creada por error. Requiere `expected_version`. Si la finca tiene registros del negocio responde 409 `farm_has_records` (se desactiva en su lugar); si cambió, 409 `stale_version` con la versión del servidor en `current`. La auditoría de la finca se conserva. */
+        delete: operations["farms_destroy"];
         options?: never;
         head?: never;
         /** @description Edición parcial, incluida la activación o desactivación con `is_active`. Requiere `expected_version`; si la finca cambió responde 409 `stale_version` con la versión del servidor en `current`. */
@@ -1569,6 +1570,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    farms_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmConflictError"];
                 };
             };
         };
