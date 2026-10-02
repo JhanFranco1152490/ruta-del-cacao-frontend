@@ -13,6 +13,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { components } from '@/lib/api/schema';
 import type { AccountCreated } from '../api';
 import { AccountCreatePanel } from './account-create-panel';
+import { AccountTypeStep } from './account-type-step';
 import { AccountDetail } from './account-detail';
 
 export function AccountPanel({
@@ -31,6 +32,12 @@ export function AccountPanel({
   receipt?: { id: string; sent: boolean };
 }) {
   const [busy, setBusy] = useState(false);
+  const association = !user.producer_id;
+  // La asociación elige primero el tipo de cuenta (y el productor, si es de un empleado); la
+  // cuenta de un productor siempre es de un empleado suyo.
+  const [chosen, setChosen] = useState<{ producer?: string } | null>(
+    association ? null : {},
+  );
   const lock = useRef(false);
   function onBusy(value: boolean) {
     lock.current = value;
@@ -47,9 +54,11 @@ export function AccountPanel({
         <SheetHeader>
           <SheetTitle>
             {selected === 'nueva'
-              ? !user.producer_id && !producer
-                ? 'Crear cuenta de administrador'
-                : 'Crear cuenta de empleado'
+              ? !chosen
+                ? 'Crear cuenta'
+                : association && !chosen.producer
+                  ? 'Crear cuenta de administrador'
+                  : 'Crear cuenta de empleado'
               : 'Detalle de la cuenta'}
           </SheetTitle>
           <SheetDescription>
@@ -58,13 +67,21 @@ export function AccountPanel({
         </SheetHeader>
         {selected === 'nueva' ? (
           hasPermission(user, PERMISSIONS.USERS_CREATE) ? (
-            <AccountCreatePanel
-              user={user}
-              producer={producer}
-              onCreated={onCreated}
-              onBusy={onBusy}
-              close={close}
-            />
+            !chosen ? (
+              <AccountTypeStep
+                user={user}
+                initialProducer={producer}
+                onChoose={(picked) => setChosen({ producer: picked })}
+              />
+            ) : (
+              <AccountCreatePanel
+                user={user}
+                producer={chosen.producer}
+                onCreated={onCreated}
+                onBusy={onBusy}
+                close={close}
+              />
+            )
           ) : (
             <ErrorState message="No tienes permiso para crear cuentas." />
           )

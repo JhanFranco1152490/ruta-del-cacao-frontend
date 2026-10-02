@@ -38,6 +38,25 @@ export const buildSession = (
   user: buildSessionUser(user),
 });
 
+// Los datos de la propia cuenta para "Mi cuenta" (inventados).
+export const buildProfile = (
+  overrides: Partial<Schemas['Profile']> = {},
+): Schemas['Profile'] => ({
+  email: 'persona@example.com',
+  first_name: 'Luis',
+  last_name: 'Pérez',
+  document_type: 'CC',
+  identity_document: '1094000111',
+  phone: '3001234567',
+  producer: {
+    id: 'p1',
+    member_code: 'PROD-000001',
+    first_name: 'Ana',
+    last_name: 'Ejemplo',
+  },
+  ...overrides,
+});
+
 export const buildProducer = (
   overrides: Partial<Schemas['ProducerDetail']> = {},
 ): Schemas['ProducerDetail'] => ({

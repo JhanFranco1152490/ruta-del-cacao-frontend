@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form';
 import { FormMessage } from '@/components/form-message';
 import { PasswordField } from '@/components/password-field';
 import { SubmitButton } from '@/components/submit-button';
+import { SIGN_IN_PATH } from '@/config/routes';
 import { applyApiFieldErrors } from '@/lib/api/form-errors';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import type { components } from '@/lib/api/schema';
@@ -124,7 +125,7 @@ export function NewPasswordForm({
         </>
       )}
       <Link
-        href={isSuccess || !recovery ? '/' : '/recuperar-contrasena'}
+        href={isSuccess || !recovery ? SIGN_IN_PATH : '/recuperar-contrasena'}
         className="block text-center text-sm font-bold text-cobre underline-offset-4 hover:underline"
       >
         {isSuccess || !recovery

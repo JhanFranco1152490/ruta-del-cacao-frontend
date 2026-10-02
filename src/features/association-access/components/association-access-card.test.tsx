@@ -2,12 +2,12 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { apiError, buildPage, buildSession } from '@/test/factories';
+import { apiError, buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
-import UsersPage from '@/app/(app)/usuarios/page';
+import MyProducerPage from '@/app/(app)/mi-productor/page';
 
 const producerPermissions = [
   PERMISSIONS.USERS_VIEW,
@@ -44,30 +44,12 @@ const findSwitch = () =>
 beforeEach(() => {
   mockSession(producerPermissions);
   server.use(
-    http.get(apiUrl('/api/users'), () => HttpResponse.json(buildPage([]))),
     http.get(apiUrl('/api/association-access'), () => HttpResponse.json(off)),
   );
 });
 
 describe('AssociationAccessCard', () => {
-  it('is not shown without association_access_manage', async () => {
-    let requested = false;
-    mockSession([PERMISSIONS.USERS_VIEW]);
-    server.use(
-      http.get(apiUrl('/api/association-access'), () => {
-        requested = true;
-        return HttpResponse.json(off);
-      }),
-    );
-    renderWithProviders(<UsersPage />);
-    expect(
-      await screen.findByText('No hay usuarios para mostrar'),
-    ).toBeVisible();
-    expect(screen.queryByRole('switch')).toBeNull();
-    expect(requested).toBe(false);
-  });
-
-  it('is not shown for an account without its own producer, even with the permission', async () => {
+  it('is not offered to an account without its own producer, even with the permission', async () => {
     // Un superusuario de Django recibe todos los permisos del sistema, incluido este, aunque
     // no tenga productor propio del que la asociación pueda gestionar cuentas: el interruptor
     // no le sirve, así que ni se muestra ni se consulta.
@@ -83,16 +65,18 @@ describe('AssociationAccessCard', () => {
         return HttpResponse.json(off);
       }),
     );
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     expect(
-      await screen.findByText('No hay usuarios para mostrar'),
+      await screen.findByText(
+        'Esta sección es para las cuentas de un productor',
+      ),
     ).toBeVisible();
     expect(screen.queryByRole('switch')).toBeNull();
     expect(requested).toBe(false);
   });
 
   it('shows the current state and that it never changed', async () => {
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     const toggle = await findSwitch();
     expect(toggle).not.toBeChecked();
     expect(screen.getByText('Apagado')).toBeVisible();
@@ -103,7 +87,7 @@ describe('AssociationAccessCard', () => {
     server.use(
       http.get(apiUrl('/api/association-access'), () => HttpResponse.json(on)),
     );
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     expect(await findSwitch()).toBeChecked();
     expect(screen.getByText('Encendido')).toBeVisible();
     expect(
@@ -116,7 +100,7 @@ describe('AssociationAccessCard', () => {
       await delay(100);
       return HttpResponse.json(on);
     });
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     await userEvent.click(await findSwitch());
     const dialog = await screen.findByRole('dialog', {
       name: '¿Permitir el acceso de la asociación?',
@@ -132,7 +116,7 @@ describe('AssociationAccessCard', () => {
 
   it('sends nothing when the confirmation is cancelled', async () => {
     const bodies = recordPut(() => json(on));
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     await userEvent.click(await findSwitch());
     const dialog = await screen.findByRole('dialog');
     await userEvent.click(
@@ -150,7 +134,7 @@ describe('AssociationAccessCard', () => {
     const bodies = recordPut(() =>
       json({ enabled: false, changed_at: '2026-09-28T16:00:00Z' }),
     );
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     const toggle = await findSwitch();
     toggle.focus();
     await userEvent.keyboard(' ');
@@ -172,7 +156,7 @@ describe('AssociationAccessCard', () => {
       http.get(apiUrl('/api/association-access'), () => HttpResponse.json(on)),
     );
     const bodies = recordPut(() => json(off));
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     await userEvent.click(await findSwitch());
     const dialog = await screen.findByRole('dialog', {
       name: '¿Quitar el acceso de la asociación?',
@@ -194,7 +178,7 @@ describe('AssociationAccessCard', () => {
         apiError(500, 'server_error', 'No fue posible guardar el cambio.'),
       ),
     );
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     await userEvent.click(await findSwitch());
     const dialog = await screen.findByRole('dialog');
     await userEvent.click(
@@ -221,7 +205,7 @@ describe('AssociationAccessCard', () => {
           : HttpResponse.json(off);
       }),
     );
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     await userEvent.click(
       await screen.findByRole('button', { name: 'Reintentar' }),
     );
@@ -238,7 +222,7 @@ describe('AssociationAccessCard', () => {
         ),
       ),
     );
-    renderWithProviders(<UsersPage />);
+    renderWithProviders(<MyProducerPage />);
     expect(
       await screen.findByText('Esta cuenta no tiene un productor asociado.'),
     ).toBeInTheDocument();

@@ -79,7 +79,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
       defaultValues={farmToFormValues(farm)}
       title="Editar finca"
       description="Los cambios se guardan en este dispositivo y se envían cuando haya conexión."
-      banner={<OfflineBanner status={sync.status} />}
+      banner={sync.showBanner && <OfflineBanner status={sync.status} />}
       blockedMessage={sync.blockedMessage}
       submitLabel="Guardar cambios"
       isSaving={update.isPending}
@@ -114,7 +114,7 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
       defaultValues={farm.values}
       title={failed ? 'Corregir finca' : 'Editar finca'}
       description="Los cambios se guardan en este dispositivo y la finca se vuelve a enviar cuando haya conexión."
-      banner={<OfflineBanner status={sync.status} />}
+      banner={sync.showBanner && <OfflineBanner status={sync.status} />}
       notice={
         failed && (
           <div

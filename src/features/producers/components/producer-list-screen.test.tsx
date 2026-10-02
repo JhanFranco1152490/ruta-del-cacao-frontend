@@ -307,7 +307,9 @@ describe('ProducerListScreen', () => {
           { queryClient: createQueryClient() },
         );
 
-        await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+        await waitFor(() =>
+          expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+        );
         expect(screen.queryByText('Ana Prueba')).not.toBeInTheDocument();
         expect(
           screen.queryByText('No fue posible cargar los productores.'),

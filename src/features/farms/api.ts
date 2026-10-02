@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
+import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
 type Schemas = components['schemas'];
 export type Farm = Schemas['Farm'];
@@ -48,6 +49,7 @@ export const useFarms = (query: FarmQuery) =>
   useQuery({
     queryKey: queryKeys.farms.list(query),
     queryFn: ({ signal }) => fetchFarms(query, signal),
+    refetchInterval: LIST_REFETCH_INTERVAL_MS,
     // Al paginar o buscar se conserva la página anterior en pantalla hasta que llega la nueva.
     placeholderData: keepPreviousData,
   });

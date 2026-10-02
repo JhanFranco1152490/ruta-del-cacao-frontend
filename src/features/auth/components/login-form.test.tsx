@@ -19,6 +19,12 @@ const session = buildSession();
 beforeEach(() => vi.clearAllMocks());
 
 describe('LoginForm', () => {
+  it('posts the form so a password never ends up in the address', () => {
+    const { container } = renderWithProviders(<LoginForm />);
+
+    expect(container.querySelector('form')).toHaveAttribute('method', 'post');
+  });
+
   it('shows validation messages and toggles password visibility', async () => {
     const user = userEvent.setup();
     renderWithProviders(<LoginForm />);
@@ -58,7 +64,7 @@ describe('LoginForm', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'cacao seguro');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/panel'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(body).toEqual({
       login_method: 'email',
       email: 'persona@example.com',
@@ -83,7 +89,7 @@ describe('LoginForm', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'cacao seguro');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/panel'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(body).toEqual({
       login_method: 'document',
       document_type: 'CE',
@@ -181,7 +187,7 @@ describe('LoginForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/panel'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
     expect(screen.getByRole('button', { name: 'Procesando…' })).toBeDisabled();
   });
 

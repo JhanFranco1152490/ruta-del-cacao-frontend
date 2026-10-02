@@ -15,6 +15,7 @@ import {
   useMunicipalityName,
   type Municipality,
 } from '@/lib/api/municipalities';
+import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
 type Schemas = components['schemas'];
 export type Producer = Schemas['ProducerDetail'];
@@ -61,6 +62,7 @@ export const useProducers = (query: ProducerQuery) =>
   useQuery({
     queryKey: queryKeys.producers.list(query),
     queryFn: ({ signal }) => fetchProducers(query, signal),
+    refetchInterval: LIST_REFETCH_INTERVAL_MS,
     // Al paginar o filtrar se conserva la página anterior en pantalla hasta que llega la nueva.
     placeholderData: keepPreviousData,
   });

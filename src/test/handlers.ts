@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 
 import { API_URL } from '@/lib/env';
 
-import { buildMunicipalities, buildPage } from './factories';
+import { buildMunicipalities, buildPage, buildProfile } from './factories';
 
 export const apiUrl = (path: string) => `${API_URL}${path}`;
 
@@ -44,4 +44,9 @@ export const farmMapPointsHandler = (
     return HttpResponse.json(results);
   });
 
-export const defaultHandlers = [csrfHandler];
+export const profileHandler = (profile = buildProfile()) =>
+  http.get(apiUrl('/api/auth/profile'), () => HttpResponse.json(profile));
+
+// "Mi cuenta" se puede abrir desde cualquier pantalla con sesión: su perfil tiene una respuesta por
+// defecto para que las pruebas que no lo miran no fallen por una petición sin atender.
+export const defaultHandlers = [csrfHandler, profileHandler()];

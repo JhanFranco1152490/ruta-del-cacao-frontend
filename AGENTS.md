@@ -52,6 +52,14 @@ vive en `AGENTS.md` del workspace, si lo tienes al lado)
   conexión con el mecanismo aprobado: PWA, Service Worker, Dexie/IndexedDB y cola de
   sincronización. La base técnica compartida ya existe; cada dominio de captura debe cablear
   su recurso a ella desde su primera pantalla, sin retroajustar el flujo después.
+- **La app abre sin conexión.** El Service Worker es de Serwist (`src/app/sw.ts`, servido por
+  `src/app/serwist/[path]/route.ts`): guarda los archivos de cada build con su versión y el HTML
+  de las pantallas de `src/config/offline-routes.ts`, y nunca guarda nada de otro origen (API,
+  teselas). Una pantalla de captura nueva **no lleva parámetros en la ruta** (`/x/editar?id=`,
+  no `/x/[id]/editar`) y se suma a esa lista; si no, no abre sin conexión. La sesión entra con la
+  copia del dispositivo (`lib/offline/session-snapshot.ts`) cuando el servidor no responde,
+  dentro de la ventana de 7 días. En `next dev` el Service Worker no se registra: lo sin conexión
+  se prueba con `pnpm build && pnpm start` y la red cortada en las herramientas del navegador.
 
 ### Stack y estructura
 
@@ -63,11 +71,13 @@ y Prettier; Husky + lint-staged corrigen y formatean lo que se va a commitear.
 ```
 src/
   app/                 rutas y layouts, delgados: solo montan una pantalla de features/
-    (auth)/            sin sesión: / (inicio de sesión), /recuperar-contrasena,
-                       /restablecer-contrasena
-    (app)/             con sesión (lo garantiza SessionGuard en su layout): /panel,
-                       /productores, /productores/nuevo, /productores/[id],
-                       /productores/[id]/editar
+    (auth)/            sin sesión: /iniciar-sesion, /recuperar-contrasena,
+                       /restablecer-contrasena, /activar-cuenta
+    (app)/             con sesión (lo garantiza SessionGuard en su layout): / (puerta de
+                       entrada: lleva a la primera sección permitida), /productores,
+                       /fincas, /usuarios, /roles, /mi-productor y sus pantallas hijas. El
+                       permiso y la conexión de cada sección se comprueban en el shell a
+                       partir de config/navigation.ts: una sección nueva solo se suma ahí
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth y producers): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)

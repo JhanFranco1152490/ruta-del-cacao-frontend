@@ -2,12 +2,19 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildPage, buildSession, apiError } from '@/test/factories';
+import {
+  buildPage,
+  buildProducer,
+  buildSession,
+  apiError,
+} from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
 import { createQueryClient } from '@/lib/query-client';
+import UsersPage from '@/app/(app)/usuarios/page';
+
 import { AccountListScreen } from './account-list-screen';
 
 const id = '11111111-1111-4111-8111-111111111111';
@@ -213,6 +220,32 @@ describe('AccountListScreen', () => {
     });
     expect(await screen.findByText('Cuenta no disponible')).toBeVisible();
   });
+  it('no longer shows the association access switch', async () => {
+    let requested = false;
+    server.use(
+      http.get(apiUrl('/api/auth/me'), () =>
+        HttpResponse.json(
+          buildSession({
+            producer_id: id,
+            permissions: [
+              ...permissions,
+              PERMISSIONS.ASSOCIATION_ACCESS_MANAGE,
+            ],
+          }),
+        ),
+      ),
+      http.get(apiUrl('/api/association-access'), () => {
+        requested = true;
+        return HttpResponse.json({ enabled: false, changed_at: null });
+      }),
+    );
+    renderWithProviders(<UsersPage />);
+
+    await screen.findByRole('heading', { name: 'Usuarios y accesos' });
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(requested).toBe(false);
+  });
+
   it('hides creation when users_create is missing', async () => {
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
@@ -288,6 +321,10 @@ describe('AccountListScreen', () => {
     renderWithProviders(<AccountListScreen />, {
       searchParams: '?cuenta=nueva',
     });
+    // La asociación elige primero el tipo: administrador viene marcado.
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Continuar' }),
+    );
     await fillForm(false);
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
@@ -299,7 +336,18 @@ describe('AccountListScreen', () => {
     let body: unknown;
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
-        HttpResponse.json(buildSession({ producer_id: null, permissions })),
+        HttpResponse.json(
+          buildSession({
+            producer_id: null,
+            permissions: [...permissions, PERMISSIONS.PRODUCERS_VIEW],
+          }),
+        ),
+      ),
+      http.get(apiUrl('/api/producers'), () =>
+        HttpResponse.json(buildPage([])),
+      ),
+      http.get(apiUrl(`/api/producers/${id}`), () =>
+        HttpResponse.json(buildProducer({ id, association_access: true })),
       ),
       http.post(apiUrl('/api/users'), async ({ request }) => {
         body = await request.json();
@@ -312,6 +360,10 @@ describe('AccountListScreen', () => {
     renderWithProviders(<AccountListScreen />, {
       searchParams: `?cuenta=nueva&productor=${id}`,
     });
+    // El productor del filtro llega ya elegido al paso del tipo de cuenta.
+    const next = await screen.findByRole('button', { name: 'Continuar' });
+    await waitFor(() => expect(next).toBeEnabled());
+    await userEvent.click(next);
     await fillForm();
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
     await screen.findByText('Correo enviado');

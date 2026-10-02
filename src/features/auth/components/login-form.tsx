@@ -11,6 +11,7 @@ import { PasswordField } from '@/components/password-field';
 import { SelectField } from '@/components/select-field';
 import { SubmitButton } from '@/components/submit-button';
 import { TextField } from '@/components/text-field';
+import { HOME_PATH } from '@/config/routes';
 import { getErrorMessage } from '@/lib/api/errors';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 
@@ -40,11 +41,13 @@ export function LoginForm() {
 
   const submit = (values: LoginFormValues) =>
     login.mutate(toLoginRequest(values), {
-      onSuccess: () => router.replace('/panel'),
+      onSuccess: () => router.replace(HOME_PATH),
     });
 
   return (
+    // `post`: si la página cargara sin JavaScript, el navegador no enviaría la contraseña en la URL.
     <form
+      method="post"
       onSubmit={handleSubmit(submit, () => login.reset())}
       noValidate
       className="space-y-4"

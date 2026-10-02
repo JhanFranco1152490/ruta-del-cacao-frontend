@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { CacaoMark } from '@/components/brand/cacao-mark';
+import { SIGN_IN_PATH } from '@/config/routes';
 import { isUnauthorized } from '@/lib/api/errors';
 
 import { useSession } from '../api';
@@ -19,7 +20,7 @@ export function SessionGuard({ children }: { children: ReactNode }) {
   const unauthorized = isUnauthorized(session.error);
 
   useEffect(() => {
-    if (unauthorized) router.replace('/');
+    if (unauthorized) router.replace(SIGN_IN_PATH);
   }, [unauthorized, router]);
 
   if (session.isPending || unauthorized) {
