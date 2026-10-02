@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
+import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
 type Schemas = components['schemas'];
 export type Role = Schemas['Role'];
@@ -39,6 +40,7 @@ export const useRoles = (query: RoleQuery) =>
   useQuery({
     queryKey: queryKeys.roles.list(query),
     queryFn: ({ signal }) => fetchRoles(query, signal),
+    refetchInterval: LIST_REFETCH_INTERVAL_MS,
   });
 export const useRole = (id: string) =>
   useQuery({
