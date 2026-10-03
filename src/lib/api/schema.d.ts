@@ -265,6 +265,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["plots_list"];
+        put?: never;
+        /** @description Registra una parcela en una finca del productor de la sesión. `id` es opcional: el dispositivo lo genera al registrar sin conexión. Reenviar el mismo `id` con el mismo contenido responde 200 con la parcela ya creada; con otro contenido, 409 `plot_id_conflict`, con la parcela del servidor en `current` si es del mismo productor. El 422 de `area_mismatch` trae `measured_area_hectares`, y el de `plot_overlap`, las parcelas invadidas y el contorno sugerido. */
+        post: operations["plots_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plots/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["plots_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina una parcela creada por error. Requiere `expected_version` en la URL. Si algo depende de la parcela responde 409 `plot_has_records` (se desactiva en su lugar); si cambió, 409 `stale_version` con la versión del servidor en `current`. Con la finca inactiva, 422 `farm_inactive`. El historial de la parcela se conserva. */
+        delete: operations["plots_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Edición parcial, incluida la activación o desactivación con `is_active`. `boundary` reemplaza el contorno completo y `null` lo quita. Requiere `expected_version`; si la parcela cambió responde 409 `stale_version` con la versión del servidor en `current`. */
+        patch: operations["plots_partial_update"];
+        trace?: never;
+    };
     "/api/producers": {
         parameters: {
             query?: never;
@@ -548,6 +583,8 @@ export interface components {
             readonly details: string;
             /** Format: decimal */
             readonly area_hectares: string;
+            /** Format: decimal */
+            readonly allocated_area_hectares: string;
             readonly altitude_masl: number;
             readonly location: components["schemas"]["Location"];
             readonly version: number;
@@ -639,6 +676,14 @@ export interface components {
         MunicipalityList: {
             results: components["schemas"]["Municipality"][];
         };
+        Overlap: {
+            /** Format: uuid */
+            plot_id: string;
+            code: string;
+            /** Format: decimal */
+            overlap_area_hectares: string;
+            boundary: components["schemas"]["Vertex"][];
+        };
         PaginatedAccountList: {
             /** @example 123 */
             count: number;
@@ -698,6 +743,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["FarmMunicipalityCount"][];
+        };
+        PaginatedPlotList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Plot"][];
         };
         PaginatedProducerListList: {
             /** @example 123 */
@@ -766,6 +826,14 @@ export interface components {
             is_active?: boolean;
             expected_version: number;
         };
+        PatchedPlotUpdateRequest: {
+            code?: string;
+            /** Format: decimal */
+            area_hectares?: string;
+            boundary?: components["schemas"]["VertexInputRequest"][] | null;
+            is_active?: boolean;
+            expected_version: number;
+        };
         PatchedProducerStatusRequest: {
             status: components["schemas"]["StatusEnum"];
             expected_version: number;
@@ -798,6 +866,63 @@ export interface components {
         };
         PermissionList: {
             results: components["schemas"]["Permission"][];
+        };
+        Plot: {
+            /** Format: uuid */
+            readonly id: string;
+            farm: components["schemas"]["PlotFarm"];
+            readonly code: string;
+            /** Format: decimal */
+            readonly area_hectares: string;
+            /** Format: decimal */
+            readonly measured_area_hectares: string | null;
+            boundary: components["schemas"]["Vertex"][] | null;
+            readonly version: number;
+            readonly is_active: boolean;
+            /** Format: date-time */
+            readonly captured_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        PlotConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["Plot"];
+        };
+        PlotCreateRequest: {
+            code: string;
+            /** Format: decimal */
+            area_hectares: string;
+            boundary?: components["schemas"]["VertexInputRequest"][] | null;
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            farm_id: string;
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
+        PlotFarm: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        PlotRuleError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            /** Format: decimal */
+            measured_area_hectares?: string;
+            overlaps?: components["schemas"]["Overlap"][];
+            suggested_boundary?: components["schemas"]["Vertex"][] | null;
+            /** Format: decimal */
+            suggested_measured_area_hectares?: string | null;
         };
         ProducerAccount: {
             /** Format: uuid */
@@ -926,6 +1051,13 @@ export interface components {
             readonly producer_id: string | null;
         };
         /**
+         * @description * `gps` - gps
+         *     * `map` - map
+         *     * `adjusted` - adjusted
+         * @enum {string}
+         */
+        SourceEnum: "gps" | "map" | "adjusted";
+        /**
          * @description * `active` - Activo
          *     * `inactive` - Inactivo
          * @enum {string}
@@ -934,6 +1066,28 @@ export interface components {
         TerritoryReference: {
             id: string;
             name: string;
+        };
+        Vertex: {
+            /** Format: decimal */
+            latitude: string;
+            /** Format: decimal */
+            longitude: string;
+            /** Format: decimal */
+            accuracy_m: string | null;
+            /** Format: date-time */
+            captured_at: string | null;
+            source: components["schemas"]["SourceEnum"];
+        };
+        VertexInputRequest: {
+            /** Format: decimal */
+            latitude: string;
+            /** Format: decimal */
+            longitude: string;
+            /** Format: decimal */
+            accuracy_m?: string | null;
+            /** Format: date-time */
+            captured_at?: string | null;
+            source: components["schemas"]["SourceEnum"];
         };
     };
     responses: never;
@@ -1849,6 +2003,336 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plots_list: {
+        parameters: {
+            query?: {
+                /** @description Solo las parcelas de esta finca. */
+                farm?: string;
+                /** @description Solo activas o solo inactivas. */
+                is_active?: boolean;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Busca en el código, sin tildes. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPlotList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plots_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlotCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plot"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plot"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotRuleError"];
+                };
+            };
+        };
+    };
+    plots_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plot"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plots_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` de la parcela que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plots_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchedPlotUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plot"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotRuleError"];
                 };
             };
         };
