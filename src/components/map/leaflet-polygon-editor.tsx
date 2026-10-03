@@ -105,7 +105,11 @@ export function LeafletPolygonEditor({
           weight: 2,
           // No interactivo: un toque sobre una vecina sigue agregando el vértice.
           interactive: false,
-        }).bindTooltip(shape.label, { permanent: true, direction: 'center' }),
+        }).bindTooltip(shape.label, {
+          permanent: true,
+          direction: 'center',
+          className: 'map-plot-label',
+        }),
       ),
     ).addTo(map);
     return () => {
@@ -192,6 +196,9 @@ export function LeafletPolygonEditor({
         alt: `Vértice ${index + 1}`,
         keyboard: false,
       }).addTo(map);
+      // Sin un oyente de clic propio, Leaflet deja pasar el clic al mapa y tocar un vértice agregaba
+      // otro encima. Con él, el marcador lo recibe y ahí termina.
+      marker.on('click', (event) => L.DomEvent.stopPropagation(event));
       marker.on('dragend', () => {
         onMoveRef.current(index, toGeoPoint(marker.getLatLng()));
       });

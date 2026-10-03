@@ -259,6 +259,28 @@ a {
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
     cursor: grab;
   }
+  /* Etiqueta de una parcela en el mapa: solo el código, en negrita y con un contorno claro que lo
+     separa de cualquier mapa base y de su propio relleno. Sin el recuadro blanco ni la flecha
+     que Leaflet pone por defecto: tapaba el polígono que nombra. */
+  .leaflet-tooltip.map-plot-label {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--ink);
+    font-size: 0.8125rem;
+    font-weight: 800;
+    pointer-events: none;
+    text-shadow:
+      -1px -1px 0 #ffffff,
+      1px -1px 0 #ffffff,
+      -1px 1px 0 #ffffff,
+      1px 1px 0 #ffffff,
+      0 0 4px #ffffff;
+  }
+  .leaflet-tooltip.map-plot-label::before {
+    display: none;
+  }
   /* Cifra de fincas de un municipio y grupo de fincas que se tapan en pantalla. */
   .map-count,
   .map-cluster {

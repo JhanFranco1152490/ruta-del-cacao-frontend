@@ -193,7 +193,11 @@ export function LeafletPointsMap({
           fillOpacity: 0.25,
           weight: 2,
         })
-          .bindTooltip(shape.label, { permanent: true, direction: 'center' })
+          .bindTooltip(shape.label, {
+            permanent: true,
+            direction: 'center',
+            className: 'map-plot-label',
+          })
           .bindPopup(popupContent(shape.label, shape.detail));
       }),
     ).addTo(map);

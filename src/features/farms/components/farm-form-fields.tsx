@@ -10,6 +10,7 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
 import { useMunicipalities } from '@/lib/api/municipalities';
+import { altitudeRangeFor } from '@/lib/geo/municipality-altitude';
 import { OPERATING_DEPARTMENT } from '@/lib/departments';
 import type { Coordinates } from '@/types/geo';
 
@@ -78,6 +79,10 @@ export function FarmFormFields({
     setValue('longitude', location.longitude, options);
   };
   const location = { latitude, longitude };
+  const altitudeRange = altitudeRangeFor(municipalityId);
+  const altitudeHint = altitudeRange
+    ? `En ${municipalities.data?.find((m) => m.code === municipalityId)?.name ?? 'el municipio'} el terreno va de ${altitudeRange.minimum} a ${altitudeRange.maximum} m.`
+    : undefined;
   const hints = useMunicipalityHints(location, municipalityId);
   const municipalityName = (code: string) =>
     municipalities.data?.find((municipality) => municipality.code === code)
@@ -182,6 +187,7 @@ export function FarmFormFields({
               <TextField
                 className={CAPTURE_FIELD_CLASS}
                 error={errors.altitude_masl?.message}
+                hint={altitudeHint}
                 inputMode="numeric"
                 label="Altitud (m s. n. m.)"
                 {...register('altitude_masl')}

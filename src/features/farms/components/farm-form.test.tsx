@@ -71,6 +71,25 @@ describe('FarmForm', () => {
     ).toBeInTheDocument();
   });
 
+  it('tells the altitude the chosen municipality reaches, and blocks one outside it', async () => {
+    const user = userEvent.setup();
+    await renderForm();
+
+    await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+    expect(
+      screen.getByText('En Pamplona el terreno va de 1450 a 3902 m.'),
+    ).toBeInTheDocument();
+
+    await fillValidFarm(user);
+    await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+    await save(user);
+
+    expect(
+      await screen.findByText(/La altitud no corresponde al municipio elegido/),
+    ).toBeInTheDocument();
+    expect(await queuedFarms()).toHaveLength(0);
+  });
+
   it('blocks saving and explains each missing required field', async () => {
     const user = userEvent.setup();
     await renderForm();
