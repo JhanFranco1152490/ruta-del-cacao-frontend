@@ -98,6 +98,10 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
   return (
     <FarmFormFields
       allocatedHectares={Number(farm.allocated_area_hectares)}
+      savedLocation={{
+        municipalityCode: farm.municipality.id,
+        altitude: String(farm.altitude_masl),
+      }}
       defaultValues={farmToFormValues(farm)}
       title="Editar finca"
       description="Los cambios se guardan en este dispositivo y se envían cuando haya conexión."

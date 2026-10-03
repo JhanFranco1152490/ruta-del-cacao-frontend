@@ -23,7 +23,9 @@ export function altitudeRangeFor(
   const range = ALTITUDE_RANGES[municipalityCode];
   if (!range) return null;
   return {
-    minimum: range[0] - ALTITUDE_MARGIN_M,
+    // Con el margen el mínimo puede quedar bajo el nivel del mar, y Norte de Santander no tiene
+    // terreno ahí: decir "de -49 a 1647 m" confunde.
+    minimum: Math.max(0, range[0] - ALTITUDE_MARGIN_M),
     maximum: range[1] + ALTITUDE_MARGIN_M,
   };
 }

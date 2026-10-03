@@ -34,6 +34,7 @@ import {
 export function FarmFormFields({
   defaultValues,
   allocatedHectares,
+  savedLocation,
   title,
   description,
   banner,
@@ -48,6 +49,9 @@ export function FarmFormFields({
   defaultValues: FarmFormValues;
   // Lo que ya ocupan las parcelas activas de la finca que se edita: el área no puede bajar de ahí.
   allocatedHectares?: number;
+  // Municipio y altitud de la finca del servidor que se edita: si no cambian, no se vuelve a exigir
+  // que la altitud quepa en el terreno del municipio.
+  savedLocation?: { municipalityCode: string; altitude: string };
   title: string;
   description: string;
   banner?: ReactNode;
@@ -62,9 +66,17 @@ export function FarmFormFields({
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
+  const municipalityList = municipalities.data;
   const schema = useMemo(
-    () => createFarmFormSchema(allocatedHectares),
-    [allocatedHectares],
+    () =>
+      createFarmFormSchema({
+        allocatedHectares,
+        municipalityName: (code) =>
+          municipalityList?.find((municipality) => municipality.code === code)
+            ?.name,
+        saved: savedLocation,
+      }),
+    [allocatedHectares, municipalityList, savedLocation],
   );
   const {
     register,
