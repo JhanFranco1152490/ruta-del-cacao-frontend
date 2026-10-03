@@ -17,10 +17,19 @@ export function FakeMap({
   disabled,
   baseLayer,
   focusBounds,
+  gpsPosition,
+  focus,
   onError,
 }: MapProviderProps) {
   return (
     <div>
+      {focus && <p>Enfocado en: {focus.target}</p>}
+      <p>
+        Posición GPS:{' '}
+        {gpsPosition
+          ? `${gpsPosition.point.latitude}, ${gpsPosition.point.longitude} ±${gpsPosition.accuracyM ?? '?'} m`
+          : 'ninguna'}
+      </p>
       <p>Capa: {baseLayer}</p>
       {focusBounds && (
         <p>

@@ -19,7 +19,11 @@ import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
 } from '@/components/capture-field-class';
-import { useGeolocation } from '@/hooks/use-geolocation';
+import {
+  COORDINATES_ALTERNATIVES,
+  useGeolocation,
+} from '@/hooks/use-geolocation';
+import { useWarmGps } from '@/hooks/use-warm-gps';
 import { useMunicipalityHints } from '../use-municipality-hints';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 import {
@@ -113,6 +117,8 @@ export function FarmFormFields({
     }
   };
   const geolocation = useGeolocation(captureLocation);
+  // Vive aquí y no en los botones: el mapa también necesita saber dónde está la persona.
+  const warm = useWarmGps(COORDINATES_ALTERNATIVES);
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
@@ -205,6 +211,7 @@ export function FarmFormFields({
           <div className="space-y-4 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
             <FarmLocationFields
               geolocation={geolocation}
+              warm={warm}
               latitudeError={errors.latitude?.message}
               location={location}
               longitudeError={errors.longitude?.message}
@@ -231,6 +238,8 @@ export function FarmFormFields({
           <FarmLocationMap
             disabled={geolocation.isCapturing}
             focusBounds={hints.focusBounds}
+            gpsPosition={warm.fix}
+            onRequestGps={warm.start}
             frameClassName="lg:h-[34rem]"
             location={location}
             onLocationChange={changeLocation}
