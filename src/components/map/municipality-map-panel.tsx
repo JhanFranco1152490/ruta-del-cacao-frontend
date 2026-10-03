@@ -48,6 +48,7 @@ export function MunicipalityMapPanel({
   const map = useMapProvider(loadProvider);
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
   const [baseLayerMissing, setBaseLayerMissing] = useState(false);
+  const [baseLayerBackup, setBaseLayerBackup] = useState(false);
 
   if (map.isLoading) return <MapSkeleton className={MUNICIPALITY_MAP_HEIGHT} />;
 
@@ -91,6 +92,7 @@ export function MunicipalityMapPanel({
               onChange={(next) => {
                 setBaseLayer(next);
                 setBaseLayerMissing(false);
+                setBaseLayerBackup(false);
               }}
               value={baseLayer}
             />
@@ -110,6 +112,7 @@ export function MunicipalityMapPanel({
         <Provider
           baseLayer={baseLayer}
           describeMunicipality={describeMunicipality}
+          onBaseLayerFallback={() => setBaseLayerBackup(true)}
           onBaseLayerUnavailable={() => setBaseLayerMissing(true)}
           onError={map.fail}
           onSelectMunicipality={onSelectMunicipality}
@@ -117,6 +120,11 @@ export function MunicipalityMapPanel({
           view={view}
         />
       </div>
+      {hasBaseLayer && baseLayerBackup && !baseLayerMissing && (
+        <p className="text-sm font-bold text-muted-foreground" role="status">
+          Se muestra el mapa de respaldo: el principal no está disponible.
+        </p>
+      )}
       {hasBaseLayer && baseLayerMissing && (
         <p className="text-sm font-bold text-muted-foreground" role="status">
           No cargó el mapa base: se ven solo los límites y las fincas.

@@ -110,6 +110,7 @@ export function LeafletMunicipalityMap({
   onSelectMunicipality,
   onSelectPoint,
   onBaseLayerUnavailable,
+  onBaseLayerFallback,
   onError,
 }: MunicipalityMapProviderProps) {
   const { containerRef, map } = useLeafletMap({
@@ -134,7 +135,12 @@ export function LeafletMunicipalityMap({
   const focusReady =
     !!focus && points.some((point) => point.id === focus.pointId);
 
-  useBaseLayer(map, code || free ? baseLayer : null, onBaseLayerUnavailable);
+  useBaseLayer(
+    map,
+    code || free ? baseLayer : null,
+    onBaseLayerUnavailable,
+    onBaseLayerFallback,
+  );
 
   useEffect(() => {
     if (!map || !outlines) return;
