@@ -25,6 +25,9 @@ import {
   type PlotFormFields,
 } from './schemas';
 
+// Por debajo de media centésima el área, con dos decimales, sería 0,00: no se propone.
+const MIN_PROPOSED_AREA_HECTARES = 0.005;
+
 type EditorFarm = { areaHectares: string; location: Coordinates };
 
 const toNumber = (value: string | undefined) => {
@@ -159,6 +162,19 @@ export function usePlotEditor({
       }
       setCloseAttempted(false);
       dispatch({ type: 'close' });
+      // Con el polígono cerrado y el área sin escribir, se propone la calculada: es lo que la
+      // persona acaba de dibujar y casi siempre es lo que iba a poner. Una ya escrita no se toca.
+      const measured = check.measuredAreaHectares;
+      if (
+        !form.getValues('area_hectares')?.trim() &&
+        measured !== null &&
+        measured >= MIN_PROPOSED_AREA_HECTARES
+      ) {
+        form.setValue('area_hectares', measured.toFixed(2), {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
     },
     undo: () => dispatch({ type: 'undo' }),
     removeVertex: (index: number) => dispatch({ type: 'remove', index }),

@@ -308,6 +308,46 @@ describe('PlotEditor', () => {
     expect(screen.getByText('1: 7.8, -72.5')).toBeInTheDocument();
   });
 
+  it('fills the area with the calculated one when the polygon is closed and the area is empty', async () => {
+    const { user } = renderEditor();
+    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
+    await tapMap(user, 3);
+    expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue('');
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar polígono' }));
+
+    const field = screen.getByLabelText(
+      'Área declarada (hectáreas)',
+    ) as HTMLInputElement;
+    expect(field.value).toMatch(/^\d+\.\d{2}$/);
+    expect(Number(field.value)).toBeGreaterThan(0);
+    // Coincide con lo calculado: no aparece el aviso de diferencia de áreas.
+    expect(
+      screen.queryByText(/no coincide con la declarada|difiere más del 5 %/),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps the area the person already wrote when closing the polygon', async () => {
+    const { user } = renderEditor();
+    await fill(user, 'P1', '0.5');
+    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
+    await tapMap(user, 3);
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar polígono' }));
+
+    expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue(
+      '0.5',
+    );
+  });
+
+  it('does not fill the area while the polygon is still open', async () => {
+    const { user } = renderEditor();
+    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
+    await tapMap(user, 3);
+
+    expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue('');
+  });
+
   it('explains that closing needs three vertices', async () => {
     const { user } = renderEditor();
 
