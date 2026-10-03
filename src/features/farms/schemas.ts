@@ -2,25 +2,12 @@ import { z } from 'zod';
 
 import { COORDINATE_DECIMALS } from '@/lib/format/coordinates';
 import { OPERATING_AREA_BOUNDS } from '@/lib/geo/operating-area';
-
-// Los límites de decimales coinciden con los que guarda la API: más precisión la rechaza.
-const AREA_DECIMALS = 2;
-
-function decimalPattern(maxDecimals: number) {
-  return new RegExp(`^-?\\d+(\\.\\d{1,${maxDecimals}})?$`);
-}
-
-function isDecimal(value: string) {
-  return /^-?\d+(\.\d+)?$/.test(value);
-}
-
-// El teclado en español suele escribir la coma decimal; se normaliza a punto, que es lo
-// que espera la API.
-const decimalText = () =>
-  z
-    .string()
-    .trim()
-    .transform((value) => value.replace(',', '.'));
+import {
+  areaHectaresField,
+  decimalPattern,
+  decimalText,
+  isDecimal,
+} from '@/lib/validation/decimal';
 
 export const OUTSIDE_OPERATING_AREA =
   'La ubicación está fuera de Norte de Santander';
@@ -59,15 +46,7 @@ export const farmFormSchema = z.object({
   name: z.string().trim().min(1, 'Ingresa el nombre de la finca.'),
   municipality_id: z.string().min(1, 'Selecciona un municipio.'),
   details: z.string().trim(),
-  area_hectares: decimalText()
-    .refine(
-      (value) => isDecimal(value) && Number(value) > 0,
-      'El área debe ser mayor a 0',
-    )
-    .refine(
-      (value) => !isDecimal(value) || decimalPattern(AREA_DECIMALS).test(value),
-      `Usa máximo ${AREA_DECIMALS} decimales.`,
-    ),
+  area_hectares: areaHectaresField(),
   altitude_masl: z
     .string()
     .trim()

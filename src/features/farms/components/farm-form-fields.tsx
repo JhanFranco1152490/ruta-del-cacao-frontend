@@ -17,7 +17,7 @@ import { farmFormSchema, type FarmFormValues } from '../schemas';
 import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
-} from './capture-field-class';
+} from '@/components/capture-field-class';
 import { useGeolocation } from '../use-geolocation';
 import { useMunicipalityHints } from '../use-municipality-hints';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';

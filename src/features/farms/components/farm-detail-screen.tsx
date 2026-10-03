@@ -1,27 +1,25 @@
 'use client';
 
 import { cn } from 'cn';
-import { ChevronRight, CircleOff, MapPin, Pencil } from 'lucide-react';
+import { ChevronRight, MapPin, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { formatDateTime } from '@/lib/format/dates';
 import { formatHectares } from '@/lib/format/hectares';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
 
-import { type Farm, useFarmDetail } from '../api';
+import type { Farm } from '../api';
 import type { QueuedFarm } from '../farm-queue';
 import { farmEditPath } from '../farm-paths';
-import { useQueuedFarm } from '../use-farm-queue';
-import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
+import { useFarmSource } from '../use-farm-source';
 import { FarmStatusBadge } from './farm-status-badge';
+import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
 
 // Lo que una sección de la pantalla necesita de la finca: datos simples y no la respuesta de la
 // API, para que otros dominios (las parcelas) no dependan de su forma.
@@ -33,6 +31,8 @@ export type FarmPlotsContext = {
   allocatedAreaHectares?: string;
   location: Coordinates;
   isActive: boolean;
+  // Todavía no existe en el servidor: solo tiene las parcelas que esperan en el dispositivo.
+  isPendingCreate?: boolean;
 };
 
 type FarmView = {
@@ -53,43 +53,38 @@ export function FarmDetailScreen({
   id: string;
   renderPlots: (farm: FarmPlotsContext) => ReactNode;
 }) {
-  const queued = useQueuedFarm(id);
+  const source = useFarmSource(id);
 
-  if (queued.isPending) return <DetailSkeleton />;
-  if (queued.isError) {
-    return (
-      <FarmUnavailable message="No fue posible leer la finca guardada en este dispositivo." />
-    );
+  switch (source.status) {
+    case 'loading':
+      return <FarmScreenSkeleton />;
+    case 'error':
+      return <FarmUnavailable message={source.message} />;
+    case 'queued':
+      return (
+        <QueuedFarmDetail farm={source.queued} renderPlots={renderPlots} />
+      );
+    case 'server':
+      return (
+        <ServerFarmDetail
+          farm={source.farm}
+          renderPlots={renderPlots}
+          savedAt={source.savedAt}
+        />
+      );
   }
-  if (queued.data)
-    return <QueuedFarmDetail farm={queued.data} renderPlots={renderPlots} />;
-  return <ServerFarmDetail id={id} renderPlots={renderPlots} />;
 }
 
 function ServerFarmDetail({
-  id,
+  farm: server,
+  savedAt,
   renderPlots,
 }: {
-  id: string;
+  farm: Farm;
+  savedAt?: number;
   renderPlots: (farm: FarmPlotsContext) => ReactNode;
 }) {
   const { data: user } = useSession();
-  const farm = useFarmDetail(user?.id, id);
-
-  if (farm.isPending) return <DetailSkeleton />;
-  if (farm.isError) {
-    return (
-      <FarmUnavailable
-        message={
-          isApiError(farm.error) && farm.error.status === 404
-            ? 'No encontramos esta finca entre las tuyas.'
-            : 'No fue posible cargar la finca. Si no la has abierto antes con conexión, necesitas conexión para verla.'
-        }
-      />
-    );
-  }
-
-  const { data: server, savedAt } = farm.data;
   return (
     <DetailLayout
       view={serverFarmView(server)}
@@ -124,7 +119,8 @@ function QueuedFarmDetail({
   const location = { latitude: values.latitude, longitude: values.longitude };
   const failed = farm.status === 'error';
   // Una edición pendiente es de una finca que ya existe en el servidor y tiene parcelas que ver.
-  // Un alta todavía no existe allá: no tiene parcelas ni área asignada.
+  // Un alta todavía no existe allá: no tiene área asignada ni parcelas del servidor, solo las que
+  // esperan en el dispositivo.
   const existsOnServer = farm.operation === 'update';
 
   return (
@@ -151,18 +147,18 @@ function QueuedFarmDetail({
           ? `No se pudo sincronizar${farm.errorMessage ? `: ${farm.errorMessage}` : '.'}`
           : existsOnServer
             ? 'Esta finca tiene cambios en este dispositivo que todavía no se envían.'
-            : 'Esta finca está solo en este dispositivo y se enviará cuando haya conexión. Sus parcelas podrás registrarlas cuando se sincronice.'
+            : 'Esta finca está solo en este dispositivo y se enviará cuando haya conexión. Puedes registrar sus parcelas ahora: se enviarán después de la finca.'
       }
       noticeIsError={failed}
     >
-      {existsOnServer &&
-        renderPlots({
-          id: farm.id,
-          name: values.name,
-          areaHectares: values.area_hectares,
-          location,
-          isActive: true,
-        })}
+      {renderPlots({
+        id: farm.id,
+        name: values.name,
+        areaHectares: values.area_hectares,
+        location,
+        isActive: true,
+        isPendingCreate: !existsOnServer,
+      })}
     </DetailLayout>
   );
 }
@@ -280,43 +276,6 @@ function Fact({ label, value }: { label: string; value: ReactNode }) {
     <div>
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="font-bold text-foreground">{value}</dd>
-    </div>
-  );
-}
-
-function DetailSkeleton() {
-  return (
-    <div
-      aria-label="Cargando finca"
-      className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-8 sm:px-8"
-      role="status"
-    >
-      <Skeleton className="h-12 w-2/3" />
-      <Skeleton className="h-28" />
-      <Skeleton className="h-72" />
-    </div>
-  );
-}
-
-function FarmUnavailable({ message }: { message: string }) {
-  return (
-    <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-8">
-      <CircleOff aria-hidden="true" className="mx-auto size-10 text-err" />
-      <h1 className="mt-4 text-3xl text-selva">
-        No fue posible abrir la finca
-      </h1>
-      <p className="mt-3 text-muted-foreground" role="alert">
-        {message}
-      </p>
-      <Link
-        className={buttonVariants({
-          size: 'office',
-          className: cn(CAPTURE_BUTTON_CLASS, 'mt-6'),
-        })}
-        href="/fincas"
-      >
-        Volver a mis fincas
-      </Link>
     </div>
   );
 }

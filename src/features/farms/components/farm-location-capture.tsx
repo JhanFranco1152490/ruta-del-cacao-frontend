@@ -14,7 +14,7 @@ import { GPS_WEAK_ACCURACY_M, type useGeolocation } from '../use-geolocation';
 import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
-} from './capture-field-class';
+} from '@/components/capture-field-class';
 
 type Geolocation = ReturnType<typeof useGeolocation>;
 

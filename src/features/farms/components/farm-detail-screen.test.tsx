@@ -142,9 +142,10 @@ describe('FarmDetailScreen', () => {
     );
   });
 
-  it('builds a farm that is only on the device from the queue, without plots', async () => {
+  it('builds a farm that is only on the device from the queue, with its pending plots section', async () => {
     await enqueueFarmCreate(userId, 'local-1', queued);
-    renderScreen({ id: 'local-1' });
+    const seen: FarmPlotsContext[] = [];
+    renderScreen({ id: 'local-1', seen });
 
     expect(
       await screen.findByRole('heading', {
@@ -156,7 +157,11 @@ describe('FarmDetailScreen', () => {
     expect(
       screen.getByText(/está solo en este dispositivo/),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/^Parcelas de/)).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Parcelas de Finca del teléfono'),
+    ).toBeInTheDocument();
+    expect(seen.at(-1)).toMatchObject({ isPendingCreate: true });
+    expect(seen.at(-1)?.allocatedAreaHectares).toBeUndefined();
   });
 
   it('shows the plots of a farm whose edit is still pending', async () => {

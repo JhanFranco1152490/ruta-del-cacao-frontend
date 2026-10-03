@@ -21,7 +21,7 @@ import {
   useQueuedFarm,
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
-import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
+import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
 import { FarmStaleVersionSummary } from './farm-stale-version-summary';
