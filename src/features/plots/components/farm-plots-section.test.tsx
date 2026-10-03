@@ -329,6 +329,23 @@ describe('FarmPlotsSection', () => {
       ).not.toBeInTheDocument();
     });
 
+    it('asks the server again when a plot leaves the queue because it synced', async () => {
+      const requests: URLSearchParams[] = [];
+      server.use(plotsHandler([], requests));
+      await enqueuePlotCreate(userId, 'q1', 'f1', {
+        code: 'P-pendiente',
+        area_hectares: '1.00',
+        vertices: [],
+      });
+      renderSection({ permissions: ALL });
+      await screen.findByText('P-pendiente');
+      const before = requests.length;
+
+      await getOfflineDb(userId).queue.delete('q1');
+
+      await waitFor(() => expect(requests.length).toBeGreaterThan(before));
+    });
+
     it('shows only the device plots of a farm that is not on the server yet, without asking for more', async () => {
       const requests: URLSearchParams[] = [];
       server.use(plotsHandler([], requests));

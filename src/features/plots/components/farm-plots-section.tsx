@@ -19,6 +19,7 @@ import type { KnownPlot } from '../known-plots';
 import { plotsToShapes } from '../plot-map';
 import { plotEditPath, plotNewPath } from '../plot-paths';
 import { useKnownPlots } from '../use-known-plots';
+import { useRefreshPlotsWhenQueueShrinks } from '../use-plot-queue';
 import { PLOT_DELETED_CODE } from '../sync-adapter';
 import { PlotAreaBar } from './plot-area-bar';
 import { PlotDeleteDialog } from './plot-delete-dialog';
@@ -49,6 +50,9 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
   const canChange = hasPermission(user, PERMISSIONS.PLOTS_CHANGE);
   const canDeletePlot = hasPermission(user, PERMISSIONS.PLOTS_DELETE);
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
+  // Cuando una parcela sale de la cola se sincronizó: la lista y el área asignada se vuelven a
+  // pedir para que aparezca con los datos del servidor.
+  useRefreshPlotsWhenQueueShrinks(farm.id, known.queuedPlots);
   // Cada pedido es un objeto nuevo: pedir dos veces la misma parcela vuelve a llevar el mapa.
   const [focus, setFocus] = useState<{ shapeId: string }>();
   const mapRef = useRef<HTMLDivElement>(null);
