@@ -9,7 +9,7 @@ import {
 
 import type { FarmListItem } from '../farm-list-item';
 import { queueErrorMessage } from '../queue-error-message';
-import { useConfirmAction } from '../use-confirm-action';
+import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { useFarmDiscard } from '../use-farm-queue';
 
 export function FarmDiscardDialog({ farm }: { farm: FarmListItem }) {

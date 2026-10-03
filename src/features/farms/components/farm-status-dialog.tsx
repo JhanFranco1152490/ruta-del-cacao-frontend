@@ -7,7 +7,7 @@ import {
   type StatusChangeAction,
 } from '@/components/status-change-dialog';
 
-import { useConfirmAction } from '../use-confirm-action';
+import { useConfirmAction } from '@/hooks/use-confirm-action';
 
 type FarmActivity = 'active' | 'inactive';
 

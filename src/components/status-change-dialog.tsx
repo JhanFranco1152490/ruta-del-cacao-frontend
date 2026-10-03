@@ -1,6 +1,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +34,8 @@ type StatusChangeDialogProps = {
   onConfirm: () => void;
   isPending: boolean;
   error?: string;
+  // Detalle de lo que la acción va a hacer, entre la descripción y el aviso de error.
+  children?: ReactNode;
 };
 
 // Confirmación de activar o desactivar: mientras la petición está en curso no se puede cerrar
@@ -45,6 +48,7 @@ export function StatusChangeDialog({
   onConfirm,
   isPending,
   error,
+  children,
 }: StatusChangeDialogProps) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -58,6 +62,7 @@ export function StatusChangeDialog({
           <DialogTitle>{action.title}</DialogTitle>
           <DialogDescription>{action.description}</DialogDescription>
         </DialogHeader>
+        {children}
         {error && (
           <p className="text-sm font-bold text-err" role="alert">
             {error}

@@ -291,7 +291,7 @@ export interface paths {
         get: operations["producers_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["producers_destroy"];
         options?: never;
         head?: never;
         /** @description Edición parcial. Requiere `expected_version` (la versión que se leyó; si cambió responde 409) y al menos un campo editable más; si falta alguno responde 400. */
@@ -2013,6 +2013,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    producers_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` del productor que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProducerConflictError"];
                 };
             };
         };
