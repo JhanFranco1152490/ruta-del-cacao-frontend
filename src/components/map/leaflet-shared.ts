@@ -87,13 +87,17 @@ export function useLeafletMap({ zoomControl = true, zoomSnap = 1 } = {}) {
 }
 
 // Mapa base con respaldo (ver `createTileFallback`). Si ninguna fuente carga, avisa
-// `onUnavailable`. Con `kind` en null el mapa queda sin mapa base.
+// `onUnavailable`; si pasa a una fuente de respaldo, avisa `onFallback` (y lo deja en la consola:
+// el mapa sigue viéndose y, sin esto, nadie se enteraría de que el principal dejó de servir).
+// Con `kind` en null el mapa queda sin mapa base.
 export function useBaseLayer(
   map: L.Map | null,
   kind: BaseLayerKind | null,
   onUnavailable: () => void,
+  onFallback?: () => void,
 ) {
   const onUnavailableRef = useLatest(onUnavailable);
+  const onFallbackRef = useLatest(onFallback);
 
   useEffect(() => {
     if (!map || !kind) return;
@@ -110,8 +114,13 @@ export function useBaseLayer(
         .on('tileload', () => fallback.tileLoaded(index))
         .on('tileerror', () => {
           const outcome = fallback.tileFailed(index);
-          if (outcome === 'next') show(index + 1);
-          else if (outcome === 'exhausted') onUnavailableRef.current();
+          if (outcome === 'next') {
+            console.warn(
+              `El mapa base principal (${kind}) no responde: se usa el de respaldo.`,
+            );
+            onFallbackRef.current?.();
+            show(index + 1);
+          } else if (outcome === 'exhausted') onUnavailableRef.current();
         })
         .addTo(map);
       layer.bringToBack();
@@ -120,5 +129,5 @@ export function useBaseLayer(
     return () => {
       layer?.remove();
     };
-  }, [map, kind, onUnavailableRef]);
+  }, [map, kind, onUnavailableRef, onFallbackRef]);
 }
