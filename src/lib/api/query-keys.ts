@@ -23,6 +23,7 @@ export const queryKeys = {
     lists: () => ['producers', 'list'] as const,
     list: (query: object) => ['producers', 'list', query] as const,
     detail: (id: string) => ['producers', 'detail', id] as const,
+    dependents: (id: string) => ['producers', 'dependents', id] as const,
   },
   farms: {
     all: () => ['farms'] as const,

@@ -2,20 +2,27 @@
 
 import { Pencil } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
+import { useSession } from '@/hooks/use-session';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useMunicipalityName } from '../api';
 import { BackToProducersLink } from './back-to-producers-link';
 import { ProducerAccessNote } from './producer-access-note';
 import { ProducerAccountCard } from './producer-account-card';
 import { ProducerDataCard } from './producer-data-card';
+import { ProducerDeleteDialog } from './producer-delete-dialog';
 import { ProducerLoadGate } from './producer-load-gate';
 import { ProducerStatusDialog } from './producer-status-dialog';
 
 export function ProducerDetailScreen({ id }: { id: string }) {
   const municipalityName = useMunicipalityName();
+  const router = useRouter();
+  const { data: user } = useSession();
+  const canDelete = hasPermission(user, PERMISSIONS.PRODUCERS_DELETE);
 
   return (
     <ProducerLoadGate id={id}>
@@ -45,6 +52,12 @@ export function ProducerDetailScreen({ id }: { id: string }) {
                   producer={producer}
                   target={producer.status === 'active' ? 'inactive' : 'active'}
                 />
+                {canDelete && (
+                  <ProducerDeleteDialog
+                    producer={producer}
+                    onDone={() => router.push('/productores')}
+                  />
+                )}
               </>
             }
           />

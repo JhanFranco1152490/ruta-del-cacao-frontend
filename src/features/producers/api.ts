@@ -8,7 +8,7 @@ import {
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { components } from '@/lib/api/schema';
+import type { components, operations } from '@/lib/api/schema';
 import {
   fetchMunicipalities,
   useMunicipalities,
@@ -126,6 +126,46 @@ export function useUpdateProducer() {
       }),
     onSuccess: cacheProducer,
     onError: (error, { id }) => refreshOnStaleVersion(error, id),
+  });
+}
+
+type ProducerDeleteQuery = NonNullable<
+  operations['producers_destroy']['parameters']['query']
+>;
+
+// La versión leída va en la URL: el servidor no lee un cuerpo en DELETE.
+export const deleteProducer = (id: string, expectedVersion: number) => {
+  const query: ProducerDeleteQuery = { expected_version: expectedVersion };
+  const params = new URLSearchParams({
+    expected_version: String(query.expected_version),
+  });
+  return apiFetch<void>(`/api/producers/${encodeURIComponent(id)}?${params}`, {
+    method: 'DELETE',
+  });
+};
+
+// Eliminar un productor creado por error es solo en línea y la persona espera la respuesta: sin
+// red debe fallar en el acto. Por defecto TanStack la dejaría en pausa y la ejecutaría sola al
+// volver la red, cuando ya nadie lo está pidiendo.
+export function useDeleteProducer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({
+      id,
+      expectedVersion,
+    }: {
+      id: string;
+      expectedVersion: number;
+    }) => deleteProducer(id, expectedVersion),
+    onSuccess: (_, { id }) => {
+      queryClient.removeQueries({ queryKey: queryKeys.producers.detail(id) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.producers.all(),
+      });
+      // Sus fincas se eliminan con él: la lista y el mapa dejan de mostrarlas.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.farms.all() });
+    },
   });
 }
 

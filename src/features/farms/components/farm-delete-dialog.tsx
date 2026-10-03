@@ -10,7 +10,7 @@ import {
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 
 import { type Farm, useChangeFarmStatus, useDeleteFarm } from '../api';
-import { useConfirmAction } from '../use-confirm-action';
+import { useConfirmAction } from '@/hooks/use-confirm-action';
 
 const HAS_RECORDS = 'farm_has_records';
 
