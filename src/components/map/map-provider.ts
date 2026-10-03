@@ -95,3 +95,31 @@ export type MunicipalityMapProvider =
 
 export type LoadMunicipalityMapProvider =
   () => Promise<MunicipalityMapProvider>;
+
+// Mapa para dibujar el polígono de una parcela: los vértices se agregan tocando el mapa (en modo
+// de dibujo) y se mueven arrastrándolos. Las formas de referencia no se editan.
+export type PolygonEditorMapProviderProps = {
+  vertices: readonly GeoPoint[];
+  // Con el modo de dibujo activo, cada toque en el mapa agrega un vértice.
+  drawing: boolean;
+  disabled: boolean;
+  baseLayer: BaseLayerKind;
+  // Referencia visual: el punto de la finca y las demás parcelas de la finca.
+  farmPoint: GeoPoint | null;
+  referenceShapes: readonly MapShape[];
+  // Las zonas del polígono que invaden a otra parcela, resaltadas.
+  overlapRegions: readonly (readonly GeoPoint[])[];
+  // Vista previa del ajuste sugerido; se dibuja sin tocar los vértices.
+  suggestion: readonly GeoPoint[] | null;
+  onAddVertex: (point: GeoPoint) => void;
+  // Quien lo recibe decide dónde queda el vértice (p. ej. pegado al borde de otra parcela).
+  onMoveVertex: (index: number, point: GeoPoint) => void;
+  // El mapa base no carga: el mapa sigue dibujando los polígonos.
+  onBaseLayerUnavailable: () => void;
+};
+
+export type PolygonEditorMapProvider =
+  ComponentType<PolygonEditorMapProviderProps>;
+
+export type LoadPolygonEditorMapProvider =
+  () => Promise<PolygonEditorMapProvider>;

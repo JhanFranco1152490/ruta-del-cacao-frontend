@@ -3,8 +3,10 @@ import type {
   LoadMunicipalityMapProvider,
   LoadPointsMapProvider,
   MapProviderProps,
+  LoadPolygonEditorMapProvider,
   MunicipalityMapProviderProps,
   PointsMapProviderProps,
+  PolygonEditorMapProviderProps,
 } from '@/components/map/map-provider';
 
 // Doble del proveedor: expone el marcador como texto y botones para simular un toque en el
@@ -138,3 +140,70 @@ export function FakeMunicipalityMap({
 
 export const loadFakeMunicipalityMap: LoadMunicipalityMapProvider = () =>
   Promise.resolve(FakeMunicipalityMap);
+
+// Doble del mapa de dibujo: lista los vértices y el resto como texto, y botones para simular un
+// toque en el mapa, arrastrar un vértice o que el mapa base falle.
+export function FakePolygonEditor({
+  vertices,
+  drawing,
+  disabled,
+  farmPoint,
+  referenceShapes,
+  overlapRegions,
+  suggestion,
+  onAddVertex,
+  onMoveVertex,
+  onBaseLayerUnavailable,
+}: PolygonEditorMapProviderProps) {
+  return (
+    <div>
+      <p>Modo: {drawing ? 'dibujando' : 'quieto'}</p>
+      <p>
+        Finca:{' '}
+        {farmPoint
+          ? `${farmPoint.latitude}, ${farmPoint.longitude}`
+          : 'sin punto'}
+      </p>
+      <ul aria-label="Vértices del mapa">
+        {vertices.map((vertex, index) => (
+          <li key={index}>
+            {index + 1}: {vertex.latitude}, {vertex.longitude}
+          </li>
+        ))}
+      </ul>
+      <p>
+        Vecinas:{' '}
+        {referenceShapes.map((shape) => shape.label).join(', ') || 'ninguna'}
+      </p>
+      <p>Zonas superpuestas: {overlapRegions.length}</p>
+      <p>
+        Sugerencia: {suggestion ? `${suggestion.length} vértices` : 'ninguna'}
+      </p>
+      <button
+        disabled={disabled}
+        onClick={() =>
+          onAddVertex({
+            latitude: 7.8 + 0.001 * vertices.length,
+            longitude: -72.5 + 0.001 * (vertices.length % 2),
+          })
+        }
+        type="button"
+      >
+        Tocar el mapa
+      </button>
+      <button
+        disabled={disabled || vertices.length === 0}
+        onClick={() => onMoveVertex(0, { latitude: 7.7, longitude: -72.6 })}
+        type="button"
+      >
+        Arrastrar el primer vértice
+      </button>
+      <button onClick={onBaseLayerUnavailable} type="button">
+        Fallar mapa base
+      </button>
+    </div>
+  );
+}
+
+export const loadFakePolygonEditor: LoadPolygonEditorMapProvider = () =>
+  Promise.resolve(FakePolygonEditor);
