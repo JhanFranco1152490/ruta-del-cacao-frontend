@@ -2,3 +2,6 @@
 // finca, incluidas las creadas sin conexión.
 export const farmEditPath = (id: string) =>
   `/fincas/editar?${new URLSearchParams({ id })}`;
+
+export const farmDetailPath = (id: string) =>
+  `/fincas/detalle?${new URLSearchParams({ id })}`;

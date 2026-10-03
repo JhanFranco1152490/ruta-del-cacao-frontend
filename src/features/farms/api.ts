@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
+import { readThroughCache } from '@/lib/offline/cached-read';
 import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
 type Schemas = components['schemas'];
@@ -66,6 +67,18 @@ export const useFarm = (
     queryKey: queryKeys.farms.detail(id),
     queryFn: ({ signal }) => fetchFarm(id, signal),
     ...options,
+  });
+
+// La finca para su pantalla de detalle, que también se lee sin conexión: sin respuesta del
+// servidor devuelve la última copia con su fecha. `offlineFirst`: sin red se intenta igual en vez
+// de quedar en pausa.
+export const useFarmDetail = (userId: string | undefined, id: string) =>
+  useQuery({
+    queryKey: queryKeys.farms.detailView(id),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, `farm:${id}`, () => fetchFarm(id, signal)),
+    enabled: !!userId,
+    networkMode: 'offlineFirst',
   });
 
 // Activar o desactivar se hace en línea: la persona necesita ver el resultado en el momento, y

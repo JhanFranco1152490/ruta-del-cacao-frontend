@@ -7,6 +7,12 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/');
   });
 
+  it('saves the fixed farm screens, whose id travels in the address', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toEqual(
+      expect.arrayContaining(['/fincas/detalle', '/fincas/editar']),
+    );
+  });
+
   it('never saves the sign-in page or the old panel', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/iniciar-sesion');
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/panel');

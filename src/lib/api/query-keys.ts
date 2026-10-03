@@ -25,11 +25,18 @@ export const queryKeys = {
     detail: (id: string) => ['producers', 'detail', id] as const,
     dependents: (id: string) => ['producers', 'dependents', id] as const,
   },
+  plots: {
+    // Las parcelas de una finca: el detalle de finca siempre las pide por finca.
+    byFarm: (farmId: string) => ['plots', 'farm', farmId] as const,
+  },
   farms: {
     all: () => ['farms'] as const,
     lists: () => ['farms', 'list'] as const,
     list: (query: object) => ['farms', 'list', query] as const,
     detail: (id: string) => ['farms', 'detail', id] as const,
+    // La finca tal como la muestra su pantalla de detalle, con la fecha de la copia si vino del
+    // dispositivo. Cuelga de `detail`, así que lo que invalida una finca invalida también esta.
+    detailView: (id: string) => ['farms', 'detail', id, 'view'] as const,
     mapCounts: (query: object) => ['farms', 'map', 'counts', query] as const,
     mapPoints: (municipality: string, query: object) =>
       ['farms', 'map', 'points', municipality, query] as const,
