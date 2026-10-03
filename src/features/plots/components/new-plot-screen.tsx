@@ -6,6 +6,7 @@ import { OfflineBanner } from '@/components/offline-banner';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
 
 import type { PlotFormValues } from '../plot-queue';
+import { suggestPlotCode } from '../suggest-code';
 import { useKnownPlots } from '../use-known-plots';
 import { usePlotCreate } from '../use-plot-queue';
 import { PlotEditor } from './plot-editor';
@@ -16,8 +17,6 @@ import {
   type PlotScreenFarm,
 } from './plot-screen-farm';
 import { PlotEditorSkeleton } from './plot-screen-states';
-
-const EMPTY: PlotFormValues = { code: '', area_hectares: '', vertices: [] };
 
 export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
   // Un id por formulario: si se guarda dos veces (doble toque, reintento), la cola lo reconoce y
@@ -45,6 +44,14 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
   }
   if (known.isLoading) return <PlotEditorSkeleton />;
 
+  // Se propone el código siguiente de la finca: la persona puede cambiarlo, pero casi nunca hace
+  // falta pensar uno.
+  const defaultValues: PlotFormValues = {
+    code: suggestPlotCode((known.plots ?? []).map((plot) => plot.code)),
+    area_hectares: '',
+    vertices: [],
+  };
+
   return (
     <PlotEditor
       key={plotId}
@@ -53,7 +60,7 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
         !farm.isActive ? INACTIVE_FARM_MESSAGE : sync.blockedMessage
       }
       cancelHref={farm.detailPath}
-      defaultValues={EMPTY}
+      defaultValues={defaultValues}
       description="El código y el área son obligatorios; el polígono es opcional. Si no hay conexión, la parcela se guarda en este dispositivo y se envía cuando vuelva la conexión."
       error={
         create.isError

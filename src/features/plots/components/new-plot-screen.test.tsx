@@ -57,12 +57,58 @@ const fillAndSave = async (
   code: string,
   area: string,
 ) => {
-  await user.type(await screen.findByLabelText('Código de la parcela'), code);
+  const codeField = await screen.findByLabelText('Código de la parcela');
+  await user.clear(codeField);
+  await user.type(codeField, code);
   await user.type(screen.getByLabelText('Área declarada (hectáreas)'), area);
   await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 };
 
 describe('NewPlotScreen', () => {
+  it('proposes the next code of the farm so the person does not have to invent one', async () => {
+    server.use(
+      plotsHandler([
+        buildPlot({ code: 'P-01' }),
+        buildPlot({ id: 'b', code: 'P-02' }),
+      ]),
+    );
+    renderScreen();
+
+    expect(await screen.findByLabelText('Código de la parcela')).toHaveValue(
+      'P-03',
+    );
+  });
+
+  it('proposes P1 for the first plot of a farm and saves it as is', async () => {
+    server.use(plotsHandler([]));
+    const { user } = renderScreen();
+
+    expect(await screen.findByLabelText('Código de la parcela')).toHaveValue(
+      'P1',
+    );
+    await user.type(screen.getByLabelText('Área declarada (hectáreas)'), '1');
+    await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
+
+    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
+    const [item] = await getOfflineDb(userId).queue.toArray();
+    expect(item.payload).toMatchObject({ code: 'P1' });
+  });
+
+  it('proposes the following code for the next plot registered in a row', async () => {
+    server.use(plotsHandler([]));
+    const { user } = renderScreen();
+    await fillAndSave(user, 'P1', '1');
+    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
+
+    await user.click(
+      screen.getByRole('button', { name: 'Registrar otra parcela' }),
+    );
+
+    expect(await screen.findByLabelText('Código de la parcela')).toHaveValue(
+      'P2',
+    );
+  });
+
   it('saves the plot on the device under its farm and says how it is going', async () => {
     server.use(plotsHandler([]));
     const { user } = renderScreen();
@@ -133,7 +179,9 @@ describe('NewPlotScreen', () => {
     first.unmount();
 
     const { user } = renderScreen();
-    await user.type(await screen.findByLabelText('Código de la parcela'), 'p1');
+    const codeField = await screen.findByLabelText('Código de la parcela');
+    await user.clear(codeField);
+    await user.type(codeField, 'p1');
     await user.type(screen.getByLabelText('Área declarada (hectáreas)'), '2');
     await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 
