@@ -1,27 +1,17 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { LoadMapProvider } from '@/components/map/map-provider';
+import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { loadFakeMap } from '@/test/fake-map';
 import type { Coordinates } from '@/types/geo';
 
 import { useGeolocation } from '../use-geolocation';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 
-const originalGeolocation = Object.getOwnPropertyDescriptor(
-  navigator,
-  'geolocation',
-);
-
-afterEach(() => {
-  if (originalGeolocation) {
-    Object.defineProperty(navigator, 'geolocation', originalGeolocation);
-  } else {
-    Reflect.deleteProperty(navigator, 'geolocation');
-  }
-});
+afterEach(restoreGeolocation);
 
 function Harness({
   onLocationChange,
@@ -62,11 +52,7 @@ function Harness({
 describe('farm location capture', () => {
   it('keeps coordinate fields editable and asks for GPS only after a click', async () => {
     const user = userEvent.setup();
-    const getCurrentPosition = vi.fn();
-    Object.defineProperty(navigator, 'geolocation', {
-      configurable: true,
-      value: { getCurrentPosition },
-    });
+    const gps = installFakeGps();
     const onLocationChange = vi.fn();
 
     render(<Harness onLocationChange={onLocationChange} />);
@@ -76,32 +62,104 @@ describe('farm location capture', () => {
       latitude: '7.8',
       longitude: '',
     });
-    expect(getCurrentPosition).not.toHaveBeenCalled();
+    expect(gps.geolocation.watchPosition).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
-    expect(getCurrentPosition).toHaveBeenCalledOnce();
+    expect(gps.geolocation.watchPosition).toHaveBeenCalledOnce();
   });
 
   it('shows the GPS error without hiding manual entry', async () => {
     const user = userEvent.setup();
-    const getCurrentPosition = vi.fn();
-    Object.defineProperty(navigator, 'geolocation', {
-      configurable: true,
-      value: { getCurrentPosition },
-    });
+    const gps = installFakeGps();
 
     render(<Harness />);
 
     await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
-    const onError = getCurrentPosition.mock
-      .calls[0][1] as PositionErrorCallback;
-    onError({ code: 1 } as GeolocationPositionError);
+    act(() => gps.fail(1));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'No permitiste acceder a tu ubicación.',
     );
     expect(screen.getByLabelText('Latitud')).toBeEnabled();
     expect(screen.getByLabelText('Longitud')).toBeEnabled();
+  });
+
+  describe('GPS precision', () => {
+    async function capture(accuracy: number) {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness />);
+      await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
+      return { user, gps, reading: () => act(() => gps.reading(accuracy)) };
+    }
+
+    it('shows the best precision on the button while it keeps reading', async () => {
+      const { reading } = await capture(35);
+
+      reading();
+
+      expect(
+        screen.getByRole('button', { name: 'Capturando GPS… ±35 m' }),
+      ).toBeDisabled();
+    });
+
+    it('tells the precision of the captured point', async () => {
+      const { reading } = await capture(8);
+
+      reading();
+
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        'Precisión del GPS: ±8 m',
+      );
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('warns when the precision is poor and offers the alternatives', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        const { gps } = await capture(80);
+        act(() => gps.reading(80));
+        act(() => vi.advanceTimersByTime(30_000));
+      } finally {
+        vi.useRealTimers();
+      }
+
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        'Precisión del GPS: ±80 m',
+      );
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'La precisión es baja',
+      );
+      expect(screen.getByRole('alert')).toHaveTextContent('vuelve a capturar');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'marca el punto en el mapa',
+      );
+    });
+
+    it('says so when the device does not report the precision', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        const { gps } = await capture(8);
+        act(() => gps.reading(undefined));
+        act(() => vi.advanceTimersByTime(30_000));
+      } finally {
+        vi.useRealTimers();
+      }
+
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        'El dispositivo no informó la precisión del GPS.',
+      );
+    });
+
+    it('stops talking about the precision once the person edits the point', async () => {
+      const { user, reading } = await capture(8);
+      reading();
+      await screen.findByRole('status');
+
+      await user.type(screen.getByLabelText('Latitud'), '1');
+
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
   });
 
   it('shows no map while no provider is configured', () => {
@@ -130,10 +188,7 @@ describe('farm location capture', () => {
 
   it('keeps the map still while the GPS is capturing', async () => {
     const user = userEvent.setup();
-    Object.defineProperty(navigator, 'geolocation', {
-      configurable: true,
-      value: { getCurrentPosition: vi.fn() },
-    });
+    installFakeGps();
     render(<Harness loadMapProvider={loadFakeMap} />);
 
     await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
