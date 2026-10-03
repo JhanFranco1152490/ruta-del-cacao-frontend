@@ -6,6 +6,7 @@ import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import {
   GPS_GOOD_ACCURACY_M,
   GPS_MAX_WAIT_MS,
+  GPS_STALL_COARSE_MS,
   GPS_STALL_MS,
   useGeolocation,
 } from './use-geolocation';
@@ -255,14 +256,14 @@ describe('useGeolocation', () => {
     const { result } = renderHook(() => useGeolocation(onCapture));
 
     act(() => result.current.capture());
-    act(() => gps.reading(93, A));
+    act(() => gps.reading(30, A));
     act(() => vi.advanceTimersByTime(GPS_STALL_MS - 1));
     expect(onCapture).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
 
     expect(onCapture).toHaveBeenCalledTimes(1);
     expect(GPS_STALL_MS).toBeLessThan(GPS_MAX_WAIT_MS);
-    expect(result.current.result?.accuracy).toBe(93);
+    expect(result.current.result?.accuracy).toBe(30);
     expect(gps.watching()).toBe(0);
   });
 
@@ -331,5 +332,41 @@ describe('useGeolocation', () => {
 
     expect(onCapture).toHaveBeenCalledTimes(1);
     expect(gps.watching()).toBe(0);
+  });
+
+  // Una lectura de cientos de metros sale de wifi o antenas: el satélite todavía puede estar
+  // fijándose, así que se espera más antes de darla por buena.
+  it('waits longer when the only readings so far are coarse', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(93, A));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS + 1000));
+    expect(onCapture).not.toHaveBeenCalled();
+    act(() =>
+      vi.advanceTimersByTime(GPS_STALL_COARSE_MS - GPS_STALL_MS - 1000),
+    );
+
+    expect(onCapture).toHaveBeenCalledTimes(1);
+    expect(result.current.result?.accuracy).toBe(93);
+  });
+
+  it('takes the satellite fix that arrives after a coarse one', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(93, A));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS + 2000));
+    act(() => gps.reading(12, B));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS));
+
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.2000000', longitude: '-72.2000000' },
+      12,
+    );
   });
 });

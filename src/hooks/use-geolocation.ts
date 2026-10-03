@@ -11,8 +11,13 @@ import type { Coordinates } from '@/types/geo';
 // segundos y se promedian las mejores lecturas. Pero no se espera de más: se termina cuando ya
 // no mejora, y como mucho a los 20 s.
 export const GPS_MAX_WAIT_MS = 20_000;
-// Sin una mejora de al menos el 10 % en este tiempo, seguir esperando casi nunca ayuda.
-export const GPS_STALL_MS = 8_000;
+// Sin una mejora de al menos el 10 % en este tiempo, seguir esperando casi nunca ayuda. Cuanto
+// más gruesa es la lectura, más se espera: una de cientos de metros sale de wifi o antenas, y el
+// satélite todavía puede estar fijándose; una de pocas decenas ya es del GPS y casi no mejora.
+export const GPS_STALL_MS = 6_000;
+export const GPS_STALL_COARSE_MS = 12_000;
+// Desde esta precisión (metros) la lectura se considera gruesa.
+export const GPS_COARSE_ACCURACY_M = 50;
 // Con esta precisión (en metros) ya no vale la pena esperar más.
 export const GPS_GOOD_ACCURACY_M = 10;
 // Peor que esto, se avisa y se ofrece repetir o marcar el punto en el mapa.
@@ -146,7 +151,12 @@ export function useGeolocation(
             setAccuracy(bestAccuracy);
             // Cada mejora reinicia la cuenta: si no llega otra a tiempo, se termina con lo que hay.
             if (stallTimer.current !== null) clearTimeout(stallTimer.current);
-            stallTimer.current = setTimeout(finish, GPS_STALL_MS);
+            stallTimer.current = setTimeout(
+              finish,
+              reading.accuracy > GPS_COARSE_ACCURACY_M
+                ? GPS_STALL_COARSE_MS
+                : GPS_STALL_MS,
+            );
           }
           if (reading.accuracy <= GPS_GOOD_ACCURACY_M) finish();
         }
