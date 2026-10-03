@@ -43,7 +43,14 @@ type PlotsFarm = {
 
 const toNumber = (value: string) => Number(value.trim().replace(',', '.'));
 
-export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
+export function FarmPlotsSection({
+  farm,
+  renderPlotDetails,
+}: {
+  farm: PlotsFarm;
+  // Ver `PlotList`: lo que otro dominio agrega a cada parcela.
+  renderPlotDetails?: (plot: KnownPlot) => React.ReactNode;
+}) {
   const { data: user } = useSession();
   const canView = hasPermission(user, PERMISSIONS.PLOTS_VIEW);
   const canAdd = hasPermission(user, PERMISSIONS.PLOTS_ADD);
@@ -160,6 +167,7 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
           plots={known.plots}
           registerLink={registerLink}
           renderActions={renderActions}
+          renderPlotDetails={renderPlotDetails}
           savedAt={known.savedAt}
         />
       )}
@@ -176,6 +184,7 @@ function PlotsContent({
   mapRef,
   registerLink,
   renderActions,
+  renderPlotDetails,
   onShowOnMap,
 }: {
   farm: PlotsFarm;
@@ -186,6 +195,7 @@ function PlotsContent({
   mapRef: React.RefObject<HTMLDivElement | null>;
   registerLink: React.ReactNode;
   renderActions: (plot: KnownPlot) => React.ReactNode;
+  renderPlotDetails?: (plot: KnownPlot) => React.ReactNode;
   onShowOnMap: (shapeId: string) => void;
 }) {
   const shapes = plotsToShapes(plots);
@@ -230,6 +240,7 @@ function PlotsContent({
           onShowOnMap={(plot) => onShowOnMap(plot.id)}
           plots={plots}
           renderActions={renderActions}
+          renderDetails={renderPlotDetails}
         />
       ) : (
         <EmptyState

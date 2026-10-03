@@ -43,15 +43,18 @@ beforeEach(() => {
 function renderSection({
   permissions = [PERMISSIONS.FARMS_VIEW, PERMISSIONS.PLOTS_VIEW] as string[],
   farm = FARM as Parameters<typeof FarmPlotsSection>[0]['farm'],
+  renderPlotDetails = undefined as
+    Parameters<typeof FarmPlotsSection>[0]['renderPlotDetails'] | undefined,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: userId, permissions }),
   );
-  return renderWithProviders(<FarmPlotsSection farm={farm} />, {
-    queryClient,
-  });
+  return renderWithProviders(
+    <FarmPlotsSection farm={farm} renderPlotDetails={renderPlotDetails} />,
+    { queryClient },
+  );
 }
 
 describe('FarmPlotsSection', () => {
@@ -82,6 +85,22 @@ describe('FarmPlotsSection', () => {
     expect(within(map).getByText(/La Esperanza \(ok\)/)).toBeInTheDocument();
     expect(within(map).getByText('P1 (ok) 3 vértices')).toBeInTheDocument();
     expect(within(map).queryByText(/P2/)).not.toBeInTheDocument();
+  });
+
+  it('shows inside each plot what another domain adds to it', async () => {
+    server.use(
+      plotsHandler([
+        buildPlot({ id: 'a', code: 'P1' }),
+        buildPlot({ id: 'b', code: 'P2' }),
+      ]),
+    );
+    renderSection({
+      renderPlotDetails: (plot) => <p>Detalle de {plot.code}</p>,
+    });
+
+    const plot = await screen.findByRole('article', { name: 'P2' });
+    expect(within(plot).getByText('Detalle de P2')).toBeInTheDocument();
+    expect(within(plot).queryByText('Detalle de P1')).not.toBeInTheDocument();
   });
 
   it('marks the plots without a polygon and offers the map only to the others', async () => {

@@ -12,10 +12,14 @@ import { PlotStatusBadge } from './plot-status-badge';
 export function PlotList({
   plots,
   onShowOnMap,
+  renderDetails,
   renderActions,
 }: {
   plots: readonly KnownPlot[];
   onShowOnMap: (plot: KnownPlot) => void;
+  // Lo que otro dominio cuenta de cada parcela (su ficha agronómica, por ejemplo), sin que esta
+  // lista lo conozca.
+  renderDetails?: (plot: KnownPlot) => ReactNode;
   renderActions?: (plot: KnownPlot) => ReactNode;
 }) {
   return (
@@ -51,6 +55,7 @@ export function PlotList({
                   Sin polígono
                 </p>
               )}
+              {renderDetails?.(plot)}
               {(hasPolygon || actions) && (
                 <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
                   {hasPolygon && (
