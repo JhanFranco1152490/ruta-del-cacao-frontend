@@ -19,7 +19,9 @@ import type { KnownPlot } from '../known-plots';
 import { plotsToShapes } from '../plot-map';
 import { plotEditPath, plotNewPath } from '../plot-paths';
 import { useKnownPlots } from '../use-known-plots';
+import { PLOT_DELETED_CODE } from '../sync-adapter';
 import { PlotAreaBar } from './plot-area-bar';
+import { PlotDiscardDialog } from './plot-discard-dialog';
 import { PlotList } from './plot-list';
 
 // Lo mismo que entrega la pantalla de la finca, escrito aquí para no importar del dominio de
@@ -61,20 +63,34 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
     </Link>
   );
 
-  const renderActions = (plot: KnownPlot) =>
-    farm.isActive &&
-    // Una parcela que solo está en el dispositivo se corrige con el permiso de registrar; una del
-    // servidor, con el de editar.
-    (plot.queue?.operation === 'create' ? canAdd : canChange) && (
-      <Link
-        aria-label={`${plot.queue?.status === 'error' ? 'Corregir' : 'Editar'} ${plot.code}`}
-        className={buttonVariants({ size: 'office', variant: 'outline' })}
-        href={plotEditPath(plot.id, farm.id)}
-      >
-        <Pencil aria-hidden="true" className="size-4" />{' '}
-        {plot.queue?.status === 'error' ? 'Corregir' : 'Editar'}
-      </Link>
+  const renderActions = (plot: KnownPlot) => {
+    const isError = plot.queue?.status === 'error';
+    // La parcela (o su finca) ya no existe en el servidor: corregirla no sirve, solo descartarla.
+    const canCorrect = plot.queue?.errorCode !== PLOT_DELETED_CODE;
+    const label = isError ? 'Corregir' : 'Editar';
+    const showEdit =
+      farm.isActive &&
+      canCorrect &&
+      // Una parcela que solo está en el dispositivo se corrige con el permiso de registrar; una
+      // del servidor, con el de editar.
+      (plot.queue?.operation === 'create' ? canAdd : canChange);
+    if (!showEdit && !isError) return null;
+    return (
+      <>
+        {showEdit && (
+          <Link
+            aria-label={`${label} ${plot.code}`}
+            className={buttonVariants({ size: 'office', variant: 'outline' })}
+            href={plotEditPath(plot.id, farm.id)}
+          >
+            <Pencil aria-hidden="true" className="size-4" /> {label}
+          </Link>
+        )}
+        {/* Descartar solo cuando falló: una pendiente todavía puede llegar bien. */}
+        {isError && <PlotDiscardDialog code={plot.code} plotId={plot.id} />}
+      </>
     );
+  };
 
   return (
     <section

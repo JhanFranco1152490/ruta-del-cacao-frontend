@@ -16,7 +16,7 @@ export function queueErrorMessage(error: unknown, fallback: string) {
     return 'Esta finca ya tiene cambios guardados en este dispositivo que aún no se envían. Vuelve a abrirla desde Mis fincas para editarlos.';
   }
   if (error instanceof QueueItemHasDependentsError) {
-    return 'No se puede descartar: hay registros pendientes que dependen de esta finca.';
+    return 'No se puede descartar: hay parcelas pendientes que dependen de esta finca. Descarta primero sus parcelas pendientes.';
   }
   return fallback;
 }

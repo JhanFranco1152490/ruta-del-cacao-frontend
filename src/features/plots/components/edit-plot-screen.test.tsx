@@ -7,7 +7,7 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
-import { buildPlot, buildSession } from '@/test/factories';
+import { buildPlot, buildSession, buildVertex } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
@@ -178,5 +178,138 @@ describe('EditPlotScreen — a plot waiting on the device', () => {
       await screen.findByRole('heading', { name: 'Editar parcela' }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Código de la parcela')).toHaveValue('P9');
+  });
+});
+
+describe('EditPlotScreen — correcting what the server sent back', () => {
+  const failWith = async (
+    code: string,
+    message: string,
+    errorData: unknown,
+  ) => {
+    await enqueuePlotCreate(userId, 'pl9', 'f1', {
+      code: 'P9',
+      area_hectares: '3.00',
+      vertices: [],
+    });
+    await getOfflineDb(userId).queue.update('pl9', {
+      status: 'error',
+      errorCode: code,
+      errorMessage: message,
+      errorData,
+    });
+  };
+
+  it('resends an edit with the current version of the server plot after showing it', async () => {
+    server.use(plotsHandler([]));
+    await getOfflineDb(userId).queue.add({
+      id: 'pl1',
+      resource: 'plots',
+      operation: 'update',
+      parentId: 'f1',
+      payload: {
+        code: 'Mi código',
+        area_hectares: '1.00',
+        boundary: null,
+        expected_version: 1,
+      },
+      status: 'error',
+      errorCode: 'stale_version',
+      errorMessage: 'La parcela cambió.',
+      errorData: {
+        current: buildPlot({ id: 'pl1', code: 'Código ajeno', version: 5 }),
+      },
+      createdAt: 1,
+      updatedAt: 1,
+    });
+    const { user } = renderScreen('pl1');
+
+    expect(
+      await screen.findByText(/ahora es «Código ajeno»/),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'Guardar y reenviar' }),
+    );
+
+    await vi.waitFor(() => expect(router.push).toHaveBeenCalled());
+    expect((await getQueuedPlot(userId, 'pl1'))?.expectedVersion).toBe(5);
+  });
+
+  it('draws the plot the server said was invaded even when the device did not know it', async () => {
+    server.use(plotsHandler([]));
+    await failWith('plot_overlap', 'Se superpone con la parcela P2.', {
+      overlaps: [
+        {
+          plot_id: 'p2',
+          code: 'P2',
+          overlap_area_hectares: '0.1200',
+          boundary: [
+            buildVertex('-72.5', '7.8'),
+            buildVertex('-72.499', '7.8'),
+            buildVertex('-72.499', '7.801'),
+          ],
+        },
+      ],
+    });
+    renderScreen('pl9');
+
+    expect(await screen.findByText('Vecinas: P2')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Se superpone con la parcela P2.',
+    );
+  });
+
+  it('explains a mismatch of areas with the calculated one to use', async () => {
+    server.use(plotsHandler([]));
+    await enqueuePlotCreate(userId, 'pl8', 'f1', {
+      code: 'P8',
+      area_hectares: '9.00',
+      vertices: [
+        {
+          latitude: 7.8,
+          longitude: -72.5,
+          source: 'map',
+          accuracyM: null,
+          capturedAt: null,
+        },
+        {
+          latitude: 7.801,
+          longitude: -72.499,
+          source: 'map',
+          accuracyM: null,
+          capturedAt: null,
+        },
+        {
+          latitude: 7.802,
+          longitude: -72.5,
+          source: 'map',
+          accuracyM: null,
+          capturedAt: null,
+        },
+      ],
+    });
+    await getOfflineDb(userId).queue.update('pl8', {
+      status: 'error',
+      errorCode: 'area_mismatch',
+      errorMessage: 'El área declarada difiere más del 5 % del área dibujada.',
+      errorData: { measured_area_hectares: '1.2300' },
+    });
+    renderScreen('pl8');
+
+    expect(
+      await screen.findByRole('button', { name: 'Usar área calculada' }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers only to discard a plot whose farm or plot no longer exists', async () => {
+    server.use(plotsHandler([]));
+    await failWith(
+      'plot_deleted',
+      'Esta parcela o su finca fue eliminada. Descarta este registro.',
+      undefined,
+    );
+    renderScreen('pl9');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('fue eliminada');
   });
 });

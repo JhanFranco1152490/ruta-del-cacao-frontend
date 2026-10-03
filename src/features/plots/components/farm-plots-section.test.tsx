@@ -272,6 +272,63 @@ describe('FarmPlotsSection', () => {
       ).toHaveAttribute('href', '/fincas/parcelas/editar?id=q2&finca=f1');
     });
 
+    it('discards a plot that failed, after confirming, and not one that is still pending', async () => {
+      server.use(plotsHandler([]));
+      await enqueuePlotCreate(userId, 'q1', 'f1', {
+        code: 'P-pendiente',
+        area_hectares: '1.00',
+        vertices: [],
+      });
+      await enqueuePlotCreate(userId, 'q2', 'f1', {
+        code: 'P-con-error',
+        area_hectares: '1.00',
+        vertices: [],
+      });
+      await getOfflineDb(userId).queue.update('q2', {
+        status: 'error',
+        errorCode: 'plot_overlap',
+        errorMessage: 'x',
+      });
+      const user = userEvent.setup();
+      renderSection({ permissions: ALL });
+
+      const buttons = await screen.findAllByRole('button', {
+        name: 'Descartar',
+      });
+      expect(buttons).toHaveLength(1);
+      await user.click(buttons[0]);
+      await user.click(
+        await screen.findByRole('button', { name: 'Descartar parcela' }),
+      );
+
+      await waitFor(async () =>
+        expect(await getOfflineDb(userId).queue.get('q2')).toBeUndefined(),
+      );
+      expect(await getOfflineDb(userId).queue.get('q1')).toBeDefined();
+    });
+
+    it('does not offer to correct a plot whose farm or plot no longer exists', async () => {
+      server.use(plotsHandler([]));
+      await enqueuePlotCreate(userId, 'q1', 'f1', {
+        code: 'P1',
+        area_hectares: '1.00',
+        vertices: [],
+      });
+      await getOfflineDb(userId).queue.update('q1', {
+        status: 'error',
+        errorCode: 'plot_deleted',
+        errorMessage: 'Eliminada.',
+      });
+      renderSection({ permissions: ALL });
+
+      expect(
+        await screen.findByRole('button', { name: 'Descartar' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Corregir P1' }),
+      ).not.toBeInTheDocument();
+    });
+
     it('shows only the device plots of a farm that is not on the server yet, without asking for more', async () => {
       const requests: URLSearchParams[] = [];
       server.use(plotsHandler([], requests));

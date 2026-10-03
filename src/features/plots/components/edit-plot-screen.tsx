@@ -1,11 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
 
+import { formatHectares } from '@/lib/format/hectares';
+
 import type { Plot } from '../api';
+import {
+  asPlotErrorData,
+  overlappedNeighbours,
+  withNeighbours,
+} from '../plot-error-data';
 import { type QueuedPlot, plotToFormValues } from '../plot-queue';
 import { useKnownPlots } from '../use-known-plots';
 import {
@@ -132,6 +140,17 @@ function QueuedPlotEditor({
   const sync = useCaptureSyncStatus('parcelas');
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
   const failed = plot.status === 'error';
+  const data = useMemo(() => asPlotErrorData(plot.errorData), [plot.errorData]);
+  // Una edición rechazada por versión obsoleta se reenvía con la versión vigente del servidor,
+  // que llegó con el error: la persona la ve antes de decidir, en vez de pisar el cambio ajeno.
+  const current = plot.errorCode === 'stale_version' ? data.current : undefined;
+
+  // Las vecinas que el servidor dijo invadidas se suman a las que conoce el dispositivo: puede
+  // no tenerlas (se registraron desde otro teléfono) y sin ellas no habría qué resaltar.
+  const knownPlots = useMemo(
+    () => withNeighbours(known.plots ?? [], overlappedNeighbours(data)),
+    [known.plots, data],
+  );
 
   if (known.isLoading) return <PlotEditorSkeleton />;
 
@@ -147,18 +166,29 @@ function QueuedPlotEditor({
       error={resubmit.isError ? SAVE_FAILED : null}
       farm={farm}
       isSaving={resubmit.isPending}
-      knownPlots={known.plots ?? []}
+      knownPlots={knownPlots}
       notice={
         <>
           {failed && (
-            <p
-              className="mt-6 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
+            <div
+              className="mt-6 space-y-2 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
               role="alert"
             >
-              No se pudo sincronizar
-              {plot.errorMessage ? `: ${plot.errorMessage}` : '.'} Corrige los
-              datos y guarda para reenviarla.
-            </p>
+              <p>
+                No se pudo sincronizar
+                {plot.errorMessage ? `: ${plot.errorMessage}` : '.'}
+              </p>
+              {current ? (
+                <p>
+                  En el servidor la parcela ahora es «{current.code}», de{' '}
+                  {formatHectares(current.area_hectares)}
+                  {current.boundary ? ' y con polígono' : ' y sin polígono'}. Si
+                  guardas, tus cambios reemplazan esa versión.
+                </p>
+              ) : (
+                <p>Corrige los datos y guarda para reenviarla.</p>
+              )}
+            </div>
           )}
           {known.serverUnavailable && (
             <p className="mt-6 font-bold text-warn" role="status">
@@ -169,7 +199,7 @@ function QueuedPlotEditor({
       }
       onSubmit={(values) =>
         resubmit.mutate(
-          { plot, values },
+          { plot, values, expectedVersion: current?.version },
           { onSuccess: () => router.push(farm.detailPath) },
         )
       }
