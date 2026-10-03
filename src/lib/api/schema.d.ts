@@ -164,6 +164,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cacao-varieties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El catálogo común de variedades de cacao, ordenado por nombre y sin paginar: el formulario de la ficha las necesita todas, también sin conexión. Basta con tener sesión. */
+        get: operations["cacao_varieties_list"];
+        put?: never;
+        /** @description Registra una variedad. Un nombre que ya existe, aunque se escriba distinto (`CCN 51` y `ccn-51`), responde 409 `duplicate_variety_name`. */
+        post: operations["cacao_varieties_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cacao-varieties/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Edita el nombre o la descripción, o activa y desactiva con `is_active`. Desactivar no cambia las fichas que ya la usan: solo deja de ofrecerse para siembras nuevas. */
+        patch: operations["cacao_varieties_partial_update"];
+        trace?: never;
+    };
     "/api/catalogs/municipalities": {
         parameters: {
             query?: never;
@@ -556,6 +591,20 @@ export interface components {
         AssociationAccessUpdateRequest: {
             enabled: boolean;
         };
+        CacaoVariety: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly description: string;
+            readonly is_active: boolean;
+        };
+        CacaoVarietyCreateRequest: {
+            name: string;
+            description?: string;
+        };
+        CacaoVarietyList: {
+            results: components["schemas"]["CacaoVariety"][];
+        };
         CsrfToken: {
             csrf_token: string;
         };
@@ -810,6 +859,11 @@ export interface components {
             first_name?: string;
             last_name?: string;
             phone?: string | null;
+        };
+        PatchedCacaoVarietyUpdateRequest: {
+            name?: string;
+            description?: string;
+            is_active?: boolean;
         };
         PatchedFarmUpdateRequest: {
             name?: string;
@@ -1514,6 +1568,166 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    cacao_varieties_list: {
+        parameters: {
+            query?: {
+                /** @description Solo activas o solo inactivas. */
+                is_active?: boolean;
+                /** @description Busca en el nombre sin mayúsculas, tildes, espacios ni guiones. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacaoVarietyList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    cacao_varieties_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CacaoVarietyCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacaoVariety"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    cacao_varieties_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCacaoVarietyUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacaoVariety"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
