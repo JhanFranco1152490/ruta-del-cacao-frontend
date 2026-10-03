@@ -129,4 +129,87 @@ describe('LeafletPolygonEditor', () => {
       expect(label).not.toHaveClass('map-plot-label-hidden'),
     );
   });
+
+  describe('the GPS position', () => {
+    const editorWith = (
+      gpsPosition: React.ComponentProps<
+        typeof LeafletPolygonEditor
+      >['gpsPosition'],
+    ) => (
+      <div style={{ width: 400, height: 300 }}>
+        <LeafletPolygonEditor
+          baseLayer="map"
+          disabled={false}
+          drawing={false}
+          farmPoint={null}
+          gpsPosition={gpsPosition}
+          onAddVertex={() => {}}
+          onBaseLayerUnavailable={() => {}}
+          onMoveVertex={() => {}}
+          overlapRegions={[]}
+          referenceShapes={[]}
+          suggestion={null}
+          vertices={VERTICES}
+        />
+      </div>
+    );
+
+    it('draws a blue dot with the circle of error, and keeps it as a single dot while it moves', async () => {
+      const { container, rerender } = render(
+        editorWith({
+          point: { latitude: 7.8, longitude: -72.5 },
+          accuracyM: 20,
+        }),
+      );
+
+      await vi.waitFor(() =>
+        expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(1),
+      );
+      rerender(
+        editorWith({
+          point: { latitude: 7.8003, longitude: -72.5003 },
+          accuracyM: 8,
+        }),
+      );
+      rerender(
+        editorWith({
+          point: { latitude: 7.8006, longitude: -72.5006 },
+          accuracyM: 5,
+        }),
+      );
+
+      expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(1);
+    });
+
+    it('is not a vertex: tapping it adds nothing and it is not numbered', async () => {
+      const { container } = render(
+        editorWith({
+          point: { latitude: 7.8, longitude: -72.5 },
+          accuracyM: 20,
+        }),
+      );
+
+      await vi.waitFor(() =>
+        expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(1),
+      );
+
+      expect(container.querySelectorAll('.map-vertex')).toHaveLength(3);
+    });
+
+    it('removes the dot when the GPS is turned off', async () => {
+      const { container, rerender } = render(
+        editorWith({
+          point: { latitude: 7.8, longitude: -72.5 },
+          accuracyM: 20,
+        }),
+      );
+      await vi.waitFor(() =>
+        expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(1),
+      );
+
+      rerender(editorWith(null));
+
+      expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(0);
+    });
+  });
 });

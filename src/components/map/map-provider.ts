@@ -111,6 +111,9 @@ export type PolygonEditorMapProviderProps = {
   overlapRegions: readonly (readonly GeoPoint[])[];
   // Vista previa del ajuste sugerido; se dibuja sin tocar los vértices.
   suggestion: readonly GeoPoint[] | null;
+  // Dónde está la persona según el GPS encendido: un punto con su círculo de error. No es un
+  // vértice ni se edita.
+  gpsPosition?: { point: GeoPoint; accuracyM: number | null } | null;
   onAddVertex: (point: GeoPoint) => void;
   // Quien lo recibe decide dónde queda el vértice (p. ej. pegado al borde de otra parcela).
   onMoveVertex: (index: number, point: GeoPoint) => void;

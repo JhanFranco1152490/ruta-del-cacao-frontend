@@ -243,6 +243,18 @@ a {
   .map-pin[data-tone='info'] {
     background: var(--info-solid);
   }
+  /* Tu posición según el GPS: punto azul con borde claro, como el de cualquier mapa del teléfono. */
+  .map-gps-dot {
+    display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 3px solid #ffffff;
+    border-radius: 9999px;
+    background: var(--info-solid);
+    box-shadow:
+      0 0 0 2px var(--info-solid),
+      0 1px 4px rgb(0 0 0 / 0.45);
+  }
   /* Vértice del polígono que se dibuja: lleva su número, así que el orden se lee en el mapa sin
      depender del color; el origen (GPS, mapa, ajustado) se ve en la lista de vértices. */
   .map-vertex {

@@ -151,6 +151,7 @@ export function FakePolygonEditor({
   referenceShapes,
   overlapRegions,
   suggestion,
+  gpsPosition,
   onAddVertex,
   onMoveVertex,
   onBaseLayerUnavailable,
@@ -178,6 +179,12 @@ export function FakePolygonEditor({
       <p>Zonas superpuestas: {overlapRegions.length}</p>
       <p>
         Sugerencia: {suggestion ? `${suggestion.length} vértices` : 'ninguna'}
+      </p>
+      <p>
+        Posición GPS:{' '}
+        {gpsPosition
+          ? `${gpsPosition.point.latitude}, ${gpsPosition.point.longitude} ±${gpsPosition.accuracyM ?? '?'} m`
+          : 'ninguna'}
       </p>
       <button
         disabled={disabled}

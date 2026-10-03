@@ -40,6 +40,7 @@ export function LeafletPolygonEditor({
   referenceShapes,
   overlapRegions,
   suggestion,
+  gpsPosition,
   onAddVertex,
   onMoveVertex,
   onBaseLayerUnavailable,
@@ -167,6 +168,61 @@ export function LeafletPolygonEditor({
       layer.remove();
     };
   }, [map, suggestionKey, suggestionRef]);
+
+  // Dónde está la persona: un punto azul y, alrededor, el círculo del error que reporta el GPS.
+  // Se actualiza con cada lectura moviendo lo que ya está dibujado, sin rehacerlo.
+  const gpsDotRef = useRef<L.Marker | null>(null);
+  const gpsCircleRef = useRef<L.Circle | null>(null);
+  const gpsLatitude = gpsPosition?.point.latitude;
+  const gpsLongitude = gpsPosition?.point.longitude;
+  const gpsAccuracy = gpsPosition?.accuracyM ?? null;
+  useEffect(() => {
+    if (!map) return;
+    if (gpsLatitude === undefined || gpsLongitude === undefined) {
+      gpsDotRef.current?.remove();
+      gpsCircleRef.current?.remove();
+      gpsDotRef.current = null;
+      gpsCircleRef.current = null;
+      return;
+    }
+    const position = L.latLng(gpsLatitude, gpsLongitude);
+    if (!gpsDotRef.current) {
+      const color = cssVar('--info-solid');
+      gpsCircleRef.current = L.circle(position, {
+        radius: gpsAccuracy ?? 0,
+        color,
+        fillColor: color,
+        fillOpacity: 0.12,
+        weight: 1,
+        interactive: false,
+      }).addTo(map);
+      gpsDotRef.current = L.marker(position, {
+        icon: L.divIcon({
+          className: '',
+          html: '<span class="map-gps-dot"></span>',
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
+        }),
+        title: 'Tu posición según el GPS',
+        alt: 'Tu posición según el GPS',
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: -100,
+      }).addTo(map);
+      return;
+    }
+    gpsDotRef.current.setLatLng(position);
+    gpsCircleRef.current?.setLatLng(position);
+    gpsCircleRef.current?.setRadius(gpsAccuracy ?? 0);
+  }, [map, gpsLatitude, gpsLongitude, gpsAccuracy]);
+  // Al desmontar el mapa se descartan las referencias a lo que ya no existe.
+  useEffect(
+    () => () => {
+      gpsDotRef.current = null;
+      gpsCircleRef.current = null;
+    },
+    [map],
+  );
 
   // El contorno propio: polígono con tres vértices o más, línea con dos.
   const outlineKey = pointsKey(vertices);

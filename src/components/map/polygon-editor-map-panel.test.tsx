@@ -60,6 +60,19 @@ describe('PolygonEditorMapPanel', () => {
     expect(screen.getByText('Sugerencia: 1 vértices')).toBeInTheDocument();
   });
 
+  it('passes the GPS position to the map', async () => {
+    renderPanel({
+      gpsPosition: {
+        point: { latitude: 7.8, longitude: -72.5 },
+        accuracyM: 12,
+      },
+    });
+
+    expect(
+      await screen.findByText('Posición GPS: 7.8, -72.5 ±12 m'),
+    ).toBeInTheDocument();
+  });
+
   it('reports the points the map gives back', async () => {
     const user = userEvent.setup();
     const { onAddVertex, onMoveVertex } = renderPanel({

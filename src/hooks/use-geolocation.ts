@@ -37,7 +37,7 @@ const COORDINATES_ALTERNATIVES: GpsAlternatives = {
   retryInstead: 'escribe las coordenadas',
 };
 
-const gpsMessages = ({ instead, retryInstead }: GpsAlternatives) => ({
+export const gpsMessages = ({ instead, retryInstead }: GpsAlternatives) => ({
   errors: {
     1: `No permitiste acceder a tu ubicación. ${instead}`,
     2: `La ubicación no está disponible. ${instead}`,

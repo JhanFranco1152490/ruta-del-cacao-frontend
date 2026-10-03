@@ -348,6 +348,37 @@ describe('PlotEditor', () => {
     expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue('');
   });
 
+  it('shows the position of the person on the map once the GPS is on, and drops it when it is off', async () => {
+    const gps = installFakeGps();
+    const { user } = renderEditor();
+    expect(
+      await screen.findByText('Posición GPS: ninguna'),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
+    act(() => gps.reading(12, { latitude: 7.8, longitude: -72.5 }));
+    expect(
+      await screen.findByText(/Posición GPS: 7\.8.*-72\.5.*±12 m/),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /GPS activo/ }));
+    expect(screen.getByText('Posición GPS: ninguna')).toBeInTheDocument();
+  });
+
+  it('adds a vertex at once from the warmed up GPS', async () => {
+    const gps = installFakeGps();
+    const { user } = renderEditor();
+    await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
+    act(() => gps.reading(6, { latitude: 7.8, longitude: -72.5 }));
+
+    await user.click(screen.getByRole('button', { name: 'Agregar vértice' }));
+
+    const list = await screen.findByRole('list', {
+      name: 'Vértices del polígono',
+    });
+    expect(within(list).getByText(/GPS ±6 m/)).toBeInTheDocument();
+  });
+
   it('explains that closing needs three vertices', async () => {
     const { user } = renderEditor();
 
