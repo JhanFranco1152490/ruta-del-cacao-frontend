@@ -25,7 +25,7 @@ const farm: FarmFormValues = {
   municipality_id: '54518',
   details: '',
   area_hectares: '12.50',
-  altitude_masl: '950',
+  altitude_masl: '2200',
   latitude: '7.8234567',
   longitude: '-72.5123456',
 };
@@ -205,6 +205,7 @@ describe('FarmEditorScreen', () => {
             id: 's1',
             municipality: { id: '54518', name: 'Pamplona' },
             details: 'Km 4',
+            altitude_masl: 2200,
             location: { latitude: '7.9000000', longitude: '-72.5123456' },
             version: 4,
           }),

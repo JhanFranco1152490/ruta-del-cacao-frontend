@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { COORDINATE_DECIMALS } from '@/lib/format/coordinates';
+import { altitudeRangeFor } from '@/lib/geo/municipality-altitude';
 import { OPERATING_AREA_BOUNDS } from '@/lib/geo/operating-area';
 import {
   areaHectaresField,
@@ -42,28 +43,45 @@ const requiredCoordinate = (
       `Usa máximo ${COORDINATE_DECIMALS} decimales.`,
     );
 
-export const farmFormSchema = z.object({
-  name: z.string().trim().min(1, 'Ingresa el nombre de la finca.'),
-  municipality_id: z.string().min(1, 'Selecciona un municipio.'),
-  details: z.string().trim(),
-  area_hectares: areaHectaresField(),
-  altitude_masl: z
-    .string()
-    .trim()
-    .refine(
-      (value) =>
-        /^-?\d+$/.test(value) && Number(value) >= -500 && Number(value) <= 9000,
-      'La altitud debe estar entre -500 y 9000.',
+export const farmFormSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Ingresa el nombre de la finca.'),
+    municipality_id: z.string().min(1, 'Selecciona un municipio.'),
+    details: z.string().trim(),
+    area_hectares: areaHectaresField(),
+    altitude_masl: z
+      .string()
+      .trim()
+      .refine(
+        (value) =>
+          /^-?\d+$/.test(value) &&
+          Number(value) >= -500 &&
+          Number(value) <= 9000,
+        'La altitud debe estar entre -500 y 9000.',
+      ),
+    latitude: requiredCoordinate(
+      [-90, 90],
+      [OPERATING_AREA_BOUNDS.south, OPERATING_AREA_BOUNDS.north],
     ),
-  latitude: requiredCoordinate(
-    [-90, 90],
-    [OPERATING_AREA_BOUNDS.south, OPERATING_AREA_BOUNDS.north],
-  ),
-  longitude: requiredCoordinate(
-    [-180, 180],
-    [OPERATING_AREA_BOUNDS.west, OPERATING_AREA_BOUNDS.east],
-  ),
-});
+    longitude: requiredCoordinate(
+      [-180, 180],
+      [OPERATING_AREA_BOUNDS.west, OPERATING_AREA_BOUNDS.east],
+    ),
+  })
+  .superRefine((values, context) => {
+    // La altitud también tiene que caber en el terreno del municipio elegido. Si no hay altitud
+    // válida o municipio todavía, ya lo dicen sus propios campos.
+    const range = altitudeRangeFor(values.municipality_id);
+    const altitude = Number(values.altitude_masl);
+    if (!range || !/^-?\d+$/.test(values.altitude_masl.trim())) return;
+    if (altitude < range.minimum || altitude > range.maximum) {
+      context.addIssue({
+        code: 'custom',
+        path: ['altitude_masl'],
+        message: `La altitud no corresponde al municipio elegido: allí el terreno va de ${range.minimum} a ${range.maximum} m.`,
+      });
+    }
+  });
 
 export type FarmFormValues = z.infer<typeof farmFormSchema>;
 

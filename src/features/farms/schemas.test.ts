@@ -96,9 +96,16 @@ describe('farmFormSchema', () => {
     expect(messages({ ...valid, altitude_masl: '9001' })).toContain(
       'La altitud debe estar entre -500 y 9000.',
     );
+    // Sin municipio elegido solo vale el rango general (el del municipio se prueba aparte).
     expect(
-      farmFormSchema.safeParse({ ...valid, altitude_masl: '-500' }).success,
-    ).toBe(true);
+      farmFormSchema
+        .safeParse({
+          ...valid,
+          municipality_id: '',
+          altitude_masl: '-500',
+        })
+        .error?.issues.map((issue) => issue.path[0]),
+    ).not.toContain('altitude_masl');
   });
 
   describe('Norte de Santander bounds', () => {
@@ -137,6 +144,43 @@ describe('farmFormSchema', () => {
       expect(issues({ latitude: '95' })).toEqual([
         ['latitude', 'Coordenadas no válidas'],
       ]);
+    });
+  });
+
+  describe('altitude against the municipality', () => {
+    // Puerto Santander (54553): el terreno va de 43 a 72 m, con 100 m de margen.
+    const lowland = { ...valid, municipality_id: '54553' };
+
+    it('rejects an altitude the municipality does not reach', () => {
+      expect(messages({ ...lowland, altitude_masl: '950' })).toContain(
+        'La altitud no corresponde al municipio elegido: allí el terreno va de -57 a 172 m.',
+      );
+    });
+
+    it('accepts one inside its range, edges included', () => {
+      for (const altitude of ['-57', '60', '172']) {
+        expect(
+          farmFormSchema.safeParse({ ...lowland, altitude_masl: altitude })
+            .success,
+        ).toBe(true);
+      }
+    });
+
+    it('accepts a mountain altitude in a mountain municipality', () => {
+      // Silos (54743): de 2060 a 4256 m.
+      expect(
+        farmFormSchema.safeParse({
+          ...valid,
+          municipality_id: '54743',
+          altitude_masl: '2700',
+        }).success,
+      ).toBe(true);
+    });
+
+    it('says nothing about it while the municipality is not chosen yet', () => {
+      expect(
+        messages({ ...valid, municipality_id: '', altitude_masl: '950' }),
+      ).not.toContain(expect.stringContaining('no corresponde al municipio'));
     });
   });
 });
