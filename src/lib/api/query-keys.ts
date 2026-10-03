@@ -28,6 +28,9 @@ export const queryKeys = {
   plots: {
     // Las parcelas de una finca: el detalle de finca siempre las pide por finca.
     byFarm: (farmId: string) => ['plots', 'farm', farmId] as const,
+    // Una parcela que todavía está en la cola del dispositivo de esta persona.
+    queued: (userId: string, id: string) =>
+      ['plots', 'queued', userId, id] as const,
   },
   farms: {
     all: () => ['farms'] as const,
