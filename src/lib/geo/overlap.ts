@@ -1,10 +1,10 @@
 import intersect from '@turf/intersect';
-import { featureCollection } from '@turf/helpers';
+import { featureCollection, polygon } from '@turf/helpers';
 
 import type { GeoPoint } from '@/types/geo';
 
 import { geometryAreaSquareMetres, squareMetresToHectares } from './area';
-import { toPolygon } from './polygon';
+import { fromPosition, toPolygon } from './polygon';
 
 // Una intersección menor que esto se trata como un lindero compartido: absorbe el redondeo de
 // las coordenadas y el ruido de dos dibujos que se tocan. Es la misma tolerancia del servidor.
@@ -36,3 +36,30 @@ export function findOverlaps(
       : [];
   });
 }
+
+// Los contornos de las zonas invadidas, para resaltarlas en el mapa: una por cada pedazo de
+// intersección que pasa de la tolerancia.
+export function overlapRegions(
+  points: readonly GeoPoint[],
+  neighbours: readonly Neighbour[],
+): GeoPoint[][] {
+  const own = toPolygon(points);
+  return neighbours.flatMap((neighbour) => {
+    const shared = intersect(
+      featureCollection([own, toPolygon(neighbour.points)]),
+    );
+    if (!shared) return [];
+    const pieces =
+      shared.geometry.type === 'Polygon'
+        ? [shared.geometry.coordinates]
+        : shared.geometry.coordinates;
+    return pieces
+      .filter(
+        ([outline]) => polygonArea(outline) >= OVERLAP_TOLERANCE_SQUARE_METRES,
+      )
+      .map(([outline]) => outline.slice(0, -1).map(fromPosition));
+  });
+}
+
+const polygonArea = (outline: number[][]) =>
+  geometryAreaSquareMetres(polygon([outline]));

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { polygonAreaHectares } from './area';
-import { findOverlaps } from './overlap';
+import { findOverlaps, overlapRegions } from './overlap';
 import { rect } from './test-shapes';
 
 describe('findOverlaps', () => {
@@ -44,5 +44,27 @@ describe('findOverlaps', () => {
     expect(overlaps[1].areaHectares).toBe(
       polygonAreaHectares(rect(0, 0, 1, 1)),
     );
+  });
+});
+
+describe('overlapRegions', () => {
+  it('gives the outline of each invaded zone', () => {
+    const regions = overlapRegions(rect(0, 0, 2, 2), [
+      { id: 'P2', points: rect(1, 0, 3, 2) },
+      { id: 'P3', points: rect(0, 3, 1, 4) },
+    ]);
+
+    expect(regions).toHaveLength(1);
+    expect(polygonAreaHectares(regions[0])).toBe(
+      polygonAreaHectares(rect(1, 0, 2, 2)),
+    );
+  });
+
+  it('gives nothing for plots that only share a side', () => {
+    expect(
+      overlapRegions(rect(0, 0, 1, 1), [
+        { id: 'P2', points: rect(1, 0, 2, 1) },
+      ]),
+    ).toEqual([]);
   });
 });
