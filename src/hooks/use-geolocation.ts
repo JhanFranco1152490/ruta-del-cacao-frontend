@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatGeoPoint } from '@/lib/format/coordinates';
 import type { Coordinates } from '@/types/geo';
@@ -14,17 +14,29 @@ export const GPS_GOOD_ACCURACY_M = 10;
 // Peor que esto, se avisa y se ofrece repetir o marcar el punto en el mapa.
 export const GPS_WEAK_ACCURACY_M = 50;
 
-const LOCATION_ERRORS: Record<number, string> = {
-  1: 'No permitiste acceder a tu ubicación. Escribe las coordenadas o marca el punto en el mapa.',
-  2: 'La ubicación no está disponible. Escribe las coordenadas o marca el punto en el mapa.',
-  3: 'La captura de ubicación tardó demasiado. Inténtalo nuevamente o escribe las coordenadas.',
+// Qué hacer cuando el GPS no sirve depende de quien lo usa: la finca ofrece escribir las
+// coordenadas; el polígono de una parcela, seguir dibujando en el mapa.
+export type GpsAlternatives = {
+  // Frase completa que sigue a "no hay ubicación".
+  instead: string;
+  // Lo que se puede hacer en lugar de reintentar, dentro de "Inténtalo nuevamente o ...".
+  retryInstead: string;
 };
 
-const UNSUPPORTED_MESSAGE =
-  'Este dispositivo no permite capturar la ubicación. Escribe las coordenadas o marca el punto en el mapa.';
+const COORDINATES_ALTERNATIVES: GpsAlternatives = {
+  instead: 'Escribe las coordenadas o marca el punto en el mapa.',
+  retryInstead: 'escribe las coordenadas',
+};
 
-const FALLBACK_MESSAGE =
-  'No fue posible capturar la ubicación. Inténtalo nuevamente o escribe las coordenadas.';
+const gpsMessages = ({ instead, retryInstead }: GpsAlternatives) => ({
+  errors: {
+    1: `No permitiste acceder a tu ubicación. ${instead}`,
+    2: `La ubicación no está disponible. ${instead}`,
+    3: `La captura de ubicación tardó demasiado. Inténtalo nuevamente o ${retryInstead}.`,
+  } as Record<number, string>,
+  unsupported: `Este dispositivo no permite capturar la ubicación. ${instead}`,
+  fallback: `No fue posible capturar la ubicación. Inténtalo nuevamente o ${retryInstead}.`,
+});
 
 export type GpsResult = {
   point: Coordinates;
@@ -34,7 +46,16 @@ export type GpsResult = {
 
 type Reading = { latitude: number; longitude: number; accuracy: number };
 
-export function useGeolocation(onCapture: (coordinates: Coordinates) => void) {
+export function useGeolocation(
+  // Recibe el punto y los metros de error que reportó el dispositivo (null si no los informó).
+  onCapture: (coordinates: Coordinates, accuracy: number | null) => void,
+  alternatives: GpsAlternatives = COORDINATES_ALTERNATIVES,
+) {
+  const { instead, retryInstead } = alternatives;
+  const messages = useMemo(
+    () => gpsMessages({ instead, retryInstead }),
+    [instead, retryInstead],
+  );
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // La mejor precisión de lo que va leyendo, para mostrarla mientras captura.
@@ -67,7 +88,7 @@ export function useGeolocation(onCapture: (coordinates: Coordinates) => void) {
   const capture = useCallback(() => {
     if (isCapturingRef.current) return;
     if (!navigator.geolocation) {
-      setError(UNSUPPORTED_MESSAGE);
+      setError(messages.unsupported);
       return;
     }
 
@@ -90,7 +111,7 @@ export function useGeolocation(onCapture: (coordinates: Coordinates) => void) {
       if (done) return;
       end();
       if (!best) {
-        setError(LOCATION_ERRORS[lastErrorCode] ?? FALLBACK_MESSAGE);
+        setError(messages.errors[lastErrorCode] ?? messages.fallback);
         return;
       }
       const point = formatGeoPoint(best);
@@ -98,7 +119,10 @@ export function useGeolocation(onCapture: (coordinates: Coordinates) => void) {
         point,
         accuracy: Number.isFinite(best.accuracy) ? best.accuracy : null,
       });
-      onCaptureRef.current(point);
+      onCaptureRef.current(
+        point,
+        Number.isFinite(best.accuracy) ? best.accuracy : null,
+      );
     };
 
     watchId.current = navigator.geolocation.watchPosition(
@@ -120,7 +144,7 @@ export function useGeolocation(onCapture: (coordinates: Coordinates) => void) {
         if (code === 1) {
           if (done) return;
           end();
-          setError(LOCATION_ERRORS[1]);
+          setError(messages.errors[1]);
           return;
         }
         lastErrorCode = code;
@@ -134,7 +158,7 @@ export function useGeolocation(onCapture: (coordinates: Coordinates) => void) {
       return;
     }
     timer.current = setTimeout(finish, GPS_MAX_WAIT_MS);
-  }, [stop]);
+  }, [stop, messages]);
 
   return { capture, error, isCapturing, accuracy, result };
 }

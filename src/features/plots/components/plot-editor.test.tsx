@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { rect } from '@/lib/geo/test-shapes';
+import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { renderWithProviders } from '@/test/render';
 
 vi.mock('@/config/map', async () => {
@@ -76,6 +77,8 @@ const fill = async (
   await user.clear(areaField);
   await user.type(areaField, area);
 };
+
+afterEach(() => restoreGeolocation());
 
 describe('PlotEditor', () => {
   it('saves a plot without polygon with just its code and area', async () => {
@@ -190,6 +193,20 @@ describe('PlotEditor', () => {
     expect(saved.vertices.every((vertex) => vertex.source === 'map')).toBe(
       true,
     );
+  });
+
+  it('adds a vertex from the GPS and shows where it came from', async () => {
+    const gps = installFakeGps();
+    const { user } = renderEditor();
+
+    await user.click(screen.getByRole('button', { name: 'Agregar vértice' }));
+    act(() => gps.reading(4, { latitude: 7.8, longitude: -72.5 }));
+
+    const list = await screen.findByRole('list', {
+      name: 'Vértices del polígono',
+    });
+    expect(within(list).getByText(/GPS ±4 m/)).toBeInTheDocument();
+    expect(screen.getByText('1: 7.8, -72.5')).toBeInTheDocument();
   });
 
   it('explains that closing needs three vertices', async () => {

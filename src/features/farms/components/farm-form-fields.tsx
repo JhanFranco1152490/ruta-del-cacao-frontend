@@ -18,7 +18,7 @@ import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
 } from '@/components/capture-field-class';
-import { useGeolocation } from '../use-geolocation';
+import { useGeolocation } from '@/hooks/use-geolocation';
 import { useMunicipalityHints } from '../use-municipality-hints';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 import {

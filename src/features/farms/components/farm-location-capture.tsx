@@ -10,7 +10,10 @@ import { Button } from '@/components/ui/button';
 import { loadMapProvider as appMapProvider } from '@/config/map';
 import type { Coordinates, GeoBounds } from '@/types/geo';
 
-import { GPS_WEAK_ACCURACY_M, type useGeolocation } from '../use-geolocation';
+import {
+  GPS_WEAK_ACCURACY_M,
+  type useGeolocation,
+} from '@/hooks/use-geolocation';
 import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,

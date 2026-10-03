@@ -22,6 +22,7 @@ import type { KnownPlot } from '../known-plots';
 import type { PlotFormValues } from '../plot-queue';
 import { toPoints } from '../plot-vertices';
 import { usePlotEditor } from '../use-plot-editor';
+import { PlotGpsButton } from './plot-gps-button';
 import { PlotGeometrySummary } from './plot-geometry-summary';
 import { PlotMapControls } from './plot-map-controls';
 import { PlotNotices } from './plot-notices';
@@ -157,6 +158,12 @@ export function PlotEditor({
             canUndo={draft.vertices.length > 0}
             disabled={isSaving}
             drawing={draft.drawing}
+            gps={
+              <PlotGpsButton
+                disabled={isSaving || editor.isAtMaxVertices}
+                onVertex={editor.addGpsVertex}
+              />
+            }
             onStartDrawing={editor.startDrawing}
             onUndo={editor.undo}
           />
