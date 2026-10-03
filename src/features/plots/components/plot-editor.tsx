@@ -158,6 +158,7 @@ export function PlotEditor({
             frameClassName="lg:h-[32rem]"
             loadProvider={loadPolygonEditorMapProvider!}
             onAddVertex={editor.addMapVertex}
+            onRequestGps={warm.start}
             onMoveVertex={editor.moveVertex}
             overlapRegions={check.overlapRegions}
             referenceShapes={referenceShapes}

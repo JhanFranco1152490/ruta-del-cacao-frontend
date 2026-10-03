@@ -41,6 +41,7 @@ export function LeafletPolygonEditor({
   overlapRegions,
   suggestion,
   gpsPosition,
+  focus,
   onAddVertex,
   onMoveVertex,
   onBaseLayerUnavailable,
@@ -301,6 +302,19 @@ export function LeafletPolygonEditor({
       });
     }
   }, [map, farmPoint, verticesRef, referenceRef]);
+
+  // Un pedido de ir a la finca o a la posición del GPS. No se aleja si ya se está más cerca.
+  const farmPointRef = useLatest(farmPoint);
+  const gpsPositionRef = useLatest(gpsPosition);
+  useEffect(() => {
+    if (!map || !focus) return;
+    const target =
+      focus.target === 'farm'
+        ? farmPointRef.current
+        : (gpsPositionRef.current?.point ?? null);
+    if (!target) return;
+    map.setView(toLatLng(target), Math.max(map.getZoom(), POINT_ZOOM + 2));
+  }, [map, focus, farmPointRef, gpsPositionRef]);
 
   // Un vértice nuevo (p. ej. capturado por GPS) puede quedar fuera de la vista: se le sigue.
   const countRef = useRef(vertices.length);

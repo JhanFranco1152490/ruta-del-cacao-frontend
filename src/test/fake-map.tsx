@@ -152,12 +152,14 @@ export function FakePolygonEditor({
   overlapRegions,
   suggestion,
   gpsPosition,
+  focus,
   onAddVertex,
   onMoveVertex,
   onBaseLayerUnavailable,
 }: PolygonEditorMapProviderProps) {
   return (
     <div>
+      {focus && <p>Enfocado en: {focus.target}</p>}
       <p>Modo: {drawing ? 'dibujando' : 'quieto'}</p>
       <p>
         Finca:{' '}

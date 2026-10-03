@@ -136,4 +136,81 @@ describe('PolygonEditorMapPanel', () => {
       'isolate',
     );
   });
+
+  describe('going to the farm or to the GPS position', () => {
+    const gps = { point: { latitude: 7.81, longitude: -72.51 }, accuracyM: 9 };
+
+    it('takes the map to the farm point', async () => {
+      const user = userEvent.setup();
+      renderPanel();
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Ir a la finca' }),
+      );
+
+      expect(await screen.findByText('Enfocado en: farm')).toBeInTheDocument();
+    });
+
+    it('cannot go to a farm that has no point', async () => {
+      renderPanel({ farmPoint: null });
+
+      expect(
+        await screen.findByRole('button', { name: 'Ir a la finca' }),
+      ).toBeDisabled();
+    });
+
+    it('takes the map to the GPS position when there is one', async () => {
+      const user = userEvent.setup();
+      renderPanel({ gpsPosition: gps });
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Ir a mi ubicación' }),
+      );
+
+      expect(await screen.findByText('Enfocado en: gps')).toBeInTheDocument();
+    });
+
+    it('asks for the GPS and goes to the position as soon as the first reading arrives', async () => {
+      const user = userEvent.setup();
+      const onRequestGps = vi.fn();
+      const props = {
+        disabled: false,
+        drawing: false,
+        farmPoint: { latitude: 7.8, longitude: -72.5 },
+        loadProvider: loadFakePolygonEditor,
+        onAddVertex: vi.fn(),
+        onMoveVertex: vi.fn(),
+        onRequestGps,
+        overlapRegions: [],
+        referenceShapes: [],
+        suggestion: null,
+        vertices: [],
+      };
+      const { rerender } = render(<PolygonEditorMapPanel {...props} />);
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Ir a mi ubicación' }),
+      );
+      expect(onRequestGps).toHaveBeenCalledOnce();
+      expect(
+        screen.getByRole('button', { name: 'Buscando tu ubicación…' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Enfocado en/)).not.toBeInTheDocument();
+
+      rerender(<PolygonEditorMapPanel {...props} gpsPosition={gps} />);
+
+      expect(await screen.findByText('Enfocado en: gps')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Ir a mi ubicación' }),
+      ).toBeInTheDocument();
+    });
+
+    it('cannot go to the position when there is neither GPS nor a way to turn it on', async () => {
+      renderPanel({ onRequestGps: undefined });
+
+      expect(
+        await screen.findByRole('button', { name: 'Ir a mi ubicación' }),
+      ).toBeDisabled();
+    });
+  });
 });

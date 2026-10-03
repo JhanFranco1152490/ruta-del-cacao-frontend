@@ -212,4 +212,42 @@ describe('LeafletPolygonEditor', () => {
       expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(0);
     });
   });
+
+  describe('focus requests', () => {
+    const withFocus = (focus: { target: 'farm' | 'gps' } | undefined) => (
+      <div style={{ width: 400, height: 300 }}>
+        <LeafletPolygonEditor
+          baseLayer="map"
+          disabled={false}
+          drawing={false}
+          farmPoint={{ latitude: 7.8, longitude: -72.5 }}
+          focus={focus}
+          gpsPosition={{
+            point: { latitude: 7.9, longitude: -72.6 },
+            accuracyM: 10,
+          }}
+          onAddVertex={() => {}}
+          onBaseLayerUnavailable={() => {}}
+          onMoveVertex={() => {}}
+          overlapRegions={[]}
+          referenceShapes={[]}
+          suggestion={null}
+          vertices={[]}
+        />
+      </div>
+    );
+
+    it('keeps drawing after being asked to go to the farm and then to the GPS position', async () => {
+      const { container, rerender } = render(withFocus(undefined));
+      await vi.waitFor(() =>
+        expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(1),
+      );
+
+      rerender(withFocus({ target: 'farm' }));
+      rerender(withFocus({ target: 'gps' }));
+
+      expect(container.querySelectorAll('.map-gps-dot')).toHaveLength(1);
+      expect(container.querySelector('.leaflet-container')).not.toBeNull();
+    });
+  });
 });

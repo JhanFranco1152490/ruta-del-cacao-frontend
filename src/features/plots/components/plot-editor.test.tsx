@@ -365,6 +365,32 @@ describe('PlotEditor', () => {
     expect(screen.getByText('Posición GPS: ninguna')).toBeInTheDocument();
   });
 
+  it('goes to the farm from the map button', async () => {
+    const { user } = renderEditor();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Ir a la finca' }),
+    );
+
+    expect(await screen.findByText('Enfocado en: farm')).toBeInTheDocument();
+  });
+
+  it('turns the GPS on from the location button and goes to the position when it arrives', async () => {
+    const gps = installFakeGps();
+    const { user } = renderEditor();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Ir a mi ubicación' }),
+    );
+    expect(gps.geolocation.watchPosition).toHaveBeenCalledOnce();
+    act(() => gps.reading(15, { latitude: 7.8, longitude: -72.5 }));
+
+    expect(await screen.findByText('Enfocado en: gps')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /GPS activo/ }),
+    ).toBeInTheDocument();
+  });
+
   it('adds a vertex at once from the warmed up GPS', async () => {
     const gps = installFakeGps();
     const { user } = renderEditor();

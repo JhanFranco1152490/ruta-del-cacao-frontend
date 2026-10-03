@@ -114,6 +114,9 @@ export type PolygonEditorMapProviderProps = {
   // Dónde está la persona según el GPS encendido: un punto con su círculo de error. No es un
   // vértice ni se edita.
   gpsPosition?: { point: GeoPoint; accuracyM: number | null } | null;
+  // Un pedido de llevar el mapa al punto de la finca o a la posición del GPS. Un objeto nuevo por
+  // pedido: pedir dos veces lo mismo vuelve a llevar el mapa aunque la persona lo haya movido.
+  focus?: { target: 'farm' | 'gps' };
   onAddVertex: (point: GeoPoint) => void;
   // Quien lo recibe decide dónde queda el vértice (p. ej. pegado al borde de otra parcela).
   onMoveVertex: (index: number, point: GeoPoint) => void;
