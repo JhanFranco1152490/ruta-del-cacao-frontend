@@ -5,6 +5,11 @@ import {
   type Neighbour,
   overlapRegions,
 } from '@/lib/geo/overlap';
+import {
+  type FarVertex,
+  maxDistanceFromFarmMetres,
+  verticesTooFarFromFarm,
+} from '@/lib/geo/farm-reach';
 import { polygonPerimeterMetres } from '@/lib/geo/perimeter';
 import { type PolygonProblem, polygonProblem } from '@/lib/geo/validate';
 import type { GeoPoint } from '@/types/geo';
@@ -23,6 +28,8 @@ export type PlotCheckInput = {
   declaredAreaHectares: number | null;
   vertices: readonly GeoPoint[];
   farmAreaHectares: number;
+  // El punto de la finca; sin él no hay con qué medir la distancia.
+  farmPoint: GeoPoint | null;
   // Lo que ya ocupan las demás parcelas activas de la finca, sin contar la que se edita.
   otherAllocatedHectares: number;
   // Las demás parcelas activas con polígono: del servidor, de la caché o pendientes.
@@ -35,6 +42,10 @@ export type PlotCheck = {
   hasPolygon: boolean;
   measuredAreaHectares: number | null;
   perimeterMetres: number | null;
+  // Los vértices que quedan más lejos del punto de la finca de lo que cabe en una finca de ese
+  // tamaño, y ese máximo.
+  farVertices: FarVertex[];
+  maxDistanceFromFarmMetres: number;
   availableHectares: number;
   exceedsFarmArea: boolean;
   // Más del 5 % de diferencia: no se guarda.
@@ -83,6 +94,16 @@ export function checkPlot(input: PlotCheckInput): PlotCheck {
     hasPolygon: hasVertices,
     measuredAreaHectares: measured,
     perimeterMetres: hasVertices ? polygonPerimeterMetres(vertices) : null,
+    farVertices: input.farmPoint
+      ? verticesTooFarFromFarm(
+          vertices,
+          input.farmPoint,
+          input.farmAreaHectares,
+        )
+      : [],
+    maxDistanceFromFarmMetres: maxDistanceFromFarmMetres(
+      input.farmAreaHectares,
+    ),
     availableHectares: availableCenti / 100,
     exceedsFarmArea: hasDeclared && toCentihectares(declared) > availableCenti,
     areaMismatch,

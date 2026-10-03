@@ -7,7 +7,8 @@ import { useForm, useWatch } from 'react-hook-form';
 import { MAX_VERTICES } from '@/lib/geo/polygon';
 import { snapToBorders } from '@/lib/geo/snap';
 import { polygonProblem } from '@/lib/geo/validate';
-import type { GeoPoint } from '@/types/geo';
+import { parseCoordinates } from '@/lib/format/coordinates';
+import type { Coordinates, GeoPoint } from '@/types/geo';
 
 import type { KnownPlot } from './known-plots';
 import type { PlotFormValues } from './plot-queue';
@@ -24,7 +25,7 @@ import {
   type PlotFormFields,
 } from './schemas';
 
-type EditorFarm = { areaHectares: string };
+type EditorFarm = { areaHectares: string; location: Coordinates };
 
 const toNumber = (value: string | undefined) => {
   const number = Number((value ?? '').trim().replace(',', '.'));
@@ -98,16 +99,31 @@ export function usePlotEditor({
     100;
 
   const points = useMemo(() => toPoints(draft.vertices), [draft.vertices]);
+  const farmLatitude = farm.location.latitude;
+  const farmLongitude = farm.location.longitude;
+  const farmPoint = useMemo(
+    () =>
+      parseCoordinates({ latitude: farmLatitude, longitude: farmLongitude }),
+    [farmLatitude, farmLongitude],
+  );
   const check = useMemo(
     () =>
       checkPlot({
         declaredAreaHectares: toNumber(area),
         vertices: points,
         farmAreaHectares: Number(farm.areaHectares),
+        farmPoint,
         otherAllocatedHectares,
         neighbours,
       }),
-    [area, points, farm.areaHectares, otherAllocatedHectares, neighbours],
+    [
+      area,
+      points,
+      farm.areaHectares,
+      farmPoint,
+      otherAllocatedHectares,
+      neighbours,
+    ],
   );
 
   const borders = useMemo(
@@ -122,6 +138,7 @@ export function usePlotEditor({
     areaExceedsFarm: check.exceedsFarmArea,
     areaMismatch: check.areaMismatch,
     overlap: check.overlaps.length > 0,
+    farFromFarm: check.farVertices.length > 0,
   };
 
   return {

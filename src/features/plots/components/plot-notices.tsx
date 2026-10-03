@@ -42,6 +42,24 @@ export function PlotNotices({
         </p>
       )}
 
+      {check.farVertices.length > 0 && (
+        <div
+          className="space-y-1 rounded-(--radius) bg-err-bg px-4 py-3"
+          role="alert"
+        >
+          <p className="font-bold text-err">
+            {check.farVertices.length === 1
+              ? `El vértice ${check.farVertices[0].index + 1} está a ${check.farVertices[0].distanceMetres} m del punto de la finca`
+              : `${check.farVertices.length} vértices están demasiado lejos del punto de la finca (el vértice ${check.farVertices[0].index + 1} a ${check.farVertices[0].distanceMetres} m)`}
+          </p>
+          <p className="text-sm text-foreground">
+            Para una finca de este tamaño el máximo es{' '}
+            {check.maxDistanceFromFarmMetres} m. Revisa que no se haya capturado
+            en otro lugar; si la parcela es de otra finca, regístrala en esa.
+          </p>
+        </div>
+      )}
+
       {check.areaMismatch &&
         measured !== null &&
         declaredAreaHectares !== null && (

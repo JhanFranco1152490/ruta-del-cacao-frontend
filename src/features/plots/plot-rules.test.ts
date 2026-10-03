@@ -11,6 +11,7 @@ const base = (over: Partial<PlotCheckInput> = {}): PlotCheckInput => ({
   declaredAreaHectares: 1.2,
   vertices: [],
   farmAreaHectares: 10,
+  farmPoint: null,
   otherAllocatedHectares: 0,
   neighbours: [],
   ...over,
@@ -172,5 +173,29 @@ describe('checkPlot — overlap', () => {
 
     expect(check.overlaps).toHaveLength(1);
     expect(check.suggestion).toBeNull();
+  });
+});
+
+describe('checkPlot — distance from the farm point', () => {
+  const farmPoint = { latitude: 7.8, longitude: -72.5 };
+  const nearby = rect(0, 0, 1, 1);
+  // Unos 11 km al norte: muy lejos de una finca de 10 ha.
+  const faraway = rect(0, 100, 1, 101);
+
+  it('accepts a polygon next to the farm point', () => {
+    expect(
+      checkPlot(base({ vertices: nearby, farmPoint })).farVertices,
+    ).toEqual([]);
+  });
+
+  it('reports each vertex that is too far, with the limit for that farm', () => {
+    const check = checkPlot(base({ vertices: faraway, farmPoint }));
+
+    expect(check.farVertices.map(({ index }) => index)).toEqual([0, 1, 2, 3]);
+    expect(check.maxDistanceFromFarmMetres).toBe(657);
+  });
+
+  it('has nothing to measure without the point of the farm', () => {
+    expect(checkPlot(base({ vertices: faraway })).farVertices).toEqual([]);
   });
 });

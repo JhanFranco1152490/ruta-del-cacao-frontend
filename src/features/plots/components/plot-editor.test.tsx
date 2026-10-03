@@ -22,7 +22,8 @@ const FARM: PlotEditorFarm = {
   id: 'f1',
   name: 'La Esperanza',
   areaHectares: '10.00',
-  location: { latitude: '7.8234567', longitude: '-72.5123456' },
+  // Junto a donde el mapa de pruebas pone los vértices.
+  location: { latitude: '7.8005', longitude: '-72.4995' },
   editPath: '/fincas/editar?id=f1',
 };
 
@@ -213,6 +214,34 @@ describe('PlotEditor', () => {
       screen.queryByRole('button', { name: /Usar el área disponible/ }),
     ).not.toBeInTheDocument();
     expect(screen.getByText(/supera el área disponible/)).toBeInTheDocument();
+  });
+
+  it('blocks a vertex that is too far from the farm point and says how far', async () => {
+    const { user } = renderEditor({
+      farm: { ...FARM, location: { latitude: '8.5', longitude: '-72.5' } },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
+    await tapMap(user, 3);
+
+    expect(
+      await screen.findByText(/demasiado lejos del punto de la finca/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/el máximo es 657 m/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Guardar parcela' }),
+    ).toBeDisabled();
+  });
+
+  it('accepts the vertices that are within reach of the farm point', async () => {
+    const { user } = renderEditor();
+
+    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
+    await tapMap(user, 3);
+
+    expect(
+      screen.queryByText(/demasiado lejos|del punto de la finca/),
+    ).not.toBeInTheDocument();
   });
 
   it('rejects a code that another plot of the farm already has', async () => {
