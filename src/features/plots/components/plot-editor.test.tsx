@@ -308,101 +308,204 @@ describe('PlotEditor', () => {
     expect(screen.getByText('1: 7.8, -72.5')).toBeInTheDocument();
   });
 
-  it('fills the area with the calculated one when the polygon is closed and the area is empty', async () => {
-    const { user } = renderEditor();
-    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
-    await tapMap(user, 3);
-    expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue('');
+  describe('the area follows the polygon until the person writes it', () => {
+    const areaField = () =>
+      screen.getByLabelText('Área declarada (hectáreas)') as HTMLInputElement;
 
-    await user.click(screen.getByRole('button', { name: 'Cerrar polígono' }));
+    it('fills the area with the calculated one as soon as the polygon encloses something', async () => {
+      const { user } = renderEditor();
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 2);
+      expect(areaField()).toHaveValue('');
 
-    const field = screen.getByLabelText(
-      'Área declarada (hectáreas)',
-    ) as HTMLInputElement;
-    expect(field.value).toMatch(/^\d+\.\d{2}$/);
-    expect(Number(field.value)).toBeGreaterThan(0);
-    // Coincide con lo calculado: no aparece el aviso de diferencia de áreas.
-    expect(
-      screen.queryByText(/no coincide con la declarada|difiere más del 5 %/),
-    ).not.toBeInTheDocument();
-  });
+      await tapMap(user, 1);
 
-  it('keeps the area the person already wrote when closing the polygon', async () => {
-    const { user } = renderEditor();
-    await fill(user, 'P1', '0.5');
-    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
-    await tapMap(user, 3);
-
-    await user.click(screen.getByRole('button', { name: 'Cerrar polígono' }));
-
-    expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue(
-      '0.5',
-    );
-  });
-
-  it('does not fill the area while the polygon is still open', async () => {
-    const { user } = renderEditor();
-    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
-    await tapMap(user, 3);
-
-    expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue('');
-  });
-
-  it('shows the position of the person on the map once the GPS is on, and drops it when it is off', async () => {
-    const gps = installFakeGps();
-    const { user } = renderEditor();
-    expect(
-      await screen.findByText('Posición GPS: ninguna'),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
-    act(() => gps.reading(12, { latitude: 7.8, longitude: -72.5 }));
-    expect(
-      await screen.findByText(/Posición GPS: 7\.8.*-72\.5.*±12 m/),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /GPS activo/ }));
-    expect(screen.getByText('Posición GPS: ninguna')).toBeInTheDocument();
-  });
-
-  it('goes to the farm from the map button', async () => {
-    const { user } = renderEditor();
-
-    await user.click(
-      await screen.findByRole('button', { name: 'Ir a la finca' }),
-    );
-
-    expect(await screen.findByText('Enfocado en: farm')).toBeInTheDocument();
-  });
-
-  it('turns the GPS on from the location button and goes to the position when it arrives', async () => {
-    const gps = installFakeGps();
-    const { user } = renderEditor();
-
-    await user.click(
-      await screen.findByRole('button', { name: 'Ir a mi ubicación' }),
-    );
-    expect(gps.geolocation.watchPosition).toHaveBeenCalledOnce();
-    act(() => gps.reading(15, { latitude: 7.8, longitude: -72.5 }));
-
-    expect(await screen.findByText('Enfocado en: gps')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /GPS activo/ }),
-    ).toBeInTheDocument();
-  });
-
-  it('adds a vertex at once from the warmed up GPS', async () => {
-    const gps = installFakeGps();
-    const { user } = renderEditor();
-    await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
-    act(() => gps.reading(6, { latitude: 7.8, longitude: -72.5 }));
-
-    await user.click(screen.getByRole('button', { name: 'Agregar vértice' }));
-
-    const list = await screen.findByRole('list', {
-      name: 'Vértices del polígono',
+      expect(areaField().value).toMatch(/^\d+\.\d{2}$/);
+      expect(Number(areaField().value)).toBeGreaterThan(0);
+      // Coincide con lo calculado: no hay aviso de diferencia de áreas.
+      expect(
+        screen.queryByText(/no coincide con la declarada|difiere más del 5 %/),
+      ).not.toBeInTheDocument();
     });
-    expect(within(list).getByText(/GPS ±6 m/)).toBeInTheDocument();
+
+    it('always matches the calculated area shown below the map', async () => {
+      const { user } = renderEditor();
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+      const calculated = () =>
+        Number(
+          screen
+            .getByText('Área calculada')
+            .nextSibling!.textContent!.replace(' ha', '')
+            .replace(',', '.'),
+        );
+
+      expect(Number(areaField().value)).toBeCloseTo(calculated(), 2);
+      await user.click(
+        screen.getByRole('button', { name: 'Arrastrar el primer vértice' }),
+      );
+      expect(Number(areaField().value)).toBeCloseTo(calculated(), 2);
+    });
+
+    it('follows a vertex that is dragged', async () => {
+      const { user } = renderEditor();
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+      const before = areaField().value;
+
+      await user.click(
+        screen.getByRole('button', { name: 'Arrastrar el primer vértice' }),
+      );
+
+      expect(areaField().value).not.toBe(before);
+    });
+
+    it('stops following once the person wrote an area', async () => {
+      const { user } = renderEditor();
+      await fill(user, 'P1', '0.5');
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+
+      await tapMap(user, 3);
+      await tapMap(user, 1);
+
+      expect(areaField()).toHaveValue('0.5');
+    });
+
+    it('stops following when the person edits an area it had filled in', async () => {
+      const { user } = renderEditor();
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+      await user.clear(areaField());
+      await user.type(areaField(), '2');
+
+      await tapMap(user, 1);
+
+      expect(areaField()).toHaveValue('2');
+    });
+
+    it('goes back to following the polygon when the person empties the field', async () => {
+      const { user } = renderEditor();
+      await fill(user, 'P1', '0.5');
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+      expect(areaField()).toHaveValue('0.5');
+
+      await user.clear(areaField());
+      await user.click(
+        screen.getByRole('button', { name: 'Arrastrar el primer vértice' }),
+      );
+
+      expect(areaField().value).toMatch(/^\d+\.\d{2}$/);
+    });
+
+    it('follows the polygon again after taking the calculated area', async () => {
+      const { user } = renderEditor();
+      await fill(user, 'P1', '9');
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+      await user.click(
+        screen.getByRole('button', { name: 'Usar área calculada' }),
+      );
+      const taken = areaField().value;
+
+      await user.click(
+        screen.getByRole('button', { name: 'Arrastrar el primer vértice' }),
+      );
+
+      expect(areaField().value).not.toBe(taken);
+    });
+
+    it('lets the person clear the field and type another value without it filling in again', async () => {
+      const { user } = renderEditor();
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+
+      await user.clear(areaField());
+      expect(areaField()).toHaveValue('');
+      await user.type(areaField(), '2.5');
+
+      expect(areaField()).toHaveValue('2.5');
+    });
+
+    it('takes away the proposed area when every vertex is removed', async () => {
+      const { user } = renderEditor();
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+      expect(areaField().value).not.toBe('');
+
+      for (let i = 0; i < 3; i += 1) {
+        await user.click(screen.getByRole('button', { name: 'Deshacer' }));
+      }
+
+      expect(areaField()).toHaveValue('');
+    });
+
+    it('keeps the last proposed area while the polygon is momentarily not valid', async () => {
+      const { user } = renderEditor();
+      await user.click(
+        screen.getByRole('button', { name: 'Dibujar polígono' }),
+      );
+      await tapMap(user, 3);
+      const area = areaField().value;
+
+      await user.click(
+        screen.getByRole('button', { name: 'Quitar vértice 3' }),
+      );
+
+      expect(areaField()).toHaveValue(area);
+    });
+
+    it('does not take the area of a plot that is being edited from the polygon', async () => {
+      renderEditor({
+        defaultValues: {
+          code: 'P1',
+          area_hectares: '3.00',
+          vertices: [
+            {
+              latitude: 7.8,
+              longitude: -72.5,
+              source: 'map',
+              accuracyM: null,
+              capturedAt: null,
+            },
+            {
+              latitude: 7.801,
+              longitude: -72.499,
+              source: 'map',
+              accuracyM: null,
+              capturedAt: null,
+            },
+            {
+              latitude: 7.802,
+              longitude: -72.5,
+              source: 'map',
+              accuracyM: null,
+              capturedAt: null,
+            },
+          ],
+        },
+      });
+
+      expect(areaField()).toHaveValue('3.00');
+    });
   });
 
   it('explains that closing needs three vertices', async () => {

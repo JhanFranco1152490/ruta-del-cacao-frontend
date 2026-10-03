@@ -201,7 +201,9 @@ export function PlotEditor({
                 hint={`Disponible en la finca: ${formatHectares(check.availableHectares.toFixed(2))}`}
                 inputMode="decimal"
                 label="Área declarada (hectáreas)"
-                {...register('area_hectares')}
+                {...register('area_hectares', {
+                  onChange: (event) => editor.onAreaTyped(event.target.value),
+                })}
               />
             </div>
           </FormSection>
