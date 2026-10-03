@@ -78,6 +78,7 @@ describe('NAV_ITEMS', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([
       '/productores',
       '/fincas',
+      '/variedades',
       '/roles',
       '/usuarios',
       '/mi-productor',
@@ -89,6 +90,9 @@ describe('NAV_ITEMS', () => {
 
     expect(byHref['/productores'].permission).toBe(PERMISSIONS.PRODUCERS_VIEW);
     expect(byHref['/fincas'].permission).toBe(PERMISSIONS.FARMS_VIEW);
+    expect(byHref['/variedades'].permission).toBe(
+      PERMISSIONS.CROPS_MANAGE_VARIETIES,
+    );
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
     expect(byHref['/usuarios'].permission).toBe(PERMISSIONS.USERS_VIEW);
   });
@@ -96,7 +100,13 @@ describe('NAV_ITEMS', () => {
   it('marks the office sections as needing a connection', () => {
     expect(
       NAV_ITEMS.filter((item) => item.needsConnection).map((item) => item.href),
-    ).toEqual(['/productores', '/roles', '/usuarios', '/mi-productor']);
+    ).toEqual([
+      '/productores',
+      '/variedades',
+      '/roles',
+      '/usuarios',
+      '/mi-productor',
+    ]);
   });
 
   it('shows Mi productor only to whoever manages the association access', () => {

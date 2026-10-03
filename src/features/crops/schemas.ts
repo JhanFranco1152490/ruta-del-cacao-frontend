@@ -4,6 +4,7 @@ import {
   ageInMonths,
   formatCount,
   MANAGEMENT_SYSTEM_OPTIONS,
+  normalizeVarietyName,
   SHADE_TYPE_OPTIONS,
   STAGE_OPTIONS,
 } from './characterization-rules';
@@ -101,4 +102,38 @@ export type CharacterizationFormInput = z.input<
 >;
 export type CharacterizationFormFields = z.output<
   ReturnType<typeof createCharacterizationFormSchema>
+>;
+
+export const VARIETY_NAME_MAX_LENGTH = 60;
+export const VARIETY_DESCRIPTION_MAX_LENGTH = 200;
+export const DUPLICATE_VARIETY_MESSAGE =
+  'Ya existe una variedad con este nombre';
+
+// `takenNames`: los nombres (ya normalizados) de las demás variedades del catálogo. El servidor
+// repite la comprobación con todas.
+export const createVarietyFormSchema = (takenNames: ReadonlySet<string>) =>
+  z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, 'Ingresa el nombre de la variedad.')
+      .max(
+        VARIETY_NAME_MAX_LENGTH,
+        `Usa máximo ${VARIETY_NAME_MAX_LENGTH} caracteres.`,
+      )
+      .refine(
+        (name) => !takenNames.has(normalizeVarietyName(name)),
+        DUPLICATE_VARIETY_MESSAGE,
+      ),
+    description: z
+      .string()
+      .trim()
+      .max(
+        VARIETY_DESCRIPTION_MAX_LENGTH,
+        `Usa máximo ${VARIETY_DESCRIPTION_MAX_LENGTH} caracteres.`,
+      ),
+  });
+
+export type VarietyFormValues = z.infer<
+  ReturnType<typeof createVarietyFormSchema>
 >;

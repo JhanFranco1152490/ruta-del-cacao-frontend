@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { normalizeVarietyName } from './characterization-rules';
 import {
   type CharacterizationFormInput,
   createCharacterizationFormSchema,
+  createVarietyFormSchema,
+  DUPLICATE_VARIETY_MESSAGE,
   MISSING_VARIETY_MESSAGE,
   REPEATED_VARIETY_MESSAGE,
 } from './schemas';
@@ -152,5 +155,45 @@ describe('characterization form schema', () => {
       schema.safeParse(form({ management_system: 'biodynamic' as never }))
         .success,
     ).toBe(false);
+  });
+});
+
+describe('variety form schema', () => {
+  const varietySchema = createVarietyFormSchema(
+    new Set([normalizeVarietyName('CCN-51')]),
+  );
+
+  it('accepts a name and an optional description, trimmed', () => {
+    expect(
+      varietySchema.parse({ name: '  ICS-95 ', description: ' Trinidad ' }),
+    ).toEqual({ name: 'ICS-95', description: 'Trinidad' });
+    expect(varietySchema.parse({ name: 'ICS-95', description: '' })).toEqual({
+      name: 'ICS-95',
+      description: '',
+    });
+  });
+
+  it('requires the name and limits both fields', () => {
+    const message = (values: { name: string; description: string }) =>
+      varietySchema.safeParse(values).error?.issues[0].message;
+
+    expect(message({ name: '  ', description: '' })).toBe(
+      'Ingresa el nombre de la variedad.',
+    );
+    expect(message({ name: 'x'.repeat(61), description: '' })).toBe(
+      'Usa máximo 60 caracteres.',
+    );
+    expect(
+      message({ name: 'x'.repeat(60), description: 'y'.repeat(201) }),
+    ).toBe('Usa máximo 200 caracteres.');
+  });
+
+  it('rejects a name the catalog already has, however it is written', () => {
+    for (const name of ['CCN 51', 'ccn51', 'Ccn-51']) {
+      expect(
+        varietySchema.safeParse({ name, description: '' }).error?.issues[0]
+          .message,
+      ).toBe(DUPLICATE_VARIETY_MESSAGE);
+    }
   });
 });

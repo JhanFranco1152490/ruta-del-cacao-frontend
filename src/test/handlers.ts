@@ -15,6 +15,16 @@ export const csrfHandler = http.get(apiUrl('/api/auth/csrf'), () =>
   HttpResponse.json({ csrf_token: 'test-csrf' }),
 );
 
+// Responde el catálogo de variedades y guarda las búsquedas recibidas.
+export const cacaoVarietiesHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/cacao-varieties'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

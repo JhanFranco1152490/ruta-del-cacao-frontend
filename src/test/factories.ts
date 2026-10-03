@@ -147,6 +147,16 @@ export const buildVertex = (
   ...overrides,
 });
 
+export const buildCacaoVariety = (
+  overrides: Partial<Schemas['CacaoVariety']> = {},
+): Schemas['CacaoVariety'] => ({
+  id: 'v-ccn-51',
+  name: 'CCN-51',
+  description: 'Procedencia: Ecuador. Autocompatible.',
+  is_active: true,
+  ...overrides,
+});
+
 export const buildPlot = (
   overrides: Partial<Schemas['Plot']> = {},
 ): Schemas['Plot'] => ({

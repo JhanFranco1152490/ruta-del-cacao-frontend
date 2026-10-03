@@ -25,6 +25,13 @@ export const queryKeys = {
     detail: (id: string) => ['producers', 'detail', id] as const,
     dependents: (id: string) => ['producers', 'dependents', id] as const,
   },
+  cacaoVarieties: {
+    all: () => ['cacao-varieties'] as const,
+    // El catálogo completo de la pantalla de variedades (activas e inactivas).
+    list: () => ['cacao-varieties', 'list'] as const,
+    // Las activas, que ofrece la ficha de una parcela; con copia en el dispositivo.
+    active: () => ['cacao-varieties', 'active'] as const,
+  },
   plots: {
     // Las parcelas de una finca: el detalle de finca siempre las pide por finca.
     byFarm: (farmId: string) => ['plots', 'farm', farmId] as const,

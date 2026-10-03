@@ -13,6 +13,7 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/fincas/parcelas/editar',
   '/productores',
   '/productores/nuevo',
+  '/variedades',
   '/usuarios',
   '/roles',
   '/mi-productor',
