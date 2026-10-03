@@ -1,5 +1,6 @@
 export const PERMISSIONS = {
   PRODUCERS_VIEW: 'producers.view',
+  PRODUCERS_DELETE: 'producers.delete',
   FARMS_VIEW: 'farms.view_farm',
   FARMS_ADD: 'farms.add_farm',
   FARMS_CHANGE: 'farms.change_farm',

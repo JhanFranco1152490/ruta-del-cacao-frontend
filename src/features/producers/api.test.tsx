@@ -1,4 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
@@ -13,6 +13,7 @@ import { server } from '@/test/server';
 import {
   useChangeProducerStatus,
   useCreateProducer,
+  useDeleteProducer,
   useMunicipalityName,
   useProducers,
   useUpdateProducer,
@@ -258,6 +259,73 @@ describe('producers api', () => {
       });
 
       expect(isStale(client)).toBe(false);
+    });
+  });
+
+  describe('deleting a producer', () => {
+    const DELETE = apiUrl(`/api/producers/${producer.id}`);
+
+    function deleteRequests(
+      respond = () => new HttpResponse(null, { status: 204 }),
+    ) {
+      const requests: { version: string | null; body: string }[] = [];
+      server.use(
+        http.delete(DELETE, async ({ request }) => {
+          requests.push({
+            version: new URL(request.url).searchParams.get('expected_version'),
+            body: await request.text(),
+          });
+          return respond();
+        }),
+      );
+      return requests;
+    }
+
+    it('sends the version in the URL and no body, and forgets the producer and its farms', async () => {
+      const requests = deleteRequests();
+      const client = createTestQueryClient();
+      client.setQueryData(queryKeys.producers.detail(producer.id), producer);
+      client.setQueryData(queryKeys.farms.list({}), buildPage([]));
+      const { result } = renderHook(() => useDeleteProducer(), {
+        wrapper: wrapper(client),
+      });
+
+      await act(async () => {
+        await result.current.mutateAsync({
+          id: producer.id,
+          expectedVersion: 4,
+        });
+      });
+
+      expect(requests).toEqual([{ version: '4', body: '' }]);
+      expect(
+        client.getQueryData(queryKeys.producers.detail(producer.id)),
+      ).toBeUndefined();
+      expect(
+        client.getQueryState(queryKeys.farms.list({}))?.isInvalidated,
+      ).toBe(true);
+    });
+
+    it('fails at once without a connection and is never sent later on its own', async () => {
+      const requests = deleteRequests(() => HttpResponse.error());
+      onlineManager.setOnline(false);
+      try {
+        const { result } = renderHook(() => useDeleteProducer(), {
+          wrapper: wrapper(),
+        });
+
+        await act(async () => {
+          await result.current
+            .mutateAsync({ id: producer.id, expectedVersion: 4 })
+            .catch(() => undefined);
+        });
+
+        expect(result.current.isError).toBe(true);
+      } finally {
+        onlineManager.setOnline(true);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(requests).toHaveLength(1);
     });
   });
 
