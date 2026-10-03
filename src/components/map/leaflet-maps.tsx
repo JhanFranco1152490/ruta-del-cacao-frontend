@@ -18,6 +18,7 @@ import {
   useBaseLayer,
   useLatest,
   useLeafletMap,
+  useShapeLabelVisibility,
 } from './leaflet-shared';
 import type { MapProviderProps, PointsMapProviderProps } from './map-provider';
 import { MAX_FIT_ZOOM, POINT_ZOOM, pointsKey, viewFor } from './map-view';
@@ -154,6 +155,7 @@ export function LeafletPointsMap({
   useBaseLayer(map, 'map', onError);
   const pointsRef = useLatest(points);
   const shapesRef = useLatest(shapes);
+  const drawnPolygons = useRef<{ polygon: L.Polygon; label: string }[]>([]);
   const markers = markersKey(points);
   const drawnShapes = shapesKey(shapes);
   const positions = pointsKey([
@@ -182,29 +184,36 @@ export function LeafletPointsMap({
 
   useEffect(() => {
     if (!map) return;
-    const layer = L.layerGroup(
-      shapesRef.current.map((shape) => {
-        const color = cssVar(`--${shape.tone}-solid`);
-        // El borde y el relleno llevan el color del estado; la etiqueta fija dice el código
-        // aunque el color no se distinga.
-        return L.polygon(shape.positions.map(toLatLng), {
-          color,
-          fillColor: color,
-          fillOpacity: 0.25,
-          weight: 2,
+    const polygons = shapesRef.current.map((shape) => {
+      const color = cssVar(`--${shape.tone}-solid`);
+      // El borde y el relleno llevan el color del estado; la etiqueta fija dice el código
+      // aunque el color no se distinga.
+      const polygon = L.polygon(shape.positions.map(toLatLng), {
+        color,
+        fillColor: color,
+        fillOpacity: 0.25,
+        weight: 2,
+      })
+        .bindTooltip(shape.label, {
+          permanent: true,
+          direction: 'center',
+          className: 'map-plot-label',
         })
-          .bindTooltip(shape.label, {
-            permanent: true,
-            direction: 'center',
-            className: 'map-plot-label',
-          })
-          .bindPopup(popupContent(shape.label, shape.detail));
-      }),
-    ).addTo(map);
+        .bindPopup(popupContent(shape.label, shape.detail));
+      return { polygon, label: shape.label };
+    });
+    drawnPolygons.current = polygons;
+    const layer = L.layerGroup(polygons.map(({ polygon }) => polygon)).addTo(
+      map,
+    );
     return () => {
       layer.remove();
+      drawnPolygons.current = [];
     };
   }, [map, drawnShapes, shapesRef]);
+
+  // El nombre solo se muestra donde cabe: con el mapa alejado se apilarían.
+  useShapeLabelVisibility(map, () => drawnPolygons.current, drawnShapes);
 
   // Solo se encuadra cuando cambian las posiciones, no al mover el mapa ni al cambiar un nombre.
   useEffect(() => {

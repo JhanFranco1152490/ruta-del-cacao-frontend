@@ -9,7 +9,12 @@ const VERTICES = [
   { latitude: 7.801, longitude: -72.499 },
 ];
 
-function renderEditor(drawing = true) {
+function renderEditor(
+  drawing = true,
+  referenceShapes: React.ComponentProps<
+    typeof LeafletPolygonEditor
+  >['referenceShapes'] = [],
+) {
   const onAddVertex = vi.fn();
   const onMoveVertex = vi.fn();
   const { container } = render(
@@ -23,7 +28,7 @@ function renderEditor(drawing = true) {
         onBaseLayerUnavailable={() => {}}
         onMoveVertex={onMoveVertex}
         overlapRegions={[]}
-        referenceShapes={[]}
+        referenceShapes={referenceShapes}
         suggestion={null}
         vertices={VERTICES}
       />
@@ -93,5 +98,35 @@ describe('LeafletPolygonEditor', () => {
     });
 
     expect(onAddVertex).not.toHaveBeenCalled();
+  });
+
+  // El nombre de una vecina se pone sin recuadro y solo se ve donde cabe en su polígono (esa
+  // decisión está en `plotLabelFits`). Al abrir, el mapa se encuadra sobre la vecina y sí cabe.
+  it('names a neighbour with a plain label once the map is framed so the name fits in it', async () => {
+    const { container } = renderEditor(true, [
+      {
+        id: 'p2',
+        label: 'P2',
+        tone: 'info',
+        positions: [
+          { latitude: 7.8, longitude: -72.51 },
+          { latitude: 7.8, longitude: -72.509 },
+          { latitude: 7.801, longitude: -72.509 },
+        ],
+      },
+    ]);
+
+    await vi.waitFor(() =>
+      expect(
+        container.querySelector('.leaflet-tooltip.map-plot-label'),
+      ).not.toBeNull(),
+    );
+    const label = container.querySelector(
+      '.leaflet-tooltip.map-plot-label',
+    ) as HTMLElement;
+    expect(label.textContent).toBe('P2');
+    await vi.waitFor(() =>
+      expect(label).not.toHaveClass('map-plot-label-hidden'),
+    );
   });
 });

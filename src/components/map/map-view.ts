@@ -22,3 +22,20 @@ export function viewFor(points: readonly GeoPoint[]): MapView {
 // puntos, no en cada render.
 export const pointsKey = (points: readonly GeoPoint[]) =>
   points.map(({ latitude, longitude }) => `${latitude},${longitude}`).join('|');
+
+// Ancho aproximado de un carácter de la etiqueta de una parcela (negrita de 13 px) y el aire que
+// necesita alrededor.
+const LABEL_CHARACTER_PX = 8;
+const LABEL_PADDING_PX = 16;
+const LABEL_HEIGHT_PX = 22;
+
+// El nombre de una parcela solo se muestra cuando cabe dentro de su polígono tal como se ve en
+// pantalla. Con el mapa alejado, los códigos se apilarían unos sobre otros y taparían todo; la
+// parcela sigue ahí, y tocarla dice cómo se llama.
+export const plotLabelFits = (
+  pixelWidth: number,
+  pixelHeight: number,
+  label: string,
+) =>
+  pixelWidth >= label.length * LABEL_CHARACTER_PX + LABEL_PADDING_PX &&
+  pixelHeight >= LABEL_HEIGHT_PX;

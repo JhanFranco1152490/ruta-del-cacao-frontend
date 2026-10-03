@@ -15,6 +15,7 @@ import {
   useBaseLayer,
   useLatest,
   useLeafletMap,
+  useShapeLabelVisibility,
 } from './leaflet-shared';
 import type { PolygonEditorMapProviderProps } from './map-provider';
 import { POINT_ZOOM, pointsKey } from './map-view';
@@ -93,29 +94,37 @@ export function LeafletPolygonEditor({
     .map((shape) => `${shape.id}:${shape.label}:${pointsKey(shape.positions)}`)
     .join('|');
   const referenceRef = useLatest(referenceShapes);
+  const drawnReferences = useRef<{ polygon: L.Polygon; label: string }[]>([]);
   useEffect(() => {
     if (!map) return;
     const color = cssVar('--muted-foreground');
-    const layer = L.layerGroup(
-      referenceRef.current.map((shape) =>
-        L.polygon(shape.positions.map(toLatLng), {
-          color,
-          fillColor: color,
-          fillOpacity: 0.12,
-          weight: 2,
-          // No interactivo: un toque sobre una vecina sigue agregando el vértice.
-          interactive: false,
-        }).bindTooltip(shape.label, {
-          permanent: true,
-          direction: 'center',
-          className: 'map-plot-label',
-        }),
-      ),
-    ).addTo(map);
+    const polygons = referenceRef.current.map((shape) => ({
+      label: shape.label,
+      polygon: L.polygon(shape.positions.map(toLatLng), {
+        color,
+        fillColor: color,
+        fillOpacity: 0.12,
+        weight: 2,
+        // No interactivo: un toque sobre una vecina sigue agregando el vértice.
+        interactive: false,
+      }).bindTooltip(shape.label, {
+        permanent: true,
+        direction: 'center',
+        className: 'map-plot-label',
+      }),
+    }));
+    drawnReferences.current = polygons;
+    const layer = L.layerGroup(polygons.map(({ polygon }) => polygon)).addTo(
+      map,
+    );
     return () => {
       layer.remove();
+      drawnReferences.current = [];
     };
   }, [map, referenceKey, referenceRef]);
+
+  // El nombre de una vecina solo se muestra donde cabe: con el mapa alejado se apilarían.
+  useShapeLabelVisibility(map, () => drawnReferences.current, referenceKey);
 
   const overlapKey = overlapRegions
     .map((region) => pointsKey(region))
