@@ -2,7 +2,12 @@ import { http, HttpResponse } from 'msw';
 
 import { API_URL } from '@/lib/env';
 
-import { buildMunicipalities, buildPage, buildProfile } from './factories';
+import {
+  buildFarm,
+  buildMunicipalities,
+  buildPage,
+  buildProfile,
+} from './factories';
 
 export const apiUrl = (path: string) => `${API_URL}${path}`;
 
@@ -42,6 +47,18 @@ export const farmMapPointsHandler = (
   http.get(apiUrl('/api/farms/map/points'), ({ request }) => {
     requests.push(new URL(request.url).searchParams);
     return HttpResponse.json(results);
+  });
+
+export const farmHandler = (farm: ReturnType<typeof buildFarm>, id = 'f1') =>
+  http.get(apiUrl(`/api/farms/${id}`), () => HttpResponse.json(farm));
+
+export const plotsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/plots'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(buildPage(results));
   });
 
 export const profileHandler = (profile = buildProfile()) =>

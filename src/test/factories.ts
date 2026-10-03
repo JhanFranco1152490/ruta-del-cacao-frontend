@@ -107,6 +107,7 @@ export const buildFarm = (
   municipality: { id: '54001', name: 'Cúcuta' },
   details: '',
   area_hectares: '12.50',
+  allocated_area_hectares: '0.00',
   altitude_masl: 950,
   location: { latitude: '7.8234567', longitude: '-72.5123456' },
   version: 1,
@@ -130,5 +131,35 @@ export const buildFarmMapPoint = (
     first_name: 'Ana',
     last_name: 'Rojas',
   },
+  ...overrides,
+});
+
+export const buildVertex = (
+  longitude: string,
+  latitude: string,
+  overrides: Partial<Schemas['Vertex']> = {},
+): Schemas['Vertex'] => ({
+  latitude,
+  longitude,
+  accuracy_m: null,
+  captured_at: null,
+  source: 'map',
+  ...overrides,
+});
+
+export const buildPlot = (
+  overrides: Partial<Schemas['Plot']> = {},
+): Schemas['Plot'] => ({
+  id: 'pl1',
+  farm: { id: 'f1', name: 'La Esperanza' },
+  code: 'P1',
+  area_hectares: '2.40',
+  measured_area_hectares: null,
+  boundary: null,
+  version: 1,
+  is_active: true,
+  captured_at: null,
+  created_at: '2026-10-01T12:00:00-05:00',
+  updated_at: '2026-10-01T12:00:00-05:00',
   ...overrides,
 });

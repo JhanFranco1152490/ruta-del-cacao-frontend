@@ -18,9 +18,11 @@ export const LEGACY_REDIRECTS = [
     destination: '/productores/:id/editar',
     permanent: false,
   },
-  // La edición pasó a una ruta fija para abrir sin conexión cualquier finca.
+  // La edición pasó a una ruta fija para abrir sin conexión cualquier finca. `parcelas` queda
+  // fuera: `/fincas/parcelas/editar` es la pantalla de editar parcelas, no la de una finca con
+  // ese id.
   {
-    source: '/fincas/:id/editar',
+    source: '/fincas/:id((?!parcelas/)[^/]+)/editar',
     destination: '/fincas/editar?id=:id',
     permanent: false,
   },

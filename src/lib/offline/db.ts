@@ -12,6 +12,9 @@ export interface QueueItem {
   status: QueueStatus;
   errorCode?: string;
   errorMessage?: string;
+  // Datos del servidor que ayudan a corregir el error (p. ej. una sugerencia): la pantalla de
+  // corrección los muestra sin volver a consultar.
+  errorData?: unknown;
   createdAt: number;
   updatedAt: number;
 }

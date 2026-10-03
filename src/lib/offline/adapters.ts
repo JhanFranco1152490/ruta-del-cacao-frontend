@@ -3,6 +3,7 @@ import type { QueueItem, QueueOperation } from './db';
 export interface SyncConflict {
   code: string;
   message: string;
+  data?: unknown;
 }
 
 // Reintentar el mismo registro como otra operación. Caso típico: un alta que sí llegó al

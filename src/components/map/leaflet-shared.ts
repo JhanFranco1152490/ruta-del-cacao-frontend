@@ -12,6 +12,7 @@ import {
   createTileFallback,
 } from './base-layers';
 import type { MapPointTone } from './map-provider';
+import { plotLabelFits } from './map-view';
 
 export const toLatLng = ({ latitude, longitude }: GeoPoint) =>
   L.latLng(latitude, longitude);
@@ -130,4 +131,44 @@ export function useBaseLayer(
       layer?.remove();
     };
   }, [map, kind, onUnavailableRef, onFallbackRef]);
+}
+
+export const HIDDEN_LABEL_CLASS = 'map-plot-label-hidden';
+
+// Muestra el nombre de cada polígono solo cuando cabe dentro de él en pantalla, y lo vuelve a
+// decidir cada vez que el mapa se acerca, se aleja o se mueve. `layers` son los polígonos que ya
+// tienen su etiqueta permanente.
+export function useShapeLabelVisibility(
+  map: L.Map | null,
+  layers: () => { polygon: L.Polygon; label: string }[],
+  // Cambia cuando se rehacen los polígonos.
+  version: string,
+) {
+  const layersRef = useLatest(layers);
+  useEffect(() => {
+    if (!map) return;
+    const update = () => {
+      for (const { polygon, label } of layersRef.current()) {
+        const bounds = polygon.getBounds();
+        const topLeft = map.latLngToContainerPoint(bounds.getNorthWest());
+        const bottomRight = map.latLngToContainerPoint(bounds.getSouthEast());
+        const fits = plotLabelFits(
+          Math.abs(bottomRight.x - topLeft.x),
+          Math.abs(bottomRight.y - topLeft.y),
+          label,
+        );
+        // Con una clase y no con la opacidad: Leaflet vuelve a poner la opacidad al abrir el
+        // tooltip y deshacía el cambio.
+        polygon
+          .getTooltip()
+          ?.getElement()
+          ?.classList.toggle(HIDDEN_LABEL_CLASS, !fits);
+      }
+    };
+    update();
+    map.on('zoomend moveend resize', update);
+    return () => {
+      map.off('zoomend moveend resize', update);
+    };
+  }, [map, layersRef, version]);
 }

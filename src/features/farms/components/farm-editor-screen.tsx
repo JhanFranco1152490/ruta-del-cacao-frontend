@@ -21,7 +21,7 @@ import {
   useQueuedFarm,
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
-import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
+import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
 import { FarmStaleVersionSummary } from './farm-stale-version-summary';
@@ -97,6 +97,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
 
   return (
     <FarmFormFields
+      allocatedHectares={Number(farm.allocated_area_hectares)}
       defaultValues={farmToFormValues(farm)}
       title="Editar finca"
       description="Los cambios se guardan en este dispositivo y se envían cuando haya conexión."

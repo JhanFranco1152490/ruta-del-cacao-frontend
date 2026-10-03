@@ -10,7 +10,7 @@ import { useSession } from '@/hooks/use-session';
 import { farmEditPath } from '../farm-paths';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
 import { type QueuedFarmState, useQueuedFarmState } from '../use-local-farms';
-import { CAPTURE_BUTTON_CLASS } from './capture-field-class';
+import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmStatusBadge } from './farm-status-badge';
 
 function describe(state: QueuedFarmState, isOnline: boolean) {

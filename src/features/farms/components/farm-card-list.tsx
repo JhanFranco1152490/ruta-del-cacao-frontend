@@ -1,10 +1,12 @@
-import { MapPin, MapPinned } from 'lucide-react';
+import { Eye, MapPin, MapPinned } from 'lucide-react';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { parseCoordinates } from '@/lib/format/coordinates';
 
 import type { FarmListItem } from '../farm-list-item';
+import { farmDetailPath } from '../farm-paths';
 import { FarmStatusBadge } from './farm-status-badge';
 
 export function FarmCardList({
@@ -54,23 +56,31 @@ export function FarmCardList({
                 {farm.errorMessage}
               </p>
             )}
-            {(onShowOnMap || renderActions) && (
-              <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-                {onShowOnMap && parseCoordinates(farm.location) && (
-                  <Button
-                    aria-label={`Ver ${farm.name} en el mapa`}
-                    onClick={() => onShowOnMap(farm)}
-                    size="office"
-                    type="button"
-                    variant="outline"
-                  >
-                    <MapPinned aria-hidden="true" className="size-4" /> Ver en
-                    el mapa
-                  </Button>
-                )}
-                {renderActions?.(farm)}
-              </div>
-            )}
+            <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+              <Link
+                aria-label={`Ver detalle de ${farm.name}`}
+                className={buttonVariants({
+                  size: 'office',
+                  variant: 'outline',
+                })}
+                href={farmDetailPath(farm.id)}
+              >
+                <Eye aria-hidden="true" className="size-4" /> Ver detalle
+              </Link>
+              {onShowOnMap && parseCoordinates(farm.location) && (
+                <Button
+                  aria-label={`Ver ${farm.name} en el mapa`}
+                  onClick={() => onShowOnMap(farm)}
+                  size="office"
+                  type="button"
+                  variant="outline"
+                >
+                  <MapPinned aria-hidden="true" className="size-4" /> Ver en el
+                  mapa
+                </Button>
+              )}
+              {renderActions?.(farm)}
+            </div>
           </article>
         </li>
       ))}
