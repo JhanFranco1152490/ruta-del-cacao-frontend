@@ -41,13 +41,21 @@ export function ProducerFilter({
   onSelect,
   onClear,
   deniedMessage = DEFAULT_DENIED_MESSAGE,
+  label = 'Productor',
+  placeholder = 'Nombre, documento o código de socio',
+  showTrigger = true,
   className,
 }: {
   producer: string | undefined;
   selected: UseQueryResult<ProducerSummary>;
   onSelect: (id: string) => void;
   onClear: () => void;
-  deniedMessage?: string;
+  // `null` cuando lo que se consulta no depende del interruptor de acceso de la asociación.
+  deniedMessage?: string | null;
+  label?: string;
+  placeholder?: string;
+  // Sin la flecha se lee como un campo para escribir y no como una lista cerrada.
+  showTrigger?: boolean;
   // Para encajar en la fila de filtros de quien lo use, junto a otros campos.
   className?: string;
 }) {
@@ -94,7 +102,7 @@ export function ProducerFilter({
           htmlFor={inputId}
           className="mb-2 block text-sm font-bold text-selva"
         >
-          Productor
+          {label}
         </label>
         <Combobox<ProducerOption>
           items={items}
@@ -114,8 +122,9 @@ export function ProducerFilter({
             // Los controles de oficina del sistema de diseño miden 44 px (h-11); el combobox
             // trae 32 px por defecto (h-8).
             className="h-11 w-full"
-            placeholder="Nombre, documento o código de socio"
+            placeholder={placeholder}
             showClear
+            showTrigger={showTrigger}
             aria-describedby={helpId}
           />
           <ComboboxContent>
@@ -135,7 +144,7 @@ export function ProducerFilter({
           </p>
         )}
       </div>
-      {selected.data?.association_access === false && (
+      {deniedMessage && selected.data?.association_access === false && (
         <p role="alert" className="text-sm font-bold text-err">
           {deniedMessage}
         </p>

@@ -12,3 +12,5 @@ pnpm-lock.yaml
 docs/ui/ref/
 # Generado por openapi-typescript: se commitea tal como sale del generador.
 src/lib/api/schema.d.ts
+# Generado por scripts/generate-municipality-geometry.mjs: Prettier lo multiplicaría de tamaño.
+src/lib/geo/norte-de-santander-municipalities.json

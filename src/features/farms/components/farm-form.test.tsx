@@ -217,6 +217,150 @@ describe('FarmForm', () => {
     ).toHaveAttribute('href', `/fincas/editar?id=${item.id}`);
   });
 
+  // Puntos conocidos del catálogo geográfico (MGN 2025 del DANE).
+  describe('location in Norte de Santander', () => {
+    const CUCUTA = { latitude: '7.8939', longitude: '-72.5078' };
+    const PAMPLONA = { latitude: '7.3756', longitude: '-72.648' };
+    const originalGeolocation = Object.getOwnPropertyDescriptor(
+      navigator,
+      'geolocation',
+    );
+
+    afterEach(() => {
+      if (originalGeolocation) {
+        Object.defineProperty(navigator, 'geolocation', originalGeolocation);
+      } else {
+        Reflect.deleteProperty(navigator, 'geolocation');
+      }
+    });
+
+    // El GPS responde enseguida con el punto dado.
+    function gpsAt({ latitude, longitude }: typeof CUCUTA) {
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        value: {
+          getCurrentPosition: (onSuccess: PositionCallback) =>
+            onSuccess({
+              coords: {
+                latitude: Number(latitude),
+                longitude: Number(longitude),
+              },
+            } as GeolocationPosition),
+        },
+      });
+    }
+
+    async function typePoint(
+      user: User,
+      { latitude, longitude }: typeof CUCUTA,
+    ) {
+      await fillField(user, 'Latitud', latitude);
+      await fillField(user, 'Longitud', longitude);
+    }
+
+    it('rejects a point outside the department and keeps the farm off the queue', async () => {
+      const user = userEvent.setup();
+      await renderForm();
+      await fillValidFarm(user);
+      await user.clear(screen.getByLabelText('Latitud'));
+      await fillField(user, 'Latitud', '10.5');
+
+      await save(user);
+
+      expect(
+        await screen.findByText(
+          'La ubicación está fuera de Norte de Santander',
+        ),
+      ).toBeInTheDocument();
+      expect(await queuedFarms()).toEqual([]);
+    });
+
+    it('warns without blocking when the point is in another municipality', async () => {
+      const user = userEvent.setup();
+      await renderForm();
+      await fillValidFarm(user);
+      await user.clear(screen.getByLabelText('Latitud'));
+      await user.clear(screen.getByLabelText('Longitud'));
+      await typePoint(user, PAMPLONA);
+
+      expect(
+        await screen.findByText(
+          'El punto parece estar en Pamplona, ¿confirmas Cúcuta?',
+        ),
+      ).toBeInTheDocument();
+
+      await save(user);
+      expect(
+        await screen.findByRole('heading', {
+          name: 'Finca registrada exitosamente',
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it('switches to the municipality of the point when asked', async () => {
+      const user = userEvent.setup();
+      await renderForm();
+      await user.selectOptions(screen.getByLabelText('Municipio'), '54001');
+      await typePoint(user, PAMPLONA);
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Cambiar a Pamplona' }),
+      );
+
+      expect(screen.getByLabelText('Municipio')).toHaveValue('54518');
+      expect(
+        screen.queryByText(/El punto parece estar en/),
+      ).not.toBeInTheDocument();
+    });
+
+    it('fills an empty municipality from the GPS point and says so', async () => {
+      const user = userEvent.setup();
+      gpsAt(CUCUTA);
+      await renderForm();
+      // Los contornos cargan aparte: se espera a que estén antes de capturar.
+      await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+      await screen.findByText(/Encuadre:/);
+      await user.selectOptions(screen.getByLabelText('Municipio'), '');
+
+      await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
+
+      expect(screen.getByLabelText('Municipio')).toHaveValue('54001');
+      expect(
+        screen.getByText(
+          'Elegimos Cúcuta como municipio según la ubicación del GPS. Cámbialo si no corresponde.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('never replaces a municipality the person chose with the GPS one', async () => {
+      const user = userEvent.setup();
+      gpsAt(CUCUTA);
+      await renderForm();
+      await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+      await screen.findByText(/Encuadre:/);
+
+      await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
+
+      expect(screen.getByLabelText('Municipio')).toHaveValue('54518');
+      expect(
+        await screen.findByText(
+          'El punto parece estar en Cúcuta, ¿confirmas Pamplona?',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('frames the chosen municipality only while there is no point', async () => {
+      const user = userEvent.setup();
+      await renderForm();
+
+      await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+      expect(await screen.findByText(/Encuadre:/)).toBeInTheDocument();
+
+      await typePoint(user, PAMPLONA);
+      expect(screen.queryByText(/Encuadre:/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('without connection', () => {
     beforeEach(() => onlineManager.setOnline(false));
     // Desmontar antes de reconectar: si no, lo que quedó en pausa se reanuda al volver la red y

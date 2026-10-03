@@ -12,6 +12,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:coverage": "vitest run --coverage",
     "gen:api": "openapi-typescript http://localhost:8000/api/schema -o src/lib/api/schema.d.ts",
+    "geo:municipalities": "node scripts/generate-municipality-geometry.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

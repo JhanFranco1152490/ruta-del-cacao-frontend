@@ -25,6 +25,25 @@ export const farmsHandler = (
     return HttpResponse.json(buildPage(results));
   });
 
+// Datos del mapa de fincas; guardan lo que se pidió, como `farmsHandler`.
+export const farmMapCountsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/farms/map/municipalities'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(results);
+  });
+
+export const farmMapPointsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/farms/map/points'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(results);
+  });
+
 export const profileHandler = (profile = buildProfile()) =>
   http.get(apiUrl('/api/auth/profile'), () => HttpResponse.json(profile));
 

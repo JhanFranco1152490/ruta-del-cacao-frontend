@@ -73,6 +73,15 @@
   --err-solid-fg: #ffffff;
   --info-solid: #20507a;
   --info-solid-fg: #ffffff;
+  /* Mapa por municipios: de ninguna (0) a muchas (5) fincas, y lo que queda fuera del
+     municipio elegido. */
+  --map-level-0: #f1ebe1;
+  --map-level-1: #d7e8dc;
+  --map-level-2: #a9cdb5;
+  --map-level-3: #6fa684;
+  --map-level-4: #3d7a58;
+  --map-level-5: #14362a;
+  --map-mask: #e7ece9;
 
   /* --- Superficies auxiliares ----------------------------------------- */
   --surface-alt: #fbf8f2; /* cabecera de tabla */
@@ -233,6 +242,57 @@ a {
   }
   .map-pin[data-tone='info'] {
     background: var(--info-solid);
+  }
+  /* Cifra de fincas de un municipio y grupo de fincas que se tapan en pantalla. */
+  .map-count,
+  .map-cluster {
+    display: grid;
+    place-items: center;
+    border: 2px solid #ffffff;
+    border-radius: 9999px;
+    color: #ffffff;
+    font-weight: 800;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+  }
+  .map-count {
+    width: 1.875rem;
+    height: 1.875rem;
+    background: var(--cobre);
+    font-size: 0.8125rem;
+  }
+  .map-cluster {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 3px;
+    background: var(--selva);
+  }
+  .map-cluster-list {
+    max-height: 10rem;
+    margin: 0.25rem 0 0;
+    overflow: auto;
+    padding-left: 1rem;
+  }
+  /* Anillo de la finca enfocada desde la lista. */
+  .map-focus {
+    display: block;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 4px solid var(--cobre);
+    border-radius: 9999px;
+    animation: map-focus-pulse 1.2s ease-out 3;
+  }
+  @keyframes map-focus-pulse {
+    from {
+      transform: scale(0.6);
+    }
+    to {
+      transform: scale(1.15);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .map-focus {
+      animation: none;
+    }
   }
 }
 

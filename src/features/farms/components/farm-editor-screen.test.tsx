@@ -1,4 +1,4 @@
-import { cleanup, screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { onlineManager } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
+import { PERMISSIONS } from '@/lib/permissions';
 import { apiError, buildFarm, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -39,11 +40,24 @@ beforeEach(async () => {
   server.use(municipalitiesHandler());
 });
 
-function renderEditor(id = 'f1') {
+function sessionClient(permissions: string[] = []) {
   const queryClient = createTestQueryClient();
-  queryClient.setQueryData(queryKeys.session(), buildSession({ id: userId }));
+  queryClient.setQueryData(
+    queryKeys.session(),
+    buildSession({ id: userId, permissions }),
+  );
+  return queryClient;
+}
+
+// `queryClient` compartido entre aperturas = la misma pestaña, sin recargar la página.
+function renderEditor(id = 'f1', queryClient = sessionClient()) {
   return renderWithProviders(<FarmEditorScreen id={id} />, { queryClient });
 }
+
+const serverFarm = (overrides: Parameters<typeof buildFarm>[0]) =>
+  http.get(apiUrl('/api/farms/s1'), () =>
+    HttpResponse.json(buildFarm({ id: 's1', ...overrides })),
+  );
 
 async function enqueueFailedFarm() {
   await enqueueFarmCreate(userId, 'f1', farm);
@@ -207,6 +221,205 @@ describe('FarmEditorScreen', () => {
       'Detalles: en el servidor Km 4, en tu formulario (vacío).',
       'Latitud: en el servidor 7.9000000, en tu formulario 7.8234567.',
     ]);
+  });
+
+  // Bug de la revisión: un conflicto solo se corregía recargando la página. El editor reusaba
+  // la finca que había leído antes, aunque el servidor ya tuviera otra versión.
+  describe('reopened without reloading the page', () => {
+    it('edits again with the version the server has now', async () => {
+      const user = userEvent.setup();
+      const queryClient = sessionClient();
+      server.use(serverFarm({ version: 5 }));
+      const first = renderEditor('s1', queryClient);
+      await screen.findByLabelText('Nombre de la finca');
+      first.unmount();
+
+      // Mientras tanto, la edición anterior se sincronizó: la finca ya va en la versión 6.
+      server.use(serverFarm({ version: 6 }));
+      renderEditor('s1', queryClient);
+      const name = await screen.findByLabelText('Nombre de la finca');
+      await user.clear(name);
+      await user.type(name, 'Segunda edición');
+      await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
+        payload: { name: 'Segunda edición', expected_version: 6 },
+      });
+    });
+
+    it('reviews a conflict against the current server data, not an earlier read', async () => {
+      const user = userEvent.setup();
+      const queryClient = sessionClient();
+      // La finca se abrió antes en esta misma pestaña, cuando iba en la versión 2.
+      queryClient.setQueryData(
+        queryKeys.farms.detail('s1'),
+        buildFarm({ id: 's1', name: 'Lectura vieja', version: 2 }),
+      );
+      await enqueueFarmUpdate(userId, 's1', farm, 2);
+      await getOfflineDb(userId).queue.update('s1', {
+        status: 'error',
+        errorCode: 'stale_version',
+        errorMessage: 'La finca cambió en el servidor.',
+      });
+      server.use(serverFarm({ name: 'Nombre de otra persona', version: 4 }));
+      renderEditor('s1', queryClient);
+
+      await screen.findByText(/Alguien la modificó mientras tanto/);
+      expect(screen.getByText(/^Nombre:/).closest('li')).toHaveTextContent(
+        'en el servidor Nombre de otra persona',
+      );
+      await save(user);
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
+        status: 'pending',
+        payload: { expected_version: 4 },
+      });
+    });
+  });
+
+  describe('deleting a farm created by mistake', () => {
+    const canDelete = () => sessionClient([PERMISSIONS.FARMS_DELETE]);
+
+    function deleteHandler(
+      respond: () => Response = () => new HttpResponse(null, { status: 204 }),
+    ) {
+      const requests: { version: string | null; body: string }[] = [];
+      server.use(
+        http.delete(apiUrl('/api/farms/s1'), async ({ request }) => {
+          requests.push({
+            version: new URL(request.url).searchParams.get('expected_version'),
+            body: await request.text(),
+          });
+          return respond();
+        }),
+      );
+      return requests;
+    }
+
+    it('is offered only to whoever can delete farms', async () => {
+      server.use(serverFarm({ version: 5 }));
+      renderEditor('s1');
+
+      await screen.findByLabelText('Nombre de la finca');
+      expect(
+        screen.queryByRole('button', { name: 'Eliminar finca' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('deletes after confirmation with the version it read, without saving the form', async () => {
+      const user = userEvent.setup();
+      server.use(serverFarm({ version: 5 }));
+      const requests = deleteHandler();
+      renderEditor('s1', canDelete());
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      expect(
+        screen.getByRole('heading', {
+          name: '¿Eliminar la finca La Esperanza?',
+        }),
+      ).toBeInTheDocument();
+      // Abrir el diálogo no envía el formulario de edición.
+      expect(await getOfflineDb(userId).queue.count()).toBe(0);
+
+      const dialog = screen.getByRole('dialog');
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+      );
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(requests).toEqual([{ version: '5', body: '' }]);
+    });
+
+    it('says it needs a connection instead of waiting, and never deletes later on its own', async () => {
+      const user = userEvent.setup();
+      server.use(serverFarm({ version: 5 }));
+      const requests = deleteHandler(() => HttpResponse.error());
+      renderEditor('s1', canDelete());
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      // La red se pierde con el diálogo ya abierto.
+      onlineManager.setOnline(false);
+      try {
+        const dialog = screen.getByRole('dialog');
+        await user.click(
+          within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+        );
+
+        expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+          'Revisa tu conexión',
+        );
+        expect(
+          within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+        ).toBeEnabled();
+      } finally {
+        cleanup();
+        onlineManager.setOnline(true);
+      }
+      // Se intentó una sola vez: al volver la red no queda nada en espera que borre la finca.
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(requests).toHaveLength(1);
+    });
+
+    it('offers to deactivate a farm that has records', async () => {
+      const user = userEvent.setup();
+      const patches: unknown[] = [];
+      server.use(
+        serverFarm({ version: 5 }),
+        http.patch(apiUrl('/api/farms/s1'), async ({ request }) => {
+          patches.push(await request.json());
+          return HttpResponse.json(
+            buildFarm({ id: 's1', version: 6, is_active: false }),
+          );
+        }),
+      );
+      deleteHandler(() =>
+        apiError(409, 'farm_has_records', 'La finca tiene registros.'),
+      );
+      renderEditor('s1', canDelete());
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      const dialog = screen.getByRole('dialog');
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+      );
+
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Esta finca tiene registros asociados',
+      );
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Desactivar finca' }),
+      );
+
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      expect(patches).toEqual([{ is_active: false, expected_version: 5 }]);
+    });
+
+    it('asks to reopen when someone changed the farm in the meantime', async () => {
+      const user = userEvent.setup();
+      server.use(serverFarm({ version: 5 }));
+      deleteHandler(() => apiError(409, 'stale_version', 'La finca cambió.'));
+      renderEditor('s1', canDelete());
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      const dialog = screen.getByRole('dialog');
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+      );
+
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Alguien cambió esta finca mientras tanto.',
+      );
+      expect(router.push).not.toHaveBeenCalled();
+    });
   });
 
   describe('without connection', () => {
