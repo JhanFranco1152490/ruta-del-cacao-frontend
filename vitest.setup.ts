@@ -12,8 +12,13 @@ vi.mock('@/config/map', async () => {
   return {
     loadMapProvider: fake.loadFakeMap,
     loadPointsMapProvider: fake.loadFakePointsMap,
+    loadMunicipalityMapProvider: fake.loadFakeMunicipalityMap,
   };
 });
+
+// jsdom no implementa el desplazamiento de la página; las pantallas lo usan para llevar la vista
+// al mapa o a una tarjeta.
+Element.prototype.scrollIntoView = vi.fn();
 
 // Una petición sin handler es un error: ningún test debe tocar la red real.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

@@ -116,3 +116,19 @@ export const buildFarm = (
   updated_at: '2026-09-29T12:00:00-05:00',
   ...overrides,
 });
+
+export const buildFarmMapPoint = (
+  overrides: Partial<Schemas['FarmMapPoint']> = {},
+): Schemas['FarmMapPoint'] => ({
+  id: 's1',
+  name: 'La Esperanza',
+  is_active: true,
+  location: { latitude: '8.6412345', longitude: '-72.7356789' },
+  producer: {
+    id: 'p1',
+    member_code: 'ASO-0001',
+    first_name: 'Ana',
+    last_name: 'Rojas',
+  },
+  ...overrides,
+});

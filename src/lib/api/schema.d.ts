@@ -207,11 +207,46 @@ export interface paths {
         get: operations["farms_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Elimina una finca creada por error. Requiere `expected_version` en la URL. Si la finca tiene registros del negocio responde 409 `farm_has_records` (se desactiva en su lugar); si cambió, 409 `stale_version` con la versión del servidor en `current`. La auditoría de la finca se conserva. */
+        delete: operations["farms_destroy"];
         options?: never;
         head?: never;
         /** @description Edición parcial, incluida la activación o desactivación con `is_active`. Requiere `expected_version`; si la finca cambió responde 409 `stale_version` con la versión del servidor en `current`. */
         patch: operations["farms_partial_update"];
+        trace?: never;
+    };
+    "/api/farms/map/municipalities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cuántas fincas hay en cada municipio, con el alcance y filtros del listado. */
+        get: operations["farms_map_municipalities_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/farms/map/points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las fincas con lo justo para dibujarlas, sin paginar, con el alcance y filtros del listado: de un municipio con `municipality`, o todas las del alcance sin él. */
+        get: operations["farms_map_points_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/permissions": {
@@ -550,6 +585,25 @@ export interface components {
             /** Format: date-time */
             captured_at?: string | null;
         };
+        FarmMapPoint: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly is_active: boolean;
+            readonly location: components["schemas"]["Location"];
+            producer: components["schemas"]["FarmMapProducer"];
+        };
+        FarmMapProducer: {
+            /** Format: uuid */
+            id: string;
+            member_code: string;
+            first_name: string;
+            last_name: string;
+        };
+        FarmMunicipalityCount: {
+            municipality_id: string;
+            farm_count: number;
+        };
         /**
          * @description * `fixed` - Fijo
          *     * `predefined` - Predefinido
@@ -614,6 +668,36 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Farm"][];
+        };
+        PaginatedFarmMapPointList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["FarmMapPoint"][];
+        };
+        PaginatedFarmMunicipalityCountList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["FarmMunicipalityCount"][];
         };
         PaginatedProducerListList: {
             /** @example 123 */
@@ -1315,11 +1399,15 @@ export interface operations {
     farms_list: {
         parameters: {
             query?: {
+                /** @description Código DIVIPOLA del municipio. */
+                municipality?: string;
                 /** @description Un número de página dentro del conjunto de resultados paginado. */
                 page?: number;
                 /** @description Número de resultados a devolver por página. */
                 page_size?: number;
-                /** @description Busca en nombre, municipio o detalles, sin distinguir tildes. */
+                /** @description Solo las de este productor. */
+                producer?: string;
+                /** @description Busca en el nombre, sin distinguir tildes. */
                 search?: string;
             };
             header?: never;
@@ -1334,6 +1422,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedFarmList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
             401: {
@@ -1478,6 +1574,69 @@ export interface operations {
             };
         };
     };
+    farms_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` de la finca que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmConflictError"];
+                };
+            };
+        };
+    };
     farms_partial_update: {
         parameters: {
             query?: never;
@@ -1542,6 +1701,114 @@ export interface operations {
                 };
             };
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    farms_map_municipalities_list: {
+        parameters: {
+            query?: {
+                /** @description Código DIVIPOLA del municipio. */
+                municipality?: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo las de este productor. */
+                producer?: string;
+                /** @description Busca en el nombre, sin distinguir tildes. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedFarmMunicipalityCountList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    farms_map_points_list: {
+        parameters: {
+            query?: {
+                /** @description Código DIVIPOLA del municipio. */
+                municipality?: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo las de este productor. */
+                producer?: string;
+                /** @description Busca en el nombre, sin distinguir tildes. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedFarmMapPointList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

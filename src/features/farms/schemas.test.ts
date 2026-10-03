@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { emptyFarmForm, farmFormSchema } from './schemas';
+import {
+  emptyFarmForm,
+  farmFormSchema,
+  OUTSIDE_OPERATING_AREA,
+} from './schemas';
 
 const valid = {
   ...emptyFarmForm,
@@ -95,5 +99,44 @@ describe('farmFormSchema', () => {
     expect(
       farmFormSchema.safeParse({ ...valid, altitude_masl: '-500' }).success,
     ).toBe(true);
+  });
+
+  describe('Norte de Santander bounds', () => {
+    const issues = (values: object) =>
+      farmFormSchema
+        .safeParse({ ...valid, ...values })
+        .error?.issues.map((issue) => [issue.path[0], issue.message]) ?? [];
+
+    it.each([
+      ['south', { latitude: '6.871' }, 'latitude'],
+      ['north', { latitude: '9.292' }, 'latitude'],
+      ['west', { longitude: '-73.635' }, 'longitude'],
+      ['east', { longitude: '-72.046' }, 'longitude'],
+    ])('rejects a point past the %s edge on that field', (_, values, field) => {
+      expect(issues(values)).toEqual([[field, OUTSIDE_OPERATING_AREA]]);
+    });
+
+    it('accepts a point right on the edges', () => {
+      expect(
+        farmFormSchema.safeParse({
+          ...valid,
+          latitude: '6.872',
+          longitude: '-73.634',
+        }).success,
+      ).toBe(true);
+      expect(
+        farmFormSchema.safeParse({
+          ...valid,
+          latitude: '9.291',
+          longitude: '-72.047',
+        }).success,
+      ).toBe(true);
+    });
+
+    it('keeps "Coordenadas no válidas" alone for an impossible point', () => {
+      expect(issues({ latitude: '95' })).toEqual([
+        ['latitude', 'Coordenadas no válidas'],
+      ]);
+    });
   });
 });

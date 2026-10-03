@@ -57,6 +57,21 @@ Colores de ilustración (mazorcas, estados sanitarios): `--amarillo-mazorca #E3A
 
 `--oro` **nunca** se usa para texto sobre fondo claro (no alcanza 4.5:1). Sobre `--selva` sí (5,5:1).
 
+### Mapa por municipios
+
+Escala de verdes para colorear cada municipio según cuántas fincas tiene frente al que más tiene.
+El color nunca va solo: cada municipio con fincas lleva su cifra encima.
+
+| Token | Hex | Uso |
+|---|---|---|
+| `--map-level-0` | `#F1EBE1` | Municipio sin fincas |
+| `--map-level-1` | `#D7E8DC` | Hasta una quinta parte del máximo |
+| `--map-level-2` | `#A9CDB5` | Hasta dos quintas partes |
+| `--map-level-3` | `#6FA684` | Hasta tres quintas partes |
+| `--map-level-4` | `#3D7A58` | Hasta cuatro quintas partes |
+| `--map-level-5` | `#14362A` | El máximo (igual a `--selva`) |
+| `--map-mask` | `#E7ECE9` | Lo que queda fuera del municipio elegido, sobre el mapa base |
+
 ### Estados semánticos
 
 Dos juegos con el mismo significado. El *tintado* es para oficina; el *sólido* para campo y para

@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react';
 
-import type { GeoPoint } from '@/types/geo';
+import type { GeoBounds, GeoPoint } from '@/types/geo';
+
+import type { BaseLayerKind } from './base-layers';
 
 // Lo que debe cumplir cualquier mapa real para usarse dentro de MapPanel. El formulario y sus
 // pruebas solo conocen esta forma, nunca la librería de mapas.
@@ -9,6 +11,10 @@ export type MapProviderProps = {
   // Un punto elegido con un toque/clic o arrastrando el marcador.
   onPointChange: (point: GeoPoint) => void;
   disabled: boolean;
+  baseLayer: BaseLayerKind;
+  // Área que el mapa encuadra cuando cambia (p. ej. el municipio elegido). Quien lo pasa decide
+  // cuándo: el formulario solo lo manda si todavía no hay punto, para no mover el de la persona.
+  focusBounds?: GeoBounds | null;
   // Falla después de cargar (p. ej. el mapa base no responde sin conexión).
   onError: () => void;
 };
@@ -38,3 +44,38 @@ export type PointsMapProviderProps = {
 export type PointsMapProvider = ComponentType<PointsMapProviderProps>;
 
 export type LoadPointsMapProvider = () => Promise<PointsMapProvider>;
+
+export type MunicipalityCount = { code: string; count: number };
+
+// Un objeto nuevo por pedido: enfocar dos veces la misma finca vuelve a llevar el mapa.
+export type MapFocus = { pointId: string };
+
+export type MunicipalityMapView =
+  | { level: 'department'; counts: readonly MunicipalityCount[] }
+  | {
+      level: 'municipality';
+      code: string;
+      points: readonly MapPoint[];
+      focus?: MapFocus;
+    }
+  // Mapa libre: todo el departamento con zoom y arrastre, y los municipios solo como referencia.
+  | { level: 'free'; points: readonly MapPoint[]; focus?: MapFocus };
+
+// El departamento por municipios y, al elegir uno, ese municipio; o el mapa libre.
+export type MunicipalityMapProviderProps = {
+  view: MunicipalityMapView;
+  baseLayer: BaseLayerKind;
+  describeMunicipality: (code: string, count: number) => string;
+  onSelectMunicipality: (code: string) => void;
+  onSelectPoint: (id: string) => void;
+  // El mapa base no carga: el mapa sigue con contorno y puntos.
+  onBaseLayerUnavailable: () => void;
+  // El mapa no puede dibujarse (p. ej. no cargaron los contornos).
+  onError: () => void;
+};
+
+export type MunicipalityMapProvider =
+  ComponentType<MunicipalityMapProviderProps>;
+
+export type LoadMunicipalityMapProvider =
+  () => Promise<MunicipalityMapProvider>;

@@ -8,7 +8,7 @@ import type { LoadMapProvider } from '@/components/map/map-provider';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
 import { loadMapProvider as appMapProvider } from '@/config/map';
-import type { Coordinates } from '@/types/geo';
+import type { Coordinates, GeoBounds } from '@/types/geo';
 
 import type { useGeolocation } from '../use-geolocation';
 import {
@@ -85,6 +85,7 @@ export function FarmLocationMap({
   onLocationChange,
   disabled,
   frameClassName,
+  focusBounds,
   loadMapProvider = appMapProvider,
 }: {
   location: Coordinates;
@@ -92,6 +93,7 @@ export function FarmLocationMap({
   // Mientras el GPS captura, el mapa no responde: no compiten por el mismo punto.
   disabled: boolean;
   frameClassName?: string;
+  focusBounds?: GeoBounds | null;
   // Sin proveedor configurado no hay mapa: el GPS y las coordenadas escritas bastan.
   loadMapProvider?: LoadMapProvider | null;
 }) {
@@ -99,6 +101,7 @@ export function FarmLocationMap({
   return (
     <MapPanel
       disabled={disabled}
+      focusBounds={focusBounds}
       frameClassName={frameClassName}
       loadProvider={loadMapProvider}
       location={location}
