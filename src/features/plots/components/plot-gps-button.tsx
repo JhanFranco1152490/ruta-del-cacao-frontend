@@ -53,6 +53,12 @@ export function PlotGpsButton({
             }`
           : 'Agregar vértice'}
       </Button>
+      {gps.isCapturing && (
+        <p className="basis-full text-sm text-muted-foreground" role="status">
+          Mantén el celular quieto y a cielo abierto: se promedian varias
+          lecturas.
+        </p>
+      )}
       {!gps.isCapturing && accuracy !== null && !isWeak && (
         <p className="basis-full text-sm text-muted-foreground" role="status">
           Vértice agregado con precisión de ±{Math.round(accuracy)} m.

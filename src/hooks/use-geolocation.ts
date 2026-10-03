@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatGeoPoint } from '@/lib/format/coordinates';
+import { bestFix, type GpsReading, improvesAccuracy } from '@/lib/geo/gps-fix';
 import type { Coordinates } from '@/types/geo';
 
 // El GPS no entrega la mejor lectura de entrada: la primera suele salir de wifi o antenas, con
 // cientos de metros de error, y el satélite tarda en fijarse. Por eso se sigue la posición unos
-// segundos y se conserva la de menor error.
-export const GPS_MAX_WAIT_MS = 30_000;
+// segundos y se promedian las mejores lecturas. Pero no se espera de más: se termina cuando ya
+// no mejora, y como mucho a los 20 s.
+export const GPS_MAX_WAIT_MS = 20_000;
+// Sin una mejora de al menos el 10 % en este tiempo, seguir esperando casi nunca ayuda.
+export const GPS_STALL_MS = 8_000;
 // Con esta precisión (en metros) ya no vale la pena esperar más.
 export const GPS_GOOD_ACCURACY_M = 10;
 // Peor que esto, se avisa y se ofrece repetir o marcar el punto en el mapa.
@@ -44,8 +48,6 @@ export type GpsResult = {
   accuracy: number | null;
 };
 
-type Reading = { latitude: number; longitude: number; accuracy: number };
-
 export function useGeolocation(
   // Recibe el punto y los metros de error que reportó el dispositivo (null si no los informó).
   onCapture: (coordinates: Coordinates, accuracy: number | null) => void,
@@ -65,6 +67,7 @@ export function useGeolocation(
   const isCapturingRef = useRef(false);
   const watchId = useRef<number | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stallTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onCaptureRef = useRef(onCapture);
   useEffect(() => {
     onCaptureRef.current = onCapture;
@@ -78,6 +81,10 @@ export function useGeolocation(
     if (timer.current !== null) {
       clearTimeout(timer.current);
       timer.current = null;
+    }
+    if (stallTimer.current !== null) {
+      clearTimeout(stallTimer.current);
+      stallTimer.current = null;
     }
     isCapturingRef.current = false;
   }, []);
@@ -98,7 +105,8 @@ export function useGeolocation(
     setAccuracy(null);
     setResult(null);
 
-    let best: Reading | null = null;
+    const readings: GpsReading[] = [];
+    let bestAccuracy: number | null = null;
     let lastErrorCode = 3;
     let done = false;
 
@@ -110,19 +118,15 @@ export function useGeolocation(
     const finish = () => {
       if (done) return;
       end();
-      if (!best) {
+      const fix = bestFix(readings);
+      if (!fix) {
         setError(messages.errors[lastErrorCode] ?? messages.fallback);
         return;
       }
-      const point = formatGeoPoint(best);
-      setResult({
-        point,
-        accuracy: Number.isFinite(best.accuracy) ? best.accuracy : null,
-      });
-      onCaptureRef.current(
-        point,
-        Number.isFinite(best.accuracy) ? best.accuracy : null,
-      );
+      const point = formatGeoPoint(fix);
+      const accuracy = Number.isFinite(fix.accuracy) ? fix.accuracy : null;
+      setResult({ point, accuracy });
+      onCaptureRef.current(point, accuracy);
     };
 
     watchId.current = navigator.geolocation.watchPosition(
@@ -135,9 +139,17 @@ export function useGeolocation(
             ? coords.accuracy
             : Infinity,
         };
-        if (!best || reading.accuracy < best.accuracy) best = reading;
-        if (Number.isFinite(best.accuracy)) setAccuracy(best.accuracy);
-        if (best.accuracy <= GPS_GOOD_ACCURACY_M) finish();
+        readings.push(reading);
+        if (Number.isFinite(reading.accuracy)) {
+          if (improvesAccuracy(bestAccuracy, reading.accuracy)) {
+            bestAccuracy = reading.accuracy;
+            setAccuracy(bestAccuracy);
+            // Cada mejora reinicia la cuenta: si no llega otra a tiempo, se termina con lo que hay.
+            if (stallTimer.current !== null) clearTimeout(stallTimer.current);
+            stallTimer.current = setTimeout(finish, GPS_STALL_MS);
+          }
+          if (reading.accuracy <= GPS_GOOD_ACCURACY_M) finish();
+        }
       },
       ({ code }) => {
         // Sin permiso no hay nada que esperar; lo demás puede pasar y el GPS seguir buscando.
