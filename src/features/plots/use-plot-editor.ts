@@ -175,6 +175,14 @@ export function usePlotEditor({
         vertices: applySuggestion(draft.vertices, check.suggestion, nowIso()),
       });
     },
+    // Reduce el área de la parcela a lo que queda libre en la finca.
+    useAvailableArea: () => {
+      if (check.availableHectares <= 0) return;
+      form.setValue('area_hectares', check.availableHectares.toFixed(2), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    },
     useMeasuredArea: () => {
       if (check.measuredAreaHectares === null) return;
       form.setValue('area_hectares', check.measuredAreaHectares.toFixed(2), {

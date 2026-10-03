@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { FormSection } from '@/components/form-section';
@@ -14,7 +14,7 @@ import { altitudeRangeFor } from '@/lib/geo/municipality-altitude';
 import { OPERATING_DEPARTMENT } from '@/lib/departments';
 import type { Coordinates } from '@/types/geo';
 
-import { farmFormSchema, type FarmFormValues } from '../schemas';
+import { createFarmFormSchema, type FarmFormValues } from '../schemas';
 import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
@@ -29,6 +29,7 @@ import {
 
 export function FarmFormFields({
   defaultValues,
+  allocatedHectares,
   title,
   description,
   banner,
@@ -41,6 +42,8 @@ export function FarmFormFields({
   onSubmit,
 }: {
   defaultValues: FarmFormValues;
+  // Lo que ya ocupan las parcelas activas de la finca que se edita: el área no puede bajar de ahí.
+  allocatedHectares?: number;
   title: string;
   description: string;
   banner?: ReactNode;
@@ -55,6 +58,10 @@ export function FarmFormFields({
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
+  const schema = useMemo(
+    () => createFarmFormSchema(allocatedHectares),
+    [allocatedHectares],
+  );
   const {
     register,
     control,
@@ -63,7 +70,7 @@ export function FarmFormFields({
     setValue,
     formState: { errors, isSubmitted },
   } = useForm<FarmFormValues>({
-    resolver: zodResolver(farmFormSchema),
+    resolver: zodResolver(schema),
     defaultValues,
     mode: 'onBlur',
     reValidateMode: 'onChange',

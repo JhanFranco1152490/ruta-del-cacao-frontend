@@ -10,6 +10,8 @@ export type PlotScreenFarm = {
   isActive: boolean;
   // Dónde ver la finca: a donde se vuelve al terminar.
   detailPath: string;
+  // Dónde editar la finca (p. ej. para ampliar su área).
+  editPath: string;
   // Todavía no existe en el servidor: la parcela esperará a que sincronice.
   isPendingCreate: boolean;
 };

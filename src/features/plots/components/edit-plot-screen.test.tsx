@@ -30,6 +30,7 @@ const FARM: PlotScreenFarm = {
   location: { latitude: '7.8234567', longitude: '-72.5123456' },
   isActive: true,
   detailPath: '/fincas/detalle?id=f1',
+  editPath: '/fincas/editar?id=f1',
   isPendingCreate: false,
 };
 

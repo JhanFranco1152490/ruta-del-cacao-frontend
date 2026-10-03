@@ -4,7 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { rect } from '@/lib/geo/test-shapes';
 import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
-import { renderWithProviders } from '@/test/render';
+import { queryKeys } from '@/lib/api/query-keys';
+import { PERMISSIONS } from '@/lib/permissions';
+import { buildSession } from '@/test/factories';
+import { createTestQueryClient, renderWithProviders } from '@/test/render';
 
 vi.mock('@/config/map', async () => {
   const { loadFakePolygonEditor } = await import('@/test/fake-map');
@@ -20,6 +23,7 @@ const FARM: PlotEditorFarm = {
   name: 'La Esperanza',
   areaHectares: '10.00',
   location: { latitude: '7.8234567', longitude: '-72.5123456' },
+  editPath: '/fincas/editar?id=f1',
 };
 
 const EMPTY: PlotFormValues = { code: '', area_hectares: '', vertices: [] };
@@ -35,8 +39,14 @@ const known = (over: Partial<KnownPlot> = {}): KnownPlot => ({
 
 function renderEditor(
   over: Partial<React.ComponentProps<typeof PlotEditor>> = {},
+  permissions: string[] = [PERMISSIONS.PLOTS_VIEW, PERMISSIONS.PLOTS_ADD],
 ) {
   const onSubmit = vi.fn();
+  const queryClient = createTestQueryClient();
+  queryClient.setQueryData(
+    queryKeys.session(),
+    buildSession({ id: 'u1', permissions }),
+  );
   renderWithProviders(
     <PlotEditor
       cancelHref="/fincas/detalle?id=f1"
@@ -50,6 +60,7 @@ function renderEditor(
       title="Registrar parcela"
       {...over}
     />,
+    { queryClient },
   );
   return { onSubmit, user: userEvent.setup() };
 }
@@ -143,6 +154,65 @@ describe('PlotEditor', () => {
       screen.getByRole('button', { name: 'Guardar parcela' }),
     ).toBeDisabled();
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('offers ways out when the area goes past what is left, and applies the available one', async () => {
+    const { user } = renderEditor({
+      knownPlots: [known({ areaHectares: '6.00' })],
+    });
+    await fill(user, 'P1', '5');
+
+    expect(screen.getByText(/le quedan 4 ha sin asignar/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Revisar las otras parcelas' }),
+    ).toHaveAttribute('href', '/fincas/detalle?id=f1');
+    await user.click(
+      screen.getByRole('button', { name: 'Usar el área disponible (4 ha)' }),
+    );
+
+    expect(screen.getByLabelText('Área declarada (hectáreas)')).toHaveValue(
+      '4.00',
+    );
+    expect(
+      screen.queryByText(/supera el área disponible/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Guardar parcela' }),
+    ).toBeEnabled();
+  });
+
+  it('offers to enlarge the farm only to who can edit farms', async () => {
+    const first = renderEditor({
+      knownPlots: [known({ areaHectares: '6.00' })],
+    });
+    await fill(first.user, 'P1', '5');
+    expect(
+      screen.queryByRole('link', { name: 'Ampliar el área de la finca' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('links to the farm edit when the person can change farms', async () => {
+    const { user } = renderEditor(
+      { knownPlots: [known({ areaHectares: '6.00' })] },
+      [PERMISSIONS.PLOTS_VIEW, PERMISSIONS.PLOTS_ADD, PERMISSIONS.FARMS_CHANGE],
+    );
+    await fill(user, 'P1', '5');
+
+    expect(
+      screen.getByRole('link', { name: 'Ampliar el área de la finca' }),
+    ).toHaveAttribute('href', '/fincas/editar?id=f1');
+  });
+
+  it('offers no available area to use when the farm is full', async () => {
+    const { user } = renderEditor({
+      knownPlots: [known({ areaHectares: '10.00' })],
+    });
+    await fill(user, 'P1', '1');
+
+    expect(
+      screen.queryByRole('button', { name: /Usar el área disponible/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/supera el área disponible/)).toBeInTheDocument();
   });
 
   it('rejects a code that another plot of the farm already has', async () => {

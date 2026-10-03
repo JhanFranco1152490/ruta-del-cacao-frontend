@@ -14,6 +14,8 @@ import { PageHeader } from '@/components/page-header';
 import { TextField } from '@/components/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { loadPolygonEditorMapProvider } from '@/config/map';
+import { useSession } from '@/hooks/use-session';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { formatHectares } from '@/lib/format/hectares';
 import { parseCoordinates } from '@/lib/format/coordinates';
 import type { Coordinates } from '@/types/geo';
@@ -22,6 +24,7 @@ import type { KnownPlot } from '../known-plots';
 import type { PlotFormValues } from '../plot-queue';
 import { toPoints } from '../plot-vertices';
 import { usePlotEditor } from '../use-plot-editor';
+import { PlotAreaExceeded } from './plot-area-exceeded';
 import { PlotGpsButton } from './plot-gps-button';
 import { PlotGeometrySummary } from './plot-geometry-summary';
 import { PlotMapControls } from './plot-map-controls';
@@ -33,6 +36,7 @@ export type PlotEditorFarm = {
   name: string;
   areaHectares: string;
   location: Coordinates;
+  editPath?: string;
 };
 
 export function PlotEditor({
@@ -70,6 +74,8 @@ export function PlotEditor({
   cancelHref: string;
   onSubmit: (values: PlotFormValues) => void;
 }) {
+  const { data: user } = useSession();
+  const canEditFarm = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
   const editor = usePlotEditor({ defaultValues, farm, knownPlots, selfId });
   const {
     form: {
@@ -191,11 +197,6 @@ export function PlotEditor({
                 label="Área declarada (hectáreas)"
                 {...register('area_hectares')}
               />
-              {check.exceedsFarmArea && (
-                <p className="font-bold text-err" role="alert">
-                  El área ingresada supera el área disponible de la finca
-                </p>
-              )}
             </div>
           </FormSection>
 
@@ -210,6 +211,15 @@ export function PlotEditor({
             />
           </FormSection>
 
+          {check.exceedsFarmArea && (
+            <PlotAreaExceeded
+              availableHectares={check.availableHectares}
+              farmAreaHectares={farm.areaHectares}
+              farmDetailPath={cancelHref}
+              farmEditPath={canEditFarm ? farm.editPath : undefined}
+              onUseAvailable={editor.useAvailableArea}
+            />
+          )}
           <PlotNotices
             check={check}
             declaredAreaHectares={

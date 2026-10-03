@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 
-import { farmDetailPath } from '../farm-paths';
+import { farmDetailPath, farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
 import type { FarmPlotsContext } from './farm-detail-screen';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
@@ -10,6 +10,8 @@ import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
 export type GatedFarm = FarmPlotsContext & {
   // Dónde ver la finca: a donde vuelve quien termina de trabajar sobre ella.
   detailPath: string;
+  // Dónde editar la finca (p. ej. para ampliar su área).
+  editPath: string;
   // Todavía no existe en el servidor (se creó sin conexión): sus parcelas esperan a que llegue.
   isPendingCreate: boolean;
 };
@@ -43,6 +45,7 @@ export function FarmGate({
         },
         isActive: true,
         detailPath: farmDetailPath(queued.id),
+        editPath: farmEditPath(queued.id),
         isPendingCreate: queued.operation === 'create',
       });
     }
@@ -56,6 +59,7 @@ export function FarmGate({
         location: farm.location,
         isActive: farm.is_active,
         detailPath: farmDetailPath(farm.id),
+        editPath: farmEditPath(farm.id),
         isPendingCreate: false,
       });
     }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  createFarmFormSchema,
   emptyFarmForm,
   farmFormSchema,
   OUTSIDE_OPERATING_AREA,
@@ -181,6 +182,35 @@ describe('farmFormSchema', () => {
       expect(
         messages({ ...valid, municipality_id: '', altitude_masl: '950' }),
       ).not.toContain(expect.stringContaining('no corresponde al municipio'));
+    });
+  });
+
+  describe('area against the plots', () => {
+    const withPlots = createFarmFormSchema(5);
+
+    it('rejects an area below what the active plots take, and says what to do', () => {
+      const message = withPlots
+        .safeParse({ ...valid, area_hectares: '4.99' })
+        .error?.issues.map((issue) => issue.message);
+
+      expect(message).toEqual([
+        'Sus parcelas activas ya ocupan 5 ha: el área de la finca no puede ser menor. Déjala en 5 ha o más, o reduce o desactiva parcelas primero.',
+      ]);
+    });
+
+    it('accepts exactly what they take, or more', () => {
+      expect(
+        withPlots.safeParse({ ...valid, area_hectares: '5' }).success,
+      ).toBe(true);
+      expect(
+        withPlots.safeParse({ ...valid, area_hectares: '8' }).success,
+      ).toBe(true);
+    });
+
+    it('asks nothing of a farm without plots', () => {
+      expect(
+        farmFormSchema.safeParse({ ...valid, area_hectares: '0.5' }).success,
+      ).toBe(true);
     });
   });
 });
