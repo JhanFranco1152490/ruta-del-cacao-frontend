@@ -19,7 +19,11 @@ import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
 } from '@/components/capture-field-class';
-import { useGeolocation } from '@/hooks/use-geolocation';
+import {
+  COORDINATES_ALTERNATIVES,
+  useGeolocation,
+} from '@/hooks/use-geolocation';
+import { useWarmGps } from '@/hooks/use-warm-gps';
 import { useMunicipalityHints } from '../use-municipality-hints';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 import {
@@ -30,6 +34,7 @@ import {
 export function FarmFormFields({
   defaultValues,
   allocatedHectares,
+  savedLocation,
   title,
   description,
   banner,
@@ -44,6 +49,9 @@ export function FarmFormFields({
   defaultValues: FarmFormValues;
   // Lo que ya ocupan las parcelas activas de la finca que se edita: el área no puede bajar de ahí.
   allocatedHectares?: number;
+  // Municipio y altitud de la finca del servidor que se edita: si no cambian, no se vuelve a exigir
+  // que la altitud quepa en el terreno del municipio.
+  savedLocation?: { municipalityCode: string; altitude: string };
   title: string;
   description: string;
   banner?: ReactNode;
@@ -58,9 +66,17 @@ export function FarmFormFields({
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
+  const municipalityList = municipalities.data;
   const schema = useMemo(
-    () => createFarmFormSchema(allocatedHectares),
-    [allocatedHectares],
+    () =>
+      createFarmFormSchema({
+        allocatedHectares,
+        municipalityName: (code) =>
+          municipalityList?.find((municipality) => municipality.code === code)
+            ?.name,
+        saved: savedLocation,
+      }),
+    [allocatedHectares, municipalityList, savedLocation],
   );
   const {
     register,
@@ -113,6 +129,8 @@ export function FarmFormFields({
     }
   };
   const geolocation = useGeolocation(captureLocation);
+  // Vive aquí y no en los botones: el mapa también necesita saber dónde está la persona.
+  const warm = useWarmGps(COORDINATES_ALTERNATIVES);
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
@@ -205,6 +223,7 @@ export function FarmFormFields({
           <div className="space-y-4 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
             <FarmLocationFields
               geolocation={geolocation}
+              warm={warm}
               latitudeError={errors.latitude?.message}
               location={location}
               longitudeError={errors.longitude?.message}
@@ -231,6 +250,8 @@ export function FarmFormFields({
           <FarmLocationMap
             disabled={geolocation.isCapturing}
             focusBounds={hints.focusBounds}
+            gpsPosition={warm.fix}
+            onRequestGps={warm.start}
             frameClassName="lg:h-[34rem]"
             location={location}
             onLocationChange={changeLocation}

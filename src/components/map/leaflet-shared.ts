@@ -11,7 +11,7 @@ import {
   type BaseLayerKind,
   createTileFallback,
 } from './base-layers';
-import type { MapPointTone } from './map-provider';
+import type { GpsPosition, MapPointTone } from './map-provider';
 import { plotLabelFits } from './map-view';
 
 export const toLatLng = ({ latitude, longitude }: GeoPoint) =>
@@ -171,4 +171,66 @@ export function useShapeLabelVisibility(
       map.off('zoomend moveend resize', update);
     };
   }, [map, layersRef, version]);
+}
+
+// Dónde está la persona: un punto azul y, alrededor, el círculo del error que reporta el GPS. Se
+// actualiza con cada lectura moviendo lo que ya está dibujado, sin rehacerlo.
+export function useGpsPosition(
+  map: L.Map | null,
+  gpsPosition: GpsPosition | null | undefined,
+) {
+  const dotRef = useRef<L.Marker | null>(null);
+  const circleRef = useRef<L.Circle | null>(null);
+  const latitude = gpsPosition?.point.latitude;
+  const longitude = gpsPosition?.point.longitude;
+  const accuracy = gpsPosition?.accuracyM ?? null;
+
+  useEffect(() => {
+    if (!map) return;
+    if (latitude === undefined || longitude === undefined) {
+      dotRef.current?.remove();
+      circleRef.current?.remove();
+      dotRef.current = null;
+      circleRef.current = null;
+      return;
+    }
+    const position = L.latLng(latitude, longitude);
+    if (!dotRef.current) {
+      const color = cssVar('--info-solid');
+      circleRef.current = L.circle(position, {
+        radius: accuracy ?? 0,
+        color,
+        fillColor: color,
+        fillOpacity: 0.12,
+        weight: 1,
+        interactive: false,
+      }).addTo(map);
+      dotRef.current = L.marker(position, {
+        icon: L.divIcon({
+          className: '',
+          html: '<span class="map-gps-dot"></span>',
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
+        }),
+        title: 'Tu posición según el GPS',
+        alt: 'Tu posición según el GPS',
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: -100,
+      }).addTo(map);
+      return;
+    }
+    dotRef.current.setLatLng(position);
+    circleRef.current?.setLatLng(position);
+    circleRef.current?.setRadius(accuracy ?? 0);
+  }, [map, latitude, longitude, accuracy]);
+
+  // Al desmontar el mapa se descartan las referencias a lo que ya no existe.
+  useEffect(
+    () => () => {
+      dotRef.current = null;
+      circleRef.current = null;
+    },
+    [map],
+  );
 }

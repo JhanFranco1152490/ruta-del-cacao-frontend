@@ -243,6 +243,16 @@ a {
   .map-pin[data-tone='info'] {
     background: var(--info-solid);
   }
+  /* Un vértice que falla una regla: cuadrado y con el color de error, para que no dependa solo del
+     color. La razón se dice en su título y en la lista de vértices. */
+  .map-vertex[data-flagged] {
+    border-radius: 0.375rem;
+    background: var(--err-solid);
+    color: var(--err-solid-fg);
+    box-shadow:
+      0 0 0 3px var(--err-solid),
+      0 1px 4px rgb(0 0 0 / 0.45);
+  }
   /* Tu posición según el GPS: punto azul con borde claro, como el de cualquier mapa del teléfono. */
   .map-gps-dot {
     display: block;

@@ -149,17 +149,17 @@ describe('farmFormSchema', () => {
   });
 
   describe('altitude against the municipality', () => {
-    // Puerto Santander (54553): el terreno va de 43 a 72 m, con 100 m de margen.
+    // Puerto Santander (54553): el terreno va de 43 a 72 m; con el margen, de 0 a 172.
     const lowland = { ...valid, municipality_id: '54553' };
 
     it('rejects an altitude the municipality does not reach', () => {
       expect(messages({ ...lowland, altitude_masl: '950' })).toContain(
-        'La altitud no corresponde al municipio elegido: allí el terreno va de -57 a 172 m.',
+        'La altitud no corresponde al municipio elegido: el terreno del municipio va de 0 a 172 m.',
       );
     });
 
     it('accepts one inside its range, edges included', () => {
-      for (const altitude of ['-57', '60', '172']) {
+      for (const altitude of ['0', '60', '172']) {
         expect(
           farmFormSchema.safeParse({ ...lowland, altitude_masl: altitude })
             .success,
@@ -186,7 +186,7 @@ describe('farmFormSchema', () => {
   });
 
   describe('area against the plots', () => {
-    const withPlots = createFarmFormSchema(5);
+    const withPlots = createFarmFormSchema({ allocatedHectares: 5 });
 
     it('rejects an area below what the active plots take, and says what to do', () => {
       const message = withPlots
@@ -211,6 +211,67 @@ describe('farmFormSchema', () => {
       expect(
         farmFormSchema.safeParse({ ...valid, area_hectares: '0.5' }).success,
       ).toBe(true);
+    });
+  });
+
+  describe('altitude message and farms saved before the rule', () => {
+    const named = createFarmFormSchema({
+      municipalityName: (code) =>
+        code === '54553' ? 'Puerto Santander' : undefined,
+    });
+
+    it('names the municipality and its range, never below sea level', () => {
+      const result = named.safeParse({
+        ...valid,
+        municipality_id: '54553',
+        altitude_masl: '950',
+      });
+
+      expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+        'La altitud no corresponde a Puerto Santander: el terreno del municipio va de 0 a 172 m.',
+      ]);
+    });
+
+    // Cúcuta con 2313 m: una finca guardada antes de la regla.
+    const legacy = {
+      ...valid,
+      municipality_id: '54001',
+      altitude_masl: '2313',
+    };
+    const saved = { municipalityCode: '54001', altitude: '2313' };
+
+    it('does not ask a farm saved before the rule for an altitude it did not change', () => {
+      const schema = createFarmFormSchema({ saved });
+
+      expect(schema.safeParse({ ...legacy, name: 'Otro nombre' }).success).toBe(
+        true,
+      );
+    });
+
+    it('asks for a valid altitude as soon as the altitude is touched', () => {
+      const schema = createFarmFormSchema({ saved });
+
+      expect(
+        schema.safeParse({ ...legacy, altitude_masl: '2400' }).success,
+      ).toBe(false);
+      expect(
+        schema.safeParse({ ...legacy, altitude_masl: '320' }).success,
+      ).toBe(true);
+    });
+
+    it('asks again when the municipality changes, even with the same altitude', () => {
+      const schema = createFarmFormSchema({
+        saved: { municipalityCode: '54518', altitude: '2313' },
+      });
+
+      // Pamplona (54518) sí alcanza 2313 m; Cúcuta no.
+      expect(
+        schema.safeParse({ ...legacy, municipality_id: '54001' }).success,
+      ).toBe(false);
+    });
+
+    it('asks for it in a farm that is not saved yet', () => {
+      expect(createFarmFormSchema().safeParse(legacy).success).toBe(false);
     });
   });
 });

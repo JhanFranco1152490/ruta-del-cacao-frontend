@@ -250,4 +250,69 @@ describe('LeafletPolygonEditor', () => {
       expect(container.querySelector('.leaflet-container')).not.toBeNull();
     });
   });
+
+  describe('flagged vertices', () => {
+    const withFlags = (flaggedVertices: number[]) => (
+      <div style={{ width: 400, height: 300 }}>
+        <LeafletPolygonEditor
+          baseLayer="map"
+          disabled={false}
+          drawing={false}
+          farmPoint={null}
+          flaggedVertices={flaggedVertices}
+          onAddVertex={() => {}}
+          onBaseLayerUnavailable={() => {}}
+          onMoveVertex={() => {}}
+          overlapRegions={[]}
+          referenceShapes={[]}
+          suggestion={null}
+          vertices={VERTICES}
+        />
+      </div>
+    );
+
+    it('marks only the vertices it is told about, and says so in their title', async () => {
+      const { container } = render(withFlags([1]));
+
+      await vi.waitFor(() =>
+        expect(container.querySelectorAll('.map-vertex')).toHaveLength(3),
+      );
+      const flagged = [
+        ...container.querySelectorAll('.map-vertex[data-flagged]'),
+      ];
+      expect(flagged.map((el) => el.textContent)).toEqual(['2']);
+      expect(
+        container
+          .querySelector('.leaflet-marker-icon [data-flagged]')!
+          .closest('.leaflet-marker-icon'),
+      ).toHaveAttribute('title', expect.stringContaining('tiene un problema'));
+    });
+
+    it('updates the marks when the flagged vertices change, without losing any vertex', async () => {
+      const { container, rerender } = render(withFlags([0]));
+      await vi.waitFor(() =>
+        expect(
+          container.querySelectorAll('.map-vertex[data-flagged]'),
+        ).toHaveLength(1),
+      );
+
+      rerender(withFlags([1, 2]));
+
+      await vi.waitFor(() =>
+        expect(
+          [...container.querySelectorAll('.map-vertex[data-flagged]')].map(
+            (el) => el.textContent,
+          ),
+        ).toEqual(['2', '3']),
+      );
+      expect(container.querySelectorAll('.map-vertex')).toHaveLength(3);
+
+      rerender(withFlags([]));
+      await vi.waitFor(() =>
+        expect(
+          container.querySelectorAll('.map-vertex[data-flagged]'),
+        ).toHaveLength(0),
+      );
+    });
+  });
 });

@@ -17,10 +17,19 @@ export function FakeMap({
   disabled,
   baseLayer,
   focusBounds,
+  gpsPosition,
+  focus,
   onError,
 }: MapProviderProps) {
   return (
     <div>
+      {focus && <p>Enfocado en: {focus.target}</p>}
+      <p>
+        Posición GPS:{' '}
+        {gpsPosition
+          ? `${gpsPosition.point.latitude}, ${gpsPosition.point.longitude} ±${gpsPosition.accuracyM ?? '?'} m`
+          : 'ninguna'}
+      </p>
       <p>Capa: {baseLayer}</p>
       {focusBounds && (
         <p>
@@ -150,6 +159,7 @@ export function FakePolygonEditor({
   farmPoint,
   referenceShapes,
   overlapRegions,
+  flaggedVertices,
   suggestion,
   gpsPosition,
   focus,
@@ -179,6 +189,7 @@ export function FakePolygonEditor({
         {referenceShapes.map((shape) => shape.label).join(', ') || 'ninguna'}
       </p>
       <p>Zonas superpuestas: {overlapRegions.length}</p>
+      <p>Vértices marcados: {flaggedVertices?.join(', ') || 'ninguno'}</p>
       <p>
         Sugerencia: {suggestion ? `${suggestion.length} vértices` : 'ninguna'}
       </p>

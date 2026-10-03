@@ -85,7 +85,9 @@ describe('FarmForm', () => {
     await save(user);
 
     expect(
-      await screen.findByText(/La altitud no corresponde al municipio elegido/),
+      await screen.findByText(
+        /La altitud no corresponde a Pamplona: el terreno del municipio va de 1450 a 3902 m/,
+      ),
     ).toBeInTheDocument();
     expect(await queuedFarms()).toHaveLength(0);
   });

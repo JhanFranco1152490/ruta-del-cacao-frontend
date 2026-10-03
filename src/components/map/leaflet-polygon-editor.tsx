@@ -15,6 +15,7 @@ import {
   useBaseLayer,
   useLatest,
   useLeafletMap,
+  useGpsPosition,
   useShapeLabelVisibility,
 } from './leaflet-shared';
 import type { PolygonEditorMapProviderProps } from './map-provider';
@@ -23,10 +24,10 @@ import { POINT_ZOOM, pointsKey } from './map-view';
 // Zoom máximo al encuadrar el polígono de una parcela de pocas hectáreas.
 const MAX_FIT_ZOOM = 18;
 
-const vertexIcon = (number: number) =>
+const vertexIcon = (number: number, flagged: boolean) =>
   L.divIcon({
     className: '',
-    html: `<span class="map-vertex">${number}</span>`,
+    html: `<span class="map-vertex"${flagged ? ' data-flagged="true"' : ''}>${number}</span>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
@@ -39,6 +40,7 @@ export function LeafletPolygonEditor({
   farmPoint,
   referenceShapes,
   overlapRegions,
+  flaggedVertices = [],
   suggestion,
   gpsPosition,
   focus,
@@ -170,63 +172,12 @@ export function LeafletPolygonEditor({
     };
   }, [map, suggestionKey, suggestionRef]);
 
-  // Dónde está la persona: un punto azul y, alrededor, el círculo del error que reporta el GPS.
-  // Se actualiza con cada lectura moviendo lo que ya está dibujado, sin rehacerlo.
-  const gpsDotRef = useRef<L.Marker | null>(null);
-  const gpsCircleRef = useRef<L.Circle | null>(null);
-  const gpsLatitude = gpsPosition?.point.latitude;
-  const gpsLongitude = gpsPosition?.point.longitude;
-  const gpsAccuracy = gpsPosition?.accuracyM ?? null;
-  useEffect(() => {
-    if (!map) return;
-    if (gpsLatitude === undefined || gpsLongitude === undefined) {
-      gpsDotRef.current?.remove();
-      gpsCircleRef.current?.remove();
-      gpsDotRef.current = null;
-      gpsCircleRef.current = null;
-      return;
-    }
-    const position = L.latLng(gpsLatitude, gpsLongitude);
-    if (!gpsDotRef.current) {
-      const color = cssVar('--info-solid');
-      gpsCircleRef.current = L.circle(position, {
-        radius: gpsAccuracy ?? 0,
-        color,
-        fillColor: color,
-        fillOpacity: 0.12,
-        weight: 1,
-        interactive: false,
-      }).addTo(map);
-      gpsDotRef.current = L.marker(position, {
-        icon: L.divIcon({
-          className: '',
-          html: '<span class="map-gps-dot"></span>',
-          iconSize: [18, 18],
-          iconAnchor: [9, 9],
-        }),
-        title: 'Tu posición según el GPS',
-        alt: 'Tu posición según el GPS',
-        interactive: false,
-        keyboard: false,
-        zIndexOffset: -100,
-      }).addTo(map);
-      return;
-    }
-    gpsDotRef.current.setLatLng(position);
-    gpsCircleRef.current?.setLatLng(position);
-    gpsCircleRef.current?.setRadius(gpsAccuracy ?? 0);
-  }, [map, gpsLatitude, gpsLongitude, gpsAccuracy]);
-  // Al desmontar el mapa se descartan las referencias a lo que ya no existe.
-  useEffect(
-    () => () => {
-      gpsDotRef.current = null;
-      gpsCircleRef.current = null;
-    },
-    [map],
-  );
+  useGpsPosition(map, gpsPosition);
 
   // El contorno propio: polígono con tres vértices o más, línea con dos.
   const outlineKey = pointsKey(vertices);
+  const flaggedRef = useLatest(flaggedVertices);
+  const flaggedKey = flaggedVertices.join(',');
   useEffect(() => {
     if (!map || vertices.length < 2) return;
     const color = cssVar('--ok-solid');
@@ -257,8 +208,10 @@ export function LeafletPolygonEditor({
     const markers = verticesRef.current.map((point, index) => {
       const marker = L.marker(toLatLng(point), {
         draggable: !disabledRef.current,
-        icon: vertexIcon(index + 1),
-        title: `Vértice ${index + 1} (arrástralo para moverlo)`,
+        icon: vertexIcon(index + 1, flaggedRef.current.includes(index)),
+        title: flaggedRef.current.includes(index)
+          ? `Vértice ${index + 1}: tiene un problema (arrástralo para moverlo)`
+          : `Vértice ${index + 1} (arrástralo para moverlo)`,
         alt: `Vértice ${index + 1}`,
         keyboard: false,
       }).addTo(map);
@@ -274,7 +227,15 @@ export function LeafletPolygonEditor({
     return () => {
       markers.forEach((marker) => marker.remove());
     };
-  }, [map, outlineKey, verticesRef, disabledRef, onMoveRef]);
+  }, [
+    map,
+    outlineKey,
+    flaggedKey,
+    flaggedRef,
+    verticesRef,
+    disabledRef,
+    onMoveRef,
+  ]);
 
   useEffect(() => {
     markersRef.current.forEach((marker) => {
