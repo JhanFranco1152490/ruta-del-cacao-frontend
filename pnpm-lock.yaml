@@ -178,6 +178,30 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.103.2
         version: 5.103.2(react@19.3.0)
+      '@turf/area':
+        specifier: ^7.4.0
+        version: 7.4.0
+      '@turf/difference':
+        specifier: ^7.4.0
+        version: 7.4.0
+      '@turf/distance':
+        specifier: ^7.4.0
+        version: 7.4.0
+      '@turf/helpers':
+        specifier: ^7.4.0
+        version: 7.4.0
+      '@turf/intersect':
+        specifier: ^7.4.0
+        version: 7.4.0
+      '@turf/kinks':
+        specifier: ^7.4.0
+        version: 7.4.0
+      '@turf/length':
+        specifier: ^7.4.0
+        version: 7.4.0
+      '@turf/nearest-point-on-line':
+        specifier: ^7.4.0
+        version: 7.4.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -233,6 +257,9 @@ importers:
       '@testing-library/user-event':
         specifier: ^14.6.7
         version: 14.6.7(@testing-library/dom@10.4.2)
+      '@types/geojson':
+        specifier: ^7946.0.16
+        version: 7946.0.16
       '@types/leaflet':
         specifier: ^1.9.22
         version: 1.9.22
@@ -289,7 +316,7 @@ importers:
         version: 0.8.1(prettier@3.9.7)
       serwist:
         specifier: ^9.5.12
-        version: 9.5.12(browserslist@4.28.6)(typescript@5.9.3)
+        version: 9.5.12(browserslist@4.29.0)(typescript@5.9.3)
       sharp:
         specifier: ^0.35.5
         version: 0.35.5(@types/node@22.20.3)
@@ -1503,6 +1530,36 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
+  '@turf/area@7.4.0':
+    resolution: {integrity: sha512-B7q5f6QwKIxxbl4/L59lAYA+FF7h2hv6st96PuKue0TGCYGSxAG/lV8LHSPUSOuOrLywN4jytJcKK3vOFBs7Nw==}
+
+  '@turf/difference@7.4.0':
+    resolution: {integrity: sha512-4zV7Xi3CwUdyNsDzrPty08PiUeYYVBdbCnNVlSf8sk5Z7SL7seA42RabRG8ByTzcrbLATeDU4oTEthVhOGPlyw==}
+
+  '@turf/distance@7.4.0':
+    resolution: {integrity: sha512-ODkopQDG1m/U6Mx7OMmShncaCvneomwX3lZY1CDA7x40bhDdTTRYP/n/6LicZVyIO4/oK+aXkov4NOtWYthA2g==}
+
+  '@turf/helpers@7.4.0':
+    resolution: {integrity: sha512-7PAwLZqOdRzTI5g9bHvUwlloAXPDH/mlajtryk0tw4ZwGMtmXsAyF4QundsAMfy4u48Fyd3AUqMXY0SMxqJGWg==}
+
+  '@turf/intersect@7.4.0':
+    resolution: {integrity: sha512-n/wbZfDPoM1JKwrql8mHBoS9cdRWUC7/VE9IBZOttVPv8Guo0B6+Mzc2Z2e1PdIkSP/1R2yH6lxPpWMuuBfVEA==}
+
+  '@turf/invariant@7.4.0':
+    resolution: {integrity: sha512-OAsc3qdNx+tRqzWmMNFMnVlWWACIqnYqIejZKvb2oKkKPYJJrURPXZ6OdrGD58ljJMolLoqwIZGSx3VndaEjxg==}
+
+  '@turf/kinks@7.4.0':
+    resolution: {integrity: sha512-M2deZpJq45WASRru5MmGwDJkVIj+JL/rcS6LLZBQyhSna47pxOQIVDC/tIx6xyFezxXw3lhX9VsoRst3irDdAQ==}
+
+  '@turf/length@7.4.0':
+    resolution: {integrity: sha512-vQsJLuL7uy8m6HAMuJJKoiOHYY1de1Hd6mY/fM90qfu2RyIrkoF8J4bRUb72XZNCVnvob/eHpUMdhZeoUhSyfQ==}
+
+  '@turf/meta@7.4.0':
+    resolution: {integrity: sha512-3cLUvlEyDuSnMSzrjhaLAEiYR8xhbfWyTVQlrlEw40xL81d4KF4PqUWbjTXKpXZStdYbet2GCurl79KMypNw6g==}
+
+  '@turf/nearest-point-on-line@7.4.0':
+    resolution: {integrity: sha512-eKTKf/qODIsPankYMZrNfI3LjLaVtQvYV/1hcj9kH/Zr3GfLUszevjhTRDZtMgTFrv8+awW3+MyhmN+PJGuLdQ==}
+
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
 
@@ -1891,6 +1948,9 @@ packages:
 
   bidi-js@1.1.0:
     resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
+
+  bignumber.js@9.3.1:
+    resolution: {integrity: sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ==}
 
   brace-expansion@1.1.21:
     resolution: {integrity: sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==}
@@ -3121,6 +3181,9 @@ packages:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
 
+  polyclip-ts@0.16.8:
+    resolution: {integrity: sha512-JPtKbDRuPEuAjuTdhR62Gph7Is2BS1Szx69CFOO3g71lpJDFo78k4tFyi+qFOMVPePEzdSKkpGU3NBXPHHjvKQ==}
+
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
@@ -3384,6 +3447,9 @@ packages:
   source-map@0.8.0:
     resolution: {integrity: sha512-d8EqvL+k/SOXCreS/SUzg2ciyHqBBLcN/yuRjFsbvVhHTE2pgei7oAhmPM7kWFbkX6OSMQfUq4KbkF3au9lhYQ==}
     engines: {node: '>= 12'}
+
+  splaytree-ts@1.0.2:
+    resolution: {integrity: sha512-0kGecIZNIReCSiznK3uheYB8sbstLjCZLiwcQwbmLhgHJj2gz6OnSPkVzJQCMnmEz1BQ4gPK59ylhBoEWOhGNA==}
 
   stable-hash@0.0.5:
     resolution: {integrity: sha512-+L3ccpzibovGXFK+Ap/f8LOS0ahMrHTf3xu7mMLSpEGU0EO9ucaysSylKo9eRDFNhWve/y275iPmIZ4z39a9iA==}
@@ -4514,6 +4580,10 @@ snapshots:
     optionalDependencies:
       browserslist: 4.28.6
 
+  '@serwist/utils@9.5.12(browserslist@4.29.0)':
+    optionalDependencies:
+      browserslist: 4.29.0
+
   '@serwist/window@9.5.12(browserslist@4.28.6)(typescript@5.9.3)':
     dependencies:
       '@types/trusted-types': 2.0.7
@@ -4704,6 +4774,76 @@ snapshots:
   '@testing-library/user-event@14.6.7(@testing-library/dom@10.4.2)':
     dependencies:
       '@testing-library/dom': 10.4.2
+
+  '@turf/area@7.4.0':
+    dependencies:
+      '@turf/helpers': 7.4.0
+      '@turf/meta': 7.4.0
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
+
+  '@turf/difference@7.4.0':
+    dependencies:
+      '@turf/helpers': 7.4.0
+      '@turf/meta': 7.4.0
+      '@types/geojson': 7946.0.16
+      polyclip-ts: 0.16.8
+      tslib: 2.8.1
+
+  '@turf/distance@7.4.0':
+    dependencies:
+      '@turf/helpers': 7.4.0
+      '@turf/invariant': 7.4.0
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
+
+  '@turf/helpers@7.4.0':
+    dependencies:
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
+
+  '@turf/intersect@7.4.0':
+    dependencies:
+      '@turf/helpers': 7.4.0
+      '@turf/meta': 7.4.0
+      '@types/geojson': 7946.0.16
+      polyclip-ts: 0.16.8
+      tslib: 2.8.1
+
+  '@turf/invariant@7.4.0':
+    dependencies:
+      '@turf/helpers': 7.4.0
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
+
+  '@turf/kinks@7.4.0':
+    dependencies:
+      '@turf/helpers': 7.4.0
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
+
+  '@turf/length@7.4.0':
+    dependencies:
+      '@turf/distance': 7.4.0
+      '@turf/helpers': 7.4.0
+      '@turf/meta': 7.4.0
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
+
+  '@turf/meta@7.4.0':
+    dependencies:
+      '@turf/helpers': 7.4.0
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
+
+  '@turf/nearest-point-on-line@7.4.0':
+    dependencies:
+      '@turf/distance': 7.4.0
+      '@turf/helpers': 7.4.0
+      '@turf/invariant': 7.4.0
+      '@turf/meta': 7.4.0
+      '@types/geojson': 7946.0.16
+      tslib: 2.8.1
 
   '@tybys/wasm-util@0.10.4':
     dependencies:
@@ -5076,6 +5216,8 @@ snapshots:
   bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
+
+  bignumber.js@9.3.1: {}
 
   brace-expansion@1.1.21:
     dependencies:
@@ -6427,6 +6569,11 @@ snapshots:
 
   pluralize@8.0.0: {}
 
+  polyclip-ts@0.16.8:
+    dependencies:
+      bignumber.js: 9.3.1
+      splaytree-ts: 1.0.2
+
   possible-typed-array-names@1.1.0: {}
 
   postcss@8.5.23:
@@ -6593,6 +6740,15 @@ snapshots:
     transitivePeerDependencies:
       - browserslist
 
+  serwist@9.5.12(browserslist@4.29.0)(typescript@5.9.3):
+    dependencies:
+      '@serwist/utils': 9.5.12(browserslist@4.29.0)
+      idb: 8.0.3
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - browserslist
+
   set-cookie-parser@3.1.2: {}
 
   set-function-length@1.2.2:
@@ -6691,6 +6847,8 @@ snapshots:
   source-map-js@1.2.1: {}
 
   source-map@0.8.0: {}
+
+  splaytree-ts@1.0.2: {}
 
   stable-hash@0.0.5: {}
 
