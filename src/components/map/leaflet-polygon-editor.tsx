@@ -24,10 +24,10 @@ import { POINT_ZOOM, pointsKey } from './map-view';
 // Zoom máximo al encuadrar el polígono de una parcela de pocas hectáreas.
 const MAX_FIT_ZOOM = 18;
 
-const vertexIcon = (number: number) =>
+const vertexIcon = (number: number, flagged: boolean) =>
   L.divIcon({
     className: '',
-    html: `<span class="map-vertex">${number}</span>`,
+    html: `<span class="map-vertex"${flagged ? ' data-flagged="true"' : ''}>${number}</span>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
@@ -40,6 +40,7 @@ export function LeafletPolygonEditor({
   farmPoint,
   referenceShapes,
   overlapRegions,
+  flaggedVertices = [],
   suggestion,
   gpsPosition,
   focus,
@@ -175,6 +176,8 @@ export function LeafletPolygonEditor({
 
   // El contorno propio: polígono con tres vértices o más, línea con dos.
   const outlineKey = pointsKey(vertices);
+  const flaggedRef = useLatest(flaggedVertices);
+  const flaggedKey = flaggedVertices.join(',');
   useEffect(() => {
     if (!map || vertices.length < 2) return;
     const color = cssVar('--ok-solid');
@@ -205,8 +208,10 @@ export function LeafletPolygonEditor({
     const markers = verticesRef.current.map((point, index) => {
       const marker = L.marker(toLatLng(point), {
         draggable: !disabledRef.current,
-        icon: vertexIcon(index + 1),
-        title: `Vértice ${index + 1} (arrástralo para moverlo)`,
+        icon: vertexIcon(index + 1, flaggedRef.current.includes(index)),
+        title: flaggedRef.current.includes(index)
+          ? `Vértice ${index + 1}: tiene un problema (arrástralo para moverlo)`
+          : `Vértice ${index + 1} (arrástralo para moverlo)`,
         alt: `Vértice ${index + 1}`,
         keyboard: false,
       }).addTo(map);
@@ -222,7 +227,15 @@ export function LeafletPolygonEditor({
     return () => {
       markers.forEach((marker) => marker.remove());
     };
-  }, [map, outlineKey, verticesRef, disabledRef, onMoveRef]);
+  }, [
+    map,
+    outlineKey,
+    flaggedKey,
+    flaggedRef,
+    verticesRef,
+    disabledRef,
+    onMoveRef,
+  ]);
 
   useEffect(() => {
     markersRef.current.forEach((marker) => {

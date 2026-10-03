@@ -233,6 +233,47 @@ describe('PlotEditor', () => {
     ).toBeDisabled();
   });
 
+  it('marks the vertex that is too far, in the map and in the list, and not the ones that are fine', async () => {
+    const { user } = renderEditor({
+      farm: {
+        ...FARM,
+        location: { latitude: '7.8005', longitude: '-72.4995' },
+      },
+    });
+    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
+    await tapMap(user, 3);
+    expect(screen.getByText('Vértices marcados: ninguno')).toBeInTheDocument();
+
+    // El mapa de pruebas lleva el primer vértice lejos.
+    await user.click(
+      screen.getByRole('button', { name: 'Arrastrar el primer vértice' }),
+    );
+
+    expect(await screen.findByText('Vértices marcados: 0')).toBeInTheDocument();
+    const [first, second] = within(
+      screen.getByRole('list', { name: 'Vértices del polígono' }),
+    ).getAllByRole('listitem');
+    expect(first).toHaveAttribute('data-flagged', 'true');
+    expect(first).toHaveTextContent(
+      /Demasiado lejos del punto de la finca: \d+ m \(máximo 657 m\)/,
+    );
+    expect(second).not.toHaveAttribute('data-flagged');
+  });
+
+  it('stops marking the vertex once it is back within reach', async () => {
+    const { user } = renderEditor();
+    await user.click(screen.getByRole('button', { name: 'Dibujar polígono' }));
+    await tapMap(user, 3);
+    await user.click(
+      screen.getByRole('button', { name: 'Arrastrar el primer vértice' }),
+    );
+    expect(await screen.findByText('Vértices marcados: 0')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Quitar vértice 1' }));
+
+    expect(screen.getByText('Vértices marcados: ninguno')).toBeInTheDocument();
+  });
+
   it('accepts the vertices that are within reach of the farm point', async () => {
     const { user } = renderEditor();
 

@@ -119,6 +119,9 @@ export type PolygonEditorMapProviderProps = {
   // Referencia visual: el punto de la finca y las demás parcelas de la finca.
   farmPoint: GeoPoint | null;
   referenceShapes: readonly MapShape[];
+  // Los vértices (por su posición, desde 0) que fallan una regla, resaltados para que la persona
+  // sepa cuál mover.
+  flaggedVertices?: readonly number[];
   // Las zonas del polígono que invaden a otra parcela, resaltadas.
   overlapRegions: readonly (readonly GeoPoint[])[];
   // Vista previa del ajuste sugerido; se dibuja sin tocar los vértices.
