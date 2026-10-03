@@ -97,6 +97,7 @@ export async function resubmit(userId: string, id: string, payload: unknown) {
       status: 'pending',
       errorCode: undefined,
       errorMessage: undefined,
+      errorData: undefined,
       updatedAt: Date.now(),
     });
   });
@@ -220,6 +221,7 @@ async function runQueue(userId: string) {
             status: 'error',
             errorCode: conflict.code,
             errorMessage: conflict.message,
+            errorData: conflict.data,
             updatedAt: Date.now(),
           });
         } else {
