@@ -264,10 +264,10 @@ describe('FarmListScreen', () => {
     expect(
       within(card).getByRole('link', { name: 'Ver detalle de El Porvenir' }),
     ).toHaveAttribute('href', '/fincas/detalle?id=s1');
-    // Editar es una acción del detalle, no de la tarjeta.
+    // Editar está en la tarjeta y también en el detalle.
     expect(
-      within(card).queryByRole('link', { name: 'Editar El Porvenir' }),
-    ).not.toBeInTheDocument();
+      within(card).getByRole('link', { name: 'Editar El Porvenir' }),
+    ).toHaveAttribute('href', '/fincas/editar?id=s1');
     expect(
       within(card).getByRole('button', { name: 'Activar' }),
     ).toBeInTheDocument();

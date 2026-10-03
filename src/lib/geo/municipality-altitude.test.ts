@@ -11,11 +11,20 @@ describe('altitudeRangeFor', () => {
   });
 
   it('widens the range of the terrain by the margin', () => {
-    // Puerto Santander: de 43 a 72 m.
+    // Silos: de 2060 a 4256 m.
+    expect(altitudeRangeFor('54743')).toEqual({
+      minimum: 2060 - ALTITUDE_MARGIN_M,
+      maximum: 4256 + ALTITUDE_MARGIN_M,
+    });
+  });
+
+  it('never goes below sea level', () => {
+    // Puerto Santander va de 43 a 72 m: con el margen el mínimo sería -57, y se queda en 0.
     expect(altitudeRangeFor('54553')).toEqual({
-      minimum: 43 - ALTITUDE_MARGIN_M,
+      minimum: 0,
       maximum: 72 + ALTITUDE_MARGIN_M,
     });
+    expect(altitudeRangeFor('54001')!.minimum).toBe(0);
   });
 
   it('puts the lowlands and the mountains where they belong', () => {

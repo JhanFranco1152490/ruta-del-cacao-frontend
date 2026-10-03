@@ -16,6 +16,7 @@ import {
   toGeoPoint,
   toLatLng,
   useBaseLayer,
+  useGpsPosition,
   useLatest,
   useLeafletMap,
   useShapeLabelVisibility,
@@ -37,6 +38,8 @@ export function LeafletPointMap({
   onError,
   baseLayer,
   focusBounds,
+  gpsPosition,
+  focus: focusRequest,
 }: MapProviderProps) {
   const { containerRef, map } = useLeafletMap();
   useBaseLayer(map, baseLayer, onError);
@@ -62,6 +65,22 @@ export function LeafletPointMap({
     if (!map || !bounds) return;
     map.fitBounds(toLatLngBounds(bounds));
   }, [map, focusKey, focusRef]);
+  useGpsPosition(map, gpsPosition);
+
+  // Un pedido de ir al punto de la finca o a la posición del GPS. No se aleja si ya se está más
+  // cerca.
+  const pointRef = useLatest(point);
+  const gpsPositionRef = useLatest(gpsPosition);
+  useEffect(() => {
+    if (!map || !focusRequest) return;
+    const target =
+      focusRequest.target === 'farm'
+        ? pointRef.current
+        : (gpsPositionRef.current?.point ?? null);
+    if (!target) return;
+    map.setView(toLatLng(target), Math.max(map.getZoom(), POINT_ZOOM + 2));
+  }, [map, focusRequest, pointRef, gpsPositionRef]);
+
   const markerRef = useRef<L.Marker | null>(null);
   const onPointChangeRef = useLatest(onPointChange);
   const disabledRef = useLatest(disabled);

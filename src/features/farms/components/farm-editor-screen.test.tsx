@@ -136,6 +136,59 @@ describe('FarmEditorScreen', () => {
     ).toHaveAttribute('href', '/fincas');
   });
 
+  // Una finca guardada antes de la regla del terreno del municipio: 2313 m en Cúcuta no cabe.
+  it('lets a farm saved before the altitude rule correct its other data', async () => {
+    const user = userEvent.setup();
+    server.use(
+      serverFarm({
+        municipality: { id: '54001', name: 'Cúcuta' },
+        altitude_masl: 2313,
+        version: 3,
+      }),
+    );
+    renderEditor('s1');
+
+    const name = await screen.findByLabelText('Nombre de la finca');
+    await user.clear(name);
+    await user.type(name, 'Finca renombrada');
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+    expect(
+      screen.queryByText(/La altitud no corresponde/),
+    ).not.toBeInTheDocument();
+    expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
+      payload: {
+        name: 'Finca renombrada',
+        altitude_masl: 2313,
+        expected_version: 3,
+      },
+    });
+  });
+
+  it('asks that farm for a valid altitude as soon as the altitude is touched, naming the municipality', async () => {
+    const user = userEvent.setup();
+    server.use(
+      serverFarm({
+        municipality: { id: '54001', name: 'Cúcuta' },
+        altitude_masl: 2313,
+      }),
+    );
+    renderEditor('s1');
+
+    const altitude = await screen.findByLabelText('Altitud (m s. n. m.)');
+    await user.clear(altitude);
+    await user.type(altitude, '2400');
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    expect(
+      await screen.findByText(
+        'La altitud no corresponde a Cúcuta: el terreno del municipio va de 0 a 1647 m.',
+      ),
+    ).toBeInTheDocument();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
   it('does not let the area go below what the active plots already take', async () => {
     const user = userEvent.setup();
     server.use(serverFarm({ allocated_area_hectares: '5.00', version: 5 }));

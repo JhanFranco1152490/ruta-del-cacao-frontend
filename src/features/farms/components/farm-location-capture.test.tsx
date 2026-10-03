@@ -8,7 +8,11 @@ import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { loadFakeMap } from '@/test/fake-map';
 import type { Coordinates } from '@/types/geo';
 
-import { useGeolocation } from '@/hooks/use-geolocation';
+import {
+  COORDINATES_ALTERNATIVES,
+  useGeolocation,
+} from '@/hooks/use-geolocation';
+import { useWarmGps } from '@/hooks/use-warm-gps';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 
 afterEach(restoreGeolocation);
@@ -31,6 +35,7 @@ function Harness({
 
   // Igual que el formulario: los campos y el mapa comparten la misma captura GPS.
   const geolocation = useGeolocation(handleLocationChange);
+  const warm = useWarmGps(COORDINATES_ALTERNATIVES);
 
   return (
     <>
@@ -38,12 +43,15 @@ function Harness({
         geolocation={geolocation}
         location={location}
         onLocationChange={handleLocationChange}
+        warm={warm}
       />
       <FarmLocationMap
         disabled={geolocation.isCapturing}
+        gpsPosition={warm.fix}
         loadMapProvider={loadMapProvider}
         location={location}
         onLocationChange={handleLocationChange}
+        onRequestGps={warm.start}
       />
     </>
   );
@@ -65,7 +73,8 @@ describe('farm location capture', () => {
     expect(gps.geolocation.watchPosition).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
-    expect(gps.geolocation.watchPosition).toHaveBeenCalledOnce();
+    // La captura sigue la posición y además deja el GPS encendido para la siguiente.
+    expect(gps.geolocation.watchPosition).toHaveBeenCalled();
   });
 
   it('shows the GPS error without hiding manual entry', async () => {
@@ -196,5 +205,141 @@ describe('farm location capture', () => {
     expect(
       await screen.findByRole('button', { name: 'Tocar el mapa' }),
     ).toBeDisabled();
+  });
+
+  describe('with the GPS warmed up', () => {
+    it('turns on at the person’s request, shows the live accuracy and the position on the map', async () => {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness loadMapProvider={loadFakeMap} />);
+      expect(
+        await screen.findByText('Posición GPS: ninguna'),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
+      expect(screen.getByText(/Buscando satélites/)).toBeInTheDocument();
+      act(() => gps.reading(14, { latitude: 7.8, longitude: -72.5 }));
+
+      expect(
+        screen.getByRole('button', { name: /GPS activo · ±14 m/ }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      expect(
+        await screen.findByText(/Posición GPS: 7\.8.*-72\.5.*±14 m/),
+      ).toBeInTheDocument();
+    });
+
+    it('captures the point at once from the recent readings, and says the accuracy', async () => {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness />);
+      await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
+      act(() =>
+        gps.reading(9, { latitude: 7.8234567, longitude: -72.5123456 }),
+      );
+      const watches = gps.geolocation.watchPosition.mock.calls.length;
+
+      await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
+
+      expect(screen.getByLabelText('Latitud')).toHaveValue('7.8234567');
+      expect(screen.getByLabelText('Longitud')).toHaveValue('-72.5123456');
+      expect(screen.getByText('Precisión del GPS: ±9 m')).toBeInTheDocument();
+      // No abrió otra lectura ni quedó esperando: la captura fue inmediata.
+      expect(gps.geolocation.watchPosition.mock.calls.length).toBe(watches);
+      expect(
+        screen.getByRole('button', { name: 'Capturar GPS' }),
+      ).toBeEnabled();
+    });
+
+    it('turns the GPS on while it captures when it was off, so the next one is instant', async () => {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness />);
+
+      await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
+      act(() => gps.reading(5, { latitude: 7.8, longitude: -72.5 }));
+
+      expect(
+        screen.getByRole('button', { name: /GPS activo/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('warns about a weak signal before capturing', async () => {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness />);
+      await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
+
+      act(() => gps.reading(93));
+
+      expect(screen.getByText(/Señal débil \(±93 m\)/)).toBeInTheDocument();
+    });
+
+    it('turns off and stops reading when asked', async () => {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness />);
+      await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
+      act(() => gps.reading(12));
+
+      await user.click(screen.getByRole('button', { name: /GPS activo/ }));
+
+      expect(
+        screen.getByRole('button', { name: 'Activar GPS' }),
+      ).toHaveAttribute('aria-pressed', 'false');
+      expect(gps.watching()).toBe(0);
+    });
+
+    it('offers the coordinates instead when the permission is denied', async () => {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness />);
+
+      await user.click(screen.getByRole('button', { name: 'Activar GPS' }));
+      act(() => gps.fail(1));
+
+      expect(
+        await screen.findByText(
+          /No permitiste acceder a tu ubicación. Escribe las coordenadas/,
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('going to the point or to the GPS position', () => {
+    it('takes the map to the point of the farm', async () => {
+      const user = userEvent.setup();
+      render(<Harness loadMapProvider={loadFakeMap} />);
+      await user.click(
+        await screen.findByRole('button', { name: 'Tocar el mapa' }),
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: 'Ir al punto de la finca' }),
+      );
+
+      expect(await screen.findByText('Enfocado en: farm')).toBeInTheDocument();
+    });
+
+    it('cannot go to a point that is not set yet', async () => {
+      render(<Harness loadMapProvider={loadFakeMap} />);
+
+      expect(
+        await screen.findByRole('button', { name: 'Ir al punto de la finca' }),
+      ).toBeDisabled();
+    });
+
+    it('turns the GPS on from the location button and goes to the position when it arrives', async () => {
+      const user = userEvent.setup();
+      const gps = installFakeGps();
+      render(<Harness loadMapProvider={loadFakeMap} />);
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Ir a mi ubicación' }),
+      );
+      expect(gps.geolocation.watchPosition).toHaveBeenCalledOnce();
+      act(() => gps.reading(15, { latitude: 7.8, longitude: -72.5 }));
+
+      expect(await screen.findByText('Enfocado en: gps')).toBeInTheDocument();
+    });
   });
 });

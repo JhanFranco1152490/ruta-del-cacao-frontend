@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import { Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ export function PlotVertexList({
   drawing,
   closeAttempted,
   disabled,
+  flagged = {},
   onRemove,
   onClose,
 }: {
@@ -30,6 +32,8 @@ export function PlotVertexList({
   drawing: boolean;
   closeAttempted: boolean;
   disabled: boolean;
+  // Los vértices que fallan una regla, por su posición (desde 0), con la razón en texto.
+  flagged?: Readonly<Record<number, string>>;
   onRemove: (index: number) => void;
   onClose: () => void;
 }) {
@@ -45,7 +49,11 @@ export function PlotVertexList({
           {vertices.map((vertex, index) => (
             <li
               key={`${index}-${vertex.latitude}-${vertex.longitude}`}
-              className="flex items-center justify-between gap-3 rounded-(--radius) border border-border px-3 py-2"
+              className={cn(
+                'flex items-center justify-between gap-3 rounded-(--radius) border px-3 py-2',
+                flagged[index] ? 'border-err bg-err-bg' : 'border-border',
+              )}
+              data-flagged={flagged[index] ? 'true' : undefined}
             >
               <span>
                 <strong>Vértice {index + 1}</strong>{' '}
@@ -56,6 +64,11 @@ export function PlotVertexList({
                   {vertex.latitude.toFixed(COORDINATE_DECIMALS)},{' '}
                   {vertex.longitude.toFixed(COORDINATE_DECIMALS)}
                 </span>
+                {flagged[index] && (
+                  <span className="block text-sm font-bold text-err">
+                    {flagged[index]}
+                  </span>
+                )}
               </span>
               <Button
                 aria-label={`Quitar vértice ${index + 1}`}

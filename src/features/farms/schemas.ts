@@ -43,9 +43,23 @@ const requiredCoordinate = (
       `Usa máximo ${COORDINATE_DECIMALS} decimales.`,
     );
 
-// `allocatedHectares`: el área que ya tienen asignada las parcelas activas de la finca que se
-// edita. El área de la finca no puede quedar por debajo (el servidor también lo rechaza).
-export const createFarmFormSchema = (allocatedHectares = 0) =>
+export type FarmSchemaOptions = {
+  // El área que ya tienen asignada las parcelas activas de la finca que se edita. El área de la
+  // finca no puede quedar por debajo (el servidor también lo rechaza).
+  allocatedHectares?: number;
+  // Cómo se llama un municipio, para decirlo en el mensaje de la altitud.
+  municipalityName?: (code: string) => string | undefined;
+  // El municipio y la altitud con los que la finca ya estaba guardada. Si no cambian, no se
+  // vuelve a exigir que la altitud quepa en el terreno: una finca guardada antes de esa regla
+  // debe poder seguir editando sus otros datos (el servidor hace lo mismo).
+  saved?: { municipalityCode: string; altitude: string };
+};
+
+export const createFarmFormSchema = ({
+  allocatedHectares = 0,
+  municipalityName,
+  saved,
+}: FarmSchemaOptions = {}) =>
   z
     .object({
       name: z.string().trim().min(1, 'Ingresa el nombre de la finca.'),
@@ -77,11 +91,16 @@ export const createFarmFormSchema = (allocatedHectares = 0) =>
       const range = altitudeRangeFor(values.municipality_id);
       const altitude = Number(values.altitude_masl);
       if (!range || !/^-?\d+$/.test(values.altitude_masl.trim())) return;
+      const unchanged =
+        saved?.municipalityCode === values.municipality_id &&
+        saved.altitude.trim() === values.altitude_masl.trim();
+      if (unchanged) return;
       if (altitude < range.minimum || altitude > range.maximum) {
+        const name = municipalityName?.(values.municipality_id);
         context.addIssue({
           code: 'custom',
           path: ['altitude_masl'],
-          message: `La altitud no corresponde al municipio elegido: allí el terreno va de ${range.minimum} a ${range.maximum} m.`,
+          message: `La altitud no corresponde ${name ? `a ${name}` : 'al municipio elegido'}: el terreno del municipio va de ${range.minimum} a ${range.maximum} m.`,
         });
       }
     })

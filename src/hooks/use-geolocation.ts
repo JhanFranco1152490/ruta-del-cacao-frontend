@@ -32,7 +32,7 @@ export type GpsAlternatives = {
   retryInstead: string;
 };
 
-const COORDINATES_ALTERNATIVES: GpsAlternatives = {
+export const COORDINATES_ALTERNATIVES: GpsAlternatives = {
   instead: 'Escribe las coordenadas o marca el punto en el mapa.',
   retryInstead: 'escribe las coordenadas',
 };

@@ -4,6 +4,14 @@ import type { GeoBounds, GeoPoint } from '@/types/geo';
 
 import type { BaseLayerKind } from './base-layers';
 
+// A dónde se lleva el mapa a pedido de la persona: el punto de la finca (el del formulario o el
+// de la finca de una parcela) o su posición según el GPS.
+export type MapFocusTarget = 'farm' | 'gps';
+
+// Dónde está la persona según el GPS encendido: un punto con su círculo de error. No es un punto
+// de la finca ni un vértice, y no se edita.
+export type GpsPosition = { point: GeoPoint; accuracyM: number | null };
+
 // Lo que debe cumplir cualquier mapa real para usarse dentro de MapPanel. El formulario y sus
 // pruebas solo conocen esta forma, nunca la librería de mapas.
 export type MapProviderProps = {
@@ -15,6 +23,10 @@ export type MapProviderProps = {
   // Área que el mapa encuadra cuando cambia (p. ej. el municipio elegido). Quien lo pasa decide
   // cuándo: el formulario solo lo manda si todavía no hay punto, para no mover el de la persona.
   focusBounds?: GeoBounds | null;
+  gpsPosition?: GpsPosition | null;
+  // Un objeto nuevo por pedido: pedir dos veces lo mismo vuelve a llevar el mapa aunque la persona
+  // lo haya movido.
+  focus?: { target: MapFocusTarget };
   // Falla después de cargar (p. ej. el mapa base no responde sin conexión).
   onError: () => void;
 };
@@ -107,16 +119,16 @@ export type PolygonEditorMapProviderProps = {
   // Referencia visual: el punto de la finca y las demás parcelas de la finca.
   farmPoint: GeoPoint | null;
   referenceShapes: readonly MapShape[];
+  // Los vértices (por su posición, desde 0) que fallan una regla, resaltados para que la persona
+  // sepa cuál mover.
+  flaggedVertices?: readonly number[];
   // Las zonas del polígono que invaden a otra parcela, resaltadas.
   overlapRegions: readonly (readonly GeoPoint[])[];
   // Vista previa del ajuste sugerido; se dibuja sin tocar los vértices.
   suggestion: readonly GeoPoint[] | null;
-  // Dónde está la persona según el GPS encendido: un punto con su círculo de error. No es un
-  // vértice ni se edita.
-  gpsPosition?: { point: GeoPoint; accuracyM: number | null } | null;
-  // Un pedido de llevar el mapa al punto de la finca o a la posición del GPS. Un objeto nuevo por
-  // pedido: pedir dos veces lo mismo vuelve a llevar el mapa aunque la persona lo haya movido.
-  focus?: { target: 'farm' | 'gps' };
+  gpsPosition?: GpsPosition | null;
+  // Un pedido de llevar el mapa al punto de la finca o a la posición del GPS (ver `MapProviderProps`).
+  focus?: { target: MapFocusTarget };
   onAddVertex: (point: GeoPoint) => void;
   // Quien lo recibe decide dónde queda el vértice (p. ej. pegado al borde de otra parcela).
   onMoveVertex: (index: number, point: GeoPoint) => void;
