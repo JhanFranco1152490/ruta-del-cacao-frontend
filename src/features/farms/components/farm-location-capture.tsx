@@ -10,13 +10,40 @@ import { Button } from '@/components/ui/button';
 import { loadMapProvider as appMapProvider } from '@/config/map';
 import type { Coordinates, GeoBounds } from '@/types/geo';
 
-import type { useGeolocation } from '../use-geolocation';
+import { GPS_WEAK_ACCURACY_M, type useGeolocation } from '../use-geolocation';
 import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
 } from './capture-field-class';
 
 type Geolocation = ReturnType<typeof useGeolocation>;
+
+const WEAK_PRECISION_MESSAGE = (meters: number) =>
+  `La precisión es baja (±${Math.round(meters)} m). Sal a un lugar abierto y vuelve a capturar, o marca el punto en el mapa.`;
+
+// Lo que se dice de la precisión de la última captura, solo mientras los campos sigan teniendo ese
+// punto: si la persona lo corrigió o lo movió en el mapa, la precisión ya no es de este punto.
+function precisionNotes(geolocation: Geolocation, location: Coordinates) {
+  const { result } = geolocation;
+  if (
+    !result ||
+    result.point.latitude !== location.latitude ||
+    result.point.longitude !== location.longitude
+  ) {
+    return null;
+  }
+  if (result.accuracy === null) {
+    return { text: 'El dispositivo no informó la precisión del GPS.' };
+  }
+  const meters = Math.round(result.accuracy);
+  return {
+    text: `Precisión del GPS: ±${meters} m`,
+    warning:
+      result.accuracy > GPS_WEAK_ACCURACY_M
+        ? WEAK_PRECISION_MESSAGE(result.accuracy)
+        : undefined,
+  };
+}
 
 // Coordenadas escritas y captura GPS. El mapa va aparte (FarmLocationMap) para que la pantalla
 // pueda ponerlo al lado en escritorio; los dos comparten la misma captura GPS.
@@ -73,9 +100,22 @@ export function FarmLocationFields({
         variant="copper"
       >
         <MapPin aria-hidden="true" className="size-5" />
-        {geolocation.isCapturing ? 'Capturando GPS…' : 'Capturar GPS'}
+        {geolocation.isCapturing
+          ? `Capturando GPS…${
+              geolocation.accuracy === null
+                ? ''
+                : ` ±${Math.round(geolocation.accuracy)} m`
+            }`
+          : 'Capturar GPS'}
       </Button>
-      <FormMessage>{geolocation.error ?? undefined}</FormMessage>
+      {precisionNotes(geolocation, location) && (
+        <p className="text-sm text-muted-foreground" role="status">
+          {precisionNotes(geolocation, location)?.text}
+        </p>
+      )}
+      <FormMessage>
+        {geolocation.error ?? precisionNotes(geolocation, location)?.warning}
+      </FormMessage>
     </section>
   );
 }

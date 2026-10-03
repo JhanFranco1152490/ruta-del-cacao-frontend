@@ -10,6 +10,7 @@ import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
+import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 
@@ -221,32 +222,20 @@ describe('FarmForm', () => {
   describe('location in Norte de Santander', () => {
     const CUCUTA = { latitude: '7.8939', longitude: '-72.5078' };
     const PAMPLONA = { latitude: '7.3756', longitude: '-72.648' };
-    const originalGeolocation = Object.getOwnPropertyDescriptor(
-      navigator,
-      'geolocation',
-    );
+    afterEach(restoreGeolocation);
 
-    afterEach(() => {
-      if (originalGeolocation) {
-        Object.defineProperty(navigator, 'geolocation', originalGeolocation);
-      } else {
-        Reflect.deleteProperty(navigator, 'geolocation');
-      }
-    });
-
-    // El GPS responde enseguida con el punto dado.
+    // El GPS responde con el punto dado y buena precisión, así que la captura termina enseguida.
     function gpsAt({ latitude, longitude }: typeof CUCUTA) {
-      Object.defineProperty(navigator, 'geolocation', {
-        configurable: true,
-        value: {
-          getCurrentPosition: (onSuccess: PositionCallback) =>
-            onSuccess({
-              coords: {
-                latitude: Number(latitude),
-                longitude: Number(longitude),
-              },
-            } as GeolocationPosition),
-        },
+      const gps = installFakeGps();
+      gps.geolocation.watchPosition.mockImplementation((onSuccess) => {
+        onSuccess({
+          coords: {
+            latitude: Number(latitude),
+            longitude: Number(longitude),
+            accuracy: 5,
+          },
+        } as GeolocationPosition);
+        return 1;
       });
     }
 
