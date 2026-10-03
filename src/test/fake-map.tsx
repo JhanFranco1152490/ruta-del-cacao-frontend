@@ -49,16 +49,32 @@ export function FakeMap({
 export const loadFakeMap: LoadMapProvider = () => Promise.resolve(FakeMap);
 
 // Doble del mapa de varios puntos: lista cada marcador como texto.
-export function FakePointsMap({ points }: PointsMapProviderProps) {
+export function FakePointsMap({
+  points,
+  shapes = [],
+  focus,
+}: PointsMapProviderProps) {
   return (
-    <ul aria-label="Marcadores del mapa">
-      {points.map((point) => (
-        <li key={point.id}>
-          {point.label} ({point.tone}) {point.position.latitude},{' '}
-          {point.position.longitude}
-        </li>
-      ))}
-    </ul>
+    <>
+      {focus && <p>Enfocado: {focus.shapeId}</p>}
+      <ul aria-label="Marcadores del mapa">
+        {points.map((point) => (
+          <li key={point.id}>
+            {point.label} ({point.tone}) {point.position.latitude},{' '}
+            {point.position.longitude}
+          </li>
+        ))}
+      </ul>
+      {shapes.length > 0 && (
+        <ul aria-label="Polígonos del mapa">
+          {shapes.map((shape) => (
+            <li key={shape.id}>
+              {shape.label} ({shape.tone}) {shape.positions.length} vértices
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 

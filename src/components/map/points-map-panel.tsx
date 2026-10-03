@@ -2,7 +2,7 @@
 
 import { ErrorState } from '@/components/error-state';
 
-import type { LoadPointsMapProvider, MapPoint } from './map-provider';
+import type { LoadPointsMapProvider, MapPoint, MapShape } from './map-provider';
 import { MapSkeleton } from './map-states';
 import { useMapProvider } from './use-map-provider';
 
@@ -11,11 +11,15 @@ import { useMapProvider } from './use-map-provider';
 export function PointsMapPanel({
   label,
   points,
+  shapes = [],
+  focus,
   emptyMessage,
   loadProvider,
 }: {
   label: string;
   points: readonly MapPoint[];
+  shapes?: readonly MapShape[];
+  focus?: { shapeId: string };
   emptyMessage: string;
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadPointsMapProvider;
@@ -43,9 +47,14 @@ export function PointsMapPanel({
         data-slot="map-frame"
         className="isolate h-64 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted md:h-80"
       >
-        <Provider onError={map.fail} points={points} />
+        <Provider
+          focus={focus}
+          onError={map.fail}
+          points={points}
+          shapes={shapes}
+        />
       </div>
-      {points.length === 0 && (
+      {points.length === 0 && shapes.length === 0 && (
         <p className="text-sm font-bold text-muted-foreground">
           {emptyMessage}
         </p>

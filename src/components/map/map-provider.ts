@@ -35,9 +35,23 @@ export type MapPoint = {
   tone: MapPointTone;
 };
 
-// Mapa de solo consulta con varios puntos (p. ej. todas las fincas de un listado).
+// Un polígono con etiqueta (p. ej. el contorno de una parcela), sin repetir el primer vértice al
+// final. El tono es el mismo de los marcadores.
+export type MapShape = {
+  id: string;
+  label: string;
+  detail?: string;
+  positions: readonly GeoPoint[];
+  tone: MapPointTone;
+};
+
+// Mapa de solo consulta con varios puntos (p. ej. todas las fincas de un listado) y, si hace
+// falta, polígonos que se encuadran junto con ellos.
 export type PointsMapProviderProps = {
   points: readonly MapPoint[];
+  shapes?: readonly MapShape[];
+  // Un objeto nuevo por pedido: enfocar dos veces el mismo polígono vuelve a llevar el mapa.
+  focus?: { shapeId: string };
   onError: () => void;
 };
 

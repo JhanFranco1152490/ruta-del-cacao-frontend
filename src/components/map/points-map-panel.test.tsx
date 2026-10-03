@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { FakePointsMap, loadFakePointsMap } from '@/test/fake-map';
 
-import type { LoadPointsMapProvider, MapPoint } from './map-provider';
+import type { LoadPointsMapProvider, MapPoint, MapShape } from './map-provider';
 import { PointsMapPanel } from './points-map-panel';
 
 const POINT: MapPoint = {
@@ -15,9 +15,21 @@ const POINT: MapPoint = {
   tone: 'ok',
 };
 
+const SHAPE: MapShape = {
+  id: 'pl1',
+  label: 'P1',
+  positions: [
+    { latitude: 7.89, longitude: -72.5 },
+    { latitude: 7.89, longitude: -72.49 },
+    { latitude: 7.88, longitude: -72.49 },
+  ],
+  tone: 'ok',
+};
+
 function renderPanel(
   points: MapPoint[],
   loadProvider: LoadPointsMapProvider = loadFakePointsMap,
+  shapes: MapShape[] = [],
 ) {
   render(
     <PointsMapPanel
@@ -25,6 +37,7 @@ function renderPanel(
       label="Mapa de mis fincas"
       loadProvider={loadProvider}
       points={points}
+      shapes={shapes}
     />,
   );
 }
@@ -53,6 +66,18 @@ describe('PointsMapPanel', () => {
     expect(
       await screen.findByRole('region', { name: 'Mapa de mis fincas' }),
     ).toHaveTextContent('Aún no hay fincas para mostrar en el mapa.');
+  });
+
+  it('draws the shapes and does not say the map is empty when there are only shapes', async () => {
+    renderPanel([], loadFakePointsMap, [SHAPE]);
+
+    const region = await screen.findByRole('region', {
+      name: 'Mapa de mis fincas',
+    });
+    expect(region).toHaveTextContent('P1 (ok) 3 vértices');
+    expect(region).not.toHaveTextContent(
+      'Aún no hay fincas para mostrar en el mapa.',
+    );
   });
 
   it('offers a retry when the map fails to load', async () => {

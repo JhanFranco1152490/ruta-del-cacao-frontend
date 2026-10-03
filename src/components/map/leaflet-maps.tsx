@@ -10,6 +10,7 @@ import { OPERATING_AREA_BOUNDS } from '@/lib/geo/operating-area';
 import type { GeoBounds } from '@/types/geo';
 
 import {
+  cssVar,
   pinIcon,
   popupContent,
   toGeoPoint,
@@ -131,12 +132,34 @@ const markersKey = (points: PointsMapProviderProps['points']) =>
     )
     .join('|');
 
-export function LeafletPointsMap({ points, onError }: PointsMapProviderProps) {
+// Zoom máximo al encuadrar polígonos: una parcela de pocas hectáreas pide más cercanía que un
+// grupo de fincas.
+const MAX_SHAPE_ZOOM = 17;
+
+const shapesKey = (shapes: NonNullable<PointsMapProviderProps['shapes']>) =>
+  shapes
+    .map(
+      (shape) =>
+        `${shape.id}:${shape.tone}:${shape.label}:${shape.detail ?? ''}:${pointsKey(shape.positions)}`,
+    )
+    .join('|');
+
+export function LeafletPointsMap({
+  points,
+  shapes = [],
+  focus,
+  onError,
+}: PointsMapProviderProps) {
   const { containerRef, map } = useLeafletMap();
   useBaseLayer(map, 'map', onError);
   const pointsRef = useLatest(points);
+  const shapesRef = useLatest(shapes);
   const markers = markersKey(points);
-  const positions = pointsKey(points.map((point) => point.position));
+  const drawnShapes = shapesKey(shapes);
+  const positions = pointsKey([
+    ...points.map((point) => point.position),
+    ...shapes.flatMap((shape) => shape.positions),
+  ]);
 
   useEffect(() => {
     if (!map) return;
@@ -157,10 +180,35 @@ export function LeafletPointsMap({ points, onError }: PointsMapProviderProps) {
     };
   }, [map, markers, pointsRef]);
 
+  useEffect(() => {
+    if (!map) return;
+    const layer = L.layerGroup(
+      shapesRef.current.map((shape) => {
+        const color = cssVar(`--${shape.tone}-solid`);
+        // El borde y el relleno llevan el color del estado; la etiqueta fija dice el código
+        // aunque el color no se distinga.
+        return L.polygon(shape.positions.map(toLatLng), {
+          color,
+          fillColor: color,
+          fillOpacity: 0.25,
+          weight: 2,
+        })
+          .bindTooltip(shape.label, { permanent: true, direction: 'center' })
+          .bindPopup(popupContent(shape.label, shape.detail));
+      }),
+    ).addTo(map);
+    return () => {
+      layer.remove();
+    };
+  }, [map, drawnShapes, shapesRef]);
+
   // Solo se encuadra cuando cambian las posiciones, no al mover el mapa ni al cambiar un nombre.
   useEffect(() => {
     if (!map) return;
-    const view = viewFor(pointsRef.current.map((point) => point.position));
+    const view = viewFor([
+      ...pointsRef.current.map((point) => point.position),
+      ...shapesRef.current.flatMap((shape) => shape.positions),
+    ]);
     if (view.kind === 'area') {
       map.setView(
         toLatLng(OPERATING_AREA_VIEW.center),
@@ -171,10 +219,21 @@ export function LeafletPointsMap({ points, onError }: PointsMapProviderProps) {
     } else {
       map.fitBounds(L.latLngBounds(view.points.map(toLatLng)), {
         padding: [32, 32],
-        maxZoom: MAX_FIT_ZOOM,
+        maxZoom: shapesRef.current.length > 0 ? MAX_SHAPE_ZOOM : MAX_FIT_ZOOM,
       });
     }
-  }, [map, positions, pointsRef]);
+  }, [map, positions, pointsRef, shapesRef]);
+
+  // Un pedido de enfoque (el objeto cambia en cada pedido) lleva el mapa al polígono pedido.
+  useEffect(() => {
+    if (!map || !focus) return;
+    const shape = shapesRef.current.find(({ id }) => id === focus.shapeId);
+    if (!shape) return;
+    map.fitBounds(L.latLngBounds(shape.positions.map(toLatLng)), {
+      padding: [32, 32],
+      maxZoom: MAX_SHAPE_ZOOM,
+    });
+  }, [map, focus, shapesRef]);
 
   return <div className="h-full w-full" ref={containerRef} />;
 }
