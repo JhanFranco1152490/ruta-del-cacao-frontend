@@ -84,6 +84,8 @@ export type MunicipalityMapProviderProps = {
   onSelectPoint: (id: string) => void;
   // El mapa base no carga: el mapa sigue con contorno y puntos.
   onBaseLayerUnavailable: () => void;
+  // El mapa base principal falló y se pasó al de respaldo: el mapa se ve, pero con otro proveedor.
+  onBaseLayerFallback: () => void;
   // El mapa no puede dibujarse (p. ej. no cargaron los contornos).
   onError: () => void;
 };

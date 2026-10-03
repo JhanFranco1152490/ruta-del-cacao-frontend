@@ -78,6 +78,33 @@ describe('MunicipalityMapPanel', () => {
     );
   });
 
+  it('says when the main base map failed and a backup is being used', async () => {
+    const user = userEvent.setup();
+    renderPanel(municipality);
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Usar mapa de respaldo' }),
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Se muestra el mapa de respaldo: el principal no está disponible.',
+    );
+    expect(screen.getByText('Municipio del mapa: 54810')).toBeInTheDocument();
+  });
+
+  it('forgets the backup notice when the base layer is switched', async () => {
+    const user = userEvent.setup();
+    renderPanel(municipality);
+    await user.click(
+      await screen.findByRole('button', { name: 'Usar mapa de respaldo' }),
+    );
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Satélite' }));
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('offers to retry when the map itself fails', async () => {
     const user = userEvent.setup();
     renderPanel(department);

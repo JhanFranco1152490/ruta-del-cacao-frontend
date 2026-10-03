@@ -88,6 +88,7 @@ export function FakeMunicipalityMap({
   onSelectMunicipality,
   onSelectPoint,
   onBaseLayerUnavailable,
+  onBaseLayerFallback,
   onError,
 }: MunicipalityMapProviderProps) {
   return (
@@ -124,6 +125,9 @@ export function FakeMunicipalityMap({
       )}
       <button onClick={onBaseLayerUnavailable} type="button">
         Fallar mapa base
+      </button>
+      <button onClick={onBaseLayerFallback} type="button">
+        Usar mapa de respaldo
       </button>
       <button onClick={onError} type="button">
         Fallar mapa
