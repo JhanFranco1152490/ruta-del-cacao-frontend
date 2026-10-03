@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
+import { getOfflineDb } from '@/lib/offline/db';
 import { buildPlot, buildSession, buildVertex } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -15,6 +16,7 @@ vi.mock('@/config/map', async () => {
   return { loadPointsMapProvider: loadFakePointsMap };
 });
 
+import { enqueuePlotCreate } from '../plot-queue';
 import { FarmPlotsSection } from './farm-plots-section';
 
 const BOUNDARY = [
@@ -29,6 +31,7 @@ const FARM = {
   areaHectares: '10.00',
   allocatedAreaHectares: '6.00',
   location: { latitude: '7.8234567', longitude: '-72.5123456' },
+  isActive: true,
 };
 
 let userId: string;
@@ -178,5 +181,116 @@ describe('FarmPlotsSection', () => {
     expect(
       screen.getByRole('button', { name: 'Reintentar' }),
     ).toBeInTheDocument();
+  });
+
+  describe('registering and editing', () => {
+    const ALL = [
+      PERMISSIONS.FARMS_VIEW,
+      PERMISSIONS.PLOTS_VIEW,
+      PERMISSIONS.PLOTS_ADD,
+      PERMISSIONS.PLOTS_CHANGE,
+    ] as string[];
+
+    it('offers to register a plot, also from the empty state', async () => {
+      server.use(plotsHandler([]));
+      renderSection({ permissions: ALL });
+
+      expect(
+        await screen.findByRole('link', { name: 'Registrar parcela' }),
+      ).toHaveAttribute('href', '/fincas/parcelas/nueva?finca=f1');
+    });
+
+    it('offers it next to the title once there are plots', async () => {
+      server.use(plotsHandler([buildPlot()]));
+      renderSection({ permissions: ALL });
+
+      expect(
+        await screen.findByRole('link', { name: 'Registrar parcela' }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not offer it without the permission or in an inactive farm', async () => {
+      server.use(plotsHandler([buildPlot()]));
+      const first = renderSection();
+      await screen.findByText('P1');
+      expect(
+        screen.queryByRole('link', { name: 'Registrar parcela' }),
+      ).not.toBeInTheDocument();
+      first.unmount();
+
+      renderSection({ permissions: ALL, farm: { ...FARM, isActive: false } });
+      await screen.findByText('P1');
+      expect(
+        screen.queryByRole('link', { name: 'Registrar parcela' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Editar P1' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('offers to edit each plot with the farm in the address', async () => {
+      server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
+      renderSection({ permissions: ALL });
+
+      expect(
+        await screen.findByRole('link', { name: 'Editar P1' }),
+      ).toHaveAttribute('href', '/fincas/parcelas/editar?id=a&finca=f1');
+    });
+
+    it('shows the plots that wait on the device, and offers to correct one that failed', async () => {
+      server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
+      await enqueuePlotCreate(userId, 'q1', 'f1', {
+        code: 'P-pendiente',
+        area_hectares: '1.00',
+        vertices: [],
+      });
+      await enqueuePlotCreate(userId, 'q2', 'f1', {
+        code: 'P-con-error',
+        area_hectares: '1.00',
+        vertices: [],
+      });
+      await getOfflineDb(userId).queue.update('q2', {
+        status: 'error',
+        errorCode: 'plot_overlap',
+        errorMessage: 'Se superpone con otra parcela.',
+      });
+      renderSection({ permissions: ALL });
+
+      const articles = within(
+        await screen.findByRole('list', { name: 'Parcelas' }),
+      ).getAllByRole('article');
+      expect(articles).toHaveLength(3);
+      expect(
+        screen.getByText('Pendiente de sincronización'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Pendiente con error')).toBeInTheDocument();
+      expect(
+        screen.getByText('Se superpone con otra parcela.'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: 'Corregir P-con-error' }),
+      ).toHaveAttribute('href', '/fincas/parcelas/editar?id=q2&finca=f1');
+    });
+
+    it('shows only the device plots of a farm that is not on the server yet, without asking for more', async () => {
+      const requests: URLSearchParams[] = [];
+      server.use(plotsHandler([], requests));
+      await enqueuePlotCreate(userId, 'q1', 'f1', {
+        code: 'P-pendiente',
+        area_hectares: '1.00',
+        vertices: [],
+      });
+      renderSection({
+        permissions: ALL,
+        farm: {
+          ...FARM,
+          allocatedAreaHectares: undefined,
+          isPendingCreate: true,
+        },
+      });
+
+      expect(await screen.findByText('P-pendiente')).toBeInTheDocument();
+      expect(requests).toHaveLength(0);
+    });
   });
 });

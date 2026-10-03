@@ -1,20 +1,24 @@
 'use client';
 
+import { Pencil, Plus } from 'lucide-react';
+import Link from 'next/link';
 import { useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
+import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { loadPointsMapProvider } from '@/config/map';
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format/dates';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
 
-import { useFarmPlots } from '../api';
+import type { KnownPlot } from '../known-plots';
 import { plotsToShapes } from '../plot-map';
+import { plotEditPath, plotNewPath } from '../plot-paths';
+import { useKnownPlots } from '../use-known-plots';
 import { PlotAreaBar } from './plot-area-bar';
 import { PlotList } from './plot-list';
 
@@ -26,6 +30,10 @@ type PlotsFarm = {
   areaHectares: string;
   allocatedAreaHectares?: string;
   location: Coordinates;
+  isActive: boolean;
+  // Todavía no existe en el servidor: no tiene parcelas allá, solo las que esperan en el
+  // dispositivo.
+  isPendingCreate?: boolean;
 };
 
 const toNumber = (value: string) => Number(value.trim().replace(',', '.'));
@@ -33,7 +41,9 @@ const toNumber = (value: string) => Number(value.trim().replace(',', '.'));
 export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
   const { data: user } = useSession();
   const canView = hasPermission(user, PERMISSIONS.PLOTS_VIEW);
-  const plots = useFarmPlots(user?.id, farm.id, { enabled: canView });
+  const canAdd = hasPermission(user, PERMISSIONS.PLOTS_ADD);
+  const canChange = hasPermission(user, PERMISSIONS.PLOTS_CHANGE);
+  const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
   // Cada pedido es un objeto nuevo: pedir dos veces la misma parcela vuelve a llevar el mapa.
   const [focus, setFocus] = useState<{ shapeId: string }>();
   const mapRef = useRef<HTMLDivElement>(null);
@@ -41,41 +51,68 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
   // La asociación consulta fincas y no llega más allá.
   if (!canView) return null;
 
+  // Registrar parcelas en una finca inactiva no se puede: sus parcelas quedan congeladas.
+  const registerLink = canAdd && farm.isActive && (
+    <Link
+      className={buttonVariants({ size: 'office' })}
+      href={plotNewPath(farm.id)}
+    >
+      <Plus aria-hidden="true" className="size-5" /> Registrar parcela
+    </Link>
+  );
+
+  const renderActions = (plot: KnownPlot) =>
+    farm.isActive &&
+    // Una parcela que solo está en el dispositivo se corrige con el permiso de registrar; una del
+    // servidor, con el de editar.
+    (plot.queue?.operation === 'create' ? canAdd : canChange) && (
+      <Link
+        aria-label={`${plot.queue?.status === 'error' ? 'Corregir' : 'Editar'} ${plot.code}`}
+        className={buttonVariants({ size: 'office', variant: 'outline' })}
+        href={plotEditPath(plot.id, farm.id)}
+      >
+        <Pencil aria-hidden="true" className="size-4" />{' '}
+        {plot.queue?.status === 'error' ? 'Corregir' : 'Editar'}
+      </Link>
+    );
+
   return (
     <section
       aria-labelledby="plots-heading"
       className="mt-6 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card"
     >
-      <h2 id="plots-heading" className="text-2xl text-selva">
-        Parcelas de esta finca
-        {plots.data ? ` · ${plots.data.data.plots.length}` : ''}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="plots-heading" className="text-2xl text-selva">
+          Parcelas de esta finca
+          {known.plots ? ` · ${known.plots.length}` : ''}
+        </h2>
+        {known.plots && known.plots.length > 0 && registerLink}
+      </div>
       {farm.allocatedAreaHectares !== undefined && (
         <PlotAreaBar
           allocatedAreaHectares={farm.allocatedAreaHectares}
           areaHectares={farm.areaHectares}
         />
       )}
-      {plots.isPending && (
+      {known.isLoading && (
         <div aria-label="Cargando parcelas" role="status">
           <Skeleton className="h-64" />
         </div>
       )}
-      {plots.isError && (
+      {known.isError && (
+        <ErrorState message="No fue posible leer las parcelas guardadas en este dispositivo." />
+      )}
+      {known.serverUnavailable && !known.isLoading && (
         <ErrorState
-          message={
-            isApiError(plots.error) && plots.error.status === 404
-              ? 'No encontramos las parcelas de esta finca.'
-              : 'No fue posible cargar las parcelas. Si no las has abierto antes con conexión, necesitas conexión para verlas.'
-          }
-          onRetry={() => void plots.refetch()}
+          message="No fue posible cargar las parcelas del servidor. Si no las has abierto antes con conexión, necesitas conexión para verlas."
+          onRetry={known.refetchServer}
         />
       )}
-      {plots.data && (
+      {known.plots && !known.isLoading && (
         <PlotsContent
           farm={farm}
           focus={focus}
-          hasMore={plots.data.data.hasMore}
+          hasMore={known.hasMore}
           mapRef={mapRef}
           onShowOnMap={(shapeId) => {
             setFocus({ shapeId });
@@ -85,8 +122,10 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
               behavior: 'smooth',
             });
           }}
-          plots={plots.data.data.plots}
-          savedAt={plots.data.savedAt}
+          plots={known.plots}
+          registerLink={registerLink}
+          renderActions={renderActions}
+          savedAt={known.savedAt}
         />
       )}
     </section>
@@ -100,14 +139,18 @@ function PlotsContent({
   savedAt,
   focus,
   mapRef,
+  registerLink,
+  renderActions,
   onShowOnMap,
 }: {
   farm: PlotsFarm;
-  plots: Parameters<typeof PlotList>[0]['plots'];
+  plots: readonly KnownPlot[];
   hasMore: boolean;
   savedAt?: number;
   focus?: { shapeId: string };
   mapRef: React.RefObject<HTMLDivElement | null>;
+  registerLink: React.ReactNode;
+  renderActions: (plot: KnownPlot) => React.ReactNode;
   onShowOnMap: (shapeId: string) => void;
 }) {
   const shapes = plotsToShapes(plots);
@@ -148,11 +191,16 @@ function PlotsContent({
         </p>
       )}
       {plots.length ? (
-        <PlotList onShowOnMap={(plot) => onShowOnMap(plot.id)} plots={plots} />
+        <PlotList
+          onShowOnMap={(plot) => onShowOnMap(plot.id)}
+          plots={plots}
+          renderActions={renderActions}
+        />
       ) : (
         <EmptyState
           title="Esta finca aún no tiene parcelas"
-          description="Cuando registres parcelas, aparecerán aquí con su polígono en el mapa."
+          description="Registra la primera con su código, su área y, si quieres, su polígono. Puedes hacerlo sin conexión."
+          action={registerLink || undefined}
         />
       )}
     </>

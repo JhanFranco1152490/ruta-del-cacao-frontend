@@ -1,29 +1,44 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildPlot, buildVertex } from '@/test/factories';
-
+import type { KnownPlot } from './known-plots';
 import { plotsToShapes } from './plot-map';
+import type { DraftVertex } from './plot-vertices';
+
+const vertex = (latitude: number, longitude: number): DraftVertex => ({
+  latitude,
+  longitude,
+  source: 'map',
+  accuracyM: null,
+  capturedAt: null,
+});
 
 const BOUNDARY = [
-  buildVertex('-72.5000000', '7.8000000'),
-  buildVertex('-72.4990000', '7.8000000'),
-  buildVertex('-72.4990000', '7.8010000'),
+  vertex(7.8, -72.5),
+  vertex(7.8, -72.499),
+  vertex(7.801, -72.499),
 ];
 
+const plot = (over: Partial<KnownPlot> = {}): KnownPlot => ({
+  id: 'pl1',
+  code: 'P1',
+  areaHectares: '2.40',
+  isActive: true,
+  vertices: BOUNDARY,
+  ...over,
+});
+
 describe('plotsToShapes', () => {
-  it('draws only the plots that have a boundary', () => {
+  it('draws only the plots that have a polygon', () => {
     const shapes = plotsToShapes([
-      buildPlot({ id: 'a', code: 'P1', boundary: BOUNDARY }),
-      buildPlot({ id: 'b', code: 'P2', boundary: null }),
+      plot({ id: 'a' }),
+      plot({ id: 'b', vertices: [] }),
     ]);
 
     expect(shapes.map((shape) => shape.id)).toEqual(['a']);
   });
 
-  it('labels the shape with the plot code and turns coordinates into numbers', () => {
-    const [shape] = plotsToShapes([
-      buildPlot({ code: 'P1 · El Mango', boundary: BOUNDARY }),
-    ]);
+  it('labels the shape with the plot code and keeps the coordinates as numbers', () => {
+    const [shape] = plotsToShapes([plot({ code: 'P1 · El Mango' })]);
 
     expect(shape.label).toBe('P1 · El Mango');
     expect(shape.positions[0]).toEqual({ latitude: 7.8, longitude: -72.5 });
@@ -31,11 +46,19 @@ describe('plotsToShapes', () => {
   });
 
   it('colors an inactive plot as a warning', () => {
-    const [shape] = plotsToShapes([
-      buildPlot({ boundary: BOUNDARY, is_active: false }),
-    ]);
+    const [shape] = plotsToShapes([plot({ isActive: false })]);
 
     expect(shape.tone).toBe('warn');
     expect(shape.detail).toContain('Inactiva');
+  });
+
+  it('colors what is waiting on the device and what failed there', () => {
+    const [waiting, failed] = plotsToShapes([
+      plot({ queue: { status: 'pending', operation: 'create' } }),
+      plot({ id: 'b', queue: { status: 'error', operation: 'create' } }),
+    ]);
+
+    expect(waiting.tone).toBe('info');
+    expect(failed.tone).toBe('err');
   });
 });

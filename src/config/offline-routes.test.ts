@@ -9,7 +9,12 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
 
   it('saves the fixed farm screens, whose id travels in the address', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toEqual(
-      expect.arrayContaining(['/fincas/detalle', '/fincas/editar']),
+      expect.arrayContaining([
+        '/fincas/detalle',
+        '/fincas/editar',
+        '/fincas/parcelas/nueva',
+        '/fincas/parcelas/editar',
+      ]),
     );
   });
 
