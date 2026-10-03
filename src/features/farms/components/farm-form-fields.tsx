@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { FormSection } from '@/components/form-section';
@@ -10,15 +10,16 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
 import { useMunicipalities } from '@/lib/api/municipalities';
+import { altitudeRangeFor } from '@/lib/geo/municipality-altitude';
 import { OPERATING_DEPARTMENT } from '@/lib/departments';
 import type { Coordinates } from '@/types/geo';
 
-import { farmFormSchema, type FarmFormValues } from '../schemas';
+import { createFarmFormSchema, type FarmFormValues } from '../schemas';
 import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
-} from './capture-field-class';
-import { useGeolocation } from '../use-geolocation';
+} from '@/components/capture-field-class';
+import { useGeolocation } from '@/hooks/use-geolocation';
 import { useMunicipalityHints } from '../use-municipality-hints';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 import {
@@ -28,6 +29,7 @@ import {
 
 export function FarmFormFields({
   defaultValues,
+  allocatedHectares,
   title,
   description,
   banner,
@@ -40,6 +42,8 @@ export function FarmFormFields({
   onSubmit,
 }: {
   defaultValues: FarmFormValues;
+  // Lo que ya ocupan las parcelas activas de la finca que se edita: el área no puede bajar de ahí.
+  allocatedHectares?: number;
   title: string;
   description: string;
   banner?: ReactNode;
@@ -54,6 +58,10 @@ export function FarmFormFields({
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
+  const schema = useMemo(
+    () => createFarmFormSchema(allocatedHectares),
+    [allocatedHectares],
+  );
   const {
     register,
     control,
@@ -62,7 +70,7 @@ export function FarmFormFields({
     setValue,
     formState: { errors, isSubmitted },
   } = useForm<FarmFormValues>({
-    resolver: zodResolver(farmFormSchema),
+    resolver: zodResolver(schema),
     defaultValues,
     mode: 'onBlur',
     reValidateMode: 'onChange',
@@ -78,6 +86,10 @@ export function FarmFormFields({
     setValue('longitude', location.longitude, options);
   };
   const location = { latitude, longitude };
+  const altitudeRange = altitudeRangeFor(municipalityId);
+  const altitudeHint = altitudeRange
+    ? `En ${municipalities.data?.find((m) => m.code === municipalityId)?.name ?? 'el municipio'} el terreno va de ${altitudeRange.minimum} a ${altitudeRange.maximum} m.`
+    : undefined;
   const hints = useMunicipalityHints(location, municipalityId);
   const municipalityName = (code: string) =>
     municipalities.data?.find((municipality) => municipality.code === code)
@@ -182,6 +194,7 @@ export function FarmFormFields({
               <TextField
                 className={CAPTURE_FIELD_CLASS}
                 error={errors.altitude_masl?.message}
+                hint={altitudeHint}
                 inputMode="numeric"
                 label="Altitud (m s. n. m.)"
                 {...register('altitude_masl')}

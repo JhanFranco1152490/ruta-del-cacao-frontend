@@ -8,7 +8,7 @@ import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { loadFakeMap } from '@/test/fake-map';
 import type { Coordinates } from '@/types/geo';
 
-import { useGeolocation } from '../use-geolocation';
+import { useGeolocation } from '@/hooks/use-geolocation';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
 
 afterEach(restoreGeolocation);

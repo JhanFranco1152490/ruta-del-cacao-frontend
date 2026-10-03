@@ -25,7 +25,7 @@ const farm: FarmFormValues = {
   municipality_id: '54518',
   details: '',
   area_hectares: '12.50',
-  altitude_masl: '950',
+  altitude_masl: '2200',
   latitude: '7.8234567',
   longitude: '-72.5123456',
 };
@@ -136,6 +136,23 @@ describe('FarmEditorScreen', () => {
     ).toHaveAttribute('href', '/fincas');
   });
 
+  it('does not let the area go below what the active plots already take', async () => {
+    const user = userEvent.setup();
+    server.use(serverFarm({ allocated_area_hectares: '5.00', version: 5 }));
+    renderEditor('s1');
+
+    const area = await screen.findByLabelText('Área total (hectáreas)');
+    await user.clear(area);
+    await user.type(area, '3');
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    expect(
+      await screen.findByText(/Sus parcelas activas ya ocupan 5 ha/),
+    ).toBeInTheDocument();
+    expect(router.push).not.toHaveBeenCalled();
+    expect(await getOfflineDb(userId).queue.get('s1')).toBeUndefined();
+  });
+
   it('edits a server farm through the queue with the version it read', async () => {
     const user = userEvent.setup();
     server.use(
@@ -205,6 +222,7 @@ describe('FarmEditorScreen', () => {
             id: 's1',
             municipality: { id: '54518', name: 'Pamplona' },
             details: 'Km 4',
+            altitude_masl: 2200,
             location: { latitude: '7.9000000', longitude: '-72.5123456' },
             version: 4,
           }),

@@ -79,7 +79,7 @@ src/
                        permiso y la conexión de cada sección se comprueban en el shell a
                        partir de config/navigation.ts: una sección nueva solo se suma ahí
     providers.tsx      QueryClientProvider + NuqsAdapter
-  features/<dominio>/  un dominio (hoy auth y producers): api.ts, schemas.ts, hooks propios
+  features/<dominio>/  un dominio (hoy auth, producers, farms y plots): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
   hooks/               hooks de React compartidos entre dominios (sin JSX; si el hook es de
@@ -105,6 +105,11 @@ src/
   `MaskedValue`...) que solo reciben props y no conocen la API; (3)
   `features/<dominio>/components/`, pantallas (`*-screen.tsx`) y piezas de un dominio: la
   pantalla compone y obtiene los datos de los hooks de `features/<dominio>/api.ts`.
+- **Un dominio no importa de la carpeta de otro.** Cuando una pantalla junta dos (el detalle de
+  una finca muestra sus parcelas), el dominio dueño de la pantalla recibe la sección del otro como
+  función (`renderPlots`) y quien las une es la página en `app/`, que sí puede importar de ambos.
+  Esa página es de cliente (`'use client'`): una función no pasa de un componente de servidor a
+  uno de cliente.
 
 ### Capa de API
 

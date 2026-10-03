@@ -35,9 +35,23 @@ export type MapPoint = {
   tone: MapPointTone;
 };
 
-// Mapa de solo consulta con varios puntos (p. ej. todas las fincas de un listado).
+// Un polígono con etiqueta (p. ej. el contorno de una parcela), sin repetir el primer vértice al
+// final. El tono es el mismo de los marcadores.
+export type MapShape = {
+  id: string;
+  label: string;
+  detail?: string;
+  positions: readonly GeoPoint[];
+  tone: MapPointTone;
+};
+
+// Mapa de solo consulta con varios puntos (p. ej. todas las fincas de un listado) y, si hace
+// falta, polígonos que se encuadran junto con ellos.
 export type PointsMapProviderProps = {
   points: readonly MapPoint[];
+  shapes?: readonly MapShape[];
+  // Un objeto nuevo por pedido: enfocar dos veces el mismo polígono vuelve a llevar el mapa.
+  focus?: { shapeId: string };
   onError: () => void;
 };
 
@@ -81,3 +95,37 @@ export type MunicipalityMapProvider =
 
 export type LoadMunicipalityMapProvider =
   () => Promise<MunicipalityMapProvider>;
+
+// Mapa para dibujar el polígono de una parcela: los vértices se agregan tocando el mapa (en modo
+// de dibujo) y se mueven arrastrándolos. Las formas de referencia no se editan.
+export type PolygonEditorMapProviderProps = {
+  vertices: readonly GeoPoint[];
+  // Con el modo de dibujo activo, cada toque en el mapa agrega un vértice.
+  drawing: boolean;
+  disabled: boolean;
+  baseLayer: BaseLayerKind;
+  // Referencia visual: el punto de la finca y las demás parcelas de la finca.
+  farmPoint: GeoPoint | null;
+  referenceShapes: readonly MapShape[];
+  // Las zonas del polígono que invaden a otra parcela, resaltadas.
+  overlapRegions: readonly (readonly GeoPoint[])[];
+  // Vista previa del ajuste sugerido; se dibuja sin tocar los vértices.
+  suggestion: readonly GeoPoint[] | null;
+  // Dónde está la persona según el GPS encendido: un punto con su círculo de error. No es un
+  // vértice ni se edita.
+  gpsPosition?: { point: GeoPoint; accuracyM: number | null } | null;
+  // Un pedido de llevar el mapa al punto de la finca o a la posición del GPS. Un objeto nuevo por
+  // pedido: pedir dos veces lo mismo vuelve a llevar el mapa aunque la persona lo haya movido.
+  focus?: { target: 'farm' | 'gps' };
+  onAddVertex: (point: GeoPoint) => void;
+  // Quien lo recibe decide dónde queda el vértice (p. ej. pegado al borde de otra parcela).
+  onMoveVertex: (index: number, point: GeoPoint) => void;
+  // El mapa base no carga: el mapa sigue dibujando los polígonos.
+  onBaseLayerUnavailable: () => void;
+};
+
+export type PolygonEditorMapProvider =
+  ComponentType<PolygonEditorMapProviderProps>;
+
+export type LoadPolygonEditorMapProvider =
+  () => Promise<PolygonEditorMapProvider>;

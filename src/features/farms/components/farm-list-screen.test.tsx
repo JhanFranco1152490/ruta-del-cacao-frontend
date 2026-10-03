@@ -199,7 +199,12 @@ describe('FarmListScreen', () => {
     renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW] });
 
     const [card] = await farmCards();
-    expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+    expect(
+      within(card).queryByRole('link', { name: /Corregir|Editar/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(card).getByRole('link', { name: 'Ver detalle de La Esperanza' }),
+    ).toHaveAttribute('href', '/fincas/detalle?id=f1');
   });
 
   it('searches device farms by name only, without accents, and explains an empty result', async () => {
@@ -257,8 +262,12 @@ describe('FarmListScreen', () => {
     expect(within(card).getByText('El Porvenir')).toBeInTheDocument();
     expect(within(card).getByText('Inactiva')).toBeInTheDocument();
     expect(
-      within(card).getByRole('link', { name: 'Editar El Porvenir' }),
-    ).toHaveAttribute('href', '/fincas/editar?id=s1');
+      within(card).getByRole('link', { name: 'Ver detalle de El Porvenir' }),
+    ).toHaveAttribute('href', '/fincas/detalle?id=s1');
+    // Editar es una acción del detalle, no de la tarjeta.
+    expect(
+      within(card).queryByRole('link', { name: 'Editar El Porvenir' }),
+    ).not.toBeInTheDocument();
     expect(
       within(card).getByRole('button', { name: 'Activar' }),
     ).toBeInTheDocument();
@@ -682,8 +691,8 @@ describe('FarmListScreen for the association', () => {
       screen.queryByRole('link', { name: /Registrar finca/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('link', { name: 'Editar El Porvenir' }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('link', { name: 'Ver detalle de El Porvenir' }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Desactivar|Activar|Eliminar/ }),
     ).not.toBeInTheDocument();

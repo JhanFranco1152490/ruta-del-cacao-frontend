@@ -210,6 +210,7 @@ describe('processQueue', () => {
       parseConflict: () => ({
         code: 'stale_version',
         message: 'Alguien más lo editó.',
+        data: { current: { version: 3 } },
       }),
     });
     registerAdapter(adapter);
@@ -226,6 +227,7 @@ describe('processQueue', () => {
       status: 'error',
       errorCode: 'stale_version',
       errorMessage: 'Alguien más lo editó.',
+      errorData: { current: { version: 3 } },
     });
   });
 
@@ -330,6 +332,7 @@ async function enqueueFailed(userId: string, id = 'a1') {
     status: 'error',
     errorCode: 'duplicate_farm_name',
     errorMessage: 'Ya existe una finca con este nombre.',
+    errorData: { hint: 'x' },
   });
 }
 
@@ -347,6 +350,7 @@ describe('resubmit', () => {
     });
     expect(item).not.toHaveProperty('errorCode');
     expect(item).not.toHaveProperty('errorMessage');
+    expect(item).not.toHaveProperty('errorData');
   });
 
   it('refuses to change an item that is being sent', async () => {

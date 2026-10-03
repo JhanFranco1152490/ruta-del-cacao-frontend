@@ -9,10 +9,13 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
+import { type Farm, fetchFarm } from '@/lib/api/farm-detail';
 import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
+// La lectura de una finca vive en `lib/api/farm-detail.ts`: la comparte el dominio de parcelas.
+export { type Farm, fetchFarm, useFarmDetail } from '@/lib/api/farm-detail';
+
 type Schemas = components['schemas'];
-export type Farm = Schemas['Farm'];
 export type FarmPage = Schemas['PaginatedFarmList'];
 export type FarmCreateRequest = Schemas['FarmCreateRequest'];
 export type FarmUpdateRequest = Schemas['PatchedFarmUpdateRequest'];
@@ -38,8 +41,6 @@ function listPath(query: FarmQuery) {
 
 export const fetchFarms = (query: FarmQuery, signal?: AbortSignal) =>
   apiFetch<FarmPage>(listPath(query), { signal });
-export const fetchFarm = (id: string, signal?: AbortSignal) =>
-  apiFetch<Farm>(`/api/farms/${id}`, { signal });
 export const postFarm = (body: FarmCreateRequest) =>
   apiFetch<Farm>('/api/farms', { method: 'POST', body });
 export const patchFarm = (id: string, body: FarmUpdateRequest) =>

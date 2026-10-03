@@ -2,6 +2,7 @@ import type {
   LoadMapProvider,
   LoadMunicipalityMapProvider,
   LoadPointsMapProvider,
+  LoadPolygonEditorMapProvider,
 } from '@/components/map/map-provider';
 
 // Proveedor de mapas de la app: Leaflet con el mapa base de OpenStreetMap. Se importa de forma
@@ -21,4 +22,10 @@ export const loadMunicipalityMapProvider: LoadMunicipalityMapProvider | null =
   () =>
     import('@/components/map/leaflet-municipality-map').then(
       (module) => module.LeafletMunicipalityMap,
+    );
+
+export const loadPolygonEditorMapProvider: LoadPolygonEditorMapProvider | null =
+  () =>
+    import('@/components/map/leaflet-polygon-editor').then(
+      (module) => module.LeafletPolygonEditor,
     );

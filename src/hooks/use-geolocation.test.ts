@@ -6,6 +6,8 @@ import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import {
   GPS_GOOD_ACCURACY_M,
   GPS_MAX_WAIT_MS,
+  GPS_STALL_COARSE_MS,
+  GPS_STALL_MS,
   useGeolocation,
 } from './use-geolocation';
 
@@ -28,15 +30,15 @@ describe('useGeolocation', () => {
     act(() => result.current.capture());
     act(() => gps.reading(120, A));
     act(() => gps.reading(40, B));
-    act(() => gps.reading(80, C));
+    act(() => gps.reading(300, C));
     expect(onCapture).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(GPS_MAX_WAIT_MS));
 
     expect(onCapture).toHaveBeenCalledTimes(1);
-    expect(onCapture).toHaveBeenCalledWith({
-      latitude: '7.2000000',
-      longitude: '-72.2000000',
-    });
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.2000000', longitude: '-72.2000000' },
+      40,
+    );
     expect(result.current.result?.accuracy).toBe(40);
     expect(result.current.isCapturing).toBe(false);
     expect(gps.watching()).toBe(0);
@@ -51,10 +53,10 @@ describe('useGeolocation', () => {
     act(() => gps.reading(35, A));
     act(() => gps.reading(GPS_GOOD_ACCURACY_M, B));
 
-    expect(onCapture).toHaveBeenCalledWith({
-      latitude: '7.2000000',
-      longitude: '-72.2000000',
-    });
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.2000000', longitude: '-72.2000000' },
+      GPS_GOOD_ACCURACY_M,
+    );
     expect(result.current.result?.accuracy).toBe(GPS_GOOD_ACCURACY_M);
     expect(gps.watching()).toBe(0);
   });
@@ -105,10 +107,10 @@ describe('useGeolocation', () => {
     act(() => result.current.capture());
     act(() => gps.reading(5, { latitude: 7.823456789123, longitude: -72.51 }));
 
-    expect(onCapture).toHaveBeenCalledWith({
-      latitude: '7.8234568',
-      longitude: '-72.5100000',
-    });
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.8234568', longitude: '-72.5100000' },
+      5,
+    );
   });
 
   it('captures once and leaves nothing running when the reading comes back at once', () => {
@@ -246,5 +248,125 @@ describe('useGeolocation', () => {
 
     expect(onCapture).toHaveBeenCalledTimes(1);
     expect(result.current.result?.accuracy).toBeNull();
+  });
+
+  it('stops by itself when the reading stops improving, without waiting the whole time', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(30, A));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS - 1));
+    expect(onCapture).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(onCapture).toHaveBeenCalledTimes(1);
+    expect(GPS_STALL_MS).toBeLessThan(GPS_MAX_WAIT_MS);
+    expect(result.current.result?.accuracy).toBe(30);
+    expect(gps.watching()).toBe(0);
+  });
+
+  it('keeps waiting while each reading is clearly better than the last', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(93, A));
+    act(() => vi.advanceTimersByTime(5000));
+    act(() => gps.reading(60, B));
+    act(() => vi.advanceTimersByTime(5000));
+    act(() => gps.reading(40, C));
+    // Pasaron 10 s, más que la espera sin mejora: cada mejora reinició la cuenta.
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS - 1));
+    expect(onCapture).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(onCapture).toHaveBeenCalledTimes(1);
+    expect(result.current.result?.accuracy).toBe(40);
+  });
+
+  it('does not wait for a better reading that improves by only a few meters', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(50, A));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS - 1000));
+    act(() => gps.reading(48, B));
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(onCapture).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives the average of the good readings instead of only the best one', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(20, { latitude: 7.0, longitude: -72.0 }));
+    act(() => gps.reading(20, { latitude: 7.2, longitude: -72.2 }));
+    act(() => vi.advanceTimersByTime(GPS_MAX_WAIT_MS));
+
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.1000000', longitude: '-72.1000000' },
+      20,
+    );
+  });
+
+  it('never waits past the time limit even if it keeps improving', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    let accuracy = 400;
+    for (let elapsed = 0; elapsed < GPS_MAX_WAIT_MS - 1000; elapsed += 4000) {
+      act(() => gps.reading((accuracy *= 0.8), A));
+      act(() => vi.advanceTimersByTime(4000));
+    }
+    act(() => vi.advanceTimersByTime(GPS_MAX_WAIT_MS));
+
+    expect(onCapture).toHaveBeenCalledTimes(1);
+    expect(gps.watching()).toBe(0);
+  });
+
+  // Una lectura de cientos de metros sale de wifi o antenas: el satélite todavía puede estar
+  // fijándose, así que se espera más antes de darla por buena.
+  it('waits longer when the only readings so far are coarse', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(93, A));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS + 1000));
+    expect(onCapture).not.toHaveBeenCalled();
+    act(() =>
+      vi.advanceTimersByTime(GPS_STALL_COARSE_MS - GPS_STALL_MS - 1000),
+    );
+
+    expect(onCapture).toHaveBeenCalledTimes(1);
+    expect(result.current.result?.accuracy).toBe(93);
+  });
+
+  it('takes the satellite fix that arrives after a coarse one', () => {
+    const gps = installFakeGps();
+    const onCapture = vi.fn();
+    const { result } = renderHook(() => useGeolocation(onCapture));
+
+    act(() => result.current.capture());
+    act(() => gps.reading(93, A));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS + 2000));
+    act(() => gps.reading(12, B));
+    act(() => vi.advanceTimersByTime(GPS_STALL_MS));
+
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.2000000', longitude: '-72.2000000' },
+      12,
+    );
   });
 });
