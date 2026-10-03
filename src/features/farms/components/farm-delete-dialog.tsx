@@ -18,8 +18,8 @@ function deleteErrorMessage(error: unknown, isActive: boolean) {
   if (isApiError(error)) {
     if (error.code === HAS_RECORDS) {
       return isActive
-        ? 'Esta finca tiene registros asociados (por ejemplo, parcelas) y no se puede eliminar. Puedes desactivarla: deja de figurar como activa sin perder sus datos.'
-        : 'Esta finca tiene registros asociados (por ejemplo, parcelas) y no se puede eliminar. Ya está inactiva.';
+        ? 'Esta finca tiene registros asociados (por ejemplo, una parcela que ya se usa) y no se puede eliminar. Puedes desactivarla: deja de figurar como activa sin perder sus datos.'
+        : 'Esta finca tiene registros asociados (por ejemplo, una parcela que ya se usa) y no se puede eliminar. Ya está inactiva.';
     }
     if (error.code === 'stale_version') {
       return 'Alguien cambió esta finca mientras tanto. Vuelve a abrirla para ver sus datos actuales.';

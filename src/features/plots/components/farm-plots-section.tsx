@@ -21,8 +21,10 @@ import { plotEditPath, plotNewPath } from '../plot-paths';
 import { useKnownPlots } from '../use-known-plots';
 import { PLOT_DELETED_CODE } from '../sync-adapter';
 import { PlotAreaBar } from './plot-area-bar';
+import { PlotDeleteDialog } from './plot-delete-dialog';
 import { PlotDiscardDialog } from './plot-discard-dialog';
 import { PlotList } from './plot-list';
+import { PlotStatusDialog } from './plot-status-dialog';
 
 // Lo mismo que entrega la pantalla de la finca, escrito aquí para no importar del dominio de
 // fincas.
@@ -45,6 +47,7 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
   const canView = hasPermission(user, PERMISSIONS.PLOTS_VIEW);
   const canAdd = hasPermission(user, PERMISSIONS.PLOTS_ADD);
   const canChange = hasPermission(user, PERMISSIONS.PLOTS_CHANGE);
+  const canDeletePlot = hasPermission(user, PERMISSIONS.PLOTS_DELETE);
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
   // Cada pedido es un objeto nuevo: pedir dos veces la misma parcela vuelve a llevar el mapa.
   const [focus, setFocus] = useState<{ shapeId: string }>();
@@ -74,7 +77,15 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
       // Una parcela que solo está en el dispositivo se corrige con el permiso de registrar; una
       // del servidor, con el de editar.
       (plot.queue?.operation === 'create' ? canAdd : canChange);
-    if (!showEdit && !isError) return null;
+    // Activar, desactivar y eliminar son en línea y sobre la versión del servidor: no se ofrecen
+    // mientras la parcela tenga algo pendiente en el dispositivo.
+    const serverPlot =
+      !plot.queue && plot.version !== undefined
+        ? { ...plot, version: plot.version }
+        : null;
+    const canDeactivate = serverPlot && canChange && farm.isActive;
+    const canDelete = serverPlot && canDeletePlot && farm.isActive;
+    if (!showEdit && !isError && !canDeactivate && !canDelete) return null;
     return (
       <>
         {showEdit && (
@@ -88,6 +99,10 @@ export function FarmPlotsSection({ farm }: { farm: PlotsFarm }) {
         )}
         {/* Descartar solo cuando falló: una pendiente todavía puede llegar bien. */}
         {isError && <PlotDiscardDialog code={plot.code} plotId={plot.id} />}
+        {canDeactivate && (
+          <PlotStatusDialog farmId={farm.id} plot={serverPlot} />
+        )}
+        {canDelete && <PlotDeleteDialog farmId={farm.id} plot={serverPlot} />}
       </>
     );
   };

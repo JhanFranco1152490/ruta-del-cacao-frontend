@@ -33,10 +33,10 @@ describe('useGeolocation', () => {
     act(() => vi.advanceTimersByTime(GPS_MAX_WAIT_MS));
 
     expect(onCapture).toHaveBeenCalledTimes(1);
-    expect(onCapture).toHaveBeenCalledWith({
-      latitude: '7.2000000',
-      longitude: '-72.2000000',
-    });
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.2000000', longitude: '-72.2000000' },
+      40,
+    );
     expect(result.current.result?.accuracy).toBe(40);
     expect(result.current.isCapturing).toBe(false);
     expect(gps.watching()).toBe(0);
@@ -51,10 +51,10 @@ describe('useGeolocation', () => {
     act(() => gps.reading(35, A));
     act(() => gps.reading(GPS_GOOD_ACCURACY_M, B));
 
-    expect(onCapture).toHaveBeenCalledWith({
-      latitude: '7.2000000',
-      longitude: '-72.2000000',
-    });
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.2000000', longitude: '-72.2000000' },
+      GPS_GOOD_ACCURACY_M,
+    );
     expect(result.current.result?.accuracy).toBe(GPS_GOOD_ACCURACY_M);
     expect(gps.watching()).toBe(0);
   });
@@ -105,10 +105,10 @@ describe('useGeolocation', () => {
     act(() => result.current.capture());
     act(() => gps.reading(5, { latitude: 7.823456789123, longitude: -72.51 }));
 
-    expect(onCapture).toHaveBeenCalledWith({
-      latitude: '7.8234568',
-      longitude: '-72.5100000',
-    });
+    expect(onCapture).toHaveBeenCalledWith(
+      { latitude: '7.8234568', longitude: '-72.5100000' },
+      5,
+    );
   });
 
   it('captures once and leaves nothing running when the reading comes back at once', () => {
