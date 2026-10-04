@@ -14,6 +14,7 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
         '/fincas/editar',
         '/fincas/parcelas/nueva',
         '/fincas/parcelas/editar',
+        '/fincas/parcelas/caracterizacion',
       ]),
     );
   });

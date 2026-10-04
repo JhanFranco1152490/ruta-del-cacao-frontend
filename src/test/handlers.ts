@@ -25,6 +25,16 @@ export const cacaoVarietiesHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde las fichas de una finca y guarda las búsquedas recibidas.
+export const characterizationsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/plot-characterizations'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

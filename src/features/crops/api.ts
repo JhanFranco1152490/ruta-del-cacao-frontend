@@ -12,6 +12,9 @@ export type CacaoVariety = Schemas['CacaoVariety'];
 export type CacaoVarietyCreateRequest = Schemas['CacaoVarietyCreateRequest'];
 export type CacaoVarietyUpdateRequest =
   Schemas['PatchedCacaoVarietyUpdateRequest'];
+export type PlotCharacterization = Schemas['PlotCharacterization'];
+export type PlotCharacterizationWriteRequest =
+  Schemas['PlotCharacterizationWriteRequest'];
 type CacaoVarietyQuery = NonNullable<
   operations['cacao_varieties_list']['parameters']['query']
 >;
@@ -105,3 +108,44 @@ export function useUpdateCacaoVariety() {
     onSettled: () => invalidate(),
   });
 }
+
+// Las fichas de todas las parcelas de una finca, en una sola consulta: el detalle muestra el
+// resumen de cada una sin pedirlas por separado. Las parcelas sin ficha no vienen.
+export async function fetchFarmCharacterizations(
+  farmId: string,
+  signal?: AbortSignal,
+): Promise<PlotCharacterization[]> {
+  const params = new URLSearchParams({ farm: farmId });
+  const { results } = await apiFetch<Schemas['PlotCharacterizationList']>(
+    `/api/plot-characterizations?${params}`,
+    { signal },
+  );
+  return results;
+}
+
+// `offlineFirst`: sin conexión se intenta igual y se cae a la copia del dispositivo, que guarda
+// las fichas de la última vez que se abrió la finca con conexión.
+export const useFarmCharacterizations = (
+  userId: string | undefined,
+  farmId: string,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.characterizations.byFarm(farmId),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, `plot-characterizations:farm:${farmId}`, () =>
+        fetchFarmCharacterizations(farmId, signal),
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
+  });
+
+// Registra o reemplaza la ficha completa de la parcela: la usa solo la cola del dispositivo.
+export const putCharacterization = (
+  plotId: string,
+  body: PlotCharacterizationWriteRequest,
+) =>
+  apiFetch<PlotCharacterization>(`/api/plot-characterizations/${plotId}`, {
+    method: 'PUT',
+    body,
+  });

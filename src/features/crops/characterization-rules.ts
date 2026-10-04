@@ -1,31 +1,36 @@
 import { differenceInCalendarMonths } from 'date-fns';
 
+import type { components } from '@/lib/api/schema';
 import { isDecimal } from '@/lib/validation/decimal';
+
+type Schemas = components['schemas'];
+export type Stage = Schemas['StageEnum'];
+export type ManagementSystem = Schemas['ManagementSystemEnum'];
+export type ShadeType = Schemas['ShadeTypeEnum'];
+
+// Las etiquetas son de la interfaz; los valores, de la API: `satisfies` avisa al compilar si la
+// API cambia o agrega una opción que aquí no está.
+type Option<T extends string> = { value: T; label: string };
 
 export const STAGE_OPTIONS = [
   { value: 'establishment', label: 'Establecimiento o formación' },
   { value: 'early_production', label: 'Inicio de producción' },
   { value: 'full_production', label: 'Producción estable' },
   { value: 'renovation', label: 'Renovación o rehabilitación' },
-] as const;
+] as const satisfies readonly Option<Stage>[];
 
 export const MANAGEMENT_SYSTEM_OPTIONS = [
   { value: 'conventional', label: 'Convencional' },
   { value: 'organic', label: 'Orgánico' },
   { value: 'in_transition', label: 'En transición a orgánico' },
-] as const;
+] as const satisfies readonly Option<ManagementSystem>[];
 
 export const SHADE_TYPE_OPTIONS = [
   { value: 'none', label: 'A plena exposición' },
   { value: 'temporary', label: 'Sombra temporal (plátano, yuca)' },
   { value: 'permanent', label: 'Sombra permanente (maderables o frutales)' },
   { value: 'mixed', label: 'Temporal y permanente' },
-] as const;
-
-export type Stage = (typeof STAGE_OPTIONS)[number]['value'];
-export type ManagementSystem =
-  (typeof MANAGEMENT_SYSTEM_OPTIONS)[number]['value'];
-export type ShadeType = (typeof SHADE_TYPE_OPTIONS)[number]['value'];
+] as const satisfies readonly Option<ShadeType>[];
 
 const PRODUCTION_STAGES: ReadonlySet<Stage> = new Set([
   'early_production',

@@ -157,6 +157,32 @@ export const buildCacaoVariety = (
   ...overrides,
 });
 
+export const buildCharacterization = (
+  overrides: Partial<Schemas['PlotCharacterization']> = {},
+): Schemas['PlotCharacterization'] => ({
+  plot_id: 'pl1',
+  varieties: [
+    {
+      variety: { id: 'v-ccn-51', name: 'CCN-51', is_active: true },
+      tree_count: 1800,
+    },
+    {
+      variety: { id: 'v-ics-95', name: 'ICS-95', is_active: true },
+      tree_count: 600,
+    },
+  ],
+  total_trees: 2400,
+  planting_date: '2021-03',
+  stage: 'full_production',
+  management_system: 'conventional',
+  shade_type: null,
+  version: 2,
+  captured_at: null,
+  created_at: '2026-10-03T12:00:00-05:00',
+  updated_at: '2026-10-03T12:00:00-05:00',
+  ...overrides,
+});
+
 export const buildPlot = (
   overrides: Partial<Schemas['Plot']> = {},
 ): Schemas['Plot'] => ({

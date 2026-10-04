@@ -3,6 +3,7 @@ import {
   type QueueItem,
   type QueueStatus,
 } from '@/lib/offline/db';
+import type { components } from '@/lib/api/schema';
 import { enqueue, resubmit } from '@/lib/offline/sync-queue';
 
 import type { CharacterizationFormFields } from './schemas';
@@ -37,11 +38,13 @@ const toPayload = (
   fields: CharacterizationFormFields,
   expectedVersion: number | null,
   capturedAt: string,
-): CharacterizationPayload => ({
-  ...fields,
-  expected_version: expectedVersion,
-  captured_at: capturedAt,
-});
+): CharacterizationPayload =>
+  // `satisfies`: el contenido de la cola se envía tal cual en el PUT.
+  ({
+    ...fields,
+    expected_version: expectedVersion,
+    captured_at: capturedAt,
+  }) satisfies components['schemas']['PlotCharacterizationWriteRequest'];
 
 function toQueued(item: QueueItem): QueuedCharacterization {
   // La cola de fichas solo la escribe este módulo, siempre con esta forma.
