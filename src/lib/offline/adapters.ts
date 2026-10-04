@@ -27,3 +27,10 @@ export interface SyncAdapter {
   // operación para reintentarlo. El motor lo reintenta una sola vez por pasada.
   recover?(item: QueueItem, error: unknown): SyncRecovery | null;
 }
+
+// Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se
+// renueva (401), el límite de solicitudes pasa (429) o el servidor se recupera (5xx). Con ellas
+// el registro se reintenta en vez de ir a la bandeja.
+export function isRetryableStatus(status: number) {
+  return status === 401 || status === 429 || status >= 500;
+}

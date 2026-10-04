@@ -1,5 +1,5 @@
 import { isApiError } from '@/lib/api/errors';
-import type { SyncAdapter } from '@/lib/offline/adapters';
+import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
 
 import { patchFarm, postFarm } from './api';
 import {
@@ -12,12 +12,6 @@ import {
 export const FARM_DELETED_CODE = 'farm_deleted';
 export const FARM_DELETED_MESSAGE =
   'Esta finca fue eliminada. Descarta esta edición.';
-
-// Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se
-// renueva (401), el límite de solicitudes pasa (429) o el servidor se recupera (5xx).
-function isRetryable(status: number) {
-  return status === 401 || status === 429 || status >= 500;
-}
 
 export const farmSyncAdapter: SyncAdapter = {
   resource: FARM_RESOURCE,
@@ -56,7 +50,7 @@ export const farmSyncAdapter: SyncAdapter = {
   // (nombre duplicado, versión obsoleta, validación, sin permiso, finca inexistente) no mejora
   // reintentando: va a la bandeja con el mensaje del servidor para que la persona lo revise.
   parseConflict(error) {
-    if (!isApiError(error) || isRetryable(error.status)) return null;
+    if (!isApiError(error) || isRetryableStatus(error.status)) return null;
     // Solo una edición puede encontrar su finca inexistente (un alta nunca responde 404): la
     // eliminaron mientras la edición esperaba en el dispositivo.
     if (error.status === 404) {

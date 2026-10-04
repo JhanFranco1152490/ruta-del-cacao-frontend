@@ -1,5 +1,5 @@
 import { isApiError } from '@/lib/api/errors';
-import type { SyncAdapter } from '@/lib/offline/adapters';
+import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
 
 import { patchPlot, postPlot } from './api';
 import {
@@ -21,12 +21,6 @@ const CORRECTION_KEYS = [
   'suggested_measured_area_hectares',
   'current',
 ] as const;
-
-// Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se
-// renueva (401), el límite de solicitudes pasa (429) o el servidor se recupera (5xx).
-function isRetryable(status: number) {
-  return status === 401 || status === 429 || status >= 500;
-}
 
 function correctionData(body: Record<string, unknown>) {
   const entries = CORRECTION_KEYS.filter((key) => key in body).map((key) => [
@@ -73,7 +67,7 @@ export const plotSyncAdapter: SyncAdapter = {
   // (código repetido, versión obsoleta, reglas de área o de superposición, sin permiso) no
   // mejora reintentando: va a la bandeja con el mensaje del servidor y, si trae, la corrección.
   parseConflict(error) {
-    if (!isApiError(error) || isRetryable(error.status)) return null;
+    if (!isApiError(error) || isRetryableStatus(error.status)) return null;
     // Un 404 es una parcela eliminada si se estaba editando, y una finca inexistente si se
     // estaba creando (la eliminaron mientras la parcela esperaba en el dispositivo): la API
     // responde igual para las dos, así que un solo mensaje las cubre.
