@@ -10,7 +10,12 @@ import type { Coordinates, GeoBounds } from '@/types/geo';
 
 import { BaseLayerToggle } from './base-layer-toggle';
 import type { BaseLayerKind } from './base-layers';
-import type { LoadMapProvider } from './map-provider';
+import { MapFocusControls } from './map-focus-controls';
+import type {
+  GpsPosition,
+  LoadMapProvider,
+  MapFocusTarget,
+} from './map-provider';
 import { MapSkeleton } from './map-states';
 import { useMapProvider } from './use-map-provider';
 
@@ -21,6 +26,8 @@ export function MapPanel({
   disabled = false,
   frameClassName,
   focusBounds,
+  gpsPosition,
+  onRequestGps,
   loadProvider,
 }: {
   location: Coordinates;
@@ -30,11 +37,16 @@ export function MapPanel({
   // Ajustes del recuadro del mapa, p. ej. más alto en escritorio.
   frameClassName?: string;
   focusBounds?: GeoBounds | null;
+  // Dónde está la persona según el GPS encendido, si lo está.
+  gpsPosition?: GpsPosition | null;
+  // Ir a la posición del GPS sin GPS encendido: se pide encenderlo.
+  onRequestGps?: () => void;
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadMapProvider;
 }) {
   const map = useMapProvider(loadProvider);
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
+  const [focus, setFocus] = useState<{ target: MapFocusTarget }>();
 
   if (map.isLoading) {
     return <MapSkeleton className={cn('h-80', frameClassName)} />;
@@ -58,7 +70,14 @@ export function MapPanel({
   return (
     <section aria-label="Mapa de ubicación" className="space-y-3">
       {/* Encima del recuadro y no sobre el mapa: en celular no tapa sus controles. */}
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <MapFocusControls
+          canGoToFarm={!!point}
+          farmLabel="Ir al punto de la finca"
+          hasGps={!!gpsPosition}
+          onFocus={(target) => setFocus({ target })}
+          onRequestGps={onRequestGps}
+        />
         <BaseLayerToggle onChange={setBaseLayer} value={baseLayer} />
       </div>
       {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
@@ -73,7 +92,9 @@ export function MapPanel({
         <Provider
           baseLayer={baseLayer}
           disabled={disabled}
+          focus={focus}
           focusBounds={focusBounds}
+          gpsPosition={gpsPosition}
           onError={map.fail}
           onPointChange={(next) => onLocationChange(formatGeoPoint(next))}
           point={point}

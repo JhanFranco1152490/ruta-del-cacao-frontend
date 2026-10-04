@@ -1,16 +1,16 @@
 'use client';
 
 import { cn } from 'cn';
-import { LocateFixed, MapPinned } from 'lucide-react';
 import { useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
-import { Button } from '@/components/ui/button';
 
 import { BaseLayerToggle } from './base-layer-toggle';
+import { MapFocusControls } from './map-focus-controls';
 import type { BaseLayerKind } from './base-layers';
 import type {
   LoadPolygonEditorMapProvider,
+  MapFocusTarget,
   PolygonEditorMapProviderProps,
 } from './map-provider';
 import { MapSkeleton } from './map-states';
@@ -42,17 +42,7 @@ export function PolygonEditorMapPanel({
   const map = useMapProvider(loadProvider);
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
   const [baseUnavailable, setBaseUnavailable] = useState(false);
-  const [focus, setFocus] = useState<{ target: 'farm' | 'gps' }>();
-  // La persona pidió ir a su ubicación sin GPS: se va cuando llegue la primera lectura.
-  const [waitingForGps, setWaitingForGps] = useState(false);
-  const hasGps = !!providerProps.gpsPosition;
-
-  // Llegó la lectura que se esperaba: se va a la posición. Se resuelve al dibujar y no en un
-  // efecto, porque es un estado que se deriva de lo que acaba de cambiar.
-  if (waitingForGps && hasGps) {
-    setWaitingForGps(false);
-    setFocus({ target: 'gps' });
-  }
+  const [focus, setFocus] = useState<{ target: MapFocusTarget }>();
 
   if (map.isLoading) {
     return <MapSkeleton className={cn('h-80', frameClassName)} />;
@@ -76,35 +66,13 @@ export function PolygonEditorMapPanel({
     <section aria-label="Mapa de la parcela" className="space-y-3">
       {/* Encima del recuadro y no sobre el mapa: en celular no tapa sus controles. */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            disabled={!providerProps.farmPoint}
-            onClick={() => setFocus({ target: 'farm' })}
-            size="office"
-            type="button"
-            variant="outline"
-          >
-            <MapPinned aria-hidden="true" className="size-4" /> Ir a la finca
-          </Button>
-          <Button
-            disabled={!hasGps && !onRequestGps}
-            onClick={() => {
-              if (hasGps) {
-                setFocus({ target: 'gps' });
-                return;
-              }
-              // Sin GPS encendido, se enciende y se va en cuanto haya una lectura.
-              setWaitingForGps(true);
-              onRequestGps?.();
-            }}
-            size="office"
-            type="button"
-            variant="outline"
-          >
-            <LocateFixed aria-hidden="true" className="size-4" />
-            {waitingForGps ? 'Buscando tu ubicación…' : 'Ir a mi ubicación'}
-          </Button>
-        </div>
+        <MapFocusControls
+          canGoToFarm={!!providerProps.farmPoint}
+          farmLabel="Ir a la finca"
+          hasGps={!!providerProps.gpsPosition}
+          onFocus={(target) => setFocus({ target })}
+          onRequestGps={onRequestGps}
+        />
         <BaseLayerToggle
           onChange={(next) => {
             setBaseUnavailable(false);

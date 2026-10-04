@@ -106,6 +106,23 @@ export function PlotEditor({
       })),
     [editor.neighbours],
   );
+  // Los vértices que pasan del límite de distancia a la finca, para marcarlos en el mapa y en la
+  // lista. Lo demás que falla (lados que se cruzan, superposición) no es de un vértice en
+  // particular.
+  const flaggedVertices = useMemo(
+    () => check.farVertices.map(({ index }) => index),
+    [check.farVertices],
+  );
+  const flaggedReasons = useMemo(
+    () =>
+      Object.fromEntries(
+        check.farVertices.map(({ index, distanceMetres }) => [
+          index,
+          `Demasiado lejos del punto de la finca: ${distanceMetres} m (máximo ${check.maxDistanceFromFarmMetres} m)`,
+        ]),
+      ),
+    [check.farVertices, check.maxDistanceFromFarmMetres],
+  );
   const vertexPoints = useMemo(
     () => toPoints(draft.vertices),
     [draft.vertices],
@@ -154,6 +171,7 @@ export function PlotEditor({
             disabled={isSaving}
             drawing={draft.drawing}
             farmPoint={farmPoint}
+            flaggedVertices={flaggedVertices}
             gpsPosition={warm.fix}
             frameClassName="lg:h-[32rem]"
             loadProvider={loadPolygonEditorMapProvider!}
@@ -213,6 +231,7 @@ export function PlotEditor({
               closeAttempted={editor.closeAttempted}
               disabled={isSaving}
               drawing={draft.drawing}
+              flagged={flaggedReasons}
               onClose={editor.close}
               onRemove={editor.removeVertex}
               vertices={draft.vertices}

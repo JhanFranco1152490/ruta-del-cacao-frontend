@@ -1,9 +1,14 @@
 'use client';
 
+import { Pencil } from 'lucide-react';
+import Link from 'next/link';
+
+import { buttonVariants } from '@/components/ui/button';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 
 import { useChangeFarmStatus } from '../api';
 import type { FarmListItem } from '../farm-list-item';
+import { farmEditPath } from '../farm-paths';
 import { FarmStatusDialog } from './farm-status-dialog';
 
 function statusErrorMessage(error: unknown) {
@@ -16,7 +21,7 @@ function statusErrorMessage(error: unknown) {
   );
 }
 
-// Acciones sobre una finca que ya está en el servidor. Editarla es una acción de su detalle.
+// Acciones sobre una finca que ya está en el servidor. Editarla también se puede desde su detalle.
 export function FarmServerActions({ farm }: { farm: FarmListItem }) {
   const changeStatus = useChangeFarmStatus();
   if (
@@ -29,6 +34,13 @@ export function FarmServerActions({ farm }: { farm: FarmListItem }) {
 
   return (
     <div className="flex flex-wrap gap-3">
+      <Link
+        aria-label={`Editar ${farm.name}`}
+        className={buttonVariants({ variant: 'outline', className: 'h-11' })}
+        href={farmEditPath(farm.id)}
+      >
+        <Pencil aria-hidden="true" className="size-4" /> Editar
+      </Link>
       <FarmStatusDialog
         farm={{ name: farm.name, status: farm.status }}
         errorMessage={statusErrorMessage}
