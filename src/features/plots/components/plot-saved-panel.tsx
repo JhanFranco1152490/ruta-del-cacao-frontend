@@ -6,36 +6,19 @@ import { useEffect, useRef } from 'react';
 
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { useQueuedRecordState } from '@/hooks/use-queued-record-state';
 import { useSession } from '@/hooks/use-session';
+import { describeQueuedRecord } from '@/lib/offline/queued-record-text';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
 
 import { plotEditPath } from '../plot-paths';
-import { type QueuedPlotState, useQueuedPlotState } from '../use-plot-queue';
 import { PlotQueueBadge } from './plot-queue-badge';
 
-function describe(state: QueuedPlotState, isOnline: boolean) {
-  switch (state.status) {
-    case 'synced':
-      return {
-        badge: 'synced',
-        text: 'ya quedó guardada en el servidor.',
-      } as const;
-    case 'error':
-      return {
-        badge: 'error',
-        text: `quedó en este dispositivo, pero el servidor no la aceptó${
-          state.errorMessage ? `: ${state.errorMessage}` : '.'
-        } Corrígela para reenviarla.`,
-      } as const;
-    default:
-      return {
-        badge: 'pending',
-        text: isOnline
-          ? 'quedó guardada en este dispositivo y se está enviando al servidor.'
-          : 'quedó guardada en este dispositivo y se enviará al servidor cuando haya conexión.',
-      } as const;
-  }
-}
+const BADGES = {
+  synced: 'synced',
+  error: 'error',
+  pending: 'pending',
+} as const;
 
 export function PlotSavedPanel({
   plotId,
@@ -52,9 +35,10 @@ export function PlotSavedPanel({
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const { data: user } = useSession();
-  const state = useQueuedPlotState(user?.id, plotId);
+  const state = useQueuedRecordState(user?.id, plotId);
   const { status: sync } = useCaptureSyncStatus('parcelas');
-  const { badge, text } = describe(state, sync.isOnline);
+  const badge = BADGES[state.status];
+  const text = describeQueuedRecord(state, sync.isOnline);
 
   // El panel reemplaza al formulario: se lleva el foco al título para que el lector de
   // pantalla anuncie el resultado y el teclado no quede en un botón que ya no existe.
