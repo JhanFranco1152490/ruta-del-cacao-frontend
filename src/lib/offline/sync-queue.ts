@@ -11,6 +11,31 @@ export function clearAdapters() {
   adapters.clear();
 }
 
+type SyncedListener = (item: QueueItem, adapter: SyncAdapter) => void;
+
+const syncedListeners = new Set<SyncedListener>();
+
+// Avisa cada vez que un registro llega al servidor, para que lo que muestra sus datos se vuelva a
+// pedir aunque la pantalla que lo guardó ya no esté abierta. Devuelve la función que deja de
+// escuchar.
+export function onItemSynced(listener: SyncedListener) {
+  syncedListeners.add(listener);
+  return () => {
+    syncedListeners.delete(listener);
+  };
+}
+
+// El registro ya salió de la cola: un fallo de quien escucha no debe frenar el resto del envío.
+function notifySynced(item: QueueItem, adapter: SyncAdapter) {
+  for (const listener of syncedListeners) {
+    try {
+      listener(item, adapter);
+    } catch {
+      // Solo se pierde el aviso; los datos se vuelven a pedir al vencer su tiempo de vida.
+    }
+  }
+}
+
 export interface EnqueueInput {
   id: string;
   resource: string;
@@ -200,6 +225,7 @@ async function runQueue(userId: string) {
         // guardar para siempre un envío que ya terminó bien.
         await db.queue.delete(item.id);
         byId.delete(item.id);
+        notifySynced(claimed, adapter);
       } catch (error) {
         const recovery = recovered.has(item.id)
           ? null

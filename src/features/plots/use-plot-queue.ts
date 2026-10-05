@@ -1,8 +1,8 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { liveQuery } from 'dexie';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSession } from '@/hooks/use-session';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -69,31 +69,6 @@ export function useQueuedPlots(userId: string | undefined, farmId: string) {
     plots: isCurrent ? state.plots : undefined,
     isError: isCurrent && state.isError,
   };
-}
-
-// Cuando una parcela sale de la cola (se sincronizó o se descartó), las parcelas del servidor y
-// el área asignada de la finca pueden haber cambiado: se vuelven a pedir.
-export function useRefreshPlotsWhenQueueShrinks(
-  farmId: string,
-  plots: readonly QueuedPlot[] | undefined,
-) {
-  const queryClient = useQueryClient();
-  const previousIds = useRef<Set<string> | null>(null);
-
-  useEffect(() => {
-    if (!plots) return;
-    const ids = new Set(plots.map((plot) => plot.id));
-    const left = [...(previousIds.current ?? [])].some((id) => !ids.has(id));
-    previousIds.current = ids;
-    if (left) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.plots.byFarm(farmId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.farms.detail(farmId),
-      });
-    }
-  }, [farmId, plots, queryClient]);
 }
 
 function useQueueMutation<T>(

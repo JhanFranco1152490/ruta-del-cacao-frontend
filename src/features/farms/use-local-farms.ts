@@ -1,10 +1,8 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { liveQuery } from 'dexie';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 
 import { FARM_RESOURCE } from './farm-queue';
@@ -50,25 +48,6 @@ export function useLocalFarms(userId: string | undefined) {
     farms: isCurrent ? state.farms : undefined,
     isError: isCurrent && state.isError,
   };
-}
-
-// Cuando una finca sale de la cola (se sincronizó o se descartó), la lista del servidor puede
-// haber cambiado: se vuelve a pedir para que la finca aparezca con sus datos del servidor.
-export function useRefreshFarmsWhenQueueShrinks(
-  farms: readonly FarmListItem[] | undefined,
-) {
-  const queryClient = useQueryClient();
-  const previousIds = useRef<Set<string> | null>(null);
-
-  useEffect(() => {
-    if (!farms) return;
-    const ids = new Set(farms.map((farm) => farm.id));
-    const left = [...(previousIds.current ?? [])].some((id) => !ids.has(id));
-    previousIds.current = ids;
-    if (left) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.farms.all() });
-    }
-  }, [farms, queryClient]);
 }
 
 export type QueuedFarmState =
