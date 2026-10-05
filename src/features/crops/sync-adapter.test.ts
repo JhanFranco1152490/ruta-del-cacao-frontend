@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
+import { queryKeys } from '@/lib/api/query-keys';
 import type { QueueItem } from '@/lib/offline/db';
 import { buildCharacterization } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
@@ -114,5 +115,17 @@ describe('characterizationSyncAdapter.parseConflict', () => {
       message: 'La variedad está desactivada.',
       data: undefined,
     });
+  });
+});
+
+describe('characterizationSyncAdapter.refreshAfterSync', () => {
+  it('refreshes the characterizations of every farm: the queued record only knows its plot', () => {
+    expect(characterizationSyncAdapter.refreshAfterSync?.(item)).toEqual([
+      queryKeys.characterizations.allFarms(),
+    ]);
+    // La clave de una finca cuelga de la de todas: invalidar la primera alcanza a la segunda.
+    expect(queryKeys.characterizations.byFarm('f1')).toEqual(
+      expect.arrayContaining([...queryKeys.characterizations.allFarms()]),
+    );
   });
 });

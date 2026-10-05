@@ -1,10 +1,17 @@
 import { onlineManager } from '@tanstack/react-query';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import type { ReactNode } from 'react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
+import {
+  clearAdapters,
+  processQueue,
+  registerAdapter,
+} from '@/lib/offline/sync-queue';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   buildCacaoVariety,
@@ -23,6 +30,7 @@ import {
   characterizationQueueId,
   enqueueCharacterization,
 } from '../characterization-queue';
+import { characterizationSyncAdapter } from '../sync-adapter';
 import { PlotCharacterizationSummary } from './plot-characterization-summary';
 
 let userId: string;
@@ -45,10 +53,12 @@ function renderSummaries(
     permissions = [PERMISSIONS.PLOTS_VIEW, PERMISSIONS.CROPS_CHARACTERIZE],
     farmIsActive = true,
     queryClient = createTestQueryClient(),
+    extra = null,
   }: {
     permissions?: string[];
     farmIsActive?: boolean;
     queryClient?: ReturnType<typeof createTestQueryClient>;
+    extra?: ReactNode;
   } = {},
 ) {
   queryClient.setQueryData(
@@ -57,6 +67,7 @@ function renderSummaries(
   );
   return renderWithProviders(
     <>
+      {extra}
       {plots.map((plot) => (
         <article aria-label={plot.code} key={plot.id}>
           <PlotCharacterizationSummary
@@ -147,6 +158,51 @@ describe('PlotCharacterizationSummary', () => {
     } finally {
       onlineManager.setOnline(true);
     }
+  });
+
+  describe('when the characterization reaches the server', () => {
+    afterEach(() => clearAdapters());
+
+    function RefreshAfterSync() {
+      useRefreshAfterSync();
+      return null;
+    }
+
+    it('asks the server again, as the session frame refreshes, even if the form that saved it is closed', async () => {
+      const requests: URLSearchParams[] = [];
+      const saved = buildCharacterization({ version: 3, stage: 'renovation' });
+      server.use(
+        characterizationsHandler([], requests),
+        http.put(apiUrl('/api/plot-characterizations/:plotId'), () =>
+          HttpResponse.json(saved),
+        ),
+      );
+      registerAdapter(characterizationSyncAdapter);
+      await enqueueCharacterization(
+        userId,
+        'pl1',
+        {
+          plantings: [
+            {
+              variety_id: 'v-ccn-51',
+              planting_date: '2021-03',
+              tree_count: 900,
+            },
+          ],
+          stage: 'renovation',
+          management_system: null,
+          shade_type: null,
+        },
+        null,
+      );
+      renderSummaries([P1], { extra: <RefreshAfterSync /> });
+      await screen.findByText(/Pendiente de sincronizar/);
+      const before = requests.length;
+
+      await processQueue(userId);
+
+      await waitFor(() => expect(requests.length).toBeGreaterThan(before));
+    });
   });
 
   it('asks the server once for every plot of the farm', async () => {

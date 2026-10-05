@@ -17,10 +17,7 @@ import {
   serverSummaryLines,
 } from '../characterization-values';
 import { CHARACTERIZATION_PLOT_DELETED_CODE } from '../sync-adapter';
-import {
-  useQueuedCharacterizations,
-  useRefreshCharacterizationsWhenQueueShrinks,
-} from '../use-characterization-queue';
+import { useQueuedCharacterizations } from '../use-characterization-queue';
 import { CharacterizationDiscardDialog } from './characterization-discard-dialog';
 
 // Lo que el resumen necesita de la parcela y de su finca. Lo entrega el detalle de la finca, que
@@ -48,7 +45,6 @@ export function PlotCharacterizationSummary({
   const catalog = useActiveCacaoVarieties(user?.id);
   const plotIds = useMemo(() => [plot.id], [plot.id]);
   const queued = useQueuedCharacterizations(user?.id, plotIds);
-  useRefreshCharacterizationsWhenQueueShrinks(farmId, queued.items);
 
   const saved = server.data?.data.find((item) => item.plot_id === plot.id);
   const pending = queued.items?.[0];

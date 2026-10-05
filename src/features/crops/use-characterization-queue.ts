@@ -1,8 +1,8 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { liveQuery } from 'dexie';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSession } from '@/hooks/use-session';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -76,28 +76,6 @@ export function useQueuedCharacterizations(
     items: isCurrent ? state.items : undefined,
     isError: isCurrent && state.isError,
   };
-}
-
-// Cuando una ficha sale de la cola (se sincronizó o se descartó), las del servidor pueden haber
-// cambiado: se vuelven a pedir.
-export function useRefreshCharacterizationsWhenQueueShrinks(
-  farmId: string,
-  items: readonly QueuedCharacterization[] | undefined,
-) {
-  const queryClient = useQueryClient();
-  const previous = useRef<Set<string> | null>(null);
-
-  useEffect(() => {
-    if (!items) return;
-    const ids = new Set(items.map((item) => item.plotId));
-    const left = [...(previous.current ?? [])].some((id) => !ids.has(id));
-    previous.current = ids;
-    if (left) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.characterizations.byFarm(farmId),
-      });
-    }
-  }, [farmId, items, queryClient]);
 }
 
 const sendWhenOnline = (userId: string) => {

@@ -33,6 +33,9 @@ export const queryKeys = {
     active: () => ['cacao-varieties', 'active'] as const,
   },
   characterizations: {
+    // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la
+    // parcela).
+    allFarms: () => ['characterizations', 'farm'] as const,
     // Las fichas de las parcelas de una finca: el detalle las pide todas juntas.
     byFarm: (farmId: string) => ['characterizations', 'farm', farmId] as const,
     // La ficha de una parcela que sigue en la cola del dispositivo de esta persona.
