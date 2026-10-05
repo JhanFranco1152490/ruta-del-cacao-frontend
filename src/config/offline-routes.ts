@@ -18,7 +18,6 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/variedades',
   '/usuarios',
   '/roles',
-  '/mi-productor',
   '/sin-conexion',
 ] as const;
 

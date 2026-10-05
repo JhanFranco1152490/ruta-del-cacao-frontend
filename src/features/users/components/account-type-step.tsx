@@ -10,12 +10,8 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 type AccountKind = 'administrator' | 'employee';
 
-const DENIED =
-  'Este productor no autorizó el acceso de la asociación: no se le pueden crear cuentas de empleados.';
-
 // Primer paso de "Crear cuenta" para la asociación: qué tipo de cuenta y, si es de un empleado,
-// de qué productor. Solo deja seguir con un productor que autorizó el acceso: el backend
-// rechazaría la cuenta.
+// de qué productor. Con un empleado no deja continuar hasta que haya un productor elegido.
 export function AccountTypeStep({
   user,
   initialProducer,
@@ -33,8 +29,7 @@ export function AccountTypeStep({
   const selected = useProducerSummary(
     kind === 'employee' ? producer : undefined,
   );
-  const allowed =
-    kind === 'administrator' || selected.data?.association_access === true;
+  const canContinue = kind === 'administrator' || Boolean(producer);
   const group = useId();
 
   return (
@@ -72,12 +67,11 @@ export function AccountTypeStep({
           selected={selected}
           onSelect={setProducer}
           onClear={() => setProducer(undefined)}
-          deniedMessage={DENIED}
         />
       )}
       <Button
         size="office"
-        disabled={!allowed}
+        disabled={!canContinue}
         onClick={() => onChoose(kind === 'employee' ? producer : undefined)}
       >
         Continuar
