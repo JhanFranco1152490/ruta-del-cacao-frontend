@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -149,4 +154,36 @@ export const putCharacterization = (
   apiFetch<PlotCharacterization>(`/api/plot-characterizations/${plotId}`, {
     method: 'PUT',
     body,
+  });
+
+export const HISTORY_PAGE_SIZE = 20;
+
+// Una página del historial de la ficha de una parcela, de la versión más nueva a la más vieja.
+export const fetchCharacterizationHistory = (
+  plotId: string,
+  page: number,
+  signal?: AbortSignal,
+) => {
+  const params = new URLSearchParams({
+    page: String(page),
+    page_size: String(HISTORY_PAGE_SIZE),
+  });
+  return apiFetch<Schemas['PaginatedPlotCharacterizationEventList']>(
+    `/api/plot-characterizations/${plotId}/history?${params}`,
+    { signal },
+  );
+};
+
+// El historial es una consulta de oficina: sin copia en el dispositivo, así que sin conexión la
+// consulta queda en pausa y la pantalla lo dice. Siempre se pide de nuevo al abrir: una ficha
+// recién sincronizada tiene una versión más.
+export const useCharacterizationHistory = (plotId: string) =>
+  useInfiniteQuery({
+    queryKey: queryKeys.characterizations.history(plotId),
+    queryFn: ({ pageParam, signal }) =>
+      fetchCharacterizationHistory(plotId, pageParam, signal),
+    initialPageParam: 1,
+    getNextPageParam: (last, pages) =>
+      last.next ? pages.length + 1 : undefined,
+    staleTime: 0,
   });

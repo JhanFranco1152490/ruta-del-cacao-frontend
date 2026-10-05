@@ -17,8 +17,12 @@ export const characterizationSyncAdapter: SyncAdapter = {
   resource: CHARACTERIZATION_RESOURCE,
 
   // El registro encolado solo sabe su parcela, no su finca: se refrescan las fichas de todas las
-  // fincas, que son pocas y se piden en una sola consulta cada una.
-  refreshAfterSync: () => [queryKeys.characterizations.allFarms()],
+  // fincas, que son pocas y se piden en una sola consulta cada una, y el historial de la parcela,
+  // que tiene una versión más.
+  refreshAfterSync: (item) => [
+    queryKeys.characterizations.allFarms(),
+    queryKeys.characterizations.history(item.parentId!),
+  ],
 
   // El padre del registro es la parcela, y la ficha se guarda en su dirección. El contenido ya
   // es el cuerpo del PUT: la versión leída y la hora en que se guardó en el dispositivo.

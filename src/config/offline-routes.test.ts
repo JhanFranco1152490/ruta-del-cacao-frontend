@@ -19,6 +19,12 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
+  it('saves the page of the history, which only shows data with a connection but must open to say so', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain(
+      '/fincas/parcelas/caracterizacion/historial',
+    );
+  });
+
   it('never saves the sign-in page or the old panel', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/iniciar-sesion');
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/panel');

@@ -35,6 +35,28 @@ export const characterizationsHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde el historial de una ficha, paginado como la API, y guarda las búsquedas recibidas.
+export const characterizationHistoryHandler = (
+  events: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(
+    apiUrl('/api/plot-characterizations/:plotId/history'),
+    ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      requests.push(params);
+      const page = Number(params.get('page') ?? '1');
+      const size = Number(params.get('page_size') ?? '20');
+      const start = (page - 1) * size;
+      return HttpResponse.json({
+        count: events.length,
+        next: start + size < events.length ? `?page=${page + 1}` : null,
+        previous: page > 1 ? `?page=${page - 1}` : null,
+        results: events.slice(start, start + size),
+      });
+    },
+  );
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

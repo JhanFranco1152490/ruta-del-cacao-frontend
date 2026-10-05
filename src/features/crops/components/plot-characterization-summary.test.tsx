@@ -103,6 +103,46 @@ describe('PlotCharacterizationSummary', () => {
     );
   });
 
+  it('offers the history of a plot with a saved characterization', async () => {
+    server.use(characterizationsHandler([buildCharacterization()]));
+    renderSummaries([P1]);
+
+    expect(
+      await screen.findByRole('link', { name: 'Ver historial de P1' }),
+    ).toHaveAttribute(
+      'href',
+      '/fincas/parcelas/caracterizacion/historial?id=pl1&finca=f1',
+    );
+  });
+
+  it('offers no history where there is nothing saved on the server yet', async () => {
+    server.use(characterizationsHandler([]));
+    await enqueueCharacterization(
+      userId,
+      'pl1',
+      {
+        plantings: [
+          {
+            variety_id: 'v-fear-5',
+            planting_date: '2024-01',
+            tree_count: 900,
+            propagation: 'grafted',
+            stage: 'establishment',
+          },
+        ],
+        management_system: null,
+        shade_type: null,
+      },
+      null,
+    );
+    renderSummaries([P1]);
+    await screen.findByText(/Pendiente de sincronizar/);
+
+    expect(
+      screen.queryByRole('link', { name: 'Ver historial de P1' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('marks a plot without characterization and offers to characterize it', async () => {
     server.use(characterizationsHandler([]));
     renderSummaries([P1]);
@@ -307,7 +347,13 @@ describe('PlotCharacterizationSummary', () => {
     renderSummaries([P1], { permissions: [PERMISSIONS.PLOTS_VIEW] });
 
     expect(await screen.findByText(/CCN-51 y 1 más/)).toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    // Editar queda cerrado, pero el historial se sigue pudiendo leer.
+    expect(
+      screen.queryByRole('link', { name: /caracterización de P1/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Ver historial de P1' }),
+    ).toBeInTheDocument();
   });
 
   it('freezes the characterization of an inactive plot or farm', async () => {
@@ -315,7 +361,13 @@ describe('PlotCharacterizationSummary', () => {
     renderSummaries([{ ...P1, isActive: false }]);
 
     expect(await screen.findByText(/CCN-51 y 1 más/)).toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    // Editar queda cerrado, pero el historial se sigue pudiendo leer.
+    expect(
+      screen.queryByRole('link', { name: /caracterización de P1/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Ver historial de P1' }),
+    ).toBeInTheDocument();
   });
 
   it('freezes it too when the farm is inactive', async () => {
@@ -323,6 +375,12 @@ describe('PlotCharacterizationSummary', () => {
     renderSummaries([P1], { farmIsActive: false });
 
     expect(await screen.findByText(/CCN-51 y 1 más/)).toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    // Editar queda cerrado, pero el historial se sigue pudiendo leer.
+    expect(
+      screen.queryByRole('link', { name: /caracterización de P1/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Ver historial de P1' }),
+    ).toBeInTheDocument();
   });
 });

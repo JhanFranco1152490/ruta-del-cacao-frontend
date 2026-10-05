@@ -2,11 +2,21 @@ import { describe, expect, it } from 'vitest';
 
 import { getOfflineDb } from '@/lib/offline/db';
 import { readThroughCache } from '@/lib/offline/cached-read';
-import { buildCacaoVariety } from '@/test/factories';
-import { cacaoVarietiesHandler } from '@/test/handlers';
+import {
+  buildCacaoVariety,
+  buildCharacterizationEvent,
+} from '@/test/factories';
+import {
+  cacaoVarietiesHandler,
+  characterizationHistoryHandler,
+} from '@/test/handlers';
 import { server } from '@/test/server';
 
-import { fetchCacaoVarieties, toVarietyOption } from './api';
+import {
+  fetchCacaoVarieties,
+  fetchCharacterizationHistory,
+  toVarietyOption,
+} from './api';
 
 describe('fetchCacaoVarieties', () => {
   it('asks for the whole catalog without filters', async () => {
@@ -49,5 +59,31 @@ describe('toVarietyOption', () => {
     expect(
       toVarietyOption(buildCacaoVariety({ id: 'v1', is_active: false })),
     ).toEqual({ id: 'v1', name: 'CCN-51', isActive: false, commonNames: [] });
+  });
+});
+
+describe('fetchCharacterizationHistory', () => {
+  const events = [3, 2, 1].map((version) =>
+    buildCharacterizationEvent({ version }),
+  );
+
+  it('asks for the page of the plot, with a fixed size', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(characterizationHistoryHandler(events, requests));
+
+    const page = await fetchCharacterizationHistory('pl1', 2);
+
+    expect(requests[0].get('page')).toBe('2');
+    expect(requests[0].get('page_size')).toBe('20');
+    expect(page.count).toBe(3);
+  });
+
+  it('brings the versions of the page, newest first, and whether there are more', async () => {
+    server.use(characterizationHistoryHandler(events));
+
+    const page = await fetchCharacterizationHistory('pl1', 1);
+
+    expect(page.results.map((event) => event.version)).toEqual([3, 2, 1]);
+    expect(page.next).toBeNull();
   });
 });

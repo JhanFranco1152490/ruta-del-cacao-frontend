@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, History } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
@@ -10,7 +10,10 @@ import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useActiveCacaoVarieties, useFarmCharacterizations } from '../api';
-import { characterizationPath } from '../characterization-paths';
+import {
+  characterizationHistoryPath,
+  characterizationPath,
+} from '../characterization-paths';
 import { characterizationSummary } from '../characterization-summary';
 import {
   queuedSummaryLines,
@@ -108,7 +111,7 @@ export function PlotCharacterizationSummary({
           {pending.errorMessage ? `: ${pending.errorMessage}` : '.'}
         </p>
       )}
-      {(canEdit || failed) && (
+      {(canEdit || failed || saved) && (
         <div className="flex flex-wrap gap-2">
           {canEdit && (
             <Link
@@ -122,6 +125,17 @@ export function PlotCharacterizationSummary({
             >
               <ClipboardList aria-hidden="true" className="size-4" />{' '}
               {actionLabel}
+            </Link>
+          )}
+          {/* Solo hay historial si la ficha ya llegó al servidor: lo que espera en el dispositivo
+              todavía no tiene versiones. */}
+          {saved && (
+            <Link
+              aria-label={`Ver historial de ${plot.code}`}
+              className={buttonVariants({ size: 'office', variant: 'outline' })}
+              href={characterizationHistoryPath(plot.id, farmId)}
+            >
+              <History aria-hidden="true" className="size-4" /> Ver historial
             </Link>
           )}
           {failed && (

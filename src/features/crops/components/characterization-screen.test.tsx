@@ -285,6 +285,28 @@ describe('CharacterizationScreen', () => {
     ).toBeDisabled();
   });
 
+  it('offers the history of a plot that already has a characterization', async () => {
+    server.use(characterizationsHandler([buildCharacterization()]));
+    renderScreen();
+
+    expect(
+      await screen.findByRole('link', { name: 'Ver historial' }),
+    ).toHaveAttribute(
+      'href',
+      '/fincas/parcelas/caracterizacion/historial?id=pl1&finca=f1',
+    );
+  });
+
+  it('offers no history to a plot that has no characterization yet', async () => {
+    server.use(characterizationsHandler([]));
+    renderScreen();
+    await screen.findByLabelText('Variedad 1');
+
+    expect(
+      screen.queryByRole('link', { name: 'Ver historial' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('links back to its farm', async () => {
     server.use(characterizationsHandler([]));
     renderScreen();

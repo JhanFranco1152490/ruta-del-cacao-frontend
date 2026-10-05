@@ -41,6 +41,9 @@ export const queryKeys = {
     // La ficha de una parcela que sigue en la cola del dispositivo de esta persona.
     queued: (userId: string, plotId: string) =>
       ['characterizations', 'queued', userId, plotId] as const,
+    // Las versiones de la ficha de una parcela: solo se piden con conexión, sin copia local.
+    history: (plotId: string) =>
+      ['characterizations', 'history', plotId] as const,
   },
   plots: {
     // Las parcelas de una finca: el detalle de finca siempre las pide por finca.

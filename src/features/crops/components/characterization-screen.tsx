@@ -22,6 +22,7 @@ import {
   useFarmCharacterizations,
 } from '../api';
 import type { QueuedCharacterization } from '../characterization-queue';
+import { characterizationHistoryPath } from '../characterization-paths';
 import { characterizationSummary } from '../characterization-summary';
 import {
   queuedToFormInput,
@@ -178,6 +179,17 @@ export function CharacterizationScreen({
           failed
             ? 'Corregir caracterización'
             : 'Caracterización agronómica de parcela'
+        }
+        actions={
+          // Solo si la ficha ya está en el servidor: sin ella no hay versiones que ver.
+          fromServer && (
+            <Link
+              className={buttonVariants({ size: 'office', variant: 'outline' })}
+              href={characterizationHistoryPath(plot.id, farm.id)}
+            >
+              Ver historial
+            </Link>
+          )
         }
       />
       {sync.showBanner && (

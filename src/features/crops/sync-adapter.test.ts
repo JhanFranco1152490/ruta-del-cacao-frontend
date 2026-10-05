@@ -127,6 +127,7 @@ describe('characterizationSyncAdapter.refreshAfterSync', () => {
   it('refreshes the characterizations of every farm: the queued record only knows its plot', () => {
     expect(characterizationSyncAdapter.refreshAfterSync?.(item)).toEqual([
       queryKeys.characterizations.allFarms(),
+      queryKeys.characterizations.history('pl1'),
     ]);
     // La clave de una finca cuelga de la de todas: invalidar la primera alcanza a la segunda.
     expect(queryKeys.characterizations.byFarm('f1')).toEqual(
