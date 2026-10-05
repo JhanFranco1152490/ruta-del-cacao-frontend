@@ -8,33 +8,17 @@ import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { StatusBadge } from '@/components/status-badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useQueuedRecordState } from '@/hooks/use-queued-record-state';
 import { useSession } from '@/hooks/use-session';
+import { describeQueuedRecord } from '@/lib/offline/queued-record-text';
 
-import {
-  type QueuedCharacterizationState,
-  useQueuedCharacterizationState,
-} from '../use-characterization-queue';
+import { characterizationQueueId } from '../characterization-queue';
 
 const BADGES = {
   pending: { label: 'Pendiente de sincronización', tone: 'info' },
   error: { label: 'Pendiente con error', tone: 'err' },
   synced: { label: 'Guardada en el servidor', tone: 'ok' },
 } as const;
-
-function describe(state: QueuedCharacterizationState, isOnline: boolean) {
-  switch (state.status) {
-    case 'synced':
-      return 'ya quedó guardada en el servidor.';
-    case 'error':
-      return `quedó en este dispositivo, pero el servidor no la aceptó${
-        state.errorMessage ? `: ${state.errorMessage}` : '.'
-      } Corrígela para reenviarla.`;
-    default:
-      return isOnline
-        ? 'quedó guardada en este dispositivo y se está enviando al servidor.'
-        : 'quedó guardada en este dispositivo y se enviará al servidor cuando haya conexión.';
-  }
-}
 
 export function CharacterizationSavedPanel({
   plotId,
@@ -49,7 +33,7 @@ export function CharacterizationSavedPanel({
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const { data: user } = useSession();
-  const state = useQueuedCharacterizationState(user?.id, plotId);
+  const state = useQueuedRecordState(user?.id, characterizationQueueId(plotId));
   const { status: sync } = useCaptureSyncStatus('caracterizaciones');
   const badge = BADGES[state.status];
 
@@ -79,7 +63,7 @@ export function CharacterizationSavedPanel({
           <p aria-live="polite" className="text-muted-foreground">
             La caracterización de{' '}
             <strong className="text-foreground">{plotCode}</strong>{' '}
-            {describe(state, sync.isOnline)}
+            {describeQueuedRecord(state, sync.isOnline)}
           </p>
         </div>
         <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>

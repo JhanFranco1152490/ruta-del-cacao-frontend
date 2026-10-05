@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 
 import { useSession } from '@/hooks/use-session';
 import { queryKeys } from '@/lib/api/query-keys';
-import { getOfflineDb } from '@/lib/offline/db';
 import { discard, processQueue } from '@/lib/offline/sync-queue';
 
 import {
@@ -129,39 +128,4 @@ export function useDiscardCharacterization() {
       await discard(user.id, characterizationQueueId(plotId));
     },
   });
-}
-
-export type QueuedCharacterizationState =
-  | { status: 'pending' }
-  | { status: 'error'; errorMessage?: string }
-  // Ya no está en la cola: el envío terminó bien y la ficha está en el servidor.
-  | { status: 'synced' };
-
-// Sigue en vivo una ficha recién guardada, para contar lo que de verdad le pasó.
-export function useQueuedCharacterizationState(
-  userId: string | undefined,
-  plotId: string,
-) {
-  const [state, setState] = useState<QueuedCharacterizationState>({
-    status: 'pending',
-  });
-
-  useEffect(() => {
-    if (!userId) return;
-    const subscription = liveQuery(() =>
-      getOfflineDb(userId).queue.get(characterizationQueueId(plotId)),
-    ).subscribe({
-      next: (item) =>
-        setState(
-          !item
-            ? { status: 'synced' }
-            : item.status === 'error'
-              ? { status: 'error', errorMessage: item.errorMessage }
-              : { status: 'pending' },
-        ),
-    });
-    return () => subscription.unsubscribe();
-  }, [userId, plotId]);
-
-  return state;
 }
