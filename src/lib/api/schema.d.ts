@@ -326,7 +326,7 @@ export interface paths {
         };
         /** @description La ficha de una parcela. 404 si la parcela es ajena o no tiene ficha. */
         get: operations["plot_characterizations_retrieve"];
-        /** @description Registra o reemplaza la ficha completa de la parcela. `expected_version` es `null` para registrar y la versión que se leyó para editar; si no coincide responde 409 `stale_version` con la ficha vigente (o `null`) en `current`. Si la ficha ya tiene exactamente ese contenido responde 200 sin subir la versión: es un reintento. Una variedad que no existe es un 400 en `fields.varieties`; una desactivada que no estaba en la ficha, 422 `variety_inactive`. */
+        /** @description Registra o reemplaza la ficha completa de la parcela. `expected_version` es `null` para registrar y la versión que se leyó para editar; si no coincide responde 409 `stale_version` con la ficha vigente (o `null`) en `current`. Si la ficha ya tiene exactamente ese contenido responde 200 sin subir la versión: es un reintento. Una variedad que no existe es un 400 en `fields.plantings`; una desactivada que no estaba en la ficha, 422 `variety_inactive`; una densidad mayor de 10.000 árboles/ha sobre el área declarada de la parcela, 422 `density_too_high`. */
         put: operations["plot_characterizations_update"];
         post?: never;
         delete?: never;
@@ -630,24 +630,17 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             readonly name: string;
+            readonly common_names: string[];
             readonly description: string;
             readonly is_active: boolean;
         };
         CacaoVarietyCreateRequest: {
             name: string;
+            common_names?: string[];
             description?: string;
         };
         CacaoVarietyList: {
             results: components["schemas"]["CacaoVariety"][];
-        };
-        CharacterizationRow: {
-            variety: components["schemas"]["VarietyRef"];
-            readonly tree_count: number;
-        };
-        CharacterizationRowInputRequest: {
-            /** Format: uuid */
-            variety_id: string;
-            tree_count: number;
         };
         CsrfToken: {
             csrf_token: string;
@@ -915,6 +908,7 @@ export interface components {
         };
         PatchedCacaoVarietyUpdateRequest: {
             name?: string;
+            common_names?: string[];
             description?: string;
             is_active?: boolean;
         };
@@ -974,6 +968,19 @@ export interface components {
         PermissionList: {
             results: components["schemas"]["Permission"][];
         };
+        Planting: {
+            variety: components["schemas"]["VarietyRef"];
+            /** @example 2021-03 */
+            planting_date: string;
+            readonly tree_count: number;
+        };
+        PlantingInputRequest: {
+            /** Format: uuid */
+            variety_id: string;
+            /** @example 2021-03 */
+            planting_date: string;
+            tree_count: number;
+        };
         Plot: {
             /** Format: uuid */
             readonly id: string;
@@ -996,10 +1003,8 @@ export interface components {
         PlotCharacterization: {
             /** Format: uuid */
             plot_id: string;
-            varieties: components["schemas"]["CharacterizationRow"][];
+            plantings: components["schemas"]["Planting"][];
             readonly total_trees: number;
-            /** @example 2021-03 */
-            planting_date: string;
             readonly stage: components["schemas"]["StageEnum"];
             readonly management_system: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
             readonly shade_type: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -1016,9 +1021,7 @@ export interface components {
         };
         PlotCharacterizationWriteRequest: {
             expected_version: number | null;
-            varieties: components["schemas"]["CharacterizationRowInputRequest"][];
-            /** @example 2021-03 */
-            planting_date: string;
+            plantings: components["schemas"]["PlantingInputRequest"][];
             stage: components["schemas"]["StageEnum"];
             management_system?: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
             shade_type?: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -1697,7 +1700,7 @@ export interface operations {
             query?: {
                 /** @description Solo activas o solo inactivas. */
                 is_active?: boolean;
-                /** @description Busca en el nombre sin mayúsculas, tildes, espacios ni guiones. */
+                /** @description Busca en el nombre y en los nombres comunes, sin mayúsculas, tildes, espacios ni guiones. */
                 search?: string;
             };
             header?: never;
