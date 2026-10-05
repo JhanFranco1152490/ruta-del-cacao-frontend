@@ -6,6 +6,7 @@ import {
   clearAdapters,
   discard,
   enqueue,
+  onItemSynced,
   processQueue,
   QueueItemBusyError,
   QueueItemExistsError,
@@ -497,5 +498,77 @@ describe('processQueue recovery', () => {
       operation: 'create',
       status: 'pending',
     });
+  });
+});
+
+describe('onItemSynced', () => {
+  const enqueueFarm = (userId: string, id: string) =>
+    enqueue(userId, {
+      id,
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+
+  it('tells about each record that reached the server, with its adapter', async () => {
+    const userId = randomUserId();
+    const adapter = fakeAdapter();
+    registerAdapter(adapter);
+    await enqueueFarm(userId, 'a1');
+    const listener = vi.fn();
+    const stop = onItemSynced(listener);
+
+    await processQueue(userId);
+    stop();
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'a1', resource: 'farms' }),
+      adapter,
+    );
+  });
+
+  it('does not tell about a record that did not reach the server', async () => {
+    const userId = randomUserId();
+    registerAdapter(
+      fakeAdapter({ send: vi.fn().mockRejectedValue(new Error('sin red')) }),
+    );
+    await enqueueFarm(userId, 'a1');
+    const listener = vi.fn();
+    const stop = onItemSynced(listener);
+
+    await processQueue(userId);
+    stop();
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('keeps sending the queue when a listener fails', async () => {
+    const userId = randomUserId();
+    const adapter = fakeAdapter();
+    registerAdapter(adapter);
+    await enqueueFarm(userId, 'a1');
+    await enqueueFarm(userId, 'a2');
+    const stop = onItemSynced(() => {
+      throw new Error('falla del que escucha');
+    });
+
+    await processQueue(userId);
+    stop();
+
+    expect(adapter.send).toHaveBeenCalledTimes(2);
+    expect(await getOfflineDb(userId).queue.toArray()).toEqual([]);
+  });
+
+  it('stops telling once the listener leaves', async () => {
+    const userId = randomUserId();
+    registerAdapter(fakeAdapter());
+    await enqueueFarm(userId, 'a1');
+    const listener = vi.fn();
+    onItemSynced(listener)();
+
+    await processQueue(userId);
+
+    expect(listener).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
+import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb, type QueueItem } from '@/lib/offline/db';
 import {
   clearAdapters,
@@ -239,5 +240,13 @@ describe('a create edited after its response was lost', () => {
       errorCode: 'stale_version',
       payload: { expected_version: 1 },
     });
+  });
+});
+
+describe('farmSyncAdapter.refreshAfterSync', () => {
+  it('refreshes every farm read: lists, map and detail', () => {
+    expect(farmSyncAdapter.refreshAfterSync?.(queueItem({}))).toEqual([
+      queryKeys.farms.all(),
+    ]);
   });
 });

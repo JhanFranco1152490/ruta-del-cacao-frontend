@@ -20,10 +20,7 @@ import { PAGE_SIZE, useFarms } from '../api';
 import { type FarmListItem, serverFarmToListItem } from '../farm-list-item';
 import { useFarmFilters } from '../use-farm-filters';
 import { useFarmMapMode } from '../use-farm-map-mode';
-import {
-  useLocalFarms,
-  useRefreshFarmsWhenQueueShrinks,
-} from '../use-local-farms';
+import { useLocalFarms } from '../use-local-farms';
 import { FarmCardList } from './farm-card-list';
 import { FarmFiltersBar } from './farm-filters-bar';
 import { FarmQueueActions } from './farm-queue-actions';
@@ -38,7 +35,6 @@ export function FarmListScreen() {
   const filters = useFarmFilters();
   const list = useFarms(filters.query);
   const local = useLocalFarms(user?.id);
-  useRefreshFarmsWhenQueueShrinks(local.farms);
   const municipalityName = useMunicipalityName();
   const canAdd = hasPermission(user, PERMISSIONS.FARMS_ADD);
   const canChange = hasPermission(user, PERMISSIONS.FARMS_CHANGE);

@@ -22,6 +22,11 @@ export function RoleDetail({
 }) {
   const [editing, setEditing] = useState(false);
   const editable = manage && canEditRole(role, catalog);
+  // El nombre lo trae el propio rol: el catálogo solo ofrece los permisos delegables, y los de un
+  // rol del sistema (los de la asociación, por ejemplo) no están en él.
+  const names = new Map(
+    role.permission_details.map((item) => [item.code, item.name]),
+  );
   if (editing && editable)
     return (
       <RoleForm
@@ -53,7 +58,7 @@ export function RoleDetail({
         <ul className="list-inside list-disc space-y-2">
           {role.permissions.map((code) => (
             <li className="break-words" key={code}>
-              {catalog.find((item) => item.code === code)?.name ?? code}
+              {names.get(code) ?? code}
             </li>
           ))}
         </ul>

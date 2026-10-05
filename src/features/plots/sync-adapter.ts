@@ -1,7 +1,7 @@
 import { isApiError } from '@/lib/api/errors';
 import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
 
-import { patchPlot, postPlot } from './api';
+import { patchPlot, plotReadsOf, postPlot } from './api';
 import {
   createToUpdate,
   PLOT_RESOURCE,
@@ -32,6 +32,9 @@ function correctionData(body: Record<string, unknown>) {
 
 export const plotSyncAdapter: SyncAdapter = {
   resource: PLOT_RESOURCE,
+
+  // El padre de toda parcela encolada es su finca.
+  refreshAfterSync: (item) => plotReadsOf(item.parentId!),
 
   async send(item) {
     if (item.operation === 'create') {

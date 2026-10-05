@@ -153,7 +153,14 @@ src/
 - El estado del servidor vive solo en TanStack Query; no se copia a `useState`. Los valores
   por defecto están en `lib/query-client.ts` (`staleTime` de 30 s, un reintento y solo ante
   errores que no sean 4xx). Tras una mutación se guarda la respuesta en el detalle de la
-  caché y se invalidan las listas.
+  caché y se invalidan las listas, y también toda otra copia que muestre ese dato (el detalle
+  de finca tiene la suya, `farms.detailView`, y el mapa las suyas): si no, al volver a esa
+  pantalla se ve el valor anterior hasta que vence el `staleTime`.
+- **Lo que llega al servidor desde la cola** se refresca con el adapter: `refreshAfterSync(item)`
+  devuelve las query keys que ese registro cambia, y `useRefreshAfterSync` (montado en el marco
+  de la sesión, que siempre está) las invalida cuando el motor avisa que el envío terminó bien.
+  Un recurso nuevo de la cola declara ahí sus consultas; no se escribe un hook por pantalla que
+  mire la cola, porque solo funciona si esa pantalla está abierta en el momento del envío.
 - Formularios con react-hook-form + `zodResolver`. El esquema y los mapeos formulario ↔
   petición viven en el dominio (`features/<dominio>/schemas.ts`). Los errores de campo del
   servidor se vuelcan con `applyApiFieldErrors(error, setError, campos)`, que devuelve

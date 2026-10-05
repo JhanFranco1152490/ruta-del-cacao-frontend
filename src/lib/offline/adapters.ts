@@ -26,6 +26,9 @@ export interface SyncAdapter {
   // Opcional: antes de clasificar el error, el adapter puede convertir el registro en otra
   // operación para reintentarlo. El motor lo reintenta una sola vez por pasada.
   recover?(item: QueueItem, error: unknown): SyncRecovery | null;
+  // Las consultas que cambian cuando el registro llega al servidor: se vuelven a pedir aunque
+  // la pantalla que lo guardó ya no esté abierta.
+  refreshAfterSync?(item: QueueItem): readonly (readonly unknown[])[];
 }
 
 // Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se

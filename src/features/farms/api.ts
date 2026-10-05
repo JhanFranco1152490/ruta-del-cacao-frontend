@@ -90,7 +90,9 @@ export function useChangeFarmStatus() {
       patchFarm(id, { is_active: isActive, expected_version: expectedVersion }),
     onSuccess: (farm) => {
       queryClient.setQueryData(queryKeys.farms.detail(farm.id), farm);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.farms.lists() });
+      // No solo la lista: la pantalla de detalle (con su propia copia) y el mapa también muestran
+      // el estado, y sin esto seguirían con el anterior al volver a ellos.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.farms.all() });
     },
     onError: (error) => {
       // Con una versión obsoleta la lista en pantalla ya no es la del servidor: se vuelve a

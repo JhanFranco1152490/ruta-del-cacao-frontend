@@ -1159,6 +1159,7 @@ export interface components {
             readonly producer_id: string | null;
             readonly producer: components["schemas"]["RoleProducer"] | null;
             readonly permissions: string[];
+            readonly permission_details: components["schemas"]["RolePermission"][];
         };
         RoleCreateRequest: {
             name: string;
@@ -1167,6 +1168,10 @@ export interface components {
             permission_codes?: string[];
             /** Format: uuid */
             producer_id?: string;
+        };
+        RolePermission: {
+            code: string;
+            name: string;
         };
         RoleProducer: {
             /** Format: uuid */
