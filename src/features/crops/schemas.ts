@@ -15,6 +15,8 @@ export const EARLIEST_PLANTING_YEAR = 1950;
 
 export const MISSING_VARIETY_MESSAGE = 'Seleccione la variedad de cacao';
 export const REPEATED_VARIETY_MESSAGE = 'Esta variedad ya está en la lista';
+export const UNAVAILABLE_VARIETY_MESSAGE =
+  'Esta variedad ya no está disponible. Elige otra del catálogo.';
 export const MISSING_STAGE_MESSAGE =
   'Selecciona la etapa del ciclo productivo.';
 
@@ -41,16 +43,25 @@ const treeCountField = () =>
       `Usa máximo ${formatCount(MAX_TREES_PER_VARIETY)} árboles.`,
     );
 
-const varietyLine = z.object({
-  variety_id: z.string().min(1, MISSING_VARIETY_MESSAGE),
-  tree_count: treeCountField(),
-});
+const varietyLine = (unavailableIds: ReadonlySet<string>) =>
+  z.object({
+    variety_id: z
+      .string()
+      .min(1, MISSING_VARIETY_MESSAGE)
+      .refine((id) => !unavailableIds.has(id), UNAVAILABLE_VARIETY_MESSAGE),
+    tree_count: treeCountField(),
+  });
 
 // `today` se recibe para decidir qué mes es futuro: así la regla no depende del reloj al probarla.
-export const createCharacterizationFormSchema = (today: Date) =>
+// `unavailableIds`: las variedades que el servidor ya no aceptaría en esta ficha (desactivadas
+// que su ficha no tenía); enviarlas solo devolvería el registro a la bandeja.
+export const createCharacterizationFormSchema = (
+  today: Date,
+  unavailableIds: ReadonlySet<string> = new Set(),
+) =>
   z.object({
     varieties: z
-      .array(varietyLine)
+      .array(varietyLine(unavailableIds))
       .min(1, MISSING_VARIETY_MESSAGE)
       .max(
         MAX_VARIETY_LINES,

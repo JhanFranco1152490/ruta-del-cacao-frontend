@@ -32,6 +32,7 @@ import {
   type CharacterizationFormInput,
   createCharacterizationFormSchema,
   MAX_VARIETY_LINES,
+  UNAVAILABLE_VARIETY_MESSAGE,
 } from '../schemas';
 import { type VarietyOption, varietyChoices } from '../variety-choices';
 import { CharacterizationWarnings } from './characterization-warnings';
@@ -48,6 +49,8 @@ export const emptyCharacterizationForm = (): CharacterizationFormInput => ({
   shade_type: '',
 });
 
+const NO_KEPT_VARIETIES: ReadonlySet<string> = new Set();
+
 const toTreeCount = (text: string) =>
   /^\d+$/.test(text.trim()) ? Number(text) : Number.NaN;
 
@@ -62,9 +65,13 @@ export function CharacterizationForm({
   secondaryAction,
   onSubmit,
   today,
+  keptVarietyIds = NO_KEPT_VARIETIES,
 }: {
   // Las variedades del catálogo que conoce el dispositivo.
   catalog: readonly VarietyOption[];
+  // Las variedades de la ficha del servidor: una desactivada se puede conservar solo si ya
+  // estaba ahí.
+  keptVarietyIds?: ReadonlySet<string>;
   // El área declarada de la parcela, para la densidad.
   areaHectares: string;
   defaultValues: CharacterizationFormInput;
@@ -80,9 +87,30 @@ export function CharacterizationForm({
 }) {
   // El día se fija al abrir el formulario: no cambia mientras se llena.
   const [openedOn] = useState(() => today ?? new Date());
+  // Las desactivadas solo se ofrecen en la ficha que ya las tenía; las que traen las filas del
+  // dispositivo y ya no se aceptan se muestran marcadas para cambiarlas.
+  const choices = useMemo(
+    () =>
+      varietyChoices(
+        catalog,
+        keptVarietyIds,
+        new Set(defaultValues.varieties.map((line) => line.variety_id)),
+      ),
+    [catalog, keptVarietyIds, defaultValues.varieties],
+  );
+  // Por contenido y no por referencia: quien usa el formulario arma las listas en cada render, y
+  // el esquema solo debe cambiar si cambia lo que se puede enviar.
+  const unavailableKey = choices
+    .filter((choice) => !choice.isAvailable)
+    .map((choice) => choice.id)
+    .join(',');
   const schema = useMemo(
-    () => createCharacterizationFormSchema(openedOn),
-    [openedOn],
+    () =>
+      createCharacterizationFormSchema(
+        openedOn,
+        new Set(unavailableKey.split(',').filter(Boolean)),
+      ),
+    [openedOn, unavailableKey],
   );
   const {
     control,
@@ -104,15 +132,6 @@ export function CharacterizationForm({
     name: ['varieties', 'planting_date', 'stage'],
   });
 
-  // Las desactivadas solo se ofrecen en la ficha que ya las tenía.
-  const choices = useMemo(
-    () =>
-      varietyChoices(
-        catalog,
-        new Set(defaultValues.varieties.map((line) => line.variety_id)),
-      ),
-    [catalog, defaultValues.varieties],
-  );
   const choiceById = new Map(choices.map((choice) => [choice.id, choice]));
 
   const trees = totalTrees(lines.map((line) => toTreeCount(line.tree_count)));
@@ -148,9 +167,11 @@ export function CharacterizationForm({
                   className={CAPTURE_FIELD_CLASS}
                   error={errors.varieties?.[index]?.variety_id?.message}
                   hint={
-                    chosen && !chosen.isActive
-                      ? 'Variedad desactivada: ya no se ofrece para fichas nuevas. Puedes conservarla o cambiarla.'
-                      : undefined
+                    !chosen || chosen.isActive
+                      ? undefined
+                      : chosen.isAvailable
+                        ? 'Variedad desactivada: ya no se ofrece para fichas nuevas. Puedes conservarla o cambiarla.'
+                        : UNAVAILABLE_VARIETY_MESSAGE
                   }
                   label={`Variedad ${index + 1}`}
                   {...register(`varieties.${index}.variety_id`)}

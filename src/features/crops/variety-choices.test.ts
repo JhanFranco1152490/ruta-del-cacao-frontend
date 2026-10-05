@@ -27,12 +27,39 @@ describe('varietyChoices', () => {
     expect(varietyChoices(catalog, new Set(['']))).toHaveLength(2);
   });
 
-  it('keeps a variety the saved catalog does not know, instead of dropping it', () => {
+  it('keeps a deactivated variety the characterization already had, as still available', () => {
+    const kept = varietyChoices(catalog, new Set(['scc-61'])).find(
+      (choice) => choice.id === 'scc-61',
+    );
+
+    expect(kept).toMatchObject({ isActive: false, isAvailable: true });
+  });
+
+  it('marks a deactivated variety that only the device has as no longer available', () => {
+    const choices = varietyChoices(catalog, new Set(), new Set(['scc-61']));
+
+    expect(choices.find((choice) => choice.id === 'scc-61')).toMatchObject({
+      label: 'SCC-61 (ya no disponible)',
+      isAvailable: false,
+    });
+  });
+
+  it('keeps a variety the saved catalog does not know, last and not available', () => {
+    const choices = varietyChoices(catalog, new Set(), new Set(['fear-5']));
+
+    expect(choices.at(-1)).toMatchObject({
+      id: 'fear-5',
+      isActive: false,
+      isAvailable: false,
+      label: 'Variedad no disponible en este dispositivo',
+    });
+  });
+
+  it('treats an unknown variety the server characterization had as available', () => {
     const choices = varietyChoices(catalog, new Set(['fear-5']));
 
     expect(choices.find((choice) => choice.id === 'fear-5')).toMatchObject({
-      isActive: false,
-      label: 'Variedad no disponible en este dispositivo',
+      isAvailable: true,
     });
   });
 });

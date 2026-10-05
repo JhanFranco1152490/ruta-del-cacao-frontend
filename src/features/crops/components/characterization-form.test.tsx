@@ -23,10 +23,12 @@ function renderForm({
   defaultValues = emptyCharacterizationForm(),
   areaHectares = '2.40',
   blockedMessage,
+  keptVarietyIds,
 }: {
   defaultValues?: CharacterizationFormInput;
   areaHectares?: string;
   blockedMessage?: string;
+  keptVarietyIds?: ReadonlySet<string>;
 } = {}) {
   const onSubmit = vi.fn();
   render(
@@ -36,6 +38,7 @@ function renderForm({
       catalog={catalog}
       defaultValues={defaultValues}
       isSaving={false}
+      keptVarietyIds={keptVarietyIds}
       onSubmit={onSubmit}
       today={TODAY}
     />,
@@ -191,6 +194,7 @@ describe('CharacterizationForm', () => {
         management_system: '',
         shade_type: '',
       },
+      keptVarietyIds: new Set(['scc-61']),
     });
 
     const kept = screen.getByLabelText('Variedad 1');
@@ -205,6 +209,29 @@ describe('CharacterizationForm', () => {
       .getAllByRole('option')
       .map((option) => option.textContent);
     expect(offered).toContain('SCC-61 (desactivada)');
+  });
+
+  it('asks to change a deactivated variety the server characterization did not have', async () => {
+    const { onSubmit, user } = renderForm({
+      defaultValues: {
+        varieties: [{ variety_id: 'scc-61', tree_count: '900' }],
+        planting_date: '2019-05',
+        stage: 'full_production',
+        management_system: '',
+        shade_type: '',
+      },
+    });
+
+    const line = screen.getByLabelText('Variedad 1');
+    expect(line).toHaveAccessibleDescription(
+      'Esta variedad ya no está disponible. Elige otra del catálogo.',
+    );
+    await save(user);
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await user.selectOptions(line, 'ccn-51');
+    await save(user);
+    expect(onSubmit).toHaveBeenCalledOnce();
   });
 
   it('does not offer a deactivated variety on a new characterization', () => {

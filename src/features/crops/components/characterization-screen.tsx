@@ -145,9 +145,14 @@ export function CharacterizationScreen({
     : fromServer
       ? serverToFormInput(fromServer)
       : emptyCharacterizationForm();
+  // La ficha del servidor contra la que se guarda: la que trajo el conflicto o la leída.
+  const serverCharacterization = current ?? fromServer;
   const options = varietyOptionsFor(
     catalog.data?.data ?? [],
-    current ?? fromServer,
+    serverCharacterization,
+  );
+  const keptVarietyIds = new Set(
+    serverCharacterization?.varieties.map((row) => row.variety.id),
   );
   const failed = pending?.status === 'error';
   const blockedMessage = !farm.isActive
@@ -222,6 +227,7 @@ export function CharacterizationScreen({
           defaultValues={defaultValues}
           error={save.isError ? SAVE_FAILED : null}
           isSaving={save.isPending}
+          keptVarietyIds={keptVarietyIds}
           key={round}
           onSubmit={(fields) =>
             save.mutate(

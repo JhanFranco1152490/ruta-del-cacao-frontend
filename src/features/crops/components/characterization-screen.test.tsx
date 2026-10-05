@@ -203,6 +203,56 @@ describe('CharacterizationScreen', () => {
     );
   });
 
+  it('lets keep a deactivated variety its saved characterization already had', async () => {
+    server.use(
+      characterizationsHandler([
+        buildCharacterization({
+          varieties: [
+            {
+              variety: { id: 'v-scc-61', name: 'SCC-61', is_active: false },
+              tree_count: 900,
+            },
+          ],
+        }),
+      ]),
+    );
+    renderScreen();
+
+    expect(
+      await screen.findByLabelText('Variedad 1'),
+    ).toHaveAccessibleDescription(
+      'Variedad desactivada: ya no se ofrece para fichas nuevas. Puedes conservarla o cambiarla.',
+    );
+  });
+
+  it('asks to change a deactivated variety the server rejected for a new line', async () => {
+    server.use(characterizationsHandler([]));
+    await enqueueCharacterization(
+      userId,
+      'pl1',
+      {
+        varieties: [{ variety_id: 'v-scc-61', tree_count: 900 }],
+        planting_date: '2024-01',
+        stage: 'establishment',
+        management_system: null,
+        shade_type: null,
+      },
+      null,
+    );
+    await getOfflineDb(userId).queue.update(characterizationQueueId('pl1'), {
+      status: 'error',
+      errorCode: 'variety_inactive',
+      errorMessage: 'Variedad desactivada: SCC-61. Elige otra del catálogo.',
+    });
+    renderScreen();
+
+    expect(
+      await screen.findByLabelText('Variedad 1'),
+    ).toHaveAccessibleDescription(
+      'Esta variedad ya no está disponible. Elige otra del catálogo.',
+    );
+  });
+
   it('does not let an inactive plot change its characterization', async () => {
     server.use(characterizationsHandler([buildCharacterization()]));
     renderScreen({ ...PLOT, isActive: false });
