@@ -514,4 +514,113 @@ describe('CharacterizationForm', () => {
       expect(warnings()).not.toHaveTextContent('siembra 1');
     });
   });
+
+  describe('collapsing a planting', () => {
+    const collapse = (user: User, position: number) =>
+      user.click(
+        screen.getByRole('button', { name: `Colapsar siembra ${position}` }),
+      );
+
+    it('hides the fields of the planting and shows what was filled in, in one line', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+
+      await collapse(user, 1);
+
+      expect(screen.getByLabelText('Variedad 1')).not.toBeVisible();
+      expect(
+        screen.getByText(
+          'CCN-51 · marzo de 2021 · 1.800 árboles · Producción estable',
+        ),
+      ).toBeVisible();
+      expect(
+        screen.getByRole('button', { name: 'Expandir siembra 1' }),
+      ).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('shows the fields again when expanded, with what was written', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+      await collapse(user, 1);
+
+      await user.click(
+        screen.getByRole('button', { name: 'Expandir siembra 1' }),
+      );
+
+      expect(screen.getByLabelText('Variedad 1')).toBeVisible();
+      expect(screen.getByLabelText('Variedad 1')).toHaveValue('ccn-51');
+      expect(treeFields()[0]).toHaveValue('1800');
+      expect(
+        screen.getByRole('button', { name: 'Colapsar siembra 1' }),
+      ).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('still sends a planting that was left collapsed', async () => {
+      const { onSubmit, user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+      await collapse(user, 1);
+
+      await save(user);
+
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          plantings: [
+            expect.objectContaining({
+              variety_id: 'ccn-51',
+              tree_count: 1800,
+              stage: 'full_production',
+            }),
+          ],
+        }),
+        expect.anything(),
+      );
+    });
+
+    it('collapses each planting on its own', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+      await addPlanting(user);
+
+      await collapse(user, 1);
+
+      expect(screen.getByLabelText('Variedad 1')).not.toBeVisible();
+      expect(screen.getByLabelText('Variedad 2')).toBeVisible();
+    });
+
+    it('opens a collapsed planting that has an error, so the error is seen', async () => {
+      const { onSubmit, user } = renderForm();
+      await user.selectOptions(screen.getByLabelText('Variedad 1'), 'ccn-51');
+      await collapse(user, 1);
+
+      await save(user);
+
+      expect(screen.getByLabelText('Mes de siembra 1')).toBeVisible();
+      expect(
+        screen.getByText('Ingresa el mes y el año de siembra.'),
+      ).toBeVisible();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('says what is missing when a planting is collapsed with nothing filled in', async () => {
+      const { user } = renderForm();
+
+      await collapse(user, 1);
+
+      expect(screen.getByText('Sin completar')).toBeVisible();
+    });
+
+    it('keeps the rest of the plantings when one is removed from its header, collapsed or not', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+      await addPlanting(user);
+      await fillPlanting(user, 2, 'ics-95', '08', '2023', '600');
+      await collapse(user, 1);
+
+      await user.click(
+        screen.getByRole('button', { name: 'Quitar siembra 1' }),
+      );
+
+      expect(screen.getByLabelText('Variedad 1')).toHaveValue('ics-95');
+    });
+  });
 });
