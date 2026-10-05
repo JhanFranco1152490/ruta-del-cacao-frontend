@@ -494,7 +494,7 @@ export interface paths {
         get: operations["users_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["users_destroy"];
         options?: never;
         head?: never;
         patch: operations["users_partial_update"];
@@ -568,6 +568,7 @@ export interface components {
             readonly roles: components["schemas"]["AccountRole"][];
             readonly status: string;
             readonly activation_pending: boolean;
+            readonly has_signed_in: boolean;
             /** Format: date-time */
             readonly created_at: string;
         };
@@ -599,6 +600,7 @@ export interface components {
             readonly roles: components["schemas"]["AccountRole"][];
             readonly status: string;
             readonly activation_pending: boolean;
+            readonly has_signed_in: boolean;
             /** Format: date-time */
             readonly created_at: string;
             readonly activation_email_sent: boolean;
@@ -1057,7 +1059,6 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
-        /** @description Una versión de la ficha en su historial, con los valores que dejó. */
         PlotCharacterizationEvent: {
             readonly version: number;
             readonly action: components["schemas"]["ActionEnum"];
@@ -3751,6 +3752,58 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    users_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

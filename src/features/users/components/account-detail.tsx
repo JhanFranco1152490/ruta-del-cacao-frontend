@@ -11,6 +11,7 @@ import { hasFixedRole, isProducerAccount } from '../schemas';
 import { AccountEditForm } from './account-edit-form';
 import { AccountRolesPanel } from './account-roles-panel';
 import { AccountStatusBadge } from '@/components/account-status-badge';
+import { AccountDeleteDialog } from '@/components/account-delete-dialog';
 import { AccountStatusDialog } from '@/components/account-status-dialog';
 import { ActivationDelivery } from '@/components/activation-delivery';
 
@@ -22,11 +23,13 @@ export function AccountDetail({
   user,
   receipt,
   onBusy,
+  onDeleted,
 }: {
   id: string;
   user: SessionUser;
   receipt?: { id: string; sent: boolean };
   onBusy: (value: boolean) => void;
+  onDeleted: () => void;
 }) {
   const account = useAccount(id);
   const [mode, setMode] = useState<Mode>('view');
@@ -60,6 +63,10 @@ export function AccountDetail({
   const canUpdate = reachable && hasPermission(user, PERMISSIONS.USERS_UPDATE);
   const canChangeStatus =
     reachable && hasPermission(user, PERMISSIONS.USERS_CHANGE_STATUS);
+  const canDelete =
+    reachable &&
+    !data.has_signed_in &&
+    hasPermission(user, PERMISSIONS.USERS_DELETE);
   const canChangeRoles =
     canUpdate &&
     !hasFixedRole(data) &&
@@ -67,7 +74,7 @@ export function AccountDetail({
   return (
     <div className="space-y-4">
       <AccountSummary account={data} />
-      {(canUpdate || canChangeStatus) && (
+      {(canUpdate || canChangeStatus || canDelete) && (
         <div className="flex flex-wrap gap-3">
           {canUpdate && (
             <Button
@@ -90,6 +97,9 @@ export function AccountDetail({
           )}
           {canChangeStatus && (
             <AccountStatusDialog account={data} onBusy={onBusy} />
+          )}
+          {canDelete && (
+            <AccountDeleteDialog account={data} onDeleted={onDeleted} />
           )}
         </div>
       )}

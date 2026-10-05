@@ -6,9 +6,11 @@ import { useId, useState } from 'react';
 
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
+import { AccountDeleteDialog } from '@/components/account-delete-dialog';
 import { AccountStatusBadge } from '@/components/account-status-badge';
 import { AccountStatusDialog } from '@/components/account-status-dialog';
 import { ActivationDelivery } from '@/components/activation-delivery';
+import { useAccount } from '@/lib/api/accounts';
 import { useRoleOptions } from '@/lib/api/role-options';
 import { queryKeys } from '@/lib/api/query-keys';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -17,6 +19,20 @@ import type { Producer } from '../api';
 import { ProducerAccountCreateDialog } from './producer-account-create-dialog';
 
 const noop = () => undefined;
+
+// El resumen de la cuenta del expediente no dice si ya inició sesión: se pide su detalle, y solo
+// quien puede consultarla y eliminarla.
+function DeleteAccountAction({
+  accountId,
+  onDeleted,
+}: {
+  accountId: string;
+  onDeleted: () => void;
+}) {
+  const account = useAccount(accountId);
+  if (!account.data || account.data.has_signed_in) return null;
+  return <AccountDeleteDialog account={account.data} onDeleted={onDeleted} />;
+}
 
 // Bloque "Cuenta de acceso" del expediente. Cada acción vuelve a pedir el expediente, que es
 // el que trae el resumen de la cuenta.
@@ -66,6 +82,11 @@ export function ProducerAccountCard({ producer }: { producer: Producer }) {
                 onBusy={noop}
                 onChanged={refresh}
               />
+            )}
+          {hasPermission(user, PERMISSIONS.USERS_DELETE) &&
+            hasPermission(user, PERMISSIONS.USERS_VIEW) &&
+            user?.id !== account.id && (
+              <DeleteAccountAction accountId={account.id} onDeleted={refresh} />
             )}
           {account.activation_pending && (
             <ActivationDelivery

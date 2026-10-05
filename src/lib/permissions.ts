@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   USERS_CREATE: 'accounts.users_create',
   USERS_UPDATE: 'accounts.users_update',
   USERS_CHANGE_STATUS: 'accounts.users_change_status',
+  USERS_DELETE: 'accounts.users_delete',
   ROLES_VIEW: 'accounts.roles_view',
   ROLES_MANAGE: 'accounts.roles_manage',
   ASSOCIATION_ACCESS_MANAGE: 'accounts.association_access_manage',
