@@ -161,6 +161,10 @@ src/
   de la sesión, que siempre está) las invalida cuando el motor avisa que el envío terminó bien.
   Un recurso nuevo de la cola declara ahí sus consultas; no se escribe un hook por pantalla que
   mire la cola, porque solo funciona si esa pantalla está abierta en el momento del envío.
+- **Un registro recién guardado se sigue con `useQueuedRecordState`** (`hooks/`): dice si sigue
+  esperando, si el servidor lo rechazó o si ya llegó (salió de la cola), y
+  `describeQueuedRecord` (`lib/offline/`) escribe lo que le pasó. Los paneles de "guardado" de
+  cada dominio los usan; no se escribe un hook ni un texto propio por recurso.
 - Formularios con react-hook-form + `zodResolver`. El esquema y los mapeos formulario ↔
   petición viven en el dominio (`features/<dominio>/schemas.ts`). Los errores de campo del
   servidor se vuelcan con `applyApiFieldErrors(error, setError, campos)`, que devuelve
