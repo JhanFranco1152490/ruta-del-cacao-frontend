@@ -25,6 +25,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
+  it('no longer saves the page of the retired section', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
+  });
+
   it('never saves the sign-in page or the old panel', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/iniciar-sesion');
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/panel');
