@@ -1,11 +1,4 @@
-import {
-  Leaf,
-  MapPinned,
-  ShieldCheck,
-  Sprout,
-  UserRound,
-  Users,
-} from 'lucide-react';
+import { Leaf, MapPinned, ShieldCheck, Sprout, Users } from 'lucide-react';
 
 import { PERMISSIONS } from '@/lib/permissions';
 import type { NavItem } from '@/types/navigation';
@@ -45,13 +38,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Usuarios',
     icon: Users,
     permission: PERMISSIONS.USERS_VIEW,
-    needsConnection: true,
-  },
-  {
-    href: '/mi-productor',
-    label: 'Mi productor',
-    icon: UserRound,
-    permission: PERMISSIONS.ASSOCIATION_ACCESS_MANAGE,
     needsConnection: true,
   },
 ];

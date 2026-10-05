@@ -209,27 +209,12 @@ describe('ProducerAccountCard', () => {
     expect(calls).toBe(1);
   });
 
-  it('links to the producer accounts only when the association has access', async () => {
-    mockProducer({ account, association_access: true });
+  it('shows no association access line and no link to the accounts', async () => {
+    mockProducer({ account });
     renderWithProviders(<ProducerDetailScreen id="p1" />);
     const region = await card();
-    expect(
-      within(region).getByText('Acceso de la asociación: encendido'),
-    ).toBeVisible();
-    expect(
-      await within(region).findByRole('link', {
-        name: 'Ver cuentas de este productor',
-      }),
-    ).toHaveAttribute('href', '/usuarios?productor=p1');
-  });
 
-  it('hides the link when the association has no access', async () => {
-    mockProducer({ account, association_access: false });
-    renderWithProviders(<ProducerDetailScreen id="p1" />);
-    const region = await card();
-    expect(
-      within(region).getByText('Acceso de la asociación: apagado'),
-    ).toBeVisible();
+    expect(within(region).queryByText(/Acceso de la asociación/)).toBeNull();
     expect(within(region).queryByRole('link')).toBeNull();
   });
 
@@ -245,7 +230,6 @@ describe('ProducerAccountCard', () => {
     );
     mockProducer({
       account: { ...account, activation_pending: true },
-      association_access: true,
     });
     renderWithProviders(<ProducerDetailScreen id="p1" />);
     const region = await card();

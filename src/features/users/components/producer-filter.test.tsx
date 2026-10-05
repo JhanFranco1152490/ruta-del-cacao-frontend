@@ -34,7 +34,7 @@ function mockSession(producer_id: string | null, permissions: string[]) {
     ),
   );
 }
-function mockProducer(association_access: boolean) {
+function mockProducer() {
   server.use(
     http.get(apiUrl(`/api/producers/${producerId}`), () =>
       HttpResponse.json(
@@ -42,7 +42,6 @@ function mockProducer(association_access: boolean) {
           id: producerId,
           first_name: 'Ana',
           member_code: 'PROD-000007',
-          association_access,
         }),
       ),
     ),
@@ -74,7 +73,7 @@ describe('producer filter of the association', () => {
         );
       }),
     );
-    mockProducer(true);
+    mockProducer();
     renderWithProviders(<AccountListScreen />, { onUrlUpdate });
 
     expect(
@@ -114,20 +113,8 @@ describe('producer filter of the association', () => {
     ).toBeVisible();
   });
 
-  it('warns when the producer has not allowed access, and still offers to create other accounts', async () => {
-    mockProducer(false);
-    renderWithProviders(<AccountListScreen />, {
-      searchParams: `?productor=${producerId}`,
-    });
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Este productor no ha autorizado el acceso de la asociación',
-    );
-    // El bloqueo de cuentas para ese productor está en el paso del tipo de cuenta.
-    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeVisible();
-  });
-
   it('goes back to every producer when the filter is removed', async () => {
-    mockProducer(true);
+    mockProducer();
     renderWithProviders(<AccountListScreen />, {
       searchParams: `?productor=${producerId}`,
     });
@@ -147,7 +134,7 @@ describe('producer filter of the association', () => {
         ),
       ),
     );
-    mockProducer(true);
+    mockProducer();
     renderWithProviders(<AccountListScreen />, {
       searchParams: `?productor=${producerId}`,
       onUrlUpdate,

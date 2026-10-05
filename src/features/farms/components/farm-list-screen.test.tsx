@@ -609,7 +609,6 @@ describe('FarmListScreen for the association', () => {
             first_name: 'Ana',
             last_name: 'Prueba',
             member_code: 'PROD-000007',
-            association_access: false,
           }),
         ),
       ),
@@ -657,18 +656,10 @@ describe('FarmListScreen for the association', () => {
     );
   });
 
-  // La asociación lee las fincas de todos los productores, sin depender de su interruptor.
-  it('does not warn about a producer without association access', async () => {
+  it('reads the farms of the chosen producer', async () => {
     const farmRequests: URLSearchParams[] = [];
-    let summaryServed = false;
     server.use(
       farmsHandler([buildFarm({ name: 'El Porvenir' })], farmRequests),
-      http.get(apiUrl(`/api/producers/${producerId}`), () => {
-        summaryServed = true;
-        return HttpResponse.json(
-          buildProducer({ id: producerId, association_access: false }),
-        );
-      }),
     );
     renderScreen({
       permissions: associationPermissions,
@@ -676,10 +667,8 @@ describe('FarmListScreen for the association', () => {
       searchParams: `?productor=${producerId}`,
     });
 
-    await waitFor(() => expect(summaryServed).toBe(true));
     expect(await farmCards()).toHaveLength(1);
     expect(farmRequests.at(-1)?.get('producer')).toBe(producerId);
-    expect(screen.queryByText(/no ha autorizado/)).not.toBeInTheDocument();
   });
 
   it('only lets the association look, never manage', async () => {

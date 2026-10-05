@@ -18,7 +18,6 @@ export const PERMISSIONS = {
   USERS_DELETE: 'accounts.users_delete',
   ROLES_VIEW: 'accounts.roles_view',
   ROLES_MANAGE: 'accounts.roles_manage',
-  ASSOCIATION_ACCESS_MANAGE: 'accounts.association_access_manage',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

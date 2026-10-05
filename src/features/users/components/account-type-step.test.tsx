@@ -22,7 +22,7 @@ const listItem = (id: string, first_name: string, member_code: string) => ({
   municipality_code: '54001',
   status: 'active',
 });
-function mockProducer(association_access: boolean) {
+function mockProducer() {
   server.use(
     http.get(apiUrl(`/api/producers/${producerId}`), () =>
       HttpResponse.json(
@@ -30,7 +30,6 @@ function mockProducer(association_access: boolean) {
           id: producerId,
           first_name: 'Ana',
           member_code: 'PROD-000007',
-          association_access,
         }),
       ),
     ),
@@ -62,8 +61,8 @@ describe('AccountTypeStep', () => {
     expect(onChoose).toHaveBeenCalledWith(undefined);
   });
 
-  it('asks for the producer of an employee who allowed access', async () => {
-    mockProducer(true);
+  it('asks for the producer of an employee', async () => {
+    mockProducer();
     const onChoose = vi.fn();
     renderWithProviders(<AccountTypeStep user={user} onChoose={onChoose} />);
 
@@ -79,24 +78,35 @@ describe('AccountTypeStep', () => {
     expect(onChoose).toHaveBeenCalledWith(producerId);
   });
 
-  it('does not continue with a producer who did not allow access', async () => {
-    mockProducer(false);
+  it('does not continue as an employee until a producer is chosen', async () => {
+    renderWithProviders(<AccountTypeStep user={user} onChoose={vi.fn()} />);
+
+    await userEvent.click(screen.getByLabelText('Empleado de un productor'));
+
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
+  });
+
+  it('continues with the chosen producer whatever the association access flag says', async () => {
+    mockProducer();
+    const onChoose = vi.fn();
     renderWithProviders(
       <AccountTypeStep
         user={user}
         initialProducer={producerId}
-        onChoose={vi.fn()}
+        onChoose={onChoose}
       />,
     );
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Este productor no autorizó el acceso de la asociación',
-    );
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
+    const next = screen.getByRole('button', { name: 'Continuar' });
+    expect(next).toBeEnabled();
+    await userEvent.click(next);
+
+    expect(onChoose).toHaveBeenCalledWith(producerId);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('starts with the producer of the list filter', async () => {
-    mockProducer(true);
+    mockProducer();
     renderWithProviders(
       <AccountTypeStep
         user={user}

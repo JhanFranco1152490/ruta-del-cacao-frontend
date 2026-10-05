@@ -81,7 +81,6 @@ describe('NAV_ITEMS', () => {
       '/variedades',
       '/roles',
       '/usuarios',
-      '/mi-productor',
     ]);
   });
 
@@ -100,21 +99,7 @@ describe('NAV_ITEMS', () => {
   it('marks the office sections as needing a connection', () => {
     expect(
       NAV_ITEMS.filter((item) => item.needsConnection).map((item) => item.href),
-    ).toEqual([
-      '/productores',
-      '/variedades',
-      '/roles',
-      '/usuarios',
-      '/mi-productor',
-    ]);
-  });
-
-  it('shows Mi productor only to whoever manages the association access', () => {
-    const byHref = Object.fromEntries(NAV_ITEMS.map((i) => [i.href, i]));
-
-    expect(byHref['/mi-productor'].permission).toBe(
-      PERMISSIONS.ASSOCIATION_ACCESS_MANAGE,
-    );
+    ).toEqual(['/productores', '/variedades', '/roles', '/usuarios']);
   });
 });
 

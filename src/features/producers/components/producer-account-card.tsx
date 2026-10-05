@@ -1,10 +1,8 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import Link from 'next/link';
 import { useId, useState } from 'react';
 
-import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { AccountDeleteDialog } from '@/components/account-delete-dialog';
 import { AccountStatusBadge } from '@/components/account-status-badge';
@@ -119,19 +117,6 @@ export function ProducerAccountCard({ producer }: { producer: Producer }) {
       ) : (
         <p>Reactiva el productor para crear su cuenta.</p>
       )}
-      <p className="text-sm text-muted-foreground">
-        Acceso de la asociación:{' '}
-        {producer.association_access ? 'encendido' : 'apagado'}
-      </p>
-      {producer.association_access &&
-        hasPermission(user, PERMISSIONS.USERS_VIEW) && (
-          <Link
-            className={buttonVariants({ variant: 'outline', size: 'office' })}
-            href={`/usuarios?productor=${producer.id}`}
-          >
-            Ver cuentas de este productor
-          </Link>
-        )}
     </section>
   );
 }
