@@ -25,6 +25,26 @@ export const queryKeys = {
     detail: (id: string) => ['producers', 'detail', id] as const,
     dependents: (id: string) => ['producers', 'dependents', id] as const,
   },
+  cacaoVarieties: {
+    all: () => ['cacao-varieties'] as const,
+    // El catálogo completo de la pantalla de variedades (activas e inactivas).
+    list: () => ['cacao-varieties', 'list'] as const,
+    // Las activas, que ofrece la ficha de una parcela; con copia en el dispositivo.
+    active: () => ['cacao-varieties', 'active'] as const,
+  },
+  characterizations: {
+    // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la
+    // parcela).
+    allFarms: () => ['characterizations', 'farm'] as const,
+    // Las fichas de las parcelas de una finca: el detalle las pide todas juntas.
+    byFarm: (farmId: string) => ['characterizations', 'farm', farmId] as const,
+    // La ficha de una parcela que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, plotId: string) =>
+      ['characterizations', 'queued', userId, plotId] as const,
+    // Las versiones de la ficha de una parcela: solo se piden con conexión, sin copia local.
+    history: (plotId: string) =>
+      ['characterizations', 'history', plotId] as const,
+  },
   plots: {
     // Las parcelas de una finca: el detalle de finca siempre las pide por finca.
     byFarm: (farmId: string) => ['plots', 'farm', farmId] as const,

@@ -14,7 +14,14 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
         '/fincas/editar',
         '/fincas/parcelas/nueva',
         '/fincas/parcelas/editar',
+        '/fincas/parcelas/caracterizacion',
       ]),
+    );
+  });
+
+  it('saves the page of the history, which only shows data with a connection but must open to say so', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain(
+      '/fincas/parcelas/caracterizacion/historial',
     );
   });
 

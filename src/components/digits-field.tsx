@@ -9,20 +9,23 @@ import {
 
 import { TextField, type TextFieldProps } from '@/components/text-field';
 
-type DigitsFieldProps<T extends FieldValues> = Omit<
+// `TTransformed`: lo que entrega el formulario al validar, cuando su esquema convierte los
+// valores (por ejemplo, el texto de este campo a número).
+type DigitsFieldProps<T extends FieldValues, TTransformed = T> = Omit<
   TextFieldProps,
   'name' | 'value' | 'onChange' | 'onBlur' | 'error' | 'ref'
 > & {
-  control: Control<T>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- el contexto por defecto de react-hook-form es `any`
+  control: Control<T, any, TTransformed>;
   name: Path<T>;
 };
 
 // Campo numérico (documento, teléfono): descarta todo lo que no sea dígito al escribir.
-export function DigitsField<T extends FieldValues>({
+export function DigitsField<T extends FieldValues, TTransformed = T>({
   control,
   name,
   ...props
-}: DigitsFieldProps<T>) {
+}: DigitsFieldProps<T, TTransformed>) {
   return (
     <Controller
       control={control}
