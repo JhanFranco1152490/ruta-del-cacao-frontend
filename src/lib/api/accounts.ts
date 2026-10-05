@@ -95,6 +95,23 @@ export const useSetAccountStatus = (id: string) =>
       body: { status },
     }),
   );
+// Eliminar es solo en línea y la persona espera la respuesta. La cuenta deja de existir: se quita
+// su detalle y se refrescan las listas, y el expediente del productor que la muestre.
+export function useDeleteAccount() {
+  const client = useQueryClient();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (id: string) =>
+      apiFetch<void>(`/api/users/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: (_, id) => {
+      client.removeQueries({ queryKey: queryKeys.accounts.detail(id) });
+      void client.invalidateQueries({ queryKey: queryKeys.accounts.lists() });
+      void client.invalidateQueries({ queryKey: queryKeys.producers.all() });
+    },
+  });
+}
 export function useResendActivation() {
   return useMutation({
     mutationFn: (id: string) =>

@@ -91,6 +91,7 @@ export function AccountPanel({
             user={user}
             receipt={receipt}
             onBusy={onBusy}
+            onDeleted={close}
           />
         ) : (
           <ErrorState message="Cuenta no disponible" />

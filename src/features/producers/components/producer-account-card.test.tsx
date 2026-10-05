@@ -269,4 +269,78 @@ describe('ProducerAccountCard', () => {
       ),
     ).toBeVisible();
   });
+
+  describe('deleting the account', () => {
+    const detail = (overrides: object = {}) => ({
+      ...account,
+      first_name: 'Ana',
+      last_name: 'Prueba',
+      has_signed_in: false,
+      ...overrides,
+    });
+    function mockAccountDetail(overrides: object = {}) {
+      server.use(
+        http.get(apiUrl(`/api/users/${accountId}`), () =>
+          HttpResponse.json(detail(overrides)),
+        ),
+      );
+    }
+    const withDelete = [...adminPermissions, PERMISSIONS.USERS_DELETE];
+
+    it('offers it for an account that never signed in and leaves the producer without one', async () => {
+      mockSession(withDelete);
+      mockProducer({ account });
+      mockAccountDetail();
+      server.use(
+        http.delete(apiUrl(`/api/users/${accountId}`), () => {
+          mockProducer({});
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderWithProviders(<ProducerDetailScreen id="p1" />);
+      const region = await card();
+      await userEvent.click(
+        await within(region).findByRole('button', { name: 'Eliminar cuenta' }),
+      );
+      const dialog = await screen.findByRole('dialog', {
+        name: '¿Eliminar la cuenta?',
+      });
+      await userEvent.click(
+        within(dialog).getByRole('button', { name: 'Eliminar cuenta' }),
+      );
+      expect(
+        await within(region).findByText(
+          'Este productor aún no tiene cuenta de acceso.',
+        ),
+      ).toBeVisible();
+      expect(
+        await within(region).findByRole('button', {
+          name: 'Crear cuenta de acceso',
+        }),
+      ).toBeVisible();
+    });
+
+    it('does not offer it once the account has signed in', async () => {
+      mockSession(withDelete);
+      mockProducer({ account });
+      mockAccountDetail({ has_signed_in: true });
+      renderWithProviders(<ProducerDetailScreen id="p1" />);
+      const region = await card();
+      await within(region).findByRole('button', { name: 'Desactivar' });
+      expect(
+        within(region).queryByRole('button', { name: 'Eliminar cuenta' }),
+      ).toBeNull();
+    });
+
+    it('does not offer it without users_delete', async () => {
+      mockProducer({ account });
+      mockAccountDetail();
+      renderWithProviders(<ProducerDetailScreen id="p1" />);
+      const region = await card();
+      await within(region).findByRole('button', { name: 'Desactivar' });
+      expect(
+        within(region).queryByRole('button', { name: 'Eliminar cuenta' }),
+      ).toBeNull();
+    });
+  });
 });
