@@ -335,6 +335,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plot-characterizations/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las versiones de la ficha de una parcela, de la más nueva a la más vieja, cada una con los valores que dejó (`snapshot`), quién la guardó y qué campos cambió. Una parcela sin ficha devuelve la lista vacía; una parcela ajena, 404. */
+        get: operations["plot_characterizations_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plots": {
         parameters: {
             query?: never;
@@ -602,6 +619,12 @@ export interface components {
         AccountRoleIdsRequest: {
             role_ids: string[];
         };
+        /**
+         * @description * `created` - Caracterización registrada
+         *     * `updated` - Caracterización actualizada
+         * @enum {string}
+         */
+        ActionEnum: "created" | "updated";
         ActivationConfirmRequest: {
             new_password: string;
             new_password_confirmation: string;
@@ -839,6 +862,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["FarmMunicipalityCount"][];
         };
+        PaginatedPlotCharacterizationEventList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["PlotCharacterizationEvent"][];
+        };
         PaginatedPlotList: {
             /** @example 123 */
             count: number;
@@ -973,6 +1011,8 @@ export interface components {
             /** @example 2021-03 */
             planting_date: string;
             readonly tree_count: number;
+            readonly propagation: components["schemas"]["PropagationEnum"];
+            readonly stage: components["schemas"]["StageEnum"];
         };
         PlantingInputRequest: {
             /** Format: uuid */
@@ -980,6 +1020,8 @@ export interface components {
             /** @example 2021-03 */
             planting_date: string;
             tree_count: number;
+            propagation: components["schemas"]["PropagationEnum"];
+            stage: components["schemas"]["StageEnum"];
         };
         Plot: {
             /** Format: uuid */
@@ -1005,7 +1047,6 @@ export interface components {
             plot_id: string;
             plantings: components["schemas"]["Planting"][];
             readonly total_trees: number;
-            readonly stage: components["schemas"]["StageEnum"];
             readonly management_system: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
             readonly shade_type: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
             readonly version: number;
@@ -1016,13 +1057,27 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        /** @description Una versión de la ficha en su historial, con los valores que dejó. */
+        PlotCharacterizationEvent: {
+            readonly version: number;
+            readonly action: components["schemas"]["ActionEnum"];
+            /** Format: date-time */
+            readonly occurred_at: string;
+            readonly actor_name: string | null;
+            readonly changed_fields: string[];
+            readonly snapshot: components["schemas"]["PlotCharacterizationSnapshot"];
+        };
         PlotCharacterizationList: {
             results: components["schemas"]["PlotCharacterization"][];
+        };
+        PlotCharacterizationSnapshot: {
+            plantings: components["schemas"]["SnapshotPlanting"][];
+            management_system: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
+            shade_type: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         PlotCharacterizationWriteRequest: {
             expected_version: number | null;
             plantings: components["schemas"]["PlantingInputRequest"][];
-            stage: components["schemas"]["StageEnum"];
             management_system?: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
             shade_type?: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
             /** Format: date-time */
@@ -1148,6 +1203,12 @@ export interface components {
             first_name: string;
             last_name: string;
         };
+        /**
+         * @description * `grafted` - Injerto o clon
+         *     * `seed` - Semilla
+         * @enum {string}
+         */
+        PropagationEnum: "grafted" | "seed";
         Role: {
             /** Format: uuid */
             readonly id: string;
@@ -1205,6 +1266,15 @@ export interface components {
          * @enum {string}
          */
         ShadeTypeEnum: "none" | "temporary" | "permanent" | "mixed";
+        SnapshotPlanting: {
+            /** Format: uuid */
+            variety_id: string;
+            name: string;
+            planting_date: string;
+            tree_count: number;
+            propagation: components["schemas"]["PropagationEnum"];
+            stage: components["schemas"]["StageEnum"];
+        };
         /**
          * @description * `gps` - gps
          *     * `map` - map
@@ -2507,6 +2577,56 @@ export interface operations {
                 };
             };
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plot_characterizations_history_list: {
+        parameters: {
+            query?: {
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPlotCharacterizationEventList"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
