@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
+import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb, type QueueItem } from '@/lib/offline/db';
 import {
   clearAdapters,
@@ -245,5 +246,15 @@ describe('the queue with the plot adapter', () => {
     expect((await getQueuedPlot(userId, 'pl1'))?.errorData).toMatchObject({
       suggested_boundary: null,
     });
+  });
+});
+
+describe('plotSyncAdapter.refreshAfterSync', () => {
+  it('refreshes the plots of its farm and the farm, whose assigned area changes', () => {
+    expect(plotSyncAdapter.refreshAfterSync?.(queueItem({}))).toEqual([
+      queryKeys.plots.byFarm('f1'),
+      queryKeys.farms.detail('f1'),
+      queryKeys.farms.lists(),
+    ]);
   });
 });
