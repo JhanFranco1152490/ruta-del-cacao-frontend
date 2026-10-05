@@ -67,17 +67,19 @@ export const deletePlot = (id: string, expectedVersion: number) => {
 };
 
 // Lo que cambia las parcelas de una finca o su área asignada: la lista de la finca y la finca
-// misma (que trae el área asignada) se vuelven a pedir.
+// misma (que trae el área asignada) se vuelven a pedir. Lo usan las acciones en línea y la cola.
+export const plotReadsOf = (farmId: string) => [
+  queryKeys.plots.byFarm(farmId),
+  queryKeys.farms.detail(farmId),
+  queryKeys.farms.lists(),
+];
+
 function useInvalidatePlotsOf() {
   const queryClient = useQueryClient();
   return (farmId: string) => {
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.plots.byFarm(farmId),
-    });
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.farms.detail(farmId),
-    });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.farms.lists() });
+    for (const queryKey of plotReadsOf(farmId)) {
+      void queryClient.invalidateQueries({ queryKey });
+    }
   };
 }
 

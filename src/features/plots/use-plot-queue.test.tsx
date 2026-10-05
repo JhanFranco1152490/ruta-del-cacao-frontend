@@ -8,16 +8,11 @@ import { getOfflineDb } from '@/lib/offline/db';
 import { buildSession } from '@/test/factories';
 import { createTestQueryClient } from '@/test/render';
 
-import {
-  enqueuePlotCreate,
-  type PlotFormValues,
-  type QueuedPlot,
-} from './plot-queue';
+import { enqueuePlotCreate, type PlotFormValues } from './plot-queue';
 import {
   usePlotCreate,
   usePlotDiscard,
   useQueuedPlots,
-  useRefreshPlotsWhenQueueShrinks,
 } from './use-plot-queue';
 
 const values: PlotFormValues = {
@@ -69,28 +64,5 @@ describe('usePlotCreate and usePlotDiscard', () => {
     await act(() => discarding.result.current.mutateAsync('pl1'));
 
     expect(await getOfflineDb(userId).queue.get('pl1')).toBeUndefined();
-  });
-});
-
-describe('useRefreshPlotsWhenQueueShrinks', () => {
-  it('asks the server again when a plot leaves the queue', async () => {
-    const { queryClient, wrapper } = setup();
-    queryClient.setQueryData(queryKeys.plots.byFarm('f1'), { stale: true });
-    const plot = (id: string) => ({ id, farmId: 'f1' }) as QueuedPlot;
-    const { rerender } = renderHook(
-      ({ plots }) => useRefreshPlotsWhenQueueShrinks('f1', plots),
-      { wrapper, initialProps: { plots: [plot('pl1')] } },
-    );
-    expect(
-      queryClient.getQueryState(queryKeys.plots.byFarm('f1'))?.isInvalidated,
-    ).toBe(false);
-
-    rerender({ plots: [] });
-
-    await waitFor(() =>
-      expect(
-        queryClient.getQueryState(queryKeys.plots.byFarm('f1'))?.isInvalidated,
-      ).toBe(true),
-    );
   });
 });

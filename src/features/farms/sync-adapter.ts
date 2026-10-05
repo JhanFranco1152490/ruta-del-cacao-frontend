@@ -1,4 +1,5 @@
 import { isApiError } from '@/lib/api/errors';
+import { queryKeys } from '@/lib/api/query-keys';
 import type { SyncAdapter } from '@/lib/offline/adapters';
 
 import { patchFarm, postFarm } from './api';
@@ -21,6 +22,9 @@ function isRetryable(status: number) {
 
 export const farmSyncAdapter: SyncAdapter = {
   resource: FARM_RESOURCE,
+
+  // Una finca nueva o editada cambia la lista, el mapa y su detalle.
+  refreshAfterSync: () => [queryKeys.farms.all()],
 
   async send(item) {
     if (item.operation === 'create') {

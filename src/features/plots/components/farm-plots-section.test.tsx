@@ -1,11 +1,18 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
 import { getOfflineDb } from '@/lib/offline/db';
+import {
+  clearAdapters,
+  processQueue,
+  registerAdapter,
+} from '@/lib/offline/sync-queue';
 import { buildPlot, buildSession, buildVertex } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -17,6 +24,7 @@ vi.mock('@/config/map', async () => {
 });
 
 import { enqueuePlotCreate } from '../plot-queue';
+import { plotSyncAdapter } from '../sync-adapter';
 import { FarmPlotsSection } from './farm-plots-section';
 
 const BOUNDARY = [
@@ -43,15 +51,20 @@ beforeEach(() => {
 function renderSection({
   permissions = [PERMISSIONS.FARMS_VIEW, PERMISSIONS.PLOTS_VIEW] as string[],
   farm = FARM as Parameters<typeof FarmPlotsSection>[0]['farm'],
+  extra = null as ReactNode,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: userId, permissions }),
   );
-  return renderWithProviders(<FarmPlotsSection farm={farm} />, {
-    queryClient,
-  });
+  return renderWithProviders(
+    <>
+      {extra}
+      <FarmPlotsSection farm={farm} />
+    </>,
+    { queryClient },
+  );
 }
 
 describe('FarmPlotsSection', () => {
@@ -329,21 +342,37 @@ describe('FarmPlotsSection', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('asks the server again when a plot leaves the queue because it synced', async () => {
+    it('asks the server again once a pending plot reaches it, as the session frame refreshes', async () => {
       const requests: URLSearchParams[] = [];
-      server.use(plotsHandler([], requests));
+      server.use(
+        plotsHandler([], requests),
+        http.post(apiUrl('/api/plots'), () =>
+          HttpResponse.json(buildPlot({ id: 'q1', code: 'P-pendiente' }), {
+            status: 201,
+          }),
+        ),
+      );
+      registerAdapter(plotSyncAdapter);
       await enqueuePlotCreate(userId, 'q1', 'f1', {
         code: 'P-pendiente',
         area_hectares: '1.00',
         vertices: [],
       });
-      renderSection({ permissions: ALL });
+      function RefreshAfterSync() {
+        useRefreshAfterSync();
+        return null;
+      }
+      renderSection({ permissions: ALL, extra: <RefreshAfterSync /> });
       await screen.findByText('P-pendiente');
       const before = requests.length;
 
-      await getOfflineDb(userId).queue.delete('q1');
+      try {
+        await processQueue(userId);
 
-      await waitFor(() => expect(requests.length).toBeGreaterThan(before));
+        await waitFor(() => expect(requests.length).toBeGreaterThan(before));
+      } finally {
+        clearAdapters();
+      }
     });
 
     it('shows only the device plots of a farm that is not on the server yet, without asking for more', async () => {
