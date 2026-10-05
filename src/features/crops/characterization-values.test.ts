@@ -18,10 +18,17 @@ describe('serverToFormInput', () => {
           variety_id: 'v-ccn-51',
           planting_date: '2021-03',
           tree_count: '1800',
+          propagation: 'grafted',
+          stage: 'full_production',
         },
-        { variety_id: 'v-ics-95', planting_date: '2021-03', tree_count: '600' },
+        {
+          variety_id: 'v-ics-95',
+          planting_date: '2021-03',
+          tree_count: '600',
+          propagation: 'grafted',
+          stage: 'full_production',
+        },
       ],
-      stage: 'full_production',
       management_system: 'conventional',
       shade_type: '',
     });
@@ -33,19 +40,41 @@ describe('queuedToFormInput', () => {
     expect(
       queuedToFormInput({
         plantings: [
-          { variety_id: 'v1', planting_date: '2018-04', tree_count: 900 },
-          { variety_id: 'v1', planting_date: '2024-01', tree_count: 300 },
+          {
+            variety_id: 'v1',
+            planting_date: '2018-04',
+            tree_count: 900,
+            propagation: 'seed',
+            stage: 'full_production',
+          },
+          {
+            variety_id: 'v1',
+            planting_date: '2024-01',
+            tree_count: 300,
+            propagation: 'grafted',
+            stage: 'establishment',
+          },
         ],
-        stage: 'establishment',
         management_system: null,
         shade_type: 'mixed',
       }),
     ).toEqual({
       plantings: [
-        { variety_id: 'v1', planting_date: '2018-04', tree_count: '900' },
-        { variety_id: 'v1', planting_date: '2024-01', tree_count: '300' },
+        {
+          variety_id: 'v1',
+          planting_date: '2018-04',
+          tree_count: '900',
+          propagation: 'seed',
+          stage: 'full_production',
+        },
+        {
+          variety_id: 'v1',
+          planting_date: '2024-01',
+          tree_count: '300',
+          propagation: 'grafted',
+          stage: 'establishment',
+        },
       ],
-      stage: 'establishment',
       management_system: '',
       shade_type: 'mixed',
     });
@@ -60,6 +89,8 @@ describe('varietyOptionsFor', () => {
           variety: { id: 'v-scc-61', name: 'SCC-61', is_active: false },
           planting_date: '2019-05',
           tree_count: 300,
+          propagation: 'grafted',
+          stage: 'full_production',
         },
       ],
     });
@@ -94,8 +125,8 @@ describe('varietyOptionsFor', () => {
 describe('summary lines', () => {
   it('take the names from the server', () => {
     expect(serverSummaryLines(buildCharacterization())).toEqual([
-      { varietyName: 'CCN-51', treeCount: 1800 },
-      { varietyName: 'ICS-95', treeCount: 600 },
+      { varietyName: 'CCN-51', treeCount: 1800, stage: 'full_production' },
+      { varietyName: 'ICS-95', treeCount: 600, stage: 'full_production' },
     ]);
   });
 
@@ -104,18 +135,29 @@ describe('summary lines', () => {
       queuedSummaryLines(
         {
           plantings: [
-            { variety_id: 'v1', planting_date: '2024-01', tree_count: 10 },
-            { variety_id: 'v9', planting_date: '2024-01', tree_count: 5 },
+            {
+              variety_id: 'v1',
+              planting_date: '2024-01',
+              tree_count: 10,
+              propagation: 'grafted',
+              stage: 'establishment',
+            },
+            {
+              variety_id: 'v9',
+              planting_date: '2024-01',
+              tree_count: 5,
+              propagation: 'grafted',
+              stage: 'establishment',
+            },
           ],
-          stage: 'establishment',
           management_system: null,
           shade_type: null,
         },
         new Map([['v1', 'CCN-51']]),
       ),
     ).toEqual([
-      { varietyName: 'CCN-51', treeCount: 10 },
-      { varietyName: 'Variedad', treeCount: 5 },
+      { varietyName: 'CCN-51', treeCount: 10, stage: 'establishment' },
+      { varietyName: 'Variedad', treeCount: 5, stage: 'establishment' },
     ]);
   });
 });

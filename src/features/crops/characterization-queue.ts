@@ -54,7 +54,6 @@ function toQueued(item: QueueItem): QueuedCharacterization {
     plotId: item.parentId!,
     fields: {
       plantings: payload.plantings,
-      stage: payload.stage,
       management_system: payload.management_system,
       shade_type: payload.shade_type,
     },

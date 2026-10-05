@@ -19,8 +19,9 @@ export const serverToFormInput = (
     variety_id: row.variety.id,
     planting_date: row.planting_date,
     tree_count: String(row.tree_count),
+    propagation: row.propagation,
+    stage: row.stage,
   })),
-  stage: characterization.stage,
   management_system: characterization.management_system ?? '',
   shade_type: characterization.shade_type ?? '',
 });
@@ -33,8 +34,9 @@ export const queuedToFormInput = (
     variety_id: row.variety_id,
     planting_date: row.planting_date,
     tree_count: String(row.tree_count),
+    propagation: row.propagation,
+    stage: row.stage,
   })),
-  stage: fields.stage,
   management_system: fields.management_system ?? '',
   shade_type: fields.shade_type ?? '',
 });
@@ -68,6 +70,7 @@ export const serverSummaryLines = (
   characterization.plantings.map((row) => ({
     varietyName: row.variety.name,
     treeCount: row.tree_count,
+    stage: row.stage,
   }));
 
 // Para una ficha pendiente solo se conocen los ids: el nombre sale del catálogo guardado, o del
@@ -79,5 +82,6 @@ export function queuedSummaryLines(
   return fields.plantings.map((row) => ({
     varietyName: names.get(row.variety_id) ?? 'Variedad',
     treeCount: row.tree_count,
+    stage: row.stage,
   }));
 }

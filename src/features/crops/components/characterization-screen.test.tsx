@@ -91,10 +91,6 @@ async function fillNewCharacterization(user: User) {
   await user.paste('2000');
   await user.selectOptions(screen.getByLabelText('Mes de siembra 1'), '03');
   await user.selectOptions(screen.getByLabelText('Año de siembra 1'), '2021');
-  await user.selectOptions(
-    screen.getByLabelText('Etapa del ciclo productivo'),
-    'full_production',
-  );
 }
 
 const save = (user: User, name = 'Guardar caracterización') =>
@@ -122,9 +118,15 @@ describe('CharacterizationScreen', () => {
     ).toHaveFocus();
     expect(await queuedPayload()).toMatchObject({
       plantings: [
-        { variety_id: 'v-ccn-51', planting_date: '2021-03', tree_count: 2000 },
+        {
+          variety_id: 'v-ccn-51',
+          planting_date: '2021-03',
+          tree_count: 2000,
+          propagation: 'grafted',
+          // La etapa salió sugerida por la edad de la siembra.
+          stage: 'full_production',
+        },
       ],
-      stage: 'full_production',
       expected_version: null,
     });
   });
@@ -135,17 +137,17 @@ describe('CharacterizationScreen', () => {
 
     expect(await screen.findByLabelText('Variedad 1')).toHaveValue('v-ccn-51');
     expect(screen.getByLabelText('Variedad 2')).toHaveValue('v-ics-95');
-    await user.selectOptions(
-      screen.getByLabelText('Etapa del ciclo productivo'),
-      'renovation',
-    );
+    await user.selectOptions(screen.getByLabelText('Etapa 1'), 'renovation');
     await save(user);
 
     await screen.findByRole('heading', {
       name: 'Caracterización guardada exitosamente',
     });
     expect(await queuedPayload()).toMatchObject({
-      stage: 'renovation',
+      plantings: [
+        { variety_id: 'v-ccn-51', stage: 'renovation' },
+        { variety_id: 'v-ics-95', stage: 'full_production' },
+      ],
       expected_version: 2,
     });
   });
@@ -170,9 +172,14 @@ describe('CharacterizationScreen', () => {
       'pl1',
       {
         plantings: [
-          { variety_id: 'v-ccn-51', planting_date: '2024-01', tree_count: 900 },
+          {
+            variety_id: 'v-ccn-51',
+            planting_date: '2024-01',
+            tree_count: 900,
+            propagation: 'grafted',
+            stage: 'establishment',
+          },
         ],
-        stage: 'establishment',
         management_system: null,
         shade_type: null,
       },
@@ -200,7 +207,7 @@ describe('CharacterizationScreen', () => {
     await waitFor(async () =>
       expect(await queuedPayload()).toMatchObject({
         expected_version: 5,
-        stage: 'establishment',
+        plantings: [{ stage: 'establishment' }],
       }),
     );
   });
@@ -214,6 +221,8 @@ describe('CharacterizationScreen', () => {
               variety: { id: 'v-scc-61', name: 'SCC-61', is_active: false },
               planting_date: '2019-05',
               tree_count: 900,
+              propagation: 'grafted',
+              stage: 'full_production',
             },
           ],
         }),
@@ -235,9 +244,14 @@ describe('CharacterizationScreen', () => {
       'pl1',
       {
         plantings: [
-          { variety_id: 'v-scc-61', planting_date: '2024-01', tree_count: 900 },
+          {
+            variety_id: 'v-scc-61',
+            planting_date: '2024-01',
+            tree_count: 900,
+            propagation: 'grafted',
+            stage: 'establishment',
+          },
         ],
-        stage: 'establishment',
         management_system: null,
         shade_type: null,
       },

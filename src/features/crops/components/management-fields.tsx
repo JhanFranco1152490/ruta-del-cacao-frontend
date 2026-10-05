@@ -6,13 +6,12 @@ import { SelectField } from '@/components/select-field';
 import {
   MANAGEMENT_SYSTEM_OPTIONS,
   SHADE_TYPE_OPTIONS,
-  STAGE_OPTIONS,
 } from '../characterization-rules';
 import type { CharacterizationFormInput } from '../schemas';
 
-// La etapa del ciclo productivo es de toda la parcela, no de cada siembra; manejo y sombra son
-// opcionales.
-export function StageAndManagementFields({
+// El manejo y la sombra son de toda la parcela y opcionales: la etapa, en cambio, es de cada
+// siembra.
+export function ManagementFields({
   register,
   errors,
 }: {
@@ -21,19 +20,6 @@ export function StageAndManagementFields({
 }) {
   return (
     <div className="grid gap-5">
-      <SelectField
-        className={CAPTURE_FIELD_CLASS}
-        error={errors.stage?.message}
-        label="Etapa del ciclo productivo"
-        {...register('stage')}
-      >
-        <option value="">Elige la etapa</option>
-        {STAGE_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </SelectField>
       <SelectField
         className={CAPTURE_FIELD_CLASS}
         error={errors.management_system?.message}

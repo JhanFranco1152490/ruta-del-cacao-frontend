@@ -20,10 +20,21 @@ import type { CharacterizationFormFields } from './schemas';
 
 const fields: CharacterizationFormFields = {
   plantings: [
-    { variety_id: 'ccn-51', planting_date: '2021-03', tree_count: 1800 },
-    { variety_id: 'ics-95', planting_date: '2023-08', tree_count: 600 },
+    {
+      variety_id: 'ccn-51',
+      planting_date: '2021-03',
+      tree_count: 1800,
+      propagation: 'grafted',
+      stage: 'full_production',
+    },
+    {
+      variety_id: 'ics-95',
+      planting_date: '2023-08',
+      tree_count: 600,
+      propagation: 'grafted',
+      stage: 'early_production',
+    },
   ],
-  stage: 'full_production',
   management_system: 'conventional',
   shade_type: null,
 };
@@ -143,11 +154,11 @@ describe('resubmitCharacterization', () => {
 
     await resubmitCharacterization(userId, queued, {
       ...fields,
-      stage: 'renovation',
+      shade_type: 'mixed',
     });
 
     expect(await getQueuedCharacterization(userId, 'plot-1')).toMatchObject({
-      fields: { stage: 'renovation' },
+      fields: { shade_type: 'mixed' },
       expectedVersion: 2,
       status: 'pending',
     });

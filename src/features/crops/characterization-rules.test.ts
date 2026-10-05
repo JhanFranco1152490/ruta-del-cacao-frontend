@@ -9,22 +9,36 @@ import {
   densityPerHectare,
   formatAge,
   formatCount,
+  isSeedVariety,
   normalizeVarietyName,
+  suggestStage,
   totalTrees,
 } from './characterization-rules';
 
 const TODAY = new Date(2026, 9, 3);
 
-const input = (overrides: Partial<CoherenceInput> = {}): CoherenceInput => ({
-  density: 1000,
+const planting = (
+  overrides: Partial<CoherenceInput['plantings'][number]> = {},
+): CoherenceInput['plantings'][number] => ({
   stage: 'full_production',
   ageMonths: 60,
+  propagation: 'grafted',
+  ...overrides,
+});
+
+const input = (overrides: Partial<CoherenceInput> = {}): CoherenceInput => ({
+  density: 1000,
+  plantings: [planting()],
   varietyNames: ['ICS-95'],
   ...overrides,
 });
 
 const codes = (overrides: Partial<CoherenceInput>) =>
   coherenceWarnings(input(overrides)).map((warning) => warning.code);
+
+// Una sola siembra con estos datos: lo que se juzga en la mayoría de las pruebas de etapa.
+const stageCodes = (overrides: Partial<CoherenceInput['plantings'][number]>) =>
+  codes({ plantings: [planting(overrides)] });
 
 describe('ageInMonths', () => {
   it('counts the calendar months since the planting month', () => {
@@ -200,40 +214,90 @@ describe('coherenceWarnings', () => {
   });
 
   it('warns about a producing stage before two years', () => {
-    expect(codes({ stage: 'early_production', ageMonths: 23 })).toEqual([
+    expect(stageCodes({ stage: 'early_production', ageMonths: 23 })).toEqual([
       'stage_age_mismatch',
     ]);
-    expect(codes({ stage: 'full_production', ageMonths: 23 })).toEqual([
+    expect(stageCodes({ stage: 'full_production', ageMonths: 23 })).toEqual([
       'stage_age_mismatch',
     ]);
-    expect(codes({ stage: 'early_production', ageMonths: 24 })).toEqual([]);
+    expect(stageCodes({ stage: 'early_production', ageMonths: 24 })).toEqual(
+      [],
+    );
+  });
+
+  it('expects a seed planting to start producing later, around five years', () => {
+    expect(
+      stageCodes({
+        propagation: 'seed',
+        stage: 'early_production',
+        ageMonths: 47,
+      }),
+    ).toEqual(['stage_age_mismatch']);
+    expect(
+      stageCodes({
+        propagation: 'seed',
+        stage: 'early_production',
+        ageMonths: 48,
+      }),
+    ).toEqual([]);
   });
 
   it('warns about establishment after five years', () => {
-    expect(codes({ stage: 'establishment', ageMonths: 60 })).toEqual([]);
-    expect(codes({ stage: 'establishment', ageMonths: 61 })).toEqual([
+    expect(stageCodes({ stage: 'establishment', ageMonths: 60 })).toEqual([]);
+    expect(stageCodes({ stage: 'establishment', ageMonths: 61 })).toEqual([
       'stage_age_mismatch',
     ]);
   });
 
   it('never warns about the stage of renovation', () => {
-    expect(codes({ stage: 'renovation', ageMonths: 3 })).toEqual([]);
-    expect(codes({ stage: 'renovation', ageMonths: 300 })).toEqual([]);
+    expect(stageCodes({ stage: 'renovation', ageMonths: 3 })).toEqual([]);
+    expect(stageCodes({ stage: 'renovation', ageMonths: 300 })).toEqual([]);
   });
 
-  it('names the age of the crop in the stage message', () => {
+  it('names the planting and the age of the crop in the stage message', () => {
     const [warning] = coherenceWarnings(
-      input({ stage: 'full_production', ageMonths: 18 }),
+      input({
+        plantings: [
+          planting(),
+          planting({ stage: 'full_production', ageMonths: 18 }),
+        ],
+      }),
     );
     expect(warning.message).toBe(
-      'La etapa elegida no es la usual para un cultivo de 1 año y 6 meses.',
+      'La etapa de la siembra 2 no es la usual para un cultivo de 1 año y 6 meses.',
     );
+  });
+
+  it('judges each planting by its own age, not by the average', () => {
+    // Una tanda vieja en producción y otra recién sembrada que también dice producción.
+    expect(
+      codes({
+        plantings: [
+          planting({ ageMonths: 96 }),
+          planting({ stage: 'full_production', ageMonths: 6 }),
+        ],
+      }),
+    ).toEqual(['stage_age_mismatch']);
+  });
+
+  it('warns once per planting that does not fit', () => {
+    expect(
+      codes({
+        plantings: [
+          planting({ ageMonths: 3 }),
+          planting({ ageMonths: 6 }),
+          planting({ ageMonths: 96 }),
+        ],
+      }),
+    ).toEqual(['stage_age_mismatch', 'stage_age_mismatch']);
   });
 
   it('does not judge the stage without a stage or with a future month', () => {
-    expect(codes({ stage: null, ageMonths: 3 })).toEqual([]);
-    expect(codes({ stage: 'full_production', ageMonths: null })).toEqual([]);
-    expect(codes({ stage: 'full_production', ageMonths: -2 })).toEqual([]);
+    expect(stageCodes({ stage: null, ageMonths: 3 })).toEqual([]);
+    expect(stageCodes({ stage: 'full_production', ageMonths: null })).toEqual(
+      [],
+    );
+    expect(stageCodes({ stage: 'full_production', ageMonths: -2 })).toEqual([]);
   });
 
   it('warns when CCN-51 shares the plot with other clones', () => {
@@ -249,10 +313,54 @@ describe('coherenceWarnings', () => {
     expect(
       codes({
         density: 3000,
-        stage: 'full_production',
-        ageMonths: 6,
+        plantings: [planting({ ageMonths: 6 })],
         varietyNames: ['CCN-51', 'FEAR-5'],
       }),
     ).toEqual(['density_out_of_range', 'stage_age_mismatch', 'ccn51_mixed']);
+  });
+});
+
+describe('suggestStage', () => {
+  it('suggests establishment before two years', () => {
+    expect(suggestStage(0, 'grafted')).toBe('establishment');
+    expect(suggestStage(23, 'grafted')).toBe('establishment');
+  });
+
+  it('suggests the start of production from two to four years', () => {
+    expect(suggestStage(24, 'grafted')).toBe('early_production');
+    expect(suggestStage(47, 'grafted')).toBe('early_production');
+  });
+
+  it('suggests stable production from four years on', () => {
+    expect(suggestStage(48, 'grafted')).toBe('full_production');
+    expect(suggestStage(240, 'grafted')).toBe('full_production');
+  });
+
+  it('never suggests renovation: it does not come from the age', () => {
+    for (const months of [0, 24, 48, 120, 360]) {
+      expect(suggestStage(months, 'grafted')).not.toBe('renovation');
+    }
+  });
+
+  it('suggests nothing for seed, whose stages are not documented', () => {
+    expect(suggestStage(12, 'seed')).toBeNull();
+    expect(suggestStage(120, 'seed')).toBeNull();
+  });
+
+  it('suggests nothing without an age, or with a future month', () => {
+    expect(suggestStage(null, 'grafted')).toBeNull();
+    expect(suggestStage(-1, 'grafted')).toBeNull();
+  });
+});
+
+describe('isSeedVariety', () => {
+  it('recognizes the unidentified hybrid, however it is written', () => {
+    expect(isSeedVariety('Híbrido o común (sin identificar)')).toBe(true);
+    expect(isSeedVariety('hibrido o comun (sin identificar)')).toBe(true);
+  });
+
+  it('takes every other variety as a clone', () => {
+    expect(isSeedVariety('CCN-51')).toBe(false);
+    expect(isSeedVariety('FSA-12')).toBe(false);
   });
 });

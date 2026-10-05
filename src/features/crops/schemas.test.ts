@@ -6,6 +6,7 @@ import {
   createCharacterizationFormSchema,
   createVarietyFormSchema,
   DUPLICATE_VARIETY_MESSAGE,
+  MISSING_STAGE_MESSAGE,
   MISSING_VARIETY_MESSAGE,
   REPEATED_PLANTING_MESSAGE,
 } from './schemas';
@@ -20,6 +21,8 @@ const line = (overrides: Partial<Line> = {}): Line => ({
   variety_id: 'ccn-51',
   planting_date: '2021-03',
   tree_count: '1800',
+  propagation: 'grafted',
+  stage: 'full_production',
   ...overrides,
 });
 
@@ -28,9 +31,13 @@ const form = (
 ): CharacterizationFormInput => ({
   plantings: [
     line(),
-    line({ variety_id: 'ics-95', planting_date: '2023-08', tree_count: '600' }),
+    line({
+      variety_id: 'ics-95',
+      planting_date: '2023-08',
+      tree_count: '600',
+      stage: 'early_production',
+    }),
   ],
-  stage: 'full_production',
   management_system: 'conventional',
   shade_type: '',
   ...overrides,
@@ -48,10 +55,21 @@ describe('characterization form schema', () => {
   it('turns the form into what the API expects', () => {
     expect(schema.parse(form())).toEqual({
       plantings: [
-        { variety_id: 'ccn-51', planting_date: '2021-03', tree_count: 1800 },
-        { variety_id: 'ics-95', planting_date: '2023-08', tree_count: 600 },
+        {
+          variety_id: 'ccn-51',
+          planting_date: '2021-03',
+          tree_count: 1800,
+          propagation: 'grafted',
+          stage: 'full_production',
+        },
+        {
+          variety_id: 'ics-95',
+          planting_date: '2023-08',
+          tree_count: 600,
+          propagation: 'grafted',
+          stage: 'early_production',
+        },
       ],
-      stage: 'full_production',
       management_system: 'conventional',
       shade_type: null,
     });
@@ -164,10 +182,37 @@ describe('characterization form schema', () => {
     ]);
   });
 
-  it('requires the stage of the productive cycle', () => {
-    expect(issues({ stage: '' })).toEqual([
-      { path: ['stage'], message: 'Selecciona la etapa del ciclo productivo.' },
+  it('requires the stage of the productive cycle on each planting', () => {
+    expect(lineIssues({ stage: '' })).toEqual([
+      { path: ['plantings', 0, 'stage'], message: MISSING_STAGE_MESSAGE },
     ]);
+    expect(
+      issues({
+        plantings: [line(), line({ planting_date: '2024-02', stage: '' })],
+      }),
+    ).toEqual([
+      { path: ['plantings', 1, 'stage'], message: MISSING_STAGE_MESSAGE },
+    ]);
+  });
+
+  it('accepts each planting in its own stage', () => {
+    expect(
+      issues({
+        plantings: [
+          line({ planting_date: '2018-04', stage: 'renovation' }),
+          line({ planting_date: '2024-02', stage: 'establishment' }),
+        ],
+      }),
+    ).toBeUndefined();
+  });
+
+  it('only accepts the known propagations', () => {
+    expect(lineIssues({ propagation: 'seed' })).toBeUndefined();
+    expect(
+      schema.safeParse(
+        form({ plantings: [line({ propagation: 'cutting' as never })] }),
+      ).success,
+    ).toBe(false);
   });
 
   it('leaves management and shade optional, but only with known values', () => {

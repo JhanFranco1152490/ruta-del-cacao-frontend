@@ -60,12 +60,9 @@ export function PlotCharacterizationSummary({
   const failed = pending?.status === 'error';
   const plotDeleted = pending?.errorCode === CHARACTERIZATION_PLOT_DELETED_CODE;
   const summary = pending
-    ? characterizationSummary(
-        queuedSummaryLines(pending.fields, names),
-        pending.fields.stage,
-      )
+    ? characterizationSummary(queuedSummaryLines(pending.fields, names))
     : saved
-      ? characterizationSummary(serverSummaryLines(saved), saved.stage)
+      ? characterizationSummary(serverSummaryLines(saved))
       : null;
   // Sin la lectura del servidor no se sabe si la parcela tiene ficha: decir "Sin caracterizar"
   // sería afirmar algo que no se sabe.

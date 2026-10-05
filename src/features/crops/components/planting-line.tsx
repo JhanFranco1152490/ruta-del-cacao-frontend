@@ -5,7 +5,9 @@ import {
   type Control,
   Controller,
   type FieldErrors,
+  type UseFormGetValues,
   type UseFormRegister,
+  type UseFormSetValue,
 } from 'react-hook-form';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
@@ -13,6 +15,7 @@ import { DigitsField } from '@/components/digits-field';
 import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
 
+import { PROPAGATION_OPTIONS, STAGE_OPTIONS } from '../characterization-rules';
 import {
   type CharacterizationFormFields,
   type CharacterizationFormInput,
@@ -20,15 +23,21 @@ import {
 } from '../schemas';
 import type { VarietyChoice } from '../variety-choices';
 import { PlantingMonthField } from './planting-month-field';
+import { usePlantingSuggestions } from './use-planting-suggestions';
 
 const KEPT_INACTIVE_HINT =
   'Variedad desactivada: ya no se ofrece para fichas nuevas. Puedes conservarla o cambiarla.';
 
-// Una siembra de la ficha: la variedad, su mes y año, y cuántos árboles tiene.
+const SUGGESTED_STAGE_HINT = 'Sugerida según la edad. Puedes cambiarla.';
+
+// Una siembra de la ficha: la variedad, su mes y año, cuántos árboles tiene, cómo se propagó y en
+// qué etapa está.
 export function PlantingLine({
   index,
   control,
   register,
+  getValues,
+  setValue,
   errors,
   choices,
   chosen,
@@ -42,6 +51,8 @@ export function PlantingLine({
     CharacterizationFormFields
   >;
   register: UseFormRegister<CharacterizationFormInput>;
+  getValues: UseFormGetValues<CharacterizationFormInput>;
+  setValue: UseFormSetValue<CharacterizationFormInput>;
   errors: FieldErrors<CharacterizationFormInput>;
   choices: readonly VarietyChoice[];
   // La variedad elegida en esta fila, si hay.
@@ -51,6 +62,18 @@ export function PlantingLine({
 }) {
   const position = index + 1;
   const lineErrors = errors.plantings?.[index];
+  const { stageSuggested, markStageTouched, markPropagationTouched } =
+    usePlantingSuggestions({
+      index,
+      control,
+      getValues,
+      setValue,
+      today,
+      varietyName: chosen?.name,
+      hasStageError: !!lineErrors?.stage,
+    });
+  const propagation = register(`plantings.${index}.propagation`);
+  const stage = register(`plantings.${index}.stage`);
 
   return (
     <li className="grid gap-3 rounded-(--radius) border border-border p-3 sm:grid-cols-2 sm:items-start">
@@ -109,6 +132,39 @@ export function PlantingLine({
           <span className="sr-only sm:not-sr-only">Quitar</span>
         </Button>
       </div>
+      <SelectField
+        className={CAPTURE_FIELD_CLASS}
+        label={`Propagación ${position}`}
+        {...propagation}
+        onChange={(event) => {
+          markPropagationTouched();
+          return propagation.onChange(event);
+        }}
+      >
+        {PROPAGATION_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField
+        className={CAPTURE_FIELD_CLASS}
+        error={lineErrors?.stage?.message}
+        hint={stageSuggested ? SUGGESTED_STAGE_HINT : undefined}
+        label={`Etapa ${position}`}
+        {...stage}
+        onChange={(event) => {
+          markStageTouched();
+          return stage.onChange(event);
+        }}
+      >
+        <option value="">Elige la etapa</option>
+        {STAGE_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </SelectField>
     </li>
   );
 }

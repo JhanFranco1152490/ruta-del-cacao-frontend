@@ -21,6 +21,12 @@ const catalog: VarietyOption[] = [
     isActive: true,
     commonNames: ['Saravena', 'Fedecacao Saravena'],
   },
+  {
+    id: 'hibrido',
+    name: 'Híbrido o común (sin identificar)',
+    isActive: true,
+    commonNames: [],
+  },
   { id: 'ics-95', name: 'ICS-95', isActive: true, commonNames: [] },
   { id: 'scc-61', name: 'SCC-61', isActive: false, commonNames: [] },
 ];
@@ -90,10 +96,6 @@ async function fillValidForm(user: User) {
   await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
   await addPlanting(user);
   await fillPlanting(user, 2, 'ics-95', '08', '2023', '600');
-  await user.selectOptions(
-    screen.getByLabelText('Etapa del ciclo productivo'),
-    'full_production',
-  );
 }
 
 const save = (user: User) =>
@@ -114,11 +116,23 @@ describe('CharacterizationForm', () => {
 
     expect(onSubmit).toHaveBeenCalledWith(
       {
+        // Las etapas salen sugeridas por la edad: 5 años y 7 meses, y 3 años y 2 meses.
         plantings: [
-          { variety_id: 'ccn-51', planting_date: '2021-03', tree_count: 1800 },
-          { variety_id: 'ics-95', planting_date: '2023-08', tree_count: 600 },
+          {
+            variety_id: 'ccn-51',
+            planting_date: '2021-03',
+            tree_count: 1800,
+            propagation: 'grafted',
+            stage: 'full_production',
+          },
+          {
+            variety_id: 'ics-95',
+            planting_date: '2023-08',
+            tree_count: 600,
+            propagation: 'grafted',
+            stage: 'early_production',
+          },
         ],
-        stage: 'full_production',
         management_system: null,
         shade_type: 'permanent',
       },
@@ -178,10 +192,6 @@ describe('CharacterizationForm', () => {
     await fillPlanting(user, 1, 'ccn-51', '10', '2018', '1000');
     await addPlanting(user);
     await fillPlanting(user, 2, 'ccn-51', '10', '2018', '500');
-    await user.selectOptions(
-      screen.getByLabelText('Etapa del ciclo productivo'),
-      'full_production',
-    );
     await save(user);
     expect(screen.getByLabelText('Variedad 2')).toHaveAccessibleDescription(
       'Esta siembra ya está en la lista',
@@ -197,10 +207,6 @@ describe('CharacterizationForm', () => {
     const { onSubmit, user } = renderForm({ areaHectares: '1.00' });
 
     await fillPlanting(user, 1, 'ccn-51', '03', '2021', '11000');
-    await user.selectOptions(
-      screen.getByLabelText('Etapa del ciclo productivo'),
-      'full_production',
-    );
     await save(user);
 
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -228,7 +234,7 @@ describe('CharacterizationForm', () => {
       screen.queryByText('Ingresa el mes y el año de siembra.'),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByLabelText('Etapa del ciclo productivo'));
+    await user.click(screen.getByLabelText('Etapa 1'));
     expect(
       screen.getByText('Ingresa el mes y el año de siembra.'),
     ).toBeInTheDocument();
@@ -263,9 +269,14 @@ describe('CharacterizationForm', () => {
     renderForm({
       defaultValues: {
         plantings: [
-          { variety_id: 'scc-61', planting_date: '2019-05', tree_count: '900' },
+          {
+            variety_id: 'scc-61',
+            planting_date: '2019-05',
+            tree_count: '900',
+            propagation: 'grafted',
+            stage: 'full_production',
+          },
         ],
-        stage: 'full_production',
         management_system: '',
         shade_type: '',
       },
@@ -290,9 +301,14 @@ describe('CharacterizationForm', () => {
     const { onSubmit, user } = renderForm({
       defaultValues: {
         plantings: [
-          { variety_id: 'scc-61', planting_date: '2019-05', tree_count: '900' },
+          {
+            variety_id: 'scc-61',
+            planting_date: '2019-05',
+            tree_count: '900',
+            propagation: 'grafted',
+            stage: 'full_production',
+          },
         ],
-        stage: 'full_production',
         management_system: '',
         shade_type: '',
       },
@@ -320,6 +336,7 @@ describe('CharacterizationForm', () => {
       'Elige la variedad',
       'CCN-51',
       'FSA-12 · Saravena',
+      'Híbrido o común (sin identificar)',
       'ICS-95',
     ]);
   });
@@ -341,5 +358,160 @@ describe('CharacterizationForm', () => {
       screen.getByRole('button', { name: 'Guardar caracterización' }),
     ).toBeDisabled();
     expect(screen.getByText('La parcela está inactiva.')).toBeInTheDocument();
+  });
+
+  describe('stage and propagation of each planting', () => {
+    const stageOf = (position: number) =>
+      screen.getByLabelText(`Etapa ${position}`);
+
+    it('suggests the stage from the age of the planting and says so', async () => {
+      const { user } = renderForm();
+
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+
+      expect(stageOf(1)).toHaveValue('full_production');
+      expect(stageOf(1)).toHaveAccessibleDescription(
+        'Sugerida según la edad. Puedes cambiarla.',
+      );
+    });
+
+    it('suggests a different stage for each planting, by its own age', async () => {
+      const { user } = renderForm();
+
+      await fillPlanting(user, 1, 'ccn-51', '03', '2018', '1000');
+      await addPlanting(user);
+      await fillPlanting(user, 2, 'ccn-51', '03', '2026', '500');
+
+      expect(stageOf(1)).toHaveValue('full_production');
+      expect(stageOf(2)).toHaveValue('establishment');
+    });
+
+    it('follows the date while the person has not touched the stage', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+
+      await user.selectOptions(
+        screen.getByLabelText('Año de siembra 1'),
+        '2023',
+      );
+
+      expect(stageOf(1)).toHaveValue('early_production');
+    });
+
+    it('stops suggesting once the person chooses a stage, and no longer says it is suggested', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+
+      await user.selectOptions(stageOf(1), 'renovation');
+      await user.selectOptions(
+        screen.getByLabelText('Año de siembra 1'),
+        '2025',
+      );
+
+      expect(stageOf(1)).toHaveValue('renovation');
+      expect(stageOf(1)).not.toHaveAccessibleDescription(
+        'Sugerida según la edad. Puedes cambiarla.',
+      );
+    });
+
+    it('never suggests renovation', async () => {
+      const { user } = renderForm();
+
+      for (const year of ['1990', '2005', '2021', '2026']) {
+        await fillPlanting(user, 1, 'ccn-51', '03', year, '10');
+        expect(stageOf(1)).not.toHaveValue('renovation');
+      }
+    });
+
+    it('proposes seed for the unidentified hybrid, and suggests no stage for it', async () => {
+      const { user } = renderForm();
+
+      await fillPlanting(user, 1, 'hibrido', '03', '2021', '300');
+
+      expect(screen.getByLabelText('Propagación 1')).toHaveValue('seed');
+      expect(stageOf(1)).toHaveValue('');
+    });
+
+    it('proposes grafted for a clone', async () => {
+      const { user } = renderForm();
+
+      await fillPlanting(user, 1, 'fsa-12', '03', '2021', '300');
+
+      expect(screen.getByLabelText('Propagación 1')).toHaveValue('grafted');
+    });
+
+    it('takes the suggestion back when the person says it is seed', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '300');
+      expect(stageOf(1)).toHaveValue('full_production');
+
+      await user.selectOptions(screen.getByLabelText('Propagación 1'), 'seed');
+
+      expect(stageOf(1)).toHaveValue('');
+    });
+
+    it('keeps the propagation the person chose when the variety changes', async () => {
+      const { user } = renderForm();
+      await user.selectOptions(screen.getByLabelText('Variedad 1'), 'ccn-51');
+      await user.selectOptions(screen.getByLabelText('Propagación 1'), 'seed');
+
+      await user.selectOptions(screen.getByLabelText('Variedad 1'), 'fsa-12');
+
+      expect(screen.getByLabelText('Propagación 1')).toHaveValue('seed');
+    });
+
+    it('does not touch the stage of a characterization that is opened to edit', async () => {
+      renderForm({
+        defaultValues: {
+          plantings: [
+            {
+              variety_id: 'ccn-51',
+              planting_date: '2018-04',
+              tree_count: '900',
+              propagation: 'grafted',
+              stage: 'renovation',
+            },
+          ],
+          management_system: '',
+          shade_type: '',
+        },
+      });
+      const user = userEvent.setup();
+
+      await user.selectOptions(
+        screen.getByLabelText('Año de siembra 1'),
+        '2021',
+      );
+
+      expect(stageOf(1)).toHaveValue('renovation');
+    });
+
+    it('clears the stage error once a stage is suggested', async () => {
+      const { user } = renderForm();
+      await save(user);
+      expect(
+        screen.getAllByText('Selecciona la etapa del ciclo productivo.'),
+      ).not.toHaveLength(0);
+
+      await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+
+      expect(
+        screen.queryByText('Selecciona la etapa del ciclo productivo.'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('warns by planting when a stage does not fit its age', async () => {
+      const { user } = renderForm();
+      await fillPlanting(user, 1, 'ccn-51', '03', '2018', '1000');
+      await addPlanting(user);
+      await fillPlanting(user, 2, 'ccn-51', '03', '2026', '500');
+
+      await user.selectOptions(stageOf(2), 'full_production');
+
+      expect(warnings()).toHaveTextContent(
+        'La etapa de la siembra 2 no es la usual para un cultivo de 7 meses.',
+      );
+      expect(warnings()).not.toHaveTextContent('siembra 1');
+    });
   });
 });

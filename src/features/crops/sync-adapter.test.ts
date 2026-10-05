@@ -16,9 +16,14 @@ import {
 
 const payload: CharacterizationPayload = {
   plantings: [
-    { variety_id: 'v-ccn-51', planting_date: '2021-03', tree_count: 1800 },
+    {
+      variety_id: 'v-ccn-51',
+      planting_date: '2021-03',
+      tree_count: 1800,
+      propagation: 'grafted',
+      stage: 'full_production',
+    },
   ],
-  stage: 'full_production',
   management_system: null,
   shade_type: 'permanent',
   expected_version: null,

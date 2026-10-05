@@ -8,6 +8,7 @@ import {
   MAX_POSSIBLE_DENSITY,
   MANAGEMENT_SYSTEM_OPTIONS,
   normalizeVarietyName,
+  PROPAGATION_OPTIONS,
   SHADE_TYPE_OPTIONS,
   STAGE_OPTIONS,
 } from './characterization-rules';
@@ -72,6 +73,15 @@ const plantingLine = (today: Date, unavailableIds: ReadonlySet<string>) =>
       .refine((id) => !unavailableIds.has(id), UNAVAILABLE_VARIETY_MESSAGE),
     planting_date: plantingMonthField(today),
     tree_count: treeCountField(),
+    propagation: z.enum(values(PROPAGATION_OPTIONS)),
+    // Vacía mientras no se elige: la fila nueva arranca así, y la API no la acepta.
+    stage: z
+      .union([z.literal(''), z.enum(values(STAGE_OPTIONS))])
+      .transform((stage, context) => {
+        if (stage !== '') return stage;
+        context.addIssue({ code: 'custom', message: MISSING_STAGE_MESSAGE });
+        return z.NEVER;
+      }),
   });
 
 export const impossibleDensityMessage = (density: number) =>
@@ -121,14 +131,6 @@ export const createCharacterizationFormSchema = (
             ),
           });
         }
-      }),
-    // Vacía mientras no se elige: el formulario arranca así, y la API no la acepta.
-    stage: z
-      .union([z.literal(''), z.enum(values(STAGE_OPTIONS))])
-      .transform((stage, context) => {
-        if (stage !== '') return stage;
-        context.addIssue({ code: 'custom', message: MISSING_STAGE_MESSAGE });
-        return z.NEVER;
       }),
     management_system: optionalChoice(MANAGEMENT_SYSTEM_OPTIONS),
     shade_type: optionalChoice(SHADE_TYPE_OPTIONS),

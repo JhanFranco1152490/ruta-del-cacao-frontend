@@ -167,21 +167,52 @@ export const buildCharacterization = (
       variety: { id: 'v-ccn-51', name: 'CCN-51', is_active: true },
       planting_date: '2021-03',
       tree_count: 1800,
+      propagation: 'grafted',
+      stage: 'full_production',
     },
     {
       variety: { id: 'v-ics-95', name: 'ICS-95', is_active: true },
       planting_date: '2021-03',
       tree_count: 600,
+      propagation: 'grafted',
+      stage: 'full_production',
     },
   ],
   total_trees: 2400,
-  stage: 'full_production',
   management_system: 'conventional',
   shade_type: null,
   version: 2,
   captured_at: null,
   created_at: '2026-10-03T12:00:00-05:00',
   updated_at: '2026-10-03T12:00:00-05:00',
+  ...overrides,
+});
+
+export const buildSnapshotPlanting = (
+  overrides: Partial<Schemas['SnapshotPlanting']> = {},
+): Schemas['SnapshotPlanting'] => ({
+  variety_id: 'v-ccn-51',
+  name: 'CCN-51',
+  planting_date: '2021-03',
+  tree_count: 1800,
+  propagation: 'grafted',
+  stage: 'full_production',
+  ...overrides,
+});
+
+export const buildCharacterizationEvent = (
+  overrides: Partial<Schemas['PlotCharacterizationEvent']> = {},
+): Schemas['PlotCharacterizationEvent'] => ({
+  version: 1,
+  action: 'created',
+  occurred_at: '2026-10-03T14:10:00-05:00',
+  actor_name: 'Ana Gómez',
+  changed_fields: [],
+  snapshot: {
+    plantings: [buildSnapshotPlanting()],
+    management_system: null,
+    shade_type: null,
+  },
   ...overrides,
 });
 

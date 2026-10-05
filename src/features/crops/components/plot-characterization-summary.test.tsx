@@ -170,7 +170,7 @@ describe('PlotCharacterizationSummary', () => {
 
     it('asks the server again, as the session frame refreshes, even if the form that saved it is closed', async () => {
       const requests: URLSearchParams[] = [];
-      const saved = buildCharacterization({ version: 3, stage: 'renovation' });
+      const saved = buildCharacterization({ version: 3 });
       server.use(
         characterizationsHandler([], requests),
         http.put(apiUrl('/api/plot-characterizations/:plotId'), () =>
@@ -187,9 +187,10 @@ describe('PlotCharacterizationSummary', () => {
               variety_id: 'v-ccn-51',
               planting_date: '2021-03',
               tree_count: 900,
+              propagation: 'grafted',
+              stage: 'renovation',
             },
           ],
-          stage: 'renovation',
           management_system: null,
           shade_type: null,
         },
@@ -236,9 +237,14 @@ describe('PlotCharacterizationSummary', () => {
       'pl1',
       {
         plantings: [
-          { variety_id: 'v-fear-5', planting_date: '2024-01', tree_count: 900 },
+          {
+            variety_id: 'v-fear-5',
+            planting_date: '2024-01',
+            tree_count: 900,
+            propagation: 'grafted',
+            stage: 'establishment',
+          },
         ],
-        stage: 'establishment',
         management_system: null,
         shade_type: null,
       },
@@ -263,9 +269,14 @@ describe('PlotCharacterizationSummary', () => {
       'pl1',
       {
         plantings: [
-          { variety_id: 'v-ccn-51', planting_date: '2024-01', tree_count: 900 },
+          {
+            variety_id: 'v-ccn-51',
+            planting_date: '2024-01',
+            tree_count: 900,
+            propagation: 'grafted',
+            stage: 'establishment',
+          },
         ],
-        stage: 'establishment',
         management_system: null,
         shade_type: null,
       },

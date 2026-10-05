@@ -10,9 +10,11 @@ import { FormSection } from '@/components/form-section';
 import { Button } from '@/components/ui/button';
 
 import {
+  ageInMonths,
   averageAgeInMonths,
   coherenceWarnings,
   densityPerHectare,
+  type Propagation,
   type Stage,
   totalTrees,
 } from '../characterization-rules';
@@ -26,14 +28,19 @@ import { type VarietyOption, varietyChoices } from '../variety-choices';
 import { CharacterizationTotals } from './characterization-totals';
 import { CharacterizationWarnings } from './characterization-warnings';
 import { PlantingLine } from './planting-line';
-import { StageAndManagementFields } from './stage-and-management-fields';
+import { ManagementFields } from './management-fields';
 
-const EMPTY_LINE = { variety_id: '', planting_date: '', tree_count: '' };
+const EMPTY_LINE = {
+  variety_id: '',
+  planting_date: '',
+  tree_count: '',
+  propagation: 'grafted' as const,
+  stage: '' as const,
+};
 
 // Una ficha nueva arranca con una siembra vacía: lo primero que se pide es la variedad.
 export const emptyCharacterizationForm = (): CharacterizationFormInput => ({
   plantings: [{ ...EMPTY_LINE }],
-  stage: '',
   management_system: '',
   shade_type: '',
 });
@@ -104,6 +111,8 @@ export function CharacterizationForm({
   const {
     control,
     register,
+    getValues,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<CharacterizationFormInput, unknown, CharacterizationFormFields>({
@@ -116,7 +125,7 @@ export function CharacterizationForm({
     control,
     name: 'plantings',
   });
-  const [lines, stage] = useWatch({ control, name: ['plantings', 'stage'] });
+  const lines = useWatch({ control, name: 'plantings' });
 
   const choiceById = new Map(choices.map((choice) => [choice.id, choice]));
 
@@ -131,8 +140,12 @@ export function CharacterizationForm({
   );
   const warnings = coherenceWarnings({
     density,
-    stage: stage === '' ? null : (stage as Stage),
-    ageMonths,
+    // Cada siembra se juzga con su propia edad, no con la media.
+    plantings: lines.map((line) => ({
+      stage: line.stage === '' ? null : (line.stage as Stage),
+      ageMonths: ageInMonths(line.planting_date, openedOn),
+      propagation: line.propagation as Propagation,
+    })),
     varietyNames: lines
       .map((line) => choiceById.get(line.variety_id)?.name)
       .filter((name): name is string => !!name),
@@ -154,10 +167,12 @@ export function CharacterizationForm({
               chosen={choiceById.get(lines[index]?.variety_id ?? '')}
               control={control}
               errors={errors}
+              getValues={getValues}
               index={index}
               key={field.id}
               onRemove={() => remove(index)}
               register={register}
+              setValue={setValue}
               today={openedOn}
             />
           ))}
@@ -188,8 +203,8 @@ export function CharacterizationForm({
         />
       </FormSection>
 
-      <FormSection title="Etapa y manejo">
-        <StageAndManagementFields errors={errors} register={register} />
+      <FormSection title="Manejo y sombra">
+        <ManagementFields errors={errors} register={register} />
       </FormSection>
 
       <div className="space-y-4 lg:col-span-2">

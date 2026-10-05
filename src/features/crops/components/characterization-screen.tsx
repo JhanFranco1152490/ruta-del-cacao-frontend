@@ -197,7 +197,7 @@ export function CharacterizationScreen({
           {current !== undefined && (
             <p>
               {current
-                ? `En el servidor la ficha ahora dice: ${characterizationSummary(serverSummaryLines(current), current.stage)}.`
+                ? `En el servidor la ficha ahora dice: ${characterizationSummary(serverSummaryLines(current))}.`
                 : 'En el servidor la parcela ya no tiene caracterización.'}{' '}
               Si guardas, tus datos reemplazan esa versión.
             </p>
