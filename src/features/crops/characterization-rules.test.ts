@@ -206,10 +206,19 @@ describe('coherenceWarnings', () => {
     expect(codes({ density: null })).toEqual([]);
   });
 
+  it('says the usual range in the message, for a density that is too low as well as too high', () => {
+    for (const density of [150, 3000]) {
+      const [warning] = coherenceWarnings(input({ density }));
+      expect(warning.message).toContain(
+        'Lo usual es de 400 a 1.600 árboles/ha.',
+      );
+    }
+  });
+
   it('shows the density in the message', () => {
     const [warning] = coherenceWarnings(input({ density: 2500 }));
     expect(warning.message).toBe(
-      'Densidad de siembra fuera de rango habitual (2.500 árboles/ha). Revisa el número de árboles o el área de la parcela.',
+      'Densidad de siembra fuera de rango habitual (2.500 árboles/ha). Lo usual es de 400 a 1.600 árboles/ha. Revisa el número de árboles o el área de la parcela.',
     );
   });
 

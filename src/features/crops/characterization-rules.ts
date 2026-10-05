@@ -214,7 +214,8 @@ export function coherenceWarnings({
   ) {
     warnings.push({
       code: 'density_out_of_range',
-      message: `Densidad de siembra fuera de rango habitual (${formatCount(density)} árboles/ha). Revisa el número de árboles o el área de la parcela.`,
+      // El rango va en el mensaje: sin él, la persona no sabe hacia dónde corregir.
+      message: `Densidad de siembra fuera de rango habitual (${formatCount(density)} árboles/ha). Lo usual es de ${formatCount(MIN_USUAL_DENSITY)} a ${formatCount(MAX_USUAL_DENSITY)} árboles/ha. Revisa el número de árboles o el área de la parcela.`,
     });
   }
 
