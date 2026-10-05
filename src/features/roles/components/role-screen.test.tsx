@@ -18,6 +18,9 @@ const role = {
   description: 'Coordina actividades',
   producer_id: id,
   permissions: ['accounts.users_view'],
+  permission_details: [
+    { code: 'accounts.users_view', name: 'Consultar usuarios' },
+  ],
 };
 const catalog = [
   {
