@@ -25,6 +25,7 @@ export const toVarietyOption = (variety: CacaoVariety): VarietyOption => ({
   id: variety.id,
   name: variety.name,
   isActive: variety.is_active,
+  commonNames: variety.common_names,
 });
 
 // El catálogo no se pagina: tiene decenas de filas y quien lo usa las necesita todas.

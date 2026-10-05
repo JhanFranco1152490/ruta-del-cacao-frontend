@@ -48,6 +48,6 @@ describe('toVarietyOption', () => {
   it('keeps what the characterization form needs', () => {
     expect(
       toVarietyOption(buildCacaoVariety({ id: 'v1', is_active: false })),
-    ).toEqual({ id: 'v1', name: 'CCN-51', isActive: false });
+    ).toEqual({ id: 'v1', name: 'CCN-51', isActive: false, commonNames: [] });
   });
 });

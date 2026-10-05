@@ -48,6 +48,19 @@ const MAX_ESTABLISHMENT_AGE_MONTHS = 60;
 export const MIN_USUAL_DENSITY = 400;
 export const MAX_USUAL_DENSITY = 1600;
 
+// 1 m² por árbol: ningún cacaotal llega ahí (las siembras intensivas rondan 2.500 árboles/ha).
+// Por encima no es un dato poco usual sino un error de digitación, y no se deja guardar.
+export const MAX_POSSIBLE_DENSITY = 10_000;
+
+// Exacta y no sobre la densidad redondeada que se muestra, para decidir lo mismo que el servidor
+// (24.001 árboles en 2,40 ha se muestran como 10.000/ha y aun así pasan el límite). El área
+// llega con dos decimales: en centésimas de hectárea la comparación es entre enteros.
+export function impossibleDensity(trees: number, areaHectares: string) {
+  if (!isDecimal(areaHectares) || !Number.isFinite(trees)) return false;
+  const hundredths = Math.round(Number(areaHectares) * 100);
+  return hundredths > 0 && trees * 100 > MAX_POSSIBLE_DENSITY * hundredths;
+}
+
 const COUNT = new Intl.NumberFormat('es', { useGrouping: 'always' });
 
 export const formatCount = (value: number) => COUNT.format(value);
@@ -63,6 +76,27 @@ export function ageInMonths(plantingMonth: string, today: Date): number | null {
     today,
     new Date(Number(match[1]), month - 1, 1),
   );
+}
+
+export type PlantingAge = { plantingMonth: string; trees: number };
+
+// La edad media del cultivo que pide el caso de uso: la de cada siembra, ponderada por sus
+// árboles. Las siembras que todavía no tienen mes o árboles no cuentan; con una siembra futura
+// no hay edad que mostrar (el formulario la marca como error).
+export function averageAgeInMonths(
+  plantings: readonly PlantingAge[],
+  today: Date,
+): number | null {
+  let weighted = 0;
+  let trees = 0;
+  for (const { plantingMonth, trees: count } of plantings) {
+    const months = ageInMonths(plantingMonth, today);
+    if (months === null || !Number.isFinite(count) || count <= 0) continue;
+    if (months < 0) return null;
+    weighted += months * count;
+    trees += count;
+  }
+  return trees === 0 ? null : Math.round(weighted / trees);
 }
 
 const plural = (count: number, one: string, many: string) =>

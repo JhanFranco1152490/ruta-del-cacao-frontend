@@ -152,6 +152,7 @@ export const buildCacaoVariety = (
 ): Schemas['CacaoVariety'] => ({
   id: 'v-ccn-51',
   name: 'CCN-51',
+  common_names: [],
   description: 'Procedencia: Ecuador. Autocompatible.',
   is_active: true,
   ...overrides,
@@ -161,18 +162,19 @@ export const buildCharacterization = (
   overrides: Partial<Schemas['PlotCharacterization']> = {},
 ): Schemas['PlotCharacterization'] => ({
   plot_id: 'pl1',
-  varieties: [
+  plantings: [
     {
       variety: { id: 'v-ccn-51', name: 'CCN-51', is_active: true },
+      planting_date: '2021-03',
       tree_count: 1800,
     },
     {
       variety: { id: 'v-ics-95', name: 'ICS-95', is_active: true },
+      planting_date: '2021-03',
       tree_count: 600,
     },
   ],
   total_trees: 2400,
-  planting_date: '2021-03',
   stage: 'full_production',
   management_system: 'conventional',
   shade_type: null,

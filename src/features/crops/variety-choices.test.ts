@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { type VarietyOption, varietyChoices } from './variety-choices';
 
 const catalog: VarietyOption[] = [
-  { id: 'ics-95', name: 'ICS-95', isActive: true },
-  { id: 'ccn-51', name: 'CCN-51', isActive: true },
-  { id: 'scc-61', name: 'SCC-61', isActive: false },
+  { id: 'ics-95', name: 'ICS-95', isActive: true, commonNames: [] },
+  { id: 'ccn-51', name: 'CCN-51', isActive: true, commonNames: [] },
+  { id: 'scc-61', name: 'SCC-61', isActive: false, commonNames: [] },
 ];
 
 describe('varietyChoices', () => {
@@ -61,5 +61,30 @@ describe('varietyChoices', () => {
     expect(choices.find((choice) => choice.id === 'fear-5')).toMatchObject({
       isAvailable: true,
     });
+  });
+
+  it('shows the code with the first common name, the one producers recognize', () => {
+    const choices = varietyChoices(
+      [
+        {
+          id: 'fsa-12',
+          name: 'FSA-12',
+          isActive: true,
+          commonNames: ['Saravena', 'Fedecacao Saravena'],
+        },
+        {
+          id: 'scc-61',
+          name: 'SCC-61',
+          isActive: false,
+          commonNames: ['San Vicente'],
+        },
+      ],
+      new Set(['scc-61']),
+    );
+
+    expect(choices.map((choice) => choice.label)).toEqual([
+      'FSA-12 · Saravena',
+      'SCC-61 · San Vicente (desactivada)',
+    ]);
   });
 });

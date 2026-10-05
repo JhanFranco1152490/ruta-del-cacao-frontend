@@ -1,49 +1,38 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
-import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 
-import {
-  CAPTURE_BUTTON_CLASS,
-  CAPTURE_FIELD_CLASS,
-} from '@/components/capture-field-class';
-import { DigitsField } from '@/components/digits-field';
+import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FormSection } from '@/components/form-section';
-import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
-import { formatHectares } from '@/lib/format/hectares';
 
 import {
-  ageInMonths,
+  averageAgeInMonths,
   coherenceWarnings,
   densityPerHectare,
-  formatAge,
-  formatCount,
-  MANAGEMENT_SYSTEM_OPTIONS,
-  SHADE_TYPE_OPTIONS,
   type Stage,
-  STAGE_OPTIONS,
   totalTrees,
 } from '../characterization-rules';
 import {
   type CharacterizationFormFields,
   type CharacterizationFormInput,
   createCharacterizationFormSchema,
-  MAX_VARIETY_LINES,
-  UNAVAILABLE_VARIETY_MESSAGE,
+  MAX_PLANTING_LINES,
 } from '../schemas';
 import { type VarietyOption, varietyChoices } from '../variety-choices';
+import { CharacterizationTotals } from './characterization-totals';
 import { CharacterizationWarnings } from './characterization-warnings';
-import { PlantingMonthField } from './planting-month-field';
+import { PlantingLine } from './planting-line';
+import { StageAndManagementFields } from './stage-and-management-fields';
 
-const EMPTY_LINE = { variety_id: '', tree_count: '' };
+const EMPTY_LINE = { variety_id: '', planting_date: '', tree_count: '' };
 
-// Una ficha nueva arranca con una fila vacía: lo primero que se pide es la variedad.
+// Una ficha nueva arranca con una siembra vacía: lo primero que se pide es la variedad.
 export const emptyCharacterizationForm = (): CharacterizationFormInput => ({
-  varieties: [{ ...EMPTY_LINE }],
-  planting_date: '',
+  plantings: [{ ...EMPTY_LINE }],
   stage: '',
   management_system: '',
   shade_type: '',
@@ -94,9 +83,9 @@ export function CharacterizationForm({
       varietyChoices(
         catalog,
         keptVarietyIds,
-        new Set(defaultValues.varieties.map((line) => line.variety_id)),
+        new Set(defaultValues.plantings.map((line) => line.variety_id)),
       ),
-    [catalog, keptVarietyIds, defaultValues.varieties],
+    [catalog, keptVarietyIds, defaultValues.plantings],
   );
   // Por contenido y no por referencia: quien usa el formulario arma las listas en cada render, y
   // el esquema solo debe cambiar si cambia lo que se puede enviar.
@@ -106,11 +95,11 @@ export function CharacterizationForm({
     .join(',');
   const schema = useMemo(
     () =>
-      createCharacterizationFormSchema(
-        openedOn,
-        new Set(unavailableKey.split(',').filter(Boolean)),
-      ),
-    [openedOn, unavailableKey],
+      createCharacterizationFormSchema(openedOn, {
+        areaHectares,
+        unavailableIds: new Set(unavailableKey.split(',').filter(Boolean)),
+      }),
+    [openedOn, areaHectares, unavailableKey],
   );
   const {
     control,
@@ -125,18 +114,21 @@ export function CharacterizationForm({
   });
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'varieties',
+    name: 'plantings',
   });
-  const [lines, plantingDate, stage] = useWatch({
-    control,
-    name: ['varieties', 'planting_date', 'stage'],
-  });
+  const [lines, stage] = useWatch({ control, name: ['plantings', 'stage'] });
 
   const choiceById = new Map(choices.map((choice) => [choice.id, choice]));
 
   const trees = totalTrees(lines.map((line) => toTreeCount(line.tree_count)));
   const density = trees > 0 ? densityPerHectare(trees, areaHectares) : null;
-  const ageMonths = ageInMonths(plantingDate, openedOn);
+  const ageMonths = averageAgeInMonths(
+    lines.map((line) => ({
+      plantingMonth: line.planting_date,
+      trees: toTreeCount(line.tree_count),
+    })),
+    openedOn,
+  );
   const warnings = coherenceWarnings({
     density,
     stage: stage === '' ? null : (stage as Stage),
@@ -145,8 +137,8 @@ export function CharacterizationForm({
       .map((line) => choiceById.get(line.variety_id)?.name)
       .filter((name): name is string => !!name),
   });
-  const varietiesError =
-    errors.varieties?.root?.message ?? errors.varieties?.message;
+  const plantingsError =
+    errors.plantings?.root?.message ?? errors.plantings?.message;
 
   return (
     <form
@@ -154,147 +146,50 @@ export function CharacterizationForm({
       noValidate
       onSubmit={handleSubmit(onSubmit)}
     >
-      <FormSection title="Variedades sembradas">
-        <ul aria-label="Variedades sembradas" className="space-y-4">
-          {fields.map((field, index) => {
-            const chosen = choiceById.get(lines[index]?.variety_id ?? '');
-            return (
-              <li
-                className="grid gap-3 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_auto] sm:items-start"
-                key={field.id}
-              >
-                <SelectField
-                  className={CAPTURE_FIELD_CLASS}
-                  error={errors.varieties?.[index]?.variety_id?.message}
-                  hint={
-                    !chosen || chosen.isActive
-                      ? undefined
-                      : chosen.isAvailable
-                        ? 'Variedad desactivada: ya no se ofrece para fichas nuevas. Puedes conservarla o cambiarla.'
-                        : UNAVAILABLE_VARIETY_MESSAGE
-                  }
-                  label={`Variedad ${index + 1}`}
-                  {...register(`varieties.${index}.variety_id`)}
-                >
-                  <option value="">Elige la variedad</option>
-                  {choices.map((choice) => (
-                    <option key={choice.id} value={choice.id}>
-                      {choice.label}
-                    </option>
-                  ))}
-                </SelectField>
-                <DigitsField
-                  className={CAPTURE_FIELD_CLASS}
-                  control={control}
-                  label="Número de árboles"
-                  name={`varieties.${index}.tree_count`}
-                />
-                <Button
-                  aria-label={`Quitar variedad ${index + 1}`}
-                  className="sm:mt-7"
-                  onClick={() => remove(index)}
-                  size="office"
-                  type="button"
-                  variant="outline"
-                >
-                  <Trash2 aria-hidden="true" className="size-4" />
-                  <span className="sm:sr-only">Quitar</span>
-                </Button>
-              </li>
-            );
-          })}
+      <FormSection title="Siembras">
+        <ul aria-label="Siembras" className="space-y-4">
+          {fields.map((field, index) => (
+            <PlantingLine
+              choices={choices}
+              chosen={choiceById.get(lines[index]?.variety_id ?? '')}
+              control={control}
+              errors={errors}
+              index={index}
+              key={field.id}
+              onRemove={() => remove(index)}
+              register={register}
+              today={openedOn}
+            />
+          ))}
         </ul>
-        {varietiesError && (
+        {plantingsError && (
           <p className="mt-3 text-sm font-bold text-err" role="alert">
-            {varietiesError}
+            {plantingsError}
           </p>
         )}
         <Button
           className="mt-4"
-          disabled={fields.length >= MAX_VARIETY_LINES}
+          disabled={fields.length >= MAX_PLANTING_LINES}
           onClick={() => append({ ...EMPTY_LINE })}
           size="office"
           type="button"
           variant="outline"
         >
-          <Plus aria-hidden="true" className="size-4" /> Agregar variedad
+          <Plus aria-hidden="true" className="size-4" /> Agregar siembra
         </Button>
-        <dl className="mt-5 grid grid-cols-2 gap-3 rounded-(--radius) bg-muted px-4 py-3 text-sm">
-          <div>
-            <dt className="text-muted-foreground">Total de árboles</dt>
-            <dd className="text-lg font-bold">{formatCount(trees)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">
-              Densidad (sobre {formatHectares(areaHectares)})
-            </dt>
-            <dd className="text-lg font-bold">
-              {density === null ? '—' : `${formatCount(density)} árboles/ha`}
-            </dd>
-          </div>
-        </dl>
+        <p className="mt-2 text-sm text-muted-foreground">
+          La misma variedad sembrada en otra fecha va en otra siembra.
+        </p>
+        <CharacterizationTotals
+          ageMonths={ageMonths}
+          areaHectares={areaHectares}
+          density={density}
+          trees={trees}
+        />
       </FormSection>
 
-      <FormSection title="Siembra y manejo">
-        <div className="grid gap-5">
-          <Controller
-            control={control}
-            name="planting_date"
-            render={({ field, fieldState }) => (
-              <PlantingMonthField
-                error={fieldState.error?.message}
-                hint={
-                  ageMonths !== null && ageMonths >= 0
-                    ? `Edad del cultivo: ${formatAge(ageMonths)}`
-                    : 'Si hay árboles de varias edades, la de la siembra principal.'
-                }
-                onBlur={field.onBlur}
-                onChange={field.onChange}
-                today={openedOn}
-                value={field.value}
-              />
-            )}
-          />
-          <SelectField
-            className={CAPTURE_FIELD_CLASS}
-            error={errors.stage?.message}
-            label="Etapa del ciclo productivo"
-            {...register('stage')}
-          >
-            <option value="">Elige la etapa</option>
-            {STAGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </SelectField>
-          <SelectField
-            className={CAPTURE_FIELD_CLASS}
-            error={errors.management_system?.message}
-            label="Sistema de manejo (opcional)"
-            {...register('management_system')}
-          >
-            <option value="">Sin especificar</option>
-            {MANAGEMENT_SYSTEM_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </SelectField>
-          <SelectField
-            className={CAPTURE_FIELD_CLASS}
-            error={errors.shade_type?.message}
-            label="Tipo de sombra (opcional)"
-            {...register('shade_type')}
-          >
-            <option value="">Sin especificar</option>
-            {SHADE_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </SelectField>
-        </div>
+      <FormSection title="Etapa y manejo">
+        <StageAndManagementFields errors={errors} register={register} />
       </FormSection>
 
       <div className="space-y-4 lg:col-span-2">

@@ -1,5 +1,17 @@
 // Una variedad del catálogo, tal como la necesita el formulario.
-export type VarietyOption = { id: string; name: string; isActive: boolean };
+export type VarietyOption = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  commonNames: readonly string[];
+};
+
+// El código con el primer nombre común: el código es la identidad, y el nombre común es por el
+// que la reconoce el productor ("FSA-12 · Saravena").
+export const varietyLabel = (variety: VarietyOption) =>
+  variety.commonNames.length
+    ? `${variety.name} · ${variety.commonNames[0]}`
+    : variety.name;
 
 // `isAvailable`: el servidor la acepta en esta ficha. Una desactivada solo lo está si la ficha
 // del servidor ya la tenía.
@@ -33,8 +45,8 @@ export function varietyChoices(
         ...variety,
         isAvailable,
         label: variety.isActive
-          ? variety.name
-          : `${variety.name} (${isAvailable ? 'desactivada' : 'ya no disponible'})`,
+          ? varietyLabel(variety)
+          : `${varietyLabel(variety)} (${isAvailable ? 'desactivada' : 'ya no disponible'})`,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name, 'es'));
@@ -48,6 +60,7 @@ export function varietyChoices(
       name: UNKNOWN_LABEL,
       isActive: false,
       isAvailable: keptIds.has(id),
+      commonNames: [],
       label: UNKNOWN_LABEL,
     }));
   return [...known, ...unknown];

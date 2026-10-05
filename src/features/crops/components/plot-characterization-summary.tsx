@@ -56,7 +56,7 @@ export function PlotCharacterizationSummary({
     const map = new Map<string, string>();
     for (const variety of catalog.data?.data ?? [])
       map.set(variety.id, variety.name);
-    for (const row of saved?.varieties ?? [])
+    for (const row of saved?.plantings ?? [])
       map.set(row.variety.id, row.variety.name);
     return map;
   }, [catalog.data, saved]);

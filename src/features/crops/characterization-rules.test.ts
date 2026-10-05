@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ageInMonths,
+  averageAgeInMonths,
   coherenceWarnings,
+  impossibleDensity,
   type CoherenceInput,
   densityPerHectare,
   formatAge,
@@ -38,6 +40,76 @@ describe('ageInMonths', () => {
     expect(ageInMonths('', TODAY)).toBeNull();
     expect(ageInMonths('2021-13', TODAY)).toBeNull();
     expect(ageInMonths('2021-3', TODAY)).toBeNull();
+  });
+});
+
+describe('averageAgeInMonths', () => {
+  it('weighs the age of each planting by its trees', () => {
+    // 1.000 árboles de 2018-10 (96 meses) y 500 de 2024-10 (24 meses): (96·1000 + 24·500) / 1500.
+    expect(
+      averageAgeInMonths(
+        [
+          { plantingMonth: '2018-10', trees: 1000 },
+          { plantingMonth: '2024-10', trees: 500 },
+        ],
+        TODAY,
+      ),
+    ).toBe(72);
+  });
+
+  it('rounds to whole months', () => {
+    expect(
+      averageAgeInMonths(
+        [
+          { plantingMonth: '2026-09', trees: 1 },
+          { plantingMonth: '2026-10', trees: 1 },
+        ],
+        TODAY,
+      ),
+    ).toBe(1);
+  });
+
+  it('leaves out plantings still without a month or trees', () => {
+    expect(
+      averageAgeInMonths(
+        [
+          { plantingMonth: '2021-03', trees: 10 },
+          { plantingMonth: '', trees: 50 },
+          { plantingMonth: '2025-03', trees: Number.NaN },
+        ],
+        TODAY,
+      ),
+    ).toBe(67);
+  });
+
+  it('has no age without a complete planting', () => {
+    expect(averageAgeInMonths([{ plantingMonth: '', trees: 5 }], TODAY)).toBe(
+      null,
+    );
+  });
+
+  it('has no age when a planting is in the future', () => {
+    expect(
+      averageAgeInMonths([{ plantingMonth: '2027-01', trees: 5 }], TODAY),
+    ).toBe(null);
+  });
+});
+
+describe('impossibleDensity', () => {
+  it('allows up to 10.000 trees per hectare, one square meter per tree', () => {
+    expect(impossibleDensity(10_000, '1.00')).toBe(false);
+    expect(impossibleDensity(10_001, '1.00')).toBe(true);
+  });
+
+  it('compares the exact density, not the rounded one shown', () => {
+    expect(impossibleDensity(24_000, '2.40')).toBe(false);
+    expect(impossibleDensity(24_001, '2.40')).toBe(true);
+    expect(impossibleDensity(2_900, '0.29')).toBe(false);
+  });
+
+  it('decides nothing without a valid area', () => {
+    expect(impossibleDensity(50_000, '')).toBe(false);
+    expect(impossibleDensity(50_000, '0')).toBe(false);
   });
 });
 

@@ -14,9 +14,15 @@ type User = ReturnType<typeof userEvent.setup>;
 const TODAY = new Date(2026, 9, 3);
 
 const catalog: VarietyOption[] = [
-  { id: 'ccn-51', name: 'CCN-51', isActive: true },
-  { id: 'ics-95', name: 'ICS-95', isActive: true },
-  { id: 'scc-61', name: 'SCC-61', isActive: false },
+  { id: 'ccn-51', name: 'CCN-51', isActive: true, commonNames: [] },
+  {
+    id: 'fsa-12',
+    name: 'FSA-12',
+    isActive: true,
+    commonNames: ['Saravena', 'Fedecacao Saravena'],
+  },
+  { id: 'ics-95', name: 'ICS-95', isActive: true, commonNames: [] },
+  { id: 'scc-61', name: 'SCC-61', isActive: false, commonNames: [] },
 ];
 
 function renderForm({
@@ -54,14 +60,36 @@ async function fillTrees(user: User, index: number, text: string) {
   await user.paste(text);
 }
 
+async function fillPlanting(
+  user: User,
+  position: number,
+  variety: string,
+  month: string,
+  year: string,
+  trees: string,
+) {
+  await user.selectOptions(
+    screen.getByLabelText(`Variedad ${position}`),
+    variety,
+  );
+  await user.selectOptions(
+    screen.getByLabelText(`Mes de siembra ${position}`),
+    month,
+  );
+  await user.selectOptions(
+    screen.getByLabelText(`Año de siembra ${position}`),
+    year,
+  );
+  await fillTrees(user, position - 1, trees);
+}
+
+const addPlanting = (user: User) =>
+  user.click(screen.getByRole('button', { name: 'Agregar siembra' }));
+
 async function fillValidForm(user: User) {
-  await user.selectOptions(screen.getByLabelText('Variedad 1'), 'ccn-51');
-  await fillTrees(user, 0, '1800');
-  await user.click(screen.getByRole('button', { name: 'Agregar variedad' }));
-  await user.selectOptions(screen.getByLabelText('Variedad 2'), 'ics-95');
-  await fillTrees(user, 1, '600');
-  await user.selectOptions(screen.getByLabelText('Mes de siembra'), '03');
-  await user.selectOptions(screen.getByLabelText('Año de siembra'), '2021');
+  await fillPlanting(user, 1, 'ccn-51', '03', '2021', '1800');
+  await addPlanting(user);
+  await fillPlanting(user, 2, 'ics-95', '08', '2023', '600');
   await user.selectOptions(
     screen.getByLabelText('Etapa del ciclo productivo'),
     'full_production',
@@ -86,11 +114,10 @@ describe('CharacterizationForm', () => {
 
     expect(onSubmit).toHaveBeenCalledWith(
       {
-        varieties: [
-          { variety_id: 'ccn-51', tree_count: 1800 },
-          { variety_id: 'ics-95', tree_count: 600 },
+        plantings: [
+          { variety_id: 'ccn-51', planting_date: '2021-03', tree_count: 1800 },
+          { variety_id: 'ics-95', planting_date: '2023-08', tree_count: 600 },
         ],
-        planting_date: '2021-03',
         stage: 'full_production',
         management_system: null,
         shade_type: 'permanent',
@@ -116,7 +143,7 @@ describe('CharacterizationForm', () => {
   it('asks for a variety when every line was removed', async () => {
     const { onSubmit, user } = renderForm();
 
-    await user.click(screen.getByRole('button', { name: 'Quitar variedad 1' }));
+    await user.click(screen.getByRole('button', { name: 'Quitar siembra 1' }));
     await save(user);
 
     expect(
@@ -134,22 +161,69 @@ describe('CharacterizationForm', () => {
     expect(screen.getByText('1.000 árboles/ha')).toBeInTheDocument();
   });
 
-  it('shows the age of the crop next to the planting month', async () => {
+  it('shows the average age of the crop, weighed by the trees of each planting', async () => {
     const { user } = renderForm();
 
-    await user.selectOptions(screen.getByLabelText('Mes de siembra'), '03');
-    await user.selectOptions(screen.getByLabelText('Año de siembra'), '2021');
+    // 1.000 árboles de 2018-10 (8 años) y 500 de 2024-10 (2 años): 6 años.
+    await fillPlanting(user, 1, 'ccn-51', '10', '2018', '1000');
+    await addPlanting(user);
+    await fillPlanting(user, 2, 'ccn-51', '10', '2024', '500');
+
+    expect(screen.getByText('6 años')).toBeInTheDocument();
+  });
+
+  it('accepts the same variety planted on another date, but not on the same one', async () => {
+    const { onSubmit, user } = renderForm();
+
+    await fillPlanting(user, 1, 'ccn-51', '10', '2018', '1000');
+    await addPlanting(user);
+    await fillPlanting(user, 2, 'ccn-51', '10', '2018', '500');
+    await user.selectOptions(
+      screen.getByLabelText('Etapa del ciclo productivo'),
+      'full_production',
+    );
+    await save(user);
+    expect(screen.getByLabelText('Variedad 2')).toHaveAccessibleDescription(
+      'Esta siembra ya está en la lista',
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await user.selectOptions(screen.getByLabelText('Año de siembra 2'), '2024');
+    await save(user);
+    expect(onSubmit).toHaveBeenCalledOnce();
+  });
+
+  it('does not let an impossible density be saved', async () => {
+    const { onSubmit, user } = renderForm({ areaHectares: '1.00' });
+
+    await fillPlanting(user, 1, 'ccn-51', '03', '2021', '11000');
+    await user.selectOptions(
+      screen.getByLabelText('Etapa del ciclo productivo'),
+      'full_production',
+    );
+    await save(user);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Con 11.000 árboles/ha la densidad no es posible: el máximo es 10.000.',
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('shows each variety with the common name producers recognize', () => {
+    renderForm();
 
     expect(
-      screen.getByText('Edad del cultivo: 5 años y 7 meses'),
+      within(screen.getByLabelText('Variedad 1')).getByRole('option', {
+        name: 'FSA-12 · Saravena',
+      }),
     ).toBeInTheDocument();
   });
 
   it('marks a half-chosen planting date only after leaving both lists', async () => {
     const { user } = renderForm();
 
-    await user.selectOptions(screen.getByLabelText('Mes de siembra'), '03');
-    await user.click(screen.getByLabelText('Año de siembra'));
+    await user.selectOptions(screen.getByLabelText('Mes de siembra 1'), '03');
+    await user.click(screen.getByLabelText('Año de siembra 1'));
     expect(
       screen.queryByText('Ingresa el mes y el año de siembra.'),
     ).not.toBeInTheDocument();
@@ -181,15 +255,16 @@ describe('CharacterizationForm', () => {
     expect(warnings()).toHaveTextContent(
       'Se recomienda sembrar CCN-51 en parcelas separadas de otros clones.',
     );
-    await user.click(screen.getByRole('button', { name: 'Quitar variedad 2' }));
+    await user.click(screen.getByRole('button', { name: 'Quitar siembra 2' }));
     expect(warnings()).not.toHaveTextContent('CCN-51');
   });
 
   it('keeps a deactivated variety the characterization had, marked as such', async () => {
     renderForm({
       defaultValues: {
-        varieties: [{ variety_id: 'scc-61', tree_count: '900' }],
-        planting_date: '2019-05',
+        plantings: [
+          { variety_id: 'scc-61', planting_date: '2019-05', tree_count: '900' },
+        ],
         stage: 'full_production',
         management_system: '',
         shade_type: '',
@@ -204,7 +279,7 @@ describe('CharacterizationForm', () => {
     );
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Agregar variedad' }));
+    await user.click(screen.getByRole('button', { name: 'Agregar siembra' }));
     const offered = within(screen.getByLabelText('Variedad 2'))
       .getAllByRole('option')
       .map((option) => option.textContent);
@@ -214,8 +289,9 @@ describe('CharacterizationForm', () => {
   it('asks to change a deactivated variety the server characterization did not have', async () => {
     const { onSubmit, user } = renderForm({
       defaultValues: {
-        varieties: [{ variety_id: 'scc-61', tree_count: '900' }],
-        planting_date: '2019-05',
+        plantings: [
+          { variety_id: 'scc-61', planting_date: '2019-05', tree_count: '900' },
+        ],
         stage: 'full_production',
         management_system: '',
         shade_type: '',
@@ -240,12 +316,17 @@ describe('CharacterizationForm', () => {
     const offered = within(screen.getByLabelText('Variedad 1'))
       .getAllByRole('option')
       .map((option) => option.textContent);
-    expect(offered).toEqual(['Elige la variedad', 'CCN-51', 'ICS-95']);
+    expect(offered).toEqual([
+      'Elige la variedad',
+      'CCN-51',
+      'FSA-12 · Saravena',
+      'ICS-95',
+    ]);
   });
 
-  it('allows up to 10 varieties', async () => {
+  it('allows up to 10 plantings', async () => {
     const { user } = renderForm();
-    const add = screen.getByRole('button', { name: 'Agregar variedad' });
+    const add = screen.getByRole('button', { name: 'Agregar siembra' });
 
     for (let line = 1; line < 10; line += 1) await user.click(add);
 

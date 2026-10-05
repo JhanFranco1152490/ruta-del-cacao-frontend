@@ -151,8 +151,8 @@ export function CharacterizationScreen({
     catalog.data?.data ?? [],
     serverCharacterization,
   );
-  const keptVarietyIds = new Set(
-    serverCharacterization?.varieties.map((row) => row.variety.id),
+  const keptVarietyIds = new Set<string>(
+    serverCharacterization?.plantings.map((row) => row.variety.id),
   );
   const failed = pending?.status === 'error';
   const blockedMessage = !farm.isActive

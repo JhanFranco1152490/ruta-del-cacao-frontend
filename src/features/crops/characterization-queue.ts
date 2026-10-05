@@ -53,8 +53,7 @@ function toQueued(item: QueueItem): QueuedCharacterization {
     // El padre de toda ficha encolada es su parcela.
     plotId: item.parentId!,
     fields: {
-      varieties: payload.varieties,
-      planting_date: payload.planting_date,
+      plantings: payload.plantings,
       stage: payload.stage,
       management_system: payload.management_system,
       shade_type: payload.shade_type,

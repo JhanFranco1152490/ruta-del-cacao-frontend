@@ -179,8 +179,9 @@ describe('PlotCharacterizationSummary', () => {
       userId,
       'pl1',
       {
-        varieties: [{ variety_id: 'v-fear-5', tree_count: 900 }],
-        planting_date: '2024-01',
+        plantings: [
+          { variety_id: 'v-fear-5', planting_date: '2024-01', tree_count: 900 },
+        ],
         stage: 'establishment',
         management_system: null,
         shade_type: null,
@@ -205,8 +206,9 @@ describe('PlotCharacterizationSummary', () => {
       userId,
       'pl1',
       {
-        varieties: [{ variety_id: 'v-ccn-51', tree_count: 900 }],
-        planting_date: '2024-01',
+        plantings: [
+          { variety_id: 'v-ccn-51', planting_date: '2024-01', tree_count: 900 },
+        ],
         stage: 'establishment',
         management_system: null,
         shade_type: null,

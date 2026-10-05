@@ -33,6 +33,7 @@ beforeEach(() => {
     buildCacaoVariety({
       id: 'scc',
       name: 'SCC-61',
+      common_names: ['San Vicente'],
       description: 'Procedencia: Colombia.',
       is_active: false,
     }),
@@ -107,6 +108,16 @@ describe('VarietyListScreen', () => {
     expect(shownNames()).toEqual(['ICS-95']);
   });
 
+  it('finds a variety by its common name and shows them', async () => {
+    const user = await renderScreen();
+
+    expect(
+      within(rowOf('SCC-61')).getByText('San Vicente'),
+    ).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Buscar variedades'), 'san vicente');
+    expect(shownNames()).toEqual(['SCC-61']);
+  });
+
   it('filters by state', async () => {
     const user = await renderScreen();
 
@@ -142,6 +153,10 @@ describe('VarietyListScreen', () => {
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText('Nombre'), ' FEAR-5 ');
     await user.type(
+      within(dialog).getByLabelText('Nombres comunes (opcional)'),
+      'Arauquita, Fedecacao Arauquita',
+    );
+    await user.type(
       within(dialog).getByLabelText('Descripción (opcional)'),
       'Procedencia: Colombia.',
     );
@@ -153,7 +168,11 @@ describe('VarietyListScreen', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
     expect(posted).toEqual([
-      { name: 'FEAR-5', description: 'Procedencia: Colombia.' },
+      {
+        name: 'FEAR-5',
+        common_names: ['Arauquita', 'Fedecacao Arauquita'],
+        description: 'Procedencia: Colombia.',
+      },
     ]);
     expect(
       await screen.findByRole('heading', { name: 'FEAR-5' }),
@@ -224,7 +243,11 @@ describe('VarietyListScreen', () => {
       expect(patched).toEqual([
         {
           id: 'ics',
-          body: { name: 'ICS-95', description: 'Trinidad. Autocompatible.' },
+          body: {
+            name: 'ICS-95',
+            common_names: [],
+            description: 'Trinidad. Autocompatible.',
+          },
         },
       ]),
     );

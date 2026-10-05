@@ -33,7 +33,11 @@ export function PlantingMonthField({
   error,
   hint,
   today,
+  index,
 }: {
+  // La siembra a la que pertenece, para que cada fila tenga nombres distintos para un lector de
+  // pantalla ("Mes de siembra 2").
+  index?: number;
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -51,6 +55,7 @@ export function PlantingMonthField({
   const change = (nextYear: string, nextMonth: string) =>
     onChange(nextYear || nextMonth ? `${nextYear}-${nextMonth}` : '');
   const help = error || hint;
+  const suffix = index === undefined ? '' : ` ${index}`;
   const control = {
     'aria-invalid': Boolean(error),
     'aria-describedby': help ? helpId : undefined,
@@ -71,7 +76,7 @@ export function PlantingMonthField({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="sr-only" htmlFor={`${id}-month`}>
-            Mes de siembra
+            {`Mes de siembra${suffix}`}
           </label>
           <NativeSelect
             {...control}
@@ -89,7 +94,7 @@ export function PlantingMonthField({
         </div>
         <div>
           <label className="sr-only" htmlFor={`${id}-year`}>
-            Año de siembra
+            {`Año de siembra${suffix}`}
           </label>
           <NativeSelect
             {...control}

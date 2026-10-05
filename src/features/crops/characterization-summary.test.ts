@@ -67,4 +67,17 @@ describe('stageLabel', () => {
     expect(stageLabel('full_production')).toBe('Producción estable');
     expect(stageLabel('renovation')).toBe('Renovación o rehabilitación');
   });
+
+  it('counts two plantings of the same variety as one variety', () => {
+    expect(
+      characterizationSummary(
+        [
+          { varietyName: 'ICS-95', treeCount: 900 },
+          { varietyName: 'CCN-51', treeCount: 600 },
+          { varietyName: 'CCN-51', treeCount: 500 },
+        ],
+        'full_production',
+      ),
+    ).toBe('CCN-51 y 1 más · 2.000 árboles · Producción estable');
+  });
 });

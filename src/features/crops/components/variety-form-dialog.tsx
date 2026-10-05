@@ -31,8 +31,10 @@ import { normalizeVarietyName } from '../characterization-rules';
 import {
   createVarietyFormSchema,
   DUPLICATE_VARIETY_MESSAGE,
+  MAX_COMMON_NAMES,
   VARIETY_DESCRIPTION_MAX_LENGTH,
   VARIETY_NAME_MAX_LENGTH,
+  type VarietyFormInput,
   type VarietyFormValues,
 } from '../schemas';
 
@@ -62,11 +64,12 @@ export function VarietyFormDialog({
       ),
     [catalog, variety?.id],
   );
-  const currentValues = (): VarietyFormValues => ({
+  const currentValues = (): VarietyFormInput => ({
     name: variety?.name ?? '',
+    common_names: variety?.common_names.join(', ') ?? '',
     description: variety?.description ?? '',
   });
-  const form = useForm<VarietyFormValues>({
+  const form = useForm<VarietyFormInput, unknown, VarietyFormValues>({
     resolver: zodResolver(schema),
     defaultValues: currentValues(),
   });
@@ -103,6 +106,7 @@ export function VarietyFormDialog({
       }
       const { applied, unmatched } = applyApiFieldErrors(error, form.setError, [
         'name',
+        'common_names',
         'description',
       ]);
       if (applied && unmatched.length === 0) return;
@@ -166,6 +170,13 @@ export function VarietyFormDialog({
             label="Nombre"
             maxLength={VARIETY_NAME_MAX_LENGTH}
             {...register('name')}
+          />
+          <TextField
+            disabled={isSaving}
+            error={errors.common_names?.message}
+            hint={`Como lo llaman los productores, separados por coma (hasta ${MAX_COMMON_NAMES}). Por ejemplo, Saravena. Pueden repetirse en otras variedades.`}
+            label="Nombres comunes (opcional)"
+            {...register('common_names')}
           />
           <TextField
             disabled={isSaving}

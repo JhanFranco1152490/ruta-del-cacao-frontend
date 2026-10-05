@@ -14,8 +14,9 @@ import {
 } from './sync-adapter';
 
 const payload: CharacterizationPayload = {
-  varieties: [{ variety_id: 'v-ccn-51', tree_count: 1800 }],
-  planting_date: '2021-03',
+  plantings: [
+    { variety_id: 'v-ccn-51', planting_date: '2021-03', tree_count: 1800 },
+  ],
   stage: 'full_production',
   management_system: null,
   shade_type: 'permanent',

@@ -13,11 +13,14 @@ import {
 describe('serverToFormInput', () => {
   it('fills the form with texts and empty lists instead of null', () => {
     expect(serverToFormInput(buildCharacterization())).toEqual({
-      varieties: [
-        { variety_id: 'v-ccn-51', tree_count: '1800' },
-        { variety_id: 'v-ics-95', tree_count: '600' },
+      plantings: [
+        {
+          variety_id: 'v-ccn-51',
+          planting_date: '2021-03',
+          tree_count: '1800',
+        },
+        { variety_id: 'v-ics-95', planting_date: '2021-03', tree_count: '600' },
       ],
-      planting_date: '2021-03',
       stage: 'full_production',
       management_system: 'conventional',
       shade_type: '',
@@ -29,15 +32,19 @@ describe('queuedToFormInput', () => {
   it('turns the pending characterization back into the form', () => {
     expect(
       queuedToFormInput({
-        varieties: [{ variety_id: 'v1', tree_count: 900 }],
-        planting_date: '2024-01',
+        plantings: [
+          { variety_id: 'v1', planting_date: '2018-04', tree_count: 900 },
+          { variety_id: 'v1', planting_date: '2024-01', tree_count: 300 },
+        ],
         stage: 'establishment',
         management_system: null,
         shade_type: 'mixed',
       }),
     ).toEqual({
-      varieties: [{ variety_id: 'v1', tree_count: '900' }],
-      planting_date: '2024-01',
+      plantings: [
+        { variety_id: 'v1', planting_date: '2018-04', tree_count: '900' },
+        { variety_id: 'v1', planting_date: '2024-01', tree_count: '300' },
+      ],
       stage: 'establishment',
       management_system: '',
       shade_type: 'mixed',
@@ -48,9 +55,10 @@ describe('queuedToFormInput', () => {
 describe('varietyOptionsFor', () => {
   it('adds the varieties the characterization already has, with their state', () => {
     const characterization = buildCharacterization({
-      varieties: [
+      plantings: [
         {
           variety: { id: 'v-scc-61', name: 'SCC-61', is_active: false },
+          planting_date: '2019-05',
           tree_count: 300,
         },
       ],
@@ -58,12 +66,23 @@ describe('varietyOptionsFor', () => {
 
     expect(
       varietyOptionsFor(
-        [buildCacaoVariety({ id: 'v-ccn-51', name: 'CCN-51' })],
+        [
+          buildCacaoVariety({
+            id: 'v-ccn-51',
+            name: 'CCN-51',
+            common_names: ['Colección Castro Naranjal'],
+          }),
+        ],
         characterization,
       ),
     ).toEqual([
-      { id: 'v-ccn-51', name: 'CCN-51', isActive: true },
-      { id: 'v-scc-61', name: 'SCC-61', isActive: false },
+      {
+        id: 'v-ccn-51',
+        name: 'CCN-51',
+        isActive: true,
+        commonNames: ['Colección Castro Naranjal'],
+      },
+      { id: 'v-scc-61', name: 'SCC-61', isActive: false, commonNames: [] },
     ]);
   });
 
@@ -84,11 +103,10 @@ describe('summary lines', () => {
     expect(
       queuedSummaryLines(
         {
-          varieties: [
-            { variety_id: 'v1', tree_count: 10 },
-            { variety_id: 'v9', tree_count: 5 },
+          plantings: [
+            { variety_id: 'v1', planting_date: '2024-01', tree_count: 10 },
+            { variety_id: 'v9', planting_date: '2024-01', tree_count: 5 },
           ],
-          planting_date: '2024-01',
           stage: 'establishment',
           management_system: null,
           shade_type: null,

@@ -89,8 +89,8 @@ async function fillNewCharacterization(user: User) {
   );
   await user.click(screen.getByLabelText('Número de árboles'));
   await user.paste('2000');
-  await user.selectOptions(screen.getByLabelText('Mes de siembra'), '03');
-  await user.selectOptions(screen.getByLabelText('Año de siembra'), '2021');
+  await user.selectOptions(screen.getByLabelText('Mes de siembra 1'), '03');
+  await user.selectOptions(screen.getByLabelText('Año de siembra 1'), '2021');
   await user.selectOptions(
     screen.getByLabelText('Etapa del ciclo productivo'),
     'full_production',
@@ -121,8 +121,9 @@ describe('CharacterizationScreen', () => {
       }),
     ).toHaveFocus();
     expect(await queuedPayload()).toMatchObject({
-      varieties: [{ variety_id: 'v-ccn-51', tree_count: 2000 }],
-      planting_date: '2021-03',
+      plantings: [
+        { variety_id: 'v-ccn-51', planting_date: '2021-03', tree_count: 2000 },
+      ],
       stage: 'full_production',
       expected_version: null,
     });
@@ -168,8 +169,9 @@ describe('CharacterizationScreen', () => {
       userId,
       'pl1',
       {
-        varieties: [{ variety_id: 'v-ccn-51', tree_count: 900 }],
-        planting_date: '2024-01',
+        plantings: [
+          { variety_id: 'v-ccn-51', planting_date: '2024-01', tree_count: 900 },
+        ],
         stage: 'establishment',
         management_system: null,
         shade_type: null,
@@ -207,9 +209,10 @@ describe('CharacterizationScreen', () => {
     server.use(
       characterizationsHandler([
         buildCharacterization({
-          varieties: [
+          plantings: [
             {
               variety: { id: 'v-scc-61', name: 'SCC-61', is_active: false },
+              planting_date: '2019-05',
               tree_count: 900,
             },
           ],
@@ -231,8 +234,9 @@ describe('CharacterizationScreen', () => {
       userId,
       'pl1',
       {
-        varieties: [{ variety_id: 'v-scc-61', tree_count: 900 }],
-        planting_date: '2024-01',
+        plantings: [
+          { variety_id: 'v-scc-61', planting_date: '2024-01', tree_count: 900 },
+        ],
         stage: 'establishment',
         management_system: null,
         shade_type: null,

@@ -17,15 +17,15 @@ import { VarietyStatusDialog } from './variety-status-dialog';
 
 type StatusFilter = '' | 'active' | 'inactive';
 
-// La búsqueda compara como el servidor: "ccn 51" encuentra "CCN-51". También busca en la
-// descripción, donde va la procedencia.
+// La búsqueda compara como el servidor: "ccn 51" encuentra "CCN-51". También busca en los
+// nombres comunes ("saravena" encuentra los tres FSA) y en la descripción, donde va la procedencia.
 function matches(variety: CacaoVariety, search: string, status: StatusFilter) {
   if (status === 'active' && !variety.is_active) return false;
   if (status === 'inactive' && variety.is_active) return false;
   const needle = normalizeVarietyName(search);
   if (!needle) return true;
-  return [variety.name, variety.description].some((text) =>
-    normalizeVarietyName(text).includes(needle),
+  return [variety.name, ...variety.common_names, variety.description].some(
+    (text) => normalizeVarietyName(text).includes(needle),
   );
 }
 
@@ -97,6 +97,14 @@ export function VarietyListScreen() {
                         {variety.is_active ? 'Activa' : 'Inactiva'}
                       </StatusBadge>
                     </div>
+                    {variety.common_names.length > 0 && (
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">
+                          Nombres comunes:{' '}
+                        </span>
+                        {variety.common_names.join(', ')}
+                      </p>
+                    )}
                     {variety.description && (
                       <p className="text-sm text-muted-foreground">
                         {variety.description}

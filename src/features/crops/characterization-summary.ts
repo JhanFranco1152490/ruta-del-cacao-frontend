@@ -16,10 +16,20 @@ export function characterizationSummary(
   lines: readonly SummaryLine[],
   stage: Stage,
 ): string {
-  const [main, ...others] = [...lines].sort(
-    (a, b) =>
-      b.treeCount - a.treeCount || a.varietyName.localeCompare(b.varietyName),
-  );
+  // Las tandas de una misma variedad suman sus árboles: siguen siendo una sola variedad.
+  const byVariety = new Map<string, number>();
+  for (const line of lines) {
+    byVariety.set(
+      line.varietyName,
+      (byVariety.get(line.varietyName) ?? 0) + line.treeCount,
+    );
+  }
+  const [main, ...others] = [...byVariety]
+    .map(([varietyName, treeCount]) => ({ varietyName, treeCount }))
+    .sort(
+      (a, b) =>
+        b.treeCount - a.treeCount || a.varietyName.localeCompare(b.varietyName),
+    );
   const varieties = !main
     ? 'Sin variedades'
     : others.length === 0
