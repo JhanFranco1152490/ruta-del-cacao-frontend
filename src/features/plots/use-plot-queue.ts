@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 
 import { useSession } from '@/hooks/use-session';
 import { queryKeys } from '@/lib/api/query-keys';
-import { getOfflineDb } from '@/lib/offline/db';
 import { discard, processQueue } from '@/lib/offline/sync-queue';
 
 import {
@@ -148,34 +147,3 @@ export const usePlotResubmit = () =>
 
 export const usePlotDiscard = () =>
   useQueueMutation((userId: string, id: string) => discard(userId, id));
-
-export type QueuedPlotState =
-  | { status: 'pending' }
-  | { status: 'error'; errorMessage?: string }
-  // Ya no está en la cola: el envío terminó bien y la parcela está en el servidor.
-  | { status: 'synced' };
-
-// Sigue en vivo una parcela recién guardada, para contar lo que de verdad le pasó en vez de
-// suponer que sigue esperando conexión.
-export function useQueuedPlotState(userId: string | undefined, id: string) {
-  const [state, setState] = useState<QueuedPlotState>({ status: 'pending' });
-
-  useEffect(() => {
-    if (!userId) return;
-    const subscription = liveQuery(() =>
-      getOfflineDb(userId).queue.get(id),
-    ).subscribe({
-      next: (item) =>
-        setState(
-          !item
-            ? { status: 'synced' }
-            : item.status === 'error'
-              ? { status: 'error', errorMessage: item.errorMessage }
-              : { status: 'pending' },
-        ),
-    });
-    return () => subscription.unsubscribe();
-  }, [userId, id]);
-
-  return state;
-}
