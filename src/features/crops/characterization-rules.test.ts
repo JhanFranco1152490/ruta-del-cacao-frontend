@@ -91,6 +91,20 @@ describe('normalizeVarietyName', () => {
       normalizeVarietyName('hibrido comun'),
     );
   });
+
+  it('treats the dashes pasted from a document as hyphens, like the server', () => {
+    const expected = normalizeVarietyName('CCN-51');
+    for (const dash of [
+      '\u2010',
+      '\u2011',
+      '\u2012',
+      '\u2013',
+      '\u2014',
+      '\u2212',
+    ]) {
+      expect(normalizeVarietyName(`CCN${dash}51`)).toBe(expected);
+    }
+  });
 });
 
 describe('coherenceWarnings', () => {

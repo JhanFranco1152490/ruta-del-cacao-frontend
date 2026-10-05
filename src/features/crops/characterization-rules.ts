@@ -97,13 +97,14 @@ export function densityPerHectare(
 }
 
 // Para comparar nombres de variedades como lo hace el servidor: "CCN 51", "CCN51" y "ccn-51" son
-// la misma.
+// la misma. También los guiones que llegan al pegar un nombre copiado de un documento: guion,
+// guion sin salto, cifra, semiraya, raya y signo menos.
 export const normalizeVarietyName = (name: string) =>
   name
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
     .toLowerCase()
-    .replace(/[\s-]+/g, '');
+    .replace(/[\s\-\u2010-\u2014\u2212]+/gu, '');
 
 const CCN51 = normalizeVarietyName('CCN-51');
 
