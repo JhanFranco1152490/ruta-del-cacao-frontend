@@ -31,7 +31,8 @@ export const useProducerOptions = (search: string, enabled = true) =>
     placeholderData: keepPreviousData,
   });
 
-// El detalle trae `association_access`, que el listado no informa.
+// El listado solo trae una página de resultados: el detalle sirve para mostrar el productor ya
+// elegido aunque no esté en ella.
 export const useProducerSummary = (id: string | undefined) =>
   useQuery({
     queryKey: queryKeys.producers.detail(id ?? ''),

@@ -104,7 +104,6 @@ function RoleWorkspace({
               onClear={() => {
                 void filters.clearProducer();
               }}
-              deniedMessage="Este productor no ha autorizado el acceso de la asociación: no puedes ver ni administrar sus roles propios."
             />
           )}
         </div>

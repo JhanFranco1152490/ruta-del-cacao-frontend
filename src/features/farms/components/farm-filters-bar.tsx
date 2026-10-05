@@ -48,11 +48,8 @@ export function FarmFiltersBar({
         ))}
       </NativeSelect>
       {pickProducer && (
-        // La asociación lee las fincas de todos los productores, tengan o no encendido su
-        // interruptor de acceso: no hay aviso de acceso denegado que mostrar.
         <ProducerFilter
           className="w-full sm:w-80"
-          deniedMessage={null}
           showTrigger={false}
           label="Filtrar por productor"
           onClear={() => void filters.setProducer(null)}

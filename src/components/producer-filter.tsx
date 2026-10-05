@@ -17,8 +17,6 @@ import {
 } from '@/lib/api/producer-options';
 
 const SEARCH_DELAY_MS = 300;
-const DEFAULT_DENIED_MESSAGE =
-  'Este productor no ha autorizado el acceso de la asociación: no puedes ver ni crear las cuentas de sus empleados.';
 
 type ProducerOption = {
   id: string;
@@ -32,15 +30,15 @@ function labelOf(item: ProducerOption): string {
 }
 
 // Con qué productor trabaja la asociación en esta pantalla: qué significa "elegir uno" lo
-// dice quien usa el componente (cuentas de empleados, roles propios...) vía los textos. Un
-// solo campo busca y elige: `filter={null}` porque los resultados ya vienen filtrados por el
-// servidor, no hace falta que el combobox también los filtre en el navegador.
+// dice quien usa el componente (cuentas de empleados, roles propios...) con la etiqueta y el
+// texto de ayuda de cada pantalla. Un solo campo busca y elige: `filter={null}` porque los
+// resultados ya vienen filtrados por el servidor, no hace falta que el combobox también los
+// filtre en el navegador.
 export function ProducerFilter({
   producer,
   selected,
   onSelect,
   onClear,
-  deniedMessage = DEFAULT_DENIED_MESSAGE,
   label = 'Productor',
   placeholder = 'Nombre, documento o código de socio',
   showTrigger = true,
@@ -50,8 +48,6 @@ export function ProducerFilter({
   selected: UseQueryResult<ProducerSummary>;
   onSelect: (id: string) => void;
   onClear: () => void;
-  // `null` cuando lo que se consulta no depende del interruptor de acceso de la asociación.
-  deniedMessage?: string | null;
   label?: string;
   placeholder?: string;
   // Sin la flecha se lee como un campo para escribir y no como una lista cerrada.
@@ -144,11 +140,6 @@ export function ProducerFilter({
           </p>
         )}
       </div>
-      {deniedMessage && selected.data?.association_access === false && (
-        <p role="alert" className="text-sm font-bold text-err">
-          {deniedMessage}
-        </p>
-      )}
     </div>
   );
 }
