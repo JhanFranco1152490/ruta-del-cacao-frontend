@@ -164,6 +164,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cacao-varieties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El catálogo común de variedades de cacao, ordenado por nombre y sin paginar: el formulario de la ficha las necesita todas, también sin conexión. Basta con tener sesión. */
+        get: operations["cacao_varieties_list"];
+        put?: never;
+        /** @description Registra una variedad. Un nombre que ya existe, aunque se escriba distinto (`CCN 51` y `ccn-51`), responde 409 `duplicate_variety_name`. */
+        post: operations["cacao_varieties_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cacao-varieties/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Edita el nombre o la descripción, o activa y desactiva con `is_active`. Desactivar no cambia las fichas que ya la usan: solo deja de ofrecerse para siembras nuevas. */
+        patch: operations["cacao_varieties_partial_update"];
+        trace?: never;
+    };
     "/api/catalogs/municipalities": {
         parameters: {
             query?: never;
@@ -257,6 +292,58 @@ export interface paths {
             cookie?: never;
         };
         get: operations["permissions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plot-characterizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las fichas de las parcelas de una finca del productor de la sesión, sin paginar: una finca tiene pocas parcelas. `farm` es obligatorio. Las parcelas sin ficha no aparecen, y una finca ajena devuelve la lista vacía. */
+        get: operations["plot_characterizations_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plot-characterizations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La ficha de una parcela. 404 si la parcela es ajena o no tiene ficha. */
+        get: operations["plot_characterizations_retrieve"];
+        /** @description Registra o reemplaza la ficha completa de la parcela. `expected_version` es `null` para registrar y la versión que se leyó para editar; si no coincide responde 409 `stale_version` con la ficha vigente (o `null`) en `current`. Si la ficha ya tiene exactamente ese contenido responde 200 sin subir la versión: es un reintento. Una variedad que no existe es un 400 en `fields.plantings`; una desactivada que no estaba en la ficha, 422 `variety_inactive`; una densidad mayor de 10.000 árboles/ha sobre el área declarada de la parcela, 422 `density_too_high`. */
+        put: operations["plot_characterizations_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plot-characterizations/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las versiones de la ficha de una parcela, de la más nueva a la más vieja, cada una con los valores que dejó (`snapshot`), quién la guardó y qué campos cambió. Una parcela sin ficha devuelve la lista vacía; una parcela ajena, 404. */
+        get: operations["plot_characterizations_history_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -532,6 +619,12 @@ export interface components {
         AccountRoleIdsRequest: {
             role_ids: string[];
         };
+        /**
+         * @description * `created` - Caracterización registrada
+         *     * `updated` - Caracterización actualizada
+         * @enum {string}
+         */
+        ActionEnum: "created" | "updated";
         ActivationConfirmRequest: {
             new_password: string;
             new_password_confirmation: string;
@@ -555,6 +648,22 @@ export interface components {
         };
         AssociationAccessUpdateRequest: {
             enabled: boolean;
+        };
+        CacaoVariety: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly common_names: string[];
+            readonly description: string;
+            readonly is_active: boolean;
+        };
+        CacaoVarietyCreateRequest: {
+            name: string;
+            common_names?: string[];
+            description?: string;
+        };
+        CacaoVarietyList: {
+            results: components["schemas"]["CacaoVariety"][];
         };
         CsrfToken: {
             csrf_token: string;
@@ -668,6 +777,13 @@ export interface components {
             identity_document?: string;
             password: string;
         };
+        /**
+         * @description * `conventional` - Convencional
+         *     * `organic` - Orgánico
+         *     * `in_transition` - En transición a orgánico
+         * @enum {string}
+         */
+        ManagementSystemEnum: "conventional" | "organic" | "in_transition";
         Municipality: {
             code: string;
             name: string;
@@ -676,6 +792,8 @@ export interface components {
         MunicipalityList: {
             results: components["schemas"]["Municipality"][];
         };
+        /** @enum {unknown} */
+        NullEnum: null;
         Overlap: {
             /** Format: uuid */
             plot_id: string;
@@ -744,6 +862,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["FarmMunicipalityCount"][];
         };
+        PaginatedPlotCharacterizationEventList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["PlotCharacterizationEvent"][];
+        };
         PaginatedPlotList: {
             /** @example 123 */
             count: number;
@@ -811,6 +944,12 @@ export interface components {
             last_name?: string;
             phone?: string | null;
         };
+        PatchedCacaoVarietyUpdateRequest: {
+            name?: string;
+            common_names?: string[];
+            description?: string;
+            is_active?: boolean;
+        };
         PatchedFarmUpdateRequest: {
             name?: string;
             department_id?: string;
@@ -867,6 +1006,23 @@ export interface components {
         PermissionList: {
             results: components["schemas"]["Permission"][];
         };
+        Planting: {
+            variety: components["schemas"]["VarietyRef"];
+            /** @example 2021-03 */
+            planting_date: string;
+            readonly tree_count: number;
+            readonly propagation: components["schemas"]["PropagationEnum"];
+            readonly stage: components["schemas"]["StageEnum"];
+        };
+        PlantingInputRequest: {
+            /** Format: uuid */
+            variety_id: string;
+            /** @example 2021-03 */
+            planting_date: string;
+            tree_count: number;
+            propagation: components["schemas"]["PropagationEnum"];
+            stage: components["schemas"]["StageEnum"];
+        };
         Plot: {
             /** Format: uuid */
             readonly id: string;
@@ -885,6 +1041,47 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        PlotCharacterization: {
+            /** Format: uuid */
+            plot_id: string;
+            plantings: components["schemas"]["Planting"][];
+            readonly total_trees: number;
+            readonly management_system: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly shade_type: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly version: number;
+            /** Format: date-time */
+            readonly captured_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Una versión de la ficha en su historial, con los valores que dejó. */
+        PlotCharacterizationEvent: {
+            readonly version: number;
+            readonly action: components["schemas"]["ActionEnum"];
+            /** Format: date-time */
+            readonly occurred_at: string;
+            readonly actor_name: string | null;
+            readonly changed_fields: string[];
+            readonly snapshot: components["schemas"]["PlotCharacterizationSnapshot"];
+        };
+        PlotCharacterizationList: {
+            results: components["schemas"]["PlotCharacterization"][];
+        };
+        PlotCharacterizationSnapshot: {
+            plantings: components["schemas"]["SnapshotPlanting"][];
+            management_system: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
+            shade_type: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
+        };
+        PlotCharacterizationWriteRequest: {
+            expected_version: number | null;
+            plantings: components["schemas"]["PlantingInputRequest"][];
+            management_system?: (components["schemas"]["ManagementSystemEnum"] | components["schemas"]["NullEnum"]) | null;
+            shade_type?: (components["schemas"]["ShadeTypeEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: date-time */
+            captured_at?: string | null;
         };
         PlotConflictError: {
             detail: string;
@@ -1006,6 +1203,12 @@ export interface components {
             first_name: string;
             last_name: string;
         };
+        /**
+         * @description * `grafted` - Injerto o clon
+         *     * `seed` - Semilla
+         * @enum {string}
+         */
+        PropagationEnum: "grafted" | "seed";
         Role: {
             /** Format: uuid */
             readonly id: string;
@@ -1056,12 +1259,45 @@ export interface components {
             readonly producer_id: string | null;
         };
         /**
+         * @description * `none` - A plena exposición
+         *     * `temporary` - Sombra temporal
+         *     * `permanent` - Sombra permanente
+         *     * `mixed` - Temporal y permanente
+         * @enum {string}
+         */
+        ShadeTypeEnum: "none" | "temporary" | "permanent" | "mixed";
+        SnapshotPlanting: {
+            /** Format: uuid */
+            variety_id: string;
+            name: string;
+            planting_date: string;
+            tree_count: number;
+            propagation: components["schemas"]["PropagationEnum"];
+            stage: components["schemas"]["StageEnum"];
+        };
+        /**
          * @description * `gps` - gps
          *     * `map` - map
          *     * `adjusted` - adjusted
          * @enum {string}
          */
         SourceEnum: "gps" | "map" | "adjusted";
+        /**
+         * @description * `establishment` - Establecimiento o formación
+         *     * `early_production` - Inicio de producción
+         *     * `full_production` - Producción estable
+         *     * `renovation` - Renovación o rehabilitación
+         * @enum {string}
+         */
+        StageEnum: "establishment" | "early_production" | "full_production" | "renovation";
+        StaleCharacterizationError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current: components["schemas"]["PlotCharacterization"] | null;
+        };
         /**
          * @description * `active` - Activo
          *     * `inactive` - Inactivo
@@ -1071,6 +1307,12 @@ export interface components {
         TerritoryReference: {
             id: string;
             name: string;
+        };
+        VarietyRef: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly is_active: boolean;
         };
         Vertex: {
             /** Format: decimal */
@@ -1519,6 +1761,166 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    cacao_varieties_list: {
+        parameters: {
+            query?: {
+                /** @description Solo activas o solo inactivas. */
+                is_active?: boolean;
+                /** @description Busca en el nombre y en los nombres comunes, sin mayúsculas, tildes, espacios ni guiones. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacaoVarietyList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    cacao_varieties_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CacaoVarietyCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacaoVariety"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    cacao_varieties_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCacaoVarietyUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacaoVariety"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2003,6 +2405,228 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plot_characterizations_list: {
+        parameters: {
+            query: {
+                /** @description La finca, por su `id`. */
+                farm: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotCharacterizationList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plot_characterizations_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotCharacterization"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plot_characterizations_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlotCharacterizationWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotCharacterization"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlotCharacterization"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleCharacterizationError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    plot_characterizations_history_list: {
+        parameters: {
+            query?: {
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPlotCharacterizationEventList"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

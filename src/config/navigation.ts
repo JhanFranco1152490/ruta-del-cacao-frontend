@@ -1,4 +1,11 @@
-import { MapPinned, ShieldCheck, Sprout, UserRound, Users } from 'lucide-react';
+import {
+  Leaf,
+  MapPinned,
+  ShieldCheck,
+  Sprout,
+  UserRound,
+  Users,
+} from 'lucide-react';
 
 import { PERMISSIONS } from '@/lib/permissions';
 import type { NavItem } from '@/types/navigation';
@@ -18,6 +25,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Fincas',
     icon: MapPinned,
     permission: PERMISSIONS.FARMS_VIEW,
+  },
+  {
+    href: '/variedades',
+    label: 'Variedades de cacao',
+    icon: Leaf,
+    permission: PERMISSIONS.CROPS_MANAGE_VARIETIES,
+    needsConnection: true,
   },
   {
     href: '/roles',

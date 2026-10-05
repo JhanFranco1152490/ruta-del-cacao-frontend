@@ -18,3 +18,7 @@ export const formatDateTime = (isoDateTime: string) =>
 // Recibe una fecha sin hora (yyyy-MM-dd) y no la desplaza por zona horaria.
 export const formatLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM 'de' yyyy", { locale: es });
+
+// Un mes y un año (yyyy-MM), sin día: la fecha de una siembra.
+export const formatMonthYear = (isoMonth: string) =>
+  format(parseISO(`${isoMonth}-01`), "MMMM 'de' yyyy", { locale: es });

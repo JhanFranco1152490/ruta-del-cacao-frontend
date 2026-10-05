@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { formatLongDate, todayInBogota } from './dates';
+import { formatLongDate, formatMonthYear, todayInBogota } from './dates';
 
 afterEach(() => vi.useRealTimers());
 
@@ -17,5 +17,12 @@ describe('todayInBogota', () => {
 describe('formatLongDate', () => {
   it('formats a date-only value in Spanish without shifting the day', () => {
     expect(formatLongDate('2026-09-24')).toBe('24 de septiembre de 2026');
+  });
+});
+
+describe('formatMonthYear', () => {
+  it('formats a year and month in Spanish', () => {
+    expect(formatMonthYear('2021-03')).toBe('marzo de 2021');
+    expect(formatMonthYear('2024-12')).toBe('diciembre de 2024');
   });
 });

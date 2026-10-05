@@ -9,6 +9,8 @@ export const PERMISSIONS = {
   PLOTS_ADD: 'plots.add_plot',
   PLOTS_CHANGE: 'plots.change_plot',
   PLOTS_DELETE: 'plots.delete_plot',
+  CROPS_CHARACTERIZE: 'crops.change_plotcharacterization',
+  CROPS_MANAGE_VARIETIES: 'crops.manage_cacaovariety',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',
   USERS_UPDATE: 'accounts.users_update',
