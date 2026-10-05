@@ -1,7 +1,8 @@
+import { onlineManager } from '@tanstack/react-query';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -63,8 +64,11 @@ beforeEach(async () => {
   );
 });
 
-function renderScreen(plot: CharacterizationPlot = PLOT, farm = FARM) {
-  const queryClient = createTestQueryClient();
+function renderScreen(
+  plot: CharacterizationPlot = PLOT,
+  farm = FARM,
+  queryClient = createTestQueryClient(),
+) {
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({
@@ -224,5 +228,55 @@ describe('CharacterizationScreen', () => {
       'href',
       '/fincas/detalle?id=f1',
     );
+  });
+});
+
+// La conexión se cae con la app abierta: TanStack Query sabe que no hay red y deja en pausa el
+// reintento de una lectura que falló, en vez de terminarla con error.
+describe('CharacterizationScreen when the connection drops with the app open', () => {
+  function offlineQueryClient() {
+    const queryClient = createTestQueryClient();
+    queryClient.setDefaultOptions({
+      queries: {
+        ...queryClient.getDefaultOptions().queries,
+        retry: 1,
+        retryDelay: 0,
+      },
+    });
+    return queryClient;
+  }
+
+  beforeEach(() => onlineManager.setOnline(false));
+  afterEach(() => onlineManager.setOnline(true));
+
+  it('says it needs the variety catalog once instead of loading forever', async () => {
+    server.use(
+      characterizationsHandler([]),
+      http.get(apiUrl('/api/cacao-varieties'), () => HttpResponse.error()),
+    );
+    renderScreen(PLOT, FARM, offlineQueryClient());
+
+    expect(await screen.findByText(NO_CATALOG_MESSAGE)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Guardar caracterización' }),
+    ).toBeDisabled();
+  });
+
+  it('lets characterize when the saved characterizations cannot be read', async () => {
+    server.use(
+      http.get(apiUrl('/api/plot-characterizations'), () =>
+        HttpResponse.error(),
+      ),
+    );
+    renderScreen(PLOT, FARM, offlineQueryClient());
+
+    expect(
+      await screen.findByText(
+        /No pudimos leer la caracterización guardada de esta parcela/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Guardar caracterización' }),
+    ).toBeEnabled();
   });
 });

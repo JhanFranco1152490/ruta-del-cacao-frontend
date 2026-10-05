@@ -14,6 +14,7 @@ import { useSession } from '@/hooks/use-session';
 import { queryKeys } from '@/lib/api/query-keys';
 import { formatDateTime } from '@/lib/format/dates';
 import { formatHectares } from '@/lib/format/hectares';
+import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import {
   type PlotCharacterization,
@@ -110,8 +111,11 @@ export function CharacterizationScreen({
     );
   }
 
+  const serverUnreachable = isPausedWithoutData(server);
   const waiting =
-    queued.isPending || catalog.isPending || (!queued.data && server.isPending);
+    queued.isPending ||
+    (catalog.isPending && !isPausedWithoutData(catalog)) ||
+    (!queued.data && server.isPending && !serverUnreachable);
   if (waiting) {
     return (
       <div
@@ -195,7 +199,7 @@ export function CharacterizationScreen({
           )}
         </div>
       )}
-      {!pending && server.isError && (
+      {!pending && (server.isError || serverUnreachable) && (
         <p className="mt-6 font-bold text-warn" role="status">
           No pudimos leer la caracterización guardada de esta parcela. Si ya
           tiene una, al sincronizar se te pedirá revisarla.

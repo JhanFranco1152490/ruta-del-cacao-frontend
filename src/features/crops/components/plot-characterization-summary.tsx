@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
+import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useActiveCacaoVarieties, useFarmCharacterizations } from '../api';
@@ -70,6 +71,10 @@ export function PlotCharacterizationSummary({
     : saved
       ? characterizationSummary(serverSummaryLines(saved), saved.stage)
       : null;
+  // Sin la lectura del servidor no se sabe si la parcela tiene ficha: decir "Sin caracterizar"
+  // sería afirmar algo que no se sabe.
+  const unreadable =
+    !pending && !server.data && (server.isError || isPausedWithoutData(server));
   // La ficha queda congelada con su parcela o su finca inactiva.
   const canEdit =
     canCharacterize && plot.isActive && farmIsActive && !plotDeleted;
@@ -77,11 +82,17 @@ export function PlotCharacterizationSummary({
     ? 'Corregir caracterización'
     : summary
       ? 'Editar caracterización'
-      : 'Caracterizar';
+      : unreadable
+        ? 'Abrir caracterización'
+        : 'Caracterizar';
 
   return (
     <div className="space-y-2 rounded-(--radius) bg-muted px-3 py-2 text-sm">
-      {server.isPending && !pending ? (
+      {unreadable ? (
+        <p className="font-bold text-warn">
+          No pudimos leer la caracterización de esta parcela.
+        </p>
+      ) : server.isPending && !pending ? (
         <p className="text-muted-foreground">Cargando caracterización…</p>
       ) : (
         <p>
@@ -109,9 +120,9 @@ export function PlotCharacterizationSummary({
           {canEdit && (
             <Link
               aria-label={
-                summary || failed
-                  ? `${actionLabel} de ${plot.code}`
-                  : `Caracterizar ${plot.code}`
+                actionLabel === 'Caracterizar'
+                  ? `Caracterizar ${plot.code}`
+                  : `${actionLabel} de ${plot.code}`
               }
               className={buttonVariants({ size: 'office', variant: 'outline' })}
               href={characterizationPath(plot.id, farmId)}

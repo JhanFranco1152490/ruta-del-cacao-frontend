@@ -1,4 +1,6 @@
+import { onlineManager } from '@tanstack/react-query';
 import { screen, within } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
@@ -10,6 +12,7 @@ import {
   buildSession,
 } from '@/test/factories';
 import {
+  apiUrl,
   cacaoVarietiesHandler,
   characterizationsHandler,
 } from '@/test/handlers';
@@ -41,9 +44,13 @@ function renderSummaries(
   {
     permissions = [PERMISSIONS.PLOTS_VIEW, PERMISSIONS.CROPS_CHARACTERIZE],
     farmIsActive = true,
-  }: { permissions?: string[]; farmIsActive?: boolean } = {},
+    queryClient = createTestQueryClient(),
+  }: {
+    permissions?: string[];
+    farmIsActive?: boolean;
+    queryClient?: ReturnType<typeof createTestQueryClient>;
+  } = {},
 ) {
-  const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: userId, permissions }),
@@ -93,6 +100,53 @@ describe('PlotCharacterizationSummary', () => {
     expect(
       screen.getByRole('link', { name: 'Caracterizar P1' }),
     ).toBeInTheDocument();
+  });
+
+  it('does not claim a plot is uncharacterized when its characterizations cannot be read', async () => {
+    server.use(
+      http.get(apiUrl('/api/plot-characterizations'), () =>
+        HttpResponse.error(),
+      ),
+    );
+    renderSummaries([P1]);
+
+    expect(
+      await screen.findByText(
+        'No pudimos leer la caracterización de esta parcela.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Sin caracterizar')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Abrir caracterización de P1' }),
+    ).toBeInTheDocument();
+  });
+
+  it('stops loading when the connection drops with the app open', async () => {
+    server.use(
+      http.get(apiUrl('/api/plot-characterizations'), () =>
+        HttpResponse.error(),
+      ),
+    );
+    const queryClient = createTestQueryClient();
+    queryClient.setDefaultOptions({
+      queries: {
+        ...queryClient.getDefaultOptions().queries,
+        retry: 1,
+        retryDelay: 0,
+      },
+    });
+    onlineManager.setOnline(false);
+    try {
+      renderSummaries([P1], { queryClient });
+
+      expect(
+        await screen.findByText(
+          'No pudimos leer la caracterización de esta parcela.',
+        ),
+      ).toBeInTheDocument();
+    } finally {
+      onlineManager.setOnline(true);
+    }
   });
 
   it('asks the server once for every plot of the farm', async () => {

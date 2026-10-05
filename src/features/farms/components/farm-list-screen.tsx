@@ -14,6 +14,7 @@ import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { matchesSearch } from '@/lib/format/search';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import { PAGE_SIZE, useFarms } from '../api';
 import { type FarmListItem, serverFarmToListItem } from '../farm-list-item';
@@ -66,9 +67,8 @@ export function FarmListScreen() {
     .map(serverFarmToListItem);
   const farms = [...localFarms, ...serverFarms];
 
-  // Sin conexión la consulta al servidor queda en pausa hasta que vuelva la red: no es una
-  // carga en curso, así que se muestra lo del dispositivo en vez de un esqueleto sin fin.
-  const serverUnreachable = list.isPending && list.fetchStatus === 'paused';
+  // Sin conexión se muestra lo del dispositivo en vez de un esqueleto sin fin.
+  const serverUnreachable = isPausedWithoutData(list);
   const isLoading =
     (list.isPending && !list.isLoadingError && !serverUnreachable) ||
     (!local.farms && !local.isError);
