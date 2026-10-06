@@ -21,13 +21,14 @@ const role = {
   permissions: [],
 };
 
-function signIn(producer_id: string | null) {
+function signIn(producer_id: string | null, is_superuser = false) {
   const requests: URLSearchParams[] = [];
   server.use(
     http.get(apiUrl('/api/auth/me'), () =>
       HttpResponse.json(
         buildSession({
           producer_id,
+          is_superuser,
           permissions: [PERMISSIONS.ROLES_VIEW],
         }),
       ),
@@ -41,12 +42,20 @@ function signIn(producer_id: string | null) {
 }
 
 describe('RoleScreen and the order of the roles', () => {
-  it('orders the roles by producer for whoever sees several, so a group is not split between pages', async () => {
-    const requests = signIn(null);
+  it('orders the roles by producer for the technical account, so a group is not split between pages', async () => {
+    const requests = signIn(null, true);
     renderWithProviders(<RoleScreen />);
 
     await screen.findByText('Roles del sistema');
     expect(requests.at(-1)?.get('ordering')).toBe('producer,name');
+  });
+
+  it('leaves the order alone for the association administrator, who sees no producer roles', async () => {
+    const requests = signIn(null);
+    renderWithProviders(<RoleScreen />);
+
+    await screen.findByText('Roles del sistema');
+    expect(requests.at(-1)?.get('ordering')).toBeNull();
   });
 
   it('leaves the order alone for a producer, who only sees its own', async () => {
