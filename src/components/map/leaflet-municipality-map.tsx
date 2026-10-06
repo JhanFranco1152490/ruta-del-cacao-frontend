@@ -28,6 +28,8 @@ import type { MapPoint, MunicipalityMapProviderProps } from './map-provider';
 
 const MAX_ZOOM = 17;
 const FOCUS_ZOOM = 15;
+// Cuánto se puede acercar el mapa del departamento sobre su encuadre completo.
+const DEPARTMENT_ZOOM_STEPS = 3;
 // Al encuadrar varias fincas del mapa libre: cerca, sin perder las veredas vecinas.
 const FIT_MAX_ZOOM = 14;
 const INTERACTIONS = [
@@ -62,8 +64,9 @@ function useOutlines(onError: () => void) {
   return outlines;
 }
 
-// El departamento por municipios se ve completo y quieto. Un municipio, o el mapa libre,
-// permiten acercar y arrastrar sin salir de él o del departamento.
+// El departamento por municipios, un municipio y el mapa libre permiten acercar y arrastrar sin
+// salir de su área; en el departamento el acercamiento tiene tope, solo para alcanzar los
+// municipios pequeños.
 function frame(
   map: L.Map,
   zoom: L.Control.Zoom,
@@ -76,16 +79,10 @@ function frame(
     typeof target === 'string' ? OPERATING_AREA_BOUNDS : target.bounds,
   );
   map.fitBounds(bounds, { animate: false, padding: [12, 12] });
-  const interactive = target !== 'department';
-  for (const name of INTERACTIONS) {
-    if (interactive) map[name].enable();
-    else map[name].disable();
-  }
-  if (!interactive) {
-    zoom.remove();
-    return;
-  }
+  for (const name of INTERACTIONS) map[name].enable();
   map.setMinZoom(map.getZoom());
+  if (target === 'department')
+    map.setMaxZoom(map.getZoom() + DEPARTMENT_ZOOM_STEPS);
   map.setMaxBounds(bounds.pad(0.15));
   zoom.addTo(map);
 }
@@ -152,6 +149,7 @@ export function LeafletMunicipalityMap({
       : free
         ? outlinesLayer(outlines)
         : departmentLayer(
+            map,
             outlines,
             current.level === 'department' ? current.counts : [],
             {
