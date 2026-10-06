@@ -4,3 +4,8 @@
 // nunca compitan.
 export const FOCUS_OUTLINE_CLASS =
   'focus-visible:ring-0 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-cobre';
+
+// Sobre `--selva` (la barra lateral) el cobre no se distingue: el anillo va en oro, que ahí sí
+// alcanza el contraste.
+export const FOCUS_OUTLINE_ON_DARK_CLASS =
+  'focus-visible:ring-0 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-oro';
