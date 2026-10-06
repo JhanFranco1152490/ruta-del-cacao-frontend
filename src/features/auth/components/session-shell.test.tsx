@@ -382,4 +382,26 @@ describe('SessionShell and the title of the tab', () => {
       expect(document.title).toBe('Productores · Ruta del Cacao'),
     );
   });
+
+  it('offers the producer selector in the header of a superuser in Fincas', async () => {
+    signInAsSuperuser();
+    pathname = '/fincas';
+
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    expect(
+      await screen.findByRole('button', { name: /Productor: Ana Prueba/ }),
+    ).toBeVisible();
+  });
+
+  it('does not offer it to an account that is not a superuser', async () => {
+    pathname = '/fincas';
+
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await screen.findByRole('button', { name: 'Cuenta de ana@example.com' });
+    expect(
+      screen.queryByRole('button', { name: /productor/i }),
+    ).not.toBeInTheDocument();
+  });
 });

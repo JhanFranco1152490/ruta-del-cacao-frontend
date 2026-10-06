@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 
 import { AccountMenu } from '@/components/layout/account-menu';
+import { ActingProducerSelect } from '@/components/layout/acting-producer-select';
 import { AppHeader } from '@/components/layout/app-header';
 import { AppShell } from '@/components/layout/app-shell';
 import { MobileNav } from '@/components/layout/mobile-nav';
@@ -104,6 +105,7 @@ export function SessionShell({
         <AppHeader
           actions={
             <>
+              <ActingProducerSelect />
               <SyncTray
                 status={syncStatus}
                 items={queueItems}
