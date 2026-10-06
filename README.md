@@ -1,9 +1,26 @@
 # Ruta del Cacao — Frontend
 
-Aplicación Next.js (App Router) del sistema de trazabilidad de la producción de cacao. Se
-conecta al backend Django por HTTP: inicio y recuperación de sesión, gestión de productores,
-fincas, usuarios y roles. La estructura del código, la capa de API y las reglas de trabajo están en
-`AGENTS.md`.
+Aplicación Next.js (App Router) del sistema de trazabilidad de la producción de cacao en Norte
+de Santander. Se conecta al backend Django por HTTP. La estructura del código, la capa de API y
+las reglas de trabajo están en `AGENTS.md`.
+
+## Qué hace hoy (primer sprint)
+
+- **Sesión:** inicio con correo o documento, activación de la cuenta y recuperación de la
+  contraseña por correo, cierre de sesión y bloqueo tras varios intentos fallidos.
+- **Productores** (asociación): registro, búsqueda sin tildes, edición, activación y
+  eliminación de uno creado por error.
+- **Usuarios y roles:** cuentas de cada productor y de sus empleados, roles propios con
+  permisos delegables, activación y reenvío del correo de activación.
+- **Fincas:** registro con punto en el mapa o GPS, mapa por municipios de Norte de Santander y
+  lectura de las fincas de todos por la asociación.
+- **Parcelas:** contorno dibujado en el mapa o caminado con GPS, área calculada, reglas de área
+  disponible y de superposición con ajuste sugerido.
+- **Caracterización productiva:** siembras por variedad, fecha, árboles, propagación y etapa;
+  manejo y sombra de la parcela, con historial de versiones.
+- **Sin conexión:** la app abre y recarga sin red; fincas, parcelas y fichas se guardan en el
+  dispositivo y se envían solas al volver la conexión, con una bandeja para corregir o descartar
+  lo que el servidor rechace.
 
 ## Desarrollo local
 
@@ -41,11 +58,24 @@ hook de pre-commit no encuentra `pnpm` y el commit falla.
    ```
 
 4. Ejecutar `pnpm dev` y abrir `http://localhost:3000`.
-5. Ingresar con una cuenta de prueba creada en el backend. No hay registro público.
+5. Ingresar con una de las cuentas de demostración (ver abajo), después de cargarlas en el
+   backend con `python manage.py seed_demo_data`. No hay registro público.
 
 Usar `localhost` en ambos servidores; mezclarlo con `127.0.0.1` afecta el envío
 de cookies. Si cambia el puerto del frontend, actualizar ambos orígenes y
 `FRONTEND_URL` en Django. Reiniciar los servidores tras cambiar variables.
+
+## Cuentas de demostración
+
+La pantalla de inicio de sesión muestra dos cuentas públicas, una del **Administrador de la
+asociación** y otra de un **Productor**, con un botón que llena el formulario. Existen para que
+quien evalúa la aplicación entre sin pedir una cuenta, y solo funcionan donde el backend corrió
+su comando `seed_demo_data`, que las crea con los mismos correos y contraseña. Los datos que las
+acompañan (productores, fincas, parcelas y fichas) son inventados.
+
+Los correos y la contraseña están en `src/features/auth/components/demo-accounts.tsx`; si
+cambian en el backend, cambian ahí. El banner se retira (ese archivo y su uso en
+`login-form.tsx`) cuando la aplicación reciba datos reales.
 
 ## Variables de entorno
 
@@ -94,6 +124,11 @@ La recuperación envía el correo registrado y abre
 se imprime en la consola del backend). La nueva contraseña debe tener entre 8 y 50
 caracteres; Django aplica las validaciones adicionales y sus errores se muestran en el
 formulario.
+
+Los correos de activación y de recuperación **pueden llegar a la carpeta de spam**, en especial
+a buzones institucionales: la propia app lo recuerda al enviarlos. Que lleguen a la bandeja
+depende del dominio de envío del backend (SPF, DKIM y DMARC), no de este repo. Las cuentas de
+demostración no necesitan correo.
 
 En despliegue se requiere HTTPS y cookies Secure. Frontend y API deben estar
 en un mismo sitio compatible con SameSite=Lax, como subdominios del mismo dominio.
