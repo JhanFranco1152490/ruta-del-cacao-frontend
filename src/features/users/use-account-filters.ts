@@ -18,7 +18,17 @@ const parsers = {
   municipality: parseAsString,
   page: parseAsInteger.withDefault(1),
 };
-export function useAccountFilters(association: boolean) {
+export type AccountScope = {
+  // Solo las cuentas de este productor (la vista "Del productor activo").
+  producer?: string | null;
+  // Agrupadas por productor: el servidor las ordena para que un grupo no se parta entre páginas.
+  grouped?: boolean;
+};
+
+export function useAccountFilters(
+  association: boolean,
+  scope: AccountScope = {},
+) {
   const [params, setParams] = useQueryStates(parsers, {
     urlKeys: {
       search: 'buscar',
@@ -32,9 +42,10 @@ export function useAccountFilters(association: boolean) {
   });
   const search = usePaginatedSearch(params.search, setParams);
   const producer =
-    association && params.producer && isUuid(params.producer)
+    scope.producer ??
+    (association && params.producer && isUuid(params.producer)
       ? params.producer
-      : undefined;
+      : undefined);
   // El municipio es del productor de la cuenta: solo filtra algo para la asociación, que ve
   // cuentas de varios productores.
   const municipality =
@@ -51,6 +62,7 @@ export function useAccountFilters(association: boolean) {
     role,
     producer,
     municipality,
+    ordering: scope.grouped ? 'producer,last_name' : undefined,
     page,
   };
   return {

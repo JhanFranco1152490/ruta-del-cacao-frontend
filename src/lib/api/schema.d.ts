@@ -593,6 +593,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             member_code: string;
+            first_name: string;
+            last_name: string;
             status: string;
             municipality_code: string;
         };
@@ -3205,6 +3207,7 @@ export interface operations {
     roles_list: {
         parameters: {
             query?: {
+                include_system?: boolean;
                 /**
                  * @description * `fixed` - Fijo
                  *     * `predefined` - Predefinido
