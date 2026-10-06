@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -81,13 +81,15 @@ afterEach(() => {
   syncActingProducer(null);
 });
 
+const field = () => screen.findByRole('combobox', { name: 'Productor activo' });
+
 describe('ActingProducerSelect', () => {
   it('is not offered to an account that is not a superuser', async () => {
     signIn(false);
     renderWithProviders(<ActingProducerSelect />);
 
     await waitFor(() =>
-      expect(screen.queryByRole('button')).not.toBeInTheDocument(),
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument(),
     );
   });
 
@@ -97,7 +99,7 @@ describe('ActingProducerSelect', () => {
     renderWithProviders(<ActingProducerSelect />);
 
     await waitFor(() =>
-      expect(screen.queryByRole('button')).not.toBeInTheDocument(),
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument(),
     );
   });
 
@@ -108,33 +110,37 @@ describe('ActingProducerSelect', () => {
       pathname = path;
       renderWithProviders(<ActingProducerSelect />);
 
-      expect(
-        await screen.findByRole('button', { name: /Elegir productor/ }),
-      ).toBeVisible();
+      expect(await field()).toHaveAttribute('placeholder', 'Elegir productor');
     },
   );
+
+  it('opens its list right under the field, not in a window of its own', async () => {
+    signIn(true);
+    renderWithProviders(<ActingProducerSelect />);
+
+    await userEvent.click(await field());
+
+    expect(
+      await screen.findByRole('option', { name: 'Ana Prueba · PROD-000007' }),
+    ).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
 
   it('shows the name and code of the chosen producer', async () => {
     signIn(true);
     writeActingProducer(USER, PRODUCER);
     renderWithProviders(<ActingProducerSelect />);
 
-    expect(
-      await screen.findByRole('button', {
-        name: /Ana Prueba · PROD-000007/,
-      }),
-    ).toBeVisible();
+    await waitFor(async () =>
+      expect(await field()).toHaveValue('Ana Prueba · PROD-000007'),
+    );
   });
 
   it('chooses a producer from the list', async () => {
     signIn(true);
     renderWithProviders(<ActingProducerSelect />);
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: /Elegir productor/ }),
-    );
-    const dialog = await screen.findByRole('dialog');
-    await userEvent.click(within(dialog).getByLabelText('Productor'));
+    await userEvent.click(await field());
     await userEvent.click(
       await screen.findByRole('option', { name: 'Ana Prueba · PROD-000007' }),
     );
@@ -148,15 +154,10 @@ describe('ActingProducerSelect', () => {
     renderWithProviders(<ActingProducerSelect />);
 
     await userEvent.click(
-      await screen.findByRole('button', { name: /PROD-000007/ }),
-    );
-    await userEvent.click(
-      within(await screen.findByRole('dialog')).getByRole('button', {
-        name: 'Quitar productor',
-      }),
+      await screen.findByRole('button', { name: 'Borrar' }),
     );
 
-    expect(readActingProducer(USER)).toBeNull();
+    await waitFor(() => expect(readActingProducer(USER)).toBeNull());
   });
 
   it('forgets a producer that no longer exists and says so', async () => {
@@ -181,14 +182,10 @@ describe('ActingProducerSelect', () => {
     connected = false;
     renderWithProviders(<ActingProducerSelect />);
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: /PROD-000007/ }),
-    );
-
-    const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveTextContent(
-      'Necesitas conexión para cambiar de productor',
-    );
-    expect(within(dialog).queryByLabelText('Productor')).toBeNull();
+    expect(await screen.findByText(/Productor: Ana Prueba/)).toBeVisible();
+    expect(
+      screen.getByText(/Necesitas conexión para cambiar/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 });

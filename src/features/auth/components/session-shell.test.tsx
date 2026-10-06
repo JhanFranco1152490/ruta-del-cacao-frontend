@@ -390,7 +390,7 @@ describe('SessionShell and the title of the tab', () => {
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
     expect(
-      await screen.findByRole('button', { name: /Productor: Ana Prueba/ }),
+      await screen.findByRole('combobox', { name: 'Productor activo' }),
     ).toBeVisible();
   });
 
@@ -401,7 +401,7 @@ describe('SessionShell and the title of the tab', () => {
 
     await screen.findByRole('button', { name: 'Cuenta de ana@example.com' });
     expect(
-      screen.queryByRole('button', { name: /productor/i }),
+      screen.queryByRole('combobox', { name: 'Productor activo' }),
     ).not.toBeInTheDocument();
   });
 });
