@@ -198,7 +198,13 @@ export function VarietyFormDialog({
             >
               Cancelar
             </DialogClose>
-            <SubmitButton pending={isSaving} pendingLabel="Guardando…">
+            {/* sm:w-auto: el pie va en fila desde `sm` y, a todo el ancho, empujaba a Cancelar fuera del
+                diálogo. */}
+            <SubmitButton
+              className="sm:w-auto"
+              pending={isSaving}
+              pendingLabel="Guardando…"
+            >
               {variety ? 'Guardar cambios' : 'Registrar variedad'}
             </SubmitButton>
           </DialogFooter>

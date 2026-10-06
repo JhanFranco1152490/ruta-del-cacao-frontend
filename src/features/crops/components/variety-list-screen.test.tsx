@@ -179,6 +179,20 @@ describe('VarietyListScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps Cancelar inside the dialog: the save button does not take the whole footer', async () => {
+    const user = await renderScreen();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Registrar variedad' }),
+    );
+    const dialog = screen.getByRole('dialog');
+
+    // A todo el ancho, en pantallas con el pie en fila empujaba a Cancelar fuera del diálogo.
+    expect(
+      within(dialog).getByRole('button', { name: 'Registrar variedad' }),
+    ).toHaveClass('sm:w-auto');
+  });
+
   it('warns about a repeated name before sending it', async () => {
     const user = await renderScreen();
 
