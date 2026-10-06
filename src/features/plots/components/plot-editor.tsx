@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { type ReactNode, useMemo } from 'react';
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useWatch } from 'react-hook-form';
 
 import {
@@ -83,6 +84,7 @@ export function PlotEditor({
   const canEditFarm = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
   // Vive aquí y no en los botones: el mapa también necesita saber dónde está la persona.
   const warm = useWarmGps();
+  const [vertexListFolded, setVertexListFolded] = useState(false);
   const editor = usePlotEditor({ defaultValues, farm, knownPlots, selfId });
   const {
     form: {
@@ -164,14 +166,16 @@ export function PlotEditor({
           }),
         )}
       >
-        <div className="space-y-4">
+        {/* Pegado al desplazarse: con muchos vértices la lista de la derecha es larga y el mapa
+            sigue a la vista mientras se recorre. */}
+        <div className="space-y-4 lg:sticky lg:top-20">
           <PolygonEditorMapPanel
             disabled={isSaving}
             drawing={draft.drawing}
             farmPoint={farmPoint}
             flaggedVertices={flaggedVertices}
             gpsPosition={warm.fix}
-            frameClassName="lg:h-[32rem]"
+            frameClassName="lg:h-[min(32rem,calc(100dvh-20rem))]"
             loadProvider={loadPolygonEditorMapProvider!}
             onAddVertex={editor.addMapVertex}
             onRequestGps={warm.start}
@@ -224,8 +228,39 @@ export function PlotEditor({
             </div>
           </FormSection>
 
-          <FormSection title="Vértices del polígono">
+          <FormSection
+            actions={
+              draft.vertices.length > 0 && (
+                <Button
+                  aria-expanded={!vertexListFolded}
+                  aria-label={
+                    vertexListFolded
+                      ? 'Desplegar la lista de vértices'
+                      : 'Plegar la lista de vértices'
+                  }
+                  className="size-11"
+                  onClick={() => setVertexListFolded((value) => !value)}
+                  size="icon"
+                  title={
+                    vertexListFolded
+                      ? 'Desplegar la lista de vértices'
+                      : 'Plegar la lista de vértices'
+                  }
+                  type="button"
+                  variant="outline"
+                >
+                  {vertexListFolded ? (
+                    <ChevronsUpDown aria-hidden="true" className="size-4" />
+                  ) : (
+                    <ChevronsDownUp aria-hidden="true" className="size-4" />
+                  )}
+                </Button>
+              )
+            }
+            title="Vértices del polígono"
+          >
             <PlotVertexList
+              collapsed={vertexListFolded}
               closeAttempted={editor.closeAttempted}
               disabled={isSaving}
               drawing={draft.drawing}

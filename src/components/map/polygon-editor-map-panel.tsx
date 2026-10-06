@@ -14,6 +14,7 @@ import type {
   PolygonEditorMapProviderProps,
 } from './map-provider';
 import { MapSkeleton } from './map-states';
+import { MapVisibilityButton } from './map-visibility-button';
 import { useMapProvider } from './use-map-provider';
 
 type PanelProps = Omit<
@@ -43,6 +44,7 @@ export function PolygonEditorMapPanel({
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
   const [baseUnavailable, setBaseUnavailable] = useState(false);
   const [focus, setFocus] = useState<{ target: MapFocusTarget }>();
+  const [visible, setVisible] = useState(true);
 
   if (map.isLoading) {
     return <MapSkeleton className={cn('h-80', frameClassName)} />;
@@ -66,38 +68,52 @@ export function PolygonEditorMapPanel({
     <section aria-label="Mapa de la parcela" className="space-y-3">
       {/* Encima del recuadro y no sobre el mapa: en celular no tapa sus controles. */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <MapFocusControls
-          canGoToFarm={!!providerProps.farmPoint}
-          farmLabel="Ir a la finca"
-          hasGps={!!providerProps.gpsPosition}
-          onFocus={(target) => setFocus({ target })}
-          onRequestGps={onRequestGps}
-        />
-        <BaseLayerToggle
-          onChange={(next) => {
-            setBaseUnavailable(false);
-            setBaseLayer(next);
-          }}
-          value={baseLayer}
-        />
+        {visible ? (
+          <MapFocusControls
+            canGoToFarm={!!providerProps.farmPoint}
+            farmLabel="Ir a la finca"
+            hasGps={!!providerProps.gpsPosition}
+            onFocus={(target) => setFocus({ target })}
+            onRequestGps={onRequestGps}
+          />
+        ) : (
+          <span />
+        )}
+        <div className="flex items-center gap-2">
+          {visible && (
+            <BaseLayerToggle
+              onChange={(next) => {
+                setBaseUnavailable(false);
+                setBaseLayer(next);
+              }}
+              value={baseLayer}
+            />
+          )}
+          <MapVisibilityButton
+            onToggle={() => setVisible((value) => !value)}
+            visible={visible}
+          />
+        </div>
       </div>
       {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
           quedaría por encima de los diálogos y del menú móvil (z-50). */}
-      <div
-        data-slot="map-frame"
-        className={cn(
-          'isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
-          frameClassName,
-        )}
-      >
-        <Provider
-          {...providerProps}
-          baseLayer={baseLayer}
-          focus={focus}
-          onBaseLayerUnavailable={() => setBaseUnavailable(true)}
-        />
-      </div>
-      {baseUnavailable && (
+      {visible && (
+        <div
+          data-slot="map-frame"
+          className={cn(
+            'isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
+            frameClassName,
+          )}
+        >
+          <Provider
+            {...providerProps}
+            baseLayer={baseLayer}
+            focus={focus}
+            onBaseLayerUnavailable={() => setBaseUnavailable(true)}
+          />
+        </div>
+      )}
+      {visible && baseUnavailable && (
         <p className="text-sm font-bold text-muted-foreground" role="status">
           El mapa base no está disponible ahora. Los vértices y los polígonos se
           siguen viendo, y puedes seguir dibujando.

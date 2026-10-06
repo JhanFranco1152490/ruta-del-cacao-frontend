@@ -168,10 +168,11 @@ export function LeafletPointsMap({
   points,
   shapes = [],
   focus,
+  baseLayer = 'map',
   onError,
 }: PointsMapProviderProps) {
   const { containerRef, map } = useLeafletMap();
-  useBaseLayer(map, 'map', onError);
+  useBaseLayer(map, baseLayer, onError);
   const pointsRef = useLatest(points);
   const shapesRef = useLatest(shapes);
   const drawnPolygons = useRef<{ polygon: L.Polygon; label: string }[]>([]);

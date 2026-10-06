@@ -17,6 +17,7 @@ import type {
   MapFocusTarget,
 } from './map-provider';
 import { MapSkeleton } from './map-states';
+import { MapVisibilityButton } from './map-visibility-button';
 import { useMapProvider } from './use-map-provider';
 
 export function MapPanel({
@@ -47,6 +48,7 @@ export function MapPanel({
   const map = useMapProvider(loadProvider);
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
   const [focus, setFocus] = useState<{ target: MapFocusTarget }>();
+  const [visible, setVisible] = useState(true);
 
   if (map.isLoading) {
     return <MapSkeleton className={cn('h-80', frameClassName)} />;
@@ -71,35 +73,49 @@ export function MapPanel({
     <section aria-label="Mapa de ubicación" className="space-y-3">
       {/* Encima del recuadro y no sobre el mapa: en celular no tapa sus controles. */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <MapFocusControls
-          canGoToFarm={!!point}
-          farmLabel="Ir al punto de la finca"
-          hasGps={!!gpsPosition}
-          onFocus={(target) => setFocus({ target })}
-          onRequestGps={onRequestGps}
-        />
-        <BaseLayerToggle onChange={setBaseLayer} value={baseLayer} />
+        {visible ? (
+          <MapFocusControls
+            canGoToFarm={!!point}
+            farmLabel="Ir al punto de la finca"
+            hasGps={!!gpsPosition}
+            onFocus={(target) => setFocus({ target })}
+            onRequestGps={onRequestGps}
+          />
+        ) : (
+          <span />
+        )}
+        <div className="flex items-center gap-2">
+          {visible && (
+            <BaseLayerToggle onChange={setBaseLayer} value={baseLayer} />
+          )}
+          <MapVisibilityButton
+            onToggle={() => setVisible((value) => !value)}
+            visible={visible}
+          />
+        </div>
       </div>
       {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
           quedaría por encima de los diálogos y del menú móvil (z-50). */}
-      <div
-        data-slot="map-frame"
-        className={cn(
-          'isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
-          frameClassName,
-        )}
-      >
-        <Provider
-          baseLayer={baseLayer}
-          disabled={disabled}
-          focus={focus}
-          focusBounds={focusBounds}
-          gpsPosition={gpsPosition}
-          onError={map.fail}
-          onPointChange={(next) => onLocationChange(formatGeoPoint(next))}
-          point={point}
-        />
-      </div>
+      {visible && (
+        <div
+          data-slot="map-frame"
+          className={cn(
+            'isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
+            frameClassName,
+          )}
+        >
+          <Provider
+            baseLayer={baseLayer}
+            disabled={disabled}
+            focus={focus}
+            focusBounds={focusBounds}
+            gpsPosition={gpsPosition}
+            onError={map.fail}
+            onPointChange={(next) => onLocationChange(formatGeoPoint(next))}
+            point={point}
+          />
+        </div>
+      )}
       {/* Debajo del mapa y no encima: así no tapa sus controles ni la atribución. */}
       <p className="flex items-center gap-2 text-sm font-bold text-foreground">
         <MapPinned aria-hidden="true" className="size-4 text-selva" />
