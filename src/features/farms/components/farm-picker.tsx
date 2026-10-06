@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useId, useState } from 'react';
 
+import { EmptyState } from '@/components/empty-state';
 import { ProducerFilter } from '@/components/producer-filter';
 import {
   Combobox,
@@ -11,6 +13,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from '@/components/ui/combobox';
+import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { getErrorMessage } from '@/lib/api/errors';
 import { useProducerSummary } from '@/lib/api/producer-options';
@@ -44,6 +47,10 @@ export function FarmPicker({ onPick }: { onPick: (farmId: string) => void }) {
   const farms = useFarms({ search: search || undefined, producer });
   const results = farms.data?.results ?? [];
   const more = (farms.data?.count ?? 0) - results.length;
+  // Sin nada escrito y sin ninguna finca: no hay qué buscar, y lo que sigue es crear una.
+  const noFarmsYet =
+    farms.isSuccess && farms.data.count === 0 && !search && !input.trim();
+  const canAddFarm = hasPermission(user, PERMISSIONS.FARMS_ADD);
   const empty = farms.isError
     ? getErrorMessage(farms.error, 'No fue posible cargar las fincas.')
     : farms.isPending
@@ -60,45 +67,73 @@ export function FarmPicker({ onPick }: { onPick: (farmId: string) => void }) {
           selected={selectedProducer}
         />
       )}
-      <div className="space-y-2">
-        <label htmlFor={inputId} className="block text-sm font-bold text-selva">
-          Finca
-        </label>
-        <Combobox<Farm>
-          items={results}
-          filter={null}
-          value={null}
-          onValueChange={(farm) => {
-            if (farm) onPick(farm.id);
-          }}
-          isItemEqualToValue={(a, b) => a.id === b.id}
-          itemToStringLabel={labelOf}
-          inputValue={input}
-          onInputValueChange={setInput}
-        >
-          <ComboboxInput
-            id={inputId}
-            className="h-11 w-full"
-            placeholder="Nombre de la finca"
-          />
-          <ComboboxContent>
-            <ComboboxEmpty>{empty}</ComboboxEmpty>
-            <ComboboxList>
-              {(farm: Farm) => (
-                <ComboboxItem key={farm.id} value={farm}>
-                  {labelOf(farm)}
-                </ComboboxItem>
+      {noFarmsYet ? (
+        <EmptyState
+          title={
+            producer
+              ? 'Este productor aún no tiene fincas'
+              : 'Aún no hay ninguna finca'
+          }
+          description={
+            canAddFarm
+              ? 'Una parcela se registra dentro de una finca: crea la finca primero y vuelve aquí.'
+              : 'Una parcela se registra dentro de una finca, y la finca debe registrarla antes quien la administra.'
+          }
+          action={
+            canAddFarm && (
+              <Link
+                className={buttonVariants({ size: 'office' })}
+                href="/fincas/nueva"
+              >
+                Registrar una finca
+              </Link>
+            )
+          }
+        />
+      ) : (
+        <div className="space-y-2">
+          <label
+            htmlFor={inputId}
+            className="block text-sm font-bold text-selva"
+          >
+            Finca
+          </label>
+          <Combobox<Farm>
+            items={results}
+            filter={null}
+            value={null}
+            onValueChange={(farm) => {
+              if (farm) onPick(farm.id);
+            }}
+            isItemEqualToValue={(a, b) => a.id === b.id}
+            itemToStringLabel={labelOf}
+            inputValue={input}
+            onInputValueChange={setInput}
+          >
+            <ComboboxInput
+              id={inputId}
+              className="h-11 w-full"
+              placeholder="Nombre de la finca"
+            />
+            <ComboboxContent>
+              <ComboboxEmpty>{empty}</ComboboxEmpty>
+              <ComboboxList>
+                {(farm: Farm) => (
+                  <ComboboxItem key={farm.id} value={farm}>
+                    {labelOf(farm)}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+              {more > 0 && (
+                <p className="px-3 py-2 text-sm text-muted-foreground">
+                  Se muestran {results.length} fincas; escribe para encontrar
+                  otras.
+                </p>
               )}
-            </ComboboxList>
-            {more > 0 && (
-              <p className="px-3 py-2 text-sm text-muted-foreground">
-                Se muestran {results.length} fincas; escribe para encontrar
-                otras.
-              </p>
-            )}
-          </ComboboxContent>
-        </Combobox>
-      </div>
+            </ComboboxContent>
+          </Combobox>
+        </div>
+      )}
     </div>
   );
 }
