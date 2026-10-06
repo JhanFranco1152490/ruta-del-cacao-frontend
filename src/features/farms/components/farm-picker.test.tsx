@@ -66,19 +66,75 @@ describe('FarmPicker', () => {
     const searches: (string | null)[] = [];
     server.use(
       http.get(apiUrl('/api/farms'), ({ request }) => {
-        searches.push(new URL(request.url).searchParams.get('search'));
-        return HttpResponse.json(buildPage([]));
+        const search = new URL(request.url).searchParams.get('search');
+        searches.push(search);
+        // Sin búsqueda hay una finca: sin ninguna, se muestra el aviso de crearla y no el buscador.
+        return HttpResponse.json(buildPage(search ? [] : [buildFarm()]));
       }),
     );
     renderPicker();
 
-    await userEvent.click(screen.getByLabelText('Finca'));
+    await userEvent.click(await screen.findByLabelText('Finca'));
     await userEvent.type(screen.getByLabelText('Finca'), 'Espe');
 
     await vi.waitFor(() => expect(searches.at(-1)).toBe('Espe'));
     expect(
       await screen.findByText('Ninguna finca coincide con la búsqueda.'),
     ).toBeVisible();
+  });
+});
+
+describe('FarmPicker without any farm yet', () => {
+  const serveNoFarms = () =>
+    server.use(
+      http.get(apiUrl('/api/farms'), () => HttpResponse.json(buildPage([]))),
+    );
+
+  it('says there is no farm and offers to create one first', async () => {
+    serveNoFarms();
+    renderPicker(vi.fn(), {
+      permissions: [PERMISSIONS.PLOTS_ADD, PERMISSIONS.FARMS_ADD],
+    });
+
+    expect(await screen.findByText('Aún no hay ninguna finca')).toBeVisible();
+    expect(
+      screen.getByRole('link', { name: 'Registrar una finca' }),
+    ).toHaveAttribute('href', '/fincas/nueva');
+    expect(screen.queryByLabelText('Finca')).not.toBeInTheDocument();
+  });
+
+  it('does not offer to create one to whoever cannot', async () => {
+    serveNoFarms();
+    renderPicker(vi.fn(), { permissions: [PERMISSIONS.PLOTS_ADD] });
+
+    expect(await screen.findByText('Aún no hay ninguna finca')).toBeVisible();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('keeps the search message when farms exist but none matches what was typed', async () => {
+    server.use(
+      http.get(apiUrl('/api/farms'), ({ request }) =>
+        HttpResponse.json(
+          buildPage(
+            new URL(request.url).searchParams.get('search')
+              ? []
+              : [buildFarm({ id: 'f1' })],
+          ),
+        ),
+      ),
+    );
+    renderPicker(vi.fn(), {
+      permissions: [PERMISSIONS.PLOTS_ADD, PERMISSIONS.FARMS_ADD],
+    });
+
+    await userEvent.type(await screen.findByLabelText('Finca'), 'zzz');
+
+    expect(
+      await screen.findByText('Ninguna finca coincide con la búsqueda.'),
+    ).toBeVisible();
+    expect(
+      screen.queryByText('Aún no hay ninguna finca'),
+    ).not.toBeInTheDocument();
   });
 });
 
