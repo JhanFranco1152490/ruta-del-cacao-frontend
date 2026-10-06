@@ -1,3 +1,4 @@
+import { getActingProducer } from '@/lib/acting-producer';
 import { API_URL } from '@/lib/env';
 
 import {
@@ -8,7 +9,13 @@ import {
 } from './errors';
 import type { components } from './schema';
 
-export type ApiRequestInit = Omit<RequestInit, 'body'> & { body?: unknown };
+export type ApiRequestInit = Omit<RequestInit, 'body'> & {
+  body?: unknown;
+  // El productor bajo el que opera la cuenta técnica en esta petición. Sin indicar, el de la
+  // pestaña; `null`, ninguno; un id, ese (la cola lo usa para enviar un registro bajo el productor
+  // con que se guardó, aunque la pestaña haya cambiado de productor mientras esperaba).
+  actingProducer?: string | null;
+};
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -24,6 +31,11 @@ const NO_RENEWAL_PREFIXES = [
   '/api/auth/password-reset',
   '/api/auth/activation',
 ];
+
+// Las rutas de la sesión nunca llevan el productor activo: si el elegido ya no existe, el servidor
+// respondería 404 a la lectura de la sesión y la pantalla creería que se cerró.
+const SESSION_PREFIX = '/api/auth/';
+const ACTING_PRODUCER_HEADER = 'X-Acting-Producer';
 
 const UNEXPECTED_DETAIL =
   'No pudimos completar la solicitud. Inténtalo de nuevo.';
@@ -57,11 +69,16 @@ async function toApiError(response: Response) {
 }
 
 async function request<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
-  const { body, ...rest } = init;
+  const { body, actingProducer, ...rest } = init;
   const method = (init.method ?? 'GET').toUpperCase();
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
   if (body !== undefined) headers.set('Content-Type', 'application/json');
+  const acting =
+    actingProducer === undefined ? getActingProducer() : actingProducer;
+  if (acting && !path.startsWith(SESSION_PREFIX)) {
+    headers.set(ACTING_PRODUCER_HEADER, acting);
+  }
   if (!SAFE_METHODS.has(method))
     headers.set('X-CSRFToken', await getCsrfToken());
 

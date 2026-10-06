@@ -1,5 +1,5 @@
 import { delay, http, HttpResponse } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   apiError,
@@ -8,6 +8,8 @@ import {
 } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
+
+import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 
 import { apiFetch } from './client';
 import { ApiError } from './errors';
@@ -449,5 +451,80 @@ describe('apiFetch', () => {
 
     await expect(apiFetch('/api/producers')).resolves.toEqual({ ok: true });
     expect(refresh.calls).toBe(1);
+  });
+});
+
+describe('apiFetch and the acting producer', () => {
+  const CHOSEN = '33333333-3333-4333-8333-333333333333';
+  const OTHER = '44444444-4444-4444-8444-444444444444';
+  const FARMS = apiUrl('/api/farms');
+
+  function captureHeader(url: string, method: 'get' | 'post' = 'get') {
+    const seen: { value: string | null | undefined } = { value: undefined };
+    server.use(
+      http[method](url, ({ request }) => {
+        seen.value = request.headers.get('x-acting-producer');
+        return HttpResponse.json({});
+      }),
+    );
+    return seen;
+  }
+
+  afterEach(() => {
+    sessionStorage.clear();
+    syncActingProducer(null);
+  });
+
+  it('sends the producer of the tab', async () => {
+    writeActingProducer('u1', CHOSEN);
+    const seen = captureHeader(FARMS);
+
+    await apiFetch('/api/farms');
+
+    expect(seen.value).toBe(CHOSEN);
+  });
+
+  it('sends nothing without a choice', async () => {
+    const seen = captureHeader(FARMS);
+
+    await apiFetch('/api/farms');
+
+    expect(seen.value).toBeNull();
+  });
+
+  it('never sends it to the session endpoints', async () => {
+    writeActingProducer('u1', CHOSEN);
+    const seen = captureHeader(ME);
+
+    await apiFetch('/api/auth/me');
+
+    expect(seen.value).toBeNull();
+  });
+
+  it('sends the producer a queued record was saved under, not the one of the tab', async () => {
+    writeActingProducer('u1', CHOSEN);
+    const seen = captureHeader(FARMS);
+
+    await apiFetch('/api/farms', { actingProducer: OTHER });
+
+    expect(seen.value).toBe(OTHER);
+  });
+
+  it('sends nothing when the caller says there is no producer', async () => {
+    writeActingProducer('u1', CHOSEN);
+    const seen = captureHeader(FARMS);
+
+    await apiFetch('/api/farms', { actingProducer: null });
+
+    expect(seen.value).toBeNull();
+  });
+
+  it('sends it along with the CSRF token on writes', async () => {
+    writeActingProducer('u1', CHOSEN);
+    const seen = captureHeader(FARMS, 'post');
+
+    await apiFetch('/api/farms', { method: 'POST', body: {} });
+
+    expect(seen.value).toBe(CHOSEN);
   });
 });
