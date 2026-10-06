@@ -175,6 +175,18 @@ a {
 }
 
 @layer base {
+  /* El encabezado es fijo: sin esto, un enlace interno o el foco por teclado dejan el elemento
+     escondido debajo de él. */
+  html {
+    scroll-padding-top: 5rem;
+  }
+
+  /* Los paneles de Leaflet usan z-index de hasta 1000: sin su propio contexto de apilamiento,
+     el mapa se pintaría encima del encabezado fijo al pasar por debajo. */
+  .leaflet-container {
+    isolation: isolate;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }

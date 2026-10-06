@@ -25,16 +25,37 @@ function textNode(text: string) {
   return node;
 }
 
-const countIcon = (count: number) =>
+// El tamaño de la cifra sigue al del municipio en pantalla: con el mapa alejado, un municipio
+// pequeño solo lleva un punto de color (la cantidad está en su texto al pasar por encima), y al
+// acercar crece hasta el tamaño normal. Así los municipios vecinos no se tapan entre sí.
+const COUNT_MAX_PX = 30;
+const COUNT_MIN_PX = 18;
+const COUNT_NUMBER_MIN_PX = 18;
+
+const countIcon = (count: number, size: number) =>
   L.divIcon({
     className: '',
-    html: `<span class="map-count">${count}</span>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    html: `<span class="map-count" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.43)}px;border-width:${size < COUNT_NUMBER_MIN_PX ? 1 : 2}px">${size >= COUNT_NUMBER_MIN_PX ? count : ''}</span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
   });
+
+function countSize(map: L.Map, outline: MunicipalityOutline) {
+  const bounds = toLatLngBounds(outline.bounds);
+  const southWest = map.latLngToContainerPoint(bounds.getSouthWest());
+  const northEast = map.latLngToContainerPoint(bounds.getNorthEast());
+  const room = Math.min(
+    Math.abs(northEast.x - southWest.x),
+    Math.abs(southWest.y - northEast.y),
+  );
+  return Math.round(
+    Math.min(COUNT_MAX_PX, Math.max(COUNT_MIN_PX, room * 0.85)),
+  );
+}
 
 // Nivel del departamento: cada municipio con el tono de su cantidad de fincas y la cifra encima.
 export function departmentLayer(
+  map: L.Map,
   outlines: readonly MunicipalityOutline[],
   counts: readonly MunicipalityCount[],
   {
@@ -59,14 +80,25 @@ export function departmentLayer(
       .bindTooltip(textNode(describe(outline.code, count)), { sticky: true })
       .on('click', () => onSelect(outline.code))
       .addTo(group);
-    if (count > 0) {
+  }
+  const badges = L.layerGroup().addTo(group);
+  const drawBadges = () => {
+    badges.clearLayers();
+    for (const outline of outlines) {
+      const count = byCode.get(outline.code) ?? 0;
+      if (count === 0) continue;
       L.marker(toLatLng(outline.labelPoint), {
-        icon: countIcon(count),
+        icon: countIcon(count, countSize(map, outline)),
         interactive: false,
         keyboard: false,
-      }).addTo(group);
+      }).addTo(badges);
     }
-  }
+  };
+  drawBadges();
+  map.on('zoomend', drawBadges);
+  group.on('remove', () => {
+    map.off('zoomend', drawBadges);
+  });
   return group;
 }
 

@@ -74,6 +74,23 @@ beforeEach(() => {
 });
 
 describe('ProducerAccountCard', () => {
+  it('keeps Cancelar inside the create dialog: the save button does not take the whole footer', async () => {
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+
+    await userEvent.click(
+      await within(await card()).findByRole('button', {
+        name: 'Crear cuenta de acceso',
+      }),
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Crear cuenta de acceso',
+    });
+
+    expect(
+      within(dialog).getByRole('button', { name: 'Crear cuenta' }),
+    ).toHaveClass('sm:w-auto');
+  });
+
   it('creates the account with the record email and shows it', async () => {
     const bodies: unknown[] = [];
     server.use(

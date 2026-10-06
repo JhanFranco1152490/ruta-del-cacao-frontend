@@ -1,23 +1,30 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { ErrorState } from '@/components/error-state';
 import { EmptyState } from '@/components/empty-state';
 import { Pagination } from '@/components/pagination';
 import { isApiError } from '@/lib/api/errors';
+import { ListViewToolbar } from '@/components/list-view-toolbar';
+import { useGroupCollapse } from '@/hooks/use-group-collapse';
 import { useRoles, PAGE_SIZE } from '../api';
 import type { useRoleFilters } from '../use-role-filters';
+import { RoleGroups, groupRoles } from './role-groups';
 import { RoleTable } from './role-table';
 
 export function RoleList({
   filters,
   open,
   byProducer,
+  hint,
 }: {
   filters: ReturnType<typeof useRoleFilters>;
   open: (id: string) => void;
   byProducer: boolean;
+  hint?: ReactNode;
 }) {
   const list = useRoles(filters.query);
+  const groups = groupRoles(list.data?.results ?? [], byProducer);
+  const collapse = useGroupCollapse(groups.map((group) => group.key));
   const missingPage =
     isApiError(list.error) && list.error.status === 404 && filters.page > 1;
   const { setPage } = filters;
@@ -41,14 +48,20 @@ export function RoleList({
     );
   return (
     <>
-      <p className="mb-4 text-sm text-muted-foreground" role="status">
-        {list.data.count} roles encontrados
-      </p>
-      {list.data.results.length ? (
+      <ListViewToolbar
+        count={`${list.data.count} roles encontrados`}
+        hint={hint}
+        view={filters.view}
+        onViewChange={byProducer ? filters.setView : undefined}
+        groups={collapse}
+      />
+      {list.data.results.length && filters.view === 'agrupada' ? (
+        <RoleGroups groups={groups} collapse={collapse} open={open} />
+      ) : list.data.results.length ? (
         <RoleTable
           roles={list.data.results}
           open={open}
-          byProducer={byProducer}
+          showProducer={byProducer}
         />
       ) : (
         <EmptyState

@@ -98,6 +98,7 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
       }
       submitLabel="Guardar parcela"
       title="Registrar parcela"
+      crumb="Nueva parcela"
     />
   );
 }

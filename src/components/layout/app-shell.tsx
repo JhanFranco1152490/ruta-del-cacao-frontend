@@ -37,7 +37,10 @@ export function AppShell({
               : 'lg:w-60',
           )}
         >
-          <div className="sticky top-0 w-60 p-4">{sidebar}</div>
+          {/* top-16: la altura del encabezado fijo. */}
+          <div className="sticky top-16 max-h-[calc(100dvh-4rem)] w-60 overflow-y-auto p-4">
+            {sidebar}
+          </div>
         </aside>
         <main
           id="contenido"

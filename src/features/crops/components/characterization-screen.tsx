@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { Breadcrumb } from '@/components/breadcrumb';
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
@@ -166,12 +167,14 @@ export function CharacterizationScreen({
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
-      <nav aria-label="Ruta de navegación" className="text-sm">
-        <Link className="font-bold text-cobre underline" href={farm.detailPath}>
-          {farm.name}
-        </Link>{' '}
-        <span aria-hidden="true">›</span> {plot.code}
-      </nav>
+      <Breadcrumb
+        items={[
+          { label: 'Fincas', href: '/fincas' },
+          { label: farm.name, href: farm.detailPath },
+          { label: plot.code },
+          { label: 'Caracterización' },
+        ]}
+      />
       <PageHeader
         description={`Área declarada de la parcela: ${formatHectares(plot.areaHectares)}. Se guarda en este dispositivo y se envía cuando haya conexión.`}
         eyebrow="Caracterización productiva"

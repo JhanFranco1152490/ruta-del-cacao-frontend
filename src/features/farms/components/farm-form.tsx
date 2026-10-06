@@ -39,6 +39,10 @@ export function FarmForm() {
   return (
     <FarmFormFields
       key={farmId}
+      breadcrumb={[
+        { label: 'Fincas', href: '/fincas' },
+        { label: 'Registrar finca' },
+      ]}
       chooseProducer={chooseProducer}
       defaultValues={emptyFarmForm}
       title="Registrar finca"

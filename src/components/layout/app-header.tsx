@@ -16,7 +16,10 @@ export function AppHeader({
   sidebarToggle?: ReactNode;
 }) {
   return (
-    <header className="border-b border-border bg-card">
+    // Fijo: ahí viven el estado de la conexión, la bandeja de registros y la cuenta, que no deben
+    // perderse de vista al desplazarse. z-40: sobre el contenido (los mapas se aíslan, ver
+    // globals.css) y bajo los diálogos y menús (z-50).
+    <header className="sticky top-0 z-40 border-b border-border bg-card">
       <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-8">
         <div className="flex min-w-0 items-center gap-3 text-selva">
           {mobileNav}

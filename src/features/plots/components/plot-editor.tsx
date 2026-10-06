@@ -1,14 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { type ReactNode, useMemo } from 'react';
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useWatch } from 'react-hook-form';
 
 import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
 } from '@/components/capture-field-class';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { FormSection } from '@/components/form-section';
+import { MobileActionBar } from '@/components/mobile-action-bar';
 import { PolygonEditorMapPanel } from '@/components/map/polygon-editor-map-panel';
 import { PageHeader } from '@/components/page-header';
 import { TextField } from '@/components/text-field';
@@ -46,6 +49,7 @@ export function PlotEditor({
   selfId,
   defaultValues,
   title,
+  crumb,
   description,
   banner,
   notice,
@@ -63,6 +67,8 @@ export function PlotEditor({
   selfId?: string;
   defaultValues: PlotFormValues;
   title: string;
+  // El último nivel de la ruta: el código de la parcela que se edita, o "Nueva parcela".
+  crumb?: string;
   description: string;
   banner?: ReactNode;
   notice?: ReactNode;
@@ -79,6 +85,7 @@ export function PlotEditor({
   const canEditFarm = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
   // Vive aquí y no en los botones: el mapa también necesita saber dónde está la persona.
   const warm = useWarmGps();
+  const [vertexListFolded, setVertexListFolded] = useState(false);
   const editor = usePlotEditor({ defaultValues, farm, knownPlots, selfId });
   const {
     form: {
@@ -135,19 +142,13 @@ export function PlotEditor({
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <nav
-        aria-label="Ruta de navegación"
-        className="text-sm text-muted-foreground"
-      >
-        <Link className="underline underline-offset-4" href="/fincas">
-          Fincas
-        </Link>{' '}
-        /{' '}
-        <Link className="underline underline-offset-4" href={cancelHref}>
-          {farm.name}
-        </Link>{' '}
-        / <span className="font-bold text-foreground">{title}</span>
-      </nav>
+      <Breadcrumb
+        items={[
+          { label: 'Fincas', href: '/fincas' },
+          { label: farm.name, href: cancelHref },
+          { label: crumb ?? title },
+        ]}
+      />
       <PageHeader
         eyebrow={`Finca ${farm.name}`}
         title={title}
@@ -166,14 +167,16 @@ export function PlotEditor({
           }),
         )}
       >
-        <div className="space-y-4">
+        {/* Pegado al desplazarse: con muchos vértices la lista de la derecha es larga y el mapa
+            sigue a la vista mientras se recorre. */}
+        <div className="space-y-4 lg:sticky lg:top-20">
           <PolygonEditorMapPanel
             disabled={isSaving}
             drawing={draft.drawing}
             farmPoint={farmPoint}
             flaggedVertices={flaggedVertices}
             gpsPosition={warm.fix}
-            frameClassName="lg:h-[32rem]"
+            frameClassName="lg:h-[min(32rem,calc(100dvh-20rem))]"
             loadProvider={loadPolygonEditorMapProvider!}
             onAddVertex={editor.addMapVertex}
             onRequestGps={warm.start}
@@ -226,8 +229,39 @@ export function PlotEditor({
             </div>
           </FormSection>
 
-          <FormSection title="Vértices del polígono">
+          <FormSection
+            actions={
+              draft.vertices.length > 0 && (
+                <Button
+                  aria-expanded={!vertexListFolded}
+                  aria-label={
+                    vertexListFolded
+                      ? 'Desplegar la lista de vértices'
+                      : 'Plegar la lista de vértices'
+                  }
+                  className="size-11"
+                  onClick={() => setVertexListFolded((value) => !value)}
+                  size="icon"
+                  title={
+                    vertexListFolded
+                      ? 'Desplegar la lista de vértices'
+                      : 'Plegar la lista de vértices'
+                  }
+                  type="button"
+                  variant="outline"
+                >
+                  {vertexListFolded ? (
+                    <ChevronsUpDown aria-hidden="true" className="size-4" />
+                  ) : (
+                    <ChevronsDownUp aria-hidden="true" className="size-4" />
+                  )}
+                </Button>
+              )
+            }
+            title="Vértices del polígono"
+          >
             <PlotVertexList
+              collapsed={vertexListFolded}
               closeAttempted={editor.closeAttempted}
               disabled={isSaving}
               drawing={draft.drawing}
@@ -272,7 +306,7 @@ export function PlotEditor({
                 {blockedMessage}
               </p>
             )}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <MobileActionBar>
               <Button
                 aria-describedby={
                   blockedMessage ? 'plot-save-blocked' : undefined
@@ -295,7 +329,7 @@ export function PlotEditor({
                 Cancelar
               </Link>
               {secondaryAction}
-            </div>
+            </MobileActionBar>
           </div>
         </div>
       </form>

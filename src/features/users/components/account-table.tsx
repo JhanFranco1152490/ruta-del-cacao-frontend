@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Account } from '../api';
+import { STACKED_TABLE_CLASS } from '@/components/stacked-table-class';
 import { AccountStatusBadge } from '@/components/account-status-badge';
 
 export function AccountTable({
@@ -25,7 +26,7 @@ export function AccountTable({
   municipalityName?: (code: string) => string;
 }) {
   return (
-    <Table>
+    <Table className={STACKED_TABLE_CLASS}>
       <TableHeader>
         <TableRow>
           <TableHead>Nombre</TableHead>
@@ -42,33 +43,42 @@ export function AccountTable({
       <TableBody>
         {accounts.map((account) => (
           <TableRow key={account.id}>
-            <TableCell className="max-w-64 font-bold break-words whitespace-normal">
+            <TableCell
+              className="max-w-64 font-bold break-words whitespace-normal"
+              data-label="Nombre"
+            >
               {account.first_name} {account.last_name}
             </TableCell>
-            <TableCell>
+            <TableCell data-label="Documento">
               <MaskedValue
                 value={account.identity_document}
                 prefix={account.document_type}
               />
             </TableCell>
-            <TableCell className="max-w-64 break-words whitespace-normal">
+            <TableCell
+              className="max-w-64 break-words whitespace-normal"
+              data-label="Roles"
+            >
               {account.roles.map((role) => role.name).join(', ')}
             </TableCell>
             {showProducer && (
-              <TableCell className="max-w-64 break-words whitespace-normal">
+              <TableCell
+                className="max-w-64 break-words whitespace-normal"
+                data-label="Productor"
+              >
                 {account.producer
                   ? `${account.producer.first_name} ${account.producer.last_name} · ${account.producer.member_code}`
                   : 'Asociación'}
               </TableCell>
             )}
             {municipalityName && (
-              <TableCell>
+              <TableCell data-label="Municipio">
                 {account.producer
                   ? municipalityName(account.producer.municipality_code)
                   : '—'}
               </TableCell>
             )}
-            <TableCell>
+            <TableCell data-label="Estado">
               <AccountStatusBadge account={account} />
             </TableCell>
             <TableCell>

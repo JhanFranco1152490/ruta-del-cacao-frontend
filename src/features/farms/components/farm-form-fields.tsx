@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
+import { Breadcrumb, type Crumb } from '@/components/breadcrumb';
 import { FormSection } from '@/components/form-section';
 import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
@@ -46,6 +47,7 @@ export function FarmFormFields({
   blockedMessage,
   secondaryAction,
   chooseProducer = false,
+  breadcrumb,
   onSubmit,
 }: {
   defaultValues: FarmFormValues;
@@ -68,6 +70,8 @@ export function FarmFormFields({
   // La cuenta técnica elige de qué productor es la finca nueva. Al editar una finca nadie lo elige:
   // no cambia de dueño.
   chooseProducer?: boolean;
+  // La ruta hasta esta pantalla (Fincas / La Esperanza / Editar).
+  breadcrumb?: readonly Crumb[];
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
@@ -140,6 +144,7 @@ export function FarmFormFields({
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
+      {breadcrumb && <Breadcrumb items={breadcrumb} />}
       <PageHeader
         eyebrow="Gestión de fincas"
         title={title}

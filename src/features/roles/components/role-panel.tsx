@@ -8,6 +8,9 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { ErrorState } from '@/components/error-state';
+import { ProducerFilter } from '@/components/producer-filter';
+import { Button } from '@/components/ui/button';
+import { useProducerSummary } from '@/lib/api/producer-options';
 import { isApiError } from '@/lib/api/errors';
 import { useRole, usePermissionCatalog } from '../api';
 import { isRoleId } from '../schemas';
@@ -18,6 +21,8 @@ type Props = {
   selected: string;
   manage: boolean;
   canCreate: boolean;
+  // La asociación elige el productor del rol nuevo dentro del panel.
+  askProducer: boolean;
   producer?: string;
   close: () => void;
   open: (id: string) => void;
@@ -62,11 +67,31 @@ export function RolePanel(props: Props) {
 }
 function NewRole({
   producer,
+  askProducer,
   open,
   close,
   onBusy,
 }: Props & { onBusy: (value: boolean) => void }) {
   const catalog = usePermissionCatalog();
+  const [chosen, setChosen] = useState(producer);
+  const summary = useProducerSummary(askProducer ? chosen : undefined);
+  if (askProducer && !chosen)
+    return (
+      <div className="space-y-5 px-4">
+        <p className="text-sm text-muted-foreground">
+          Los roles propios pertenecen a un productor. Elige de cuál.
+        </p>
+        <ProducerFilter
+          producer={chosen}
+          selected={summary}
+          onSelect={setChosen}
+          onClear={() => setChosen(undefined)}
+        />
+        <Button type="button" variant="outline" onClick={close}>
+          Cancelar
+        </Button>
+      </div>
+    );
   if (catalog.isPending) return <p role="status">Cargando permisos…</p>;
   if (catalog.isError)
     return (
@@ -80,7 +105,13 @@ function NewRole({
   return (
     <RoleForm
       catalog={catalog.data}
-      producer={producer}
+      producer={chosen}
+      producerLabel={
+        askProducer && summary.data
+          ? `${summary.data.first_name} ${summary.data.last_name} · ${summary.data.member_code}`
+          : undefined
+      }
+      onChangeProducer={askProducer ? () => setChosen(undefined) : undefined}
       onBusy={onBusy}
       onSaved={(role) => open(role.id)}
       onCancel={close}

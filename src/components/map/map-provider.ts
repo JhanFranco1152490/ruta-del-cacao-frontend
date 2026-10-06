@@ -64,6 +64,8 @@ export type PointsMapProviderProps = {
   shapes?: readonly MapShape[];
   // Un objeto nuevo por pedido: enfocar dos veces el mismo polígono vuelve a llevar el mapa.
   focus?: { shapeId: string };
+  // Sin él, el mapa de calles.
+  baseLayer?: BaseLayerKind;
   onError: () => void;
 };
 
