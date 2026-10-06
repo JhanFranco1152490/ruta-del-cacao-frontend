@@ -219,4 +219,40 @@ describe('LoginForm', () => {
       screen.queryByText('Usuario o contraseña incorrectos.'),
     ).not.toBeInTheDocument();
   });
+
+  it('shows both demo accounts with their shared password', () => {
+    renderWithProviders(<LoginForm />);
+
+    const banner = screen.getByRole('region', {
+      name: 'Cuentas de demostración',
+    });
+    expect(banner).toHaveTextContent('administrador@example.com');
+    expect(banner).toHaveTextContent('productor@example.com');
+    expect(banner).toHaveTextContent('CacaoDemo2026');
+  });
+
+  it('signs in with a demo account after filling it in, even from the document method', async () => {
+    let body: unknown;
+    server.use(
+      http.post(LOGIN, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(session);
+      }),
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<LoginForm />);
+    await user.selectOptions(screen.getByLabelText('Ingresar con'), 'document');
+
+    await user.click(
+      screen.getByRole('button', { name: 'Usar la cuenta Productor' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    expect(body).toEqual({
+      login_method: 'email',
+      email: 'productor@example.com',
+      password: 'CacaoDemo2026',
+    });
+  });
 });

@@ -53,6 +53,16 @@ async function openDialog(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('ActivationDelivery', () => {
+  it('reminds to look in spam once the email went out, and not before', () => {
+    renderDelivery({ sent: true });
+    expect(screen.getByRole('status')).toHaveTextContent('carpeta de spam');
+  });
+
+  it('does not talk about spam when nothing was sent', () => {
+    renderDelivery({ sent: false });
+    expect(screen.getByRole('status')).not.toHaveTextContent('spam');
+  });
+
   it('lets the email be sent again even after it went out', async () => {
     const calls = serveSend();
     const { user } = renderDelivery({ sent: true });

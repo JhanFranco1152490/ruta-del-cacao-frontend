@@ -71,7 +71,7 @@ export function ActivationDelivery({
         {delivered === undefined
           ? 'La cuenta aún no se ha activado.'
           : delivered
-            ? 'Se envió el correo de activación. La persona debe abrir el enlace y elegir su contraseña.'
+            ? 'Se envió el correo de activación. La persona debe abrir el enlace y elegir su contraseña; si no lo ve, que revise la carpeta de spam.'
             : 'La cuenta se creó, pero no se pudo enviar el correo de activación.'}
       </p>
       {canResend && (
