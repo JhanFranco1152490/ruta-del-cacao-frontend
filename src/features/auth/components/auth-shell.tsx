@@ -77,8 +77,11 @@ export function AuthShell({
   const headline = todaysHeadline();
 
   return (
-    <div className="h-dvh overflow-hidden bg-background lg:flex">
-      <aside className="relative hidden w-[43%] max-w-[620px] shrink-0 flex-col overflow-hidden bg-selva p-10 text-primary-foreground lg:flex xl:p-12">
+    // La página crece con su contenido: con alto fijo y `overflow-hidden`, un formulario más alto
+    // que la ventana (un banner, un error, una pantalla baja) se recortaba arriba y abajo sin
+    // poder desplazarse. El panel de marca se queda a la altura de la ventana mientras se baja.
+    <div className="min-h-dvh bg-background lg:flex">
+      <aside className="relative hidden w-[43%] max-w-[620px] shrink-0 flex-col overflow-hidden bg-selva p-10 text-primary-foreground lg:sticky lg:top-0 lg:flex lg:h-dvh lg:self-start xl:p-12">
         <BotanicalVine className="absolute inset-0 size-full opacity-30" />
         <Brand className="relative text-crema" />
         <h2 className="relative mt-auto max-w-md font-serif text-[46px] leading-[1.08]">
@@ -88,7 +91,7 @@ export function AuthShell({
         </h2>
       </aside>
 
-      <main className="flex h-dvh flex-1 flex-col items-center justify-center px-5 py-6 sm:px-10">
+      <main className="flex min-h-dvh flex-1 flex-col items-center justify-center px-5 py-6 sm:px-10">
         <Brand className="mb-5 text-selva lg:hidden" />
         <div className="w-full max-w-[420px] rounded-xl bg-card p-7 shadow-card">
           {eyebrow && <p className="section-label">{eyebrow}</p>}
