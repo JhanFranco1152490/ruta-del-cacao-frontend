@@ -13,7 +13,10 @@ import { AccountRolesPanel } from './account-roles-panel';
 import { AccountStatusBadge } from '@/components/account-status-badge';
 import { AccountDeleteDialog } from '@/components/account-delete-dialog';
 import { AccountStatusDialog } from '@/components/account-status-dialog';
-import { ActivationDelivery } from '@/components/activation-delivery';
+import {
+  ActivationDelivery,
+  CHANGE_RECORD_EMAIL_HINT,
+} from '@/components/activation-delivery';
 
 type SessionUser = components['schemas']['SessionUser'];
 type Mode = 'view' | 'edit' | 'roles';
@@ -107,8 +110,12 @@ export function AccountDetail({
         <ActivationDelivery
           key={id}
           id={id}
+          email={data.email}
           sent={receipt?.id === id ? receipt.sent : undefined}
           canResend={canUpdate}
+          // El correo de la cuenta Productor es el de su expediente: se cambia ahí, no aquí.
+          canChangeEmail={canUpdate && !isProducerAccount(data)}
+          changeEmailHint={CHANGE_RECORD_EMAIL_HINT}
           onBusy={onBusy}
         />
       )}

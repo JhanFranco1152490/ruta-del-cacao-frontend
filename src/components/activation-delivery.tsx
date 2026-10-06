@@ -3,18 +3,33 @@ import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/status-badge';
 import { getErrorMessage } from '@/lib/api/errors';
+import { ChangeActivationEmailDialog } from '@/components/change-activation-email-dialog';
 import { useResendActivation } from '@/lib/api/accounts';
+
+// Para la cuenta Productor: su correo es el del expediente y se cambia allí; después se reenvía la
+// activación desde aquí.
+export const CHANGE_RECORD_EMAIL_HINT =
+  'Para cambiar el correo, edita el expediente del productor y luego reenvía la activación.';
 
 export function ActivationDelivery({
   id,
+  email,
   sent,
   canResend,
+  canChangeEmail = false,
+  changeEmailHint,
   onBusy,
 }: {
   id: string;
+  // El correo al que sale la activación.
+  email: string;
   // Resultado del último envío conocido en esta visita; sin él solo se sabe que falta activar.
   sent?: boolean;
   canResend: boolean;
+  // Corregir el correo desde aquí (cuentas cuyo correo es de la cuenta misma).
+  canChangeEmail?: boolean;
+  // Qué decir cuando el correo no se cambia desde aquí (p. ej. se cambia en el expediente).
+  changeEmailHint?: string;
   onBusy: (value: boolean) => void;
 }) {
   const mutation = useResendActivation();
@@ -59,12 +74,38 @@ export function ActivationDelivery({
             ? 'Se envió el correo de activación. La persona debe abrir el enlace y elegir su contraseña.'
             : 'La cuenta se creó, pero no se pudo enviar el correo de activación.'}
       </p>
-      {!delivered && canResend && (
-        <Button disabled={mutation.isPending} onClick={resend}>
-          {mutation.isPending ? 'Reenviando…' : 'Reenviar activación'}
-        </Button>
+      {canResend && (
+        <div className="flex flex-wrap gap-3">
+          {/* También después de enviado: el correo pudo perderse o el enlace vencer (72 horas). */}
+          <Button
+            className="h-11"
+            disabled={mutation.isPending}
+            onClick={resend}
+            variant={delivered ? 'outline' : 'default'}
+          >
+            {mutation.isPending ? 'Reenviando…' : 'Reenviar activación'}
+          </Button>
+          {canChangeEmail && (
+            <ChangeActivationEmailDialog
+              email={email}
+              id={id}
+              onBusy={onBusy}
+              onSent={(wasSent) => {
+                setDelivered(wasSent);
+                setFailure(
+                  wasSent
+                    ? ''
+                    : 'El correo se cambió, pero no se pudo enviar la activación. Puedes reenviarla.',
+                );
+              }}
+            />
+          )}
+        </div>
       )}
-      {!delivered && !canResend && (
+      {canResend && !canChangeEmail && changeEmailHint && (
+        <p className="text-sm text-muted-foreground">{changeEmailHint}</p>
+      )}
+      {!canResend && (
         <p>
           Solicita el reenvío a una persona con permiso para actualizar cuentas.
         </p>
