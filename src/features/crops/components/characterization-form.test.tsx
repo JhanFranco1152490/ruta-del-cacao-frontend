@@ -215,6 +215,20 @@ describe('CharacterizationForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('does not add a "usual range" warning to a density that is not even possible', async () => {
+    const { user } = renderForm({ areaHectares: '1.00' });
+
+    await fillPlanting(user, 1, 'ccn-51', '03', '2021', '11723');
+    await save(user);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Con 11.723 árboles/ha la densidad no es posible: el máximo es 10.000.',
+    );
+    expect(
+      screen.queryByText(/fuera de rango habitual/),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows each variety with the common name producers recognize', () => {
     renderForm();
 

@@ -206,6 +206,16 @@ describe('coherenceWarnings', () => {
     expect(codes({ density: null })).toEqual([]);
   });
 
+  it('does not call a density that is not even possible just unusual', () => {
+    // Por encima del máximo físico el formulario ya lo bloquea con su propio error: el aviso de
+    // "rango habitual" sobraría.
+    expect(codes({ density: 11_723 })).toEqual([]);
+    expect(codes({ density: 10_001 })).toEqual([]);
+    expect(codes({ density: 10_000 })).toEqual(['density_out_of_range']);
+    // Redondeada puede verse como 10.000 y aun así no ser posible: lo decide el cálculo exacto.
+    expect(codes({ density: 10_000, impossibleDensity: true })).toEqual([]);
+  });
+
   it('says the usual range in the message, for a density that is too low as well as too high', () => {
     for (const density of [150, 3000]) {
       const [warning] = coherenceWarnings(input({ density }));

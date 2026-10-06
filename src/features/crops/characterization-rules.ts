@@ -196,6 +196,9 @@ export type PlantingJudgement = {
 
 export type CoherenceInput = {
   density: number | null;
+  // La densidad supera el máximo físico (cálculo exacto, ver `impossibleDensity`): ya es un error
+  // que bloquea el guardado, así que no se suma un aviso de "poco usual".
+  impossibleDensity?: boolean;
   plantings: readonly PlantingJudgement[];
   varietyNames: readonly string[];
 };
@@ -203,6 +206,7 @@ export type CoherenceInput = {
 // Avisos que no bloquean el guardado: señalan datos poco usuales para que la persona los revise.
 export function coherenceWarnings({
   density,
+  impossibleDensity: isImpossible = false,
   plantings,
   varietyNames,
 }: CoherenceInput): CoherenceWarning[] {
@@ -210,6 +214,8 @@ export function coherenceWarnings({
 
   if (
     density !== null &&
+    !isImpossible &&
+    density <= MAX_POSSIBLE_DENSITY &&
     (density < MIN_USUAL_DENSITY || density > MAX_USUAL_DENSITY)
   ) {
     warnings.push({
