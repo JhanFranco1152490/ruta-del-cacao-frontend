@@ -17,6 +17,7 @@ import { DOCUMENT_TYPES } from '@/lib/document-types';
 
 import { useLogin } from '../api';
 import { loginSchema, toLoginRequest, type LoginFormValues } from '../schemas';
+import { DemoAccounts } from './demo-accounts';
 
 export function LoginForm() {
   const router = useRouter();
@@ -44,6 +45,14 @@ export function LoginForm() {
       onSuccess: () => router.replace(HOME_PATH),
     });
 
+  const fillDemoAccount = (email: string, password: string) => {
+    setValue('loginMethod', 'email');
+    setValue('identifier', email);
+    setValue('password', password);
+    clearErrors();
+    login.reset();
+  };
+
   return (
     // `post`: si la página cargara sin JavaScript, el navegador no enviaría la contraseña en la URL.
     <form
@@ -52,6 +61,7 @@ export function LoginForm() {
       noValidate
       className="space-y-4"
     >
+      <DemoAccounts onUse={fillDemoAccount} />
       <FormMessage>
         {login.isError
           ? getErrorMessage(
