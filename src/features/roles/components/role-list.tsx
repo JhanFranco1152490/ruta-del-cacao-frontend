@@ -12,10 +12,13 @@ export function RoleList({
   filters,
   open,
   byProducer,
+  grouped,
 }: {
   filters: ReturnType<typeof useRoleFilters>;
   open: (id: string) => void;
   byProducer: boolean;
+  // La cuenta técnica viendo "Todos": el productor activo primero y los demás plegados.
+  grouped?: { activeProducerId?: string };
 }) {
   const list = useRoles(filters.query);
   const missingPage =
@@ -49,6 +52,8 @@ export function RoleList({
           roles={list.data.results}
           open={open}
           byProducer={byProducer}
+          activeProducerId={grouped?.activeProducerId}
+          collapseOthers={!!grouped}
         />
       ) : (
         <EmptyState

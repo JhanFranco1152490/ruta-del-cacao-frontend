@@ -23,18 +23,28 @@ const urlKeys = {
   page: 'pagina',
 };
 
-export function useRoleFilters(association: boolean) {
+export type RoleScope = {
+  // Solo los roles propios de este productor y los del sistema (la vista "Del productor activo").
+  producer?: string | null;
+  // Agrupados por productor: el servidor los ordena para que un grupo no se parta entre páginas.
+  grouped?: boolean;
+};
+
+export function useRoleFilters(association: boolean, scope: RoleScope = {}) {
   const [params, setParams] = useQueryStates(parsers, { urlKeys });
   const search = usePaginatedSearch(params.search, setParams);
   const producer =
-    association && params.producer && isRoleId(params.producer)
+    scope.producer ??
+    (association && params.producer && isRoleId(params.producer)
       ? params.producer
-      : undefined;
+      : undefined);
   const page = Math.max(1, params.page);
   const query: RoleQuery = {
     search: params.search.trim() || undefined,
     kind: params.kind ?? undefined,
     producer,
+    include_system: scope.producer ? true : undefined,
+    ordering: scope.grouped ? 'producer,name' : undefined,
     page,
   };
   return {

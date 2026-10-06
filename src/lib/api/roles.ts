@@ -13,6 +13,10 @@ export type RoleQuery = {
   search?: string;
   kind?: Role['kind'];
   producer?: string;
+  // Con `producer`: sus roles propios y también los del sistema.
+  include_system?: boolean;
+  // Con la vista agrupada por productor: `producer,name`.
+  ordering?: string;
   page?: number;
 };
 export const PAGE_SIZE = 20;
@@ -25,6 +29,8 @@ export const fetchRoles = (query: RoleQuery, signal?: AbortSignal) => {
   if (query.search) params.set('search', query.search);
   if (query.kind) params.set('kind', query.kind);
   if (query.producer) params.set('producer', query.producer);
+  if (query.include_system) params.set('include_system', 'true');
+  if (query.ordering) params.set('ordering', query.ordering);
   return apiFetch<Schemas['PaginatedRoleList']>(`/api/roles?${params}`, {
     signal,
   });
