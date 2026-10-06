@@ -29,4 +29,11 @@ describe('AppHeader', () => {
 
     expect(screen.getByRole('button', { name: 'Acción' })).toBeInTheDocument();
   });
+
+  it('stays at the top while the page scrolls, above the content but below dialogs', () => {
+    render(<AppHeader logoutFailed={false} />);
+
+    const header = screen.getByRole('banner');
+    expect(header).toHaveClass('sticky', 'top-0', 'z-40');
+  });
 });
