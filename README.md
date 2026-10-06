@@ -20,7 +20,7 @@ las reglas de trabajo están en `AGENTS.md`.
   manejo y sombra de la parcela, con historial de versiones.
 - **Sin conexión:** la app abre y recarga sin red; fincas, parcelas y fichas se guardan en el
   dispositivo y se envían solas al volver la conexión, con una bandeja para corregir o descartar
-  lo que el servidor rechace.
+  lo que el servidor rechace. Ver "Qué funciona sin conexión".
 
 ## Desarrollo local
 
@@ -64,6 +64,41 @@ hook de pre-commit no encuentra `pnpm` y el commit falla.
 Usar `localhost` en ambos servidores; mezclarlo con `127.0.0.1` afecta el envío
 de cookies. Si cambia el puerto del frontend, actualizar ambos orígenes y
 `FRONTEND_URL` en Django. Reiniciar los servidores tras cambiar variables.
+
+## Entornos
+
+| Entorno | Rama | Aplicación | API (`NEXT_PUBLIC_API_URL`) |
+| --- | --- | --- | --- |
+| Producción | `main` | https://rutadelcacao.escapate.tours/ | https://api-rutadelcacao.escapate.tours |
+| Staging | `dev` | https://staging-rutadelcacao.escapate.tours/ | https://api-staging-rutadelcacao.escapate.tours |
+
+Cada entorno se compila con la API de su mismo entorno: `NEXT_PUBLIC_API_URL` se incrusta al
+compilar, así que cambiarla exige un nuevo despliegue, y va sin barra final.
+
+## Qué funciona sin conexión
+
+La interfaz **no explica** qué se puede hacer sin red (no hay tutorial ni aviso), así que queda
+escrito aquí. La app es una PWA: abre y recarga sin conexión, y lo capturado se guarda en el
+dispositivo y se envía solo al volver la red.
+
+- **Antes de salir al campo, con conexión:** abrir la app e iniciar sesión; abrir **Mis fincas** y
+  el detalle de cada finca que se va a trabajar (sin red solo se ven las que ya se abrieron); y
+  abrir una vez la ficha de caracterización para guardar el catálogo de variedades.
+- **Sin conexión sí se puede:** abrir la app mientras el último inicio de sesión confirmado por el
+  servidor sea de menos de 7 días; ver fincas y parcelas ya abiertas ("Datos guardados el …");
+  registrar y editar fincas, parcelas (contorno por mapa o GPS, con las revisiones de área,
+  superposición y distancia en el dispositivo) y fichas de caracterización; y **cerrar sesión**
+  (se cierra en el dispositivo y el servidor se entera al volver la red).
+- **Qué falta enviar:** el encabezado muestra la conexión y los registros pendientes. Si el
+  servidor rechaza uno, cae en la bandeja del dispositivo con el motivo, y se puede **Corregir** o
+  **Descartar**. Los pendientes se conservan al cerrar sesión.
+- **Sin conexión no se puede:** ver los mapas base (los polígonos y el GPS sí); abrir Productores,
+  Usuarios, Roles ni Variedades; activar, desactivar o eliminar; ver el historial de una ficha;
+  "Mi cuenta" ni cambiar la contraseña; ni abrir una finca o parcela que nunca se abrió con red.
+  **Guardar** se deshabilita tras 7 días sin que el servidor confirme la sesión.
+- **Cómo probarlo:** con conexión, preparar el dispositivo como arriba y luego cortar la red
+  (Herramientas del navegador → Red → Sin conexión, o modo avión). En `next dev` el Service Worker
+  no se registra: usar `pnpm build && pnpm start`.
 
 ## Cuentas de demostración
 
