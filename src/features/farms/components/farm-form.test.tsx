@@ -8,7 +8,8 @@ import { fetchMunicipalities } from '@/lib/api/municipalities';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
-import { buildSession } from '@/test/factories';
+import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
+import { buildPage, buildProducer, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -27,9 +28,12 @@ beforeEach(async () => {
   server.use(municipalitiesHandler());
 });
 
-async function renderForm() {
+async function renderForm(session: Parameters<typeof buildSession>[0] = {}) {
   const queryClient = createTestQueryClient();
-  queryClient.setQueryData(queryKeys.session(), buildSession({ id: userId }));
+  queryClient.setQueryData(
+    queryKeys.session(),
+    buildSession({ id: userId, ...session }),
+  );
   const result = renderWithProviders(<FarmForm />, { queryClient });
   await screen.findByRole('option', { name: 'Pamplona' });
   return result;
@@ -402,5 +406,104 @@ describe('FarmForm', () => {
       ).toBeInTheDocument();
       expect(await queuedFarms()).toHaveLength(1);
     });
+  });
+});
+
+describe('FarmForm for the technical account', () => {
+  const PRODUCER = '33333333-3333-4333-8333-333333333333';
+  const technical = { producer_id: null, is_superuser: true } as const;
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    syncActingProducer(null);
+    server.use(
+      http.get(apiUrl('/api/producers'), () =>
+        HttpResponse.json(
+          buildPage([
+            {
+              id: PRODUCER,
+              member_code: 'PROD-000007',
+              document_type: 'CC',
+              identity_document: '1234567890',
+              first_name: 'Ana',
+              last_name: 'Prueba',
+              municipality_code: '54001',
+              status: 'active',
+            },
+          ]),
+        ),
+      ),
+      http.get(apiUrl(`/api/producers/${PRODUCER}`), () =>
+        HttpResponse.json(
+          buildProducer({
+            id: PRODUCER,
+            first_name: 'Ana',
+            last_name: 'Prueba',
+            member_code: 'PROD-000007',
+          }),
+        ),
+      ),
+    );
+  });
+
+  afterEach(() => {
+    sessionStorage.clear();
+    syncActingProducer(null);
+  });
+
+  it('asks which producer the farm is for and does not save without one', async () => {
+    const user = userEvent.setup();
+    await renderForm(technical);
+    await fillValidFarm(user);
+
+    await save(user);
+
+    expect(
+      await screen.findByText('Elige el productor de la finca.'),
+    ).toBeInTheDocument();
+    expect(await queuedFarms()).toHaveLength(0);
+  });
+
+  it('saves the farm for the producer that was chosen in the form', async () => {
+    const user = userEvent.setup();
+    await renderForm(technical);
+    await fillValidFarm(user);
+
+    await user.click(screen.getByLabelText('Productor'));
+    await user.click(
+      await screen.findByRole('option', { name: 'Ana Prueba · PROD-000007' }),
+    );
+    await save(user);
+
+    await waitFor(async () => expect(await queuedFarms()).toHaveLength(1));
+    expect((await queuedFarms())[0].payload).toMatchObject({
+      name: 'La Esperanza',
+      producer_id: PRODUCER,
+    });
+  });
+
+  it('starts with the producer chosen in the header', async () => {
+    writeActingProducer(userId, PRODUCER);
+    const user = userEvent.setup();
+    await renderForm(technical);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Productor')).toHaveValue(
+        'Ana Prueba · PROD-000007',
+      ),
+    );
+    await fillValidFarm(user);
+    await save(user);
+
+    await waitFor(async () => expect(await queuedFarms()).toHaveLength(1));
+    expect((await queuedFarms())[0].payload).toMatchObject({
+      producer_id: PRODUCER,
+    });
+  });
+
+  it('does not ask a producer for it', async () => {
+    await renderForm();
+
+    expect(screen.queryByLabelText('Productor')).not.toBeInTheDocument();
   });
 });

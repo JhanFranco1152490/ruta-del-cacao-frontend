@@ -141,6 +141,8 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
 
   return (
     <FarmFormFields
+      // Un alta de la cuenta técnica sigue pudiendo cambiar su productor mientras espera.
+      chooseProducer={farm.operation === 'create' && !!farm.values.producer_id}
       defaultValues={farm.values}
       title={failed ? 'Corregir finca' : 'Editar finca'}
       description="Los cambios se guardan en este dispositivo y la finca se vuelve a enviar cuando haya conexión."
