@@ -8,6 +8,7 @@ import {
   CAPTURE_BUTTON_CLASS,
   CAPTURE_FIELD_CLASS,
 } from '@/components/capture-field-class';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { FormSection } from '@/components/form-section';
 import { PolygonEditorMapPanel } from '@/components/map/polygon-editor-map-panel';
 import { PageHeader } from '@/components/page-header';
@@ -46,6 +47,7 @@ export function PlotEditor({
   selfId,
   defaultValues,
   title,
+  crumb,
   description,
   banner,
   notice,
@@ -63,6 +65,8 @@ export function PlotEditor({
   selfId?: string;
   defaultValues: PlotFormValues;
   title: string;
+  // El último nivel de la ruta: el código de la parcela que se edita, o "Nueva parcela".
+  crumb?: string;
   description: string;
   banner?: ReactNode;
   notice?: ReactNode;
@@ -135,19 +139,13 @@ export function PlotEditor({
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <nav
-        aria-label="Ruta de navegación"
-        className="text-sm text-muted-foreground"
-      >
-        <Link className="underline underline-offset-4" href="/fincas">
-          Fincas
-        </Link>{' '}
-        /{' '}
-        <Link className="underline underline-offset-4" href={cancelHref}>
-          {farm.name}
-        </Link>{' '}
-        / <span className="font-bold text-foreground">{title}</span>
-      </nav>
+      <Breadcrumb
+        items={[
+          { label: 'Fincas', href: '/fincas' },
+          { label: farm.name, href: cancelHref },
+          { label: crumb ?? title },
+        ]}
+      />
       <PageHeader
         eyebrow={`Finca ${farm.name}`}
         title={title}

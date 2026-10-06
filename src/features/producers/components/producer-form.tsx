@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
+import { Breadcrumb } from '@/components/breadcrumb';
 import { DigitsField } from '@/components/digits-field';
 import { FormSection } from '@/components/form-section';
 import { PageHeader } from '@/components/page-header';
@@ -22,7 +23,6 @@ import {
   type ProducerFormValues,
 } from '../schemas';
 import { useProducerSave } from '../use-producer-save';
-import { BackToProducersLink } from './back-to-producers-link';
 
 export function ProducerForm({
   producer: initialProducer,
@@ -57,7 +57,20 @@ export function ProducerForm({
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
-      <BackToProducersLink />
+      <Breadcrumb
+        items={[
+          { label: 'Productores', href: '/productores' },
+          ...(producer
+            ? [
+                {
+                  label: `${producer.first_name} ${producer.last_name}`,
+                  href: `/productores/${producer.id}`,
+                },
+                { label: 'Editar' },
+              ]
+            : [{ label: 'Registrar productor' }]),
+        ]}
+      />
       <PageHeader
         className="mt-5"
         eyebrow="Administración"

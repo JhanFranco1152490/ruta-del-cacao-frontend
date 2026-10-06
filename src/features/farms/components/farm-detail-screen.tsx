@@ -1,10 +1,11 @@
 'use client';
 
 import { cn } from 'cn';
-import { ChevronRight, MapPin, Pencil } from 'lucide-react';
+import { MapPin, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { Breadcrumb } from '@/components/breadcrumb';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
@@ -205,22 +206,9 @@ function DetailLayout({
   const showProducer = !!view.producer && !user?.producer_id;
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <nav
-        aria-label="Ruta de navegación"
-        className="text-sm text-muted-foreground"
-      >
-        <ol className="flex flex-wrap items-center gap-1">
-          <li>
-            <Link className="underline underline-offset-4" href="/fincas">
-              Fincas
-            </Link>
-          </li>
-          <ChevronRight aria-hidden="true" className="size-4" />
-          <li aria-current="page" className="font-bold text-foreground">
-            {view.name}
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb
+        items={[{ label: 'Fincas', href: '/fincas' }, { label: view.name }]}
+      />
       <PageHeader
         eyebrow="Detalle de la finca"
         title={view.name}

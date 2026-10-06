@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
-
+import { BackLink } from '@/components/back-link';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
@@ -31,22 +31,19 @@ export function CharacterizationHistoryScreen({
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
-      <nav aria-label="Ruta de navegación" className="text-sm">
-        <Link className="font-bold text-cobre underline" href={farm.detailPath}>
-          {farm.name}
-        </Link>{' '}
-        <span aria-hidden="true">›</span> {plot.code}{' '}
-        <span aria-hidden="true">›</span> Historial
-      </nav>
+      <Breadcrumb
+        items={[
+          { label: 'Fincas', href: '/fincas' },
+          { label: farm.name, href: farm.detailPath },
+          { label: plot.code },
+          { label: 'Caracterización', href: backHref },
+          { label: 'Historial' },
+        ]}
+      />
+      <div className="mt-2">
+        <BackLink href={backHref}>Volver a la caracterización</BackLink>
+      </div>
       <PageHeader
-        actions={
-          <Link
-            className={buttonVariants({ size: 'office', variant: 'outline' })}
-            href={backHref}
-          >
-            Volver a la caracterización
-          </Link>
-        }
         description="Cada vez que se guarda la ficha queda una versión, con lo que cambió y quién la guardó."
         eyebrow="Caracterización productiva"
         title={`Historial de ${plot.code}`}

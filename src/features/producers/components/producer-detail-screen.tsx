@@ -4,13 +4,13 @@ import { Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import { Breadcrumb } from '@/components/breadcrumb';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useMunicipalityName } from '../api';
-import { BackToProducersLink } from './back-to-producers-link';
 import { ProducerAccessNote } from './producer-access-note';
 import { ProducerAccountCard } from './producer-account-card';
 import { ProducerDataCard } from './producer-data-card';
@@ -28,7 +28,12 @@ export function ProducerDetailScreen({ id }: { id: string }) {
     <ProducerLoadGate id={id}>
       {(producer) => (
         <div className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-8">
-          <BackToProducersLink />
+          <Breadcrumb
+            items={[
+              { label: 'Productores', href: '/productores' },
+              { label: `${producer.first_name} ${producer.last_name}` },
+            ]}
+          />
           <PageHeader
             // Con dos acciones la cabecera se apila hasta pantallas anchas (lg): en tableta no
             // caben junto al título.
