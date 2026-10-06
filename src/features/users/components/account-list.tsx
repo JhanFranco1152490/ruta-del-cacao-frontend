@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { Pagination } from '@/components/pagination';
 import { isApiError } from '@/lib/api/errors';
+import { useMissingPageReset } from '@/hooks/use-missing-page-reset';
 import { ListViewToolbar } from '@/components/list-view-toolbar';
 import { useGroupCollapse } from '@/hooks/use-group-collapse';
 import { useAccounts, PAGE_SIZE } from '../api';
@@ -24,12 +24,11 @@ export function AccountList({
   const list = useAccounts(filters.query);
   const groups = groupAccounts(list.data?.results ?? []);
   const collapse = useGroupCollapse(groups.map((group) => group.key));
-  const missingPage =
-    isApiError(list.error) && list.error.status === 404 && filters.page > 1;
-  const { setPage } = filters;
-  useEffect(() => {
-    if (missingPage) void setPage(1);
-  }, [missingPage, setPage]);
+  const missingPage = useMissingPageReset(
+    list.error,
+    filters.page,
+    filters.setPage,
+  );
   if (list.isPending || missingPage)
     return <p role="status">Cargando usuarios…</p>;
   if (list.isError)

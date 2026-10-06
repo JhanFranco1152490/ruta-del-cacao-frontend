@@ -2,14 +2,13 @@
 
 import { UserRoundPlus } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { buttonVariants } from '@/components/ui/button';
-import { isApiError } from '@/lib/api/errors';
+import { useMissingPageReset } from '@/hooks/use-missing-page-reset';
 
 import {
   PAGE_SIZE,
@@ -28,14 +27,11 @@ export function ProducerListScreen() {
   const municipalities = useMunicipalities();
   const municipalityName = useMunicipalityName();
 
-  // Una página que ya no existe (se filtró o se borró contenido) no es un error para la persona:
-  // se vuelve a la primera.
-  const pageMissing =
-    isApiError(list.error) && list.error.status === 404 && filters.page > 1;
-  const { setPage } = filters;
-  useEffect(() => {
-    if (pageMissing) void setPage(1);
-  }, [pageMissing, setPage]);
+  const pageMissing = useMissingPageReset(
+    list.error,
+    filters.page,
+    filters.setPage,
+  );
 
   // El error reemplaza la tabla solo si la lista nunca cargó (`isLoadingError`): un refetch
   // fallido en segundo plano conserva `data` y la tabla sigue a la vista.
