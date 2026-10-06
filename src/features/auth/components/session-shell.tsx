@@ -14,7 +14,7 @@ import { SectionGate } from '@/components/section-gate';
 import type { QueueView } from '@/components/sync-tray/queue-view';
 import { SyncTray } from '@/components/sync-tray/sync-tray';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
-import { SIGN_IN_PATH } from '@/config/routes';
+import { HOME_PATH, SIGN_IN_PATH } from '@/config/routes';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
 import { useSyncStatus } from '@/hooks/use-sync-status';
@@ -100,7 +100,12 @@ export function SessionShell({
                 onOpenAccount={() => setAccountOpen(true)}
                 onLogout={() =>
                   logout.mutate(undefined, {
-                    onSuccess: () => router.replace(SIGN_IN_PATH),
+                    // El inicio de sesión no abre sin conexión: se va a la entrada, que sí, y la
+                    // guardia explica que la sesión quedó cerrada en el dispositivo.
+                    onSuccess: (closedOn) =>
+                      router.replace(
+                        closedOn === 'device' ? HOME_PATH : SIGN_IN_PATH,
+                      ),
                   })
                 }
               />

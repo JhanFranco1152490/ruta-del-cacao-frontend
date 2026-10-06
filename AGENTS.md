@@ -58,7 +58,13 @@ vive en `AGENTS.md` del workspace, si lo tienes al lado)
   teselas). Una pantalla de captura nueva **no lleva parámetros en la ruta** (`/x/editar?id=`,
   no `/x/[id]/editar`) y se suma a esa lista; si no, no abre sin conexión. La sesión entra con la
   copia del dispositivo (`lib/offline/session-snapshot.ts`) cuando el servidor no responde,
-  dentro de la ventana de 7 días. En `next dev` el Service Worker no se registra: lo sin conexión
+  dentro de la ventana de 7 días. **Cerrar sesión siempre se puede, también sin red:** si el servidor
+  no responde, `useLogout` cierra en el dispositivo (borra la copia de la sesión y las lecturas, no
+  la cola) y deja la marca de `lib/offline/pending-logout.ts`. Con la marca puesta, `fetchSession` y
+  `useLogin` envían primero el cierre al servidor (las cookies son `HttpOnly`: solo él las revoca),
+  porque si no, al volver la red la persona reaparecería dentro; la guardia muestra "Cerraste sesión
+  en este dispositivo" en vez de un fallo de validación. Un error del servidor sí deja la sesión
+  abierta para reintentar. En `next dev` el Service Worker no se registra: lo sin conexión
   se prueba con `pnpm build && pnpm start` y la red cortada en las herramientas del navegador.
 
 ### Stack y estructura

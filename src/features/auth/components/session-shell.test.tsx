@@ -6,9 +6,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
+import { hasPendingLogout } from '@/lib/offline/pending-logout';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
-import { buildSession } from '@/test/factories';
+import { apiError, buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
@@ -198,12 +199,12 @@ describe('SessionShell', () => {
     ).toBeVisible();
   });
 
-  it('keeps the shell and allows retrying when the logout fails', async () => {
+  it('keeps the shell and allows retrying when the server fails the logout', async () => {
     let failing = true;
     server.use(
       http.post(LOGOUT, () =>
         failing
-          ? HttpResponse.error()
+          ? apiError(500, 'internal_error')
           : new HttpResponse(null, { status: 204 }),
       ),
     );
@@ -221,6 +222,18 @@ describe('SessionShell', () => {
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
     );
+  });
+
+  it('signs out without a connection and leaves the screen that works offline', async () => {
+    server.use(http.post(LOGOUT, () => HttpResponse.error()));
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await chooseFromAccountMenu('Cerrar sesión');
+
+    // El inicio de sesión no abre sin conexión: se va a la entrada, que sí, y ahí se explica.
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(hasPendingLogout()).toBe(true);
   });
 
   it('does not log out twice while the request is in flight', async () => {

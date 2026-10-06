@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError, isUnauthorized } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
+import { flushPendingLogout } from '@/lib/offline/pending-logout';
 import {
   forgetLastSession,
   readSessionSnapshot,
@@ -25,6 +26,10 @@ export type ResolvedSession = Session & { fromDevice?: true };
 export async function fetchSession(
   signal?: AbortSignal,
 ): Promise<ResolvedSession> {
+  // Una sesión cerrada sin conexión se cierra en el servidor antes de preguntar quién entró: con
+  // las cookies aún vivas, `me` devolvería la cuenta y deshacería el cierre. Si todavía no hay red
+  // falla aquí, sin tocar la copia del dispositivo (que el cierre ya borró).
+  await flushPendingLogout();
   try {
     return await apiFetch<Session>('/api/auth/me', { signal });
   } catch (error) {

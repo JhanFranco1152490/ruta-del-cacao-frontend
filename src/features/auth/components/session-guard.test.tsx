@@ -10,6 +10,7 @@ import {
   sessionExpired as unauthorized,
 } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
+import { markPendingLogout } from '@/lib/offline/pending-logout';
 import { renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
@@ -21,7 +22,10 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 const ME = apiUrl('/api/auth/me');
 const session = buildSession();
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  window.localStorage.clear();
+});
 
 describe('SessionGuard', () => {
   it('shows a loading state, then the protected content', async () => {
@@ -91,6 +95,57 @@ describe('SessionGuard', () => {
     failing = false;
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(await screen.findByText('contenido protegido')).toBeInTheDocument();
+  });
+
+  describe('after signing out without a connection', () => {
+    const LOGOUT = apiUrl('/api/auth/logout');
+
+    it('says the session is closed on this device instead of asking to validate it', async () => {
+      server.use(
+        http.post(LOGOUT, () => HttpResponse.error()),
+        http.get(ME, () => HttpResponse.error()),
+      );
+      markPendingLogout();
+      renderWithProviders(<SessionGuard>contenido protegido</SessionGuard>);
+
+      expect(
+        await screen.findByRole('heading', {
+          name: 'Cerraste sesión en este dispositivo',
+        }),
+      ).toBeVisible();
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'necesitas conexión',
+      );
+      expect(screen.queryByText('contenido protegido')).not.toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(router.replace).not.toHaveBeenCalled();
+    });
+
+    it('goes to the sign-in screen once the connection is back and the server closed the session', async () => {
+      let online = false;
+      server.use(
+        http.post(LOGOUT, () =>
+          online
+            ? new HttpResponse(null, { status: 204 })
+            : HttpResponse.error(),
+        ),
+        http.get(ME, () => (online ? unauthorized() : HttpResponse.error())),
+        http.post(apiUrl('/api/auth/refresh'), unauthorized),
+      );
+      markPendingLogout();
+      renderWithProviders(<SessionGuard>contenido protegido</SessionGuard>);
+      await screen.findByRole('heading', {
+        name: 'Cerraste sesión en este dispositivo',
+      });
+
+      online = true;
+      await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith('/iniciar-sesion'),
+      );
+      expect(screen.queryByText('contenido protegido')).not.toBeInTheDocument();
+    });
   });
 
   it('redirects when a later check of the session fails with 401', async () => {

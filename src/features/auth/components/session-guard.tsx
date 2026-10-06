@@ -6,8 +6,10 @@ import { useEffect, type ReactNode } from 'react';
 import { CacaoMark } from '@/components/brand/cacao-mark';
 import { SIGN_IN_PATH } from '@/config/routes';
 import { isUnauthorized } from '@/lib/api/errors';
+import { hasPendingLogout } from '@/lib/offline/pending-logout';
 
 import { useSession } from '../api';
+import { SignedOutOffline } from './signed-out-offline';
 
 // Protege todo lo que vive bajo (app): comprueba la sesión al entrar y cada vez que se
 // revalida (foco, reconexión, un 401 en otra consulta), y lleva al inicio de sesión si no
@@ -35,6 +37,11 @@ export function SessionGuard({ children }: { children: ReactNode }) {
         </div>
       </main>
     );
+  }
+
+  // Cerró sesión sin conexión y el servidor aún no pudo enterarse: no es un fallo al validar.
+  if (session.isLoadingError && hasPendingLogout()) {
+    return <SignedOutOffline onRetry={() => session.refetch()} />;
   }
 
   if (session.isLoadingError) {
