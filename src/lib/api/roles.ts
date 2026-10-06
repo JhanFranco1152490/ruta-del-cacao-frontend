@@ -13,6 +13,8 @@ export type RoleQuery = {
   search?: string;
   kind?: Role['kind'];
   producer?: string;
+  // `producer,name`: agrupa por productor sin partir un grupo entre dos páginas.
+  ordering?: string;
   page?: number;
 };
 export const PAGE_SIZE = 20;
@@ -25,6 +27,7 @@ export const fetchRoles = (query: RoleQuery, signal?: AbortSignal) => {
   if (query.search) params.set('search', query.search);
   if (query.kind) params.set('kind', query.kind);
   if (query.producer) params.set('producer', query.producer);
+  if (query.ordering) params.set('ordering', query.ordering);
   return apiFetch<Schemas['PaginatedRoleList']>(`/api/roles?${params}`, {
     signal,
   });

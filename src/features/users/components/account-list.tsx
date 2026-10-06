@@ -11,10 +11,12 @@ export function AccountList({
   filters,
   open,
   municipalityName,
+  showProducer,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   open: (id: string) => void;
   municipalityName?: (code: string) => string;
+  showProducer?: boolean;
 }) {
   const list = useAccounts(filters.query);
   const missingPage =
@@ -48,6 +50,7 @@ export function AccountList({
           accounts={list.data.results}
           open={open}
           municipalityName={municipalityName}
+          showProducer={showProducer}
         />
       ) : (
         <EmptyState

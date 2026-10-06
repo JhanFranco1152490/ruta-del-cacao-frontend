@@ -15,9 +15,12 @@ export function AccountTable({
   accounts,
   open,
   municipalityName,
+  showProducer = false,
 }: {
   accounts: Account[];
   open: (id: string) => void;
+  // Quien no tiene un productor propio ve de qué productor es cada cuenta.
+  showProducer?: boolean;
   // Solo la asociación ve cuentas de varios productores: sin esto no hay columna de municipio.
   municipalityName?: (code: string) => string;
 }) {
@@ -28,6 +31,7 @@ export function AccountTable({
           <TableHead>Nombre</TableHead>
           <TableHead>Documento</TableHead>
           <TableHead>Roles</TableHead>
+          {showProducer && <TableHead>Productor</TableHead>}
           {municipalityName && <TableHead>Municipio</TableHead>}
           <TableHead>Estado</TableHead>
           <TableHead>
@@ -50,6 +54,13 @@ export function AccountTable({
             <TableCell className="max-w-64 break-words whitespace-normal">
               {account.roles.map((role) => role.name).join(', ')}
             </TableCell>
+            {showProducer && (
+              <TableCell className="max-w-64 break-words whitespace-normal">
+                {account.producer
+                  ? `${account.producer.first_name} ${account.producer.last_name} · ${account.producer.member_code}`
+                  : 'Asociación'}
+              </TableCell>
+            )}
             {municipalityName && (
               <TableCell>
                 {account.producer

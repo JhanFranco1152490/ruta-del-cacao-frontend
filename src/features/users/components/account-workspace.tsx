@@ -81,6 +81,7 @@ export function AccountWorkspace({
           filters={filters}
           open={panel.open}
           municipalityName={association ? municipalityName : undefined}
+          showProducer={association}
         />
       </section>
       {panel.selected !== null && (
