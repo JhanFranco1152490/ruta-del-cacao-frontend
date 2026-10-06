@@ -14,7 +14,7 @@ import { useRequestPasswordReset } from '../api';
 import { resetRequestSchema, type ResetRequestValues } from '../schemas';
 
 const SUCCESS_MESSAGE =
-  'Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.';
+  'Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña. Si no lo ves en unos minutos, revisa la carpeta de spam.';
 
 export function ResetRequestForm() {
   const request = useRequestPasswordReset();

@@ -60,9 +60,9 @@ describe('ResetRequestForm', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Enviar' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Si el correo está registrado',
-    );
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('Si el correo está registrado');
+    expect(status).toHaveTextContent('carpeta de spam');
     expect(body).toEqual({ email: 'persona@example.com' });
   });
 
