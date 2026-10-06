@@ -6,6 +6,7 @@ import {
   useQueryStates,
 } from 'nuqs';
 import { usePaginatedSearch } from '@/hooks/use-paginated-search';
+import { LIST_VIEWS, type ListView } from '@/lib/list-view';
 import type { Role, RoleQuery } from './api';
 import { isRoleId } from './schemas';
 
@@ -14,12 +15,14 @@ const parsers = {
   search: parseAsString.withDefault(''),
   kind: parseAsStringLiteral(kinds),
   producer: parseAsString,
+  view: parseAsStringLiteral(LIST_VIEWS).withDefault('agrupada'),
   page: parseAsInteger.withDefault(1),
 };
 const urlKeys = {
   search: 'buscar',
   kind: 'tipo',
   producer: 'productor',
+  view: 'vista',
   page: 'pagina',
 };
 
@@ -31,13 +34,14 @@ export function useRoleFilters(association: boolean) {
       ? params.producer
       : undefined;
   const page = Math.max(1, params.page);
+  // Quien no es de la asociación ve los roles del sistema y los suyos: siempre en dos secciones.
+  const view: ListView = association ? params.view : 'agrupada';
   const query: RoleQuery = {
     search: params.search.trim() || undefined,
     kind: params.kind ?? undefined,
     producer,
-    // La asociación ve roles propios de varios productores y se agrupan por productor: el servidor
-    // los ordena para que un grupo no se parta entre páginas.
-    ordering: association ? 'producer,name' : undefined,
+    // Agrupados por productor, el servidor los ordena para que un grupo no se parta entre páginas.
+    ordering: association && view === 'agrupada' ? 'producer,name' : undefined,
     page,
   };
   return {
@@ -45,8 +49,10 @@ export function useRoleFilters(association: boolean) {
     page,
     producer,
     kind: params.kind,
+    view,
     ...search,
     setKind: (kind: Role['kind'] | null) => setParams({ kind, page: 1 }),
+    setView: (view: ListView) => setParams({ view, page: 1 }),
     setProducer: (producer: string | null) => setParams({ producer, page: 1 }),
     clearProducer: () => setParams({ producer: null, page: 1 }),
     setPage: (page: number) => setParams({ page }),

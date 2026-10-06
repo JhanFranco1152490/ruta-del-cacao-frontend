@@ -47,7 +47,9 @@ function RoleWorkspace({
   const selectedProducer = useProducerSummary(
     pickProducer ? filters.producer : undefined,
   );
-  const canCreate = manage && (!association || !!filters.producer);
+  // La asociación elige el productor del rol al crearlo, si no lo tiene ya elegido en el filtro.
+  const canCreate =
+    manage && (!association || pickProducer || !!filters.producer);
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
       <PageHeader
@@ -107,20 +109,15 @@ function RoleWorkspace({
             />
           )}
         </div>
-        {pickProducer && !filters.producer && (
-          <p className="text-sm text-muted-foreground">
-            Elige un productor para administrar sus roles propios.
-          </p>
-        )}
-        {!pickProducer && association && manage && !filters.producer && (
-          <p className="text-sm text-muted-foreground">
-            Para crear un rol propio, entra desde el expediente del productor.
-          </p>
-        )}
         <RoleList
           filters={filters}
           open={panel.open}
           byProducer={association}
+          hint={
+            !pickProducer && association && manage && !filters.producer
+              ? 'Para crear un rol propio, entra desde el expediente del productor.'
+              : undefined
+          }
         />
       </section>
       {panel.selected !== null && (
@@ -129,6 +126,7 @@ function RoleWorkspace({
           selected={panel.selected}
           manage={manage}
           canCreate={canCreate}
+          askProducer={association}
           producer={filters.producer}
           close={panel.close}
           open={panel.open}

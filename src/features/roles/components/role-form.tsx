@@ -25,6 +25,8 @@ export function RoleForm({
   role,
   catalog,
   producer,
+  producerLabel,
+  onChangeProducer,
   onSaved,
   onCancel,
   onBusy,
@@ -32,6 +34,9 @@ export function RoleForm({
   role?: Role;
   catalog: PermissionItem[];
   producer?: string;
+  // Para quien elige el productor del rol: de quién es y cómo cambiarlo antes de guardar.
+  producerLabel?: string;
+  onChangeProducer?: () => void;
   onSaved: (role: Role) => void;
   onCancel: () => void;
   onBusy: (busy: boolean) => void;
@@ -101,6 +106,23 @@ export function RoleForm({
       }}
     >
       <fieldset disabled={isSubmitting} className="space-y-5">
+        {producerLabel && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-surface-alt px-4 py-3">
+            <p>
+              <span className="text-sm text-muted-foreground">Rol de </span>
+              <span className="font-bold text-selva">{producerLabel}</span>
+            </p>
+            {onChangeProducer && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onChangeProducer}
+              >
+                Cambiar
+              </Button>
+            )}
+          </div>
+        )}
         <TextField
           label="Nombre"
           maxLength={100}
