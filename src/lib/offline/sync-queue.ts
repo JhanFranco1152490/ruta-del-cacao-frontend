@@ -1,5 +1,3 @@
-import { getActingProducer } from '@/lib/acting-producer';
-
 import type { SyncAdapter, SyncRecovery } from './adapters';
 import { getOfflineDb, type QueueItem, type QueueOperation } from './db';
 
@@ -71,19 +69,9 @@ export async function enqueue(
       return existing;
     }
 
-    // Un hijo (una parcela de una finca que sigue en la cola) viaja bajo el mismo productor que su
-    // padre aunque la pestaña haya cambiado de productor entre uno y otro: de otro modo el hijo
-    // buscaría su finca en un productor que no es el suyo.
-    const parent = input.parentId
-      ? await db.queue.get(input.parentId)
-      : undefined;
-    const actingProducerId =
-      parent?.actingProducerId ?? getActingProducer() ?? undefined;
-
     const now = Date.now();
     const item: QueueItem = {
       ...input,
-      ...(actingProducerId && { actingProducerId }),
       status: 'pending',
       createdAt: now,
       updatedAt: now,

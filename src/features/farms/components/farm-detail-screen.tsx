@@ -7,12 +7,11 @@ import type { ReactNode } from 'react';
 
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
-import { useWriteAccess } from '@/hooks/use-write-access';
+import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { formatDateTime } from '@/lib/format/dates';
 import { formatHectares } from '@/lib/format/hectares';
-import { PERMISSIONS } from '@/lib/permissions';
-import { ActingProducerNotice } from '@/components/acting-producer-notice';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
 
 import type { Farm } from '../api';
@@ -85,14 +84,14 @@ function ServerFarmDetail({
   savedAt?: number;
   renderPlots: (farm: FarmPlotsContext) => ReactNode;
 }) {
-  const write = useWriteAccess();
+  const { data: user } = useSession();
   return (
     <DetailLayout
       view={serverFarmView(server)}
       badge={
         <FarmStatusBadge status={server.is_active ? 'active' : 'inactive'} />
       }
-      canEdit={write.can(PERMISSIONS.FARMS_CHANGE)}
+      canEdit={hasPermission(user, PERMISSIONS.FARMS_CHANGE)}
       savedAt={savedAt}
     >
       {renderPlots({
@@ -114,7 +113,7 @@ function QueuedFarmDetail({
   farm: QueuedFarm;
   renderPlots: (farm: FarmPlotsContext) => ReactNode;
 }) {
-  const write = useWriteAccess();
+  const { data: user } = useSession();
   const municipalityName = useMunicipalityName();
   const { values } = farm;
   const location = { latitude: values.latitude, longitude: values.longitude };
@@ -140,7 +139,8 @@ function QueuedFarmDetail({
       }}
       badge={<FarmStatusBadge status={failed ? 'error' : 'pending'} />}
       canEdit={
-        write.can(PERMISSIONS.FARMS_ADD) || write.can(PERMISSIONS.FARMS_CHANGE)
+        hasPermission(user, PERMISSIONS.FARMS_ADD) ||
+        hasPermission(user, PERMISSIONS.FARMS_CHANGE)
       }
       notice={
         failed
@@ -192,7 +192,6 @@ function DetailLayout({
   children?: ReactNode;
 }) {
   const place = [view.municipality, view.department].filter(Boolean).join(', ');
-  const needsProducer = useWriteAccess().needsProducer;
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
       <nav
@@ -235,11 +234,6 @@ function DetailLayout({
           </p>
         )}
       </div>
-      {needsProducer && (
-        <div className="mt-4">
-          <ActingProducerNotice />
-        </div>
-      )}
       {notice && (
         <p
           className={cn(

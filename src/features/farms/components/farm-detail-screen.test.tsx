@@ -1,11 +1,10 @@
 import { screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
-import { syncActingProducer } from '@/lib/acting-producer';
 import { apiError, buildFarm, buildSession } from '@/test/factories';
 import { apiUrl, farmHandler, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -37,17 +36,11 @@ function renderScreen({
   id = 'f1',
   permissions = [PERMISSIONS.FARMS_VIEW, PERMISSIONS.FARMS_CHANGE] as string[],
   seen = [] as FarmPlotsContext[],
-  isSuperuser = false,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
-    buildSession({
-      id: userId,
-      permissions,
-      producer_id: isSuperuser ? null : 'p1',
-      is_superuser: isSuperuser,
-    }),
+    buildSession({ id: userId, permissions }),
   );
   return renderWithProviders(
     <FarmDetailScreen
@@ -187,29 +180,5 @@ describe('FarmDetailScreen', () => {
     expect(screen.getByText(/cambios en este dispositivo/)).toBeInTheDocument();
     await waitFor(() => expect(seen.at(-1)?.name).toBe('Nombre nuevo'));
     expect(seen.at(-1)?.allocatedAreaHectares).toBeUndefined();
-  });
-});
-
-describe('FarmDetailScreen for the technical account', () => {
-  afterEach(() => {
-    sessionStorage.clear();
-    syncActingProducer(null);
-  });
-
-  it('shows the farm but not the edit action, and says a producer is missing', async () => {
-    server.use(farmHandler(buildFarm({ id: 'f1', name: 'La Esperanza' })));
-    renderScreen({ isSuperuser: true });
-
-    expect(
-      await screen.findByRole('heading', { name: 'La Esperanza' }),
-    ).toBeVisible();
-    expect(
-      screen.getByText(
-        'Elige un productor en el encabezado para registrar o editar aquí.',
-      ),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('link', { name: 'Editar finca' }),
-    ).not.toBeInTheDocument();
   });
 });

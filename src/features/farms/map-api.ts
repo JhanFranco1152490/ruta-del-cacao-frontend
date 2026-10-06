@@ -1,6 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
-import { getActingProducer } from '@/lib/acting-producer';
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
@@ -21,10 +20,6 @@ function params(query: FarmMapQuery, municipality?: string) {
   if (municipality) values.set('municipality', municipality);
   return values;
 }
-
-// El servidor limita el mapa al productor activo de la cuenta técnica: la copia del dispositivo
-// lleva ese alcance en su clave, o sin conexión se vería lo de otro productor bajo el nombre de este.
-const copyScope = () => `:scope=${getActingProducer() ?? 'todos'}`;
 
 export const fetchFarmMunicipalityCounts = (
   query: FarmMapQuery,
@@ -55,10 +50,8 @@ export const useFarmMunicipalityCounts = (
   useQuery({
     queryKey: queryKeys.farms.mapCounts(query),
     queryFn: ({ signal }) =>
-      readThroughCache(
-        userId!,
-        `farm-map:counts:${params(query)}${copyScope()}`,
-        () => fetchFarmMunicipalityCounts(query, signal),
+      readThroughCache(userId!, `farm-map:counts:${params(query)}`, () =>
+        fetchFarmMunicipalityCounts(query, signal),
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
@@ -78,7 +71,7 @@ export const useFarmMapPoints = (
     queryFn: ({ signal }) =>
       readThroughCache(
         userId!,
-        `farm-map:points:${params(query, municipality ?? undefined)}${copyScope()}`,
+        `farm-map:points:${params(query, municipality ?? undefined)}`,
         () => fetchFarmMapPoints(municipality, query, signal),
       ),
     enabled: enabled && !!userId,

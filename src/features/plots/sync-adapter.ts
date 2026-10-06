@@ -37,19 +37,14 @@ export const plotSyncAdapter: SyncAdapter = {
   refreshAfterSync: (item) => plotReadsOf(item.parentId!),
 
   async send(item) {
-    // Con el productor con que se guardó, o ninguno: nunca el que tenga la pestaña ahora.
-    const options = { actingProducer: item.actingProducerId ?? null };
     if (item.operation === 'create') {
-      await postPlot(
-        {
-          ...(item.payload as PlotCreatePayload),
-          // La hora en que se guardó en el dispositivo; informativa para el servidor.
-          captured_at: new Date(item.createdAt).toISOString(),
-        },
-        options,
-      );
+      await postPlot({
+        ...(item.payload as PlotCreatePayload),
+        // La hora en que se guardó en el dispositivo; informativa para el servidor.
+        captured_at: new Date(item.createdAt).toISOString(),
+      });
     } else {
-      await patchPlot(item.id, item.payload as PlotUpdatePayload, options);
+      await patchPlot(item.id, item.payload as PlotUpdatePayload);
     }
   },
 

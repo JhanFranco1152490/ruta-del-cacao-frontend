@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 import { ApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { QueueItem } from '@/lib/offline/db';
@@ -134,48 +133,5 @@ describe('characterizationSyncAdapter.refreshAfterSync', () => {
     expect(queryKeys.characterizations.byFarm('f1')).toEqual(
       expect.arrayContaining([...queryKeys.characterizations.allFarms()]),
     );
-  });
-});
-
-describe('characterizationSyncAdapter.send and the acting producer', () => {
-  const SAVED_UNDER = '33333333-3333-4333-8333-333333333333';
-  const OF_THE_TAB = '44444444-4444-4444-8444-444444444444';
-
-  afterEach(() => {
-    sessionStorage.clear();
-    syncActingProducer(null);
-  });
-
-  it('sends the record under the producer it was saved with, not the one of the tab', async () => {
-    writeActingProducer('u1', OF_THE_TAB);
-    let seen: string | null | undefined;
-    server.use(
-      http.put(apiUrl('/api/plot-characterizations/pl1'), ({ request }) => {
-        seen = request.headers.get('x-acting-producer');
-        return HttpResponse.json(buildCharacterization());
-      }),
-    );
-
-    await characterizationSyncAdapter.send({
-      ...item,
-      actingProducerId: SAVED_UNDER,
-    });
-
-    expect(seen).toBe(SAVED_UNDER);
-  });
-
-  it('sends no producer for a record saved without one', async () => {
-    writeActingProducer('u1', OF_THE_TAB);
-    let seen: string | null | undefined;
-    server.use(
-      http.put(apiUrl('/api/plot-characterizations/pl1'), ({ request }) => {
-        seen = request.headers.get('x-acting-producer');
-        return HttpResponse.json(buildCharacterization());
-      }),
-    );
-
-    await characterizationSyncAdapter.send(item);
-
-    expect(seen).toBeNull();
   });
 });

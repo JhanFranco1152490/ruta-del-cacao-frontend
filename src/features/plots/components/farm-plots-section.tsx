@@ -7,13 +7,12 @@ import { useRef, useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
-import { ACTING_PRODUCER_NOTICE_ID } from '@/components/acting-producer-notice';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { loadPointsMapProvider } from '@/config/map';
-import { useWriteAccess } from '@/hooks/use-write-access';
+import { useSession } from '@/hooks/use-session';
 import { formatDateTime } from '@/lib/format/dates';
-import { PERMISSIONS } from '@/lib/permissions';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
 
 import type { KnownPlot } from '../known-plots';
@@ -51,11 +50,11 @@ export function FarmPlotsSection({
   // Ver `PlotList`: lo que otro dominio agrega a cada parcela.
   renderPlotDetails?: (plot: KnownPlot) => React.ReactNode;
 }) {
-  const write = useWriteAccess();
-  const canView = write.has(PERMISSIONS.PLOTS_VIEW);
-  const canAdd = write.can(PERMISSIONS.PLOTS_ADD);
-  const canChange = write.can(PERMISSIONS.PLOTS_CHANGE);
-  const canDeletePlot = write.can(PERMISSIONS.PLOTS_DELETE);
+  const { data: user } = useSession();
+  const canView = hasPermission(user, PERMISSIONS.PLOTS_VIEW);
+  const canAdd = hasPermission(user, PERMISSIONS.PLOTS_ADD);
+  const canChange = hasPermission(user, PERMISSIONS.PLOTS_CHANGE);
+  const canDeletePlot = hasPermission(user, PERMISSIONS.PLOTS_DELETE);
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
   // Cuando una parcela sale de la cola se sincronizó: la lista y el área asignada se vuelven a
   // pedir para que aparezca con los datos del servidor.
@@ -67,27 +66,14 @@ export function FarmPlotsSection({
   if (!canView) return null;
 
   // Registrar parcelas en una finca inactiva no se puede: sus parcelas quedan congeladas.
-  const registerLink =
-    farm.isActive &&
-    (canAdd ? (
-      <Link
-        className={buttonVariants({ size: 'office' })}
-        href={plotNewPath(farm.id)}
-      >
-        <Plus aria-hidden="true" className="size-5" /> Registrar parcela
-      </Link>
-    ) : (
-      write.needsProducer &&
-      write.has(PERMISSIONS.PLOTS_ADD) && (
-        <Button
-          size="office"
-          disabled
-          aria-describedby={ACTING_PRODUCER_NOTICE_ID}
-        >
-          <Plus aria-hidden="true" className="size-5" /> Registrar parcela
-        </Button>
-      )
-    ));
+  const registerLink = canAdd && farm.isActive && (
+    <Link
+      className={buttonVariants({ size: 'office' })}
+      href={plotNewPath(farm.id)}
+    >
+      <Plus aria-hidden="true" className="size-5" /> Registrar parcela
+    </Link>
+  );
 
   const renderActions = (plot: KnownPlot) => {
     const isError = plot.queue?.status === 'error';

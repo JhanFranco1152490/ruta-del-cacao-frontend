@@ -21,19 +21,14 @@ export const farmSyncAdapter: SyncAdapter = {
   refreshAfterSync: () => [queryKeys.farms.all()],
 
   async send(item) {
-    // Con el productor con que se guardó, o ninguno: nunca el que tenga la pestaña ahora.
-    const options = { actingProducer: item.actingProducerId ?? null };
     if (item.operation === 'create') {
-      await postFarm(
-        {
-          ...(item.payload as FarmCreatePayload),
-          // La hora en que se guardó en el dispositivo; informativa para el servidor.
-          captured_at: new Date(item.createdAt).toISOString(),
-        },
-        options,
-      );
+      await postFarm({
+        ...(item.payload as FarmCreatePayload),
+        // La hora en que se guardó en el dispositivo; informativa para el servidor.
+        captured_at: new Date(item.createdAt).toISOString(),
+      });
     } else {
-      await patchFarm(item.id, item.payload as FarmUpdatePayload, options);
+      await patchFarm(item.id, item.payload as FarmUpdatePayload);
     }
   },
 

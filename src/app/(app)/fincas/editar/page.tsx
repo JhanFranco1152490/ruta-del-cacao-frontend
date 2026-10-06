@@ -11,10 +11,7 @@ export default function EditFarmPage() {
   // Corregir una finca nueva pendiente es parte de registrarla; editar una del servidor es
   // cambiarla: basta con cualquiera de los dos permisos para abrir la pantalla.
   return (
-    <PermissionGate
-      anyOf={[PERMISSIONS.FARMS_ADD, PERMISSIONS.FARMS_CHANGE]}
-      needsProducer
-    >
+    <PermissionGate anyOf={[PERMISSIONS.FARMS_ADD, PERMISSIONS.FARMS_CHANGE]}>
       <Suspense>
         <FarmEditorFromQuery />
       </Suspense>

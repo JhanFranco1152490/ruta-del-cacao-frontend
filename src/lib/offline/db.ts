@@ -9,10 +9,6 @@ export interface QueueItem {
   operation: QueueOperation;
   parentId?: string;
   payload: unknown;
-  // El productor bajo el que la cuenta técnica guardó el registro. El envío usa este y no el de la
-  // pestaña de ese momento: si se cambiara de productor mientras el registro espera, iría al
-  // productor equivocado. No se indexa: no hace falta buscar por él.
-  actingProducerId?: string;
   status: QueueStatus;
   errorCode?: string;
   errorMessage?: string;

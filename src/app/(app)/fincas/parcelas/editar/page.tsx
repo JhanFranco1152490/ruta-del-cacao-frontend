@@ -10,10 +10,7 @@ import { EditPlotWithFarm } from './edit-plot-with-farm';
 // de los dos permisos para abrir la pantalla.
 export default function EditPlotPage() {
   return (
-    <PermissionGate
-      anyOf={[PERMISSIONS.PLOTS_ADD, PERMISSIONS.PLOTS_CHANGE]}
-      needsProducer
-    >
+    <PermissionGate anyOf={[PERMISSIONS.PLOTS_ADD, PERMISSIONS.PLOTS_CHANGE]}>
       <Suspense>
         <EditPlotWithFarm />
       </Suspense>

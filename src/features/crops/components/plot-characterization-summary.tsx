@@ -6,9 +6,8 @@ import { useMemo } from 'react';
 
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
-import { useWriteAccess } from '@/hooks/use-write-access';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
-import { PERMISSIONS } from '@/lib/permissions';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useActiveCacaoVarieties, useFarmCharacterizations } from '../api';
 import {
@@ -44,7 +43,7 @@ export function PlotCharacterizationSummary({
   farmIsActive: boolean;
 }) {
   const { data: user } = useSession();
-  const canCharacterize = useWriteAccess().can(PERMISSIONS.CROPS_CHARACTERIZE);
+  const canCharacterize = hasPermission(user, PERMISSIONS.CROPS_CHARACTERIZE);
   const server = useFarmCharacterizations(user?.id, farmId);
   const catalog = useActiveCacaoVarieties(user?.id);
   const plotIds = useMemo(() => [plot.id], [plot.id]);

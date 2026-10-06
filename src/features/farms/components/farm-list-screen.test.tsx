@@ -4,7 +4,6 @@ import { http, HttpResponse } from 'msw';
 import { onlineManager } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
@@ -60,17 +59,11 @@ function renderScreen({
   searchParams = '',
   // `null`: una cuenta de la asociación, sin productor.
   producerId = 'p1' as string | null,
-  isSuperuser = false,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
-    buildSession({
-      id: userId,
-      permissions,
-      producer_id: producerId,
-      is_superuser: isSuperuser,
-    }),
+    buildSession({ id: userId, permissions, producer_id: producerId }),
   );
   return renderWithProviders(<FarmListScreen />, { queryClient, searchParams });
 }
@@ -786,53 +779,5 @@ describe('FarmListScreen free map', () => {
     expect(farmRequests.every((request) => !request.has('municipality'))).toBe(
       true,
     );
-  });
-});
-
-describe('FarmListScreen for the technical account', () => {
-  const CHOSEN = '33333333-3333-4333-8333-333333333333';
-  const technical = {
-    permissions: [PERMISSIONS.FARMS_VIEW, PERMISSIONS.FARMS_ADD] as string[],
-    producerId: null,
-    isSuperuser: true,
-  };
-
-  afterEach(() => {
-    sessionStorage.clear();
-    syncActingProducer(null);
-  });
-
-  it('shows the farms but asks for a producer before registering one', async () => {
-    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
-    renderScreen(technical);
-
-    expect(await farmCards()).toHaveLength(1);
-    expect(
-      screen.getByText(
-        'Elige un productor en el encabezado para registrar o editar aquí.',
-      ),
-    ).toBeVisible();
-    const register = screen.getByRole('button', { name: 'Registrar finca' });
-    expect(register).toBeDisabled();
-    expect(register).toHaveAccessibleDescription(
-      'Elige un productor en el encabezado para registrar o editar aquí.',
-    );
-    expect(
-      screen.queryByRole('link', { name: 'Registrar finca' }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('offers to register a farm once a producer is chosen', async () => {
-    writeActingProducer(userId, CHOSEN);
-    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
-    renderScreen(technical);
-
-    expect(await farmCards()).toHaveLength(1);
-    expect(
-      screen.getByRole('link', { name: 'Registrar finca' }),
-    ).toHaveAttribute('href', '/fincas/nueva');
-    expect(
-      screen.queryByText(/Elige un productor en el encabezado/),
-    ).not.toBeInTheDocument();
   });
 });
