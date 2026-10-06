@@ -7,6 +7,9 @@ import type { FarmFields } from './farm-queue';
 
 export type FarmProducer = Farm['producer'];
 
+export const producerLabelOf = (producer: FarmProducer) =>
+  `${producer.first_name} ${producer.last_name} · ${producer.member_code}`;
+
 // Lo que el listado necesita de una finca, venga del servidor o de la cola del dispositivo:
 // las tarjetas no dependen de la forma de la respuesta de la API.
 export type FarmListItem = {

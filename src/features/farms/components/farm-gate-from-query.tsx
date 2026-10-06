@@ -11,12 +11,21 @@ import { FarmGate, type GatedFarm } from './farm-gate';
 // cualquier finca, incluidas las creadas sin conexión.
 export function FarmGateFromQuery({
   children,
+  missing,
 }: {
   children: (farm: GatedFarm) => ReactNode;
+  // Qué mostrar cuando la dirección no trae finca (por ejemplo, un buscador para elegirla). Sin
+  // esto, se avisa que falta.
+  missing?: ReactNode;
 }) {
   const id = useSearchParams().get('finca');
-  if (!id)
-    return <ErrorState message="No se indicó de qué finca es la parcela." />;
+  if (!id) {
+    return (
+      missing ?? (
+        <ErrorState message="No se indicó de qué finca es la parcela." />
+      )
+    );
+  }
   // `key`: cambiar de finca sin salir de la página monta todo de nuevo, sin datos de la otra.
   return (
     <FarmGate id={id} key={id}>

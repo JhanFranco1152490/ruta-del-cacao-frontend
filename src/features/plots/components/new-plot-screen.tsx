@@ -4,11 +4,13 @@ import { useState } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useSession } from '@/hooks/use-session';
 
 import type { PlotFormValues } from '../plot-queue';
 import { suggestPlotCode } from '../suggest-code';
 import { useKnownPlots } from '../use-known-plots';
 import { usePlotCreate } from '../use-plot-queue';
+import { PlotContextBanner } from './plot-context-banner';
 import { PlotEditor } from './plot-editor';
 import { PlotSavedPanel } from './plot-saved-panel';
 import {
@@ -26,6 +28,7 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
   const create = usePlotCreate();
   const sync = useCaptureSyncStatus('parcelas');
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
+  const { data: user } = useSession();
 
   if (savedCode) {
     return (
@@ -55,7 +58,17 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
   return (
     <PlotEditor
       key={plotId}
-      banner={sync.showBanner && <OfflineBanner status={sync.status} />}
+      banner={
+        <>
+          {!user?.producer_id && farm.producerLabel && (
+            <PlotContextBanner
+              farmName={farm.name}
+              producerLabel={farm.producerLabel}
+            />
+          )}
+          {sync.showBanner && <OfflineBanner status={sync.status} />}
+        </>
+      }
       blockedMessage={
         !farm.isActive ? INACTIVE_FARM_MESSAGE : sync.blockedMessage
       }

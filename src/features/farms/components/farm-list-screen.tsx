@@ -75,6 +75,17 @@ export function FarmListScreen() {
       <Plus aria-hidden="true" className="size-5" /> Registrar finca
     </Link>
   );
+  // Quien no tiene un productor propio (la cuenta técnica) registra parcelas en fincas de muchos:
+  // el atajo le ahorra abrir antes la finca. Un productor llega desde la suya.
+  const registerPlotLink = isAssociation &&
+    hasPermission(user, PERMISSIONS.PLOTS_ADD) && (
+      <Link
+        className={buttonVariants({ size: 'office', variant: 'outline' })}
+        href="/fincas/parcelas/nueva"
+      >
+        <Plus aria-hidden="true" className="size-5" /> Registrar parcela
+      </Link>
+    );
 
   const renderActions = (farm: FarmListItem) =>
     isQueued(farm)
@@ -114,7 +125,14 @@ export function FarmListScreen() {
             ? 'Consulta las fincas de los productores de la asociación.'
             : 'Consulta tus fincas y su estado de sincronización.'
         }
-        actions={registerLink}
+        actions={
+          registerLink || registerPlotLink ? (
+            <>
+              {registerPlotLink}
+              {registerLink}
+            </>
+          ) : undefined
+        }
       />
       <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
         <FarmFiltersBar

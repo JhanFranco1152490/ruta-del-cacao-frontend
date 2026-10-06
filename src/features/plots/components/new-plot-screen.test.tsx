@@ -38,12 +38,17 @@ beforeEach(async () => {
   await recordLogin(userId);
 });
 
-function renderScreen(farm: PlotScreenFarm = FARM) {
+function renderScreen(
+  farm: PlotScreenFarm = FARM,
+  // `null`: una cuenta sin productor propio (la asociación o la cuenta técnica).
+  producerId: string | null = 'p1',
+) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({
       id: userId,
+      producer_id: producerId,
       permissions: [PERMISSIONS.PLOTS_VIEW, PERMISSIONS.PLOTS_ADD],
     }),
   );
@@ -229,5 +234,44 @@ describe('NewPlotScreen', () => {
         screen.getByRole('button', { name: 'Guardar parcela' }),
       ).toBeEnabled(),
     );
+  });
+});
+
+describe('NewPlotScreen and whose farm it is', () => {
+  const OF_ANA = { ...FARM, producerLabel: 'Ana Prueba · PROD-000007' };
+
+  it('says in which farm and of which producer the plot is registered, to an account without a producer', async () => {
+    server.use(plotsHandler([]));
+    renderScreen(OF_ANA, null);
+
+    expect(
+      await screen.findByText(/Registras una parcela en la finca/),
+    ).toHaveTextContent(
+      'Registras una parcela en la finca La Esperanza, de Ana Prueba · PROD-000007.',
+    );
+  });
+
+  it('does not say it to the producer itself', async () => {
+    server.use(plotsHandler([]));
+    renderScreen(OF_ANA);
+
+    await screen.findByLabelText('Código de la parcela');
+    expect(
+      screen.queryByText(/Registras una parcela en la finca/),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps saying it when registering another plot', async () => {
+    server.use(plotsHandler([]));
+    const { user } = renderScreen(OF_ANA, null);
+    await fillAndSave(user, 'P-01', '1');
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Registrar otra parcela' }),
+    );
+
+    expect(
+      await screen.findByText(/Registras una parcela en la finca/),
+    ).toBeVisible();
   });
 });

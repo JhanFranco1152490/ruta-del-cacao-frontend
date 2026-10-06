@@ -18,6 +18,7 @@ import type { Farm } from '../api';
 import type { QueuedFarm } from '../farm-queue';
 import { farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
+import { producerLabelOf } from '../farm-list-item';
 import { FarmProducerLine } from './farm-producer-line';
 import { FarmStatusBadge } from './farm-status-badge';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
@@ -34,6 +35,8 @@ export type FarmPlotsContext = {
   isActive: boolean;
   // Todavía no existe en el servidor: solo tiene las parcelas que esperan en el dispositivo.
   isPendingCreate?: boolean;
+  // De quién es la finca, escrito para mostrarlo. Solo la del servidor.
+  producerLabel?: string;
 };
 
 type FarmView = {
@@ -104,6 +107,7 @@ function ServerFarmDetail({
         allocatedAreaHectares: server.allocated_area_hectares,
         location: server.location,
         isActive: server.is_active,
+        producerLabel: producerLabelOf(server.producer),
       })}
     </DetailLayout>
   );
