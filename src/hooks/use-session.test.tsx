@@ -4,6 +4,10 @@ import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  hasPendingLogout,
+  markPendingLogout,
+} from '@/lib/offline/pending-logout';
 import { recordLogin } from '@/lib/offline/session-clock';
 import {
   readSessionSnapshot,
@@ -51,6 +55,49 @@ describe('fetchSession', () => {
     server.use(http.get(ME, () => HttpResponse.error()));
 
     expect(await fetchSession()).toEqual({ user, fromDevice: true });
+  });
+
+  describe('after signing out without a connection', () => {
+    const LOGOUT = apiUrl('/api/auth/logout');
+
+    it('closes the session on the server before asking who is signed in', async () => {
+      const calls: string[] = [];
+      server.use(
+        http.post(LOGOUT, () => {
+          calls.push('logout');
+          return new HttpResponse(null, { status: 204 });
+        }),
+        http.get(ME, () => {
+          calls.push('me');
+          return notAuthenticated();
+        }),
+      );
+      markPendingLogout();
+
+      await expect(fetchSession()).rejects.toThrow();
+
+      // Con las cookies todavía vivas, `me` habría devuelto la cuenta y deshecho el cierre.
+      expect(calls).toEqual(['logout', 'me']);
+      expect(hasPendingLogout()).toBe(false);
+    });
+
+    it('does not ask for the session, nor use the device copy, while it cannot reach the server', async () => {
+      await deviceAccount();
+      let asked = 0;
+      server.use(
+        http.post(LOGOUT, () => HttpResponse.error()),
+        http.get(ME, () => {
+          asked += 1;
+          return HttpResponse.json(buildSession());
+        }),
+      );
+      markPendingLogout();
+
+      await expect(fetchSession()).rejects.toThrow();
+
+      expect(asked).toBe(0);
+      expect(hasPendingLogout()).toBe(true);
+    });
   });
 
   it('asks for a connection once the offline window is over', async () => {
