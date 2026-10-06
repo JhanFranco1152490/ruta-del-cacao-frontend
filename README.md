@@ -67,10 +67,13 @@ de cookies. Si cambia el puerto del frontend, actualizar ambos orígenes y
 
 ## Entornos
 
-| Entorno | Rama | Dirección |
-| --- | --- | --- |
-| Producción | `main` | https://rutadelcacao.escapate.tours/ |
-| Staging | `dev` | https://staging-rutadelcacao.escapate.tours/ |
+| Entorno | Rama | Aplicación | API (`NEXT_PUBLIC_API_URL`) |
+| --- | --- | --- | --- |
+| Producción | `main` | https://rutadelcacao.escapate.tours/ | https://api-rutadelcacao.escapate.tours |
+| Staging | `dev` | https://staging-rutadelcacao.escapate.tours/ | https://api-staging-rutadelcacao.escapate.tours |
+
+Cada entorno se compila con la API de su mismo entorno: `NEXT_PUBLIC_API_URL` se incrusta al
+compilar, así que cambiarla exige un nuevo despliegue, y va sin barra final.
 
 ## Qué funciona sin conexión
 
