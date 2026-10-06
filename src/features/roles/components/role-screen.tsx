@@ -27,6 +27,7 @@ function RoleScreenContent() {
   return (
     <RoleWorkspace
       association={!user?.producer_id}
+      superuser={user?.is_superuser === true}
       manage={hasPermission(user, PERMISSIONS.ROLES_MANAGE)}
       canPickProducer={hasPermission(user, PERMISSIONS.PRODUCERS_VIEW)}
     />
@@ -34,20 +35,23 @@ function RoleScreenContent() {
 }
 function RoleWorkspace({
   association,
+  superuser,
   manage,
   canPickProducer,
 }: {
   association: boolean;
+  superuser: boolean;
   manage: boolean;
   canPickProducer: boolean;
 }) {
-  const filters = useRoleFilters(association);
+  const filters = useRoleFilters(superuser);
   const panel = useRolePanel();
-  const pickProducer = association && canPickProducer;
+  const pickProducer = superuser && canPickProducer;
   const selectedProducer = useProducerSummary(
     pickProducer ? filters.producer : undefined,
   );
-  // La asociación elige el productor del rol al crearlo, si no lo tiene ya elegido en el filtro.
+  // Solo la cuenta técnica crea roles de un productor y elige cuál; el Administrador de la
+  // asociación solo consulta los roles del sistema.
   const canCreate =
     manage && (!association || pickProducer || !!filters.producer);
   return (
@@ -109,16 +113,7 @@ function RoleWorkspace({
             />
           )}
         </div>
-        <RoleList
-          filters={filters}
-          open={panel.open}
-          byProducer={association}
-          hint={
-            !pickProducer && association && manage && !filters.producer
-              ? 'Para crear un rol propio, entra desde el expediente del productor.'
-              : undefined
-          }
-        />
+        <RoleList filters={filters} open={panel.open} byProducer={superuser} />
       </section>
       {panel.selected !== null && (
         <RolePanel
@@ -126,7 +121,7 @@ function RoleWorkspace({
           selected={panel.selected}
           manage={manage}
           canCreate={canCreate}
-          askProducer={association}
+          askProducer={superuser}
           producer={filters.producer}
           close={panel.close}
           open={panel.open}

@@ -26,22 +26,23 @@ const urlKeys = {
   page: 'pagina',
 };
 
-export function useRoleFilters(association: boolean) {
+export function useRoleFilters(superuser: boolean) {
   const [params, setParams] = useQueryStates(parsers, { urlKeys });
   const search = usePaginatedSearch(params.search, setParams);
   const producer =
-    association && params.producer && isRoleId(params.producer)
+    superuser && params.producer && isRoleId(params.producer)
       ? params.producer
       : undefined;
   const page = Math.max(1, params.page);
-  // Quien no es de la asociación ve los roles del sistema y los suyos: siempre en dos secciones.
-  const view: ListView = association ? params.view : 'agrupada';
+  // Solo la cuenta técnica ve roles propios de varios productores. Los demás ven los del sistema y
+  // los suyos, siempre en dos secciones.
+  const view: ListView = superuser ? params.view : 'agrupada';
   const query: RoleQuery = {
     search: params.search.trim() || undefined,
     kind: params.kind ?? undefined,
     producer,
     // Agrupados por productor, el servidor los ordena para que un grupo no se parta entre páginas.
-    ordering: association && view === 'agrupada' ? 'producer,name' : undefined,
+    ordering: superuser && view === 'agrupada' ? 'producer,name' : undefined,
     page,
   };
   return {

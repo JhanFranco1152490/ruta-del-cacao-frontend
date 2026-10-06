@@ -20,7 +20,7 @@ const parsers = {
   view: parseAsStringLiteral(LIST_VIEWS).withDefault('lista'),
   page: parseAsInteger.withDefault(1),
 };
-export function useAccountFilters(association: boolean) {
+export function useAccountFilters(association: boolean, superuser: boolean) {
   const [params, setParams] = useQueryStates(parsers, {
     urlKeys: {
       search: 'buscar',
@@ -44,8 +44,9 @@ export function useAccountFilters(association: boolean) {
     association && params.municipality ? params.municipality : undefined;
   const role = params.role && isUuid(params.role) ? params.role : undefined;
   const page = Math.max(1, params.page);
-  // Solo la asociación ve cuentas de varios productores: para el resto no hay qué agrupar.
-  const view: ListView = association ? params.view : 'lista';
+  // Agrupar por productor es de la cuenta técnica: el Administrador de la asociación solo ve las
+  // cuentas de administrador y de productor, una por productor, y no hay qué agrupar.
+  const view: ListView = superuser ? params.view : 'lista';
   const query: AccountQuery = {
     search: params.search.trim() || undefined,
     status: params.status ?? undefined,
