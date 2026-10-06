@@ -7,7 +7,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Breadcrumb, type Crumb } from '@/components/breadcrumb';
 import { FormSection } from '@/components/form-section';
 import { PageHeader } from '@/components/page-header';
-import { SelectField } from '@/components/select-field';
+import { MunicipalitySelectField } from '@/components/municipality-select-field';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
 import { useMunicipalities } from '@/lib/api/municipalities';
@@ -185,34 +185,13 @@ export function FarmFormFields({
                 readOnly
                 value={OPERATING_DEPARTMENT.name}
               />
-              <div>
-                {/* Se remonta al llegar el catálogo: un select no controlado no vuelve a aplicar
-                  el valor guardado cuando aparecen sus opciones (al corregir quedaría en blanco). */}
-                <SelectField
-                  key={municipalities.isSuccess ? 'ready' : 'loading'}
-                  className={CAPTURE_FIELD_CLASS}
-                  disabled={!municipalities.isSuccess}
-                  error={errors.municipality_id?.message}
-                  label="Municipio"
-                  {...register('municipality_id')}
-                >
-                  <option value="">
-                    {municipalities.isPending
-                      ? 'Cargando municipios…'
-                      : 'Elige un municipio'}
-                  </option>
-                  {municipalities.data?.map((municipality) => (
-                    <option key={municipality.code} value={municipality.code}>
-                      {municipality.name}
-                    </option>
-                  ))}
-                </SelectField>
-                {municipalities.isError && (
-                  <p className="mt-2 text-sm font-medium text-err" role="alert">
-                    No fue posible cargar los municipios. Inténtalo nuevamente.
-                  </p>
-                )}
-              </div>
+              <MunicipalitySelectField
+                className={CAPTURE_FIELD_CLASS}
+                error={errors.municipality_id?.message}
+                label="Municipio"
+                placeholder="Elige un municipio"
+                {...register('municipality_id')}
+              />
               <TextField
                 className={CAPTURE_FIELD_CLASS}
                 error={errors.details?.message}

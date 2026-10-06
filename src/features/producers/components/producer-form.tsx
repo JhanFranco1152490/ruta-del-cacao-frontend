@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Breadcrumb } from '@/components/breadcrumb';
+import { MunicipalitySelectField } from '@/components/municipality-select-field';
 import { DigitsField } from '@/components/digits-field';
 import { FormSection } from '@/components/form-section';
 import { PageHeader } from '@/components/page-header';
@@ -14,7 +15,7 @@ import { TextField } from '@/components/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 
-import { useMunicipalities, type Producer } from '../api';
+import type { Producer } from '../api';
 import {
   emptyProducerForm,
   producerFormSchema,
@@ -34,7 +35,6 @@ export function ProducerForm({
   // más nueva, el formulario no la adopta: guardar con la versión nueva y los valores viejos
   // haría que el servidor aceptara el cambio y pisara lo que otra persona guardó.
   const [producer] = useState(initialProducer);
-  const municipalities = useMunicipalities();
   const submitLabel = producer ? 'Guardar cambios' : 'Guardar productor';
   const {
     register,
@@ -144,33 +144,11 @@ export function ProducerForm({
               error={errors.last_name?.message}
               {...register('last_name')}
             />
-            <div>
-              {/* Se remonta al llegar el catálogo: un select no controlado no vuelve a aplicar
-                  el valor guardado cuando aparecen sus opciones (en edición quedaría en blanco). */}
-              <SelectField
-                key={municipalities.isSuccess ? 'ready' : 'loading'}
-                label="Municipio"
-                disabled={!municipalities.isSuccess}
-                error={errors.municipality_code?.message}
-                {...register('municipality_code')}
-              >
-                <option value="">
-                  {municipalities.isPending
-                    ? 'Cargando municipios…'
-                    : 'Selecciona un municipio'}
-                </option>
-                {municipalities.data?.map((municipality) => (
-                  <option key={municipality.code} value={municipality.code}>
-                    {municipality.name}
-                  </option>
-                ))}
-              </SelectField>
-              {municipalities.isError && (
-                <p className="mt-2 text-sm font-medium text-err" role="alert">
-                  No fue posible cargar los municipios. Inténtalo nuevamente.
-                </p>
-              )}
-            </div>
+            <MunicipalitySelectField
+              label="Municipio"
+              error={errors.municipality_code?.message}
+              {...register('municipality_code')}
+            />
             <TextField
               label="Fecha de vinculación"
               type="date"

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Sprout } from 'lucide-react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -73,5 +74,70 @@ describe('NavList', () => {
     const { container } = render(<NavList items={[]} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  describe('submenus', () => {
+    const withChildren: NavItem[] = [
+      {
+        href: '/fincas',
+        label: 'Fincas',
+        icon: Sprout,
+        children: [
+          {
+            href: '/fincas/parcelas/nueva',
+            label: 'Registrar parcela',
+            icon: Sprout,
+          },
+        ],
+      },
+    ];
+
+    it('shows the tasks under their section and folds them on request', async () => {
+      pathname.current = '/productores';
+      render(<NavList items={withChildren} />);
+
+      expect(
+        screen.getByRole('link', { name: 'Registrar parcela' }),
+      ).toHaveAttribute('href', '/fincas/parcelas/nueva');
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Plegar el submenú de Fincas' }),
+      );
+      expect(
+        screen.queryByRole('link', { name: 'Registrar parcela' }),
+      ).not.toBeInTheDocument();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Desplegar el submenú de Fincas' }),
+      );
+      expect(
+        screen.getByRole('link', { name: 'Registrar parcela' }),
+      ).toBeInTheDocument();
+    });
+
+    it('puts the emphasis on the task and keeps the section marked', () => {
+      pathname.current = '/fincas/parcelas/nueva';
+      render(<NavList items={withChildren} />);
+
+      expect(
+        screen.getByRole('link', { name: 'Registrar parcela' }),
+      ).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('link', { name: 'Fincas' })).not.toHaveAttribute(
+        'aria-current',
+      );
+    });
+
+    it('does not hide the task the person is in, even when folded', async () => {
+      pathname.current = '/fincas/parcelas/nueva';
+      render(<NavList items={withChildren} />);
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Plegar el submenú de Fincas' }),
+      );
+
+      expect(
+        screen.getByRole('link', { name: 'Registrar parcela' }),
+      ).toBeInTheDocument();
+    });
   });
 });

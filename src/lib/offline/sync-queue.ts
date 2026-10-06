@@ -178,6 +178,12 @@ export function processQueue(userId: string) {
   return run;
 }
 
+// Tras guardar en el dispositivo: con conexión se intenta enviar de inmediato; sin ella, la cola
+// lo hará al volver la red. Nadie espera el envío, el guardado ya terminó en el dispositivo.
+export const sendWhenOnline = (userId: string) => {
+  if (navigator.onLine) void processQueue(userId);
+};
+
 // Procesa lo que esté listo, en cascada (un hijo puede sincronizar en la misma llamada que su
 // padre si el padre tiene éxito). Cada item se intenta como máximo una vez por llamada: un
 // padre que falla no se reintenta en el mismo ciclo, para no martillar la red contra un error

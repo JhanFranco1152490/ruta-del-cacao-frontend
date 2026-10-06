@@ -1,10 +1,8 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
-
-import { useSession } from '@/hooks/use-session';
+import { useQueueMutation, useQueuedRecord } from '@/hooks/use-queue-mutation';
 import { queryKeys } from '@/lib/api/query-keys';
-import { discard, processQueue } from '@/lib/offline/sync-queue';
+import { discard, sendWhenOnline } from '@/lib/offline/sync-queue';
 
 import {
   enqueueFarmCreate,
@@ -15,38 +13,11 @@ import {
 } from './farm-queue';
 import type { FarmFormValues } from './schemas';
 
-// Leer y escribir la cola del dispositivo no usa la red. Por defecto TanStack Query pausa todo
-// mientras no hay conexión (espera a que vuelva): aquí eso dejaba "Guardando…" colgado y la
-// finca sin guardar hasta recuperar la señal, justo lo contrario de lo que se busca.
-const LOCAL_ONLY = 'always' as const;
-
-// Se lee una sola vez: el formulario se inicializa con esta lectura y no debe adoptar una
-// posterior mientras la persona corrige.
-export function useQueuedFarm(id: string) {
-  const { data: user } = useSession();
-  const userId = user?.id;
-  return useQuery({
-    queryKey: queryKeys.farms.queued(userId ?? '', id),
-    queryFn: () => getQueuedFarm(userId!, id),
-    enabled: !!userId,
-    staleTime: Infinity,
-    gcTime: 0,
-    networkMode: LOCAL_ONLY,
-  });
-}
-
-function useQueueMutation<T>(
-  action: (userId: string, input: T) => Promise<void>,
-) {
-  const { data: user } = useSession();
-  return useMutation({
-    networkMode: LOCAL_ONLY,
-    mutationFn: async (input: T) => {
-      if (!user) throw new Error('No hay una sesión activa.');
-      await action(user.id, input);
-    },
-  });
-}
+export const useQueuedFarm = (id: string) =>
+  useQueuedRecord(
+    (userId) => queryKeys.farms.queued(userId, id),
+    (userId) => getQueuedFarm(userId, id),
+  );
 
 type FarmInput = { id: string; values: FarmFormValues };
 
@@ -56,7 +27,7 @@ type FarmInput = { id: string; values: FarmFormValues };
 export const useFarmCreate = () =>
   useQueueMutation(async (userId: string, { id, values }: FarmInput) => {
     await enqueueFarmCreate(userId, id, values);
-    if (navigator.onLine) void processQueue(userId);
+    sendWhenOnline(userId);
   });
 
 export const useFarmUpdate = () =>
@@ -66,7 +37,7 @@ export const useFarmUpdate = () =>
       { id, values, expectedVersion }: FarmInput & { expectedVersion: number },
     ) => {
       await enqueueFarmUpdate(userId, id, values, expectedVersion);
-      if (navigator.onLine) void processQueue(userId);
+      sendWhenOnline(userId);
     },
   );
 
@@ -85,7 +56,7 @@ export const useFarmResubmit = () =>
       },
     ) => {
       await resubmitFarm(userId, farm, values, expectedVersion);
-      if (navigator.onLine) void processQueue(userId);
+      sendWhenOnline(userId);
     },
   );
 

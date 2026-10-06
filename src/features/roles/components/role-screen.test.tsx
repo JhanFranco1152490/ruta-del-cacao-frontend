@@ -333,6 +333,39 @@ describe('RoleScreen', () => {
       screen.queryByRole('button', { name: 'Guardar rol' }),
     ).not.toBeInTheDocument();
   });
+  it('lets an account that can pick producers create a role and asks for the producer first', async () => {
+    server.use(
+      http.get(apiUrl('/api/auth/me'), () =>
+        HttpResponse.json(
+          buildSession({
+            producer_id: null,
+            permissions: [
+              PERMISSIONS.ROLES_VIEW,
+              PERMISSIONS.ROLES_MANAGE,
+              PERMISSIONS.PRODUCERS_VIEW,
+            ],
+          }),
+        ),
+      ),
+      http.get(apiUrl('/api/producers'), () =>
+        HttpResponse.json(buildPage([])),
+      ),
+    );
+    renderWithProviders(<RoleScreen />);
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Crear rol' }),
+    );
+
+    expect(
+      await screen.findByText(/Los roles propios pertenecen a un productor/),
+    ).toBeVisible();
+    expect(
+      within(screen.getByRole('dialog')).getByLabelText('Productor'),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Guardar rol' }),
+    ).not.toBeInTheDocument();
+  });
   it('sends the selected producer only for association accounts', async () => {
     let payload: unknown;
     server.use(
