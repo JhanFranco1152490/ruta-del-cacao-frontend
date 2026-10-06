@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, type ApiRequestInit } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
@@ -41,10 +41,15 @@ function listPath(query: FarmQuery) {
 
 export const fetchFarms = (query: FarmQuery, signal?: AbortSignal) =>
   apiFetch<FarmPage>(listPath(query), { signal });
-export const postFarm = (body: FarmCreateRequest) =>
-  apiFetch<Farm>('/api/farms', { method: 'POST', body });
-export const patchFarm = (id: string, body: FarmUpdateRequest) =>
-  apiFetch<Farm>(`/api/farms/${id}`, { method: 'PATCH', body });
+export const postFarm = (
+  body: FarmCreateRequest,
+  options?: Pick<ApiRequestInit, 'actingProducer'>,
+) => apiFetch<Farm>('/api/farms', { method: 'POST', body, ...options });
+export const patchFarm = (
+  id: string,
+  body: FarmUpdateRequest,
+  options?: Pick<ApiRequestInit, 'actingProducer'>,
+) => apiFetch<Farm>(`/api/farms/${id}`, { method: 'PATCH', body, ...options });
 
 export const useFarms = (query: FarmQuery) =>
   useQuery({

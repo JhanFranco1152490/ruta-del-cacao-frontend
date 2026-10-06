@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, type ApiRequestInit } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
@@ -150,10 +150,12 @@ export const useFarmCharacterizations = (
 export const putCharacterization = (
   plotId: string,
   body: PlotCharacterizationWriteRequest,
+  options?: Pick<ApiRequestInit, 'actingProducer'>,
 ) =>
   apiFetch<PlotCharacterization>(`/api/plot-characterizations/${plotId}`, {
     method: 'PUT',
     body,
+    ...options,
   });
 
 export const HISTORY_PAGE_SIZE = 20;

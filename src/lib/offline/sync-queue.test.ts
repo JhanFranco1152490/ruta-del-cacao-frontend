@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
+
 import type { SyncAdapter } from './adapters';
 import { getOfflineDb, type QueueItem } from './db';
 import {
@@ -31,6 +33,8 @@ function fakeAdapter(overrides: Partial<SyncAdapter> = {}): SyncAdapter {
 
 afterEach(() => {
   clearAdapters();
+  sessionStorage.clear();
+  syncActingProducer(null);
 });
 
 describe('enqueue', () => {
@@ -69,6 +73,64 @@ describe('enqueue', () => {
     expect(await getOfflineDb(userId).queue.get('a1')).toMatchObject({
       payload: { name: 'Primera' },
     });
+  });
+});
+
+describe('enqueue and the acting producer', () => {
+  const CHOSEN = '33333333-3333-4333-8333-333333333333';
+  const OTHER = '44444444-4444-4444-8444-444444444444';
+  const input = (id: string, parentId?: string) => ({
+    id,
+    resource: 'farms',
+    operation: 'create' as const,
+    parentId,
+    payload: {},
+  });
+
+  it('saves the producer the tab is acting under with the record', async () => {
+    const userId = randomUserId();
+    writeActingProducer(userId, CHOSEN);
+
+    const item = await enqueue(userId, input('a1'));
+
+    expect(item.actingProducerId).toBe(CHOSEN);
+  });
+
+  it('saves none when the tab is not acting under a producer', async () => {
+    const item = await enqueue(randomUserId(), input('a1'));
+
+    expect(item.actingProducerId).toBeUndefined();
+  });
+
+  it('keeps the producer of the record when it is queued again after a change', async () => {
+    const userId = randomUserId();
+    writeActingProducer(userId, CHOSEN);
+    await enqueue(userId, input('a1'));
+    writeActingProducer(userId, OTHER);
+
+    const again = await enqueue(userId, input('a1'));
+
+    expect(again.actingProducerId).toBe(CHOSEN);
+  });
+
+  it('gives a child the producer of its queued parent, not the one of the tab', async () => {
+    const userId = randomUserId();
+    writeActingProducer(userId, CHOSEN);
+    await enqueue(userId, input('farm-1'));
+    writeActingProducer(userId, OTHER);
+
+    const child = await enqueue(userId, input('plot-1', 'farm-1'));
+
+    expect(child.actingProducerId).toBe(CHOSEN);
+  });
+
+  it('uses the producer of the tab for a child whose parent is already on the server', async () => {
+    const userId = randomUserId();
+    writeActingProducer(userId, OTHER);
+
+    const child = await enqueue(userId, input('plot-1', 'farm-on-server'));
+
+    expect(child.actingProducerId).toBe(OTHER);
   });
 });
 

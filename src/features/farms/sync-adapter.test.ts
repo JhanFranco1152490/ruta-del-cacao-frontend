@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 import { ApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb, type QueueItem } from '@/lib/offline/db';
@@ -248,5 +249,60 @@ describe('farmSyncAdapter.refreshAfterSync', () => {
     expect(farmSyncAdapter.refreshAfterSync?.(queueItem({}))).toEqual([
       queryKeys.farms.all(),
     ]);
+  });
+});
+
+describe('farmSyncAdapter.send and the acting producer', () => {
+  const SAVED_UNDER = '33333333-3333-4333-8333-333333333333';
+  const OF_THE_TAB = '44444444-4444-4444-8444-444444444444';
+
+  afterEach(() => {
+    sessionStorage.clear();
+    syncActingProducer(null);
+  });
+
+  function captureProducer(method: 'post' | 'patch', path: string) {
+    const seen: { value: string | null | undefined } = { value: undefined };
+    server.use(
+      http[method](apiUrl(path), ({ request }) => {
+        seen.value = request.headers.get('x-acting-producer');
+        return HttpResponse.json(buildFarm(), { status: 201 });
+      }),
+    );
+    return seen;
+  }
+
+  it('sends the record under the producer it was saved with, not the one of the tab', async () => {
+    writeActingProducer('u1', OF_THE_TAB);
+    const seen = captureProducer('post', '/api/farms');
+
+    await farmSyncAdapter.send(queueItem({ actingProducerId: SAVED_UNDER }));
+
+    expect(seen.value).toBe(SAVED_UNDER);
+  });
+
+  it('sends no producer for a record saved without one, even if the tab has chosen one', async () => {
+    writeActingProducer('u1', OF_THE_TAB);
+    const seen = captureProducer('post', '/api/farms');
+
+    await farmSyncAdapter.send(queueItem({}));
+
+    expect(seen.value).toBeNull();
+  });
+
+  it('does the same for an edit', async () => {
+    writeActingProducer('u1', OF_THE_TAB);
+    const seen = captureProducer('patch', '/api/farms/s1');
+
+    await farmSyncAdapter.send(
+      queueItem({
+        id: 's1',
+        operation: 'update',
+        payload: { ...fields, expected_version: 2 },
+        actingProducerId: SAVED_UNDER,
+      }),
+    );
+
+    expect(seen.value).toBe(SAVED_UNDER);
   });
 });

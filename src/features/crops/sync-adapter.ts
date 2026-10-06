@@ -30,6 +30,8 @@ export const characterizationSyncAdapter: SyncAdapter = {
     await putCharacterization(
       item.parentId!,
       item.payload as CharacterizationPayload,
+      // Con el productor con que se guardó, o ninguno: nunca el que tenga la pestaña ahora.
+      { actingProducer: item.actingProducerId ?? null },
     );
   },
 

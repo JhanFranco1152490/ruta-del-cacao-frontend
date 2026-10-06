@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, type ApiRequestInit } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
@@ -50,10 +50,15 @@ export const useFarmPlots = (
     networkMode: 'offlineFirst',
   });
 
-export const postPlot = (body: PlotCreateRequest) =>
-  apiFetch<Plot>('/api/plots', { method: 'POST', body });
-export const patchPlot = (id: string, body: PlotUpdateRequest) =>
-  apiFetch<Plot>(`/api/plots/${id}`, { method: 'PATCH', body });
+export const postPlot = (
+  body: PlotCreateRequest,
+  options?: Pick<ApiRequestInit, 'actingProducer'>,
+) => apiFetch<Plot>('/api/plots', { method: 'POST', body, ...options });
+export const patchPlot = (
+  id: string,
+  body: PlotUpdateRequest,
+  options?: Pick<ApiRequestInit, 'actingProducer'>,
+) => apiFetch<Plot>(`/api/plots/${id}`, { method: 'PATCH', body, ...options });
 
 type PlotDeleteQuery = operations['plots_destroy']['parameters']['query'];
 
