@@ -24,8 +24,13 @@ export function PageHeader({
       <div>
         {eyebrow && <p className="section-label">{eyebrow}</p>}
         <h1 className="mt-2 text-4xl text-selva">{title}</h1>
+        {/* El subrayado cobre de la marca: separa el título de su descripción. */}
+        <span
+          aria-hidden="true"
+          className="mt-3 block h-1 w-12 rounded-full bg-cobre"
+        />
         {description && (
-          <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
+          <p className="mt-3 max-w-2xl text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && <div className="flex flex-wrap gap-3">{actions}</div>}

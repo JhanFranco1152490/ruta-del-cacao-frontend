@@ -8,7 +8,11 @@ describe('AppHeader', () => {
     render(<AppHeader logoutFailed={false} />);
 
     // En pantallas muy angostas el nombre se oculta a la vista, pero no del lector de pantalla.
-    expect(screen.getByText('Ruta del Cacao')).toHaveClass('sr-only');
+    const name = screen
+      .getByRole('link', { name: 'Ruta del Cacao' })
+      .querySelector('span');
+    expect(name).toHaveTextContent('Ruta del Cacao');
+    expect(name).toHaveClass('sr-only');
   });
 
   it('links the logo to the entry of the app', () => {

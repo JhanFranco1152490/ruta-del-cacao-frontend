@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from 'cn';
 
-import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
+import { FOCUS_OUTLINE_ON_DARK_CLASS } from '@/components/ui/focus-outline';
 import { isActiveRoute } from '@/config/navigation';
 import type { NavItem } from '@/types/navigation';
 
@@ -32,6 +32,9 @@ export function NavList({
 
   return (
     <nav aria-label="Principal">
+      <p aria-hidden="true" className="section-label mb-3 px-3 !text-oro">
+        Menú
+      </p>
       <ul className="space-y-1">
         {items.map(({ href, label, icon: Icon, children = [] }) => {
           const childActive = children.some((child) =>
@@ -52,15 +55,18 @@ export function NavList({
                   onClick={onNavigate}
                   className={cn(
                     'flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-md px-3 text-sm font-bold',
-                    FOCUS_OUTLINE_CLASS,
+                    FOCUS_OUTLINE_ON_DARK_CLASS,
                     active
-                      ? 'bg-selva text-primary-foreground'
+                      ? 'bg-crema text-selva'
                       : inSection
-                        ? 'bg-muted text-selva'
-                        : 'text-selva hover:bg-muted',
+                        ? 'bg-white/10 text-crema'
+                        : 'text-crema/90 hover:bg-white/10 hover:text-crema',
                   )}
                 >
-                  <Icon aria-hidden="true" className="size-5" />
+                  <Icon
+                    aria-hidden="true"
+                    className={cn('size-5', !active && 'text-oro')}
+                  />
                   {label}
                 </Link>
                 {children.length > 0 && (
@@ -70,8 +76,8 @@ export function NavList({
                     aria-label={`${open ? 'Plegar' : 'Desplegar'} el submenú de ${label}`}
                     onClick={() => toggle(href)}
                     className={cn(
-                      'flex size-11 shrink-0 items-center justify-center rounded-md text-selva hover:bg-muted',
-                      FOCUS_OUTLINE_CLASS,
+                      'flex size-11 shrink-0 items-center justify-center rounded-md text-crema/90 hover:bg-white/10',
+                      FOCUS_OUTLINE_ON_DARK_CLASS,
                     )}
                   >
                     <ChevronDown
@@ -85,7 +91,7 @@ export function NavList({
                 )}
               </div>
               {children.length > 0 && open && (
-                <ul className="mt-1 ml-5 space-y-1 border-l border-border pl-3">
+                <ul className="mt-1 ml-5 space-y-1 border-l border-white/20 pl-3">
                   {children.map((child) => {
                     const here = isActiveRoute(child.href, pathname);
                     return (
@@ -96,10 +102,10 @@ export function NavList({
                           onClick={onNavigate}
                           className={cn(
                             'flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-bold',
-                            FOCUS_OUTLINE_CLASS,
+                            FOCUS_OUTLINE_ON_DARK_CLASS,
                             here
-                              ? 'bg-selva text-primary-foreground'
-                              : 'text-selva hover:bg-muted',
+                              ? 'bg-crema text-selva'
+                              : 'text-crema/90 hover:bg-white/10 hover:text-crema',
                           )}
                         >
                           <child.icon aria-hidden="true" className="size-4" />

@@ -3,6 +3,7 @@
 import { Menu } from 'lucide-react';
 import { useState } from 'react';
 
+import { BotanicalVine } from '@/components/brand/botanical-vine';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -36,13 +37,19 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
         <Menu aria-hidden="true" className="size-5" />
         <span className="sr-only">Abrir menú</span>
       </SheetTrigger>
-      <SheetContent side="left">
+      <SheetContent
+        side="left"
+        className="border-selva-barra bg-selva-barra text-crema [&_[data-slot=sheet-close]]:text-crema [&_[data-slot=sheet-close]]:hover:bg-white/10"
+      >
         <SheetHeader>
-          <SheetTitle className="font-serif text-xl text-selva">
+          <SheetTitle className="font-serif text-xl text-crema">
             Menú de navegación
           </SheetTitle>
         </SheetHeader>
-        <NavList items={items} onNavigate={() => setOpen(false)} />
+        <div className="flex flex-1 flex-col">
+          <NavList items={items} onNavigate={() => setOpen(false)} />
+          <BotanicalVine className="pointer-events-none -mx-4 mt-auto h-40 w-72 shrink-0 opacity-40" />
+        </div>
       </SheetContent>
     </Sheet>
   );
