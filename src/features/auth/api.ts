@@ -1,9 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
+import { isNetworkFailure } from '@/lib/api/errors';
+import { postLogout } from '@/lib/api/logout';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { clearOfflineCache } from '@/lib/offline/db';
+import {
+  flushPendingLogout,
+  markPendingLogout,
+} from '@/lib/offline/pending-logout';
 import { clearSessionSnapshot } from '@/lib/offline/session-snapshot';
 import { recordLogin } from '@/lib/offline/session-clock';
 
@@ -29,8 +35,6 @@ type PasswordResetConfirmRequest =
 
 export const postLogin = (body: LoginRequest) =>
   apiFetch<Session>('/api/auth/login', { method: 'POST', body });
-export const postLogout = () =>
-  apiFetch<void>('/api/auth/logout', { method: 'POST' });
 export const postPasswordResetRequest = (email: string) =>
   apiFetch<void>('/api/auth/password-reset/request', {
     method: 'POST',
@@ -42,7 +46,12 @@ export const postPasswordResetConfirm = (body: PasswordResetConfirmRequest) =>
 export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: postLogin,
+    // Si quedó un cierre de sesión sin enviar, se envía antes: el inicio nuevo no debe heredar
+    // la sesión que la persona ya había cerrado, ni ser cerrado después por esa marca.
+    mutationFn: async (body: LoginRequest) => {
+      await flushPendingLogout();
+      return postLogin(body);
+    },
     onSuccess: (session) => {
       // Si la sesión anterior terminó sin cerrar sesión en esta pestaña (venció o se cerró en
       // otra), su caché sigue aquí: sin limpiarla, otra cuenta vería los datos de la anterior.
@@ -53,12 +62,25 @@ export function useLogin() {
   });
 }
 
+// Devuelve dónde se cerró: 'server' si el servidor respondió, 'device' si no había conexión y el
+// cierre en el servidor queda pendiente. Cerrar sesión siempre debe poder hacerse: quien entrega
+// el teléfono en el campo no tiene red, y su cuenta no puede quedar abierta por eso.
 export function useLogout() {
   const queryClient = useQueryClient();
-  // Solo se limpia la caché si el cierre tuvo éxito: si falló (p. ej. sin conexión) la persona
-  // sigue en su panel y puede reintentar.
+  // Solo se limpia la caché si el cierre tuvo éxito (en el servidor o, sin red, en el
+  // dispositivo): si el servidor respondió con un error, la persona sigue en su panel y puede
+  // reintentar.
   return useMutation({
-    mutationFn: postLogout,
+    mutationFn: async () => {
+      try {
+        await postLogout();
+        return 'server' as const;
+      } catch (error) {
+        if (!isNetworkFailure(error)) throw error;
+        markPendingLogout();
+        return 'device' as const;
+      }
+    },
     onSuccess: () => {
       const session = queryClient.getQueryData<Session>(queryKeys.session());
       if (session) {

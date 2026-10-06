@@ -116,8 +116,12 @@ el frontend nunca los guarda. Antes de cada petición que modifica datos, el cli
 Las pantallas protegidas consultan `/api/auth/me`. Ante un 401 en un endpoint que usa el
 token de acceso, el cliente renueva la sesión una sola vez (las peticiones simultáneas
 comparten la renovación dentro de la pestaña) y repite la petición. Si la renovación
-falla, la persona vuelve al inicio de sesión. Un fallo de conexión al cerrar sesión no se
-presenta como un cierre exitoso: la persona sigue en su pantalla y puede reintentar.
+falla, la persona vuelve al inicio de sesión. Cerrar sesión siempre se puede: con conexión se
+revoca en el servidor; sin conexión se cierra en el dispositivo (se olvida la copia de la sesión y
+las lecturas guardadas, y se conservan los registros sin enviar) y el cierre en el servidor queda
+pendiente. Mientras esté pendiente, nada restaura la sesión: al volver la red se envía antes de
+preguntar quién entró o de iniciar sesión otra vez. Si el servidor responde con un error, la
+persona sigue en su pantalla y puede reintentar.
 
 La recuperación envía el correo registrado y abre
 `/restablecer-contrasena?uid=…&token=…` desde el enlace que genera Django (en desarrollo
