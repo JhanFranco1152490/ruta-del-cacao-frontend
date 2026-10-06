@@ -294,24 +294,25 @@ describe('AccountListScreen', () => {
     renderWithProviders(<AccountListScreen />, {
       searchParams: '?cuenta=nueva',
     });
-    // La asociación elige primero el tipo: administrador viene marcado.
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Continuar' }),
-    );
+    // El Administrador solo crea cuentas de administrador: no se le pregunta el tipo.
     await fillForm(false);
+    expect(
+      screen.queryByRole('button', { name: 'Continuar' }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
     await screen.findByText('Correo enviado');
     expect(body).toMatchObject({ role_ids: [roleId] });
     expect(body).not.toHaveProperty('producer_id');
   });
-  it('sends the selected producer when the association creates an employee', async () => {
+  it('sends the selected producer when the technical account creates an employee', async () => {
     let body: unknown;
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
         HttpResponse.json(
           buildSession({
             producer_id: null,
+            is_superuser: true,
             permissions: [...permissions, PERMISSIONS.PRODUCERS_VIEW],
           }),
         ),

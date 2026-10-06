@@ -1,12 +1,12 @@
-import type { FarmFormValues } from './schemas';
+import type { FarmContentField, FarmFormValues } from './schemas';
 
 export type FarmDifference = {
-  field: keyof FarmFormValues;
+  field: FarmContentField;
   server: string;
   mine: string;
 };
 
-const NUMERIC_FIELDS = new Set<keyof FarmFormValues>([
+const NUMERIC_FIELDS = new Set<FarmContentField>([
   'area_hectares',
   'altitude_masl',
   'latitude',
@@ -14,7 +14,7 @@ const NUMERIC_FIELDS = new Set<keyof FarmFormValues>([
 ]);
 
 // Mismo orden que el formulario, para que la lista se lea igual que la pantalla.
-const FIELDS: readonly (keyof FarmFormValues)[] = [
+const FIELDS: readonly FarmContentField[] = [
   'name',
   'municipality_id',
   'details',
@@ -24,7 +24,7 @@ const FIELDS: readonly (keyof FarmFormValues)[] = [
   'longitude',
 ];
 
-function sameValue(field: keyof FarmFormValues, a: string, b: string) {
+function sameValue(field: FarmContentField, a: string, b: string) {
   if (!NUMERIC_FIELDS.has(field)) return a.trim() === b.trim();
   // "12.50", "12,5" y "12.5" son la misma área; la API los guarda igual.
   return Number(a.replace(',', '.')) === Number(b.replace(',', '.'));

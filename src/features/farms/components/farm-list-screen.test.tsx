@@ -781,3 +781,65 @@ describe('FarmListScreen free map', () => {
     );
   });
 });
+
+describe('FarmListScreen and the producer of each farm', () => {
+  const associationPermissions = [
+    PERMISSIONS.FARMS_VIEW,
+    PERMISSIONS.PRODUCERS_VIEW,
+  ] as string[];
+
+  it('names the producer on each card for an account without a producer of its own', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen({ permissions: associationPermissions, producerId: null });
+
+    const [card] = await farmCards();
+    expect(
+      within(card).getByRole('link', { name: 'Ana Prueba · PROD-000007' }),
+    ).toHaveAttribute('href', '/productores/p1');
+  });
+
+  it('does not say it to a producer, who only sees its own farms', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen();
+
+    const [card] = await farmCards();
+    expect(within(card).queryByText(/Productor:/)).not.toBeInTheDocument();
+  });
+});
+
+describe('FarmListScreen and registering plots', () => {
+  const withPlots = [
+    PERMISSIONS.FARMS_VIEW,
+    PERMISSIONS.PLOTS_VIEW,
+    PERMISSIONS.PLOTS_ADD,
+  ] as string[];
+
+  it('offers a shortcut to register a plot to an account without a producer of its own', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen({ permissions: withPlots, producerId: null });
+
+    expect(
+      await screen.findByRole('link', { name: 'Registrar parcela' }),
+    ).toHaveAttribute('href', '/fincas/parcelas/nueva');
+  });
+
+  it('does not offer it to a producer, who reaches it from its own farm', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen({ permissions: withPlots });
+
+    await farmCards();
+    expect(
+      screen.queryByRole('link', { name: 'Registrar parcela' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not offer it without the permission to register plots', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW], producerId: null });
+
+    await farmCards();
+    expect(
+      screen.queryByRole('link', { name: 'Registrar parcela' }),
+    ).not.toBeInTheDocument();
+  });
+});

@@ -5,9 +5,9 @@ import { useMunicipalityName } from '@/lib/api/municipalities';
 import type { Farm } from '../api';
 import { farmDifferences } from '../farm-differences';
 import { farmToFormValues } from '../farm-queue';
-import type { FarmFormValues } from '../schemas';
+import type { FarmContentField, FarmFormValues } from '../schemas';
 
-const LABELS: Record<keyof FarmFormValues, string> = {
+const LABELS: Record<FarmContentField, string> = {
   name: 'Nombre',
   municipality_id: 'Municipio',
   details: 'Detalles',
@@ -26,7 +26,7 @@ export function FarmStaleVersionSummary({
 }) {
   const municipalityName = useMunicipalityName();
   const differences = farmDifferences(farmToFormValues(current), mine);
-  const show = (field: keyof FarmFormValues, value: string) =>
+  const show = (field: FarmContentField, value: string) =>
     field === 'municipality_id'
       ? municipalityName(value)
       : value.trim() || '(vacío)';

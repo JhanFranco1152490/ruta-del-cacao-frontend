@@ -26,6 +26,7 @@ import {
 import { useWarmGps } from '@/hooks/use-warm-gps';
 import { useMunicipalityHints } from '../use-municipality-hints';
 import { FarmLocationFields, FarmLocationMap } from './farm-location-capture';
+import { FarmProducerField } from './farm-producer-field';
 import {
   FarmMunicipalityMismatch,
   FarmMunicipalitySuggestion,
@@ -44,6 +45,7 @@ export function FarmFormFields({
   error,
   blockedMessage,
   secondaryAction,
+  chooseProducer = false,
   onSubmit,
 }: {
   defaultValues: FarmFormValues;
@@ -63,6 +65,9 @@ export function FarmFormFields({
   blockedMessage?: string | null;
   // Otra acción junto a guardar (p. ej. eliminar la finca en la edición).
   secondaryAction?: ReactNode;
+  // La cuenta técnica elige de qué productor es la finca nueva. Al editar una finca nadie lo elige:
+  // no cambia de dueño.
+  chooseProducer?: boolean;
   onSubmit: (values: FarmFormValues) => void;
 }) {
   const municipalities = useMunicipalities();
@@ -75,8 +80,9 @@ export function FarmFormFields({
           municipalityList?.find((municipality) => municipality.code === code)
             ?.name,
         saved: savedLocation,
+        requireProducer: chooseProducer,
       }),
-    [allocatedHectares, municipalityList, savedLocation],
+    [allocatedHectares, municipalityList, savedLocation, chooseProducer],
   );
   const {
     register,
@@ -152,6 +158,14 @@ export function FarmFormFields({
         <div className="space-y-6 lg:col-start-1 lg:row-start-1">
           <FormSection title="Datos de la finca">
             <div className="grid gap-5 sm:grid-cols-2">
+              {chooseProducer && (
+                <div className="sm:col-span-2">
+                  <FarmProducerField
+                    control={control}
+                    error={errors.producer_id?.message}
+                  />
+                </div>
+              )}
               <TextField
                 className={CAPTURE_FIELD_CLASS}
                 error={errors.name?.message}

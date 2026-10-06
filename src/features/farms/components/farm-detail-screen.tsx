@@ -18,6 +18,8 @@ import type { Farm } from '../api';
 import type { QueuedFarm } from '../farm-queue';
 import { farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
+import { producerLabelOf } from '../farm-list-item';
+import { FarmProducerLine } from './farm-producer-line';
 import { FarmStatusBadge } from './farm-status-badge';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
 
@@ -33,11 +35,15 @@ export type FarmPlotsContext = {
   isActive: boolean;
   // Todavía no existe en el servidor: solo tiene las parcelas que esperan en el dispositivo.
   isPendingCreate?: boolean;
+  // De quién es la finca, escrito para mostrarlo. Solo la del servidor.
+  producerLabel?: string;
 };
 
 type FarmView = {
   id: string;
   name: string;
+  // Solo la finca del servidor: la que está en la cola todavía no trae el nombre de su productor.
+  producer?: Farm['producer'];
   municipality: string;
   department: string;
   details: string;
@@ -101,6 +107,7 @@ function ServerFarmDetail({
         allocatedAreaHectares: server.allocated_area_hectares,
         location: server.location,
         isActive: server.is_active,
+        producerLabel: producerLabelOf(server.producer),
       })}
     </DetailLayout>
   );
@@ -166,6 +173,7 @@ function QueuedFarmDetail({
 const serverFarmView = (farm: Farm): FarmView => ({
   id: farm.id,
   name: farm.name,
+  producer: farm.producer,
   municipality: farm.municipality.name,
   department: farm.department.name,
   details: farm.details,
@@ -192,6 +200,9 @@ function DetailLayout({
   children?: ReactNode;
 }) {
   const place = [view.municipality, view.department].filter(Boolean).join(', ');
+  const { data: user } = useSession();
+  // De quién es la finca, para quien no tiene un productor propio (solo lectura: no cambia de dueño).
+  const showProducer = !!view.producer && !user?.producer_id;
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
       <nav
@@ -225,6 +236,14 @@ function DetailLayout({
           )
         }
       />
+      {showProducer && view.producer && (
+        <div className="mt-4">
+          <FarmProducerLine
+            producer={view.producer}
+            linkable={hasPermission(user, PERMISSIONS.PRODUCERS_VIEW)}
+          />
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {badge}
         {savedAt !== undefined && (

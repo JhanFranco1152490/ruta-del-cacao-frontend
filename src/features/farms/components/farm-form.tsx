@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
+import { useSession } from '@/hooks/use-session';
 
 import { emptyFarmForm } from '../schemas';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
@@ -17,6 +18,9 @@ export function FarmForm() {
   const [savedName, setSavedName] = useState<string | null>(null);
   const create = useFarmCreate();
   const sync = useFarmSyncStatus();
+  const { data: user } = useSession();
+  // La cuenta técnica no tiene un productor propio: elige de cuál es la finca.
+  const chooseProducer = user?.is_superuser === true;
 
   if (savedName) {
     return (
@@ -35,6 +39,7 @@ export function FarmForm() {
   return (
     <FarmFormFields
       key={farmId}
+      chooseProducer={chooseProducer}
       defaultValues={emptyFarmForm}
       title="Registrar finca"
       description="Los campos marcados son obligatorios. Si no hay conexión, la finca se guarda en este dispositivo y se envía cuando vuelva la conexión."

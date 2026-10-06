@@ -53,15 +53,21 @@ export type FarmSchemaOptions = {
   // vuelve a exigir que la altitud quepa en el terreno: una finca guardada antes de esa regla
   // debe poder seguir editando sus otros datos (el servidor hace lo mismo).
   saved?: { municipalityCode: string; altitude: string };
+  // La cuenta técnica no tiene un productor propio: al crear una finca elige de cuál es.
+  requireProducer?: boolean;
 };
 
 export const createFarmFormSchema = ({
   allocatedHectares = 0,
   municipalityName,
   saved,
+  requireProducer = false,
 }: FarmSchemaOptions = {}) =>
   z
     .object({
+      // Solo al crear una finca la cuenta técnica; para cualquier otra, el servidor usa el productor
+      // de la sesión.
+      producer_id: z.string().optional(),
       name: z.string().trim().min(1, 'Ingresa el nombre de la finca.'),
       municipality_id: z.string().min(1, 'Selecciona un municipio.'),
       details: z.string().trim(),
@@ -84,6 +90,15 @@ export const createFarmFormSchema = ({
         [-180, 180],
         [OPERATING_AREA_BOUNDS.west, OPERATING_AREA_BOUNDS.east],
       ),
+    })
+    .superRefine((values, context) => {
+      if (requireProducer && !values.producer_id) {
+        context.addIssue({
+          code: 'custom',
+          path: ['producer_id'],
+          message: 'Elige el productor de la finca.',
+        });
+      }
     })
     .superRefine((values, context) => {
       // La altitud también tiene que caber en el terreno del municipio elegido. Si no hay altitud
@@ -123,6 +138,10 @@ export const createFarmFormSchema = ({
 export const farmFormSchema = createFarmFormSchema();
 
 export type FarmFormValues = z.infer<typeof farmFormSchema>;
+
+// Los campos que son de la finca misma: `producer_id` no, porque una finca no cambia de dueño y
+// por eso no se compara ni se reenvía al corregir.
+export type FarmContentField = Exclude<keyof FarmFormValues, 'producer_id'>;
 
 export const FARM_FORM_FIELDS = Object.keys(farmFormSchema.shape);
 

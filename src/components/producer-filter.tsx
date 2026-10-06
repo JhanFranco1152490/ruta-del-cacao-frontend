@@ -57,12 +57,17 @@ export function ProducerFilter({
 }) {
   const inputId = useId();
   const helpId = `${inputId}-help`;
-  const [input, setInput] = useState('');
+  // Lo que la persona está escribiendo; `null` mientras no escribe: el campo muestra entonces el
+  // productor elegido, también cuando viene ya elegido de antes (al recargar, de la URL).
+  const [typed, setTyped] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(input.trim()), SEARCH_DELAY_MS);
+    const timer = setTimeout(
+      () => setSearch((typed ?? '').trim()),
+      SEARCH_DELAY_MS,
+    );
     return () => clearTimeout(timer);
-  }, [input]);
+  }, [typed]);
   const options = useProducerOptions(search);
   const results = options.data?.results ?? [];
   const more = (options.data?.count ?? 0) - results.length;
@@ -110,8 +115,12 @@ export function ProducerFilter({
           }}
           isItemEqualToValue={(a, b) => a.id === b.id}
           itemToStringLabel={labelOf}
-          inputValue={input}
-          onInputValueChange={setInput}
+          inputValue={
+            typed ?? (selectedItem?.member_code ? labelOf(selectedItem) : '')
+          }
+          onInputValueChange={(value, details) =>
+            setTyped(details.reason === 'input-change' ? value : null)
+          }
         >
           <ComboboxInput
             id={inputId}
