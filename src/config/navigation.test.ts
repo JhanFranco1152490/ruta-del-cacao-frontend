@@ -73,6 +73,16 @@ describe('isActiveRoute', () => {
   });
 });
 
+describe('NAV_ITEMS and the acting producer', () => {
+  it('marks the sections where the technical account acts under a producer', () => {
+    expect(
+      NAV_ITEMS.filter((item) => item.actsUnderProducer).map(
+        (item) => item.href,
+      ),
+    ).toEqual(['/fincas', '/roles', '/usuarios']);
+  });
+});
+
 describe('NAV_ITEMS', () => {
   it('lists the domain sections and then administration', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([

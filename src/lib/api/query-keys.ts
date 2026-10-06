@@ -22,6 +22,8 @@ export const queryKeys = {
     lists: () => ['producers', 'list'] as const,
     list: (query: object) => ['producers', 'list', query] as const,
     detail: (id: string) => ['producers', 'detail', id] as const,
+    // El productor bajo el que opera la cuenta técnica, con su copia sin conexión.
+    acting: (id: string) => ['producers', 'acting', id] as const,
     dependents: (id: string) => ['producers', 'dependents', id] as const,
   },
   cacaoVarieties: {

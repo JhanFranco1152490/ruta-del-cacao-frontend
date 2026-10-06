@@ -11,4 +11,6 @@ export type NavItem = {
   // Sección de oficina: sus datos solo están en el servidor, así que sin conexión avisa en vez
   // de fallar.
   needsConnection?: boolean;
+  // La cuenta técnica elige aquí el productor bajo el que opera, y la pantalla trabaja bajo él.
+  actsUnderProducer?: boolean;
 };
