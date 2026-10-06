@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from 'cn';
 
 export type Crumb = {
   label: string;
@@ -18,7 +19,7 @@ export function Breadcrumb({ items }: { items: readonly Crumb[] }) {
           const current = index === items.length - 1;
           return (
             <li
-              className="flex items-center gap-1"
+              className="flex min-w-0 items-center gap-1"
               key={`${index}-${item.label}`}
             >
               {index > 0 && (
@@ -26,7 +27,8 @@ export function Breadcrumb({ items }: { items: readonly Crumb[] }) {
               )}
               {item.href && !current ? (
                 <Link
-                  className="underline underline-offset-4 hover:text-foreground"
+                  className="block max-w-32 truncate underline underline-offset-4 hover:text-foreground sm:max-w-none"
+                  title={item.label}
                   href={item.href}
                 >
                   {item.label}
@@ -34,7 +36,11 @@ export function Breadcrumb({ items }: { items: readonly Crumb[] }) {
               ) : (
                 <span
                   aria-current={current ? 'page' : undefined}
-                  className={current ? 'font-bold text-foreground' : undefined}
+                  className={cn(
+                    'block max-w-48 truncate sm:max-w-none',
+                    current && 'font-bold text-foreground',
+                  )}
+                  title={item.label}
                 >
                   {item.label}
                 </span>

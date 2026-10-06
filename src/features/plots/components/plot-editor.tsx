@@ -11,6 +11,7 @@ import {
 } from '@/components/capture-field-class';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { FormSection } from '@/components/form-section';
+import { MobileActionBar } from '@/components/mobile-action-bar';
 import { PolygonEditorMapPanel } from '@/components/map/polygon-editor-map-panel';
 import { PageHeader } from '@/components/page-header';
 import { TextField } from '@/components/text-field';
@@ -305,7 +306,7 @@ export function PlotEditor({
                 {blockedMessage}
               </p>
             )}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <MobileActionBar>
               <Button
                 aria-describedby={
                   blockedMessage ? 'plot-save-blocked' : undefined
@@ -328,7 +329,7 @@ export function PlotEditor({
                 Cancelar
               </Link>
               {secondaryAction}
-            </div>
+            </MobileActionBar>
           </div>
         </div>
       </form>

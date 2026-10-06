@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { STACKED_TABLE_CLASS } from '@/components/stacked-table-class';
 import { StatusBadge } from '@/components/status-badge';
 import type { Role } from '../api';
 
@@ -27,7 +28,7 @@ export function RoleTable({
   showProducer?: boolean;
 }) {
   return (
-    <Table>
+    <Table className={STACKED_TABLE_CLASS}>
       <TableHeader>
         <TableRow>
           <TableHead>Nombre</TableHead>
@@ -42,20 +43,28 @@ export function RoleTable({
       <TableBody>
         {roles.map((role) => (
           <TableRow key={role.id}>
-            <TableCell className="max-w-64 font-bold break-words whitespace-normal">
+            <TableCell
+              className="max-w-64 font-bold break-words whitespace-normal"
+              data-label="Nombre"
+            >
               {role.name}
             </TableCell>
-            <TableCell>
+            <TableCell data-label="Tipo">
               <StatusBadge tone="info">{KIND_LABEL[role.kind]}</StatusBadge>
             </TableCell>
             {showProducer && (
-              <TableCell className="max-w-64 break-words whitespace-normal">
+              <TableCell
+                className="max-w-64 break-words whitespace-normal"
+                data-label="Productor"
+              >
                 {role.producer
                   ? `${role.producer.first_name} ${role.producer.last_name} · ${role.producer.member_code}`
                   : '—'}
               </TableCell>
             )}
-            <TableCell>{role.permissions.length}</TableCell>
+            <TableCell data-label="Permisos">
+              {role.permissions.length}
+            </TableCell>
             <TableCell>
               <Button
                 variant="outline"

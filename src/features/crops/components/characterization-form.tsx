@@ -26,6 +26,7 @@ import {
   MAX_PLANTING_LINES,
 } from '../schemas';
 import { type VarietyOption, varietyChoices } from '../variety-choices';
+import { MobileActionBar } from '@/components/mobile-action-bar';
 import { CharacterizationTotals } from './characterization-totals';
 import { CharacterizationWarnings } from './characterization-warnings';
 import { PlantingLine } from './planting-line';
@@ -230,7 +231,7 @@ export function CharacterizationForm({
               {blockedMessage}
             </p>
           )}
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <MobileActionBar>
             <Button
               aria-describedby={
                 blockedMessage ? 'characterization-save-blocked' : undefined
@@ -243,7 +244,7 @@ export function CharacterizationForm({
               {isSaving ? 'Guardando…' : submitLabel}
             </Button>
             {secondaryAction}
-          </div>
+          </MobileActionBar>
         </div>
       </div>
     </form>

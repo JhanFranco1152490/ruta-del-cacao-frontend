@@ -2,10 +2,8 @@ import {
   LandPlot,
   Leaf,
   MapPinned,
-  MapPinPlus,
   ShieldCheck,
   Sprout,
-  UserRoundPlus,
   Users,
 } from 'lucide-react';
 
@@ -21,13 +19,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Sprout,
     permission: PERMISSIONS.PRODUCERS_VIEW,
     needsConnection: true,
-    children: [
-      {
-        href: '/productores/nuevo',
-        label: 'Registrar productor',
-        icon: UserRoundPlus,
-      },
-    ],
   },
   {
     href: '/fincas',
@@ -35,12 +26,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: MapPinned,
     permission: PERMISSIONS.FARMS_VIEW,
     children: [
-      {
-        href: '/fincas/nueva',
-        label: 'Registrar finca',
-        icon: MapPinPlus,
-        permission: PERMISSIONS.FARMS_ADD,
-      },
       {
         href: '/fincas/parcelas/nueva',
         label: 'Registrar parcela',
