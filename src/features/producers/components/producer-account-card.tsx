@@ -7,7 +7,10 @@ import { useSession } from '@/hooks/use-session';
 import { AccountDeleteDialog } from '@/components/account-delete-dialog';
 import { AccountStatusBadge } from '@/components/account-status-badge';
 import { AccountStatusDialog } from '@/components/account-status-dialog';
-import { ActivationDelivery } from '@/components/activation-delivery';
+import {
+  ActivationDelivery,
+  CHANGE_RECORD_EMAIL_HINT,
+} from '@/components/activation-delivery';
 import { useAccount } from '@/lib/api/accounts';
 import { useRoleOptions } from '@/lib/api/role-options';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -92,6 +95,8 @@ export function ProducerAccountCard({ producer }: { producer: Producer }) {
             <ActivationDelivery
               key={account.id}
               id={account.id}
+              email={account.email}
+              changeEmailHint={CHANGE_RECORD_EMAIL_HINT}
               sent={receipt?.id === account.id ? receipt.sent : undefined}
               canResend={hasPermission(user, PERMISSIONS.USERS_UPDATE)}
               onBusy={noop}
