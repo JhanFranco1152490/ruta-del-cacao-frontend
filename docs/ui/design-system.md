@@ -38,6 +38,7 @@ Regla general: en campo nada depende de un matiz suave. Contraste alto, área t�
 |---|---|---|
 | `--selva` | `#14362A` | Color primario: encabezados de marca, botón primario, barras oscuras |
 | `--selva-2` | `#1F5C45` | Verde medio: enlaces, gráficos, chip activo |
+| `--selva-barra` | `#1D4B3B` | Barra lateral y menú móvil: un tono más suave que el encabezado, para que el marco no se sienta tan oscuro |
 | `--cobre` | `#9A5220` | Acento de marca: etiquetas de sección, subrayados, botón de acción secundaria fuerte |
 | `--oro` | `#C9A24B` | Solo ornamento sobre fondo oscuro (línea botánica, versalitas) |
 | `--crema` | `#F7F2EA` | Fondo de la aplicación |
@@ -125,7 +126,8 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
   Una sola elevación; no hay escala de sombras. Diálogos: la misma más un velo `rgba(20,54,42,.45)`.
 - **Bordes:** 1 px `--border` para separar; 2.5 px `--ink` para «esto se toca en el campo».
 - **Foco visible siempre:** anillo de 3 px `--cobre` con 2 px de separación
-  (`outline: 3px solid var(--cobre); outline-offset: 2px`). No se elimina nunca.
+  (`outline: 3px solid var(--cobre); outline-offset: 2px`). No se elimina nunca. Sobre `--selva`
+  (encabezado y barra lateral) el cobre no se distingue: ahí el anillo es `--oro`.
 
 ---
 
@@ -164,6 +166,9 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `PermissionMatrix` | Matriz permisos × roles | Roles y permisos |
 | `CheckboxField` | Compone la casilla de shadcn/ui con `FormField`: etiqueta, ayuda o error, explicación de deshabilitado y foco cobre; reutiliza la accesibilidad de Base UI | Selección de roles y permisos |
 | `MaskedValue` | Muestra `CC ••••4821` y registra en bitácora al revelar | Productores, usuarios |
+| `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos, página no encontrada y de error |
+| `BotanicalVine` | Línea botánica en oro, solo sobre fondo oscuro | Inicio de sesión, barra lateral y menú móvil |
+| `StatusPage` | Pantalla completa con la mata, título y acciones | Página no encontrada y error inesperado |
 
 ### Iconografía
 
@@ -174,7 +179,10 @@ poscosecha cobre, calidad azul). Nunca emojis.
 ### Ilustración y fotografía
 
 - Mazorcas planas con contorno chocolate: solo para elegir estado sanitario y para estados vacíos.
-- Fotografía y línea botánica en oro: solo marca, autenticación y página pública del QR.
+- La mata de cacao (`CacaoPlant`) acompaña los estados vacíos y las páginas de no encontrado y de
+  error; nunca lleva información ni reemplaza el texto.
+- Fotografía y línea botánica en oro: solo marca, autenticación, el marco de la app (al pie de la
+  barra lateral y del menú móvil, al 50 % de opacidad) y página pública del QR.
 - Ninguna textura detrás de texto corrido.
 
 ---
@@ -197,6 +205,12 @@ poscosecha cobre, calidad azul). Nunca emojis.
 
 ## 7. Patrones de pantalla
 
+- **Marco de la app:** encabezado en `--selva`, como el panel del inicio de sesión, y barra
+  lateral un tono más suave (`--selva-barra`); el contenido va sobre `--crema`. En la barra, la entrada activa es una píldora `--crema`
+  con texto `--selva`; las demás, texto `--crema` con ícono `--oro`; arriba, la etiqueta «Menú» en
+  versalitas oro. La marca del encabezado lleva la mazorca en `--amarillo-mazorca` y «Cacao» en
+  itálica. Los botones del encabezado siguen siendo claros (fondo blanco, texto oscuro).
+- **Título de página:** H1 en serif con un subrayado `--cobre` de 48 × 4 px debajo.
 - **Lista:** PageHeader + buscador + chips de filtro + tabla + paginación + fila de contexto al pie.
 - **Ficha:** dos columnas (2/3 contenido, 1/3 relaciones e historial de cambios).
 - **Formulario de oficina:** columna de 520 px con cards por sección; el mapa o la vista previa

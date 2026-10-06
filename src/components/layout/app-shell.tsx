@@ -1,6 +1,8 @@
 import { cn } from 'cn';
 import type { ReactNode } from 'react';
 
+import { BotanicalVine } from '@/components/brand/botanical-vine';
+
 // Marco de las pantallas con sesión: recibe la cabecera y la navegación ya armadas para no
 // conocer la sesión. Es el único lugar que dibuja el <main>: las pantallas no deben traer el suyo.
 export function AppShell({
@@ -31,15 +33,16 @@ export function AppShell({
           id="barra-lateral"
           inert={sidebarHidden}
           className={cn(
-            'hidden shrink-0 overflow-x-clip border-r border-border bg-card transition-[width,visibility,border-color] duration-200 ease-out motion-reduce:transition-none lg:block',
+            'hidden shrink-0 overflow-x-clip border-r border-selva-barra bg-selva-barra text-crema transition-[width,visibility,border-color] duration-200 ease-out motion-reduce:transition-none lg:block',
             sidebarHidden
               ? 'lg:invisible lg:w-0 lg:border-transparent'
               : 'lg:w-60',
           )}
         >
           {/* top-16: la altura del encabezado fijo. */}
-          <div className="sticky top-16 max-h-[calc(100dvh-4rem)] w-60 overflow-y-auto p-4">
+          <div className="sticky top-16 flex h-[calc(100dvh-4rem)] w-60 flex-col overflow-y-auto p-4">
             {sidebar}
+            <BotanicalVine className="pointer-events-none -mx-4 mt-auto -mb-4 h-44 w-60 shrink-0 opacity-50" />
           </div>
         </aside>
         <main
