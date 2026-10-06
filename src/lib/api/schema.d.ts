@@ -4,22 +4,6 @@
  */
 
 export interface paths {
-    "/api/association-access": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["association_access_retrieve"];
-        put: operations["association_access_update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/auth/activation/confirm": {
         parameters: {
             query?: never;
@@ -609,6 +593,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             member_code: string;
+            first_name: string;
+            last_name: string;
             status: string;
             municipality_code: string;
         };
@@ -642,14 +628,6 @@ export interface components {
             fields: {
                 [key: string]: string[];
             };
-        };
-        AssociationAccess: {
-            enabled: boolean;
-            /** Format: date-time */
-            changed_at: string | null;
-        };
-        AssociationAccessUpdateRequest: {
-            enabled: boolean;
         };
         CacaoVariety: {
             /** Format: uuid */
@@ -689,6 +667,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             readonly name: string;
+            readonly producer: components["schemas"]["FarmProducer"];
             readonly department: components["schemas"]["TerritoryReference"];
             readonly municipality: components["schemas"]["TerritoryReference"];
             readonly details: string;
@@ -730,6 +709,8 @@ export interface components {
             longitude?: string;
             /** Format: uuid */
             id?: string;
+            /** Format: uuid */
+            producer_id?: string;
             /** Format: date-time */
             captured_at?: string | null;
         };
@@ -739,18 +720,18 @@ export interface components {
             readonly name: string;
             readonly is_active: boolean;
             readonly location: components["schemas"]["Location"];
-            producer: components["schemas"]["FarmMapProducer"];
+            producer: components["schemas"]["FarmProducer"];
         };
-        FarmMapProducer: {
+        FarmMunicipalityCount: {
+            municipality_id: string;
+            farm_count: number;
+        };
+        FarmProducer: {
             /** Format: uuid */
             id: string;
             member_code: string;
             first_name: string;
             last_name: string;
-        };
-        FarmMunicipalityCount: {
-            municipality_id: string;
-            farm_count: number;
         };
         /**
          * @description * `fixed` - Fijo
@@ -1160,7 +1141,6 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
             readonly account: components["schemas"]["ProducerAccount"] | null;
-            readonly association_access: boolean;
         };
         ProducerList: {
             /** Format: uuid */
@@ -1258,6 +1238,7 @@ export interface components {
             readonly permissions: string[];
             /** Format: uuid */
             readonly producer_id: string | null;
+            readonly is_superuser: boolean;
         };
         /**
          * @description * `none` - A plena exposición
@@ -1346,104 +1327,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    association_access_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssociationAccess"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    association_access_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssociationAccessUpdateRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssociationAccess"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
     auth_activation_confirm_create: {
         parameters: {
             query?: never;

@@ -35,6 +35,9 @@ export function useRoleFilters(association: boolean) {
     search: params.search.trim() || undefined,
     kind: params.kind ?? undefined,
     producer,
+    // La asociación ve roles propios de varios productores y se agrupan por productor: el servidor
+    // los ordena para que un grupo no se parta entre páginas.
+    ordering: association ? 'producer,name' : undefined,
     page,
   };
   return {

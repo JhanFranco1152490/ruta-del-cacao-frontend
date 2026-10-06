@@ -36,11 +36,13 @@ function renderScreen({
   id = 'f1',
   permissions = [PERMISSIONS.FARMS_VIEW, PERMISSIONS.FARMS_CHANGE] as string[],
   seen = [] as FarmPlotsContext[],
+  // `null`: una cuenta sin productor propio (la asociación o la cuenta técnica).
+  producerId = 'p1' as string | null,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
-    buildSession({ id: userId, permissions }),
+    buildSession({ id: userId, permissions, producer_id: producerId }),
   );
   return renderWithProviders(
     <FarmDetailScreen
@@ -180,5 +182,34 @@ describe('FarmDetailScreen', () => {
     expect(screen.getByText(/cambios en este dispositivo/)).toBeInTheDocument();
     await waitFor(() => expect(seen.at(-1)?.name).toBe('Nombre nuevo'));
     expect(seen.at(-1)?.allocatedAreaHectares).toBeUndefined();
+  });
+});
+
+describe('FarmDetailScreen and the producer of the farm', () => {
+  it('says whose farm it is to an account without a producer of its own, with no way to change it', async () => {
+    server.use(farmHandler(buildFarm({ id: 'f1', name: 'La Esperanza' })));
+    renderScreen({
+      permissions: [
+        PERMISSIONS.FARMS_VIEW,
+        PERMISSIONS.FARMS_CHANGE,
+        PERMISSIONS.PRODUCERS_VIEW,
+      ],
+      producerId: null,
+    });
+
+    expect(
+      await screen.findByRole('link', { name: 'Ana Prueba · PROD-000007' }),
+    ).toHaveAttribute('href', '/productores/p1');
+    expect(screen.queryByLabelText('Productor')).not.toBeInTheDocument();
+  });
+
+  it('does not say it to the producer itself', async () => {
+    server.use(farmHandler(buildFarm({ id: 'f1', name: 'La Esperanza' })));
+    renderScreen();
+
+    expect(
+      await screen.findByRole('heading', { name: 'La Esperanza' }),
+    ).toBeVisible();
+    expect(screen.queryByText(/Productor:/)).not.toBeInTheDocument();
   });
 });

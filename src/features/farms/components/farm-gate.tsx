@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 
+import { producerLabelOf } from '../farm-list-item';
 import { farmDetailPath, farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
 import type { FarmPlotsContext } from './farm-detail-screen';
@@ -58,6 +59,7 @@ export function FarmGate({
         allocatedAreaHectares: farm.allocated_area_hectares,
         location: farm.location,
         isActive: farm.is_active,
+        producerLabel: producerLabelOf(farm.producer),
         detailPath: farmDetailPath(farm.id),
         editPath: farmEditPath(farm.id),
         isPendingCreate: false,

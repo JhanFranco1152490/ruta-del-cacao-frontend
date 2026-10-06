@@ -29,7 +29,11 @@ export type FarmFields = Required<
 
 // Lo que guarda la cola. Una finca nueva lleva el id del dispositivo; la edición de una finca
 // del servidor, la versión que se leyó (el id de la finca es el del item de la cola).
-export type FarmCreatePayload = FarmFields & { id: string };
+// `producer_id` solo lo manda la cuenta técnica, que no tiene un productor propio.
+export type FarmCreatePayload = FarmFields & {
+  id: string;
+  producer_id?: string;
+};
 export type FarmUpdatePayload = FarmFields & { expected_version: number };
 
 // Versión con la que el servidor crea toda finca. Es la única que conoce el dispositivo que la
@@ -64,7 +68,10 @@ export const toFields = (values: FarmFormValues): FarmFields => ({
   longitude: values.longitude,
 });
 
-export const toFormValues = (fields: FarmFields): FarmFormValues => ({
+export const toFormValues = (
+  fields: FarmFields & { producer_id?: string },
+): FarmFormValues => ({
+  ...(fields.producer_id && { producer_id: fields.producer_id }),
   name: fields.name,
   municipality_id: fields.municipality_id,
   details: fields.details,
@@ -84,6 +91,15 @@ export const farmToFormValues = (farm: Farm): FarmFormValues => ({
   longitude: farm.location.longitude,
 });
 
+const createPayload = (
+  id: string,
+  values: FarmFormValues,
+): FarmCreatePayload => ({
+  id,
+  ...toFields(values),
+  ...(values.producer_id && { producer_id: values.producer_id }),
+});
+
 // Toda finca nueva se guarda primero en el dispositivo, con o sin conexión; la cola la envía
 // cuando puede. El id lo genera el formulario una sola vez, así que guardar dos veces el mismo
 // formulario no crea dos fincas.
@@ -96,7 +112,7 @@ export const enqueueFarmCreate = (
     id,
     resource: FARM_RESOURCE,
     operation: 'create',
-    payload: { id, ...toFields(values) } satisfies FarmCreatePayload,
+    payload: createPayload(id, values),
   });
 
 // Editar una finca del servidor también pasa por la cola, con la versión que se leyó: si
@@ -166,7 +182,7 @@ export const resubmitFarm = (
     userId,
     farm.id,
     farm.operation === 'create'
-      ? ({ id: farm.id, ...toFields(values) } satisfies FarmCreatePayload)
+      ? createPayload(farm.id, values)
       : ({
           ...toFields(values),
           expected_version: expectedVersion!,

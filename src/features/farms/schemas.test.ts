@@ -275,3 +275,27 @@ describe('farmFormSchema', () => {
     });
   });
 });
+
+describe('createFarmFormSchema and the producer', () => {
+  const PRODUCER = '33333333-3333-4333-8333-333333333333';
+  const schema = createFarmFormSchema({ requireProducer: true });
+
+  it('asks the technical account which producer the farm is for', () => {
+    const result = schema.safeParse(valid);
+
+    expect(result.error?.issues.map((issue) => issue.message)).toContain(
+      'Elige el productor de la finca.',
+    );
+    expect(result.error?.issues[0]?.path).toEqual(['producer_id']);
+  });
+
+  it('accepts the farm once a producer is chosen', () => {
+    expect(schema.safeParse({ ...valid, producer_id: PRODUCER }).success).toBe(
+      true,
+    );
+  });
+
+  it('does not ask anyone else for it', () => {
+    expect(farmFormSchema.safeParse(valid).success).toBe(true);
+  });
+});

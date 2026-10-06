@@ -8,7 +8,12 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
-import { apiError, buildFarm, buildSession } from '@/test/factories';
+import {
+  apiError,
+  buildFarm,
+  buildProducer,
+  buildSession,
+} from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
@@ -525,5 +530,51 @@ describe('FarmEditorScreen', () => {
         (await getOfflineDb(userId).queue.get('f1'))?.payload,
       ).toMatchObject({ name: 'Corregida sin red' });
     });
+  });
+});
+
+describe('FarmEditorScreen for a farm the technical account saved for a producer', () => {
+  const PRODUCER = '33333333-3333-4333-8333-333333333333';
+
+  beforeEach(() => {
+    server.use(
+      http.get(apiUrl('/api/producers'), () =>
+        HttpResponse.json({
+          count: 0,
+          next: null,
+          previous: null,
+          results: [],
+        }),
+      ),
+      http.get(apiUrl(`/api/producers/${PRODUCER}`), () =>
+        HttpResponse.json(
+          buildProducer({
+            id: PRODUCER,
+            first_name: 'Ana',
+            last_name: 'Prueba',
+            member_code: 'PROD-000007',
+          }),
+        ),
+      ),
+    );
+  });
+
+  it('lets the producer be corrected while the create is still waiting', async () => {
+    await enqueueFarmCreate(userId, 'f1', { ...farm, producer_id: PRODUCER });
+    renderEditor();
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Productor')).toHaveValue(
+        'Ana Prueba · PROD-000007',
+      ),
+    );
+  });
+
+  it('does not offer it for a farm that is already on the server', async () => {
+    server.use(serverFarm({ name: 'La Esperanza' }));
+    renderEditor('s1');
+
+    await screen.findByLabelText('Nombre de la finca');
+    expect(screen.queryByLabelText('Productor')).not.toBeInTheDocument();
   });
 });

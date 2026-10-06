@@ -33,10 +33,11 @@ export function AccountPanel({
 }) {
   const [busy, setBusy] = useState(false);
   const association = !user.producer_id;
-  // La asociación elige primero el tipo de cuenta (y el productor, si es de un empleado); la
-  // cuenta de un productor siempre es de un empleado suyo.
+  // La cuenta técnica elige primero el tipo de cuenta (y el productor, si es de un empleado); el
+  // Administrador solo crea cuentas de administrador, y la cuenta de un productor siempre es de un
+  // empleado suyo.
   const [chosen, setChosen] = useState<{ producer?: string } | null>(
-    association ? null : {},
+    association && user.is_superuser ? null : {},
   );
   const lock = useRef(false);
   function onBusy(value: boolean) {

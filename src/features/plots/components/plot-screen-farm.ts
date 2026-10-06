@@ -14,6 +14,8 @@ export type PlotScreenFarm = {
   editPath: string;
   // Todavía no existe en el servidor: la parcela esperará a que sincronice.
   isPendingCreate: boolean;
+  // De quién es la finca, escrito para mostrarlo. Solo la del servidor.
+  producerLabel?: string;
 };
 
 export const INACTIVE_FARM_MESSAGE =

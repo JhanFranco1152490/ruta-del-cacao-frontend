@@ -5,6 +5,11 @@ import type { Farm } from './api';
 import type { FarmDisplayStatus } from './components/farm-status-badge';
 import type { FarmFields } from './farm-queue';
 
+export type FarmProducer = Farm['producer'];
+
+export const producerLabelOf = (producer: FarmProducer) =>
+  `${producer.first_name} ${producer.last_name} · ${producer.member_code}`;
+
 // Lo que el listado necesita de una finca, venga del servidor o de la cola del dispositivo:
 // las tarjetas no dependen de la forma de la respuesta de la API.
 export type FarmListItem = {
@@ -17,6 +22,8 @@ export type FarmListItem = {
   status: FarmDisplayStatus;
   // Solo las del servidor: con ella se activa o desactiva sin pisar un cambio ajeno.
   version?: number;
+  // Solo las del servidor: una finca que todavía está en la cola no trae el nombre de su productor.
+  producer?: FarmProducer;
   errorMessage?: string;
   errorCode?: string;
   // Solo las de la cola: un alta todavía no existe en el servidor; una edición sí.
@@ -50,6 +57,7 @@ export const serverFarmToListItem = (farm: Farm): FarmListItem => ({
   location: farm.location,
   status: farm.is_active ? 'active' : 'inactive',
   version: farm.version,
+  producer: farm.producer,
 });
 
 export const byFarmName = (a: FarmListItem, b: FarmListItem) =>

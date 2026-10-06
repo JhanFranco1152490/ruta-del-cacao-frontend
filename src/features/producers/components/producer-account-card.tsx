@@ -68,6 +68,8 @@ export function ProducerAccountCard({ producer }: { producer: Producer }) {
               producer: {
                 id: producer.id,
                 member_code: producer.member_code,
+                first_name: producer.first_name,
+                last_name: producer.last_name,
                 status: producer.status,
                 municipality_code: producer.municipality_code,
               },

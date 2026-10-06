@@ -113,6 +113,19 @@ describe('producer filter of the association', () => {
     ).toBeVisible();
   });
 
+  it('shows the producer that comes already chosen in the address', async () => {
+    mockProducer();
+    renderWithProviders(<AccountListScreen />, {
+      searchParams: `?productor=${producerId}`,
+    });
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Productor')).toHaveValue(
+        'Ana Prueba · PROD-000007',
+      ),
+    );
+  });
+
   it('goes back to every producer when the filter is removed', async () => {
     mockProducer();
     renderWithProviders(<AccountListScreen />, {
