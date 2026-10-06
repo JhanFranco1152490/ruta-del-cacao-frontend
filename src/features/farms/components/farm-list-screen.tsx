@@ -8,9 +8,14 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
-import { buttonVariants } from '@/components/ui/button';
+import {
+  ACTING_PRODUCER_NOTICE_ID,
+  ActingProducerNotice,
+} from '@/components/acting-producer-notice';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
+import { useWriteAccess } from '@/hooks/use-write-access';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { matchesSearch } from '@/lib/format/search';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -36,8 +41,9 @@ export function FarmListScreen() {
   const list = useFarms(filters.query);
   const local = useLocalFarms(user?.id);
   const municipalityName = useMunicipalityName();
-  const canAdd = hasPermission(user, PERMISSIONS.FARMS_ADD);
-  const canChange = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
+  const write = useWriteAccess();
+  const canAdd = write.can(PERMISSIONS.FARMS_ADD);
+  const canChange = write.can(PERMISSIONS.FARMS_CHANGE);
   const canPickProducer = hasPermission(user, PERMISSIONS.PRODUCERS_VIEW);
   // Estado de la interfaz, no del servidor: qué finca enfocar en el mapa y qué tarjeta resaltar.
   const [focus, setFocus] = useState<{ pointId: string }>();
@@ -70,10 +76,21 @@ export function FarmListScreen() {
     (!local.farms && !local.isError);
   const hasError = list.isLoadingError || local.isError;
 
-  const registerLink = canAdd && (
+  const registerLink = canAdd ? (
     <Link className={buttonVariants({ size: 'office' })} href="/fincas/nueva">
       <Plus aria-hidden="true" className="size-5" /> Registrar finca
     </Link>
+  ) : (
+    write.needsProducer &&
+    write.has(PERMISSIONS.FARMS_ADD) && (
+      <Button
+        size="office"
+        disabled
+        aria-describedby={ACTING_PRODUCER_NOTICE_ID}
+      >
+        <Plus aria-hidden="true" className="size-5" /> Registrar finca
+      </Button>
+    )
   );
 
   const renderActions = (farm: FarmListItem) =>
@@ -116,6 +133,11 @@ export function FarmListScreen() {
         }
         actions={registerLink}
       />
+      {write.needsProducer && (
+        <div className="mt-6">
+          <ActingProducerNotice />
+        </div>
+      )}
       <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
         <FarmFiltersBar
           filters={filters}

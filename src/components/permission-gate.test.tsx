@@ -1,5 +1,7 @@
 import { screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -32,5 +34,63 @@ describe('PermissionGate', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Acceso no disponible');
     expect(screen.queryByText('Formulario de finca')).not.toBeInTheDocument();
+  });
+});
+
+describe('PermissionGate for a screen that writes under a producer', () => {
+  const CHOSEN = '33333333-3333-4333-8333-333333333333';
+
+  afterEach(() => {
+    sessionStorage.clear();
+    syncActingProducer(null);
+  });
+
+  function renderTechnical() {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      queryKeys.session(),
+      buildSession({
+        id: 'su1',
+        producer_id: null,
+        is_superuser: true,
+        permissions: [PERMISSIONS.FARMS_ADD],
+      }),
+    );
+    renderWithProviders(
+      <PermissionGate anyOf={[PERMISSIONS.FARMS_ADD]} needsProducer>
+        <p>Formulario de finca</p>
+      </PermissionGate>,
+      { queryClient },
+    );
+  }
+
+  it('asks the technical account for a producer instead of the form', () => {
+    renderTechnical();
+
+    expect(screen.getByText('Elige un productor')).toBeVisible();
+    expect(screen.queryByText('Formulario de finca')).not.toBeInTheDocument();
+  });
+
+  it('shows the form once a producer is chosen', () => {
+    writeActingProducer('su1', CHOSEN);
+    renderTechnical();
+
+    expect(screen.getByText('Formulario de finca')).toBeVisible();
+  });
+
+  it('does not ask a producer for one', () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      queryKeys.session(),
+      buildSession({ permissions: [PERMISSIONS.FARMS_ADD] }),
+    );
+    renderWithProviders(
+      <PermissionGate anyOf={[PERMISSIONS.FARMS_ADD]} needsProducer>
+        <p>Formulario de finca</p>
+      </PermissionGate>,
+      { queryClient },
+    );
+
+    expect(screen.getByText('Formulario de finca')).toBeVisible();
   });
 });

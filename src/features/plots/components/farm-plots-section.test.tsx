@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -13,6 +13,7 @@ import {
   processQueue,
   registerAdapter,
 } from '@/lib/offline/sync-queue';
+import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 import { buildPlot, buildSession, buildVertex } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -54,11 +55,17 @@ function renderSection({
   renderPlotDetails = undefined as
     Parameters<typeof FarmPlotsSection>[0]['renderPlotDetails'] | undefined,
   extra = null as ReactNode,
+  isSuperuser = false,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
-    buildSession({ id: userId, permissions }),
+    buildSession({
+      id: userId,
+      permissions,
+      producer_id: isSuperuser ? null : 'p1',
+      is_superuser: isSuperuser,
+    }),
   );
   return renderWithProviders(
     <>
@@ -413,5 +420,42 @@ describe('FarmPlotsSection', () => {
       expect(await screen.findByText('P-pendiente')).toBeInTheDocument();
       expect(requests).toHaveLength(0);
     });
+  });
+});
+
+describe('FarmPlotsSection for the technical account', () => {
+  const CHOSEN = '33333333-3333-4333-8333-333333333333';
+  const permissions = [
+    PERMISSIONS.FARMS_VIEW,
+    PERMISSIONS.PLOTS_VIEW,
+    PERMISSIONS.PLOTS_ADD,
+  ];
+
+  afterEach(() => {
+    sessionStorage.clear();
+    syncActingProducer(null);
+  });
+
+  it('shows the plots but disables registering one while no producer is chosen', async () => {
+    server.use(plotsHandler([buildPlot({ code: 'Lote 1' })]));
+    renderSection({ permissions, isSuperuser: true });
+
+    expect(await screen.findByText('Lote 1')).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Registrar parcela' }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole('link', { name: 'Registrar parcela' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('offers to register a plot once a producer is chosen', async () => {
+    writeActingProducer(userId, CHOSEN);
+    server.use(plotsHandler([buildPlot({ code: 'Lote 1' })]));
+    renderSection({ permissions, isSuperuser: true });
+
+    expect(
+      await screen.findByRole('link', { name: 'Registrar parcela' }),
+    ).toBeVisible();
   });
 });

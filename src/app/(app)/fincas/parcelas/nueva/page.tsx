@@ -9,7 +9,7 @@ import { NewPlotWithFarm } from './new-plot-with-farm';
 // página guardada abre sin conexión sobre cualquier finca.
 export default function NewPlotPage() {
   return (
-    <PermissionGate anyOf={[PERMISSIONS.PLOTS_ADD]}>
+    <PermissionGate anyOf={[PERMISSIONS.PLOTS_ADD]} needsProducer>
       <Suspense>
         <NewPlotWithFarm />
       </Suspense>

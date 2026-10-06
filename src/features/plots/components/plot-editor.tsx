@@ -14,9 +14,9 @@ import { PageHeader } from '@/components/page-header';
 import { TextField } from '@/components/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { loadPolygonEditorMapProvider } from '@/config/map';
-import { useSession } from '@/hooks/use-session';
+import { useWriteAccess } from '@/hooks/use-write-access';
 import { useWarmGps } from '@/hooks/use-warm-gps';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { PERMISSIONS } from '@/lib/permissions';
 import { formatHectares } from '@/lib/format/hectares';
 import { parseCoordinates } from '@/lib/format/coordinates';
 import type { Coordinates } from '@/types/geo';
@@ -75,8 +75,7 @@ export function PlotEditor({
   cancelHref: string;
   onSubmit: (values: PlotFormValues) => void;
 }) {
-  const { data: user } = useSession();
-  const canEditFarm = hasPermission(user, PERMISSIONS.FARMS_CHANGE);
+  const canEditFarm = useWriteAccess().can(PERMISSIONS.FARMS_CHANGE);
   // Vive aquí y no en los botones: el mapa también necesita saber dónde está la persona.
   const warm = useWarmGps();
   const editor = usePlotEditor({ defaultValues, farm, knownPlots, selfId });

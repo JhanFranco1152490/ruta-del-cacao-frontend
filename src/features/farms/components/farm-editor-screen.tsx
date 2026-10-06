@@ -8,9 +8,9 @@ import { useRouter } from 'next/navigation';
 import { OfflineBanner } from '@/components/offline-banner';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSession } from '@/hooks/use-session';
+import { useWriteAccess } from '@/hooks/use-write-access';
 import { isApiError } from '@/lib/api/errors';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { PERMISSIONS } from '@/lib/permissions';
 
 import { type Farm, useFarm } from '../api';
 import { farmToFormValues, type QueuedFarm } from '../farm-queue';
@@ -90,10 +90,10 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
   const router = useRouter();
   const update = useFarmUpdate();
   const sync = useFarmSyncStatus();
-  const { data: user } = useSession();
+  const write = useWriteAccess();
   // Solo quien tiene el permiso (el productor y los empleados a quienes él lo delegue); nunca
   // la asociación.
-  const canDelete = hasPermission(user, PERMISSIONS.FARMS_DELETE);
+  const canDelete = write.can(PERMISSIONS.FARMS_DELETE);
 
   return (
     <FarmFormFields
