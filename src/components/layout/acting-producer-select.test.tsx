@@ -20,7 +20,7 @@ import { server } from '@/test/server';
 
 import { ActingProducerSelect } from './acting-producer-select';
 
-let pathname = '/fincas';
+let pathname = '/usuarios';
 vi.mock('next/navigation', () => ({ usePathname: () => pathname }));
 
 let connected = true;
@@ -70,7 +70,7 @@ function signIn(is_superuser: boolean) {
 }
 
 beforeEach(() => {
-  pathname = '/fincas';
+  pathname = '/usuarios';
   connected = true;
   sessionStorage.clear();
   syncActingProducer(null);
@@ -103,7 +103,7 @@ describe('ActingProducerSelect', () => {
     );
   });
 
-  it.each(['/fincas', '/usuarios', '/roles'])(
+  it.each(['/usuarios', '/roles'])(
     'is offered to a superuser in %s',
     async (path) => {
       signIn(true);
@@ -113,6 +113,16 @@ describe('ActingProducerSelect', () => {
       expect(await field()).toHaveAttribute('placeholder', 'Elegir productor');
     },
   );
+
+  it('is not offered in Fincas: each farm already says its producer', async () => {
+    signIn(true);
+    pathname = '/fincas';
+    renderWithProviders(<ActingProducerSelect />);
+
+    await waitFor(() =>
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument(),
+    );
+  });
 
   it('opens its list right under the field, not in a window of its own', async () => {
     signIn(true);

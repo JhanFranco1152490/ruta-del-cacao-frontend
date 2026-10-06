@@ -18,7 +18,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Fincas',
     icon: MapPinned,
     permission: PERMISSIONS.FARMS_VIEW,
-    actsUnderProducer: true,
   },
   {
     href: '/variedades',

@@ -361,15 +361,24 @@ describe('SessionShell and the title of the tab', () => {
     writeActingProducer('su1', PRODUCER);
   }
 
-  it('names the section and the producer where the account acts under one', async () => {
+  it('names the section and the producer in users and roles', async () => {
+    signInAsSuperuser();
+    pathname = '/usuarios';
+
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    await waitFor(() =>
+      expect(document.title).toBe('Usuarios · Ana Prueba · Ruta del Cacao'),
+    );
+  });
+
+  it('leaves the producer out of Fincas, where each farm already says its own', async () => {
     signInAsSuperuser();
     pathname = '/fincas';
 
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
-    await waitFor(() =>
-      expect(document.title).toBe('Fincas · Ana Prueba · Ruta del Cacao'),
-    );
+    await waitFor(() => expect(document.title).toBe('Fincas · Ruta del Cacao'));
   });
 
   it('leaves the producer out of a section that is for the whole association', async () => {
@@ -383,9 +392,9 @@ describe('SessionShell and the title of the tab', () => {
     );
   });
 
-  it('offers the producer selector in the header of a superuser in Fincas', async () => {
+  it('offers the producer selector in the header of a superuser in Usuarios', async () => {
     signInAsSuperuser();
-    pathname = '/fincas';
+    pathname = '/usuarios';
 
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 
@@ -395,7 +404,7 @@ describe('SessionShell and the title of the tab', () => {
   });
 
   it('does not offer it to an account that is not a superuser', async () => {
-    pathname = '/fincas';
+    pathname = '/usuarios';
 
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 

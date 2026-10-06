@@ -79,7 +79,7 @@ describe('NAV_ITEMS and the acting producer', () => {
       NAV_ITEMS.filter((item) => item.actsUnderProducer).map(
         (item) => item.href,
       ),
-    ).toEqual(['/fincas', '/roles', '/usuarios']);
+    ).toEqual(['/roles', '/usuarios']);
   });
 });
 
