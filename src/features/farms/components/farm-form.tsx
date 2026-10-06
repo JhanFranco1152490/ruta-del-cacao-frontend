@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
-import { useActingProducer } from '@/hooks/use-acting-producer';
 import { useSession } from '@/hooks/use-session';
 
 import { emptyFarmForm } from '../schemas';
@@ -20,9 +19,7 @@ export function FarmForm() {
   const create = useFarmCreate();
   const sync = useFarmSyncStatus();
   const { data: user } = useSession();
-  const { producerId } = useActingProducer();
-  // La cuenta técnica no tiene un productor propio: elige de cuál es la finca, empezando por el que
-  // tenga elegido en el encabezado.
+  // La cuenta técnica no tiene un productor propio: elige de cuál es la finca.
   const chooseProducer = user?.is_superuser === true;
 
   if (savedName) {
@@ -43,11 +40,7 @@ export function FarmForm() {
     <FarmFormFields
       key={farmId}
       chooseProducer={chooseProducer}
-      defaultValues={
-        chooseProducer && producerId
-          ? { ...emptyFarmForm, producer_id: producerId }
-          : emptyFarmForm
-      }
+      defaultValues={emptyFarmForm}
       title="Registrar finca"
       description="Los campos marcados son obligatorios. Si no hay conexión, la finca se guarda en este dispositivo y se envía cuando vuelva la conexión."
       banner={sync.showBanner && <OfflineBanner status={sync.status} />}

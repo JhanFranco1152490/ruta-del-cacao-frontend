@@ -20,7 +20,6 @@ export function AccountPanel({
   selected,
   user,
   producer,
-  lockedProducer,
   close,
   onCreated,
   receipt,
@@ -28,9 +27,6 @@ export function AccountPanel({
   selected: string;
   user: components['schemas']['SessionUser'];
   producer?: string;
-  // Con la vista "Del productor activo" la cuenta nueva es de un empleado de ese productor, sin
-  // preguntar cuál.
-  lockedProducer?: string;
   close: () => void;
   onCreated: (account: AccountCreated) => void;
   receipt?: { id: string; sent: boolean };
@@ -41,11 +37,7 @@ export function AccountPanel({
   // Administrador solo crea cuentas de administrador, y la cuenta de un productor siempre es de un
   // empleado suyo.
   const [chosen, setChosen] = useState<{ producer?: string } | null>(
-    lockedProducer
-      ? { producer: lockedProducer }
-      : association && user.is_superuser
-        ? null
-        : {},
+    association && user.is_superuser ? null : {},
   );
   const lock = useRef(false);
   function onBusy(value: boolean) {

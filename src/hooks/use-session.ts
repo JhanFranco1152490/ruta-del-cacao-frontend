@@ -4,7 +4,6 @@ import {
   useQuery,
 } from '@tanstack/react-query';
 
-import { syncActingProducer } from '@/lib/acting-producer';
 import { apiFetch } from '@/lib/api/client';
 import { isApiError, isUnauthorized } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
@@ -23,7 +22,9 @@ export type ResolvedSession = Session & { fromDevice?: true };
 // dispositivo, dentro de la ventana sin conexión. Un error de la API nunca usa la copia, ni una
 // consulta cancelada; un 401 además la borra: la sesión terminó (venció o se revocó el acceso) y
 // sin red no debe poder abrirse de nuevo.
-async function resolveSession(signal?: AbortSignal): Promise<ResolvedSession> {
+export async function fetchSession(
+  signal?: AbortSignal,
+): Promise<ResolvedSession> {
   try {
     return await apiFetch<Session>('/api/auth/me', { signal });
   } catch (error) {
@@ -33,16 +34,6 @@ async function resolveSession(signal?: AbortSignal): Promise<ResolvedSession> {
     if (!user) throw error;
     return { user, fromDevice: true };
   }
-}
-
-// Además de resolver la sesión, fija el productor bajo el que opera la pestaña: ninguna consulta
-// que dependa de la sesión sale antes que esto, así que ninguna se pide sin su encabezado.
-export async function fetchSession(
-  signal?: AbortSignal,
-): Promise<ResolvedSession> {
-  const session = await resolveSession(signal);
-  syncActingProducer(session.user);
-  return session;
 }
 
 // Con la copia se vuelve a preguntar al servidor seguido: el navegador no avisa cuando una red sin

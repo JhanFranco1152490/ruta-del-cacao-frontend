@@ -3210,7 +3210,6 @@ export interface operations {
     roles_list: {
         parameters: {
             query?: {
-                include_system?: boolean;
                 /**
                  * @description * `fixed` - Fijo
                  *     * `predefined` - Predefinido

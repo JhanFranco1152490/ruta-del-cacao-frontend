@@ -4,7 +4,6 @@ import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getActingProducer, syncActingProducer } from '@/lib/acting-producer';
 import { recordLogin } from '@/lib/offline/session-clock';
 import {
   readSessionSnapshot,
@@ -31,39 +30,7 @@ async function deviceAccount({ daysAgo = 0 } = {}) {
   return user;
 }
 
-beforeEach(() => {
-  window.localStorage.clear();
-  sessionStorage.clear();
-  syncActingProducer(null);
-});
-
-describe('fetchSession and the acting producer', () => {
-  const PRODUCER = '33333333-3333-4333-8333-333333333333';
-
-  it('sets the producer of the tab before the session resolves', async () => {
-    sessionStorage.setItem('cacao:acting-producer:su', PRODUCER);
-    server.use(
-      http.get(ME, () =>
-        HttpResponse.json(buildSession({ id: 'su', is_superuser: true })),
-      ),
-    );
-
-    await fetchSession();
-
-    expect(getActingProducer()).toBe(PRODUCER);
-  });
-
-  it('does not set it for an account that is not a superuser', async () => {
-    sessionStorage.setItem('cacao:acting-producer:u1', PRODUCER);
-    server.use(
-      http.get(ME, () => HttpResponse.json(buildSession({ id: 'u1' }))),
-    );
-
-    await fetchSession();
-
-    expect(getActingProducer()).toBeNull();
-  });
-});
+beforeEach(() => window.localStorage.clear());
 
 describe('fetchSession', () => {
   it('returns the server session when it answers', async () => {

@@ -3,13 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
 import { runOfflineBootstrap } from '@/lib/offline/bootstrap';
 import { recordLogin } from '@/lib/offline/session-clock';
 import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
-import { buildProducer, buildSession } from '@/test/factories';
+import { buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
@@ -17,10 +16,9 @@ import { server } from '@/test/server';
 
 import { SessionShell } from './session-shell';
 
-let pathname = '/panel';
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
-  usePathname: () => pathname,
+  usePathname: () => '/panel',
 }));
 
 vi.mock('@/lib/offline/bootstrap', () => ({ runOfflineBootstrap: vi.fn() }));
@@ -55,9 +53,6 @@ async function chooseFromAccountMenu(name: string) {
 beforeEach(() => {
   vi.clearAllMocks();
   window.localStorage.clear();
-  sessionStorage.clear();
-  syncActingProducer(null);
-  pathname = '/panel';
   signInWith([PERMISSIONS.PRODUCERS_VIEW]);
 });
 
@@ -330,87 +325,5 @@ describe('SessionShell', () => {
     window.dispatchEvent(new Event('online'));
 
     await waitFor(() => expect(runOfflineBootstrap).toHaveBeenCalledTimes(2));
-  });
-});
-
-describe('SessionShell and the title of the tab', () => {
-  const PRODUCER = '33333333-3333-4333-8333-333333333333';
-
-  function signInAsSuperuser() {
-    server.use(
-      http.get(ME, () =>
-        HttpResponse.json(
-          buildSession({
-            id: 'su1',
-            email: 'ana@example.com',
-            is_superuser: true,
-            permissions: [PERMISSIONS.FARMS_VIEW, PERMISSIONS.PRODUCERS_VIEW],
-          }),
-        ),
-      ),
-      http.get(apiUrl(`/api/producers/${PRODUCER}`), () =>
-        HttpResponse.json(
-          buildProducer({
-            id: PRODUCER,
-            first_name: 'Ana',
-            last_name: 'Prueba',
-          }),
-        ),
-      ),
-    );
-    writeActingProducer('su1', PRODUCER);
-  }
-
-  it('names the section and the producer in users and roles', async () => {
-    signInAsSuperuser();
-    pathname = '/usuarios';
-
-    renderWithProviders(<SessionShell>contenido</SessionShell>);
-
-    await waitFor(() =>
-      expect(document.title).toBe('Usuarios · Ana Prueba · Ruta del Cacao'),
-    );
-  });
-
-  it('leaves the producer out of Fincas, where each farm already says its own', async () => {
-    signInAsSuperuser();
-    pathname = '/fincas';
-
-    renderWithProviders(<SessionShell>contenido</SessionShell>);
-
-    await waitFor(() => expect(document.title).toBe('Fincas · Ruta del Cacao'));
-  });
-
-  it('leaves the producer out of a section that is for the whole association', async () => {
-    signInAsSuperuser();
-    pathname = '/productores';
-
-    renderWithProviders(<SessionShell>contenido</SessionShell>);
-
-    await waitFor(() =>
-      expect(document.title).toBe('Productores · Ruta del Cacao'),
-    );
-  });
-
-  it('offers the producer selector in the header of a superuser in Usuarios', async () => {
-    signInAsSuperuser();
-    pathname = '/usuarios';
-
-    renderWithProviders(<SessionShell>contenido</SessionShell>);
-
-    expect(
-      await screen.findByRole('combobox', { name: 'Productor activo' }),
-    ).toBeVisible();
-  });
-
-  it('does not offer it to an account that is not a superuser', async () => {
-    pathname = '/usuarios';
-
-    renderWithProviders(<SessionShell>contenido</SessionShell>);
-
-    await screen.findByRole('button', { name: 'Cuenta de ana@example.com' });
-    expect(
-      screen.queryByRole('combobox', { name: 'Productor activo' }),
-    ).not.toBeInTheDocument();
   });
 });

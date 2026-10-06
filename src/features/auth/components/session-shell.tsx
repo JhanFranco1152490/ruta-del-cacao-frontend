@@ -1,10 +1,9 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 
 import { AccountMenu } from '@/components/layout/account-menu';
-import { ActingProducerSelect } from '@/components/layout/acting-producer-select';
 import { AppHeader } from '@/components/layout/app-header';
 import { AppShell } from '@/components/layout/app-shell';
 import { MobileNav } from '@/components/layout/mobile-nav';
@@ -14,14 +13,8 @@ import { useSidebarVisibility } from '@/components/layout/use-sidebar-visibility
 import { SectionGate } from '@/components/section-gate';
 import type { QueueView } from '@/components/sync-tray/queue-view';
 import { SyncTray } from '@/components/sync-tray/sync-tray';
-import {
-  NAV_ITEMS,
-  navItemForPath,
-  visibleNavItems,
-} from '@/config/navigation';
+import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 import { SIGN_IN_PATH } from '@/config/routes';
-import { useActingProducerSummary } from '@/hooks/use-acting-producer-summary';
-import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
 import { useSyncStatus } from '@/hooks/use-sync-status';
@@ -53,15 +46,6 @@ export function SessionShell({
   const queueItems = useQueueItems(user?.id);
   const items = visibleNavItems(NAV_ITEMS, user?.permissions);
   useRefreshAfterSync();
-
-  const section = navItemForPath(NAV_ITEMS, usePathname());
-  const actingProducer = useActingProducerSummary();
-  useDocumentTitle(
-    section?.label,
-    section?.actsUnderProducer && actingProducer.data
-      ? fullName(actingProducer.data)
-      : undefined,
-  );
 
   // Toca el reloj de sesión y guarda la copia del dispositivo cada vez que el servidor confirma
   // la sesión (no solo cuando se escribe la contraseña): la sesión se renueva sola en segundo
@@ -105,7 +89,6 @@ export function SessionShell({
         <AppHeader
           actions={
             <>
-              <ActingProducerSelect />
               <SyncTray
                 status={syncStatus}
                 items={queueItems}

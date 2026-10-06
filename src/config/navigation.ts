@@ -32,7 +32,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: ShieldCheck,
     permission: PERMISSIONS.ROLES_VIEW,
     needsConnection: true,
-    actsUnderProducer: true,
   },
   {
     href: '/usuarios',
@@ -40,7 +39,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Users,
     permission: PERMISSIONS.USERS_VIEW,
     needsConnection: true,
-    actsUnderProducer: true,
   },
 ];
 

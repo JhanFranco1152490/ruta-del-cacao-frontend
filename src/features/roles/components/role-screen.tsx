@@ -6,9 +6,7 @@ import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
 import { ProducerFilter } from '@/components/producer-filter';
-import { ProducerScopeControl } from '@/components/producer-scope-control';
 import { useProducerSummary } from '@/lib/api/producer-options';
-import { useProducerScope } from '@/hooks/use-producer-scope';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { useRoleFilters } from '../use-role-filters';
@@ -43,17 +41,9 @@ function RoleWorkspace({
   manage: boolean;
   canPickProducer: boolean;
 }) {
-  const scope = useProducerScope();
-  const { data: user } = useSession();
-  // La cuenta técnica viendo "Todos" los agrupa por productor; con un productor activo y la vista
-  // "Del productor activo", ve los suyos y los del sistema, sin filtro de productor.
-  const grouped = user?.is_superuser === true && !scope.scopedProducer;
-  const filters = useRoleFilters(association, {
-    producer: scope.scopedProducer,
-    grouped,
-  });
+  const filters = useRoleFilters(association);
   const panel = useRolePanel();
-  const pickProducer = association && canPickProducer && !scope.scopedProducer;
+  const pickProducer = association && canPickProducer;
   const selectedProducer = useProducerSummary(
     pickProducer ? filters.producer : undefined,
   );
@@ -78,15 +68,6 @@ function RoleWorkspace({
         }
       />
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
-        {scope.offered && (
-          <ProducerScopeControl
-            value={scope.view}
-            onChange={(view) => {
-              void scope.setView(view);
-              void filters.setPage(1);
-            }}
-          />
-        )}
         <div
           className={cn(
             'grid gap-4',
@@ -140,11 +121,6 @@ function RoleWorkspace({
           filters={filters}
           open={panel.open}
           byProducer={association}
-          grouped={
-            grouped
-              ? { activeProducerId: scope.acting ?? undefined }
-              : undefined
-          }
         />
       </section>
       {panel.selected !== null && (

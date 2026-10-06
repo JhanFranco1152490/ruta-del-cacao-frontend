@@ -5,20 +5,16 @@ import { Pagination } from '@/components/pagination';
 import { isApiError } from '@/lib/api/errors';
 import { useAccounts, PAGE_SIZE } from '../api';
 import type { useAccountFilters } from '../use-account-filters';
-import { AccountGroups } from './account-groups';
 import { AccountTable } from './account-table';
 
 export function AccountList({
   filters,
   open,
   municipalityName,
-  grouped,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   open: (id: string) => void;
   municipalityName?: (code: string) => string;
-  // La cuenta técnica viendo "Todos": agrupa por productor y destaca el activo.
-  grouped?: { activeProducerId?: string };
 }) {
   const list = useAccounts(filters.query);
   const missingPage =
@@ -48,20 +44,11 @@ export function AccountList({
         {list.data.count} usuarios encontrados
       </p>
       {list.data.results.length ? (
-        grouped ? (
-          <AccountGroups
-            accounts={list.data.results}
-            activeProducerId={grouped.activeProducerId}
-            open={open}
-            municipalityName={municipalityName}
-          />
-        ) : (
-          <AccountTable
-            accounts={list.data.results}
-            open={open}
-            municipalityName={municipalityName}
-          />
-        )
+        <AccountTable
+          accounts={list.data.results}
+          open={open}
+          municipalityName={municipalityName}
+        />
       ) : (
         <EmptyState
           title="No hay usuarios para mostrar"

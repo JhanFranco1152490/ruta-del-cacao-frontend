@@ -11,12 +11,6 @@ import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
 
-import {
-  getActingProducer,
-  readActingProducer,
-  writeActingProducer,
-} from '@/lib/acting-producer';
-
 import { useLogin, useLogout } from './api';
 
 const LOGIN = apiUrl('/api/auth/login');
@@ -104,25 +98,6 @@ describe('auth api', () => {
     ).toBeUndefined();
     expect(client.getQueryData(queryKeys.producers.list({}))).toBeUndefined();
     expect(client.getQueryData(queryKeys.session())).toBeUndefined();
-  });
-
-  it('forgets the producer the technical account was acting under', async () => {
-    const PRODUCER = '33333333-3333-4333-8333-333333333333';
-    server.use(
-      http.post(LOGOUT, () => new HttpResponse(null, { status: 204 })),
-    );
-    const client = seededClient();
-    writeActingProducer('u1', PRODUCER);
-    const { result } = renderHook(() => useLogout(), {
-      wrapper: wrapper(client),
-    });
-
-    await act(async () => {
-      await result.current.mutateAsync();
-    });
-
-    expect(readActingProducer('u1')).toBeNull();
-    expect(getActingProducer()).toBeNull();
   });
 
   it('keeps the cache when the logout fails', async () => {

@@ -42,7 +42,6 @@ export function ProducerFilter({
   label = 'Productor',
   placeholder = 'Nombre, documento o código de socio',
   showTrigger = true,
-  compact = false,
   className,
 }: {
   producer: string | undefined;
@@ -53,25 +52,17 @@ export function ProducerFilter({
   placeholder?: string;
   // Sin la flecha se lee como un campo para escribir y no como una lista cerrada.
   showTrigger?: boolean;
-  // Para el encabezado: la etiqueta solo la lee el lector de pantalla y el aviso de "se muestran N
-  // productores" va dentro de la lista desplegada, no debajo del campo.
-  compact?: boolean;
   // Para encajar en la fila de filtros de quien lo use, junto a otros campos.
   className?: string;
 }) {
   const inputId = useId();
   const helpId = `${inputId}-help`;
-  // Lo que la persona está escribiendo; `null` mientras no escribe: el campo muestra entonces el
-  // productor elegido, también cuando viene ya elegido de antes (al recargar, de la URL).
-  const [typed, setTyped] = useState<string | null>(null);
+  const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   useEffect(() => {
-    const timer = setTimeout(
-      () => setSearch((typed ?? '').trim()),
-      SEARCH_DELAY_MS,
-    );
+    const timer = setTimeout(() => setSearch(input.trim()), SEARCH_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [typed]);
+  }, [input]);
   const options = useProducerOptions(search);
   const results = options.data?.results ?? [];
   const more = (options.data?.count ?? 0) - results.length;
@@ -105,10 +96,7 @@ export function ProducerFilter({
       <div>
         <label
           htmlFor={inputId}
-          className={cn(
-            'text-sm font-bold text-selva',
-            compact ? 'sr-only' : 'mb-2 block',
-          )}
+          className="mb-2 block text-sm font-bold text-selva"
         >
           {label}
         </label>
@@ -122,12 +110,8 @@ export function ProducerFilter({
           }}
           isItemEqualToValue={(a, b) => a.id === b.id}
           itemToStringLabel={labelOf}
-          inputValue={
-            typed ?? (selectedItem?.member_code ? labelOf(selectedItem) : '')
-          }
-          onInputValueChange={(value, details) =>
-            setTyped(details.reason === 'input-change' ? value : null)
-          }
+          inputValue={input}
+          onInputValueChange={setInput}
         >
           <ComboboxInput
             id={inputId}
@@ -148,14 +132,9 @@ export function ProducerFilter({
                 </ComboboxItem>
               )}
             </ComboboxList>
-            {compact && paginationHint && (
-              <p className="px-3 py-2 text-sm text-muted-foreground">
-                {paginationHint}
-              </p>
-            )}
           </ComboboxContent>
         </Combobox>
-        {!compact && paginationHint && (
+        {paginationHint && (
           <p id={helpId} className="mt-2 text-sm text-muted-foreground">
             {paginationHint}
           </p>

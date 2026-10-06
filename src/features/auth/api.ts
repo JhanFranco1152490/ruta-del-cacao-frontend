@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
@@ -49,7 +48,6 @@ export function useLogin() {
       // otra), su caché sigue aquí: sin limpiarla, otra cuenta vería los datos de la anterior.
       queryClient.clear();
       queryClient.setQueryData(queryKeys.session(), session);
-      syncActingProducer(session.user);
       void recordLogin(session.user.id);
     },
   });
@@ -66,10 +64,7 @@ export function useLogout() {
       if (session) {
         void clearOfflineCache(session.user.id);
         void clearSessionSnapshot(session.user.id);
-        // En un equipo compartido, el siguiente no debe heredar el productor de la cuenta técnica.
-        writeActingProducer(session.user.id, null);
       }
-      syncActingProducer(null);
       queryClient.clear();
     },
   });

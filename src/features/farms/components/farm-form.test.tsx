@@ -8,7 +8,6 @@ import { fetchMunicipalities } from '@/lib/api/municipalities';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
-import { syncActingProducer, writeActingProducer } from '@/lib/acting-producer';
 import { buildPage, buildProducer, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
@@ -414,8 +413,6 @@ describe('FarmForm for the technical account', () => {
   const technical = { producer_id: null, is_superuser: true } as const;
 
   beforeEach(() => {
-    sessionStorage.clear();
-    syncActingProducer(null);
     server.use(
       http.get(apiUrl('/api/producers'), () =>
         HttpResponse.json(
@@ -446,11 +443,6 @@ describe('FarmForm for the technical account', () => {
     );
   });
 
-  afterEach(() => {
-    sessionStorage.clear();
-    syncActingProducer(null);
-  });
-
   it('asks which producer the farm is for and does not save without one', async () => {
     const user = userEvent.setup();
     await renderForm(technical);
@@ -478,25 +470,6 @@ describe('FarmForm for the technical account', () => {
     await waitFor(async () => expect(await queuedFarms()).toHaveLength(1));
     expect((await queuedFarms())[0].payload).toMatchObject({
       name: 'La Esperanza',
-      producer_id: PRODUCER,
-    });
-  });
-
-  it('starts with the producer chosen in the header', async () => {
-    writeActingProducer(userId, PRODUCER);
-    const user = userEvent.setup();
-    await renderForm(technical);
-
-    await waitFor(() =>
-      expect(screen.getByLabelText('Productor')).toHaveValue(
-        'Ana Prueba · PROD-000007',
-      ),
-    );
-    await fillValidFarm(user);
-    await save(user);
-
-    await waitFor(async () => expect(await queuedFarms()).toHaveLength(1));
-    expect((await queuedFarms())[0].payload).toMatchObject({
       producer_id: PRODUCER,
     });
   });

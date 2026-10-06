@@ -15,8 +15,6 @@ export type AccountQuery = {
   role?: string;
   producer?: string;
   municipality?: string;
-  // Con la vista agrupada por productor: `producer,last_name`.
-  ordering?: string;
   page?: number;
 };
 export const PAGE_SIZE = 20;
@@ -31,7 +29,6 @@ export const fetchAccounts = (query: AccountQuery, signal?: AbortSignal) => {
     'role',
     'producer',
     'municipality',
-    'ordering',
   ] as const)
     if (query[key]) params.set(key, query[key]);
   if (query.activation_pending !== undefined)
