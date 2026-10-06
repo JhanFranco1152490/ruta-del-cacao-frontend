@@ -607,8 +607,9 @@ describe('ProducerForm', () => {
       'href',
       '/productores',
     );
-    expect(
-      screen.getByRole('link', { name: '← Volver a productores' }),
-    ).toHaveAttribute('href', '/productores');
+    expect(screen.getByRole('link', { name: 'Productores' })).toHaveAttribute(
+      'href',
+      '/productores',
+    );
   });
 });
