@@ -103,6 +103,12 @@ export const buildFarm = (
 ): Schemas['Farm'] => ({
   id: 'f1',
   name: 'La Esperanza',
+  producer: {
+    id: 'p1',
+    member_code: 'PROD-000007',
+    first_name: 'Ana',
+    last_name: 'Prueba',
+  },
   department: { id: '54', name: 'Norte de Santander' },
   municipality: { id: '54001', name: 'Cúcuta' },
   details: '',

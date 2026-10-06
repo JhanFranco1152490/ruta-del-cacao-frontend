@@ -667,6 +667,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             readonly name: string;
+            readonly producer: components["schemas"]["FarmProducer"];
             readonly department: components["schemas"]["TerritoryReference"];
             readonly municipality: components["schemas"]["TerritoryReference"];
             readonly details: string;
@@ -708,6 +709,8 @@ export interface components {
             longitude?: string;
             /** Format: uuid */
             id?: string;
+            /** Format: uuid */
+            producer_id?: string;
             /** Format: date-time */
             captured_at?: string | null;
         };
@@ -717,18 +720,18 @@ export interface components {
             readonly name: string;
             readonly is_active: boolean;
             readonly location: components["schemas"]["Location"];
-            producer: components["schemas"]["FarmMapProducer"];
+            producer: components["schemas"]["FarmProducer"];
         };
-        FarmMapProducer: {
+        FarmMunicipalityCount: {
+            municipality_id: string;
+            farm_count: number;
+        };
+        FarmProducer: {
             /** Format: uuid */
             id: string;
             member_code: string;
             first_name: string;
             last_name: string;
-        };
-        FarmMunicipalityCount: {
-            municipality_id: string;
-            farm_count: number;
         };
         /**
          * @description * `fixed` - Fijo

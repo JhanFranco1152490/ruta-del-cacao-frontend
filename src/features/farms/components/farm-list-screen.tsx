@@ -180,7 +180,9 @@ export function FarmListScreen() {
         ) : farms.length ? (
           <FarmCardList
             farms={farms}
+            canOpenProducer={canPickProducer}
             highlightedId={highlightedId}
+            showProducer={isAssociation}
             municipalityName={municipalityName}
             onShowOnMap={(farm) => {
               // Por municipios hay que entrar al suyo; el mapa libre ya la tiene a la vista.

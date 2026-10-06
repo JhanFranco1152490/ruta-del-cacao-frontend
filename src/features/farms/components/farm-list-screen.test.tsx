@@ -781,3 +781,28 @@ describe('FarmListScreen free map', () => {
     );
   });
 });
+
+describe('FarmListScreen and the producer of each farm', () => {
+  const associationPermissions = [
+    PERMISSIONS.FARMS_VIEW,
+    PERMISSIONS.PRODUCERS_VIEW,
+  ] as string[];
+
+  it('names the producer on each card for an account without a producer of its own', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen({ permissions: associationPermissions, producerId: null });
+
+    const [card] = await farmCards();
+    expect(
+      within(card).getByRole('link', { name: 'Ana Prueba · PROD-000007' }),
+    ).toHaveAttribute('href', '/productores/p1');
+  });
+
+  it('does not say it to a producer, who only sees its own farms', async () => {
+    server.use(farmsHandler([buildFarm({ name: 'El Porvenir' })]));
+    renderScreen();
+
+    const [card] = await farmCards();
+    expect(within(card).queryByText(/Productor:/)).not.toBeInTheDocument();
+  });
+});

@@ -7,6 +7,7 @@ import { parseCoordinates } from '@/lib/format/coordinates';
 
 import type { FarmListItem } from '../farm-list-item';
 import { farmDetailPath } from '../farm-paths';
+import { FarmProducerLine } from './farm-producer-line';
 import { FarmStatusBadge } from './farm-status-badge';
 
 export function FarmCardList({
@@ -15,6 +16,8 @@ export function FarmCardList({
   renderActions,
   onShowOnMap,
   highlightedId,
+  showProducer = false,
+  canOpenProducer = false,
 }: {
   farms: readonly FarmListItem[];
   municipalityName: (code: string) => string;
@@ -22,6 +25,9 @@ export function FarmCardList({
   onShowOnMap?: (farm: FarmListItem) => void;
   // La finca tocada en el mapa.
   highlightedId?: string;
+  // Quien no tiene productor propio ve de quién es cada finca.
+  showProducer?: boolean;
+  canOpenProducer?: boolean;
 }) {
   return (
     <ul className="grid gap-4 md:grid-cols-2" aria-label="Fincas">
@@ -42,6 +48,12 @@ export function FarmCardList({
               <MapPin aria-hidden="true" className="size-4 text-selva" />
               {municipalityName(farm.municipalityCode)}
             </p>
+            {showProducer && farm.producer && (
+              <FarmProducerLine
+                producer={farm.producer}
+                linkable={canOpenProducer}
+              />
+            )}
             {farm.details && (
               <p className="text-muted-foreground">{farm.details}</p>
             )}
