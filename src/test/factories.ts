@@ -29,6 +29,7 @@ export const buildSessionUser = (
   roles: [{ id: 'role-producer', code: 'producer', name: 'Productor' }],
   producer_id: 'p1',
   permissions: [],
+  is_superuser: false,
   ...overrides,
 });
 
@@ -73,7 +74,6 @@ export const buildProducer = (
   status: 'active',
   version: 3,
   account: null,
-  association_access: false,
   created_at: '2026-03-15T12:00:00-05:00',
   updated_at: '2026-03-15T12:00:00-05:00',
   ...overrides,
