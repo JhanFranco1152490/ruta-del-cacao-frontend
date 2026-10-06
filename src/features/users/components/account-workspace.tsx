@@ -23,7 +23,8 @@ export function AccountWorkspace({
   user: components['schemas']['SessionUser'];
 }) {
   const association = !user.producer_id;
-  const filters = useAccountFilters(association);
+  const superuser = user.is_superuser;
+  const filters = useAccountFilters(association, superuser);
   const municipalities = useMunicipalities(association);
   const municipalityName = useMunicipalityName(association);
   const canPickProducer =
@@ -82,6 +83,7 @@ export function AccountWorkspace({
           open={panel.open}
           municipalityName={association ? municipalityName : undefined}
           showProducer={association}
+          canGroup={superuser}
         />
       </section>
       {panel.selected !== null && (

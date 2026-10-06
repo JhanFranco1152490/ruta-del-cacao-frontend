@@ -312,12 +312,13 @@ describe('RoleScreen', () => {
     expect(requests[0].searchParams.has('kind')).toBe(false);
     expect(requests[0].searchParams.has('producer')).toBe(false);
   });
-  it('requires a producer before creating on behalf of the association', async () => {
+  it('requires a producer before the technical account creates a role', async () => {
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
         HttpResponse.json(
           buildSession({
             producer_id: null,
+            is_superuser: true,
             permissions: [PERMISSIONS.ROLES_VIEW, PERMISSIONS.ROLES_MANAGE],
           }),
         ),
@@ -333,12 +334,48 @@ describe('RoleScreen', () => {
       screen.queryByRole('button', { name: 'Guardar rol' }),
     ).not.toBeInTheDocument();
   });
+  it('keeps the association administrator out of the roles of the producers', async () => {
+    const requests: URL[] = [];
+    server.use(
+      http.get(apiUrl('/api/auth/me'), () =>
+        HttpResponse.json(
+          buildSession({
+            producer_id: null,
+            permissions: [
+              PERMISSIONS.ROLES_VIEW,
+              PERMISSIONS.ROLES_MANAGE,
+              PERMISSIONS.PRODUCERS_VIEW,
+            ],
+          }),
+        ),
+      ),
+      http.get(apiUrl('/api/roles'), ({ request }) => {
+        requests.push(new URL(request.url));
+        return HttpResponse.json(buildPage([role]));
+      }),
+    );
+    renderWithProviders(<RoleScreen />, {
+      searchParams: `?productor=${id}&vista=lista`,
+    });
+    await screen.findByText('Supervisor');
+
+    expect(
+      screen.queryByRole('group', { name: 'Vista de la lista' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Productor')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Crear rol' }),
+    ).not.toBeInTheDocument();
+    expect(requests.at(-1)?.searchParams.has('producer')).toBe(false);
+    expect(requests.at(-1)?.searchParams.has('ordering')).toBe(false);
+  });
   it('lets an account that can pick producers create a role and asks for the producer first', async () => {
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
         HttpResponse.json(
           buildSession({
             producer_id: null,
+            is_superuser: true,
             permissions: [
               PERMISSIONS.ROLES_VIEW,
               PERMISSIONS.ROLES_MANAGE,
@@ -366,13 +403,14 @@ describe('RoleScreen', () => {
       screen.queryByRole('button', { name: 'Guardar rol' }),
     ).not.toBeInTheDocument();
   });
-  it('sends the selected producer only for association accounts', async () => {
+  it('sends the selected producer only for the technical account', async () => {
     let payload: unknown;
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
         HttpResponse.json(
           buildSession({
             producer_id: null,
+            is_superuser: true,
             permissions: [PERMISSIONS.ROLES_VIEW, PERMISSIONS.ROLES_MANAGE],
           }),
         ),
@@ -573,12 +611,13 @@ describe('custom roles by producer', () => {
       (heading) => heading.textContent,
     );
 
-  it('groups the custom roles of each producer for the association', async () => {
+  it('groups the custom roles of each producer for the technical account', async () => {
     server.use(
       http.get(apiUrl('/api/auth/me'), () =>
         HttpResponse.json(
           buildSession({
             producer_id: null,
+            is_superuser: true,
             permissions: [PERMISSIONS.ROLES_VIEW],
           }),
         ),

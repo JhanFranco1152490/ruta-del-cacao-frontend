@@ -15,11 +15,13 @@ export function AccountList({
   open,
   municipalityName,
   showProducer,
+  canGroup,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   open: (id: string) => void;
   municipalityName?: (code: string) => string;
   showProducer?: boolean;
+  canGroup?: boolean;
 }) {
   const list = useAccounts(filters.query);
   const groups = groupAccounts(list.data?.results ?? []);
@@ -49,7 +51,7 @@ export function AccountList({
       <ListViewToolbar
         count={`${list.data.count} usuarios encontrados`}
         view={filters.view}
-        onViewChange={showProducer ? filters.setView : undefined}
+        onViewChange={canGroup ? filters.setView : undefined}
         groups={collapse}
       />
       {list.data.results.length && filters.view === 'agrupada' ? (

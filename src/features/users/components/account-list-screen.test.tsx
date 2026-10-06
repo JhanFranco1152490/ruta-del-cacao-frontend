@@ -343,6 +343,47 @@ describe('AccountListScreen', () => {
     await screen.findByText('Correo enviado');
     expect(body).toHaveProperty('producer_id', id);
   });
+  it('offers the view by producer only to the technical account', async () => {
+    const orderings: (string | null)[] = [];
+    function signIn(is_superuser: boolean) {
+      server.use(
+        http.get(apiUrl('/api/auth/me'), () =>
+          HttpResponse.json(
+            buildSession({ producer_id: null, is_superuser, permissions }),
+          ),
+        ),
+        http.get(apiUrl('/api/users'), ({ request }) => {
+          orderings.push(new URL(request.url).searchParams.get('ordering'));
+          return HttpResponse.json(buildPage([account]));
+        }),
+      );
+    }
+    signIn(false);
+    const first = renderWithProviders(<AccountListScreen />, {
+      searchParams: '?vista=agrupada',
+    });
+    await screen.findByText('Ana Prueba');
+    expect(
+      screen.queryByRole('group', { name: 'Vista de la lista' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Plegar todo' }),
+    ).not.toBeInTheDocument();
+    expect(orderings.at(-1)).toBeNull();
+    first.unmount();
+
+    signIn(true);
+    renderWithProviders(<AccountListScreen />, {
+      searchParams: '?vista=agrupada',
+    });
+    expect(
+      await screen.findByRole('group', { name: 'Vista de la lista' }),
+    ).toBeVisible();
+    expect(
+      await screen.findByRole('button', { name: 'Plegar todo' }),
+    ).toBeVisible();
+    expect(orderings.at(-1)).toBe('producer,last_name');
+  });
   it('does not offer fixed or more privileged roles to a producer', async () => {
     server.use(
       http.get(apiUrl('/api/roles'), () =>

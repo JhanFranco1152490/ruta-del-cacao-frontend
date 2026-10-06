@@ -1,5 +1,4 @@
 'use client';
-import type { ReactNode } from 'react';
 import { ErrorState } from '@/components/error-state';
 import { EmptyState } from '@/components/empty-state';
 import { Pagination } from '@/components/pagination';
@@ -16,12 +15,10 @@ export function RoleList({
   filters,
   open,
   byProducer,
-  hint,
 }: {
   filters: ReturnType<typeof useRoleFilters>;
   open: (id: string) => void;
   byProducer: boolean;
-  hint?: ReactNode;
 }) {
   const list = useRoles(filters.query);
   const groups = groupRoles(list.data?.results ?? [], byProducer);
@@ -50,7 +47,6 @@ export function RoleList({
     <>
       <ListViewToolbar
         count={`${list.data.count} roles encontrados`}
-        hint={hint}
         view={filters.view}
         onViewChange={byProducer ? filters.setView : undefined}
         groups={collapse}
