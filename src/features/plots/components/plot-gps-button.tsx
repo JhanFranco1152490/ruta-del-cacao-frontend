@@ -111,19 +111,25 @@ export function PlotGpsButton({
           : 'Activar GPS'}
       </Button>
       {warm.status === 'searching' && (
-        <p className="basis-full text-sm text-muted-foreground" role="status">
+        <p
+          className="order-last basis-full text-sm text-muted-foreground"
+          role="status"
+        >
           Buscando satélites: sigue en un lugar despejado. Con el GPS activo,
           cada vértice se agrega al instante.
         </p>
       )}
       {isWeakLive && (
-        <p className="basis-full text-sm font-bold text-warn">
+        <p className="order-last basis-full text-sm font-bold text-warn">
           Señal débil (±{Math.round(liveAccuracy)} m): busca un lugar despejado
           antes de agregar el vértice.
         </p>
       )}
       {capture.isCapturing && (
-        <p className="basis-full text-sm text-muted-foreground" role="status">
+        <p
+          className="order-last basis-full text-sm text-muted-foreground"
+          role="status"
+        >
           Mantén el celular quieto y a cielo abierto: se promedian varias
           lecturas.
         </p>
@@ -132,18 +138,21 @@ export function PlotGpsButton({
         !capture.isCapturing &&
         lastAccuracy !== null &&
         !isWeakAdded && (
-          <p className="basis-full text-sm text-muted-foreground" role="status">
+          <p
+            className="order-last basis-full text-sm text-muted-foreground"
+            role="status"
+          >
             Vértice agregado con precisión de ±{Math.round(lastAccuracy)} m.
           </p>
         )}
       {isWeakAdded && lastAccuracy !== null && (
-        <p className="basis-full font-bold text-warn" role="status">
+        <p className="order-last basis-full font-bold text-warn" role="status">
           Precisión baja (±{Math.round(lastAccuracy)} m): espera unos segundos o
           busca un lugar despejado
         </p>
       )}
       {error && (
-        <p className="basis-full font-bold text-err" role="alert">
+        <p className="order-last basis-full font-bold text-err" role="alert">
           {error}
         </p>
       )}

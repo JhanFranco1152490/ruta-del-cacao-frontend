@@ -2,6 +2,7 @@
 import { useId } from 'react';
 import { CheckboxField } from '@/components/checkbox-field';
 import type { PermissionItem } from '../api';
+import { groupPermissionsByArea } from '../permission-areas';
 import { requiredBy, withRequirements } from '../schemas';
 
 export function RolePermissionPicker({
@@ -18,7 +19,7 @@ export function RolePermissionPicker({
   error?: string;
 }) {
   const errorId = useId();
-  const areas = [...new Set(catalog.map((item) => item.area))];
+  const groups = groupPermissionsByArea(catalog);
   return (
     <fieldset
       disabled={disabled}
@@ -33,37 +34,35 @@ export function RolePermissionPicker({
         </p>
       )}
       {!catalog.length && <p>No hay permisos disponibles.</p>}
-      {areas.map((area) => (
+      {groups.map(({ area, label, items }) => (
         <fieldset key={area} className="rounded-md border border-border p-3">
-          <legend className="px-1 font-bold">{area}</legend>
-          {catalog
-            .filter((item) => item.area === area)
-            .map((item) => {
-              const ungrantable = !item.grantable || !item.delegable;
-              const dependents = requiredBy(item.code, value, catalog);
-              return (
-                <CheckboxField
-                  key={item.code}
-                  label={item.name}
-                  checked={value.includes(item.code)}
-                  disabled={disabled || ungrantable || dependents.length > 0}
-                  hint={
-                    ungrantable
-                      ? 'No puedes conceder este permiso.'
-                      : dependents.length
-                        ? `Se incluye porque lo necesita: ${dependents.map((p) => p.name).join(', ')}.`
-                        : undefined
-                  }
-                  onCheckedChange={(checked) =>
-                    onChange(
-                      checked
-                        ? withRequirements([...value, item.code], catalog)
-                        : value.filter((code) => code !== item.code),
-                    )
-                  }
-                />
-              );
-            })}
+          <legend className="px-1 font-bold">{label}</legend>
+          {items.map((item) => {
+            const ungrantable = !item.grantable || !item.delegable;
+            const dependents = requiredBy(item.code, value, catalog);
+            return (
+              <CheckboxField
+                key={item.code}
+                label={item.name}
+                checked={value.includes(item.code)}
+                disabled={disabled || ungrantable || dependents.length > 0}
+                hint={
+                  ungrantable
+                    ? 'No puedes conceder este permiso.'
+                    : dependents.length
+                      ? `Se incluye porque lo necesita: ${dependents.map((p) => p.name).join(', ')}.`
+                      : undefined
+                }
+                onCheckedChange={(checked) =>
+                  onChange(
+                    checked
+                      ? withRequirements([...value, item.code], catalog)
+                      : value.filter((code) => code !== item.code),
+                  )
+                }
+              />
+            );
+          })}
         </fieldset>
       ))}
     </fieldset>

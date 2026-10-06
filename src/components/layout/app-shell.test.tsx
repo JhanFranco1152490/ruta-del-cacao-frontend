@@ -59,4 +59,13 @@ describe('AppShell', () => {
     expect(screen.getByText('Menú').closest('aside')).toHaveAttribute('inert');
     expect(screen.getByText('Contenido de la página')).toBeInTheDocument();
   });
+
+  it('keeps the menu in view below the fixed header while the page scrolls', () => {
+    renderShell();
+
+    const menu = screen.getByText('Menú').parentElement;
+    expect(menu).toHaveClass('sticky', 'top-16');
+    // Más alto que la ventana, el menú se desplaza por dentro en vez de quedar cortado.
+    expect(menu).toHaveClass('overflow-y-auto');
+  });
 });

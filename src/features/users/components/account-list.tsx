@@ -3,8 +3,11 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { Pagination } from '@/components/pagination';
 import { isApiError } from '@/lib/api/errors';
+import { ListViewToolbar } from '@/components/list-view-toolbar';
+import { useGroupCollapse } from '@/hooks/use-group-collapse';
 import { useAccounts, PAGE_SIZE } from '../api';
 import type { useAccountFilters } from '../use-account-filters';
+import { AccountGroups, groupAccounts } from './account-groups';
 import { AccountTable } from './account-table';
 
 export function AccountList({
@@ -19,6 +22,8 @@ export function AccountList({
   showProducer?: boolean;
 }) {
   const list = useAccounts(filters.query);
+  const groups = groupAccounts(list.data?.results ?? []);
+  const collapse = useGroupCollapse(groups.map((group) => group.key));
   const missingPage =
     isApiError(list.error) && list.error.status === 404 && filters.page > 1;
   const { setPage } = filters;
@@ -42,10 +47,15 @@ export function AccountList({
     );
   return (
     <>
-      <p role="status" className="text-sm text-muted-foreground">
-        {list.data.count} usuarios encontrados
-      </p>
-      {list.data.results.length ? (
+      <ListViewToolbar
+        count={`${list.data.count} usuarios encontrados`}
+        view={filters.view}
+        onViewChange={showProducer ? filters.setView : undefined}
+        groups={collapse}
+      />
+      {list.data.results.length && filters.view === 'agrupada' ? (
+        <AccountGroups groups={groups} collapse={collapse} open={open} />
+      ) : list.data.results.length ? (
         <AccountTable
           accounts={list.data.results}
           open={open}

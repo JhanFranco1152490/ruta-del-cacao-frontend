@@ -25,6 +25,7 @@ export function PlotVertexList({
   closeAttempted,
   disabled,
   flagged = {},
+  collapsed = false,
   onRemove,
   onClose,
 }: {
@@ -34,6 +35,8 @@ export function PlotVertexList({
   disabled: boolean;
   // Los vértices que fallan una regla, por su posición (desde 0), con la razón en texto.
   flagged?: Readonly<Record<number, string>>;
+  // Plegada, la lista se reduce a cuántos vértices hay.
+  collapsed?: boolean;
   onRemove: (index: number) => void;
   onClose: () => void;
 }) {
@@ -43,6 +46,12 @@ export function PlotVertexList({
         <p className="text-muted-foreground">
           Aún no hay vértices. Usa <strong>Dibujar polígono</strong> y toca el
           mapa, o agrega vértices con el GPS. El polígono es opcional.
+        </p>
+      ) : collapsed ? (
+        <p className="text-muted-foreground">
+          {vertices.length} vértices (lista plegada).
+          {Object.keys(flagged).length > 0 &&
+            ' Hay vértices con avisos: despliega la lista para verlos.'}
         </p>
       ) : (
         <ol aria-label="Vértices del polígono" className="space-y-2">

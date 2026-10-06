@@ -15,6 +15,7 @@ import type {
 } from './map-provider';
 import { MapSkeleton } from './map-states';
 import { useMapProvider } from './use-map-provider';
+import { MapVisibilityButton } from './map-visibility-button';
 
 export const MUNICIPALITY_MAP_HEIGHT = 'h-80 lg:h-[28rem]';
 
@@ -49,6 +50,7 @@ export function MunicipalityMapPanel({
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
   const [baseLayerMissing, setBaseLayerMissing] = useState(false);
   const [baseLayerBackup, setBaseLayerBackup] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   if (map.isLoading) return <MapSkeleton className={MUNICIPALITY_MAP_HEIGHT} />;
 
@@ -98,34 +100,40 @@ export function MunicipalityMapPanel({
             />
           )}
           {controls}
+          <MapVisibilityButton
+            onToggle={() => setVisible((value) => !value)}
+            visible={visible}
+          />
         </div>
       </div>
       {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
           quedaría por encima de los diálogos y del menú móvil (z-50). */}
-      <div
-        className={cn(
-          'isolate overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
-          MUNICIPALITY_MAP_HEIGHT,
-        )}
-        data-slot="map-frame"
-      >
-        <Provider
-          baseLayer={baseLayer}
-          describeMunicipality={describeMunicipality}
-          onBaseLayerFallback={() => setBaseLayerBackup(true)}
-          onBaseLayerUnavailable={() => setBaseLayerMissing(true)}
-          onError={map.fail}
-          onSelectMunicipality={onSelectMunicipality}
-          onSelectPoint={onSelectPoint}
-          view={view}
-        />
-      </div>
-      {hasBaseLayer && baseLayerBackup && !baseLayerMissing && (
+      {visible && (
+        <div
+          className={cn(
+            'isolate overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
+            MUNICIPALITY_MAP_HEIGHT,
+          )}
+          data-slot="map-frame"
+        >
+          <Provider
+            baseLayer={baseLayer}
+            describeMunicipality={describeMunicipality}
+            onBaseLayerFallback={() => setBaseLayerBackup(true)}
+            onBaseLayerUnavailable={() => setBaseLayerMissing(true)}
+            onError={map.fail}
+            onSelectMunicipality={onSelectMunicipality}
+            onSelectPoint={onSelectPoint}
+            view={view}
+          />
+        </div>
+      )}
+      {visible && hasBaseLayer && baseLayerBackup && !baseLayerMissing && (
         <p className="text-sm font-bold text-muted-foreground" role="status">
           Se muestra el mapa de respaldo: el principal no está disponible.
         </p>
       )}
-      {hasBaseLayer && baseLayerMissing && (
+      {visible && hasBaseLayer && baseLayerMissing && (
         <p className="text-sm font-bold text-muted-foreground" role="status">
           No cargó el mapa base: se ven solo los límites y las fincas.
         </p>

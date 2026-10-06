@@ -14,6 +14,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Farm, useFarm } from '../api';
 import { farmToFormValues, type QueuedFarm } from '../farm-queue';
+import { farmDetailPath } from '../farm-paths';
 import { queueErrorMessage } from '../queue-error-message';
 import {
   useFarmResubmit,
@@ -97,6 +98,11 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
 
   return (
     <FarmFormFields
+      breadcrumb={[
+        { label: 'Fincas', href: '/fincas' },
+        { label: farm.name, href: farmDetailPath(farm.id) },
+        { label: 'Editar' },
+      ]}
       allocatedHectares={Number(farm.allocated_area_hectares)}
       savedLocation={{
         municipalityCode: farm.municipality.id,
@@ -141,6 +147,11 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
 
   return (
     <FarmFormFields
+      breadcrumb={[
+        { label: 'Fincas', href: '/fincas' },
+        { label: farm.values.name, href: farmDetailPath(farm.id) },
+        { label: failed ? 'Corregir' : 'Editar' },
+      ]}
       // Un alta de la cuenta técnica sigue pudiendo cambiar su productor mientras espera.
       chooseProducer={farm.operation === 'create' && !!farm.values.producer_id}
       defaultValues={farm.values}

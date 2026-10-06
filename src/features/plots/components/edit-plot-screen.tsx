@@ -124,6 +124,7 @@ function SavedPlotEditor({
       selfId={plot.id}
       submitLabel="Guardar cambios"
       title="Editar parcela"
+      crumb={plot.code}
     />
   );
 }
@@ -206,6 +207,7 @@ function QueuedPlotEditor({
       selfId={plot.id}
       submitLabel={failed ? 'Guardar y reenviar' : 'Guardar cambios'}
       title={failed ? 'Corregir parcela' : 'Editar parcela'}
+      crumb={plot.values.code}
     />
   );
 }

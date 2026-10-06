@@ -8,6 +8,7 @@ import {
 import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import { isUuid } from '@/lib/validation/is-uuid';
 import type { AccountQuery } from '@/lib/api/accounts';
+import { LIST_VIEWS, type ListView } from '@/lib/list-view';
 
 const parsers = {
   search: parseAsString.withDefault(''),
@@ -16,6 +17,7 @@ const parsers = {
   role: parseAsString,
   producer: parseAsString,
   municipality: parseAsString,
+  view: parseAsStringLiteral(LIST_VIEWS).withDefault('lista'),
   page: parseAsInteger.withDefault(1),
 };
 export function useAccountFilters(association: boolean) {
@@ -27,6 +29,7 @@ export function useAccountFilters(association: boolean) {
       role: 'rol',
       producer: 'productor',
       municipality: 'municipio',
+      view: 'vista',
       page: 'pagina',
     },
   });
@@ -41,6 +44,8 @@ export function useAccountFilters(association: boolean) {
     association && params.municipality ? params.municipality : undefined;
   const role = params.role && isUuid(params.role) ? params.role : undefined;
   const page = Math.max(1, params.page);
+  // Solo la asociación ve cuentas de varios productores: para el resto no hay qué agrupar.
+  const view: ListView = association ? params.view : 'lista';
   const query: AccountQuery = {
     search: params.search.trim() || undefined,
     status: params.status ?? undefined,
@@ -51,6 +56,8 @@ export function useAccountFilters(association: boolean) {
     role,
     producer,
     municipality,
+    // Agrupadas, el servidor las ordena por productor para que un grupo no se parta entre páginas.
+    ordering: view === 'agrupada' ? 'producer,last_name' : undefined,
     page,
   };
   return {
@@ -60,6 +67,7 @@ export function useAccountFilters(association: boolean) {
     producer,
     municipality,
     role,
+    view,
     status: params.status,
     activation: params.activation,
     setStatus: (status: AccountQuery['status']) =>
@@ -69,6 +77,7 @@ export function useAccountFilters(association: boolean) {
     setRole: (role: string | null) => setParams({ role, page: 1 }),
     setMunicipality: (municipality: string | null) =>
       setParams({ municipality, page: 1 }),
+    setView: (view: ListView) => setParams({ view, page: 1 }),
     setProducer: (producer: string | null) => setParams({ producer, page: 1 }),
     clearProducer: () => setParams({ producer: null, page: 1 }),
     setPage: (page: number) => setParams({ page }),

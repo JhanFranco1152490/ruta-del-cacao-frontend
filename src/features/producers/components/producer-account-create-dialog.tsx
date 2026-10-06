@@ -117,7 +117,13 @@ export function ProducerAccountCreateDialog({
             <DialogClose disabled={busy} render={<Button variant="outline" />}>
               Cancelar
             </DialogClose>
-            <SubmitButton pending={busy} pendingLabel="Creando…">
+            {/* sm:w-auto: el pie va en fila desde `sm` y, a todo el ancho, empujaba a Cancelar fuera del
+                diálogo. */}
+            <SubmitButton
+              className="sm:w-auto"
+              pending={busy}
+              pendingLabel="Creando…"
+            >
               Crear cuenta
             </SubmitButton>
           </DialogFooter>

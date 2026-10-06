@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
+import { Breadcrumb } from '@/components/breadcrumb';
 import { DigitsField } from '@/components/digits-field';
 import { FormSection } from '@/components/form-section';
 import { PageHeader } from '@/components/page-header';
@@ -22,7 +23,6 @@ import {
   type ProducerFormValues,
 } from '../schemas';
 import { useProducerSave } from '../use-producer-save';
-import { BackToProducersLink } from './back-to-producers-link';
 
 export function ProducerForm({
   producer: initialProducer,
@@ -56,8 +56,21 @@ export function ProducerForm({
   );
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
-      <BackToProducersLink />
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8">
+      <Breadcrumb
+        items={[
+          { label: 'Productores', href: '/productores' },
+          ...(producer
+            ? [
+                {
+                  label: `${producer.first_name} ${producer.last_name}`,
+                  href: `/productores/${producer.id}`,
+                },
+                { label: 'Editar' },
+              ]
+            : [{ label: 'Registrar productor' }]),
+        ]}
+      />
       <PageHeader
         className="mt-5"
         eyebrow="Administración"
@@ -69,32 +82,53 @@ export function ProducerForm({
         }
       />
       <form
-        className="mt-8 space-y-6"
+        className="mt-8 grid items-start gap-6 lg:grid-cols-2"
         noValidate
         onSubmit={handleSubmit(save, clearError)}
       >
-        <FormSection title="Identificación">
-          <div className="grid gap-5 sm:grid-cols-3">
-            <SelectField
-              label="Tipo de documento"
-              error={errors.document_type?.message}
-              {...register('document_type')}
-            >
-              {DOCUMENT_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </SelectField>
-            <DigitsField
-              control={control}
-              name="identity_document"
-              label="Número de documento"
-              maxLength={15}
-              wrapperClassName="sm:col-span-2"
-            />
-          </div>
-        </FormSection>
+        <div className="space-y-6">
+          <FormSection title="Identificación">
+            <div className="grid gap-5 sm:grid-cols-3">
+              <SelectField
+                label="Tipo de documento"
+                error={errors.document_type?.message}
+                {...register('document_type')}
+              >
+                {DOCUMENT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </SelectField>
+              <DigitsField
+                control={control}
+                name="identity_document"
+                label="Número de documento"
+                maxLength={15}
+                wrapperClassName="sm:col-span-2"
+              />
+            </div>
+          </FormSection>
+
+          <FormSection title="Contacto">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <DigitsField
+                control={control}
+                name="phone"
+                label="Teléfono"
+                type="tel"
+                maxLength={10}
+              />
+              <TextField
+                label="Correo electrónico"
+                type="email"
+                required={!producer}
+                error={errors.email?.message}
+                {...register('email')}
+              />
+            </div>
+          </FormSection>
+        </div>
 
         <FormSection title="Datos del productor">
           <div className="grid gap-5 sm:grid-cols-2">
@@ -146,35 +180,16 @@ export function ProducerForm({
           </div>
         </FormSection>
 
-        <FormSection title="Contacto">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <DigitsField
-              control={control}
-              name="phone"
-              label="Teléfono"
-              type="tel"
-              maxLength={10}
-            />
-            <TextField
-              label="Correo electrónico"
-              type="email"
-              required={!producer}
-              error={errors.email?.message}
-              {...register('email')}
-            />
-          </div>
-        </FormSection>
-
         {generalError && (
           <p
-            className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
+            className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err lg:col-span-2"
             role="alert"
           >
             {generalError}
           </p>
         )}
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end lg:col-span-2">
           <Link
             className={buttonVariants({
               variant: 'outline',
