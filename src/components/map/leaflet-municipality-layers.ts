@@ -29,8 +29,8 @@ function textNode(text: string) {
 // pequeño solo lleva un punto de color (la cantidad está en su texto al pasar por encima), y al
 // acercar crece hasta el tamaño normal. Así los municipios vecinos no se tapan entre sí.
 const COUNT_MAX_PX = 30;
-const COUNT_MIN_PX = 10;
-const COUNT_NUMBER_MIN_PX = 20;
+const COUNT_MIN_PX = 18;
+const COUNT_NUMBER_MIN_PX = 18;
 
 const countIcon = (count: number, size: number) =>
   L.divIcon({
@@ -48,7 +48,9 @@ function countSize(map: L.Map, outline: MunicipalityOutline) {
     Math.abs(northEast.x - southWest.x),
     Math.abs(southWest.y - northEast.y),
   );
-  return Math.round(Math.min(COUNT_MAX_PX, Math.max(COUNT_MIN_PX, room * 0.6)));
+  return Math.round(
+    Math.min(COUNT_MAX_PX, Math.max(COUNT_MIN_PX, room * 0.85)),
+  );
 }
 
 // Nivel del departamento: cada municipio con el tono de su cantidad de fincas y la cifra encima.
