@@ -15,6 +15,7 @@
   /* --- Marca ------------------------------------------------------------ */
   --selva: #14362a;
   --selva-2: #1f5c45;
+  --selva-barra: #1d4b3b; /* barra lateral y menú móvil: un tono más suave que el encabezado */
   --cobre: #9a5220;
   --oro: #c9a24b; /* solo ornamento sobre fondo oscuro, nunca texto en claro */
   --crema: #f7f2ea;
@@ -128,6 +129,7 @@
 
   --color-selva: var(--selva);
   --color-selva-2: var(--selva-2);
+  --color-selva-barra: var(--selva-barra);
   --color-cobre: var(--cobre);
   --color-oro: var(--oro);
   --color-crema: var(--crema);

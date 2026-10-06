@@ -38,6 +38,7 @@ Regla general: en campo nada depende de un matiz suave. Contraste alto, área t�
 |---|---|---|
 | `--selva` | `#14362A` | Color primario: encabezados de marca, botón primario, barras oscuras |
 | `--selva-2` | `#1F5C45` | Verde medio: enlaces, gráficos, chip activo |
+| `--selva-barra` | `#1D4B3B` | Barra lateral y menú móvil: un tono más suave que el encabezado, para que el marco no se sienta tan oscuro |
 | `--cobre` | `#9A5220` | Acento de marca: etiquetas de sección, subrayados, botón de acción secundaria fuerte |
 | `--oro` | `#C9A24B` | Solo ornamento sobre fondo oscuro (línea botánica, versalitas) |
 | `--crema` | `#F7F2EA` | Fondo de la aplicación |
@@ -204,8 +205,8 @@ poscosecha cobre, calidad azul). Nunca emojis.
 
 ## 7. Patrones de pantalla
 
-- **Marco de la app:** encabezado y barra lateral en `--selva`, como el panel del inicio de
-  sesión; el contenido va sobre `--crema`. En la barra, la entrada activa es una píldora `--crema`
+- **Marco de la app:** encabezado en `--selva`, como el panel del inicio de sesión, y barra
+  lateral un tono más suave (`--selva-barra`); el contenido va sobre `--crema`. En la barra, la entrada activa es una píldora `--crema`
   con texto `--selva`; las demás, texto `--crema` con ícono `--oro`; arriba, la etiqueta «Menú» en
   versalitas oro. La marca del encabezado lleva la mazorca en `--amarillo-mazorca` y «Cacao» en
   itálica. Los botones del encabezado siguen siendo claros (fondo blanco, texto oscuro).

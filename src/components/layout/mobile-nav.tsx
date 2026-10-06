@@ -39,7 +39,7 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="border-selva bg-selva text-crema [&_[data-slot=sheet-close]]:text-crema [&_[data-slot=sheet-close]]:hover:bg-white/10"
+        className="border-selva-barra bg-selva-barra text-crema [&_[data-slot=sheet-close]]:text-crema [&_[data-slot=sheet-close]]:hover:bg-white/10"
       >
         <SheetHeader>
           <SheetTitle className="font-serif text-xl text-crema">

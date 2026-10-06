@@ -33,7 +33,7 @@ export function AppShell({
           id="barra-lateral"
           inert={sidebarHidden}
           className={cn(
-            'hidden shrink-0 overflow-x-clip border-r border-selva bg-selva text-crema transition-[width,visibility,border-color] duration-200 ease-out motion-reduce:transition-none lg:block',
+            'hidden shrink-0 overflow-x-clip border-r border-selva-barra bg-selva-barra text-crema transition-[width,visibility,border-color] duration-200 ease-out motion-reduce:transition-none lg:block',
             sidebarHidden
               ? 'lg:invisible lg:w-0 lg:border-transparent'
               : 'lg:w-60',
