@@ -1,12 +1,11 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { liveQuery } from 'dexie';
 import { useEffect, useState } from 'react';
 
-import { useSession } from '@/hooks/use-session';
+import { useQueueMutation, useQueuedRecord } from '@/hooks/use-queue-mutation';
 import { queryKeys } from '@/lib/api/query-keys';
-import { discard, processQueue } from '@/lib/offline/sync-queue';
+import { discard, sendWhenOnline } from '@/lib/offline/sync-queue';
 
 import {
   enqueuePlotCreate,
@@ -18,25 +17,11 @@ import {
   resubmitPlot,
 } from './plot-queue';
 
-// Leer y escribir la cola del dispositivo no usa la red. Por defecto TanStack Query pausa todo
-// mientras no hay conexión (espera a que vuelva): aquí eso dejaba "Guardando…" colgado y la
-// parcela sin guardar hasta recuperar la señal, justo lo contrario de lo que se busca.
-const LOCAL_ONLY = 'always' as const;
-
-// Se lee una sola vez: el formulario se inicializa con esta lectura y no debe adoptar una
-// posterior mientras la persona corrige.
-export function useQueuedPlot(id: string) {
-  const { data: user } = useSession();
-  const userId = user?.id;
-  return useQuery({
-    queryKey: queryKeys.plots.queued(userId ?? '', id),
-    queryFn: () => getQueuedPlot(userId!, id),
-    enabled: !!userId,
-    staleTime: Infinity,
-    gcTime: 0,
-    networkMode: LOCAL_ONLY,
-  });
-}
+export const useQueuedPlot = (id: string) =>
+  useQueuedRecord(
+    (userId) => queryKeys.plots.queued(userId, id),
+    (userId) => getQueuedPlot(userId, id),
+  );
 
 type LocalPlots = {
   userId?: string;
@@ -69,23 +54,6 @@ export function useQueuedPlots(userId: string | undefined, farmId: string) {
     isError: isCurrent && state.isError,
   };
 }
-
-function useQueueMutation<T>(
-  action: (userId: string, input: T) => Promise<void>,
-) {
-  const { data: user } = useSession();
-  return useMutation({
-    networkMode: LOCAL_ONLY,
-    mutationFn: async (input: T) => {
-      if (!user) throw new Error('No hay una sesión activa.');
-      await action(user.id, input);
-    },
-  });
-}
-
-const sendWhenOnline = (userId: string) => {
-  if (navigator.onLine) void processQueue(userId);
-};
 
 // Toda parcela nueva se guarda primero en el dispositivo; con conexión se intenta enviar de
 // inmediato y, sin ella, la cola lo hará al volver la red. El guardado ya terminó en el

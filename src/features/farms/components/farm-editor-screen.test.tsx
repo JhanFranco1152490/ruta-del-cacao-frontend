@@ -289,8 +289,10 @@ describe('FarmEditorScreen', () => {
     );
     renderEditor('s1');
 
-    await screen.findByText(/Alguien la modificó mientras tanto/);
-    const changed = screen
+    const notice = await screen.findByText(
+      /Alguien la modificó mientras tanto/,
+    );
+    const changed = within(notice.parentElement!)
       .getAllByRole('listitem')
       .map((item) => item.textContent);
     expect(changed).toEqual([

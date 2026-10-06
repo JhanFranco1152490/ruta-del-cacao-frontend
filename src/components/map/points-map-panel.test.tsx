@@ -108,4 +108,30 @@ describe('PointsMapPanel', () => {
       'isolate',
     );
   });
+
+  it('hides and shows the map with a button that only has an icon', async () => {
+    renderPanel([POINT]);
+    const region = await screen.findByRole('region', {
+      name: 'Mapa de mis fincas',
+    });
+    expect(region).toHaveTextContent('La Esperanza (ok) 7.89, -72.5');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
+    expect(region).not.toHaveTextContent('La Esperanza');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mostrar mapa' }));
+    expect(region).toHaveTextContent('La Esperanza (ok) 7.89, -72.5');
+  });
+
+  it('offers the satellite base layer', async () => {
+    renderPanel([POINT]);
+    await screen.findByRole('region', { name: 'Mapa de mis fincas' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Satélite' }));
+
+    expect(screen.getByRole('button', { name: 'Satélite' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
 });
