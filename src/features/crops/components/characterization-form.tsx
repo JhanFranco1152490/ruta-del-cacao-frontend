@@ -205,38 +205,45 @@ export function CharacterizationForm({
         />
       </FormSection>
 
-      <FormSection title="Manejo y sombra">
-        <ManagementFields errors={errors} register={register} />
-      </FormSection>
+      {/* Pegada al desplazarse: con muchas siembras, el manejo, los avisos y el botón de guardar
+          siguen a la vista sin volver arriba. */}
+      <div className="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto">
+        <FormSection title="Manejo y sombra">
+          <ManagementFields errors={errors} register={register} />
+        </FormSection>
 
-      <div className="space-y-4 lg:col-span-2">
-        <CharacterizationWarnings warnings={warnings} />
-        {error && (
-          <p
-            className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-        {blockedMessage && (
-          <p className="font-bold text-warn" id="characterization-save-blocked">
-            {blockedMessage}
-          </p>
-        )}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button
-            aria-describedby={
-              blockedMessage ? 'characterization-save-blocked' : undefined
-            }
-            className={CAPTURE_BUTTON_CLASS}
-            disabled={isSaving || !!blockedMessage}
-            size="office"
-            type="submit"
-          >
-            {isSaving ? 'Guardando…' : submitLabel}
-          </Button>
-          {secondaryAction}
+        <div className="space-y-4">
+          <CharacterizationWarnings warnings={warnings} />
+          {error && (
+            <p
+              className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+          {blockedMessage && (
+            <p
+              className="font-bold text-warn"
+              id="characterization-save-blocked"
+            >
+              {blockedMessage}
+            </p>
+          )}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <Button
+              aria-describedby={
+                blockedMessage ? 'characterization-save-blocked' : undefined
+              }
+              className={CAPTURE_BUTTON_CLASS}
+              disabled={isSaving || !!blockedMessage}
+              size="office"
+              type="submit"
+            >
+              {isSaving ? 'Guardando…' : submitLabel}
+            </Button>
+            {secondaryAction}
+          </div>
         </div>
       </div>
     </form>

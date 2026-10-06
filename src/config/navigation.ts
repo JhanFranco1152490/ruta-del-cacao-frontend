@@ -1,4 +1,13 @@
-import { Leaf, MapPinned, ShieldCheck, Sprout, Users } from 'lucide-react';
+import {
+  LandPlot,
+  Leaf,
+  MapPinned,
+  MapPinPlus,
+  ShieldCheck,
+  Sprout,
+  UserRoundPlus,
+  Users,
+} from 'lucide-react';
 
 import { PERMISSIONS } from '@/lib/permissions';
 import type { NavItem } from '@/types/navigation';
@@ -12,12 +21,33 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Sprout,
     permission: PERMISSIONS.PRODUCERS_VIEW,
     needsConnection: true,
+    children: [
+      {
+        href: '/productores/nuevo',
+        label: 'Registrar productor',
+        icon: UserRoundPlus,
+      },
+    ],
   },
   {
     href: '/fincas',
     label: 'Fincas',
     icon: MapPinned,
     permission: PERMISSIONS.FARMS_VIEW,
+    children: [
+      {
+        href: '/fincas/nueva',
+        label: 'Registrar finca',
+        icon: MapPinPlus,
+        permission: PERMISSIONS.FARMS_ADD,
+      },
+      {
+        href: '/fincas/parcelas/nueva',
+        label: 'Registrar parcela',
+        icon: LandPlot,
+        permission: PERMISSIONS.PLOTS_ADD,
+      },
+    ],
   },
   {
     href: '/variedades',
@@ -46,9 +76,20 @@ export function visibleNavItems(
   items: readonly NavItem[],
   permissions: readonly string[] | undefined,
 ): NavItem[] {
-  return items.filter(
-    ({ permission }) => !permission || !!permissions?.includes(permission),
-  );
+  const allowed = (permission?: string) =>
+    !permission || !!permissions?.includes(permission);
+  return items
+    .filter(({ permission }) => allowed(permission))
+    .map((item) =>
+      item.children
+        ? {
+            ...item,
+            children: item.children.filter(({ permission }) =>
+              allowed(permission),
+            ),
+          }
+        : item,
+    );
 }
 
 // El prefijo exige la barra: '/productores-x' no cuenta como hija de '/productores'.
