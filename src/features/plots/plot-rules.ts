@@ -18,9 +18,14 @@ import type { GeoPoint } from '@/types/geo';
 // misma que valida el servidor.
 export const AREA_TOLERANCE = 0.05;
 
-// Las áreas se escriben con dos decimales: por debajo de media centésima no hay diferencia que
-// avisar.
-const NOTICEABLE_DIFFERENCE_HECTARES = 0.005;
+// Las áreas se escriben con dos decimales, así que redondear la del dibujo la mueve hasta media
+// centésima. Por debajo de eso no hay diferencia que avisar, y la diferencia permitida nunca baja
+// de ahí: en una parcela de menos de 0,1 ha el 5 % es menor y rechazaría el área que la propia
+// herramienta propone. El servidor aplica el mismo piso.
+const ROUNDING_ALLOWANCE_HECTARES = 0.005;
+// Los números de punto flotante no restan exacto (0,075 - 0,07 da 0,0050000000000000044): sin
+// este margen, una diferencia justo en el piso se rechazaría aunque el servidor la acepta.
+const FLOAT_EPSILON = 1e-9;
 
 export type KnownNeighbour = Neighbour & { code: string };
 
@@ -77,7 +82,11 @@ export function checkPlot(input: PlotCheckInput): PlotCheck {
   const difference =
     hasDeclared && measured !== null ? Math.abs(declared - measured) : 0;
   const areaMismatch =
-    hasDeclared && measured !== null && difference > AREA_TOLERANCE * measured;
+    hasDeclared &&
+    measured !== null &&
+    difference >
+      Math.max(AREA_TOLERANCE * measured, ROUNDING_ALLOWANCE_HECTARES) +
+        FLOAT_EPSILON;
 
   const overlaps = isValidPolygon
     ? findOverlaps(vertices, input.neighbours).map((overlap) => ({
@@ -110,7 +119,7 @@ export function checkPlot(input: PlotCheckInput): PlotCheck {
     areaDifferenceNotice:
       !areaMismatch &&
       measured !== null &&
-      difference > NOTICEABLE_DIFFERENCE_HECTARES,
+      difference > ROUNDING_ALLOWANCE_HECTARES,
     overlaps,
     overlapRegions: overlaps.length ? overlapRegions(vertices, overlapped) : [],
     suggestion: overlaps.length

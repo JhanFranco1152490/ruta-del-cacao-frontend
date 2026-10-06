@@ -139,6 +139,32 @@ describe('checkPlot — declared against drawn area', () => {
   it('has nothing to compare without a polygon', () => {
     expect(checkPlot(base()).areaMismatch).toBe(false);
   });
+
+  it('always accepts the drawn area rounded to two decimals, even on a small plot', () => {
+    // Redondear a dos decimales mueve el área hasta 0,005 ha: en una parcela de menos de
+    // 0,1 ha eso pasa del 5 %, y la herramienta rechazaría el área que ella misma propone.
+    for (let side = 0.1; side <= 0.4; side += 0.005) {
+      const vertices = rect(0, 0, side, side);
+      const drawn = checkPlot(base({ vertices })).measuredAreaHectares!;
+      const check = checkPlot(
+        base({ vertices, declaredAreaHectares: Number(drawn.toFixed(2)) }),
+      );
+
+      expect(drawn).toBeLessThan(0.2);
+      expect(check.areaMismatch).toBe(false);
+    }
+  });
+
+  it('still blocks a clearly different area on a small plot', () => {
+    const vertices = rect(0, 0, 0.25, 0.25);
+    const drawn = checkPlot(base({ vertices })).measuredAreaHectares!;
+
+    const check = checkPlot(
+      base({ vertices, declaredAreaHectares: Number((drawn * 2).toFixed(2)) }),
+    );
+
+    expect(check.areaMismatch).toBe(true);
+  });
 });
 
 describe('checkPlot — overlap', () => {
