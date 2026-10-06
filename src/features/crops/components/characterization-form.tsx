@@ -14,6 +14,7 @@ import {
   averageAgeInMonths,
   coherenceWarnings,
   densityPerHectare,
+  impossibleDensity,
   type Propagation,
   type Stage,
   totalTrees,
@@ -140,6 +141,7 @@ export function CharacterizationForm({
   );
   const warnings = coherenceWarnings({
     density,
+    impossibleDensity: impossibleDensity(trees, areaHectares),
     // Cada siembra se juzga con su propia edad, no con la media.
     plantings: lines.map((line) => ({
       stage: line.stage === '' ? null : (line.stage as Stage),
