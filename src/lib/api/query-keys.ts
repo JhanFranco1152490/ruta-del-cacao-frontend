@@ -31,6 +31,13 @@ export const queryKeys = {
     // Las activas, que ofrece la ficha de una parcela; con copia en el dispositivo.
     active: () => ['cacao-varieties', 'active'] as const,
   },
+  agriculturalInputs: {
+    all: () => ['agricultural-inputs'] as const,
+    // El catálogo completo de un productor (activos e inactivos), con copia en el dispositivo. La
+    // cuenta técnica elige el productor; las demás cuentas ven el suyo y pasan `null`.
+    list: (producer: string | null) =>
+      ['agricultural-inputs', 'list', producer] as const,
+  },
   characterizations: {
     // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la
     // parcela).
