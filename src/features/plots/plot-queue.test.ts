@@ -149,6 +149,27 @@ describe('queued plots of a farm', () => {
     expect(plots.map((plot) => plot.id)).toEqual(['pl1']);
   });
 
+  it('lists the plots of every farm when no farm is given', async () => {
+    await enqueuePlotCreate(userId, 'pl1', 'f1', values);
+    await enqueuePlotCreate(userId, 'pl2', 'f2', values);
+    await getOfflineDb(userId).queue.add({
+      id: 'f3',
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+      status: 'pending',
+      createdAt: 1,
+      updatedAt: 1,
+    });
+
+    const plots = await listQueuedPlots(userId);
+
+    expect(plots.map((plot) => [plot.id, plot.farmId]).sort()).toEqual([
+      ['pl1', 'f1'],
+      ['pl2', 'f2'],
+    ]);
+  });
+
   it('knows nothing of an id that belongs to another resource', async () => {
     await getOfflineDb(userId).queue.add({
       id: 'f1',

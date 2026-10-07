@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
@@ -17,6 +22,42 @@ export type PlotUpdateRequest = Schemas['PatchedPlotUpdateRequest'];
 export const PLOTS_PAGE_SIZE = 100;
 
 export type FarmPlots = { plots: Plot[]; hasMore: boolean };
+
+// La pantalla general pagina como la de fincas.
+export const PLOT_LIST_PAGE_SIZE = 20;
+
+export type PlotQuery = {
+  search?: string;
+  farm?: string;
+  producer?: string;
+  page?: number;
+};
+
+export const fetchPlots = (query: PlotQuery, signal?: AbortSignal) => {
+  const params = new URLSearchParams();
+  if (query.search) params.set('search', query.search);
+  if (query.farm) params.set('farm', query.farm);
+  if (query.producer) params.set('producer', query.producer);
+  params.set('page', String(query.page ?? 1));
+  params.set('page_size', String(PLOT_LIST_PAGE_SIZE));
+  return apiFetch<Schemas['PaginatedPlotList']>(`/api/plots?${params}`, {
+    signal,
+  });
+};
+
+// `offlineFirst`, como las parcelas de una finca: sin conexión se cae a la copia de esta misma
+// consulta, guardada la última vez que se vio con conexión.
+export const usePlots = (userId: string | undefined, query: PlotQuery) =>
+  useQuery({
+    queryKey: queryKeys.plots.list(query),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, `plots:list:${JSON.stringify(query)}`, () =>
+        fetchPlots(query, signal),
+      ),
+    enabled: !!userId,
+    networkMode: 'offlineFirst',
+    placeholderData: keepPreviousData,
+  });
 
 export const fetchFarmPlots = async (
   farmId: string,
@@ -70,6 +111,7 @@ export const deletePlot = (id: string, expectedVersion: number) => {
 // misma (que trae el área asignada) se vuelven a pedir. Lo usan las acciones en línea y la cola.
 export const plotReadsOf = (farmId: string) => [
   queryKeys.plots.byFarm(farmId),
+  queryKeys.plots.lists(),
   queryKeys.farms.detail(farmId),
   queryKeys.farms.lists(),
 ];
