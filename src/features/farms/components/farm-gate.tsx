@@ -2,7 +2,8 @@
 
 import type { ReactNode } from 'react';
 
-import { producerLabelOf } from '../farm-list-item';
+import { producerLabelOf } from '@/lib/format/producer';
+
 import { farmDetailPath, farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
 import type { FarmPlotsContext } from './farm-detail-screen';
