@@ -241,15 +241,22 @@ Sprint 1, en `docs/ui/ref/`:
 | `s1-10-finca-campo.html` | Registro de finca en campo con GPS, sin conexión |
 | `s1-11-parcela-campo.html` | Recorrido del perímetro en campo |
 
-Sprint 2, en `docs/ui/ref/`. Cada módulo trae una pantalla de escritorio, una hoja con los
-estados de sus diálogos y la vista en celular con el caso sin conexión. Cada archivo lleva sus
-notas para implementar debajo del dibujo:
+Sprint 2, en `docs/ui/ref/`. La numeración sigue la del Sprint 1, sin volver a empezar: el
+prefijo dice el sprint y el número no se repite entre sprints. Cada módulo trae:
+
+- su pantalla principal en escritorio;
+- la vista principal de su formulario;
+- una hoja con los estados del formulario (errores y confirmaciones);
+- la vista en celular, con el caso sin conexión.
+
+Cada archivo lleva sus notas para implementar debajo del dibujo.
 
 | Archivo | Pantalla |
 |---|---|
-| `s2-01-insumos-lista.html` | Catálogo de insumos (escritorio) con filtros y menú de acciones |
-| `s2-02-insumo-formulario.html` | Registrar y editar insumo: validaciones, bulto, duplicados, unidad bloqueada, confirmaciones |
-| `s2-03-insumos-movil.html` | Insumos en celular: tarjetas, sin conexión, sin resultados y catálogo vacío |
+| `s2-12-insumos-lista.html` | Catálogo de insumos (escritorio) con filtros y menú de acciones |
+| `s2-13-insumo-registrar.html` | Registrar insumo: vista principal del formulario, sus listas desplegables y la versión en celular |
+| `s2-14-insumo-estados.html` | Estados del formulario: validaciones, bulto, duplicados, unidad bloqueada, confirmaciones |
+| `s2-15-insumos-movil.html` | Insumos en celular: tarjetas, sin conexión, sin resultados y catálogo vacío |
 
 Base de la dirección: `selvaviva-sistema.html` (hoja de tokens), `selvaviva-dashboard.html`,
 `selvaviva-campo.html`, `selvaviva-qr.html`.

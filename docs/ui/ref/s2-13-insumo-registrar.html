@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sprint 2 · Insumos, lista · Ruta del Cacao (referencia de diseño)</title>
+<title>Sprint 2 · Registrar insumo · Ruta del Cacao (referencia de diseño)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Karla:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -98,6 +98,40 @@ td { padding:0 12px; height:52px; border-top:1px solid #EEE7DC; }
 .notes ol { margin:12px 0 0; padding-left:22px; columns:2; column-gap:40px; }
 .notes li { margin-bottom:8px; break-inside:avoid; }
 .tag { display:inline-block; font-size:12px; font-weight:800; color:var(--cobre); background:#F6EADF; border-radius:6px; padding:1px 6px; margin-right:4px; }
+
+/* Diálogo de registro sobre la lista */
+.frame { position:relative; }
+.veil { position:absolute; inset:0; background:rgba(20,54,42,.45); display:flex; align-items:center; justify-content:center; z-index:10; }
+.dialog { width:520px; background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:26px 26px 22px; }
+.dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.dialog h2 { margin:0; font-size:28px; color:var(--selva); line-height:1.15; }
+.sub { margin:6px 0 0; color:var(--muted-fg); font-size:15px; line-height:1.45; }
+.close { width:40px; height:40px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; color:var(--muted-fg); flex-shrink:0; }
+.form { display:flex; flex-direction:column; gap:18px; margin-top:20px; }
+.help { margin-top:6px; font-size:13px; color:var(--muted-fg); line-height:1.4; }
+.control.focus { outline:3px solid var(--cobre); outline-offset:2px; }
+.caret { width:2px; height:20px; background:var(--ink); margin-right:-4px; }
+.dialog-foot { display:flex; justify-content:flex-end; gap:10px; margin-top:24px; padding-top:18px; border-top:1px solid #EEE7DC; }
+
+/* Debajo del marco: opciones de las listas y versión en celular */
+.extras { width:1440px; display:grid; grid-template-columns:340px 340px 1fr; gap:24px; align-items:start; }
+.panel { background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:20px; }
+.panel h3 { margin:4px 0 12px; font-size:20px; color:var(--selva); }
+.opts { border:1px solid var(--border); border-radius:12px; padding:6px; box-shadow:var(--shadow); }
+.opt { height:44px; border-radius:8px; display:flex; align-items:center; gap:10px; padding:0 10px; font-weight:700; font-size:15px; }
+.opt .hint { margin-left:auto; font-weight:600; font-size:13px; color:var(--muted-fg); }
+.opt.sel { background:#F3EEE5; }
+.panel p { margin:12px 0 0; font-size:14px; color:var(--muted-fg); line-height:1.45; }
+.phone { width:390px; height:844px; border-radius:28px; overflow:hidden; background:#fff; box-shadow:var(--shadow), 0 0 0 8px #231812; display:flex; flex-direction:column; margin:8px; flex-shrink:0; }
+.m-top { height:64px; display:flex; align-items:center; gap:8px; padding:0 8px 0 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.m-top h2 { margin:0; font-size:24px; color:var(--selva); flex:1; }
+.m-body { padding:20px 16px; display:flex; flex-direction:column; gap:18px; flex:1; }
+.m-body .control { height:48px; }
+.m-foot { padding:12px 16px 20px; border-top:1px solid var(--border); display:grid; grid-template-columns:1fr 1.4fr; gap:10px; }
+.m-foot .btn { height:52px; justify-content:center; }
+.mobile-wrap { display:flex; flex-direction:column; gap:24px; }
+.notes-list { margin:0; padding-left:20px; font-size:15px; line-height:1.5; }
+.notes-list li { margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -116,6 +150,7 @@ td { padding:0 12px; height:52px; border-top:1px solid #EEE7DC; }
   <symbol id="i-package" viewBox="0 0 24 24"><path d="M16.5 9.4 7.5 4.2 M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z M3.3 7 12 12l8.7-5 M12 22V12"/></symbol>
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M22 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18 M6 6l12 12"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
   <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10 M18.4 6.6a9 9 0 1 1-12.8 0"/></symbol>
   <symbol id="i-pod" viewBox="-34 -60 68 110"><path d="M0 -44 l0 -12" style="fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round"/><path d="M0 -44 C24 -44 32 -12 28 12 C24 36 11 46 0 46 C-11 46 -24 36 -28 12 C-32 -12 -24 -44 0 -44Z" style="fill:currentColor;stroke:none"/></symbol>
@@ -195,12 +230,7 @@ td { padding:0 12px; height:52px; border-top:1px solid #EEE7DC; }
               <td>
                 <span class="actions">
                   <button class="btn btn-ghost btn-sm" type="button"><svg class="i" style="width:16px;height:16px"><use href="#i-pencil"/></svg>Editar</button>
-                  <button class="icon-btn" type="button" aria-label="Más acciones para Oxicloruro de cobre" aria-expanded="true" style="border-color:var(--selva-2);background:#F3EEE5"><svg class="i"><use href="#i-more"/></svg></button>
-                  <div class="menu" role="menu">
-                    <div class="menu-item focus" role="menuitem"><svg class="i" style="width:18px;height:18px"><use href="#i-ban"/></svg>Desactivar</div>
-                    <div class="menu-sep"></div>
-                    <div class="menu-item danger" role="menuitem"><svg class="i" style="width:18px;height:18px"><use href="#i-trash"/></svg>Eliminar</div>
-                  </div>
+                  <button class="icon-btn" type="button" aria-label="Más acciones para Oxicloruro de cobre"><svg class="i"><use href="#i-more"/></svg></button>
                 </span>
               </td>
             </tr>
@@ -228,22 +258,95 @@ td { padding:0 12px; height:52px; border-top:1px solid #EEE7DC; }
       </section>
     </main>
   </div>
+  <div class="veil">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="reg-title">
+      <div class="dialog-head">
+        <div>
+          <h2 class="serif" id="reg-title">Registrar insumo</h2>
+          <p class="sub">Lo podrás elegir al registrar actividades agrícolas y controles fitosanitarios.</p>
+        </div>
+        <span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span>
+      </div>
+      <div class="form">
+        <div class="field">
+          <label>Nombre</label>
+          <div class="control focus"><span class="caret"></span><span class="ph">Ej.: Urea 46 %</span></div>
+          <div class="help">Como lo conocen en la finca, de 2 a 80 caracteres.</div>
+        </div>
+        <div class="field">
+          <label>Tipo de insumo</label>
+          <div class="control"><span class="ph">Elige un tipo</span><svg class="i chev"><use href="#i-chev"/></svg></div>
+        </div>
+        <div class="field">
+          <label>Unidad de medida</label>
+          <div class="control"><span class="ph">Elige una unidad</span><svg class="i chev"><use href="#i-chev"/></svg></div>
+          <div class="help">Es la unidad en que se van a registrar las cantidades aplicadas.</div>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn btn-secondary" type="button">Cancelar</button>
+        <button class="btn btn-primary" type="button">Guardar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<section class="notes">
-  <div class="eyebrow">Notas para implementar · features/007</div>
-  <h2 class="serif">Lista de insumos (escritorio)</h2>
-  <ol>
-    <li><span class="tag">HU-08 CA-01</span>Columnas: nombre, tipo, unidad y estado, ordenadas por nombre. Un bulto se nombra siempre con su peso: <b>Bulto de 50 kg</b>.</li>
-    <li><span class="tag">HU-08 CA-02</span>La búsqueda filtra mientras se escribe y no distingue mayúsculas, tildes, espacios ni guiones: <code>urea46</code> encuentra <b>Urea 46 %</b>. Corre en el dispositivo, sin pedir al servidor.</li>
-    <li>El filtro <b>Estado</b> arranca en <b>Activos</b>. Aquí se muestra en <b>Todos</b> para que se vea un insumo inactivo. <b>Limpiar filtros</b> solo aparece si hay alguno puesto.</li>
-    <li>El inactivo usa el mismo tono que en variedades (advertencia, con ícono y texto) y su nombre se ve en gris. Sigue siendo editable.</li>
-    <li><b>Editar</b> abre el formulario (ver <code>s2-02</code>). El menú <b>Más acciones</b> tiene <b>Desactivar</b> (o <b>Activar</b>) y <b>Eliminar</b>. <b>Eliminar</b> no aparece si el insumo tiene registros, ni si la persona no tiene el permiso: el Capataz/Operario no lo tiene por defecto.</li>
-    <li>Sin el permiso de registrar no aparece <b>Registrar insumo</b>. Sin el de editar no aparecen <b>Editar</b> ni el menú.</li>
-    <li>La lista no se pagina: el catálogo de un productor es corto y se guarda entero para consultarlo sin conexión.</li>
-    <li>La cuenta técnica ve además un filtro <b>Productor</b> y una columna <b>Productor</b> (no se dibuja aquí).</li>
-    <li>Los insumos son datos de ejemplo. No se usan como fixtures.</li>
-  </ol>
+<section class="extras">
+  <div class="panel">
+    <div class="eyebrow">Lista desplegable</div>
+    <h3 class="serif">Tipo de insumo</h3>
+    <div class="opts" role="listbox" aria-label="Tipo de insumo">
+      <div class="opt sel" role="option" aria-selected="true">Fertilizante<span class="hint">urea, triple 15</span></div>
+      <div class="opt" role="option">Abono<span class="hint">compost, gallinaza</span></div>
+      <div class="opt" role="option">Fungicida</div>
+      <div class="opt" role="option">Insecticida</div>
+      <div class="opt" role="option">Otro</div>
+    </div>
+    <p>Los ejemplos en gris solo orientan aquí. En la app cada opción muestra solo el nombre del tipo.</p>
+  </div>
+  <div class="panel">
+    <div class="eyebrow">Lista desplegable</div>
+    <h3 class="serif">Unidad de medida</h3>
+    <div class="opts" role="listbox" aria-label="Unidad de medida">
+      <div class="opt" role="option">Kilogramos</div>
+      <div class="opt" role="option">Gramos</div>
+      <div class="opt" role="option">Litros</div>
+      <div class="opt" role="option">Mililitros</div>
+      <div class="opt sel" role="option" aria-selected="true">Bulto<span class="hint">pide su peso en kg</span></div>
+      <div class="opt" role="option">Unidades<span class="hint">trampas y otros</span></div>
+    </div>
+    <p>Con <b>Bulto</b> aparece debajo <b>Peso del bulto (kg)</b>, también obligatorio (estado 2 de <code>s2-14</code>).</p>
+  </div>
+  <div style="display:flex;gap:24px;align-items:flex-start">
+    <div class="phone" role="dialog" aria-labelledby="m-title">
+      <div class="m-top">
+        <h2 class="serif" id="m-title">Registrar insumo</h2>
+        <span class="close" aria-label="Cerrar" style="width:48px;height:48px"><svg class="i"><use href="#i-x"/></svg></span>
+      </div>
+      <div class="m-body">
+        <p class="sub" style="margin:0">Lo podrás elegir al registrar actividades agrícolas y controles fitosanitarios.</p>
+        <div class="field"><label>Nombre</label><div class="control focus"><span class="caret"></span><span class="ph">Ej.: Urea 46 %</span></div><div class="help">Como lo conocen en la finca, de 2 a 80 caracteres.</div></div>
+        <div class="field"><label>Tipo de insumo</label><div class="control"><span class="ph">Elige un tipo</span><svg class="i chev"><use href="#i-chev"/></svg></div></div>
+        <div class="field"><label>Unidad de medida</label><div class="control"><span class="ph">Elige una unidad</span><svg class="i chev"><use href="#i-chev"/></svg></div><div class="help">Es la unidad en que se van a registrar las cantidades aplicadas.</div></div>
+      </div>
+      <div class="m-foot">
+        <button class="btn btn-secondary" type="button">Cancelar</button>
+        <button class="btn btn-primary" type="button">Guardar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">Notas para implementar · features/007</div>
+      <h3 class="serif">Registrar insumo</h3>
+      <ul class="notes-list">
+        <li><span class="tag">HU-07 CA-01</span>Se abre con <b>Registrar insumo</b> desde la lista. Los tres campos son obligatorios y empiezan vacíos. El foco cae en <b>Nombre</b>.</li>
+        <li>En escritorio es un diálogo sobre la lista. En celular ocupa toda la pantalla, con controles de 48 px y los botones fijos abajo.</li>
+        <li><b>Editar insumo</b> es este mismo formulario con los valores cargados y el botón <b>Guardar cambios</b>.</li>
+        <li>Al guardar: <b>Insumo guardado con éxito</b>, se cierra el diálogo y el insumo aparece en la lista, activo.</li>
+        <li><b>Cancelar</b>, la X y la tecla Esc cierran sin guardar. El foco vuelve al botón que abrió el diálogo.</li>
+        <li>Errores, duplicados, bulto y unidad bloqueada: <code>s2-14</code>.</li>
+      </ul>
+    </div>
+  </div>
 </section>
 </body>
 </html>
