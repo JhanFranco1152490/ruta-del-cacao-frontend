@@ -1,11 +1,7 @@
-const HECTARES = new Intl.NumberFormat('es', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+import { formatDecimal } from './decimal';
 
 // La API entrega las áreas como decimales en texto con dos decimales: "2.40" se lee "2,4 ha".
-export const formatHectareValue = (value: string) =>
-  HECTARES.format(Number(value));
+export const formatHectareValue = formatDecimal;
 
 export const formatHectares = (value: string) =>
   `${formatHectareValue(value)} ha`;
