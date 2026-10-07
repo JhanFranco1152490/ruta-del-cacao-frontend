@@ -134,4 +134,24 @@ describe('PointsMapPanel', () => {
       'true',
     );
   });
+
+  it('says which polygon was touched', async () => {
+    const onSelectShape = vi.fn();
+    render(
+      <PointsMapPanel
+        emptyMessage="Sin parcelas."
+        label="Mapa de parcelas"
+        loadProvider={loadFakePointsMap}
+        onSelectShape={onSelectShape}
+        points={[]}
+        shapes={[SHAPE]}
+      />,
+    );
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Tocar P1' }),
+    );
+
+    expect(onSelectShape).toHaveBeenCalledWith('pl1');
+  });
 });

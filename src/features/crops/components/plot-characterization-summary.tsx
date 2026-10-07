@@ -9,7 +9,11 @@ import { useSession } from '@/hooks/use-session';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { useActiveCacaoVarieties, useFarmCharacterizations } from '../api';
+import {
+  useActiveCacaoVarieties,
+  useFarmCharacterizations,
+  usePlotsCharacterizations,
+} from '../api';
 import {
   characterizationHistoryPath,
   characterizationPath,
@@ -23,28 +27,41 @@ import { CHARACTERIZATION_PLOT_DELETED_CODE } from '../sync-adapter';
 import { useQueuedCharacterizations } from '../use-characterization-queue';
 import { CharacterizationDiscardDialog } from './characterization-discard-dialog';
 
-// Lo que el resumen necesita de la parcela y de su finca. Lo entrega el detalle de la finca, que
-// une los dominios: este no importa del de parcelas.
+// Lo que el resumen necesita de la parcela y de su finca. Lo entrega quien une los dominios (el
+// detalle de la finca, las pantallas generales): este no importa del de parcelas.
 export type SummaryPlot = {
   id: string;
   code: string;
   isActive: boolean;
 };
 
-// El resumen de la ficha dentro de la tarjeta de cada parcela, con su acción. Todas las
-// tarjetas de una finca comparten la misma consulta de fichas.
+// El resumen de la ficha dentro de la tarjeta de cada parcela, con sus acciones. Todas las
+// tarjetas de una finca (o de una página de parcelas, con `pagePlotIds`) comparten la misma
+// consulta de fichas.
 export function PlotCharacterizationSummary({
   plot,
   farmId,
   farmIsActive,
+  pagePlotIds,
+  withActions = true,
 }: {
   plot: SummaryPlot;
   farmId: string;
   farmIsActive: boolean;
+  // Las parcelas de la página en que está la tarjeta, cuando no son las de una sola finca.
+  pagePlotIds?: readonly string[];
+  // Sin acciones, solo dice cómo está la ficha (la pantalla de parcelas).
+  withActions?: boolean;
 }) {
   const { data: user } = useSession();
   const canCharacterize = hasPermission(user, PERMISSIONS.CROPS_CHARACTERIZE);
-  const server = useFarmCharacterizations(user?.id, farmId);
+  const byFarm = useFarmCharacterizations(user?.id, farmId, {
+    enabled: !pagePlotIds,
+  });
+  const byPlots = usePlotsCharacterizations(user?.id, pagePlotIds ?? [], {
+    enabled: !!pagePlotIds,
+  });
+  const server = pagePlotIds ? byPlots : byFarm;
   const catalog = useActiveCacaoVarieties(user?.id);
   const plotIds = useMemo(() => [plot.id], [plot.id]);
   const queued = useQueuedCharacterizations(user?.id, plotIds);
@@ -111,7 +128,7 @@ export function PlotCharacterizationSummary({
           {pending.errorMessage ? `: ${pending.errorMessage}` : '.'}
         </p>
       )}
-      {(canEdit || failed || saved) && (
+      {withActions && (canEdit || failed || saved) && (
         <div className="flex flex-wrap gap-2">
           {canEdit && (
             <Link

@@ -18,6 +18,7 @@ export function PointsMapPanel({
   points,
   shapes = [],
   focus,
+  onSelectShape,
   emptyMessage,
   loadProvider,
 }: {
@@ -25,6 +26,7 @@ export function PointsMapPanel({
   points: readonly MapPoint[];
   shapes?: readonly MapShape[];
   focus?: { shapeId: string };
+  onSelectShape?: (id: string) => void;
   emptyMessage: string;
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadPointsMapProvider;
@@ -68,6 +70,7 @@ export function PointsMapPanel({
             baseLayer={baseLayer}
             focus={focus}
             onError={map.fail}
+            onSelectShape={onSelectShape}
             points={points}
             shapes={shapes}
           />
