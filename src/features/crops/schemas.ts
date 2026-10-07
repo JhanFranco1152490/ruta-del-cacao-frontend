@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { normalizeCatalogName } from '@/lib/format/search';
+
 import {
   ageInMonths,
   densityPerHectare,
@@ -7,7 +9,6 @@ import {
   impossibleDensity,
   MAX_POSSIBLE_DENSITY,
   MANAGEMENT_SYSTEM_OPTIONS,
-  normalizeVarietyName,
   PROPAGATION_OPTIONS,
   SHADE_TYPE_OPTIONS,
   STAGE_OPTIONS,
@@ -163,7 +164,7 @@ export const createVarietyFormSchema = (takenNames: ReadonlySet<string>) =>
         `Usa máximo ${VARIETY_NAME_MAX_LENGTH} caracteres.`,
       )
       .refine(
-        (name) => !takenNames.has(normalizeVarietyName(name)),
+        (name) => !takenNames.has(normalizeCatalogName(name)),
         DUPLICATE_VARIETY_MESSAGE,
       ),
     // Se escriben separados por coma. Pueden repetirse entre variedades (de un mismo lugar salen
@@ -208,7 +209,7 @@ function splitCommonNames(text: string): string[] {
     .split(',')
     .map((name) => name.trim())
     .filter((name) => {
-      const key = normalizeVarietyName(name);
+      const key = normalizeCatalogName(name);
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
