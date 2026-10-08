@@ -25,3 +25,21 @@ describe('agricultural input query keys', () => {
     );
   });
 });
+
+describe('input stock query keys', () => {
+  it('hangs the stock of every farm from the key that movements invalidate', () => {
+    const all = queryKeys.inputStocks.all();
+    expect(startsWith(queryKeys.inputStocks.byFarm('f-1'), all)).toBe(true);
+    expect(queryKeys.inputStocks.byFarm('f-1')).not.toEqual(
+      queryKeys.inputStocks.byFarm('f-2'),
+    );
+  });
+
+  it('keeps the movements of each input in each farm apart', () => {
+    const all = queryKeys.inputMovements.all();
+    const movements = queryKeys.inputMovements.list('i-1', 'f-1');
+    expect(startsWith(movements, all)).toBe(true);
+    expect(movements).not.toEqual(queryKeys.inputMovements.list('i-1', 'f-2'));
+    expect(movements).not.toEqual(queryKeys.inputMovements.list('i-2', 'f-1'));
+  });
+});

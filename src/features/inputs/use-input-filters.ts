@@ -24,6 +24,7 @@ const parsers = {
   type: parseAsStringLiteral(TYPES),
   status: parseAsStringLiteral(STATUSES).withDefault('active'),
   producer: parseAsString,
+  farm: parseAsString,
 };
 
 // En la URL los parámetros van en español, como las rutas.
@@ -32,6 +33,7 @@ const urlKeys = {
   type: 'tipo',
   status: 'estado',
   producer: 'productor',
+  farm: 'finca',
 };
 
 export function useInputFilters() {
@@ -53,8 +55,14 @@ export function useInputFilters() {
     setSearch: (search: string) => setParams({ search: search || null }),
     setType: (type: InputType | '') => setParams({ type: type || null }),
     setStatus: (status: InputStatusFilter) => setParams({ status }),
-    setProducer: (producer: string | null) => setParams({ producer }),
-    // El productor no es un filtro sino de qué catálogo se trata: se conserva.
+    // La finca elegida era de otro productor: al cambiarlo, se vuelve a elegir.
+    setProducer: (producer: string | null) =>
+      setParams({ producer, farm: null }),
+    // `?finca=` vacío es "sin elegir": las existencias se muestran de una finca.
+    farm: params.farm || null,
+    setFarm: (farm: string | null) => setParams({ farm }),
+    // El productor y la finca no son filtros sino de qué catálogo y qué bodega se trata: se
+    // conservan.
     clear: () => setParams({ search: null, type: null, status: null }),
     // Lleva la lista a un insumo que ya existe (por ejemplo, el que tiene el nombre repetido),
     // esté activo o no.

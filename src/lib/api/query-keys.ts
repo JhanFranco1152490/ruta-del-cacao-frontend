@@ -38,6 +38,19 @@ export const queryKeys = {
     list: (producer: string | null) =>
       ['agricultural-inputs', 'list', producer] as const,
   },
+  inputStocks: {
+    // Lo que invalida una entrada o un conteo, y la salida de una actividad que llega del
+    // dispositivo: no siempre se sabe de qué finca era la copia abierta.
+    all: () => ['input-stocks'] as const,
+    // Las existencias de una finca, con copia en el dispositivo.
+    byFarm: (farmId: string) => ['input-stocks', 'farm', farmId] as const,
+  },
+  inputMovements: {
+    all: () => ['input-movements'] as const,
+    // Los movimientos de un insumo en una finca: solo se piden con conexión, sin copia local.
+    list: (inputId: string, farmId: string) =>
+      ['input-movements', inputId, farmId] as const,
+  },
   characterizations: {
     // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la
     // parcela).

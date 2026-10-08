@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   INPUTS_ADD: 'inputs.add_agriculturalinput',
   INPUTS_CHANGE: 'inputs.change_agriculturalinput',
   INPUTS_DELETE: 'inputs.delete_agriculturalinput',
+  INPUTS_MANAGE_STOCK: 'inputs.manage_inputstock',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',
   USERS_UPDATE: 'accounts.users_update',

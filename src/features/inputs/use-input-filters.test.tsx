@@ -38,11 +38,12 @@ describe('useInputFilters', () => {
       status: 'active',
     });
     expect(result.current.producer).toBeNull();
+    expect(result.current.farm).toBeNull();
   });
 
   it('reads the filters from the URL', () => {
     const { result } = setup(
-      '?buscar=urea&tipo=fertilizer&estado=inactive&productor=p-1',
+      '?buscar=urea&tipo=fertilizer&estado=inactive&productor=p-1&finca=f-1',
     );
 
     expect(result.current.filters).toEqual({
@@ -51,10 +52,11 @@ describe('useInputFilters', () => {
       status: 'inactive',
     });
     expect(result.current.producer).toBe('p-1');
+    expect(result.current.farm).toBe('f-1');
   });
 
   it('falls back to defaults for malformed parameters', () => {
-    const { result } = setup('?tipo=herbicide&estado=zzz&productor=');
+    const { result } = setup('?tipo=herbicide&estado=zzz&productor=&finca=');
 
     expect(result.current.filters).toEqual({
       search: '',
@@ -62,6 +64,7 @@ describe('useInputFilters', () => {
       status: 'active',
     });
     expect(result.current.producer).toBeNull();
+    expect(result.current.farm).toBeNull();
   });
 
   it('writes each filter to the URL in Spanish', async () => {
@@ -72,6 +75,7 @@ describe('useInputFilters', () => {
       result.current.setType('fungicide');
       result.current.setStatus('all');
       result.current.setProducer('p-1');
+      result.current.setFarm('f-1');
     });
 
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
@@ -81,6 +85,7 @@ describe('useInputFilters', () => {
       tipo: 'fungicide',
       estado: 'all',
       productor: 'p-1',
+      finca: 'f-1',
     });
   });
 
@@ -97,9 +102,9 @@ describe('useInputFilters', () => {
     expect(lastQuery(onUrlUpdate)).toBe('');
   });
 
-  it('clears the filters but keeps the chosen producer', async () => {
+  it('clears the filters but keeps the chosen producer and farm', async () => {
     const { result, onUrlUpdate } = setup(
-      '?buscar=urea&tipo=other&estado=inactive&productor=p-1',
+      '?buscar=urea&tipo=other&estado=inactive&productor=p-1&finca=f-1',
     );
 
     act(() => {
@@ -112,7 +117,18 @@ describe('useInputFilters', () => {
       type: '',
       status: 'active',
     });
-    expect(lastQuery(onUrlUpdate)).toBe('?productor=p-1');
+    expect(lastQuery(onUrlUpdate)).toBe('?productor=p-1&finca=f-1');
+  });
+
+  it('forgets the farm when the technical account changes producer', async () => {
+    const { result } = setup('?productor=p-1&finca=f-1');
+
+    act(() => {
+      result.current.setProducer('p-2');
+    });
+
+    await waitFor(() => expect(result.current.producer).toBe('p-2'));
+    expect(result.current.farm).toBeNull();
   });
 
   it('shows an existing input whatever its status', async () => {
