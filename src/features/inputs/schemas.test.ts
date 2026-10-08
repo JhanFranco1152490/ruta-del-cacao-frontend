@@ -13,7 +13,8 @@ const values = (overrides: Partial<InputFormInput> = {}): InputFormInput => ({
   name: 'Urea 46 %',
   input_type: 'fertilizer',
   unit: 'kg',
-  bag_weight_kg: '',
+  package_type: '',
+  package_size: '',
   ...overrides,
 });
 
@@ -33,7 +34,8 @@ describe('input form schema', () => {
       name: 'Urea 46 %',
       input_type: 'fertilizer',
       unit: 'kg',
-      bag_weight_kg: null,
+      package_type: null,
+      package_size: null,
     });
   });
 
@@ -66,56 +68,78 @@ describe('input form schema', () => {
   });
 });
 
-describe('bag weight', () => {
-  it('is required with the bag unit', () => {
-    expect(errorsOf(values({ unit: 'bag' })).bag_weight_kg).toBe(
-      REQUIRED_FIELD_MESSAGE,
+describe('package', () => {
+  const tub = { unit: 'ml' as const, package_type: 'tub' as const };
+
+  it('sends the package type and its content with a point', () => {
+    expect(schema.parse(values({ ...tub, package_size: '100' }))).toMatchObject(
+      { package_type: 'tub', package_size: '100' },
     );
+    expect(
+      schema.parse(
+        values({ unit: 'l', package_type: 'gallon', package_size: '3,785' }),
+      ).package_size,
+    ).toBe('3.785');
   });
 
-  it('accepts a comma and sends a decimal with a point', () => {
-    expect(
-      schema.parse(values({ unit: 'bag', bag_weight_kg: '46,5' }))
-        .bag_weight_kg,
-    ).toBe('46.5');
+  it('is optional, and travels empty without it', () => {
+    expect(schema.parse(values())).toMatchObject({
+      package_type: null,
+      package_size: null,
+    });
   });
 
-  it('goes from 1 to 100 kg', () => {
-    const range = 'El peso del bulto va de 1 a 100 kg.';
-    expect(
-      errorsOf(values({ unit: 'bag', bag_weight_kg: '0.5' })).bag_weight_kg,
-    ).toBe(range);
-    expect(
-      errorsOf(values({ unit: 'bag', bag_weight_kg: '100.5' })).bag_weight_kg,
-    ).toBe(range);
-    expect(
-      errorsOf(values({ unit: 'bag', bag_weight_kg: 'cincuenta' }))
-        .bag_weight_kg,
-    ).toBe(range);
-    expect(errorsOf(values({ unit: 'bag', bag_weight_kg: '1' }))).toEqual({});
-    expect(errorsOf(values({ unit: 'bag', bag_weight_kg: '100' }))).toEqual({});
+  it('needs both the type and the content', () => {
+    expect(errorsOf(values({ package_type: 'tub' }))).toEqual({
+      package_size: REQUIRED_FIELD_MESSAGE,
+    });
+    expect(errorsOf(values({ package_size: '100' }))).toEqual({
+      package_type: REQUIRED_FIELD_MESSAGE,
+    });
   });
 
-  it('takes at most two decimals', () => {
+  it('holds from 0,001 to 100.000', () => {
+    const range = 'El contenido va de 0,001 a 100.000.';
+    expect(errorsOf(values({ ...tub, package_size: '0' })).package_size).toBe(
+      range,
+    );
     expect(
-      errorsOf(values({ unit: 'bag', bag_weight_kg: '46.555' })).bag_weight_kg,
-    ).toBe('Usa máximo 2 decimales.');
+      errorsOf(values({ ...tub, package_size: '100000.5' })).package_size,
+    ).toBe(range);
+    expect(
+      errorsOf(values({ ...tub, package_size: 'cien' })).package_size,
+    ).toBe(range);
+    expect(errorsOf(values({ ...tub, package_size: '0.001' }))).toEqual({});
+    expect(errorsOf(values({ ...tub, package_size: '100000' }))).toEqual({});
+  });
+
+  it('takes at most three decimals', () => {
+    expect(
+      errorsOf(values({ ...tub, package_size: '1.2345' })).package_size,
+    ).toBe('Usa máximo 3 decimales.');
+  });
+
+  it('rejects a package outside the options', () => {
+    expect(
+      Object.keys(
+        errorsOf(
+          values({
+            package_type: 'crate' as InputFormInput['package_type'],
+            package_size: '10',
+          }),
+        ),
+      ),
+    ).toEqual(['package_type']);
   });
 
   it('is marked together with the other missing fields', () => {
-    expect(errorsOf(values({ name: '', input_type: '', unit: 'bag' }))).toEqual(
-      {
-        name: REQUIRED_FIELD_MESSAGE,
-        input_type: REQUIRED_FIELD_MESSAGE,
-        bag_weight_kg: REQUIRED_FIELD_MESSAGE,
-      },
-    );
-  });
-
-  it('is ignored with another unit', () => {
     expect(
-      schema.parse(values({ unit: 'kg', bag_weight_kg: 'abc' })).bag_weight_kg,
-    ).toBeNull();
+      errorsOf(values({ name: '', input_type: '', package_type: 'tub' })),
+    ).toEqual({
+      name: REQUIRED_FIELD_MESSAGE,
+      input_type: REQUIRED_FIELD_MESSAGE,
+      package_size: REQUIRED_FIELD_MESSAGE,
+    });
   });
 });
 

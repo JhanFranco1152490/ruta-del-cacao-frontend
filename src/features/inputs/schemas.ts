@@ -8,11 +8,12 @@ import {
 } from '@/lib/validation/decimal';
 
 import {
-  BAG_UNIT,
   INPUT_TYPE_OPTIONS,
   INPUT_UNIT_OPTIONS,
+  PACKAGE_TYPE_OPTIONS,
   type InputType,
   type InputUnit,
+  type PackageType,
 } from './input-options';
 
 export const REQUIRED_FIELD_MESSAGE = 'Campo obligatorio';
@@ -22,9 +23,9 @@ export const DUPLICATE_INPUT_MESSAGE =
 
 export const INPUT_NAME_MIN_LENGTH = 2;
 export const INPUT_NAME_MAX_LENGTH = 80;
-export const BAG_WEIGHT_MIN_KG = 1;
-export const BAG_WEIGHT_MAX_KG = 100;
-const BAG_WEIGHT_DECIMALS = 2;
+export const PACKAGE_SIZE_MIN = 0.001;
+export const PACKAGE_SIZE_MAX = 100_000;
+const PACKAGE_SIZE_DECIMALS = 3;
 
 // Nombre y tipo identifican un insumo dentro del catálogo: el mismo nombre con otro tipo es otro.
 export const inputDuplicateKey = (name: string, inputType: string) =>
@@ -59,6 +60,14 @@ const requiredChoice = <T extends string>(options: readonly { value: T }[]) =>
     .refine((value) => value !== '', REQUIRED_FIELD_MESSAGE)
     .transform((value) => value as T);
 
+// La presentación es opcional: vacía viaja como null.
+const optionalChoice = <T extends string>(options: readonly { value: T }[]) =>
+  z
+    .union([z.literal(''), z.enum(values(options))], {
+      error: 'Elige una opción de la lista.',
+    })
+    .transform((value) => (value === '' ? null : value));
+
 const nameField = () =>
   z
     .string()
@@ -74,14 +83,17 @@ const nameField = () =>
       if (message) context.addIssue({ code: 'custom', message });
     });
 
-function bagWeightError(weight: string): string | null {
-  if (!weight) return REQUIRED_FIELD_MESSAGE;
-  const kg = Number(weight);
-  if (!isDecimal(weight) || kg < BAG_WEIGHT_MIN_KG || kg > BAG_WEIGHT_MAX_KG) {
-    return `El peso del bulto va de ${BAG_WEIGHT_MIN_KG} a ${BAG_WEIGHT_MAX_KG} kg.`;
+function packageSizeError(size: string): string | null {
+  const amount = Number(size);
+  if (
+    !isDecimal(size) ||
+    amount < PACKAGE_SIZE_MIN ||
+    amount > PACKAGE_SIZE_MAX
+  ) {
+    return 'El contenido va de 0,001 a 100.000.';
   }
-  if (!decimalPattern(BAG_WEIGHT_DECIMALS).test(weight)) {
-    return `Usa máximo ${BAG_WEIGHT_DECIMALS} decimales.`;
+  if (!decimalPattern(PACKAGE_SIZE_DECIMALS).test(size)) {
+    return `Usa máximo ${PACKAGE_SIZE_DECIMALS} decimales.`;
   }
   return null;
 }
@@ -94,37 +106,38 @@ export const createInputFormSchema = (takenKeys: ReadonlySet<string>) =>
       name: nameField(),
       input_type: requiredChoice(INPUT_TYPE_OPTIONS),
       unit: requiredChoice(INPUT_UNIT_OPTIONS),
-      bag_weight_kg: decimalText(),
+      package_type: optionalChoice(PACKAGE_TYPE_OPTIONS),
+      package_size: decimalText(),
     })
-    .superRefine(({ name, input_type, unit, bag_weight_kg }, context) => {
-      if (takenKeys.has(inputDuplicateKey(name, input_type))) {
-        context.addIssue({
-          code: 'custom',
-          path: ['name'],
-          message: DUPLICATE_INPUT_MESSAGE,
-        });
-      }
-      const weightError =
-        unit === BAG_UNIT ? bagWeightError(bag_weight_kg) : null;
-      if (weightError) {
-        context.addIssue({
-          code: 'custom',
-          path: ['bag_weight_kg'],
-          message: weightError,
-        });
-      }
-    })
-    // El peso solo existe para el bulto: con otra unidad viaja vacío, como lo espera la API.
-    .transform(({ bag_weight_kg, ...input }) => ({
+    .superRefine(
+      ({ name, input_type, package_type, package_size }, context) => {
+        const issue = (path: string, message: string) =>
+          context.addIssue({ code: 'custom', path: [path], message });
+        if (takenKeys.has(inputDuplicateKey(name, input_type))) {
+          issue('name', DUPLICATE_INPUT_MESSAGE);
+        }
+        // Empaque y contenido van juntos: uno sin el otro no dice cómo viene el insumo.
+        if (package_type && !package_size) {
+          issue('package_size', REQUIRED_FIELD_MESSAGE);
+        }
+        if (package_size) {
+          if (!package_type) issue('package_type', REQUIRED_FIELD_MESSAGE);
+          const sizeError = packageSizeError(package_size);
+          if (sizeError) issue('package_size', sizeError);
+        }
+      },
+    )
+    .transform(({ package_size, ...input }) => ({
       ...input,
-      bag_weight_kg: input.unit === BAG_UNIT ? bag_weight_kg : null,
+      package_size: input.package_type ? package_size : null,
     }));
 
 export type InputFormInput = {
   name: string;
   input_type: InputType | '';
   unit: InputUnit | '';
-  bag_weight_kg: string;
+  package_type: PackageType | '';
+  package_size: string;
 };
 export type InputFormValues = z.output<
   ReturnType<typeof createInputFormSchema>

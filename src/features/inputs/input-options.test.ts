@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  formatInputUnit,
   INPUT_TYPE_OPTIONS,
   INPUT_UNIT_OPTIONS,
   inputTypeLabel,
+  PACKAGE_TYPE_OPTIONS,
   matchesInputFilters,
 } from './input-options';
 
@@ -32,30 +32,29 @@ describe('input options', () => {
       'g',
       'l',
       'ml',
-      'bag',
       'unit',
+    ]);
+  });
+
+  it('names every package in singular and plural', () => {
+    expect(
+      PACKAGE_TYPE_OPTIONS.map(({ label, plural }) => `${label}/${plural}`),
+    ).toEqual([
+      'Bulto/bultos',
+      'Bolsa/bolsas',
+      'Pote/potes',
+      'Frasco/frascos',
+      'Botella/botellas',
+      'Galón/galones',
+      'Caneca/canecas',
+      'Caja/cajas',
+      'Sobre/sobres',
     ]);
   });
 
   it('labels a type, and shows an unknown value as it comes', () => {
     expect(inputTypeLabel('organic_fertilizer')).toBe('Abono');
     expect(inputTypeLabel('herbicide')).toBe('herbicide');
-  });
-});
-
-describe('formatInputUnit', () => {
-  it('names the unit', () => {
-    expect(formatInputUnit('kg', null)).toBe('Kilogramos');
-    expect(formatInputUnit('ml', null)).toBe('Mililitros');
-  });
-
-  it('says the weight of a bag', () => {
-    expect(formatInputUnit('bag', '50.00')).toBe('Bulto de 50 kg');
-    expect(formatInputUnit('bag', '46.50')).toBe('Bulto de 46,5 kg');
-  });
-
-  it('says only Bulto when the weight is missing', () => {
-    expect(formatInputUnit('bag', null)).toBe('Bulto');
   });
 });
 
