@@ -89,3 +89,16 @@ export function packagesToUnit(count: string, packageSize: string) {
   );
   return String(thousandths / 1000);
 }
+
+// Lo que un conteo cambia en las existencias. Sin movimientos todo lo contado es diferencia, y un
+// conteo también corrige unas existencias negativas.
+export function formatCountDifference(
+  counted: string,
+  stock: string | null,
+  unit: string,
+) {
+  const thousandths = toThousandths(counted) - toThousandths(stock ?? '0');
+  if (thousandths === 0) return 'Sin diferencia';
+  const sign = thousandths > 0 ? '+' : '';
+  return `Diferencia: ${sign}${formatQuantity(String(thousandths / 1000), unit)}`;
+}

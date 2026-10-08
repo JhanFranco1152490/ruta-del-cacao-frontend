@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatCountDifference,
   formatPackage,
   formatQuantity,
   formatStock,
@@ -81,5 +82,35 @@ describe('packagesToUnit', () => {
     expect(packagesToUnit('2.5', '50')).toBe('125');
     expect(packagesToUnit('3', '0.1')).toBe('0.3');
     expect(packagesToUnit('1.5', '3.785')).toBe('5.678');
+  });
+});
+
+describe('formatCountDifference', () => {
+  it('says what the count changes, with its sign', () => {
+    expect(formatCountDifference('230', '250.000', 'ml')).toBe(
+      'Diferencia: −20 mL',
+    );
+    expect(formatCountDifference('280', '250.000', 'ml')).toBe(
+      'Diferencia: +30 mL',
+    );
+  });
+
+  it('says when the count matches the stock', () => {
+    expect(formatCountDifference('250', '250.000', 'ml')).toBe(
+      'Sin diferencia',
+    );
+  });
+
+  it('counts everything as difference without movements, and fixes a negative stock', () => {
+    expect(formatCountDifference('100', null, 'kg')).toBe(
+      'Diferencia: +100 kg',
+    );
+    expect(formatCountDifference('0', '-20.000', 'ml')).toBe(
+      'Diferencia: +20 mL',
+    );
+  });
+
+  it('avoids floating point noise', () => {
+    expect(formatCountDifference('0.3', '0.1', 'l')).toBe('Diferencia: +0,2 L');
   });
 });
