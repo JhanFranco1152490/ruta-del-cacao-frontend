@@ -1,7 +1,7 @@
 import { formatDecimal } from './decimal';
 
 // La API entrega las áreas como decimales en texto con dos decimales: "2.40" se lee "2,4 ha".
-export const formatHectareValue = formatDecimal;
+export const formatHectareValue = (value: string) => formatDecimal(value);
 
 export const formatHectares = (value: string) =>
   `${formatHectareValue(value)} ha`;
