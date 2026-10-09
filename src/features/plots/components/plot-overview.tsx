@@ -13,39 +13,44 @@ import { formatDateTime } from '@/lib/format/dates';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { PLOT_LIST_PAGE_SIZE } from '../api';
+import { sectionPlots } from '../plot-groups';
 import type { OverviewPlot } from '../plot-overview';
 import { plotsToShapes } from '../plot-map';
 import { usePlotFilters } from '../use-plot-filters';
 import { usePlotOverview } from '../use-plot-overview';
+import { PlotCardActions } from './plot-card-actions';
+import { PlotCharacterizationProgress } from './plot-characterization-progress';
 import { PlotFarmLine } from './plot-farm-line';
 import { PlotList } from './plot-list';
 import { PlotOverviewFiltersBar } from './plot-overview-filters-bar';
+import { PlotSections } from './plot-sections';
 
-// Las parcelas de todas las fincas, con filtros y paginadas. La comparten la pantalla de parcelas
-// (con mapa) y la de caracterización, que agrega a cada tarjeta lo de su dominio.
+// Lo que otro dominio agrega a cada tarjeta (la ficha agronómica, con sus acciones). Recibe los
+// ids de la página para pedir lo suyo en una sola consulta.
+export type RenderPlotDetails = (
+  plot: OverviewPlot,
+  pagePlotIds: readonly string[],
+) => ReactNode;
+
+// Las parcelas de todas las fincas: filtros, contador de caracterización, mapa y tarjetas
+// agrupadas, cada una con todo lo que se puede hacer con ella.
 export function PlotOverview({
-  showMap = false,
   farmHref,
   renderPlotDetails,
-  renderSummary,
+  failedPlotIds,
   emptyAction,
 }: {
-  showMap?: boolean;
   // A dónde lleva el nombre de la finca: la pantalla de otro dominio, que entrega la página.
   farmHref?: (farmId: string) => string;
-  // Lo que otro dominio agrega a cada tarjeta. Recibe los ids de la página para pedir lo suyo en
-  // una sola consulta.
-  renderPlotDetails?: (
-    plot: OverviewPlot,
-    pagePlotIds: readonly string[],
-  ) => ReactNode;
-  renderSummary?: (pagePlotIds: readonly string[]) => ReactNode;
+  renderPlotDetails?: RenderPlotDetails;
+  // Las parcelas cuya ficha falló en el dispositivo (otro dominio), para el filtro "Con error".
+  failedPlotIds?: readonly string[];
   emptyAction?: ReactNode;
 }) {
   const { data: user } = useSession();
-  const filters = usePlotFilters();
-  const overview = usePlotOverview(filters);
   const ownProducer = !!user?.producer_id;
+  const filters = usePlotFilters({ ownProducer });
+  const overview = usePlotOverview(filters, { failedPlotIds });
   const canOpenProducer = hasPermission(user, PERMISSIONS.PRODUCERS_VIEW);
   // Estado de la interfaz, no del servidor: qué parcela enfocar en el mapa y qué tarjeta resaltar.
   const [focus, setFocus] = useState<{ shapeId: string }>();
@@ -54,15 +59,34 @@ export function PlotOverview({
 
   const plots = overview.plots ?? [];
   const pagePlotIds = plots.map((plot) => plot.id);
-  const filtered = !!(filters.query.search || filters.farm || filters.producer);
+  const before = overview.before && {
+    farm: {
+      id: overview.before.farm.id,
+      name: overview.before.farm.name,
+      isActive: overview.before.farm.is_active,
+      producer: overview.before.farm.producer,
+    },
+  };
+  const sections = sectionPlots(plots, filters.grouping, {
+    byProducer: !ownProducer,
+    before,
+  });
+
+  const showOnMap = (plot: OverviewPlot) => {
+    setFocus({ shapeId: plot.id });
+    // La lista está debajo del mapa: se sube hasta él para ver la parcela.
+    mapRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
 
   return (
     <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
-      <PlotOverviewFiltersBar
-        farms={overview.farms}
-        filters={filters}
-        pickProducer={!ownProducer}
-      />
+      <PlotOverviewFiltersBar filters={filters} pickProducer={!ownProducer} />
+      {overview.counts && (
+        <PlotCharacterizationProgress
+          done={overview.counts.done}
+          pending={overview.counts.pending}
+        />
+      )}
       {overview.queueError && (
         <ErrorState message="No fue posible leer las parcelas guardadas en este dispositivo." />
       )}
@@ -84,7 +108,7 @@ export function PlotOverview({
           {formatDateTime(new Date(overview.savedAt).toISOString())}.
         </p>
       )}
-      {showMap && !overview.isLoading && (
+      {!overview.isLoading && (
         <div className="scroll-mt-6" ref={mapRef}>
           <PointsMapPanel
             emptyMessage="Ninguna parcela de esta página tiene polígono para mostrar."
@@ -108,43 +132,38 @@ export function PlotOverview({
           <Skeleton className="h-40" />
         </div>
       ) : plots.length ? (
-        <>
-          {renderSummary?.(pagePlotIds)}
-          <PlotList
-            highlightedId={highlightedId}
-            onShowOnMap={
-              showMap
-                ? (plot) => {
-                    setFocus({ shapeId: plot.id });
-                    // La lista está debajo del mapa: se sube hasta él para ver la parcela.
-                    mapRef.current?.scrollIntoView({
-                      block: 'start',
-                      behavior: 'smooth',
-                    });
-                  }
-                : undefined
-            }
-            plots={plots}
-            renderDetails={(plot) => (
-              <>
-                <PlotFarmLine
-                  canOpenProducer={canOpenProducer}
-                  farm={plot.farm}
-                  farmHref={farmHref}
-                  showProducer={!ownProducer}
-                />
-                {renderPlotDetails?.(plot, pagePlotIds)}
-              </>
-            )}
-          />
-        </>
+        <PlotSections
+          renderList={(groupPlots) => (
+            <PlotList
+              highlightedId={highlightedId}
+              label={labelOf(sections, groupPlots)}
+              onShowOnMap={showOnMap}
+              plots={groupPlots}
+              renderActions={(plot) => (
+                <PlotCardActions farm={plot.farm} plot={plot} />
+              )}
+              renderDetails={(plot) => (
+                <>
+                  <PlotFarmLine
+                    canOpenProducer={canOpenProducer}
+                    farm={plot.farm}
+                    farmHref={farmHref}
+                    showProducer={!ownProducer}
+                  />
+                  {renderPlotDetails?.(plot, pagePlotIds)}
+                </>
+              )}
+            />
+          )}
+          sections={sections}
+        />
       ) : (
         !overview.serverError &&
         !overview.serverUnreachable &&
-        (filtered ? (
+        (filters.filtered ? (
           <EmptyState
             title="No hay parcelas que coincidan"
-            description="Prueba con otro código, otra finca u otro productor."
+            description="Prueba con otro código, otra finca, otro productor u otra caracterización."
           />
         ) : (
           <EmptyState
@@ -169,4 +188,14 @@ export function PlotOverview({
       )}
     </section>
   );
+}
+
+// El nombre de cada lista es el de su grupo: con varias en la pantalla, se distinguen.
+function labelOf(
+  sections: ReturnType<typeof sectionPlots>,
+  plots: readonly OverviewPlot[],
+) {
+  const section = sections.find((item) => item.plots === plots);
+  const header = section?.headers.at(-1);
+  return header ? `Parcelas de ${header.label}` : 'Parcelas';
 }

@@ -874,6 +874,10 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Plot"][];
+            characterization_counts: {
+                done: number;
+                pending: number;
+            };
         };
         PaginatedProducerListList: {
             /** @example 123 */
@@ -2527,10 +2531,14 @@ export interface operations {
     plots_list: {
         parameters: {
             query?: {
+                /** @description Solo las parcelas con ficha (`done`) o sin ella (`pending`). No cambia `characterization_counts`, que cuenta con los demás filtros. */
+                characterization?: "done" | "pending";
                 /** @description Solo las parcelas de esta finca. */
                 farm?: string;
                 /** @description Solo activas o solo inactivas. */
                 is_active?: boolean;
+                /** @description `code` (por defecto) o `producer,farm,code`: por nombre del productor, nombre de la finca y código, para agrupar. Cada nivel desempata por su id. */
+                ordering?: "code" | "producer,farm,code";
                 /** @description Un número de página dentro del conjunto de resultados paginado. */
                 page?: number;
                 /** @description Número de resultados a devolver por página. */

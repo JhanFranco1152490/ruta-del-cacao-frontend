@@ -1,5 +1,4 @@
 import {
-  ClipboardList,
   LandPlot,
   Leaf,
   MapPinned,
@@ -21,7 +20,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: PERMISSIONS.PRODUCERS_VIEW,
     needsConnection: true,
   },
-  // Fincas, parcelas y caracterización van seguidas: es el orden en que el productor trabaja.
+  // Fincas y parcelas van seguidas: es el orden en que el productor trabaja. La caracterización
+  // de cada parcela se hace desde su tarjeta, en Parcelas.
   {
     href: '/fincas',
     label: 'Fincas',
@@ -36,13 +36,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: LandPlot,
     permission: PERMISSIONS.PLOTS_VIEW,
     routes: ['/fincas/parcelas'],
-  },
-  {
-    href: '/caracterizacion',
-    label: 'Caracterización',
-    icon: ClipboardList,
-    permission: PERMISSIONS.PLOTS_VIEW,
-    routes: ['/fincas/parcelas/caracterizacion'],
   },
   {
     href: '/variedades',

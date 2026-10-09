@@ -21,6 +21,9 @@ export type OverviewFilters = {
   farm?: string;
   // Solo la cuenta técnica filtra por productor.
   producer?: string;
+  // Solo lo que falló en el dispositivo. La lista del servidor que acompaña son entonces las
+  // parcelas cuya ficha falló, que no vienen filtradas: se filtran aquí como lo del dispositivo.
+  onlyErrors?: boolean;
 };
 
 export type KnownFarms = ReadonlyMap<string, Omit<OverviewFarm, 'id'>>;
@@ -31,6 +34,11 @@ const farmOf = (plot: Plot): OverviewFarm => ({
   isActive: plot.farm.is_active,
   producer: plot.farm.producer,
 });
+
+const matchesServerFilters = (plot: Plot, filters: OverviewFilters) =>
+  (!filters.farm || plot.farm.id === filters.farm) &&
+  (!filters.producer || plot.farm.producer.id === filters.producer) &&
+  matchesSearch([plot.code], filters.search ?? '');
 
 const byCode = (a: KnownPlot, b: KnownPlot) =>
   a.code.localeCompare(b.code, 'es', { sensitivity: 'base' });
@@ -50,6 +58,7 @@ export function mergeOverviewPlots(
   const local = queued
     .filter(
       (plot) =>
+        (!filters.onlyErrors || plot.status === 'error') &&
         (!filters.farm || plot.farmId === filters.farm) &&
         (!filters.producer ||
           serverById.has(plot.id) ||
@@ -74,7 +83,11 @@ export function mergeOverviewPlots(
     .sort(byCode);
   const localIds = new Set(queued.map((plot) => plot.id));
   const rest = server
-    .filter((plot) => !localIds.has(plot.id))
+    .filter(
+      (plot) =>
+        !localIds.has(plot.id) &&
+        (!filters.onlyErrors || matchesServerFilters(plot, filters)),
+    )
     .map((plot): OverviewPlot => ({ ...fromServer(plot), farm: farmOf(plot) }));
   return [...local, ...rest];
 }

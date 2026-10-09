@@ -1,65 +1,109 @@
 'use client';
 
+import { FarmFilter } from '@/components/farm-filter';
 import { ProducerFilter } from '@/components/producer-filter';
+import { SegmentedControl } from '@/components/segmented-control';
+import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
-import { NativeSelect } from '@/components/ui/native-select';
-import type { FarmOption } from '@/lib/api/farm-options';
+import { useSession } from '@/hooks/use-session';
+import { useFarmDetail } from '@/lib/api/farm-detail';
 import { useProducerSummary } from '@/lib/api/producer-options';
 
-import type { usePlotFilters } from '../use-plot-filters';
+import type {
+  CharacterizationState,
+  Grouping,
+  usePlotFilters,
+} from '../use-plot-filters';
+
+const CHARACTERIZATION_LABELS: Record<CharacterizationState, string> = {
+  'sin-caracterizar': 'Sin caracterizar',
+  caracterizadas: 'Caracterizadas',
+  'con-error': 'Con error',
+};
 
 export function PlotOverviewFiltersBar({
   filters,
-  farms,
   pickProducer = false,
 }: {
   filters: ReturnType<typeof usePlotFilters>;
-  // Sin fincas que ofrecer (la cuenta técnica antes de elegir productor) no hay filtro de finca.
-  farms?: readonly FarmOption[];
-  // Solo quien ve parcelas de varios productores puede quedarse con las de uno.
+  // Solo quien ve parcelas de varios productores filtra y agrupa por productor.
   pickProducer?: boolean;
 }) {
+  const { data: user } = useSession();
+  // El nombre de la finca elegida, que puede no estar entre lo que trae el buscador.
+  const farm = useFarmDetail(user?.id, filters.farm ?? '');
   const selectedProducer = useProducerSummary(
     pickProducer ? (filters.producer ?? undefined) : undefined,
   );
+  const groupings: { value: Grouping; label: string }[] = [
+    { value: 'ninguno', label: 'Sin agrupar' },
+    ...(pickProducer
+      ? [{ value: 'productor' as const, label: 'Por productor' }]
+      : []),
+    { value: 'finca', label: 'Por finca' },
+  ];
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <TextField
-        label="Buscar parcela"
-        onChange={(event) => filters.setSearchInput(event.target.value)}
-        placeholder="Código de la parcela"
-        type="search"
-        value={filters.searchInput}
-        wrapperClassName="w-full max-w-md"
-      />
-      {pickProducer && (
-        <ProducerFilter
-          className="w-full sm:w-80"
-          label="Filtrar por productor"
-          onClear={() => void filters.setProducer(null)}
-          onSelect={(id) => void filters.setProducer(id)}
-          placeholder="Nombre, documento o código"
-          producer={filters.producer ?? undefined}
-          selected={selectedProducer}
-          showTrigger={false}
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <TextField
+          label="Buscar parcela"
+          onChange={(event) => filters.setSearchInput(event.target.value)}
+          placeholder="Código de la parcela"
+          type="search"
+          value={filters.searchInput}
+          wrapperClassName="w-full max-w-md"
         />
-      )}
-      {farms && farms.length > 0 && (
-        <NativeSelect
-          aria-label="Filtrar por finca"
-          className="text-sm sm:w-64"
-          onChange={(event) => void filters.setFarm(event.target.value || null)}
-          value={filters.farm ?? ''}
+        <FarmFilter
+          className="w-full sm:w-80"
+          farm={filters.farm ?? undefined}
+          label="Filtrar por finca"
+          onClear={() => void filters.setFarm(null)}
+          onSelect={(option) =>
+            void filters.setFarm(option.id, option.producer.id)
+          }
+          producer={filters.producer ?? undefined}
+          selectedLabel={filters.farm ? farm.data?.data.name : undefined}
+          showProducer={pickProducer}
+        />
+        {pickProducer && (
+          <ProducerFilter
+            className="w-full sm:w-80"
+            label="Filtrar por productor"
+            onClear={() => void filters.setProducer(null)}
+            onSelect={(id) => void filters.setProducer(id)}
+            placeholder="Nombre, documento o código"
+            producer={filters.producer ?? undefined}
+            selected={selectedProducer}
+            showTrigger={false}
+          />
+        )}
+        <SelectField
+          label="Caracterización"
+          onChange={(event) =>
+            void filters.setCharacterization(
+              (event.target.value || null) as CharacterizationState | null,
+            )
+          }
+          value={filters.characterization ?? ''}
+          wrapperClassName="w-full sm:w-56"
         >
-          <option value="">Todas las fincas</option>
-          {farms.map((farm) => (
-            <option key={farm.id} value={farm.id}>
-              {farm.name}
+          <option value="">Todas</option>
+          {(
+            Object.keys(CHARACTERIZATION_LABELS) as CharacterizationState[]
+          ).map((value) => (
+            <option key={value} value={value}>
+              {CHARACTERIZATION_LABELS[value]}
             </option>
           ))}
-        </NativeSelect>
-      )}
+        </SelectField>
+      </div>
+      <SegmentedControl
+        label="Agrupar"
+        onChange={(value) => void filters.setGrouping(value)}
+        options={groupings}
+        value={filters.grouping}
+      />
     </div>
   );
 }

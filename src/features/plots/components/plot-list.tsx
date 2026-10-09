@@ -15,9 +15,10 @@ export function PlotList<T extends KnownPlot>({
   highlightedId,
   renderDetails,
   renderActions,
+  label = 'Parcelas',
 }: {
   plots: readonly T[];
-  // Sin mapa al lado (la pantalla de caracterización), la tarjeta no ofrece verla en él.
+  // Sin mapa al lado, la tarjeta no ofrece verla en él.
   onShowOnMap?: (plot: T) => void;
   // La parcela tocada en el mapa.
   highlightedId?: string;
@@ -25,9 +26,11 @@ export function PlotList<T extends KnownPlot>({
   // lista lo conozca.
   renderDetails?: (plot: T) => ReactNode;
   renderActions?: (plot: T) => ReactNode;
+  // El nombre de la lista; con varias en la misma pantalla (una por grupo), el de su grupo.
+  label?: string;
 }) {
   return (
-    <ul className="grid gap-3 md:grid-cols-2" aria-label="Parcelas">
+    <ul className="grid gap-3 md:grid-cols-2" aria-label={label}>
       {plots.map((plot) => {
         const hasPolygon = plot.vertices.length >= 3;
         const canShowOnMap = hasPolygon && onShowOnMap;

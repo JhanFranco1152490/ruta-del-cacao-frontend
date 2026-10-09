@@ -57,6 +57,8 @@ export const queryKeys = {
     // Una parcela que todavía está en la cola del dispositivo de esta persona.
     queued: (userId: string, id: string) =>
       ['plots', 'queued', userId, id] as const,
+    // Una parcela leída sola, por su id.
+    detail: (id: string) => ['plots', 'detail', id] as const,
   },
   farms: {
     all: () => ['farms'] as const,
@@ -66,6 +68,8 @@ export const queryKeys = {
     // Las fincas de un productor para elegir una en un filtro.
     options: (producer: string | undefined) =>
       ['farms', 'options', producer ?? ''] as const,
+    // Las fincas que calzan con un buscador de finca.
+    search: (query: object) => ['farms', 'search', query] as const,
     // La finca tal como la muestra su pantalla de detalle, con la fecha de la copia si vino del
     // dispositivo. Cuelga de `detail`, así que lo que invalida una finca invalida también esta.
     detailView: (id: string) => ['farms', 'detail', id, 'view'] as const,

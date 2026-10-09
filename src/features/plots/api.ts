@@ -1,6 +1,7 @@
 import {
   keepPreviousData,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
@@ -26,11 +27,19 @@ export type FarmPlots = { plots: Plot[]; hasMore: boolean };
 // La pantalla general pagina como la de fincas.
 export const PLOT_LIST_PAGE_SIZE = 20;
 
+type PlotListParams = NonNullable<
+  operations['plots_list']['parameters']['query']
+>;
+
 export type PlotQuery = {
   search?: string;
   farm?: string;
   producer?: string;
+  characterization?: PlotListParams['characterization'];
+  ordering?: PlotListParams['ordering'];
   page?: number;
+  // Por defecto, una página de la lista.
+  pageSize?: number;
 };
 
 export const fetchPlots = (query: PlotQuery, signal?: AbortSignal) => {
@@ -38,8 +47,11 @@ export const fetchPlots = (query: PlotQuery, signal?: AbortSignal) => {
   if (query.search) params.set('search', query.search);
   if (query.farm) params.set('farm', query.farm);
   if (query.producer) params.set('producer', query.producer);
+  if (query.characterization)
+    params.set('characterization', query.characterization);
+  if (query.ordering) params.set('ordering', query.ordering);
   params.set('page', String(query.page ?? 1));
-  params.set('page_size', String(PLOT_LIST_PAGE_SIZE));
+  params.set('page_size', String(query.pageSize ?? PLOT_LIST_PAGE_SIZE));
   return apiFetch<Schemas['PaginatedPlotList']>(`/api/plots?${params}`, {
     signal,
   });
@@ -58,6 +70,57 @@ export const usePlots = (userId: string | undefined, query: PlotQuery) =>
     networkMode: 'offlineFirst',
     placeholderData: keepPreviousData,
   });
+
+// La parcela que cierra la página anterior, para saber si el primer grupo de esta página empezó
+// allá ("continúa"). Se pide sola: con páginas de una parcela, la página número `(n-1)·20` es
+// justo esa. Sin ella (sin conexión, primera página) el grupo simplemente no lo dice.
+export const usePlotBefore = (
+  userId: string | undefined,
+  query: PlotQuery,
+  { enabled = true } = {},
+) => {
+  const page = query.page ?? 1;
+  const position = (page - 1) * PLOT_LIST_PAGE_SIZE;
+  return useQuery({
+    queryKey: queryKeys.plots.list({ ...query, before: true }),
+    queryFn: async ({ signal }) => {
+      const result = await fetchPlots(
+        { ...query, page: position, pageSize: 1 },
+        signal,
+      );
+      return result.results[0] ?? null;
+    },
+    enabled: enabled && !!userId && page > 1,
+  });
+};
+
+export const fetchPlot = (id: string, signal?: AbortSignal) =>
+  apiFetch<Plot>(`/api/plots/${id}`, { signal });
+
+// Parcelas sueltas por su id (las que tienen algo pendiente con error en el dispositivo), con
+// copia para leerlas sin conexión. Una que ya no existe simplemente no viene.
+export function usePlotsByIds(
+  userId: string | undefined,
+  ids: readonly string[],
+) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: queryKeys.plots.detail(id),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        readThroughCache(userId!, `plot:${id}`, () => fetchPlot(id, signal)),
+      enabled: !!userId,
+      networkMode: 'offlineFirst' as const,
+    })),
+    combine: (results) => ({
+      plots: results.flatMap((result) =>
+        result.data ? [result.data.data] : [],
+      ),
+      isLoading: results.some(
+        (result) => result.isPending && result.fetchStatus !== 'paused',
+      ),
+    }),
+  });
+}
 
 export const fetchFarmPlots = async (
   farmId: string,

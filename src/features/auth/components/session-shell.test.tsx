@@ -152,8 +152,8 @@ describe('SessionShell', () => {
     expect(within(nav).getByRole('link', { name: 'Fincas' })).toBeVisible();
     expect(within(nav).getByRole('link', { name: 'Parcelas' })).toBeVisible();
     expect(
-      within(nav).getByRole('link', { name: 'Caracterización' }),
-    ).toBeVisible();
+      within(nav).queryByRole('link', { name: 'Caracterización' }),
+    ).not.toBeInTheDocument();
   });
 
   it('hides and shows the sidebar and remembers it on the next visit', async () => {

@@ -19,6 +19,7 @@ export const useFarmDetail = (userId: string | undefined, id: string) =>
     queryKey: queryKeys.farms.detailView(id),
     queryFn: ({ signal }) =>
       readThroughCache(userId!, `farm:${id}`, () => fetchFarm(id, signal)),
-    enabled: !!userId,
+    // Sin finca no hay nada que pedir (un filtro de finca vacío).
+    enabled: !!userId && !!id,
     networkMode: 'offlineFirst',
   });

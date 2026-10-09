@@ -99,6 +99,18 @@ export async function getQueuedCharacterization(
 }
 
 // Las fichas que siguen en este dispositivo (pendientes o con error) para estas parcelas.
+// Las parcelas cuya ficha no se pudo enviar: el servidor la rechazó y espera una corrección.
+export async function listFailedCharacterizationPlotIds(
+  userId: string,
+): Promise<string[]> {
+  const items = await getOfflineDb(userId)
+    .queue.where('resource')
+    .equals(CHARACTERIZATION_RESOURCE)
+    .filter((item) => item.status === 'error')
+    .toArray();
+  return items.map((item) => item.parentId!);
+}
+
 export async function listQueuedCharacterizations(
   userId: string,
   plotIds: readonly string[],

@@ -14,12 +14,12 @@ import { PlotOverview } from './plot-overview';
 // Sin finca en la dirección, el editor deja elegirla.
 const REGISTER_PLOT_PATH = '/fincas/parcelas/nueva';
 
-// El segundo paso del trabajo del productor: después de sus fincas, todas sus parcelas juntas con
-// su mapa.
+// El segundo paso del trabajo del productor: después de sus fincas, todas sus parcelas juntas,
+// con su mapa, su caracterización y todo lo que se puede hacer con cada una.
 export function PlotListScreen(
   props: Pick<
     ComponentProps<typeof PlotOverview>,
-    'farmHref' | 'renderPlotDetails'
+    'farmHref' | 'renderPlotDetails' | 'failedPlotIds'
   >,
 ) {
   const { data: user } = useSession();
@@ -40,16 +40,12 @@ export function PlotListScreen(
         title={ownProducer ? 'Mis parcelas' : 'Parcelas'}
         description={
           ownProducer
-            ? 'Consulta las parcelas de todas tus fincas, su área y su polígono.'
+            ? 'Consulta, caracteriza y administra las parcelas de todas tus fincas.'
             : 'Consulta las parcelas de las fincas de los productores.'
         }
         actions={registerLink || undefined}
       />
-      <PlotOverview
-        {...props}
-        emptyAction={registerLink || undefined}
-        showMap
-      />
+      <PlotOverview {...props} emptyAction={registerLink || undefined} />
     </div>
   );
 }

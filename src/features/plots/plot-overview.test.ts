@@ -120,4 +120,28 @@ describe('mergeOverviewPlots', () => {
 
     expect(plots.map((plot) => plot.id).sort()).toEqual(['mine', 's1']);
   });
+
+  it('keeps only what failed, and filters the plots whose characterization failed', () => {
+    const plots = mergeOverviewPlots(
+      [
+        buildPlot({ id: 'ficha-con-error', code: 'A1' }),
+        buildPlot({
+          id: 'otra-finca',
+          code: 'A2',
+          farm: { ...buildPlot().farm, id: 'f2' },
+        }),
+      ],
+      [
+        queued({ id: 'pendiente' }),
+        queued({ id: 'con-error', status: 'error' }),
+      ],
+      { onlyErrors: true, farm: 'f1' },
+      noFarms,
+    );
+
+    expect(plots.map((plot) => plot.id)).toEqual([
+      'con-error',
+      'ficha-con-error',
+    ]);
+  });
 });

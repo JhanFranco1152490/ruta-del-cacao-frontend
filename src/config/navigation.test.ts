@@ -88,7 +88,6 @@ describe('NAV_ITEMS', () => {
       '/productores',
       '/fincas',
       '/parcelas',
-      '/caracterizacion',
       '/variedades',
       '/roles',
       '/usuarios',
@@ -101,7 +100,6 @@ describe('NAV_ITEMS', () => {
     expect(byHref['/productores'].permission).toBe(PERMISSIONS.PRODUCERS_VIEW);
     expect(byHref['/fincas'].permission).toBe(PERMISSIONS.FARMS_VIEW);
     expect(byHref['/parcelas'].permission).toBe(PERMISSIONS.PLOTS_VIEW);
-    expect(byHref['/caracterizacion'].permission).toBe(PERMISSIONS.PLOTS_VIEW);
     expect(byHref['/variedades'].permission).toBe(
       PERMISSIONS.CROPS_MANAGE_VARIETIES,
     );
@@ -151,16 +149,16 @@ describe('navItemForPath', () => {
     expect(navItemForPath([field, task], '/campo/editar')).toBe(field);
   });
 
-  it('gives the plot and characterization routes to their own sections', () => {
+  it('gives the plot and characterization routes to the plots section', () => {
     const href = (pathname: string) =>
       navItemForPath(NAV_ITEMS, pathname)?.href;
 
     expect(href('/fincas/detalle')).toBe('/fincas');
     expect(href('/fincas/parcelas/nueva')).toBe('/parcelas');
     expect(href('/fincas/parcelas/editar')).toBe('/parcelas');
-    expect(href('/fincas/parcelas/caracterizacion')).toBe('/caracterizacion');
+    expect(href('/fincas/parcelas/caracterizacion')).toBe('/parcelas');
     expect(href('/fincas/parcelas/caracterizacion/historial')).toBe(
-      '/caracterizacion',
+      '/parcelas',
     );
   });
 });

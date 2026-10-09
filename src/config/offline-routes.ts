@@ -14,7 +14,6 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/fincas/parcelas/caracterizacion',
   '/fincas/parcelas/caracterizacion/historial',
   '/parcelas',
-  '/caracterizacion',
   '/productores',
   '/productores/nuevo',
   '/variedades',
