@@ -92,7 +92,7 @@ const groupHeadings = async () =>
   );
 
 describe('PlotListScreen', () => {
-  it('groups the plots by farm when asked, as the server orders them', async () => {
+  it('groups the plots by farm by default, as the server orders them', async () => {
     const requests: URLSearchParams[] = [];
     server.use(
       plotsHandler(
@@ -104,7 +104,7 @@ describe('PlotListScreen', () => {
         requests,
       ),
     );
-    renderScreen({ searchParams: '?agrupar=finca' });
+    renderScreen();
 
     expect(
       await screen.findByRole('heading', { name: 'Mis parcelas' }),
@@ -121,7 +121,7 @@ describe('PlotListScreen', () => {
     expect(screen.queryByText(/Productor:/)).not.toBeInTheDocument();
   });
 
-  it('lists them flat, by code, by default', async () => {
+  it('lists them flat, by code, when told not to group', async () => {
     const requests: URLSearchParams[] = [];
     server.use(
       plotsHandler(
@@ -132,7 +132,7 @@ describe('PlotListScreen', () => {
         requests,
       ),
     );
-    renderScreen();
+    renderScreen({ searchParams: '?agrupar=ninguno' });
 
     expect(
       within(
@@ -284,7 +284,7 @@ describe('PlotListScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Tocar P1' }));
 
     const [touched, other] = within(
-      screen.getByRole('list', { name: 'Parcelas' }),
+      screen.getByRole('list', { name: 'Parcelas de La Esperanza' }),
     ).getAllByRole('article');
     expect(touched).toHaveAttribute('data-highlighted', 'true');
     expect(other).not.toHaveAttribute('data-highlighted');
@@ -404,7 +404,7 @@ describe('PlotListScreen', () => {
 
     it('reads the copy saved the last time the list was seen', async () => {
       await getOfflineDb(userId).cache.put({
-        key: `plots:list:${JSON.stringify({ ordering: 'code', page: 1 })}`,
+        key: `plots:list:${JSON.stringify({ ordering: 'producer,farm,code', page: 1 })}`,
         value: {
           ...buildPage([buildPlot({ code: 'P-guardada' })]),
           characterization_counts: { done: 0, pending: 1 },

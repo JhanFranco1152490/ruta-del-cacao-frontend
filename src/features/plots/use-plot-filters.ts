@@ -28,7 +28,7 @@ const parsers = {
   farm: parseAsString,
   producer: parseAsString,
   characterization: parseAsStringLiteral(CHARACTERIZATION_STATES),
-  grouping: parseAsStringLiteral(GROUPINGS).withDefault('ninguno'),
+  grouping: parseAsStringLiteral(GROUPINGS).withDefault('finca'),
   page: parseAsInteger.withDefault(1),
 };
 const urlKeys = {

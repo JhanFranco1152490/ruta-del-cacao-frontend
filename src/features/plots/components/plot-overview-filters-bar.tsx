@@ -78,6 +78,8 @@ export function PlotOverviewFiltersBar({
             showTrigger={false}
           />
         )}
+      </div>
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <SelectField
           label="Caracterización"
           onChange={(event) =>
@@ -97,13 +99,13 @@ export function PlotOverviewFiltersBar({
             </option>
           ))}
         </SelectField>
+        <SegmentedControl
+          label="Agrupar"
+          onChange={(value) => void filters.setGrouping(value)}
+          options={groupings}
+          value={filters.grouping}
+        />
       </div>
-      <SegmentedControl
-        label="Agrupar"
-        onChange={(value) => void filters.setGrouping(value)}
-        options={groupings}
-        value={filters.grouping}
-      />
     </div>
   );
 }

@@ -81,12 +81,6 @@ export function PlotOverview({
   return (
     <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
       <PlotOverviewFiltersBar filters={filters} pickProducer={!ownProducer} />
-      {overview.counts && (
-        <PlotCharacterizationProgress
-          done={overview.counts.done}
-          pending={overview.counts.pending}
-        />
-      )}
       {overview.queueError && (
         <ErrorState message="No fue posible leer las parcelas guardadas en este dispositivo." />
       )}
@@ -124,6 +118,14 @@ export function PlotOverview({
             }}
             points={[]}
             shapes={plotsToShapes(plots)}
+            toolbar={
+              overview.counts && (
+                <PlotCharacterizationProgress
+                  done={overview.counts.done}
+                  pending={overview.counts.pending}
+                />
+              )
+            }
           />
         </div>
       )}
