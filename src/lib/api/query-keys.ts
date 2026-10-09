@@ -57,6 +57,10 @@ export const queryKeys = {
     allFarms: () => ['characterizations', 'farm'] as const,
     // Las fichas de las parcelas de una finca: el detalle las pide todas juntas.
     byFarm: (farmId: string) => ['characterizations', 'farm', farmId] as const,
+    // Las de una lista de parcelas (la página de una pantalla general), y todas esas listas.
+    allPlotLists: () => ['characterizations', 'plots'] as const,
+    byPlots: (plotIds: readonly string[]) =>
+      ['characterizations', 'plots', plotIds] as const,
     // La ficha de una parcela que sigue en la cola del dispositivo de esta persona.
     queued: (userId: string, plotId: string) =>
       ['characterizations', 'queued', userId, plotId] as const,
@@ -67,15 +71,25 @@ export const queryKeys = {
   plots: {
     // Las parcelas de una finca: el detalle de finca siempre las pide por finca.
     byFarm: (farmId: string) => ['plots', 'farm', farmId] as const,
+    // Las parcelas de todas las fincas, filtradas y paginadas: la pantalla general.
+    lists: () => ['plots', 'list'] as const,
+    list: (query: object) => ['plots', 'list', query] as const,
     // Una parcela que todavía está en la cola del dispositivo de esta persona.
     queued: (userId: string, id: string) =>
       ['plots', 'queued', userId, id] as const,
+    // Una parcela leída sola, por su id.
+    detail: (id: string) => ['plots', 'detail', id] as const,
   },
   farms: {
     all: () => ['farms'] as const,
     lists: () => ['farms', 'list'] as const,
     list: (query: object) => ['farms', 'list', query] as const,
     detail: (id: string) => ['farms', 'detail', id] as const,
+    // Las fincas de un productor para elegir una en un filtro.
+    options: (producer: string | undefined) =>
+      ['farms', 'options', producer ?? ''] as const,
+    // Las fincas que calzan con un buscador de finca.
+    search: (query: object) => ['farms', 'search', query] as const,
     // La finca tal como la muestra su pantalla de detalle, con la fecha de la copia si vino del
     // dispositivo. Cuelga de `detail`, así que lo que invalida una finca invalida también esta.
     detailView: (id: string) => ['farms', 'detail', id, 'view'] as const,

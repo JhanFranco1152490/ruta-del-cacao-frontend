@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { FarmProducerLine } from './farm-producer-line';
+import { ProducerLine } from './producer-line';
 
 const producer = {
   id: '33333333-3333-4333-8333-333333333333',
@@ -10,9 +10,9 @@ const producer = {
   last_name: 'Prueba',
 };
 
-describe('FarmProducerLine', () => {
+describe('ProducerLine', () => {
   it('names the producer with its code', () => {
-    render(<FarmProducerLine producer={producer} />);
+    render(<ProducerLine producer={producer} />);
 
     expect(screen.getByText(/Productor:/)).toHaveTextContent(
       'Productor: Ana Prueba · PROD-000007',
@@ -21,7 +21,7 @@ describe('FarmProducerLine', () => {
   });
 
   it('links to the record of the producer when it can be opened', () => {
-    render(<FarmProducerLine producer={producer} linkable />);
+    render(<ProducerLine producer={producer} linkable />);
 
     expect(
       screen.getByRole('link', { name: 'Ana Prueba · PROD-000007' }),

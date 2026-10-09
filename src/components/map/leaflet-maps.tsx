@@ -169,12 +169,14 @@ export function LeafletPointsMap({
   shapes = [],
   focus,
   baseLayer = 'map',
+  onSelectShape,
   onError,
 }: PointsMapProviderProps) {
   const { containerRef, map } = useLeafletMap();
   useBaseLayer(map, baseLayer, onError);
   const pointsRef = useLatest(points);
   const shapesRef = useLatest(shapes);
+  const onSelectShapeRef = useLatest(onSelectShape);
   const drawnPolygons = useRef<{ polygon: L.Polygon; label: string }[]>([]);
   const markers = markersKey(points);
   const drawnShapes = shapesKey(shapes);
@@ -219,7 +221,8 @@ export function LeafletPointsMap({
           direction: 'center',
           className: 'map-plot-label',
         })
-        .bindPopup(popupContent(shape.label, shape.detail));
+        .bindPopup(popupContent(shape.label, shape.detail))
+        .on('click', () => onSelectShapeRef.current?.(shape.id));
       return { polygon, label: shape.label };
     });
     drawnPolygons.current = polygons;
@@ -230,7 +233,7 @@ export function LeafletPointsMap({
       layer.remove();
       drawnPolygons.current = [];
     };
-  }, [map, drawnShapes, shapesRef]);
+  }, [map, drawnShapes, shapesRef, onSelectShapeRef]);
 
   // El nombre solo se muestra donde cabe: con el mapa alejado se apilarían.
   useShapeLabelVisibility(map, () => drawnPolygons.current, drawnShapes);

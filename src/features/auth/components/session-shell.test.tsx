@@ -127,9 +127,32 @@ describe('SessionShell', () => {
     const menu = await screen.findByRole('dialog', {
       name: 'Menú de navegación',
     });
-    expect(within(menu).getByRole('link', { name: 'Fincas' })).toBeVisible();
+    expect(
+      within(menu).getByRole('link', { name: 'Mis fincas' }),
+    ).toBeVisible();
     expect(
       within(menu).queryByRole('link', { name: 'Productores' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('names the sections without "Mis" for an account without a producer', async () => {
+    server.use(
+      http.get(ME, () =>
+        HttpResponse.json(
+          buildSession({
+            producer_id: null,
+            permissions: [PERMISSIONS.FARMS_VIEW, PERMISSIONS.PLOTS_VIEW],
+          }),
+        ),
+      ),
+    );
+    renderWithProviders(<SessionShell>contenido</SessionShell>);
+
+    const nav = await screen.findByRole('navigation', { name: 'Principal' });
+    expect(within(nav).getByRole('link', { name: 'Fincas' })).toBeVisible();
+    expect(within(nav).getByRole('link', { name: 'Parcelas' })).toBeVisible();
+    expect(
+      within(nav).queryByRole('link', { name: 'Caracterización' }),
     ).not.toBeInTheDocument();
   });
 

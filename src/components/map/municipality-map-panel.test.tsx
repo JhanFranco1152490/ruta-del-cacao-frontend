@@ -51,6 +51,20 @@ describe('MunicipalityMapPanel', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('hides the base layer selector together with the map', async () => {
+    const user = userEvent.setup();
+    renderPanel(municipality);
+    expect(
+      await screen.findByRole('group', { name: 'Mapa base' }),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
+
+    expect(
+      screen.queryByRole('group', { name: 'Mapa base' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('goes back and switches the base layer inside a municipality', async () => {
     const user = userEvent.setup();
     const { onBack } = renderPanel(municipality);

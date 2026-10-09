@@ -154,15 +154,20 @@ export async function getQueuedPlot(
 }
 
 // Las parcelas de una finca que siguen en la cola de este dispositivo (pendientes o con error).
+// Las de una finca, o las de todas sin `farmId` (la pantalla general de parcelas).
 export async function listQueuedPlots(
   userId: string,
-  farmId: string,
+  farmId?: string,
 ): Promise<QueuedPlot[]> {
-  const items = await getOfflineDb(userId)
-    .queue.where('parentId')
-    .equals(farmId)
-    .filter((item) => item.resource === PLOT_RESOURCE)
-    .toArray();
+  const queue = getOfflineDb(userId).queue;
+  const items = await (
+    farmId === undefined
+      ? queue.where('resource').equals(PLOT_RESOURCE)
+      : queue
+          .where('parentId')
+          .equals(farmId)
+          .filter((item) => item.resource === PLOT_RESOURCE)
+  ).toArray();
   return items.map(toQueuedPlot);
 }
 

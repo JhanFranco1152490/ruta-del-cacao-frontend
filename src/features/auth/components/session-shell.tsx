@@ -44,7 +44,9 @@ export function SessionShell({
   const [accountOpen, setAccountOpen] = useState(false);
   const syncStatus = useSyncStatus(user?.id);
   const queueItems = useQueueItems(user?.id);
-  const items = visibleNavItems(NAV_ITEMS, user?.permissions);
+  const items = visibleNavItems(NAV_ITEMS, user?.permissions, {
+    ownProducer: !!user?.producer_id,
+  });
   useRefreshAfterSync();
 
   // Toca el reloj de sesión y guarda la copia del dispositivo cada vez que el servidor confirma

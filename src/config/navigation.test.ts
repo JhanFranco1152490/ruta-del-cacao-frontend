@@ -51,6 +51,15 @@ describe('visibleNavItems', () => {
   it('shows only the open entries when the session has no permissions', () => {
     expect(visibleNavItems([guarded, open], undefined)).toEqual([open]);
   });
+
+  it('names an entry as its own for whoever has a producer', () => {
+    const own: NavItem = { ...open, ownLabel: 'Mi abierta' };
+
+    expect(visibleNavItems([own], [], { ownProducer: true })[0].label).toBe(
+      'Mi abierta',
+    );
+    expect(visibleNavItems([own], [])[0].label).toBe('Abierta');
+  });
 });
 
 describe('isActiveRoute', () => {
@@ -78,6 +87,7 @@ describe('NAV_ITEMS', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([
       '/productores',
       '/fincas',
+      '/parcelas',
       '/variedades',
       '/insumos',
       '/roles',
@@ -90,6 +100,7 @@ describe('NAV_ITEMS', () => {
 
     expect(byHref['/productores'].permission).toBe(PERMISSIONS.PRODUCERS_VIEW);
     expect(byHref['/fincas'].permission).toBe(PERMISSIONS.FARMS_VIEW);
+    expect(byHref['/parcelas'].permission).toBe(PERMISSIONS.PLOTS_VIEW);
     expect(byHref['/variedades'].permission).toBe(
       PERMISSIONS.CROPS_MANAGE_VARIETIES,
     );
@@ -126,6 +137,31 @@ describe('navItemForPath', () => {
 
   it('finds nothing for a route outside the registry', () => {
     expect(navItemForPath([office, field], '/panel')).toBeUndefined();
+  });
+
+  it('finds the section that claims a route under another one', () => {
+    const task: NavItem = {
+      href: '/tareas',
+      label: 'Tareas',
+      icon: Sprout,
+      routes: ['/campo/tareas'],
+    };
+
+    expect(navItemForPath([field, task], '/campo/tareas/nueva')).toBe(task);
+    expect(navItemForPath([field, task], '/campo/editar')).toBe(field);
+  });
+
+  it('gives the plot and characterization routes to the plots section', () => {
+    const href = (pathname: string) =>
+      navItemForPath(NAV_ITEMS, pathname)?.href;
+
+    expect(href('/fincas/detalle')).toBe('/fincas');
+    expect(href('/fincas/parcelas/nueva')).toBe('/parcelas');
+    expect(href('/fincas/parcelas/editar')).toBe('/parcelas');
+    expect(href('/fincas/parcelas/caracterizacion')).toBe('/parcelas');
+    expect(href('/fincas/parcelas/caracterizacion/historial')).toBe(
+      '/parcelas',
+    );
   });
 });
 

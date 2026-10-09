@@ -226,7 +226,17 @@ export const buildPlot = (
   overrides: Partial<Schemas['Plot']> = {},
 ): Schemas['Plot'] => ({
   id: 'pl1',
-  farm: { id: 'f1', name: 'La Esperanza' },
+  farm: {
+    id: 'f1',
+    name: 'La Esperanza',
+    is_active: true,
+    producer: {
+      id: 'p1',
+      member_code: 'PROD-000007',
+      first_name: 'Ana',
+      last_name: 'Prueba',
+    },
+  },
   code: 'P1',
   area_hectares: '2.40',
   measured_area_hectares: null,
