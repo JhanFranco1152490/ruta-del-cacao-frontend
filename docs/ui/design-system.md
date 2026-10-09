@@ -241,6 +241,45 @@ Sprint 1, en `docs/ui/ref/`:
 | `s1-10-finca-campo.html` | Registro de finca en campo con GPS, sin conexión |
 | `s1-11-parcela-campo.html` | Recorrido del perímetro en campo |
 
+Sprint 2, en `docs/ui/ref/`. La numeración sigue la del Sprint 1, sin volver a empezar: el
+prefijo dice el sprint y el número no se repite entre sprints. Cada módulo trae:
+
+- su pantalla principal en escritorio;
+- la vista principal de su formulario;
+- una hoja con los estados del formulario (errores y confirmaciones);
+- la vista en celular, con el caso sin conexión.
+
+Cada archivo lleva sus notas para implementar debajo del dibujo. Lo que aparece entre
+`[corchetes]` es una pregunta abierta que decide algo de la pantalla.
+
+| Archivo | Pantalla |
+|---|---|
+| `s2-16-actividades-calendario.html` | Calendario de actividades del mes (escritorio): filtros, lista del día y una ficha por estado |
+| `s2-17-actividad-programar.html` | Programar actividad: diálogo, listas desplegables, selector de fecha y celular |
+| `s2-18-actividad-estados.html` | Actividades: errores, edición, detalle por estado, eliminar y sin conexión |
+| `s2-19-actividad-realizar-campo.html` | Registrar la realización en campo: insumos, confirmación, cola y bandeja |
+| `s2-20-actividades-movil.html` | Actividades en celular: lista por días, filtros, detalle y sin conexión |
+| `s2-21-monitoreo-campo.html` | Registrar monitoreo en campo: detecciones, incidencia, sin presencia y sin conexión |
+| `s2-22-historial-fitosanitario.html` | Historial fitosanitario de la parcela con su gráfico de incidencia |
+| `s2-23-control-fitosanitario.html` | Control fitosanitario desde una detección: programar o registrar como aplicado |
+| `s2-24-evidencia-fitosanitaria.html` | Evidencia fotográfica: galería, adjuntar, errores y campo |
+| `s2-25-cosechas-lista.html` | Cosechas (escritorio) con la selección para crear un lote |
+| `s2-26-cosecha-campo.html` | Registrar cosecha en campo |
+| `s2-27-lotes.html` | Lotes por etapa, crear lote y código de trazabilidad |
+| `s2-28-cosechas-lotes-movil.html` | Cosechas y lotes en celular |
+| `s2-29-infraestructura-lista.html` | Infraestructura de poscosecha: cajones y marquesinas |
+| `s2-30-infraestructura-estados.html` | Infraestructura: formulario, desactivar, activar y celular |
+| `s2-31-lote-fermentacion.html` | Ficha del lote en fermentación: volteos y mediciones |
+| `s2-32-fermentacion-iniciar-finalizar.html` | Iniciar y finalizar la fermentación |
+| `s2-33-volteo-campo.html` | Volteo y finalización de la fermentación en campo |
+| `s2-34-lote-secado.html` | Ficha del lote en secado: curva de humedad y bitácora |
+| `s2-35-secado-iniciar-finalizar.html` | Iniciar el secado y finalizarlo con el rendimiento |
+| `s2-36-bitacora-campo.html` | Bitácora diaria de secado en campo |
+| `s2-37-parametros-poscosecha.html` | Parámetros de poscosecha (reemplaza el bloque de parámetros de `s1-06`) |
+| `s2-38-parametros-estados.html` | Parámetros: errores, restablecer la línea base y celular |
+| `s2-39-notificaciones.html` | Notificaciones: bandeja, panel de la campana y alerta crítica |
+| `s2-40-alertas-tipos-movil.html` | Tipos de alerta con su texto y notificaciones en celular |
+
 Base de la dirección: `selvaviva-sistema.html` (hoja de tokens), `selvaviva-dashboard.html`,
 `selvaviva-campo.html`, `selvaviva-qr.html`.
 

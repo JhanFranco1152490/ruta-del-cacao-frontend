@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprint 2 · Registrar cosecha en campo · Ruta del Cacao (referencia de diseño)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Karla:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Referencia de diseño, no código de producción. Ancho fijo a propósito. */
+:root {
+  --selva:#14362A; --selva-2:#1F5C45; --selva-barra:#1D4B3B; --cobre:#9A5220; --oro:#C9A24B;
+  --crema:#F7F2EA; --ink:#231812; --surface:#FFFFFF; --muted-fg:#5A4A40; --border:#DDD2C2;
+  --input:#8F7F70; --amarillo-mazorca:#E3A92B; --morado-cacao:#6B2A3A; --hoja:#3F7A4E;
+  --ok:#1F6B45; --ok-bg:#E1EFE6; --warn:#7D4E00; --warn-bg:#F8E7C2;
+  --err:#9E1F1F; --err-bg:#F6DEDA; --info:#20507A; --info-bg:#DFE9F2;
+  --ok-solid:#1F6B45; --warn-solid:#F2C037; --err-solid:#A3161B; --info-solid:#20507A;
+  --shadow:0 1px 2px rgba(35,24,18,.06), 0 8px 24px rgba(35,24,18,.07);
+}
+html { background:#E9E4DA; }
+body { margin:0; padding:24px 0 48px; display:flex; flex-direction:column; align-items:center; gap:24px;
+  font-family:'Karla', sans-serif; color:var(--ink); }
+* { box-sizing:border-box; }
+button, input, select { font:inherit; color:inherit; }
+code { font-size:.92em; background:#F3EEE5; border-radius:4px; padding:0 4px; }
+.serif { font-family:'DM Serif Display', Georgia, serif; font-weight:400; }
+.num { font-variant-numeric:tabular-nums; }
+svg.i { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; display:block; }
+svg.sm { width:16px; height:16px; }
+svg.xs { width:14px; height:14px; stroke-width:2.4; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* Marco de la app (escritorio) */
+.frame { width:1440px; height:900px; overflow:hidden; background:var(--crema); display:flex; flex-direction:column; box-shadow:var(--shadow); position:relative; }
+.app-header { height:64px; background:var(--selva); display:flex; align-items:center; justify-content:space-between; padding:0 32px; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,.1); }
+.brand { display:flex; align-items:center; gap:12px; color:var(--crema); font-size:24px; }
+.header-actions { display:flex; align-items:center; gap:12px; }
+.hbtn { height:40px; min-width:40px; padding:0 12px; border-radius:10px; background:#fff; border:0; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:800; font-size:14px; }
+.hbtn.offline { background:var(--info); color:#fff; }
+.hbtn .count-dot { min-width:20px; height:20px; border-radius:999px; background:var(--info); color:#fff; font-size:12px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px; }
+.avatar { width:28px; height:28px; border-radius:50%; background:var(--selva); color:#fff; font-size:12px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.body { display:flex; flex:1; min-height:0; }
+.sidebar { width:248px; background:var(--selva-barra); padding:20px 14px; display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+.sidebar .menu-label { color:var(--oro); font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; padding:0 12px 10px; }
+.nav { height:44px; border-radius:999px; padding:0 14px; display:flex; align-items:center; gap:12px; color:var(--crema); font-weight:700; font-size:15px; text-decoration:none; }
+.nav svg { color:var(--oro); }
+.nav.active { background:var(--crema); color:var(--selva); font-weight:800; }
+.nav.active svg { color:var(--selva); }
+.main { flex:1; min-width:0; padding:32px 40px; display:flex; flex-direction:column; gap:20px; overflow:hidden; }
+
+/* PageHeader */
+.page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; }
+.eyebrow { font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--cobre); }
+h1 { margin:6px 0 0; font-size:34px; color:var(--selva); line-height:1.1; }
+h1::after { content:""; display:block; width:48px; height:4px; background:var(--cobre); margin-top:10px; border-radius:2px; }
+.page-desc { margin:12px 0 0; color:var(--muted-fg); font-size:16px; max-width:680px; line-height:1.45; }
+
+/* Botones de oficina */
+.btn { height:44px; padding:0 18px; border-radius:10px; border:0; font-weight:800; font-size:15px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; white-space:nowrap; font-family:inherit; }
+.btn-primary { background:var(--selva); color:#fff; }
+.btn-secondary { background:#fff; border:1px solid var(--input); color:var(--ink); }
+.btn-ghost { background:transparent; color:var(--selva-2); padding:0 10px; }
+.btn-copper { background:var(--cobre); color:#fff; }
+.btn-danger { background:var(--err-solid); color:#fff; }
+.btn-sm { height:36px; font-size:14px; padding:0 12px; }
+.btn[aria-disabled="true"] { background:#E6DFD3; color:#7A6B60; border-color:#E6DFD3; cursor:not-allowed; }
+.btn.block { width:100%; }
+.icon-btn { width:36px; height:36px; border-radius:10px; border:1px solid var(--border); background:#fff; display:inline-flex; align-items:center; justify-content:center; color:var(--ink); flex-shrink:0; }
+.spin { width:16px; height:16px; border-radius:50%; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; }
+
+/* Card, campos y filtros */
+.card { background:var(--surface); border-radius:14px; box-shadow:var(--shadow); }
+.field label, .field .lbl { display:block; font-size:14px; font-weight:800; margin-bottom:6px; }
+.control { height:44px; border-radius:10px; border:1px solid var(--input); background:#fff; display:flex; align-items:center; gap:8px; padding:0 12px; font-size:15px; }
+.control .ph { color:var(--muted-fg); }
+.control .chev { margin-left:auto; color:var(--muted-fg); }
+.control .trail { margin-left:auto; color:var(--muted-fg); font-size:13px; font-weight:700; }
+.control.focus { outline:3px solid var(--cobre); outline-offset:2px; }
+.control.invalid { border:2px solid var(--err); padding:0 11px; }
+.control.disabled { background:#F3EEE5; border-color:var(--border); color:var(--muted-fg); }
+.caret { width:2px; height:20px; background:var(--ink); margin-right:-4px; }
+.help { margin-top:6px; font-size:13px; color:var(--muted-fg); display:flex; gap:6px; align-items:flex-start; line-height:1.4; }
+.err-msg { margin-top:6px; font-size:13px; font-weight:700; color:var(--err); display:flex; gap:6px; align-items:flex-start; line-height:1.4; }
+.link { color:var(--selva-2); font-weight:800; font-size:14px; text-decoration:underline; text-underline-offset:3px; display:inline-flex; align-items:center; gap:6px; }
+
+/* Avisos */
+.alert { border-radius:10px; padding:10px 12px; display:flex; gap:10px; align-items:flex-start; font-size:14px; font-weight:700; line-height:1.4; }
+.alert.err { background:var(--err-bg); color:var(--err); }
+.alert.warn { background:var(--warn-bg); color:var(--warn); }
+.alert.info { background:var(--info-bg); color:var(--info); }
+.alert.ok { background:var(--ok-bg); color:var(--ok); }
+
+/* StatusBadge (tintado, oficina) */
+.badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:800; white-space:nowrap; }
+.badge svg.i { width:14px; height:14px; stroke-width:2.4; }
+.b-ok { background:var(--ok-bg); color:var(--ok); }
+.b-warn { background:var(--warn-bg); color:var(--warn); }
+.b-err { background:var(--err-bg); color:var(--err); }
+.b-info { background:var(--info-bg); color:var(--info); }
+.b-muted { background:#EEE7DC; color:var(--muted-fg); }
+
+/* Ficha de actividad en el calendario */
+.ev { display:flex; flex-direction:column; gap:1px; border-radius:8px; padding:4px 7px 5px; border-left:4px solid; font-size:12.5px; line-height:1.25; min-width:0; }
+.ev .t { display:flex; align-items:center; gap:5px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ev .t svg.i { width:13px; height:13px; stroke-width:2.4; }
+.ev .s { display:flex; align-items:center; gap:4px; font-weight:800; white-space:nowrap; }
+.ev .s svg.i { width:12px; height:12px; stroke-width:2.6; }
+.ev .s .p { color:var(--muted-fg); font-weight:700; }
+.ev.st-prog { background:var(--info-bg); border-color:var(--info); } .ev.st-prog .s { color:var(--info); }
+.ev.st-late { background:var(--warn-bg); border-color:var(--warn); } .ev.st-late .s { color:var(--warn); }
+.ev.st-over { background:var(--err-bg); border-color:var(--err); } .ev.st-over .s { color:var(--err); }
+.ev.st-done { background:var(--ok-bg); border-color:var(--ok); } .ev.st-done .s { color:var(--ok); }
+.ev.st-queue { background:var(--ok-bg); border-color:var(--ok); border-left-style:dashed; } .ev.st-queue .s { color:var(--info); }
+.ev.focus { outline:3px solid var(--cobre); outline-offset:2px; }
+
+/* Diálogo */
+.veil { position:absolute; inset:0; background:rgba(20,54,42,.45); display:flex; align-items:center; justify-content:center; z-index:10; }
+.backdrop { background:rgba(20,54,42,.45); border-radius:14px; padding:20px; }
+.dialog { background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:22px; }
+.dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.dialog h2 { margin:0; font-size:24px; color:var(--selva); line-height:1.15; }
+.dialog .sub { margin:6px 0 0; color:var(--muted-fg); font-size:14px; line-height:1.45; }
+.close { width:36px; height:36px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; color:var(--muted-fg); flex-shrink:0; }
+.form { display:flex; flex-direction:column; gap:14px; margin-top:16px; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.foot { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; padding-top:16px; border-top:1px solid #EEE7DC; }
+.foot .left { margin-right:auto; }
+
+/* Detalle de actividad: pares etiqueta/valor */
+.kv { display:grid; grid-template-columns:150px 1fr; gap:10px 14px; margin-top:16px; font-size:15px; }
+.kv dt { color:var(--muted-fg); font-weight:700; font-size:14px; }
+.kv dd { margin:0; font-weight:700; }
+.kv dd .muted { color:var(--muted-fg); font-weight:600; }
+.used { margin-top:6px; border:1px solid #EEE7DC; border-radius:10px; overflow:hidden; }
+.used div { display:flex; justify-content:space-between; gap:10px; padding:9px 12px; font-size:14px; border-top:1px solid #EEE7DC; }
+.used div:first-child { border-top:0; }
+.used b { font-weight:800; }
+.used span { color:var(--muted-fg); font-weight:700; }
+
+/* Hojas de estados (fuera del marco) */
+.sheet { width:1440px; }
+.lead { margin:12px 0 28px; color:var(--muted-fg); font-size:16px; max-width:960px; line-height:1.45; }
+.grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:28px 24px; align-items:start; }
+.state-label { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; font-weight:800; font-size:15px; }
+.state-label .k { width:26px; height:26px; border-radius:50%; background:var(--selva); color:#fff; font-size:13px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.state-label .ref { margin-left:auto; font-size:12px; color:var(--cobre); background:#F6EADF; border-radius:6px; padding:2px 6px; white-space:nowrap; }
+.group-title { grid-column:1/-1; margin:12px 0 -8px; display:flex; align-items:center; gap:12px; }
+.group-title h2 { margin:0; font-size:24px; color:var(--selva); }
+.group-title::after { content:""; flex:1; height:1px; background:#CFC3B2; }
+.toast { display:inline-flex; align-items:center; gap:10px; background:#fff; border-radius:12px; box-shadow:var(--shadow); padding:12px 16px; font-weight:800; font-size:15px; }
+.toast .dot { width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.toast .msg { font-weight:600; font-size:14px; color:var(--muted-fg); display:block; margin-top:2px; max-width:360px; }
+
+/* Notas para quien implementa */
+.notes { width:1440px; background:#fff; border-radius:14px; padding:24px 32px; box-shadow:var(--shadow); font-size:15px; line-height:1.5; }
+.notes h2 { margin:0 0 4px; font-size:24px; color:var(--selva); }
+.notes ol, .notes ul { margin:12px 0 0; padding-left:22px; columns:2; column-gap:40px; }
+.notes li { margin-bottom:8px; break-inside:avoid; }
+.tag { display:inline-block; font-size:12px; font-weight:800; color:var(--cobre); background:#F6EADF; border-radius:6px; padding:1px 6px; margin-right:4px; }
+
+/* Panel suelto (listas desplegables, notas al lado) */
+.panel { background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:20px; }
+.panel h3 { margin:4px 0 12px; font-size:20px; color:var(--selva); }
+.panel p { margin:12px 0 0; font-size:14px; color:var(--muted-fg); line-height:1.45; }
+.opts { border:1px solid var(--border); border-radius:12px; padding:6px; box-shadow:var(--shadow); background:#fff; }
+.opt { min-height:44px; border-radius:8px; display:flex; align-items:center; gap:10px; padding:0 10px; font-weight:700; font-size:15px; }
+.opt .hint { margin-left:auto; font-weight:600; font-size:13px; color:var(--muted-fg); }
+.opt.sel { background:#F3EEE5; }
+.opt.focus { background:#F3EEE5; outline:3px solid var(--cobre); outline-offset:-3px; }
+.opt.dis { color:#7A6B60; }
+.opt-group { font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-fg); padding:10px 10px 4px; }
+
+/* Teléfono (densidad de oficina en celular: 48 px) */
+.phone { width:390px; height:844px; border-radius:28px; overflow:hidden; background:var(--crema); box-shadow:var(--shadow), 0 0 0 8px #231812; display:flex; flex-direction:column; margin:8px; flex-shrink:0; position:relative; }
+.m-header { height:60px; background:var(--selva); display:flex; align-items:center; gap:8px; padding:0 12px; flex-shrink:0; }
+.m-header .menu { width:44px; height:44px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; color:var(--crema); }
+.m-header .actions { margin-left:auto; display:flex; gap:8px; }
+.m-header .hbtn { font-size:13px; padding:0 10px; }
+.m-main { padding:18px 16px; display:flex; flex-direction:column; gap:12px; overflow:hidden; flex:1; }
+.m-main > * { flex-shrink:0; }
+.f-body > * { flex-shrink:0; }
+.m-main h1 { font-size:30px; }
+.m-main h1::after { margin-top:8px; }
+.phone .btn { height:48px; padding:0 16px; }
+.phone .control { height:48px; }
+.phone .icon-btn { width:44px; height:44px; }
+.banner { border-radius:12px; padding:12px; display:flex; gap:10px; align-items:flex-start; font-size:14px; font-weight:700; line-height:1.4; background:var(--info-bg); color:var(--info); }
+.empty { background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:28px 20px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; }
+.empty h2 { margin:6px 0 0; font-size:22px; color:var(--selva); line-height:1.2; }
+.empty p { margin:0; color:var(--muted-fg); font-size:15px; line-height:1.45; }
+.sheet-veil { position:absolute; inset:0; background:rgba(20,54,42,.45); display:flex; align-items:flex-end; z-index:5; }
+.bottom-sheet { width:100%; background:#fff; border-radius:20px 20px 0 0; padding:10px 16px 20px; }
+.bottom-sheet .grab { width:44px; height:5px; border-radius:999px; background:#CFC3B2; margin:0 auto 12px; }
+
+/* Captura de campo (60 px o más, bordes 2.5 px, sin sombras) */
+.f-screen { background:var(--crema); display:flex; flex-direction:column; height:100%; }
+.f-head { position:relative; background:var(--selva); padding:12px 16px 18px; overflow:hidden; flex-shrink:0; }
+.f-head .vine { position:absolute; inset:0; opacity:.33; }
+.f-head .bar { position:relative; display:flex; justify-content:space-between; align-items:center; }
+.f-back { width:48px; height:48px; border-radius:12px; border:2px solid var(--crema); display:flex; align-items:center; justify-content:center; color:var(--crema); }
+.f-back svg.i { width:24px; height:24px; stroke-width:2.6; }
+.f-conn { display:inline-flex; align-items:center; gap:8px; padding:4px 10px; border-radius:8px; border:2px solid var(--ink); font-size:14px; font-weight:800; white-space:nowrap; }
+.f-conn svg.i { width:16px; height:16px; stroke-width:2.8; }
+.f-conn.on { background:var(--ok-solid); color:#fff; }
+.f-conn.off { background:var(--info-solid); color:#fff; }
+.f-head .kicker { position:relative; margin-top:12px; font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--oro); }
+.f-head h1 { position:relative; margin:2px 0 0; font-size:32px; color:#fff; line-height:1.05; }
+.f-head h1::after { display:none; }
+.f-body { padding:14px 16px; display:flex; flex-direction:column; gap:14px; flex:1; overflow:hidden; }
+.f-box { border:2.5px solid var(--ink); border-radius:12px; background:#fff; padding:12px 14px; }
+.f-label { font-size:17px; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.f-label .opt-tag { margin-left:auto; font-size:13px; font-weight:700; color:var(--muted-fg); }
+.f-control { height:60px; border-radius:12px; border:2.5px solid var(--ink); background:#fff; display:flex; align-items:center; gap:10px; padding:0 14px; font-size:18px; font-weight:700; }
+.f-control .ph { color:var(--muted-fg); font-weight:600; }
+.f-control .trail { margin-left:auto; color:var(--muted-fg); font-size:15px; font-weight:800; }
+.f-control.invalid { border-color:var(--err); border-width:3px; }
+.f-control.focus { outline:3px solid var(--cobre); outline-offset:2px; }
+.f-control svg.i { width:24px; height:24px; }
+.f-big { font-family:'DM Serif Display', Georgia, serif; font-weight:400; font-size:30px; color:var(--selva); line-height:1; }
+.f-err { margin-top:8px; display:flex; gap:8px; align-items:flex-start; font-size:15px; font-weight:800; color:var(--err); line-height:1.35; }
+.f-err svg.i { width:18px; height:18px; stroke-width:2.6; margin-top:1px; }
+.f-help { margin-top:8px; display:flex; gap:8px; align-items:flex-start; font-size:14px; font-weight:700; color:var(--muted-fg); line-height:1.35; }
+.f-btn { height:64px; border-radius:12px; border:2.5px solid var(--ink); background:#fff; font-size:17px; font-weight:800; color:var(--ink); display:flex; align-items:center; justify-content:center; gap:10px; padding:0 18px; white-space:nowrap; }
+.f-btn svg.i { width:24px; height:24px; stroke-width:2.8; }
+.f-btn.primary { background:var(--selva); color:#fff; font-size:18px; }
+.f-btn.copper { background:var(--cobre); color:#fff; font-size:18px; }
+.f-btn.tall { height:76px; }
+.f-btn.block { width:100%; }
+.f-btn[aria-disabled="true"] { background:#E6DFD3; color:#6B5C51; border-color:#B9AC9C; }
+.f-foot { padding:12px 16px 24px; background:#fff; border-top:1px solid var(--border); display:flex; gap:10px; flex-shrink:0; }
+.f-solid { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:8px; border:2px solid var(--ink); font-size:14px; font-weight:800; white-space:nowrap; }
+.f-solid svg.i { width:16px; height:16px; stroke-width:2.8; }
+.fs-ok { background:var(--ok-solid); color:#fff; } .fs-warn { background:var(--warn-solid); color:var(--ink); }
+.fs-err { background:var(--err-solid); color:#fff; } .fs-info { background:var(--info-solid); color:#fff; }
+.f-alert { border:2.5px solid var(--ink); border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:flex-start; font-size:15px; font-weight:800; line-height:1.35; }
+.f-alert svg.i { width:22px; height:22px; stroke-width:2.6; }
+.f-alert.info { background:var(--info-solid); color:#fff; }
+.f-alert.warn { background:var(--warn-solid); color:var(--ink); }
+.f-alert.err { background:var(--err-solid); color:#fff; }
+
+/* DiseaseTile (campo) */
+.dtile { border:2.5px solid var(--ink); border-radius:12px; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:10px 6px; min-height:120px; position:relative; text-align:center; font-size:16px; font-weight:800; line-height:1.15; }
+.dtile.sel { background:#E1EFE6; border-width:4px; border-color:var(--selva); }
+.dtile .ck { position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:var(--selva); color:#fff; display:flex; align-items:center; justify-content:center; }
+.dtile .ck svg.i { width:16px; height:16px; stroke-width:3; }
+.dtile .cnt { position:absolute; top:8px; left:8px; font-size:12px; font-weight:800; background:var(--selva); color:#fff; border-radius:999px; padding:2px 8px; }
+/* StageFlow: cadena de estados del lote */
+.stages { display:flex; align-items:center; gap:6px; }
+.stage { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; font-size:14px; font-weight:800; background:#EEE7DC; color:var(--muted-fg); white-space:nowrap; }
+.stage svg.i { width:16px; height:16px; }
+.stage.done { background:var(--ok-bg); color:var(--ok); }
+.stage.now { background:var(--selva); color:#fff; }
+.stage-sep { width:18px; height:2px; background:#CFC3B2; flex-shrink:0; }
+.code { font-family:'DM Serif Display', Georgia, serif; font-size:18px; color:var(--selva); letter-spacing:.01em; }
+/* Tabla de oficina */
+table.t { width:100%; border-collapse:collapse; font-size:15px; }
+table.t thead tr { background:#FBF8F2; }
+table.t th { text-align:left; padding:10px 12px; font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-fg); white-space:nowrap; }
+table.t th:first-child, table.t td:first-child { padding-left:20px; }
+table.t th:last-child, table.t td:last-child { padding-right:20px; }
+table.t td { padding:0 12px; height:54px; border-top:1px solid #EEE7DC; }
+table.t td.r, table.t th.r { text-align:right; font-variant-numeric:tabular-nums; }
+table.t .sub2 { display:block; font-size:13px; font-weight:600; color:var(--muted-fg); }
+table.t tr.sel td { background:#F6FAF7; }
+.filters { display:grid; gap:16px; padding:20px 20px 16px; align-items:end; }
+.table-foot { display:flex; align-items:center; gap:12px; padding:14px 20px; border-top:1px solid #EEE7DC; font-size:13px; color:var(--muted-fg); font-weight:600; }
+.kpis { display:grid; gap:16px; }
+.kpi { background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:16px 18px; }
+.kpi .lbl { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; color:var(--muted-fg); }
+.kpi .val { font-family:'DM Serif Display', Georgia, serif; font-size:34px; color:var(--selva); line-height:1.1; margin-top:6px; }
+.kpi .val small { font-family:'Karla',sans-serif; font-size:15px; font-weight:800; color:var(--muted-fg); margin-left:4px; }
+.kpi .dl { font-size:13px; font-weight:800; margin-top:4px; }
+.pc { font-size:12px; font-weight:800; color:var(--selva); background:#EEE7DC; border-radius:6px; padding:2px 6px; white-space:nowrap; }
+.crumbs { font-size:14px; font-weight:700; color:var(--muted-fg); display:flex; gap:8px; align-items:center; }
+.crumbs a { color:var(--selva-2); text-decoration:underline; text-underline-offset:3px; }
+.side-notes { background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:20px 22px; font-size:14px; line-height:1.5; grid-column:span 2; }
+.side-notes ul { margin:8px 0 0; padding-left:18px; columns:2; column-gap:32px; }
+.side-notes li { margin-bottom:8px; break-inside:avoid; }
+.phone .f-screen { height:100%; }
+.f-step { display:grid; grid-template-columns:64px 1fr 64px; gap:8px; }
+.f-step .sb { height:64px; border-radius:12px; border:2.5px solid var(--ink); background:#fff; display:flex; align-items:center; justify-content:center; }
+.f-step .sb svg.i { width:26px; height:26px; stroke-width:3; }
+.f-step .sb.dark { background:var(--selva); color:#fff; }
+.f-step .val { height:64px; border-radius:12px; border:2.5px solid var(--ink); background:#fff; display:flex; align-items:baseline; justify-content:center; gap:8px; padding-top:12px; }
+.f-step .val .u { font-size:16px; font-weight:800; color:var(--muted-fg); }
+.f-step .val.invalid { border:3px solid var(--err); }
+.pend { color:var(--muted-fg); font-weight:700; background:#F3EEE5; border:1px dashed #B9AC9C; border-radius:6px; padding:0 4px; }
+.vopts { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.vopt { border:2.5px solid var(--ink); border-radius:12px; background:#fff; min-height:64px; padding:8px 12px; display:flex; flex-direction:column; justify-content:center; font-size:18px; font-weight:800; }
+.vopt small { font-size:13px; font-weight:700; color:var(--muted-fg); }
+.vopt.sel { background:var(--selva); color:#fff; } .vopt.sel small { color:#D7E8DC; }
+.plist { border:2.5px solid var(--ink); border-radius:12px; background:#fff; overflow:hidden; }
+.plist .g { font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-fg); padding:10px 14px 4px; background:#FBF8F2; }
+.plist .it { min-height:64px; display:flex; align-items:center; gap:10px; padding:8px 14px; border-top:1.5px solid #E3DACB; font-size:17px; font-weight:800; }
+.plist .it small { display:block; font-size:13px; font-weight:700; color:var(--muted-fg); }
+.plist .it.sel { background:#E1EFE6; }
+.plist .it.sel::after { content:""; }
+.done-hero { background:#fff; border:2.5px solid var(--ink); border-radius:12px; padding:16px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; }
+.done-hero .ok { width:56px; height:56px; border-radius:50%; background:var(--ok-solid); color:#fff; display:flex; align-items:center; justify-content:center; }
+.done-hero .ok svg.i { width:30px; height:30px; stroke-width:3; }
+.done-hero h2 { margin:0; font-size:26px; color:var(--selva); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z M21 21l-4.35-4.35"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14 M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z M12 9v4 M12 17h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01"/></symbol>
+  <symbol id="i-xc" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M15 9l-6 6 M9 9l6 6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 7v5l3 2"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16V8 M8.5 11.5 12 8l3.5 3.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18 M6 6l12 12"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M12 5h.01 M12 12h.01 M12 19h.01" stroke-width="3.2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2 M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M12 22s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12z M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24"><path d="M16.5 9.4 7.5 4.2 M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z M3.3 7 12 12l8.7-5 M12 22V12"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M22 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M16 2v4 M8 2v4 M3 10h18"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M3 10h18 M3 16h18 M9 10v12 M15 10v12"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16 M4 12h16 M4 18h16"/></symbol>
+  <symbol id="i-wifioff" viewBox="0 0 24 24"><path d="M2 2l20 20 M8.5 16.4a5 5 0 0 1 7 0 M5 12.9a10 10 0 0 1 5.2-2.7 M19 12.9a10 10 0 0 0-2.3-1.7 M1.6 9.3a15 15 0 0 1 4.2-2.6 M10.7 5.1A15 15 0 0 1 22.4 9.3 M12 20h.01"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.6a10 10 0 0 1 14 0 M1.5 9a15 15 0 0 1 21 0 M8.5 16.1a5 5 0 0 1 7 0 M12 20h.01"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8 M3 3v5h5 M12 7v5l4 2"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13z M21 21l-5.9-5.9 M10.5 7.5c-1.8 1.2-2.2 3.2-1.5 5 1.8-.3 3.3-1.6 3.6-3.6-.6-.6-1.3-1-2.1-1.4z"/></symbol>
+  <symbol id="i-spray" viewBox="0 0 24 24"><path d="M8 7h5v3H8z M7 10h7l1 3v8H6v-8z M13 8.5h2.5 M18 6h.01 M20 8.5h.01 M18 11h.01 M20 4h.01"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16 M3 12a9 9 0 0 1 15.5-6.2L21 8 M21 3v5h-5 M3 21v-5h5"/></symbol>
+  <symbol id="i-pod" viewBox="-34 -60 68 110"><path d="M0 -44 l0 -12" style="fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round"/><path d="M0 -44 C24 -44 32 -12 28 12 C24 36 11 46 0 46 C-11 46 -24 36 -28 12 C-32 -12 -24 -44 0 -44Z" style="fill:currentColor;stroke:none"/></symbol>
+
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9 M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M12 2v2 M12 20v2 M4.9 4.9l1.4 1.4 M17.7 17.7l1.4 1.4 M2 12h2 M20 12h2 M6.3 17.7l-1.4 1.4 M19.1 4.9l-1.4 1.4"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9z"/></symbol>
+  <symbol id="i-thermo" viewBox="0 0 24 24"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z M12 9v8"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6 M10 3v6.5L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9.5V3 M7 15h10"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.7s6 6.6 6 11.3a6 6 0 0 1-12 0c0-4.7 6-11.3 6-11.3z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 8h18v12H3z M3 8l2-4h14l2 4 M9 12h6"/></symbol>
+  <symbol id="i-roof" viewBox="0 0 24 24"><path d="M2 11 12 4l10 7 M4 10v10 M20 10v10 M4 16h16 M8 16v4 M16 16v4"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18 M5 21h14 M3 7h18 M6 7l-3 7a3 3 0 0 0 6 0z M18 7l-3 7a3 3 0 0 0 6 0z"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M21 15l-5-5L5 21"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M9 13h6 M9 17h6"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21.4 11.1l-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z M2 21c0-3 1.9-5.4 5.1-6"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.3 1.5 1.2 2.8 2.5 2.8z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5z M2 17l10 5 10-5 M2 12l10 5 10-5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7 M4 10V3 M12 21v-9 M12 8V3 M20 21v-5 M20 12V3 M1 14h6 M9 8h6 M17 16h6"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><path d="M8 2l1.9 1.9 M14.1 3.9 16 2 M9 7.1V6a3 3 0 1 1 6 0v1.1 M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6z M12 20v-9 M6.5 13H3 M21 13h-3.5 M6 9.5 3.5 8 M18 9.5 20.5 8 M6 17l-3 1.5 M18 17l3 1.5"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8 M3 3v5h5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18 M7 15l4-4 3 3 5-6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7 M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+  <!-- DiseaseTile: mazorcas ilustradas -->
+  <symbol id="d-sana" viewBox="-40 -58 80 110"><g transform="scale(0.9)"><path d="M0 -44 l0 -12" style="fill:none;stroke:#231812;stroke-width:4;stroke-linecap:round"/><path d="M0 -44 C24 -44 32 -12 28 12 C24 36 11 46 0 46 C-11 46 -24 36 -28 12 C-32 -12 -24 -44 0 -44Z" style="fill:#E3A92B;stroke:#231812;stroke-width:3"/><path d="M-12 -38 C-18 -10 -18 20 -10 40 M12 -38 C18 -10 18 20 10 40 M0 -44 V46" style="fill:none;stroke:#231812;stroke-width:2;opacity:.45"/></g></symbol>
+  <symbol id="d-monilia" viewBox="-40 -58 80 110"><g transform="scale(0.9)"><path d="M0 -44 l0 -12" style="fill:none;stroke:#231812;stroke-width:4;stroke-linecap:round"/><path d="M0 -44 C24 -44 32 -12 28 12 C24 36 11 46 0 46 C-11 46 -24 36 -28 12 C-32 -12 -24 -44 0 -44Z" style="fill:#C9C58A;stroke:#231812;stroke-width:3"/><path d="M-12 -38 C-18 -10 -18 20 -10 40 M12 -38 C18 -10 18 20 10 40 M0 -44 V46" style="fill:none;stroke:#231812;stroke-width:2;opacity:.45"/><circle cx="-10" cy="-6" r="7" style="fill:#FFFFFF;stroke:#231812;stroke-width:1.5"/><circle cx="8" cy="10" r="6" style="fill:#FFFFFF;stroke:#231812;stroke-width:1.5"/><circle cx="-4" cy="22" r="5" style="fill:#FFFFFF;stroke:#231812;stroke-width:1.5"/><circle cx="12" cy="-16" r="4" style="fill:#FFFFFF;stroke:#231812;stroke-width:1.5"/></g></symbol>
+  <symbol id="d-negra" viewBox="-40 -58 80 110"><g transform="scale(0.9)"><path d="M0 -44 l0 -12" style="fill:none;stroke:#231812;stroke-width:4;stroke-linecap:round"/><path d="M0 -44 C24 -44 32 -12 28 12 C24 36 11 46 0 46 C-11 46 -24 36 -28 12 C-32 -12 -24 -44 0 -44Z" style="fill:#2E211B;stroke:#231812;stroke-width:3"/><path d="M-12 -38 C-18 -10 -18 20 -10 40 M12 -38 C18 -10 18 20 10 40 M0 -44 V46" style="fill:none;stroke:#231812;stroke-width:2;opacity:.45"/></g></symbol>
+  <symbol id="d-escoba" viewBox="-40 -58 80 110"><path d="M-20 40 L0 -40 M0 -20 L18 -44 M0 -6 L-20 -30 M0 10 L22 -8" style="fill:none;stroke:#231812;stroke-width:5;stroke-linecap:round"/><g transform="translate(-4 -30) scale(0.35) rotate(-60)"><path d="M0 0 C10 -30 40 -38 60 -30 C52 -10 30 8 0 0Z" style="fill:#3F7A4E;stroke:#231812;stroke-width:3"/><path d="M0 0 C20 -14 36 -24 56 -29" style="fill:none;stroke:#231812;stroke-width:2"/></g></symbol>
+  <!-- Mata de cacao simplificada (CacaoPlant) para los estados vacíos -->
+  <symbol id="plant" viewBox="0 0 120 120">
+    <path d="M60 112V30" style="fill:none;stroke:#5A3A28;stroke-width:5;stroke-linecap:round"/>
+    <path d="M60 52c-18-2-30-14-32-28 16 0 30 10 32 28z" style="fill:var(--hoja)"/>
+    <path d="M60 40c16-4 26-16 26-30-15 2-26 14-26 30z" style="fill:var(--selva-2)"/>
+    <path d="M60 78c18-2 30-12 34-26-16 0-31 8-34 26z" style="fill:var(--hoja)"/>
+    <path d="M48 70c-8 0-11 9-11 16s4 13 11 13 11-6 11-13-3-16-11-16z" style="fill:var(--amarillo-mazorca);stroke:var(--ink);stroke-width:2.5"/>
+    <path d="M73 86c-6 0-8 7-8 12s3 10 8 10 8-5 8-10-2-12-8-12z" style="fill:var(--morado-cacao);stroke:var(--ink);stroke-width:2.5"/>
+    <path d="M30 112h60" style="fill:none;stroke:#C9B9A4;stroke-width:4;stroke-linecap:round"/>
+  </symbol>
+  <!-- Línea botánica en oro (BotanicalVine) para la cabecera de campo -->
+  <symbol id="vine" viewBox="0 0 300 200">
+    <path d="M-10 170 C60 150 120 120 200 60 S290 10 320 0" style="fill:none;stroke:#C9A24B;stroke-width:1.6"/>
+    <path d="M40 160 C50 130 80 120 100 126 C90 148 66 162 40 160Z M40 160 C60 144 78 134 98 127" style="fill:none;stroke:#C9A24B;stroke-width:1.4"/>
+    <path d="M120 118 C130 88 160 78 180 84 C170 106 146 120 120 118Z M120 118 C140 102 158 92 178 85" style="fill:none;stroke:#C9A24B;stroke-width:1.4"/>
+    <path d="M190 70 C200 40 230 30 250 36 C240 58 216 72 190 70Z M190 70 C210 54 228 44 248 37" style="fill:none;stroke:#C9A24B;stroke-width:1.4"/>
+    <path d="M250 32 C260 2 290 -8 310 -2 C300 20 276 34 250 32Z M250 32 C270 16 288 6 308 -1" style="fill:none;stroke:#C9A24B;stroke-width:1.4"/>
+    <g transform="translate(100 160) rotate(20)"><path d="M0 -26 C14 -26 18 -6 16 8 C13 22 6 28 0 28 C-6 28 -13 22 -16 8 C-18 -6 -14 -26 0 -26Z M-7 -22 C-10 -4 -10 12 -5 24 M7 -22 C10 -4 10 12 5 24" style="fill:none;stroke:#C9A24B;stroke-width:1.4"/></g>
+    <g transform="translate(165 120) rotate(20)"><path d="M0 -26 C14 -26 18 -6 16 8 C13 22 6 28 0 28 C-6 28 -13 22 -16 8 C-18 -6 -14 -26 0 -26Z M-7 -22 C-10 -4 -10 12 -5 24 M7 -22 C10 -4 10 12 5 24" style="fill:none;stroke:#C9A24B;stroke-width:1.4"/></g>
+  </symbol>
+</svg>
+
+<div class="sheet">
+  <div class="eyebrow">Sprint 2 · Cosecha y lotes · HU-19</div>
+  <h1 class="serif">Registrar la cosecha en campo</h1>
+  <p class="lead">La recolección se registra donde se pesa, muchas veces sin señal. Se abre con <b>Registrar cosecha</b> desde Cosechas o desde el detalle de la parcela. Usa la densidad de campo (<code>s1-10</code>, <code>s1-11</code>) y la cola del dispositivo.</p>
+  <div class="grid">
+
+    <div>
+      <div class="state-label"><span class="k">1</span>Vista principal<span class="ref">HU-19 CA-01</span></div>
+      <div class="phone"><div class="f-screen">
+        <header class="f-head"><svg class="vine" width="390" height="170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#vine"/></svg><div class="bar"><span class="f-back" aria-label="Volver"><svg class="i"><use href="#i-left"/></svg></span><span class="f-conn on"><svg class="i"><use href="#i-wifi"/></svg>En línea</span></div><div class="kicker">Producción</div><h1 class="serif">Registrar cosecha</h1></header>
+        <div class="f-body" style="gap:12px">
+          <div><div class="f-label">Fecha</div><div class="f-control"><svg class="i" style="color:var(--selva-2)"><use href="#i-cal"/></svg>Hoy, jue 22 oct.<span class="trail">Cambiar</span></div></div>
+          <div><div class="f-label">Parcela de origen</div><div class="f-control"><span class="pc" style="font-size:14px">P-02</span>La loma<span class="trail">La Esperanza</span></div></div>
+          <div><div class="f-label">Variedad cosechada</div><div class="vopts"><span class="vopt sel">CCN-51<small>siembra de 2019</small></span><span class="vopt">ICS-95<small>siembra de 2021</small></span></div></div>
+          <div><div class="f-label">Peso en verde</div>
+            <div class="f-step"><span class="sb"><svg class="i"><use href="#i-minus"/></svg></span><span class="val"><span class="f-big">117</span><span class="u">kg</span></span><span class="sb dark"><svg class="i"><use href="#i-plus"/></svg></span></div></div>
+          <div><div class="f-label">Recolector</div><div class="f-control">Luis Rincón<svg class="i" style="margin-left:auto;color:var(--muted-fg)"><use href="#i-chev"/></svg></div></div>
+        </div>
+        <div class="f-foot"><span class="f-btn primary tall block"><svg class="i"><use href="#i-check"/></svg>Guardar</span></div>
+      </div></div>
+    </div>
+
+    <div>
+      <div class="state-label"><span class="k">2</span>Elegir la parcela<span class="ref">HU-19 CA-04</span></div>
+      <div class="phone"><div class="f-screen">
+        <header class="f-head" style="padding-bottom:14px"><svg class="vine" width="390" height="170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#vine"/></svg><div class="bar"><span class="f-back" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span><span class="f-conn on"><svg class="i"><use href="#i-wifi"/></svg>En línea</span></div><h1 class="serif" style="margin-top:12px;font-size:28px">Parcela de origen</h1></header>
+        <div class="f-body">
+          <div class="f-control"><svg class="i" style="color:var(--muted-fg)"><use href="#i-search"/></svg><span class="ph">Código o nombre</span></div>
+          <div class="plist" role="listbox">
+            <div class="g">Finca La Esperanza</div>
+            <div class="it" role="option"><span class="pc" style="font-size:14px">P-01</span><div>Lote del río<small>2,4 ha · CCN-51, ICS-95</small></div></div>
+            <div class="it sel" role="option" aria-selected="true"><span class="pc" style="font-size:14px">P-02</span><div>La loma<small>1,8 ha · CCN-51, ICS-95</small></div><svg class="i" style="margin-left:auto;color:var(--selva);width:24px;height:24px;stroke-width:3"><use href="#i-check"/></svg></div>
+            <div class="it" role="option"><span class="pc" style="font-size:14px">P-03</span><div>Entrada<small>3,1 ha · CCN-51</small></div></div>
+            <div class="g">Finca El Diviso</div>
+            <div class="it" role="option"><span class="pc" style="font-size:14px">P-04</span><div>Bajo<small>1,2 ha · FEAR-5</small></div></div>
+          </div>
+          <div class="f-help"><svg class="i sm"><use href="#i-info"/></svg>Solo parcelas activas a las que tienes acceso.</div>
+        </div>
+      </div></div>
+    </div>
+
+    <div>
+      <div class="state-label"><span class="k">3</span>Errores<span class="ref">HU-19 CA-02 · CA-03</span></div>
+      <div class="phone"><div class="f-screen">
+        <header class="f-head"><svg class="vine" width="390" height="170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#vine"/></svg><div class="bar"><span class="f-back" aria-label="Volver"><svg class="i"><use href="#i-left"/></svg></span><span class="f-conn on"><svg class="i"><use href="#i-wifi"/></svg>En línea</span></div><div class="kicker">Producción</div><h1 class="serif">Registrar cosecha</h1></header>
+        <div class="f-body" style="gap:12px">
+          <div class="f-alert err" role="alert"><svg class="i"><use href="#i-xc"/></svg>Revisa los 2 datos marcados.</div>
+          <div><div class="f-label">Parcela de origen</div><div class="f-control"><span class="pc" style="font-size:14px">P-02</span>La loma<span class="trail">La Esperanza</span></div></div>
+          <div><div class="f-label">Variedad cosechada</div><div class="vopts"><span class="vopt" style="border-color:var(--err)">CCN-51<small>siembra de 2019</small></span><span class="vopt" style="border-color:var(--err)">ICS-95<small>siembra de 2021</small></span></div><div class="f-err"><svg class="i"><use href="#i-xc"/></svg>Campo obligatorio</div></div>
+          <div><div class="f-label">Peso en verde</div>
+            <div class="f-step"><span class="sb"><svg class="i"><use href="#i-minus"/></svg></span><span class="val invalid" aria-invalid="true"><span class="f-big" style="color:var(--err)">0</span><span class="u">kg</span></span><span class="sb dark"><svg class="i"><use href="#i-plus"/></svg></span></div>
+            <div class="f-err"><svg class="i"><use href="#i-xc"/></svg>El peso debe ser mayor que cero.</div></div>
+        </div>
+        <div class="f-foot"><span class="f-btn primary tall block"><svg class="i"><use href="#i-check"/></svg>Guardar</span></div>
+      </div></div>
+    </div>
+
+    <div>
+      <div class="state-label"><span class="k">4</span>Parcela sin siembras registradas<span class="ref">HU-19 CA-05</span></div>
+      <div class="phone"><div class="f-screen">
+        <header class="f-head"><svg class="vine" width="390" height="170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#vine"/></svg><div class="bar"><span class="f-back" aria-label="Volver"><svg class="i"><use href="#i-left"/></svg></span><span class="f-conn on"><svg class="i"><use href="#i-wifi"/></svg>En línea</span></div><div class="kicker">Producción</div><h1 class="serif">Registrar cosecha</h1></header>
+        <div class="f-body" style="gap:12px">
+          <div><div class="f-label">Parcela de origen</div><div class="f-control"><span class="pc" style="font-size:14px">P-05</span>Nueva<span class="trail">El Diviso</span></div></div>
+          <div><div class="f-label">Variedad cosechada</div>
+            <div class="f-alert warn"><svg class="i"><use href="#i-alert"/></svg>Esta parcela no tiene siembras en su ficha productiva, así que no hay variedades para elegir.</div>
+            <span class="f-btn block" style="margin-top:10px"><svg class="i"><use href="#i-leaf"/></svg>Completar la ficha</span></div>
+        </div>
+        <div class="f-foot"><span class="f-btn primary tall block" aria-disabled="true"><svg class="i"><use href="#i-check"/></svg>Guardar</span></div>
+      </div></div>
+    </div>
+
+    <div>
+      <div class="state-label"><span class="k">5</span>Sin conexión<span class="ref">RNF-21</span></div>
+      <div class="phone"><div class="f-screen">
+        <header class="f-head"><svg class="vine" width="390" height="170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#vine"/></svg><div class="bar"><span class="f-back" aria-label="Volver"><svg class="i"><use href="#i-left"/></svg></span><span class="f-conn off"><svg class="i"><use href="#i-wifioff"/></svg>Sin red · 3 en cola</span></div><div class="kicker">Producción</div><h1 class="serif">Registrar cosecha</h1></header>
+        <div class="f-body" style="gap:12px">
+          <div class="f-alert info" role="status"><svg class="i"><use href="#i-wifioff"/></svg>Sin conexión. La cosecha se guarda en el teléfono y se envía sola al volver la señal.</div>
+          <div><div class="f-label">Parcela de origen</div><div class="f-control"><span class="pc" style="font-size:14px">P-04</span>Bajo<span class="trail">El Diviso</span></div></div>
+          <div><div class="f-label">Variedad cosechada</div><div class="vopts"><span class="vopt sel">FEAR-5<small>siembra de 2020</small></span></div></div>
+          <div><div class="f-label">Peso en verde</div><div class="f-step"><span class="sb"><svg class="i"><use href="#i-minus"/></svg></span><span class="val"><span class="f-big">142</span><span class="u">kg</span></span><span class="sb dark"><svg class="i"><use href="#i-plus"/></svg></span></div></div>
+        </div>
+        <div class="f-foot"><span class="f-btn copper tall block"><svg class="i"><use href="#i-inbox"/></svg>Guardar en el teléfono</span></div>
+      </div></div>
+    </div>
+
+    <div>
+      <div class="state-label"><span class="k">6</span>Guardada: qué sigue<span class="ref">HU-21</span></div>
+      <div class="phone"><div class="f-screen">
+        <header class="f-head"><svg class="vine" width="390" height="170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#vine"/></svg><div class="bar"><span class="f-back" aria-label="Volver"><svg class="i"><use href="#i-left"/></svg></span><span class="f-conn on"><svg class="i"><use href="#i-wifi"/></svg>En línea</span></div><div class="kicker">Producción</div><h1 class="serif">Registrar cosecha</h1></header>
+        <div class="f-body">
+          <div class="done-hero"><span class="ok"><svg class="i"><use href="#i-check"/></svg></span><h2 class="serif">Cosecha registrada</h2><div style="font-size:16px;font-weight:700;color:var(--muted-fg)">117 kg de CCN-51 · P-02 La loma · 22 oct.</div></div>
+          <span class="f-btn block"><svg class="i"><use href="#i-plus"/></svg>Registrar otra cosecha</span>
+          <span class="f-btn block"><svg class="i"><use href="#i-layers"/></svg>Crear un lote con esta cosecha</span>
+        </div>
+        <div class="f-foot"><span class="f-btn primary tall block">Listo</span></div>
+      </div></div>
+    </div>
+
+    <div class="side-notes" style="grid-column:span 3">
+      <div class="eyebrow">Notas para implementar</div>
+      <ul>
+        <li><span class="tag">HU-19 CA-01</span>Cinco datos obligatorios: fecha, parcela, variedad, peso en verde (kg) y recolector. La fecha arranca en hoy. <span class="pend">[¿Se prohíbe una fecha futura?]</span>. Se propone que sí, como en las actividades.</li>
+        <li><span class="tag">HU-19 CA-04</span>La parcela se elige en una lista de pantalla completa, agrupada por finca, con buscador. Solo aparecen las activas a las que la persona tiene acceso. Se recuerda la última usada.</li>
+        <li><span class="tag">HU-19 CA-05</span>Las variedades son las de las siembras de la parcela (ficha productiva). Con una sola, ya viene elegida. Sin siembras (4), no se puede guardar y se ofrece completar la ficha.</li>
+        <li><span class="tag">HU-19 CA-03</span>El peso usa el <code>FieldStepper</code> y el teclado numérico, con hasta 1 decimal. Debe ser mayor que cero.</li>
+        <li>Recolector: las cuentas activas del productor, como los responsables de las actividades. <span class="pend">[¿Usuario del sistema o nombre libre?]</span>.</li>
+        <li>Sin conexión (5) pasa por la cola: la parcela, las variedades y las personas salen de la copia del dispositivo. En la lista, la cosecha queda <b>Pendiente de enviar</b> y todavía no se puede usar en un lote.</li>
+        <li>Al guardar (6) se ofrece registrar otra (la parcela y el recolector se mantienen) o crear un lote con ella (<code>s2-27</code>).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>
