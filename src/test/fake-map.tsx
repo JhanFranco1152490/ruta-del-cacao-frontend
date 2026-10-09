@@ -64,6 +64,7 @@ export function FakePointsMap({
   points,
   shapes = [],
   focus,
+  onSelectShape,
 }: PointsMapProviderProps) {
   return (
     <>
@@ -81,6 +82,11 @@ export function FakePointsMap({
           {shapes.map((shape) => (
             <li key={shape.id}>
               {shape.label} ({shape.tone}) {shape.positions.length} vértices
+              {onSelectShape && (
+                <button onClick={() => onSelectShape(shape.id)} type="button">
+                  Tocar {shape.label}
+                </button>
+              )}
             </li>
           ))}
         </ul>

@@ -61,6 +61,31 @@ describe('NavList', () => {
     );
   });
 
+  it('marks only the section that claims a route under another one', () => {
+    pathname.current = '/productores/fichas/nueva';
+    render(
+      <NavList
+        items={[
+          ...items,
+          {
+            href: '/fichas',
+            label: 'Fichas',
+            icon: Sprout,
+            routes: ['/productores/fichas'],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Fichas' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(
+      screen.getByRole('link', { name: 'Productores' }),
+    ).not.toHaveAttribute('aria-current');
+  });
+
   it('does not mark a route that only shares the prefix text', () => {
     pathname.current = '/productores-x';
     render(<NavList items={items} />);

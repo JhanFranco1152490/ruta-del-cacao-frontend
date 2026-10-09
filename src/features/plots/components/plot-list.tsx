@@ -9,29 +9,38 @@ import { plotStatus } from '../plot-status';
 import { PlotStatusBadge } from './plot-status-badge';
 
 // La lista es la forma accesible de recorrer las parcelas: el mapa que la acompaña es un apoyo.
-export function PlotList({
+export function PlotList<T extends KnownPlot>({
   plots,
   onShowOnMap,
+  highlightedId,
   renderDetails,
   renderActions,
+  label = 'Parcelas',
 }: {
-  plots: readonly KnownPlot[];
-  onShowOnMap: (plot: KnownPlot) => void;
+  plots: readonly T[];
+  // Sin mapa al lado, la tarjeta no ofrece verla en él.
+  onShowOnMap?: (plot: T) => void;
+  // La parcela tocada en el mapa.
+  highlightedId?: string;
   // Lo que otro dominio cuenta de cada parcela (su ficha agronómica, por ejemplo), sin que esta
   // lista lo conozca.
-  renderDetails?: (plot: KnownPlot) => ReactNode;
-  renderActions?: (plot: KnownPlot) => ReactNode;
+  renderDetails?: (plot: T) => ReactNode;
+  renderActions?: (plot: T) => ReactNode;
+  // El nombre de la lista; con varias en la misma pantalla (una por grupo), el de su grupo.
+  label?: string;
 }) {
   return (
-    <ul className="grid gap-3 md:grid-cols-2" aria-label="Parcelas">
+    <ul className="grid gap-3 md:grid-cols-2" aria-label={label}>
       {plots.map((plot) => {
         const hasPolygon = plot.vertices.length >= 3;
+        const canShowOnMap = hasPolygon && onShowOnMap;
         const actions = renderActions?.(plot);
         return (
           <li key={plot.id}>
             <article
               aria-labelledby={`plot-${plot.id}-code`}
-              className="flex h-full flex-col gap-2 rounded-[var(--radius-card)] border border-border bg-card p-4"
+              className="flex h-full flex-col gap-2 rounded-[var(--radius-card)] border border-border bg-card p-4 data-[highlighted]:ring-3 data-[highlighted]:ring-cobre"
+              data-highlighted={plot.id === highlightedId || undefined}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <h3 id={`plot-${plot.id}-code`} className="text-lg text-selva">
@@ -56,12 +65,12 @@ export function PlotList({
                 </p>
               )}
               {renderDetails?.(plot)}
-              {(hasPolygon || actions) && (
+              {(canShowOnMap || actions) && (
                 <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                  {hasPolygon && (
+                  {canShowOnMap && (
                     <Button
                       aria-label={`Ver ${plot.code} en el mapa`}
-                      onClick={() => onShowOnMap(plot)}
+                      onClick={() => onShowOnMap?.(plot)}
                       size="office"
                       type="button"
                       variant="outline"

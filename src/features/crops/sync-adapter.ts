@@ -17,10 +17,11 @@ export const characterizationSyncAdapter: SyncAdapter = {
   resource: CHARACTERIZATION_RESOURCE,
 
   // El registro encolado solo sabe su parcela, no su finca: se refrescan las fichas de todas las
-  // fincas, que son pocas y se piden en una sola consulta cada una, y el historial de la parcela,
-  // que tiene una versión más.
+  // fincas y de las listas de parcelas, que son pocas y se piden en una sola consulta cada una, y
+  // el historial de la parcela, que tiene una versión más.
   refreshAfterSync: (item) => [
     queryKeys.characterizations.allFarms(),
+    queryKeys.characterizations.allPlotLists(),
     queryKeys.characterizations.history(item.parentId!),
   ],
 

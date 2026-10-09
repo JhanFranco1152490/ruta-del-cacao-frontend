@@ -291,7 +291,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Las fichas de las parcelas de una finca del productor de la sesión, sin paginar: una finca tiene pocas parcelas. `farm` es obligatorio. Las parcelas sin ficha no aparecen, y una finca ajena devuelve la lista vacía. */
+        /** @description Las fichas de las parcelas de una finca, o de una lista de parcelas, del productor de la sesión, sin paginar: una finca tiene pocas parcelas y la lista llega hasta 100. Se envía `farm`, `plots` o los dos (se combinan). Las parcelas sin ficha no aparecen, y una finca o una parcela ajenas simplemente no traen nada. */
         get: operations["plot_characterizations_list"];
         put?: never;
         post?: never;
@@ -874,6 +874,10 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Plot"][];
+            characterization_counts: {
+                done: number;
+                pending: number;
+            };
         };
         PaginatedProducerListList: {
             /** @example 123 */
@@ -1089,6 +1093,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            is_active: boolean;
+            producer: components["schemas"]["FarmProducer"];
         };
         PlotRuleError: {
             detail: string;
@@ -2300,9 +2306,11 @@ export interface operations {
     };
     plot_characterizations_list: {
         parameters: {
-            query: {
+            query?: {
                 /** @description La finca, por su `id`. */
-                farm: string;
+                farm?: string;
+                /** @description Ids de parcela separados por coma, hasta 100. */
+                plots?: string;
             };
             header?: never;
             path?: never;
@@ -2523,14 +2531,20 @@ export interface operations {
     plots_list: {
         parameters: {
             query?: {
+                /** @description Solo las parcelas con ficha (`done`) o sin ella (`pending`). No cambia `characterization_counts`, que cuenta con los demás filtros. */
+                characterization?: "done" | "pending";
                 /** @description Solo las parcelas de esta finca. */
                 farm?: string;
                 /** @description Solo activas o solo inactivas. */
                 is_active?: boolean;
+                /** @description `code` (por defecto) o `producer,farm,code`: por nombre del productor, nombre de la finca y código, para agrupar. Cada nivel desempata por su id. */
+                ordering?: "code" | "producer,farm,code";
                 /** @description Un número de página dentro del conjunto de resultados paginado. */
                 page?: number;
                 /** @description Número de resultados a devolver por página. */
                 page_size?: number;
+                /** @description Solo las parcelas de las fincas de este productor. */
+                producer?: string;
                 /** @description Busca en el código, sin tildes. */
                 search?: string;
             };

@@ -27,14 +27,14 @@ export type KnownPlot = {
   queue?: KnownPlotQueue;
 };
 
-const toQueue = (plot: QueuedPlot): KnownPlotQueue => ({
+export const toQueue = (plot: QueuedPlot): KnownPlotQueue => ({
   status: plot.status === 'error' ? 'error' : 'pending',
   operation: plot.operation,
   errorMessage: plot.errorMessage,
   errorCode: plot.errorCode,
 });
 
-const fromServer = (plot: Plot): KnownPlot => ({
+export const fromServer = (plot: Plot): KnownPlot => ({
   id: plot.id,
   code: plot.code,
   areaHectares: plot.area_hectares,

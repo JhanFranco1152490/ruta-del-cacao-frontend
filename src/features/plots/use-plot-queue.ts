@@ -30,9 +30,9 @@ type LocalPlots = {
   isError: boolean;
 };
 
-// Las parcelas de una finca que siguen en este dispositivo (pendientes o con error). Se
-// actualiza sola cuando la cola cambia.
-export function useQueuedPlots(userId: string | undefined, farmId: string) {
+// Las parcelas de una finca (o de todas, sin `farmId`) que siguen en este dispositivo
+// (pendientes o con error). Se actualiza sola cuando la cola cambia.
+export function useQueuedPlots(userId: string | undefined, farmId?: string) {
   const [state, setState] = useState<LocalPlots>({ isError: false });
 
   useEffect(() => {

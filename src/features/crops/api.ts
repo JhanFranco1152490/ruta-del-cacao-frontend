@@ -129,6 +129,41 @@ export async function fetchFarmCharacterizations(
   return results;
 }
 
+// Las fichas de una lista de parcelas (las de la página de una pantalla general), en una sola
+// consulta. El servidor acepta hasta 100, más que una página.
+export async function fetchPlotsCharacterizations(
+  plotIds: readonly string[],
+  signal?: AbortSignal,
+): Promise<PlotCharacterization[]> {
+  const params = new URLSearchParams({ plots: plotIds.join(',') });
+  const { results } = await apiFetch<Schemas['PlotCharacterizationList']>(
+    `/api/plot-characterizations?${params}`,
+    { signal },
+  );
+  return results;
+}
+
+// Sin parcelas no hay nada que pedir: el servidor exige al menos una. El orden de los ids no
+// cambia la respuesta, así que se ordenan para que la clave y la copia sean las mismas.
+export function usePlotsCharacterizations(
+  userId: string | undefined,
+  plotIds: readonly string[],
+  { enabled = true } = {},
+) {
+  const ids = [...plotIds].sort();
+  return useQuery({
+    queryKey: queryKeys.characterizations.byPlots(ids),
+    queryFn: ({ signal }) =>
+      readThroughCache(
+        userId!,
+        `plot-characterizations:plots:${ids.join(',')}`,
+        () => fetchPlotsCharacterizations(ids, signal),
+      ),
+    enabled: enabled && !!userId && ids.length > 0,
+    networkMode: 'offlineFirst',
+  });
+}
+
 // `offlineFirst`: sin conexión se intenta igual y se cae a la copia del dispositivo, que guarda
 // las fichas de la última vez que se abrió la finca con conexión.
 export const useFarmCharacterizations = (

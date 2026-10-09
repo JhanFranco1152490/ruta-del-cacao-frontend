@@ -20,19 +20,22 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: PERMISSIONS.PRODUCERS_VIEW,
     needsConnection: true,
   },
+  // Fincas y parcelas van seguidas: es el orden en que el productor trabaja. La caracterización
+  // de cada parcela se hace desde su tarjeta, en Parcelas.
   {
     href: '/fincas',
     label: 'Fincas',
+    ownLabel: 'Mis fincas',
     icon: MapPinned,
     permission: PERMISSIONS.FARMS_VIEW,
-    children: [
-      {
-        href: '/fincas/parcelas/nueva',
-        label: 'Registrar parcela',
-        icon: LandPlot,
-        permission: PERMISSIONS.PLOTS_ADD,
-      },
-    ],
+  },
+  {
+    href: '/parcelas',
+    label: 'Parcelas',
+    ownLabel: 'Mis parcelas',
+    icon: LandPlot,
+    permission: PERMISSIONS.PLOTS_VIEW,
+    routes: ['/fincas/parcelas'],
   },
   {
     href: '/variedades',
@@ -60,21 +63,26 @@ export const NAV_ITEMS: readonly NavItem[] = [
 export function visibleNavItems(
   items: readonly NavItem[],
   permissions: readonly string[] | undefined,
+  // Quien tiene un productor propio ve solo lo suyo, y el menú lo nombra así.
+  { ownProducer = false } = {},
 ): NavItem[] {
   const allowed = (permission?: string) =>
     !permission || !!permissions?.includes(permission);
   return items
     .filter(({ permission }) => allowed(permission))
-    .map((item) =>
-      item.children
-        ? {
-            ...item,
-            children: item.children.filter(({ permission }) =>
-              allowed(permission),
-            ),
-          }
-        : item,
-    );
+    .map((item) => {
+      const label = (ownProducer && item.ownLabel) || item.label;
+      if (!item.children && label === item.label) return item;
+      return {
+        ...item,
+        label,
+        ...(item.children && {
+          children: item.children.filter(({ permission }) =>
+            allowed(permission),
+          ),
+        }),
+      };
+    });
 }
 
 // El prefijo exige la barra: '/productores-x' no cuenta como hija de '/productores'.
@@ -82,12 +90,23 @@ export function isActiveRoute(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-// La sección a la que pertenece una ruta, o ninguna (como la entrada, `/`).
+// La sección a la que pertenece una ruta, o ninguna (como la entrada, `/`). Si varias la
+// reclaman gana la más específica: /fincas/parcelas/nueva es de Parcelas, no de Fincas.
 export function navItemForPath(
   items: readonly NavItem[],
   pathname: string,
 ): NavItem | undefined {
-  return items.find((item) => isActiveRoute(item.href, pathname));
+  let found: NavItem | undefined;
+  let length = -1;
+  for (const item of items) {
+    for (const route of [item.href, ...(item.routes ?? [])]) {
+      if (isActiveRoute(route, pathname) && route.length > length) {
+        found = item;
+        length = route.length;
+      }
+    }
+  }
+  return found;
 }
 
 // Dónde entra la persona: la primera sección que puede ver. Sin conexión se prefiere la primera

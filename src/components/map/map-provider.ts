@@ -66,6 +66,8 @@ export type PointsMapProviderProps = {
   focus?: { shapeId: string };
   // Sin él, el mapa de calles.
   baseLayer?: BaseLayerKind;
+  // Tocar un polígono, además de mostrar su nombre: la lista que acompaña al mapa lo resalta.
+  onSelectShape?: (id: string) => void;
   onError: () => void;
 };
 

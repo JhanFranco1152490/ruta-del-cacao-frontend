@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { cn } from 'cn';
 
 import { FOCUS_OUTLINE_ON_DARK_CLASS } from '@/components/ui/focus-outline';
-import { isActiveRoute } from '@/config/navigation';
+import { isActiveRoute, navItemForPath } from '@/config/navigation';
 import type { NavItem } from '@/types/navigation';
 
 export function NavList({
@@ -29,6 +29,7 @@ export function NavList({
     });
 
   if (items.length === 0) return null;
+  const section = navItemForPath(items, pathname);
 
   return (
     <nav aria-label="Principal">
@@ -42,8 +43,8 @@ export function NavList({
           );
           // La sección sigue marcada mientras se está en una de sus tareas, pero la tarea es la
           // que lleva el énfasis.
-          const active = isActiveRoute(href, pathname) && !childActive;
-          const inSection = isActiveRoute(href, pathname);
+          const inSection = section?.href === href;
+          const active = inSection && !childActive;
           // Se pliega a gusto, pero no se esconde la tarea en la que se está.
           const open = !folded.has(href) || childActive;
           return (

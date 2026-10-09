@@ -89,7 +89,7 @@ export function MunicipalityMapPanel({
           <p className="font-bold text-selva">{title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {hasBaseLayer && (
+          {visible && hasBaseLayer && (
             <BaseLayerToggle
               onChange={(next) => {
                 setBaseLayer(next);

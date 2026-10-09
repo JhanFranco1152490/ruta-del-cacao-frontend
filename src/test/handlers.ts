@@ -94,13 +94,18 @@ export const farmMapPointsHandler = (
 export const farmHandler = (farm: ReturnType<typeof buildFarm>, id = 'f1') =>
   http.get(apiUrl(`/api/farms/${id}`), () => HttpResponse.json(farm));
 
+// Los conteos de caracterización son del conjunto filtrado: por defecto, todas sin ficha.
 export const plotsHandler = (
   results: unknown[] = [],
   requests: URLSearchParams[] = [],
+  characterizationCounts = { done: 0, pending: results.length },
 ) =>
   http.get(apiUrl('/api/plots'), ({ request }) => {
     requests.push(new URL(request.url).searchParams);
-    return HttpResponse.json(buildPage(results));
+    return HttpResponse.json({
+      ...buildPage(results),
+      characterization_counts: characterizationCounts,
+    });
   });
 
 export const profileHandler = (profile = buildProfile()) =>

@@ -17,10 +17,10 @@ import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { getErrorMessage } from '@/lib/api/errors';
 import { useProducerSummary } from '@/lib/api/producer-options';
+import { producerLabelOf } from '@/lib/format/producer';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Farm, useFarms } from '../api';
-import { producerLabelOf } from '../farm-list-item';
 
 const SEARCH_DELAY_MS = 300;
 

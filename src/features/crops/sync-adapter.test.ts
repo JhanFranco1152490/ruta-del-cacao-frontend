@@ -124,14 +124,19 @@ describe('characterizationSyncAdapter.parseConflict', () => {
 });
 
 describe('characterizationSyncAdapter.refreshAfterSync', () => {
-  it('refreshes the characterizations of every farm: the queued record only knows its plot', () => {
+  it('refreshes the characterizations of every farm and plot list: the queued record only knows its plot', () => {
     expect(characterizationSyncAdapter.refreshAfterSync?.(item)).toEqual([
       queryKeys.characterizations.allFarms(),
+      queryKeys.characterizations.allPlotLists(),
       queryKeys.characterizations.history('pl1'),
     ]);
-    // La clave de una finca cuelga de la de todas: invalidar la primera alcanza a la segunda.
+    // La clave de una finca cuelga de la de todas, y la de una lista de parcelas de la de todas
+    // las listas: invalidar la segunda alcanza a la primera.
     expect(queryKeys.characterizations.byFarm('f1')).toEqual(
       expect.arrayContaining([...queryKeys.characterizations.allFarms()]),
     );
+    expect(queryKeys.characterizations.byPlots(['pl1']).slice(0, 2)).toEqual([
+      ...queryKeys.characterizations.allPlotLists(),
+    ]);
   });
 });

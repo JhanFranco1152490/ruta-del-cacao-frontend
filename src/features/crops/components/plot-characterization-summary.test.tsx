@@ -54,11 +54,15 @@ function renderSummaries(
     farmIsActive = true,
     queryClient = createTestQueryClient(),
     extra = null,
+    pagePlotIds,
+    withActions,
   }: {
     permissions?: string[];
     farmIsActive?: boolean;
     queryClient?: ReturnType<typeof createTestQueryClient>;
     extra?: ReactNode;
+    pagePlotIds?: string[];
+    withActions?: boolean;
   } = {},
 ) {
   queryClient.setQueryData(
@@ -73,7 +77,9 @@ function renderSummaries(
           <PlotCharacterizationSummary
             farmId="f1"
             farmIsActive={farmIsActive}
+            pagePlotIds={pagePlotIds}
             plot={plot}
+            withActions={withActions}
           />
         </article>
       ))}
@@ -382,5 +388,33 @@ describe('PlotCharacterizationSummary', () => {
     expect(
       screen.getByRole('link', { name: 'Ver historial de P1' }),
     ).toBeInTheDocument();
+  });
+
+  it('reads the characterizations of a page of plots in a single request', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(characterizationsHandler([buildCharacterization()], requests));
+    renderSummaries([P1, P2], { pagePlotIds: ['pl2', 'pl1'] });
+
+    expect(
+      await within(screen.getByRole('article', { name: 'P1' })).findByText(
+        /CCN-51 y 1 más/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('article', { name: 'P2' })).getByText(
+        'Sin caracterizar',
+      ),
+    ).toBeInTheDocument();
+    expect(requests).toHaveLength(1);
+    expect(requests[0].get('plots')).toBe('pl1,pl2');
+    expect(requests[0].has('farm')).toBe(false);
+  });
+
+  it('only tells the state of the characterization without its actions', async () => {
+    server.use(characterizationsHandler([buildCharacterization()]));
+    renderSummaries([P1], { withActions: false });
+
+    expect(await screen.findByText(/CCN-51 y 1 más/)).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 });

@@ -7,11 +7,13 @@ import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { PageHeader } from '@/components/page-header';
+import { ProducerLine } from '@/components/producer-line';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { formatDateTime } from '@/lib/format/dates';
 import { formatHectares } from '@/lib/format/hectares';
+import { producerLabelOf } from '@/lib/format/producer';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
 
@@ -19,8 +21,6 @@ import type { Farm } from '../api';
 import type { QueuedFarm } from '../farm-queue';
 import { farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
-import { producerLabelOf } from '../farm-list-item';
-import { FarmProducerLine } from './farm-producer-line';
 import { FarmStatusBadge } from './farm-status-badge';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
 
@@ -226,7 +226,7 @@ function DetailLayout({
       />
       {showProducer && view.producer && (
         <div className="mt-4">
-          <FarmProducerLine
+          <ProducerLine
             producer={view.producer}
             linkable={hasPermission(user, PERMISSIONS.PRODUCERS_VIEW)}
           />
