@@ -24,11 +24,9 @@ import {
 import { inputListPath } from '../input-paths';
 import { formatStock, inputPackageOf } from '../stock-format';
 import type { FarmChoice } from './input-farm-select';
-import {
-  InputMovementDialog,
-  type MovementKind,
-} from './input-movement-dialog';
+import { InputMovementDialog } from './input-movement-dialog';
 import { InputMovementItem } from './input-movement-item';
+import type { MovementKind } from './use-movement-form';
 
 // Los movimientos de un insumo en una finca, del más nuevo al más viejo. Es una consulta en línea,
 // como el historial de las fichas: sin conexión lo dice en vez de quedarse cargando.
