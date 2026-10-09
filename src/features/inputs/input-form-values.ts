@@ -4,6 +4,8 @@ import type { InputFormInput } from './schemas';
 export const INPUT_SAVED_MESSAGE = 'Insumo guardado con éxito';
 export const INPUT_UPDATED_MESSAGE = 'Insumo actualizado';
 export const INPUT_ACTIVATED_MESSAGE = 'Insumo activado';
+export const INPUT_DEACTIVATED_MESSAGE = 'Insumo desactivado';
+export const INPUT_DELETED_MESSAGE = 'Insumo eliminado';
 export const STALE_INPUT_MESSAGE =
   'Otra persona cambió este insumo. Revisa los datos actuales antes de guardar.';
 export const UNIT_LOCKED_HINT =

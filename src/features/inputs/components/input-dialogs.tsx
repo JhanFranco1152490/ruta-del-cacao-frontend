@@ -1,8 +1,10 @@
 'use client';
 
 import type { AgriculturalInput, ExistingInput } from '../api';
+import { InputDeleteDialog } from './input-delete-dialog';
 import { InputFormDialog } from './input-form-dialog';
 import type { InputActionKind } from './input-row-actions';
+import { InputStatusDialog } from './input-status-dialog';
 
 export type PendingAction = {
   kind: InputActionKind | 'create';
@@ -38,6 +40,24 @@ export function InputDialogs({
         onSaved={onSaved}
         onShowExisting={onShowExisting}
         producer={producer}
+      />
+    );
+  }
+  if (pending?.kind === 'status' && pending.input) {
+    return (
+      <InputStatusDialog
+        input={pending.input}
+        onClose={onClose}
+        onDone={onSaved}
+      />
+    );
+  }
+  if (pending?.kind === 'delete' && pending.input) {
+    return (
+      <InputDeleteDialog
+        input={pending.input}
+        onClose={onClose}
+        onDone={onSaved}
       />
     );
   }

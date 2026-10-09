@@ -3,96 +3,28 @@ import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
-import { PERMISSIONS } from '@/lib/permissions';
-import {
-  apiError,
-  buildAgriculturalInput,
-  buildSession,
-} from '@/test/factories';
-import { apiUrl, inputStocksHandler } from '@/test/handlers';
-import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { apiError, buildAgriculturalInput } from '@/test/factories';
+import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
-import { InputListScreen } from './input-list-screen';
+import {
+  type InputsBackend,
+  renderInputsScreen,
+  startInputsBackend,
+} from './inputs-test-kit';
 
-type AgriculturalInput = components['schemas']['AgriculturalInput'];
 type SessionUser = components['schemas']['SessionUser'];
 
-const PERMISSIONS_ALL = [
-  PERMISSIONS.INPUTS_VIEW,
-  PERMISSIONS.INPUTS_ADD,
-  PERMISSIONS.INPUTS_CHANGE,
-  PERMISSIONS.INPUTS_DELETE,
-  PERMISSIONS.INPUTS_MANAGE_STOCK,
-];
-
-let catalog: AgriculturalInput[];
-let posted: unknown[];
-let patched: { id: string; body: Record<string, unknown> }[];
+let backend: InputsBackend;
 let urls: string[];
 
-// Un backend en memoria: lo que se registra o cambia aparece al volver a pedir la lista.
 beforeEach(() => {
-  catalog = [buildAgriculturalInput({ id: 'urea', version: 2 })];
-  posted = [];
-  patched = [];
-  urls = [];
-  server.use(
-    http.get(apiUrl('/api/agricultural-inputs'), () =>
-      HttpResponse.json({ results: catalog }),
-    ),
-    http.post(apiUrl('/api/agricultural-inputs'), async ({ request }) => {
-      const body = (await request.json()) as Partial<AgriculturalInput>;
-      posted.push(body);
-      const created = buildAgriculturalInput({ ...body, id: 'new' });
-      catalog = [...catalog, created];
-      return HttpResponse.json(created, { status: 201 });
-    }),
-    http.patch(
-      apiUrl('/api/agricultural-inputs/:id'),
-      async ({ params, request }) => {
-        const body = (await request.json()) as Record<string, unknown>;
-        patched.push({ id: String(params.id), body });
-        const { expected_version: version, ...changes } = body;
-        catalog = catalog.map((input) =>
-          input.id === params.id
-            ? { ...input, ...changes, version: Number(version) + 1 }
-            : input,
-        );
-        return HttpResponse.json(
-          catalog.find((input) => input.id === params.id),
-        );
-      },
-    ),
-    inputStocksHandler(),
-  );
+  backend = startInputsBackend();
 });
 
 function renderScreen(user: Partial<SessionUser> = {}, searchParams = '') {
-  const queryClient = createTestQueryClient();
-  queryClient.setQueryData(
-    queryKeys.session(),
-    buildSession({
-      id: `input-form-${crypto.randomUUID()}`,
-      permissions: PERMISSIONS_ALL,
-      ...user,
-    }),
-  );
-  return renderWithProviders(
-    <InputListScreen
-      farms={{
-        choices: [{ id: 'f1', name: 'La Esperanza', is_active: true }],
-        isLoading: false,
-      }}
-    />,
-    {
-      queryClient,
-      searchParams,
-      onUrlUpdate: ({ queryString }) => urls.push(queryString),
-    },
-  );
+  ({ urls } = renderInputsScreen({ user, searchParams }));
 }
 
 const dialog = () => screen.findByRole('dialog');
@@ -148,7 +80,7 @@ describe('InputFormDialog', () => {
       );
     }
     expect(within(form).getAllByText('Campo obligatorio')).toHaveLength(3);
-    expect(posted).toHaveLength(0);
+    expect(backend.posted).toHaveLength(0);
   });
 
   it('registers an input with its package and confirms it', async () => {
@@ -170,7 +102,7 @@ describe('InputFormDialog', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
-    expect(posted).toEqual([
+    expect(backend.posted).toEqual([
       {
         name: 'Oxicloruro de cobre',
         input_type: 'fungicide',
@@ -202,8 +134,11 @@ describe('InputFormDialog', () => {
     await userEvent.selectOptions(packageField, '');
     await save(form);
 
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]).toMatchObject({ package_type: null, package_size: null });
+    await waitFor(() => expect(backend.posted).toHaveLength(1));
+    expect(backend.posted[0]).toMatchObject({
+      package_type: null,
+      package_size: null,
+    });
   });
 
   it('warns about a repeated name before sending and shows the existing input', async () => {
@@ -218,7 +153,7 @@ describe('InputFormDialog', () => {
         'Ya existe un insumo con este nombre y tipo',
       ),
     ).toBeInTheDocument();
-    expect(posted).toHaveLength(0);
+    expect(backend.posted).toHaveLength(0);
 
     await userEvent.click(
       within(form).getByRole('button', { name: 'Ver el insumo existente' }),
@@ -232,7 +167,7 @@ describe('InputFormDialog', () => {
   });
 
   it('offers to activate an inactive input with the repeated name', async () => {
-    catalog = [
+    backend.catalog = [
       buildAgriculturalInput({ id: 'old', is_active: false, version: 4 }),
     ];
     renderScreen({}, '?estado=all');
@@ -245,7 +180,7 @@ describe('InputFormDialog', () => {
     );
 
     await waitFor(() =>
-      expect(patched).toEqual([
+      expect(backend.patched).toEqual([
         { id: 'old', body: { is_active: true, expected_version: 4 } },
       ]),
     );
@@ -337,8 +272,8 @@ describe('InputFormDialog', () => {
     await userEvent.type(within(form).getByLabelText('Nombre'), 'Urea');
     await save(form, 'Guardar cambios');
 
-    await waitFor(() => expect(patched).toHaveLength(1));
-    expect(patched[0].body).toEqual({
+    await waitFor(() => expect(backend.patched).toHaveLength(1));
+    expect(backend.patched[0].body).toEqual({
       name: 'Urea',
       input_type: 'fertilizer',
       unit: 'kg',
@@ -350,7 +285,9 @@ describe('InputFormDialog', () => {
   });
 
   it('locks the unit of an input with records but lets the rest change', async () => {
-    catalog = [buildAgriculturalInput({ id: 'urea', has_records: true })];
+    backend.catalog = [
+      buildAgriculturalInput({ id: 'urea', has_records: true }),
+    ];
     renderScreen();
     const form = await openEdit();
 
@@ -364,8 +301,8 @@ describe('InputFormDialog', () => {
 
     await save(form, 'Guardar cambios');
 
-    await waitFor(() => expect(patched).toHaveLength(1));
-    expect(patched[0].body.unit).toBe('kg');
+    await waitFor(() => expect(backend.patched).toHaveLength(1));
+    expect(backend.patched[0].body.unit).toBe('kg');
   });
 
   it('locks the unit when the server says it was used meanwhile', async () => {
@@ -412,7 +349,7 @@ describe('InputFormDialog', () => {
               { status: 409 },
             );
           }
-          patched.push({ id: 'urea', body });
+          backend.patched.push({ id: 'urea', body });
           return HttpResponse.json(buildAgriculturalInput({ version: 6 }));
         },
       ),
@@ -432,8 +369,8 @@ describe('InputFormDialog', () => {
 
     await save(form, 'Guardar cambios');
 
-    await waitFor(() => expect(patched).toHaveLength(1));
-    expect(patched[0].body.expected_version).toBe(5);
+    await waitFor(() => expect(backend.patched).toHaveLength(1));
+    expect(backend.patched[0].body.expected_version).toBe(5);
   });
 
   it('makes the technical account choose the producer of a new input', async () => {
@@ -457,7 +394,7 @@ describe('InputFormDialog', () => {
       await within(form).findByText('Complete los datos obligatorios'),
     ).toBeInTheDocument();
     expect(within(form).getByText('Campo obligatorio')).toBeInTheDocument();
-    expect(posted).toHaveLength(0);
+    expect(backend.posted).toHaveLength(0);
   });
 
   it('sends the producer chosen in the list for the technical account', async () => {
@@ -485,8 +422,8 @@ describe('InputFormDialog', () => {
 
     await save(form);
 
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]).toMatchObject({ producer_id: 'p2' });
+    await waitFor(() => expect(backend.posted).toHaveLength(1));
+    expect(backend.posted[0]).toMatchObject({ producer_id: 'p2' });
   });
 
   it('closes without saving with Cancel', async () => {
@@ -501,6 +438,6 @@ describe('InputFormDialog', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
-    expect(posted).toHaveLength(0);
+    expect(backend.posted).toHaveLength(0);
   });
 });
