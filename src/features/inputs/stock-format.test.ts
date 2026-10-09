@@ -5,6 +5,7 @@ import {
   formatPackage,
   formatQuantity,
   formatStock,
+  inputPackageOf,
   isNegativeStock,
   packagesToUnit,
 } from './stock-format';
@@ -112,5 +113,16 @@ describe('formatCountDifference', () => {
 
   it('avoids floating point noise', () => {
     expect(formatCountDifference('0.3', '0.1', 'l')).toBe('Diferencia: +0,2 L');
+  });
+});
+
+describe('inputPackageOf', () => {
+  it('gives the package only when it has both type and size', () => {
+    expect(
+      inputPackageOf({ package_type: 'tub', package_size: '100.000' }),
+    ).toEqual({ package_type: 'tub', package_size: '100.000' });
+    expect(inputPackageOf({ package_type: null, package_size: null })).toBe(
+      null,
+    );
   });
 });

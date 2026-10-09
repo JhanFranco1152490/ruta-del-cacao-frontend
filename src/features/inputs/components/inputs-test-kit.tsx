@@ -5,7 +5,12 @@ import { http, HttpResponse } from 'msw';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { PERMISSIONS } from '@/lib/permissions';
-import { buildAgriculturalInput, buildSession } from '@/test/factories';
+import {
+  buildAgriculturalInput,
+  buildInputMovement,
+  buildInputStock,
+  buildSession,
+} from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
@@ -98,6 +103,32 @@ export function startInputsBackend(
     http.get(apiUrl('/api/input-stocks'), () =>
       HttpResponse.json({ results: backend.stocks }),
     ),
+    // Una entrada suma y un conteo deja las existencias en lo contado, como el servidor.
+    http.post(apiUrl('/api/input-movements'), async ({ request }) => {
+      const body = (await request.json()) as Record<string, string>;
+      backend.movements.push(body);
+      const previous = backend.stocks.find(
+        (stock) =>
+          stock.input_id === body.input_id && stock.farm_id === body.farm_id,
+      );
+      const quantity =
+        body.kind === 'entry'
+          ? Number(previous?.quantity ?? 0) + Number(body.quantity)
+          : Number(body.counted_quantity);
+      const stock = buildInputStock({
+        input_id: body.input_id,
+        farm_id: body.farm_id,
+        quantity: quantity.toFixed(3),
+      });
+      backend.stocks = [
+        ...backend.stocks.filter((other) => other !== previous),
+        stock,
+      ];
+      return HttpResponse.json(
+        { movement: buildInputMovement({ id: body.id }), stock },
+        { status: 201 },
+      );
+    }),
   );
   return backend;
 }

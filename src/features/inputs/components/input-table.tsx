@@ -11,7 +11,12 @@ import {
 
 import { inputTypeLabel, inputUnitLabel } from '../input-options';
 import type { InputRow } from '../input-rows';
-import { formatPackage, formatStock, isNegativeStock } from '../stock-format';
+import {
+  formatPackage,
+  formatStock,
+  inputPackageOf,
+  isNegativeStock,
+} from '../stock-format';
 import {
   type InputActionKind,
   type InputPermissions,
@@ -26,11 +31,6 @@ export type StockState = 'ready' | 'loading' | 'unavailable';
 const producerLabel = ({ producer }: AgriculturalInput) =>
   `${producer.first_name} ${producer.last_name} · ${producer.member_code}`;
 
-const packageOf = (input: AgriculturalInput) =>
-  input.package_type && input.package_size
-    ? { package_type: input.package_type, package_size: input.package_size }
-    : null;
-
 function StockValue({ row, state }: { row: InputRow; state: StockState }) {
   if (state === 'loading') return <span>Cargando…</span>;
   if (state === 'unavailable') {
@@ -41,7 +41,7 @@ function StockValue({ row, state }: { row: InputRow; state: StockState }) {
   const { input, quantity } = row;
   return (
     <span className="flex flex-col items-end gap-1 md:items-start">
-      <span>{formatStock(quantity, input.unit, packageOf(input))}</span>
+      <span>{formatStock(quantity, input.unit, inputPackageOf(input))}</span>
       {isNegativeStock(quantity) && (
         <StatusBadge tone="warn">Faltan entradas por registrar</StatusBadge>
       )}
@@ -86,7 +86,7 @@ export function InputTable({
       <TableBody>
         {rows.map((row) => {
           const { input } = row;
-          const inputPackage = packageOf(input);
+          const inputPackage = inputPackageOf(input);
           return (
             <TableRow key={input.id}>
               <TableCell

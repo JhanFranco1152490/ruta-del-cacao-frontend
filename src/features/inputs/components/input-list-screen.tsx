@@ -192,6 +192,8 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
       <InputDialogs
         catalog={catalogInputs}
         chooseProducer={superuser}
+        farm={farm}
+        farms={choices ?? []}
         onClose={() => setPending(undefined)}
         onSaved={(message) => {
           setPending(undefined);

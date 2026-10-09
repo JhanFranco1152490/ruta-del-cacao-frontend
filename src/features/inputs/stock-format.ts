@@ -10,7 +10,16 @@ import {
 const QUANTITY_DECIMALS = 3;
 const MIN_PACKAGES_SHOWN = 0.1;
 
-type InputPackage = { package_type: string; package_size: string };
+export type InputPackage = { package_type: string; package_size: string };
+
+// La presentación de un insumo, o `null` si no tiene: empaque y contenido van siempre juntos.
+export const inputPackageOf = (input: {
+  package_type: string | null;
+  package_size: string | null;
+}): InputPackage | null =>
+  input.package_type && input.package_size
+    ? { package_type: input.package_type, package_size: input.package_size }
+    : null;
 
 const unitSymbol = (unit: string, amount: number) => {
   const symbol = UNIT_SYMBOLS[unit as InputUnit];

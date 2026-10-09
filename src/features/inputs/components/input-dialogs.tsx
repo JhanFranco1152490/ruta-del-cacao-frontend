@@ -2,7 +2,9 @@
 
 import type { AgriculturalInput, ExistingInput } from '../api';
 import { InputDeleteDialog } from './input-delete-dialog';
+import type { FarmChoice } from './input-farm-select';
 import { InputFormDialog } from './input-form-dialog';
+import { InputMovementDialog } from './input-movement-dialog';
 import type { InputActionKind } from './input-row-actions';
 import { InputStatusDialog } from './input-status-dialog';
 
@@ -18,6 +20,8 @@ export function InputDialogs({
   catalog,
   producer,
   chooseProducer,
+  farms,
+  farm,
   onClose,
   onSaved,
   onShowExisting,
@@ -26,6 +30,8 @@ export function InputDialogs({
   catalog: readonly AgriculturalInput[];
   producer: string | null;
   chooseProducer: boolean;
+  farms: readonly FarmChoice[];
+  farm: string | null;
   onClose: () => void;
   onSaved: (message: string) => void;
   onShowExisting: (existing: ExistingInput) => void;
@@ -49,6 +55,21 @@ export function InputDialogs({
         input={pending.input}
         onClose={onClose}
         onDone={onSaved}
+      />
+    );
+  }
+  if (
+    (pending?.kind === 'entry' || pending?.kind === 'count') &&
+    pending.input
+  ) {
+    return (
+      <InputMovementDialog
+        farm={farm}
+        farms={farms}
+        input={pending.input}
+        kind={pending.kind}
+        onClose={onClose}
+        onSaved={onSaved}
       />
     );
   }
