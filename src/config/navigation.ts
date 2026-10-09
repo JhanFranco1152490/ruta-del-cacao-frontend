@@ -1,4 +1,5 @@
 import {
+  FlaskConical,
   LandPlot,
   Leaf,
   MapPinned,
@@ -40,6 +41,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Leaf,
     permission: PERMISSIONS.CROPS_MANAGE_VARIETIES,
     needsConnection: true,
+  },
+  {
+    href: '/insumos',
+    label: 'Insumos',
+    icon: FlaskConical,
+    permission: PERMISSIONS.INPUTS_VIEW,
   },
   {
     href: '/roles',

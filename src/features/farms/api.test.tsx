@@ -5,12 +5,13 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
+import { getOfflineDb } from '@/lib/offline/db';
 import { buildFarm } from '@/test/factories';
-import { apiUrl } from '@/test/handlers';
+import { apiUrl, farmsHandler } from '@/test/handlers';
 import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
 
-import { useChangeFarmStatus } from './api';
+import { useChangeFarmStatus, useFarmOptions } from './api';
 
 describe('useChangeFarmStatus', () => {
   it('refreshes every read of the farm, not only the list', async () => {
@@ -44,5 +45,54 @@ describe('useChangeFarmStatus', () => {
       expect(queryClient.getQueryState(detailView)?.isInvalidated).toBe(true);
       expect(queryClient.getQueryState(mapCounts)?.isInvalidated).toBe(true);
     });
+  });
+});
+
+describe('useFarmOptions', () => {
+  const wrapper = (queryClient = createTestQueryClient()) =>
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+    };
+
+  it('asks for every farm of the producer in one page and keeps a slim copy', async () => {
+    const userId = `farm-options-${crypto.randomUUID()}`;
+    const requests: URLSearchParams[] = [];
+    server.use(
+      farmsHandler(
+        [buildFarm({ id: 'f1', name: 'La Esperanza', is_active: false })],
+        requests,
+      ),
+    );
+
+    const { result } = renderHook(() => useFarmOptions(userId, 'p2'), {
+      wrapper: wrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(requests[0].get('producer')).toBe('p2');
+    expect(requests[0].get('page_size')).toBe('100');
+    const slim = [{ id: 'f1', name: 'La Esperanza', is_active: false }];
+    expect(result.current.data?.data).toEqual(slim);
+    const saved = await getOfflineDb(userId).cache.get(
+      'farm-options:producer:p2',
+    );
+    expect(saved?.value).toEqual(slim);
+  });
+
+  it('reads the own farms without a producer', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(farmsHandler([], requests));
+
+    const { result } = renderHook(
+      () => useFarmOptions(`farm-options-${crypto.randomUUID()}`, null),
+      { wrapper: wrapper() },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(requests[0].has('producer')).toBe(false);
   });
 });

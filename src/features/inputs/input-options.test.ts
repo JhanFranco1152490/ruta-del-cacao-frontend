@@ -4,6 +4,7 @@ import {
   INPUT_TYPE_OPTIONS,
   INPUT_UNIT_OPTIONS,
   inputTypeLabel,
+  inputUnitLabel,
   PACKAGE_TYPE_OPTIONS,
   matchesInputFilters,
 } from './input-options';
@@ -55,6 +56,11 @@ describe('input options', () => {
   it('labels a type, and shows an unknown value as it comes', () => {
     expect(inputTypeLabel('organic_fertilizer')).toBe('Abono');
     expect(inputTypeLabel('herbicide')).toBe('herbicide');
+  });
+
+  it('labels a unit, and shows an unknown value as it comes', () => {
+    expect(inputUnitLabel('ml')).toBe('Mililitros');
+    expect(inputUnitLabel('lb')).toBe('lb');
   });
 });
 

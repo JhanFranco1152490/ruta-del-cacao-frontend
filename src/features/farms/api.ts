@@ -10,6 +10,7 @@ import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { type Farm, fetchFarm } from '@/lib/api/farm-detail';
+import { readThroughCache } from '@/lib/offline/cached-read';
 import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
 
 // La lectura de una finca vive en `lib/api/farm-detail.ts`: la comparte el dominio de parcelas.
@@ -53,6 +54,46 @@ export const useFarms = (query: FarmQuery) =>
     refetchInterval: LIST_REFETCH_INTERVAL_MS,
     // Al paginar o buscar se conserva la página anterior en pantalla hasta que llega la nueva.
     placeholderData: keepPreviousData,
+  });
+
+export type FarmOption = Pick<Farm, 'id' | 'name' | 'is_active'>;
+
+// El máximo de una página: un productor no llega a tantas fincas, así que basta una petición.
+const FARM_OPTIONS_PAGE_SIZE = 100;
+
+export async function fetchFarmOptions(
+  producer: string | null,
+  signal?: AbortSignal,
+): Promise<FarmOption[]> {
+  const params = new URLSearchParams({
+    page: '1',
+    page_size: String(FARM_OPTIONS_PAGE_SIZE),
+  });
+  if (producer) params.set('producer', producer);
+  const { results } = await apiFetch<FarmPage>(`/api/farms?${params}`, {
+    signal,
+  });
+  return results.map(({ id, name, is_active }) => ({ id, name, is_active }));
+}
+
+// Las fincas para elegir una en otra pantalla (por ejemplo, de qué bodega ver las existencias).
+// Se guardan en el dispositivo, solo con lo que hace falta para elegir, para elegir también sin
+// conexión.
+export const useFarmOptions = (
+  userId: string | undefined,
+  producer: string | null,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.farms.options(producer),
+    queryFn: ({ signal }) =>
+      readThroughCache(
+        userId!,
+        producer ? `farm-options:producer:${producer}` : 'farm-options',
+        () => fetchFarmOptions(producer, signal),
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
   });
 
 export const useFarm = (

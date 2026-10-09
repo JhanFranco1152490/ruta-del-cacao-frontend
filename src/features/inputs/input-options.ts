@@ -61,6 +61,9 @@ const labelOf = (options: readonly Option<string>[], value: string) =>
 export const inputTypeLabel = (type: string) =>
   labelOf(INPUT_TYPE_OPTIONS, type);
 
+export const inputUnitLabel = (unit: string) =>
+  labelOf(INPUT_UNIT_OPTIONS, unit);
+
 export type InputStatusFilter = 'active' | 'inactive' | 'all';
 
 export type InputFilters = {
