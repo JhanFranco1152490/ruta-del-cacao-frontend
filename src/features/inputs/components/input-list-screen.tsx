@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FormMessage } from '@/components/form-message';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,27 +16,18 @@ import { formatTimestamp } from '@/lib/format/dates';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import {
-  type AgriculturalInput,
-  useAgriculturalInputs,
-  useInputStocks,
-} from '../api';
+import { useAgriculturalInputs, useInputStocks } from '../api';
 import { buildInputRows } from '../input-rows';
 import { useInputFilters } from '../use-input-filters';
 import { type FarmChoice, InputFarmSelect } from './input-farm-select';
 import { InputFiltersBar } from './input-filters-bar';
-import type { InputActionKind } from './input-row-actions';
+import { InputDialogs, type PendingAction } from './input-dialogs';
 import { InputTable, type StockState } from './input-table';
 
 export type FarmChoices = {
   // `undefined` mientras se cargan o si no se pudieron leer.
   choices?: readonly FarmChoice[];
   isLoading: boolean;
-};
-
-type PendingAction = {
-  kind: InputActionKind | 'create';
-  input?: AgriculturalInput;
 };
 
 function offlineMessage(savedAt: number | undefined) {
@@ -63,7 +55,9 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         : null
       : filters.farm;
   const stocks = useInputStocks(user?.id, farm);
-  const [, setPending] = useState<PendingAction>();
+  const [pending, setPending] = useState<PendingAction>();
+  // La confirmación de lo último que se guardó, en un aviso que leen los lectores de pantalla.
+  const [saved, setSaved] = useState<string>();
 
   const savedAt = catalog.data?.savedAt;
   const offline = !hasConnection || savedAt !== undefined;
@@ -92,7 +86,10 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   const registerButton = canAdd && (
     <Button
       disabled={offline}
-      onClick={() => setPending({ kind: 'create' })}
+      onClick={() => {
+        setSaved(undefined);
+        setPending({ kind: 'create' });
+      }}
       size="office"
     >
       <Plus aria-hidden="true" className="size-5" /> Registrar insumo
@@ -107,6 +104,9 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         eyebrow="Inventario"
         title="Insumos"
       />
+      <div className="mt-6 empty:hidden">
+        <FormMessage variant="success">{saved}</FormMessage>
+      </div>
       {offline && catalog.isSuccess && (
         <p
           className="mt-6 flex gap-3 rounded-lg border border-border bg-card p-4 text-sm font-bold"
@@ -178,7 +178,10 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
             <InputTable
               actionsDisabled={offline}
               farm={farm}
-              onAction={(kind, input) => setPending({ kind, input })}
+              onAction={(kind, input) => {
+                setSaved(undefined);
+                setPending({ kind, input });
+              }}
               permissions={permissions}
               rows={rows}
               showProducer={needsProducer}
@@ -186,6 +189,21 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
             />
           ))}
       </section>
+      <InputDialogs
+        catalog={catalogInputs}
+        chooseProducer={superuser}
+        onClose={() => setPending(undefined)}
+        onSaved={(message) => {
+          setPending(undefined);
+          setSaved(message);
+        }}
+        onShowExisting={(existing) => {
+          setPending(undefined);
+          filters.showInput(existing);
+        }}
+        pending={pending}
+        producer={producer}
+      />
     </div>
   );
 }
