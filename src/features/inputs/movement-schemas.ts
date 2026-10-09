@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { components } from '@/lib/api/schema';
 import { todayInBogota } from '@/lib/format/dates';
 import { decimalPattern, isDecimal } from '@/lib/validation/decimal';
 
@@ -109,6 +110,6 @@ export function buildMovementRequest(
   { id, inputId, farmId }: MovementContext,
   kind: 'entry' | 'count',
   values: EntryValues | CountValues,
-) {
+): components['schemas']['InputMovementCreateRequest'] {
   return { id, input_id: inputId, farm_id: farmId, kind, ...values };
 }

@@ -238,3 +238,51 @@ export const buildPlot = (
   updated_at: '2026-10-01T12:00:00-05:00',
   ...overrides,
 });
+
+export const buildAgriculturalInput = (
+  overrides: Partial<Schemas['AgriculturalInput']> = {},
+): Schemas['AgriculturalInput'] => ({
+  id: 'in1',
+  producer: {
+    id: 'p1',
+    member_code: 'ASO-001',
+    first_name: 'Productora',
+    last_name: 'De Prueba',
+  },
+  name: 'Urea 46 %',
+  input_type: 'fertilizer',
+  unit: 'kg',
+  package_type: 'sack',
+  package_size: '50.000',
+  is_active: true,
+  has_records: false,
+  version: 1,
+  created_at: '2026-10-06T12:00:00-05:00',
+  updated_at: '2026-10-06T12:00:00-05:00',
+  ...overrides,
+});
+
+export const buildInputStock = (
+  overrides: Partial<Schemas['InputStock']> = {},
+): Schemas['InputStock'] => ({
+  input_id: 'in1',
+  farm_id: 'f1',
+  quantity: '100.000',
+  last_count_date: null,
+  updated_at: '2026-10-07T12:00:00-05:00',
+  ...overrides,
+});
+
+export const buildInputMovement = (
+  overrides: Partial<Schemas['InputMovement']> = {},
+): Schemas['InputMovement'] => ({
+  id: 'mv1',
+  kind: 'entry',
+  quantity: '100.000',
+  counted_quantity: null,
+  occurred_on: '2026-10-07',
+  note: '',
+  actor_name: 'Cuenta de prueba',
+  created_at: '2026-10-07T12:00:00-05:00',
+  ...overrides,
+});

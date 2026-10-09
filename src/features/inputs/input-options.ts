@@ -1,5 +1,7 @@
+import type { components } from '@/lib/api/schema';
 import { normalizeCatalogName } from '@/lib/format/search';
 
+type Schemas = components['schemas'];
 type Option<T extends string> = { value: T; label: string };
 
 // En el orden en que se ofrecen en el formulario y en el filtro de la lista.
@@ -9,7 +11,7 @@ export const INPUT_TYPE_OPTIONS = [
   { value: 'fungicide', label: 'Fungicida' },
   { value: 'insecticide', label: 'Insecticida' },
   { value: 'other', label: 'Otro' },
-] as const satisfies readonly Option<string>[];
+] as const satisfies readonly Option<Schemas['InputTypeEnum']>[];
 
 export type InputType = (typeof INPUT_TYPE_OPTIONS)[number]['value'];
 
@@ -19,7 +21,7 @@ export const INPUT_UNIT_OPTIONS = [
   { value: 'l', label: 'Litros' },
   { value: 'ml', label: 'Mililitros' },
   { value: 'unit', label: 'Unidades' },
-] as const satisfies readonly Option<string>[];
+] as const satisfies readonly Option<Schemas['UnitEnum']>[];
 
 export type InputUnit = (typeof INPUT_UNIT_OPTIONS)[number]['value'];
 
@@ -46,7 +48,9 @@ export const PACKAGE_TYPE_OPTIONS = [
   { value: 'drum', label: 'Caneca', plural: 'canecas' },
   { value: 'box', label: 'Caja', plural: 'cajas' },
   { value: 'sachet', label: 'Sobre', plural: 'sobres' },
-] as const satisfies readonly (Option<string> & { plural: string })[];
+] as const satisfies readonly (Option<Schemas['PackageTypeEnum']> & {
+  plural: string;
+})[];
 
 export type PackageType = (typeof PACKAGE_TYPE_OPTIONS)[number]['value'];
 
