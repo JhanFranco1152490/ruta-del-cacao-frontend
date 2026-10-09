@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from 'cn';
 import { useEffect, useId, useState } from 'react';
 
 import {
@@ -77,7 +76,7 @@ export function FarmFilter({
       : 'Ninguna finca coincide con la búsqueda.';
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={className}>
       <label
         className="mb-2 block text-sm font-bold text-selva"
         htmlFor={inputId}
