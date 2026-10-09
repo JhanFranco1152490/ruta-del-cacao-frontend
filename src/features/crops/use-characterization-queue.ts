@@ -11,6 +11,7 @@ import {
   characterizationQueueId,
   enqueueCharacterization,
   getQueuedCharacterization,
+  listFailedCharacterizationPlotIds,
   listQueuedCharacterizations,
   type QueuedCharacterization,
   resubmitCharacterization,
@@ -22,6 +23,24 @@ export const useQueuedCharacterization = (plotId: string) =>
     (userId) => queryKeys.characterizations.queued(userId, plotId),
     (userId) => getQueuedCharacterization(userId, plotId),
   );
+
+// Las parcelas cuya ficha falló al enviarse. Se actualiza sola cuando la cola cambia.
+export function useFailedCharacterizationPlotIds(userId: string | undefined) {
+  const [state, setState] = useState<{ userId?: string; ids?: string[] }>({});
+
+  useEffect(() => {
+    if (!userId) return;
+    const subscription = liveQuery(() =>
+      listFailedCharacterizationPlotIds(userId),
+    ).subscribe({
+      next: (ids) => setState({ userId, ids }),
+      error: () => setState({ userId, ids: [] }),
+    });
+    return () => subscription.unsubscribe();
+  }, [userId]);
+
+  return state.userId === userId ? state.ids : undefined;
+}
 
 type LocalCharacterizations = {
   key?: string;

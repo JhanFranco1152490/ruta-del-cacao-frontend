@@ -1,15 +1,15 @@
 import Link from 'next/link';
 
-import { type FarmProducer, producerLabelOf } from '../farm-list-item';
+import { type ProducerRef, producerLabelOf } from '@/lib/format/producer';
 
-// De quién es la finca. Solo se muestra a quien no tiene un productor propio (la asociación y la
+// De quién es una finca o una parcela. Solo se muestra a quien no tiene un productor propio (la asociación y la
 // cuenta técnica): para un productor sería su propio nombre en cada tarjeta. Es solo de lectura:
-// una finca no cambia de dueño.
-export function FarmProducerLine({
+// nada cambia de dueño.
+export function ProducerLine({
   producer,
   linkable = false,
 }: {
-  producer: FarmProducer;
+  producer: ProducerRef;
   // Con permiso para consultar productores, el nombre lleva a su expediente.
   linkable?: boolean;
 }) {

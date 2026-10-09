@@ -250,9 +250,10 @@ describe('the queue with the plot adapter', () => {
 });
 
 describe('plotSyncAdapter.refreshAfterSync', () => {
-  it('refreshes the plots of its farm and the farm, whose assigned area changes', () => {
+  it('refreshes the plots of its farm, the general plot lists and the farm, whose assigned area changes', () => {
     expect(plotSyncAdapter.refreshAfterSync?.(queueItem({}))).toEqual([
       queryKeys.plots.byFarm('f1'),
+      queryKeys.plots.lists(),
       queryKeys.farms.detail('f1'),
       queryKeys.farms.lists(),
     ]);

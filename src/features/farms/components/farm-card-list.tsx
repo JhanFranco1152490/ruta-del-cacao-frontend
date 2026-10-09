@@ -2,12 +2,12 @@ import { Eye, MapPin, MapPinned } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { ProducerLine } from '@/components/producer-line';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { parseCoordinates } from '@/lib/format/coordinates';
 
 import type { FarmListItem } from '../farm-list-item';
 import { farmDetailPath } from '../farm-paths';
-import { FarmProducerLine } from './farm-producer-line';
 import { FarmStatusBadge } from './farm-status-badge';
 
 export function FarmCardList({
@@ -49,7 +49,7 @@ export function FarmCardList({
               {municipalityName(farm.municipalityCode)}
             </p>
             {showProducer && farm.producer && (
-              <FarmProducerLine
+              <ProducerLine
                 producer={farm.producer}
                 linkable={canOpenProducer}
               />
