@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { components } from '@/lib/api/schema';
+import type { components, operations } from '@/lib/api/schema';
 import { monthBounds } from '@/lib/format/dates';
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
 
@@ -19,6 +19,8 @@ export type Assignee = Schemas['Assignee'];
 export type UsedInput = Schemas['UsedInputOutput'];
 export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
 export type ActivityUpdateRequest = Schemas['PatchedActivityUpdateRequest'];
+type ActivityDeleteQuery =
+  operations['agricultural_activities_destroy']['parameters']['query'];
 
 export const ACTIVITY_ERROR = {
   staleVersion: 'stale_version',
@@ -167,6 +169,33 @@ export function useUpdateActivity() {
     networkMode: 'always',
     mutationFn: ({ id, body }: { id: string; body: ActivityUpdateRequest }) =>
       patchActivity(id, body),
+    onSettled: () => invalidate(),
+  });
+}
+
+// La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP.
+export const deleteActivity = (id: string, expectedVersion: number) => {
+  const query: ActivityDeleteQuery = { expected_version: expectedVersion };
+  const params = new URLSearchParams({
+    expected_version: String(query.expected_version),
+  });
+  return apiFetch<void>(`/api/agricultural-activities/${id}?${params}`, {
+    method: 'DELETE',
+  });
+};
+
+// También al fallar: la lista debe leer cómo quedó la actividad que no se pudo eliminar.
+export function useDeleteActivity() {
+  const invalidate = useInvalidateActivities();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({
+      id,
+      expectedVersion,
+    }: {
+      id: string;
+      expectedVersion: number;
+    }) => deleteActivity(id, expectedVersion),
     onSettled: () => invalidate(),
   });
 }

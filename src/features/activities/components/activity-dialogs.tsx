@@ -2,6 +2,7 @@
 
 import type { ActivityOfDay } from '../activity-days';
 import type { UsedInput } from '../api';
+import { ActivityDeleteDialog } from './activity-delete-dialog';
 import { ActivityDetailDialog } from './activity-detail-dialog';
 import { ActivityFormDialog } from './activity-form-dialog';
 
@@ -10,7 +11,8 @@ import { ActivityFormDialog } from './activity-form-dialog';
 export type PendingDialog =
   | { kind: 'schedule' }
   | { kind: 'detail'; id: string }
-  | { kind: 'edit'; id: string };
+  | { kind: 'edit'; id: string }
+  | { kind: 'delete'; id: string };
 
 export type ActivityNotice = {
   message: string;
@@ -34,7 +36,7 @@ export function ActivityDialogs({
   // Las actividades de la lista, con su estado de hoy.
   items: readonly ActivityOfDay[];
   today: string;
-  // Sin conexión solo se consulta: editar necesita al servidor.
+  // Sin conexión solo se consulta: editar y eliminar necesitan al servidor.
   offline: boolean;
   formatUsedInput: (used: UsedInput) => string;
   onPending: (pending: PendingDialog | undefined) => void;
@@ -44,6 +46,11 @@ export function ActivityDialogs({
   const saved = (message: string, isoDate: string) => {
     close();
     onNotice({ message, variant: 'success', month: monthOf(isoDate) });
+  };
+
+  const rejected = (message: string) => {
+    close();
+    onNotice({ message, variant: 'error' });
   };
 
   if (!pending) return null;
@@ -68,11 +75,23 @@ export function ActivityDialogs({
         activity={item.activity}
         // Cancelar vuelve al detalle del que salió.
         onClose={() => onPending({ kind: 'detail', id })}
-        onRejected={(message) => {
-          close();
-          onNotice({ message, variant: 'error' });
-        }}
+        onRejected={rejected}
         onSaved={(activity, message) => saved(message, activity.scheduled_date)}
+      />
+    );
+  }
+
+  if (pending.kind === 'delete') {
+    return (
+      <ActivityDeleteDialog
+        activity={item.activity}
+        // Cancelar vuelve al detalle del que salió.
+        onClose={() => onPending({ kind: 'detail', id })}
+        onDone={(message) => {
+          close();
+          onNotice({ message, variant: 'success' });
+        }}
+        onRejected={rejected}
       />
     );
   }
@@ -83,6 +102,7 @@ export function ActivityDialogs({
       item={item}
       offline={offline}
       onClose={close}
+      onDelete={() => onPending({ kind: 'delete', id })}
       onEdit={() => onPending({ kind: 'edit', id })}
       today={today}
     />

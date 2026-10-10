@@ -1,6 +1,6 @@
 'use client';
 
-import { CloudOff, Plus } from 'lucide-react';
+import { CloudOff } from 'lucide-react';
 import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
@@ -25,6 +25,7 @@ import {
   type PendingDialog,
 } from './activity-dialogs';
 import { ActivityMonthBar } from './activity-month-bar';
+import { ScheduleActivityButton } from './schedule-activity-button';
 
 // Cómo se escribe la cantidad de un insumo usado llega de la página: este dominio no conoce las
 // unidades ni las presentaciones de los insumos.
@@ -57,29 +58,14 @@ export function ActivityListScreen({
   // otro mes, la lista no salta: el aviso ofrece ir a verla.
   const [notice, setNotice] = useState<ActivityNotice>();
 
-  // Programar es solo en línea: sin conexión el botón lo dice en vez de fallar al guardar.
   const scheduleButton = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD) && (
-    <div className="flex flex-col items-start gap-2 sm:items-end">
-      <Button
-        aria-describedby={offline ? 'schedule-needs-connection' : undefined}
-        disabled={offline}
-        onClick={() => {
-          setNotice(undefined);
-          setPending({ kind: 'schedule' });
-        }}
-        size="office"
-      >
-        <Plus aria-hidden="true" className="size-5" /> Programar actividad
-      </Button>
-      {offline && (
-        <p
-          className="text-sm text-muted-foreground"
-          id="schedule-needs-connection"
-        >
-          Programar una actividad necesita conexión.
-        </p>
-      )}
-    </div>
+    <ScheduleActivityButton
+      offline={offline}
+      onClick={() => {
+        setNotice(undefined);
+        setPending({ kind: 'schedule' });
+      }}
+    />
   );
 
   return (

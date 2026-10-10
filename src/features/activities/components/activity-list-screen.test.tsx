@@ -545,4 +545,114 @@ describe('ActivityListScreen', () => {
       );
     });
   });
+
+  describe('deleting', () => {
+    const CAN_DELETE = [
+      PERMISSIONS.ACTIVITIES_VIEW,
+      PERMISSIONS.ACTIVITIES_DELETE,
+    ];
+    const pruning = buildAgriculturalActivity({
+      activity_type: 'pruning',
+      scheduled_date: '2026-10-26',
+      version: 2,
+    });
+
+    const openDelete = async () => {
+      await userEvent.click(
+        await screen.findByRole('button', { name: /Poda/ }),
+      );
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Eliminar' }),
+      );
+      return screen.findByRole('heading', {
+        name: '¿Eliminar esta actividad?',
+      });
+    };
+
+    it('deletes an activity from its detail and takes it off the list', async () => {
+      let results = [pruning];
+      const versions: (string | null)[] = [];
+      server.use(
+        http.get(apiUrl('/api/agricultural-activities'), () =>
+          HttpResponse.json({ results }),
+        ),
+        http.delete(
+          apiUrl('/api/agricultural-activities/a1'),
+          ({ request }) => {
+            versions.push(
+              new URL(request.url).searchParams.get('expected_version'),
+            );
+            results = [];
+            return new HttpResponse(null, { status: 204 });
+          },
+        ),
+      );
+      renderScreen({ permissions: CAN_DELETE });
+      await openDelete();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Eliminar actividad' }),
+      );
+
+      expect(
+        await screen.findByText('Actividad eliminada'),
+      ).toBeInTheDocument();
+      expect(versions).toEqual(['2']);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        await screen.findByText(
+          'No hay actividades programadas en este periodo',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('comes back to the detail when the deletion is cancelled', async () => {
+      server.use(agriculturalActivitiesHandler([pruning]));
+      renderScreen({ permissions: CAN_DELETE });
+      await openDelete();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+      expect(
+        await screen.findByRole('heading', { name: 'Poda' }),
+      ).toBeInTheDocument();
+    });
+
+    it('hides the deletion from who lacks the permission', async () => {
+      server.use(agriculturalActivitiesHandler([pruning]));
+      renderScreen({
+        permissions: [
+          PERMISSIONS.ACTIVITIES_VIEW,
+          PERMISSIONS.ACTIVITIES_CHANGE,
+        ],
+      });
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: /Poda/ }),
+      );
+
+      await screen.findByRole('button', { name: 'Editar' });
+      expect(
+        screen.queryByRole('button', { name: 'Eliminar' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('disables the deletion without a connection', async () => {
+      await getOfflineDb(userId).cache.put({
+        key: 'agricultural-activities:2026-10',
+        value: [pruning],
+        fetchedAt: 1_700_000_000_000,
+      });
+      server.use(offline());
+      renderScreen({ permissions: CAN_DELETE });
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: /Poda/ }),
+      );
+
+      expect(
+        await screen.findByRole('button', { name: 'Eliminar' }),
+      ).toBeDisabled();
+    });
+  });
 });
