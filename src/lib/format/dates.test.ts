@@ -6,8 +6,10 @@ import {
   formatMonthYear,
   formatTimestamp,
   formatWeekdayDate,
+  formatWeekdayLongDate,
   isIsoMonth,
   monthBounds,
+  shiftDays,
   shiftMonth,
   todayInBogota,
 } from './dates';
@@ -104,5 +106,21 @@ describe('formatWeekdayDate', () => {
   it('names the weekday in Spanish without shifting the day', () => {
     expect(formatWeekdayDate('2026-10-19')).toBe('lunes 19 de octubre');
     expect(formatWeekdayDate('2026-11-01')).toBe('domingo 1 de noviembre');
+  });
+});
+
+describe('shiftDays', () => {
+  it('moves a date forward and back across a month and a year', () => {
+    expect(shiftDays('2026-10-20', 3)).toBe('2026-10-23');
+    expect(shiftDays('2026-10-30', 3)).toBe('2026-11-02');
+    expect(shiftDays('2027-01-01', -1)).toBe('2026-12-31');
+  });
+});
+
+describe('formatWeekdayLongDate', () => {
+  it('names the weekday and the year', () => {
+    expect(formatWeekdayLongDate('2026-10-22')).toBe(
+      'jueves 22 de octubre de 2026',
+    );
   });
 });

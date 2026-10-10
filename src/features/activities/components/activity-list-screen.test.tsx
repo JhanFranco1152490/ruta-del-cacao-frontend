@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -45,11 +45,16 @@ function renderScreen({ searchParams = '' } = {}) {
       permissions: [PERMISSIONS.ACTIVITIES_VIEW],
     }),
   );
-  return renderWithProviders(<ActivityListScreen />, {
-    queryClient,
-    searchParams,
-    onUrlUpdate: ({ queryString }) => urls.push(queryString),
-  });
+  return renderWithProviders(
+    <ActivityListScreen
+      formatUsedInput={({ quantity, input }) => `${quantity} ${input.unit}`}
+    />,
+    {
+      queryClient,
+      searchParams,
+      onUrlUpdate: ({ queryString }) => urls.push(queryString),
+    },
+  );
 }
 
 const dayOf = (name: string) => screen.findByRole('region', { name });
@@ -251,5 +256,36 @@ describe('ActivityListScreen', () => {
     expect(
       screen.getByRole('button', { name: 'Reintentar' }),
     ).toBeInTheDocument();
+  });
+
+  it('opens the detail of an activity and closes it', async () => {
+    server.use(
+      agriculturalActivitiesHandler([
+        buildAgriculturalActivity({
+          activity_type: 'pruning',
+          scheduled_date: '2026-10-20',
+        }),
+      ]),
+    );
+    renderScreen();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Poda/ }));
+
+    const detail = await screen.findByRole('dialog');
+    expect(
+      within(detail).getByRole('heading', { name: 'Poda' }),
+    ).toBeInTheDocument();
+    expect(detail).toHaveTextContent('martes 20 de octubre de 2026');
+    expect(within(detail).getByRole('status')).toHaveTextContent(
+      'Retrasada · 2 días',
+    );
+
+    await userEvent.click(
+      within(detail).getByRole('button', { name: 'Cerrar' }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
   });
 });

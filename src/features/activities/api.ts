@@ -16,6 +16,7 @@ import {
 type Schemas = components['schemas'];
 export type AgriculturalActivity = Schemas['AgriculturalActivity'];
 export type Assignee = Schemas['Assignee'];
+export type UsedInput = Schemas['UsedInputOutput'];
 
 // La consulta pide un periodo y no se pagina: los filtros corren en el dispositivo, también sin
 // conexión. `producer` solo lo envía la cuenta técnica; las demás cuentas ven su productor.

@@ -1,5 +1,6 @@
 import { tz } from '@date-fns/tz';
 import {
+  addDays,
   addMonths,
   differenceInCalendarDays,
   format,
@@ -54,3 +55,11 @@ export const shiftMonth = (isoMonth: string, months: number) =>
 // Una fecha sin hora con su día de la semana: "lunes 19 de octubre".
 export const formatWeekdayDate = (isoDate: string) =>
   format(parseISO(isoDate), "EEEE d 'de' MMMM", { locale: es });
+
+// La fecha que queda tantos días después de una fecha sin hora (yyyy-MM-dd).
+export const shiftDays = (isoDate: string, days: number) =>
+  format(addDays(parseISO(isoDate), days), 'yyyy-MM-dd');
+
+// Una fecha sin hora con su día de la semana y su año: "jueves 22 de octubre de 2026".
+export const formatWeekdayLongDate = (isoDate: string) =>
+  format(parseISO(isoDate), "EEEE d 'de' MMMM 'de' yyyy", { locale: es });

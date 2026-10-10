@@ -1,10 +1,16 @@
 import { formatWeekdayDate } from '@/lib/format/dates';
 
-import type { ActivityDay } from '../activity-days';
+import type { ActivityDay, ActivityOfDay } from '../activity-days';
 import { ActivityCard } from './activity-card';
 
 // Las actividades del mes agrupadas por día: solo aparecen los días que tienen alguna.
-export function ActivityDayList({ days }: { days: readonly ActivityDay[] }) {
+export function ActivityDayList({
+  days,
+  onSelect,
+}: {
+  days: readonly ActivityDay[];
+  onSelect: (item: ActivityOfDay) => void;
+}) {
   return (
     <div className="space-y-6">
       {days.map((day) => (
@@ -21,7 +27,7 @@ export function ActivityDayList({ days }: { days: readonly ActivityDay[] }) {
           <ul className="mt-3 space-y-3">
             {day.activities.map((item) => (
               <li key={item.activity.id}>
-                <ActivityCard {...item} />
+                <ActivityCard item={item} onSelect={() => onSelect(item)} />
               </li>
             ))}
           </ul>

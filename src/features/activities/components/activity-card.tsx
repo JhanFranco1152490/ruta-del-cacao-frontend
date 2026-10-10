@@ -1,4 +1,5 @@
 import { StatusBadge } from '@/components/status-badge';
+import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 
 import type { ActivityOfDay } from '../activity-days';
 import {
@@ -15,20 +16,28 @@ const BORDER_BY_TONE = {
   ok: 'border-l-ok',
 } as const;
 
-// Una actividad en la lista: la labor, dónde es, quién la hace y cómo va.
-export function ActivityCard({ activity, state, daysLate }: ActivityOfDay) {
+// Una actividad en la lista: la labor, dónde es, quién la hace y cómo va. Tocarla abre su detalle.
+export function ActivityCard({
+  item: { activity, state, daysLate },
+  onSelect,
+}: {
+  item: ActivityOfDay;
+  onSelect: () => void;
+}) {
   const { tone } = ACTIVITY_STATE_DISPLAY[state];
   const { plot, assignee } = activity;
 
   return (
-    <article
-      className={`flex flex-col gap-2 rounded-xl border-l-[5px] bg-card px-4 py-3 shadow-card sm:flex-row sm:items-center sm:justify-between ${BORDER_BY_TONE[tone]}`}
+    <button
+      className={`flex w-full cursor-pointer flex-col gap-2 rounded-xl border-l-[5px] bg-card px-4 py-3 text-left shadow-card hover:bg-muted sm:flex-row sm:items-center sm:justify-between ${BORDER_BY_TONE[tone]} ${FOCUS_OUTLINE_CLASS}`}
+      onClick={onSelect}
+      type="button"
     >
-      <div className="min-w-0 space-y-1">
-        <h4 className="font-sans text-base font-extrabold text-selva">
+      <span className="block min-w-0 space-y-1">
+        <span className="block font-sans text-base font-extrabold text-selva">
           {activityTitle(activity)}
-        </h4>
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-muted-foreground">
+        </span>
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-muted-foreground">
           <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-extrabold whitespace-nowrap text-selva">
             {plot.code}
           </span>
@@ -38,13 +47,13 @@ export function ActivityCard({ activity, state, daysLate }: ActivityOfDay) {
             {assignee.full_name}
             {!assignee.is_active && ' (cuenta inactiva)'}
           </span>
-        </p>
-      </div>
-      <div className="shrink-0">
+        </span>
+      </span>
+      <span className="shrink-0">
         <StatusBadge tone={tone}>
           {activityStateText(state, daysLate)}
         </StatusBadge>
-      </div>
-    </article>
+      </span>
+    </button>
   );
 }

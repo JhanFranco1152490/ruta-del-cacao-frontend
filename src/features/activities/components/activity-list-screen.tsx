@@ -1,6 +1,7 @@
 'use client';
 
 import { CloudOff } from 'lucide-react';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
@@ -13,12 +14,19 @@ import { isNetworkFailure } from '@/lib/api/errors';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import { groupActivitiesByDay } from '../activity-days';
-import { useActivitiesOfMonth } from '../api';
+import { type UsedInput, useActivitiesOfMonth } from '../api';
 import { useActivityMonth } from '../use-activity-month';
 import { ActivityDayList } from './activity-day-list';
+import { ActivityDetailDialog } from './activity-detail-dialog';
 import { ActivityMonthBar } from './activity-month-bar';
 
-export function ActivityListScreen() {
+// Cómo se escribe la cantidad de un insumo usado llega de la página: este dominio no conoce las
+// unidades ni las presentaciones de los insumos.
+export function ActivityListScreen({
+  formatUsedInput,
+}: {
+  formatUsedInput: (used: UsedInput) => string;
+}) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
   const { month, today, isCurrentMonth, goPrevious, goNext, goToday } =
@@ -31,6 +39,12 @@ export function ActivityListScreen() {
     isPausedWithoutData(activities) ||
     (activities.isError && isNetworkFailure(activities.error));
   const days = groupActivitiesByDay(activities.data?.data ?? [], today);
+  // Se guarda solo el id: el detalle muestra la actividad como está en la lista, también después
+  // de que una acción la cambie, y se cierra solo si deja de estar.
+  const [selectedId, setSelectedId] = useState<string>();
+  const selected = days
+    .flatMap((day) => day.activities)
+    .find(({ activity }) => activity.id === selectedId);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
@@ -87,9 +101,20 @@ export function ActivityListScreen() {
               title="No hay actividades programadas en este periodo"
             />
           ) : (
-            <ActivityDayList days={days} />
+            <ActivityDayList
+              days={days}
+              onSelect={({ activity }) => setSelectedId(activity.id)}
+            />
           ))}
       </div>
+      {selected && (
+        <ActivityDetailDialog
+          formatUsedInput={formatUsedInput}
+          item={selected}
+          onClose={() => setSelectedId(undefined)}
+          today={today}
+        />
+      )}
     </div>
   );
 }
