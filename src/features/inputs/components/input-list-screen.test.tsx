@@ -9,12 +9,14 @@ import { getOfflineDb } from '@/lib/offline/db';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   buildAgriculturalInput,
+  buildFarm,
   buildInputStock,
   buildSession,
 } from '@/test/factories';
 import {
   agriculturalInputsHandler,
   apiUrl,
+  farmsHandler,
   inputStocksHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
@@ -438,5 +440,34 @@ describe('InputListScreen', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText('Finca')).toHaveValue('');
     await waitFor(() => expect(stockRequests[0]?.get('producer')).toBe('p2'));
+  });
+
+  it('lets the technical account register an entry without choosing a producer, with the farms of the input', async () => {
+    const farmRequests: URLSearchParams[] = [];
+    server.use(
+      agriculturalInputsHandler([urea]),
+      inputStocksHandler(),
+      farmsHandler(
+        [buildFarm({ id: 'f9', name: 'Finca del insumo' })],
+        farmRequests,
+      ),
+    );
+
+    renderScreen({
+      user: { is_superuser: true, producer_id: null },
+      farms: { isLoading: false },
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', {
+        name: 'Registrar entrada de Urea 46 %',
+      }),
+    );
+    const dialog = await screen.findByRole('dialog');
+
+    expect(
+      await within(dialog).findByRole('option', { name: 'Finca del insumo' }),
+    ).toBeInTheDocument();
+    expect(farmRequests[0].get('producer')).toBe(urea.producer.id);
   });
 });

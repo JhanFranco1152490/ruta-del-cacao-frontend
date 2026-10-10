@@ -196,8 +196,9 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
               permissions={permissions}
               rows={rows}
               showProducer={needsProducer}
-              // Entrada y conteo piden una finca: la de la lista o la que se elija en el diálogo.
-              stockFarms={!!farm || (choices?.length ?? 0) > 0}
+              // Entrada y conteo piden una finca: la de la lista o la que se elija en el diálogo, y sin
+              // productor elegido el insumo ya dice de cuál.
+              stockFarms={!!farm || needsProducer || (choices?.length ?? 0) > 0}
               stockState={stockState}
             />
           ))}
