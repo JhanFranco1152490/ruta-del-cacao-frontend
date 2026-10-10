@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ACTIVITY_STATE_DISPLAY,
   ACTIVITY_TYPE_OPTIONS,
+  activityBadge,
   activityStateText,
   activityTitle,
   activityTypeLabel,
@@ -79,5 +80,30 @@ describe('activity states', () => {
   it('says only the label when there is no delay to tell', () => {
     expect(activityStateText('scheduled', 0)).toBe('Programada');
     expect(activityStateText('done', 0)).toBe('Realizada');
+  });
+});
+
+describe('activityBadge', () => {
+  it('shows the state of the activity, with its delay', () => {
+    expect(activityBadge({ state: 'overdue', daysLate: 5 })).toEqual({
+      tone: 'err',
+      text: 'Vencida · 5 días',
+    });
+    expect(activityBadge({ state: 'done', daysLate: 0 })).toEqual({
+      tone: 'ok',
+      text: 'Realizada',
+    });
+  });
+
+  it('says that the labor was done while its completion waits in the device', () => {
+    expect(
+      activityBadge({ state: 'delayed', daysLate: 2, completion: 'pending' }),
+    ).toEqual({ tone: 'info', text: 'Realizada · pendiente de enviar' });
+  });
+
+  it('keeps the state of the activity when the server rejected the completion', () => {
+    expect(
+      activityBadge({ state: 'delayed', daysLate: 2, completion: 'error' }),
+    ).toEqual({ tone: 'warn', text: 'Retrasada · 2 días' });
   });
 });

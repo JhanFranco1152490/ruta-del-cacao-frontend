@@ -26,7 +26,11 @@ const ALL_PERMISSIONS: string[] = [
 
 function renderDetail(
   overrides: Partial<AgriculturalActivity> = {},
-  { permissions = ALL_PERMISSIONS, withHandlers = true } = {},
+  {
+    permissions = ALL_PERMISSIONS,
+    withHandlers = true,
+    completion = undefined as 'pending' | 'error' | undefined,
+  } = {},
 ) {
   const activity = buildAgriculturalActivity(overrides);
   const handlers = {
@@ -41,7 +45,7 @@ function renderDetail(
   );
   renderWithProviders(
     <ActivityDetailDialog
-      item={{ activity, ...activityState(activity, TODAY) }}
+      item={{ activity, ...activityState(activity, TODAY), completion }}
       today={TODAY}
       {...(withHandlers
         ? { ...handlers, completeHref: '/actividades/realizar?id=a1' }
@@ -218,5 +222,36 @@ describe('ActivityDetailDialog', () => {
     );
 
     expect(handlers.onClose).toHaveBeenCalledOnce();
+  });
+
+  it('says that the completion waits in the phone and offers nothing', async () => {
+    renderDetail({ scheduled_date: '2026-10-20' }, { completion: 'pending' });
+
+    const detail = await dialog();
+    expect(
+      within(detail).getByText('Realizada · pendiente de enviar'),
+    ).toBeInTheDocument();
+    expect(within(detail).getByRole('status')).toHaveTextContent(
+      'Guardada en este teléfono. Se enviará sola cuando haya conexión; puedes seguirla en Registros del dispositivo.',
+    );
+    // Ya se hizo: ni el aviso de retraso ni cuándo vence.
+    expect(detail).not.toHaveTextContent('reprográmala');
+    expect(detail).not.toHaveTextContent('Vence');
+    expect(await buttonNames()).toEqual(['Cerrar']);
+  });
+
+  it('says that the server rejected the completion saved in the phone', async () => {
+    renderDetail({ scheduled_date: '2026-10-30' }, { completion: 'error' });
+
+    const detail = await dialog();
+    expect(within(detail).getByRole('alert')).toHaveTextContent(
+      'El servidor no aceptó la realización guardada en este teléfono. Corrígela o descártala desde Registros del dispositivo.',
+    );
+    expect(within(detail).getByText('Programada')).toBeInTheDocument();
+    expect(await buttonNames()).toEqual([
+      'Eliminar',
+      'Editar',
+      'Registrar realización',
+    ]);
   });
 });

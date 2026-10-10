@@ -10,7 +10,7 @@ import {
 import { formatStock, inputPackageOf } from '@/lib/format/input-quantity';
 
 import type { ActivityOfDay } from '../activity-days';
-import { ACTIVITY_STATE_DISPLAY, activityStateText } from '../activity-labels';
+import { activityBadge } from '../activity-labels';
 import { OVERDUE_AFTER_DAYS } from '../activity-state';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
@@ -30,7 +30,7 @@ const Aside = ({ children }: { children: ReactNode }) => (
 
 // Todo lo registrado de una actividad.
 export function ActivityDetailFacts({
-  item: { activity, state, daysLate },
+  item,
   today,
   userId,
 }: {
@@ -38,15 +38,15 @@ export function ActivityDetailFacts({
   today: string;
   userId: string | undefined;
 }) {
+  const { activity, state } = item;
+  const badge = activityBadge(item);
   const { assignee, completed_by: recorder } = activity;
   const done = state === 'done';
 
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-sm">
       <Fact label="Estado">
-        <StatusBadge tone={ACTIVITY_STATE_DISPLAY[state].tone}>
-          {activityStateText(state, daysLate)}
-        </StatusBadge>
+        <StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>
       </Fact>
       <Fact label={done ? 'Programada para' : 'Fecha programada'}>
         {formatWeekdayLongDate(activity.scheduled_date)}
@@ -62,7 +62,7 @@ export function ActivityDetailFacts({
         {assignee.id === userId && <Aside>(tú)</Aside>}
         {!assignee.is_active && <Aside>· Cuenta inactiva</Aside>}
       </Fact>
-      {state === 'delayed' && (
+      {state === 'delayed' && item.completion !== 'pending' && (
         <Fact label="Vence">
           El{' '}
           {formatWeekdayDate(

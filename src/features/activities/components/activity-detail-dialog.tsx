@@ -61,8 +61,15 @@ export function ActivityDetailDialog({
   const { data: user } = useSession();
   const { activity, state } = item;
   const { plot } = activity;
-  const actions = activityActions(state, activity.activity_type, user);
-  const notice = lateNotice(item);
+  const awaitingSync = item.completion === 'pending';
+  const actions = activityActions(
+    state,
+    activity.activity_type,
+    user,
+    awaitingSync,
+  );
+  // La labor ya se hizo: lo que convenía hacer con el atraso dejó de importar.
+  const notice = awaitingSync ? null : lateNotice(item);
   const showEdit = actions.edit && !!onEdit;
   const showDelete = actions.remove && !!onDelete;
   const onlineOnly = offline && (showEdit || showDelete);
@@ -93,6 +100,24 @@ export function ActivityDetailDialog({
             role="status"
           >
             {notice.text}
+          </p>
+        )}
+        {awaitingSync && (
+          <p
+            className="rounded-md border border-info/30 bg-info-bg px-4 py-3 text-sm leading-6 font-bold text-info"
+            role="status"
+          >
+            Guardada en este teléfono. Se enviará sola cuando haya conexión;
+            puedes seguirla en Registros del dispositivo.
+          </p>
+        )}
+        {item.completion === 'error' && (
+          <p
+            className="rounded-md border border-err/30 bg-err-bg px-4 py-3 text-sm leading-6 font-bold text-err"
+            role="alert"
+          >
+            El servidor no aceptó la realización guardada en este teléfono.
+            Corrígela o descártala desde Registros del dispositivo.
           </p>
         )}
         <ActivityDetailFacts item={item} today={today} userId={user?.id} />

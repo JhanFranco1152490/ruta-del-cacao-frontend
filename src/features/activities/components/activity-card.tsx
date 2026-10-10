@@ -2,11 +2,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 
 import type { ActivityOfDay } from '../activity-days';
-import {
-  ACTIVITY_STATE_DISPLAY,
-  activityStateText,
-  activityTitle,
-} from '../activity-labels';
+import { activityBadge, activityTitle } from '../activity-labels';
 
 // El borde repite el tono del estado, que ya dicen el ícono y el texto de la etiqueta.
 const BORDER_BY_TONE = {
@@ -18,18 +14,19 @@ const BORDER_BY_TONE = {
 
 // Una actividad en la lista: la labor, dónde es, quién la hace y cómo va. Tocarla abre su detalle.
 export function ActivityCard({
-  item: { activity, state, daysLate },
+  item,
   onSelect,
 }: {
   item: ActivityOfDay;
   onSelect: () => void;
 }) {
-  const { tone } = ACTIVITY_STATE_DISPLAY[state];
+  const { activity } = item;
+  const { tone, text } = activityBadge(item);
   const { plot, assignee } = activity;
 
   return (
     <button
-      className={`flex w-full cursor-pointer flex-col gap-2 rounded-xl border-l-[5px] bg-card px-4 py-3 text-left shadow-card hover:bg-muted sm:flex-row sm:items-center sm:justify-between ${BORDER_BY_TONE[tone]} ${FOCUS_OUTLINE_CLASS}`}
+      className={`flex w-full cursor-pointer flex-col gap-2 rounded-xl border-l-[5px] bg-card px-4 py-3 text-left shadow-card hover:bg-muted sm:flex-row sm:items-center sm:justify-between ${BORDER_BY_TONE[tone]} ${item.completion === 'pending' ? 'border-dashed' : ''} ${FOCUS_OUTLINE_CLASS}`}
       onClick={onSelect}
       type="button"
     >
@@ -50,9 +47,7 @@ export function ActivityCard({
         </span>
       </span>
       <span className="shrink-0">
-        <StatusBadge tone={tone}>
-          {activityStateText(state, daysLate)}
-        </StatusBadge>
+        <StatusBadge tone={tone}>{text}</StatusBadge>
       </span>
     </button>
   );

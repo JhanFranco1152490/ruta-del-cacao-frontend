@@ -50,3 +50,25 @@ export function activityStateText(state: ActivityState, daysLate: number) {
   if (daysLate <= 0) return label;
   return `${label} · ${daysLate} ${daysLate === 1 ? 'día' : 'días'}`;
 }
+
+export const PENDING_COMPLETION_LABEL = 'Realizada · pendiente de enviar';
+
+// Lo que se muestra como estado de una actividad. Una cuya realización espera en el dispositivo
+// ya se hizo, aunque el servidor todavía no lo sepa: se dice así, y no con el estado que tenía.
+export function activityBadge({
+  state,
+  daysLate,
+  completion,
+}: {
+  state: ActivityState;
+  daysLate: number;
+  completion?: 'pending' | 'error';
+}): { tone: 'ok' | 'warn' | 'err' | 'info'; text: string } {
+  if (completion === 'pending') {
+    return { tone: 'info', text: PENDING_COMPLETION_LABEL };
+  }
+  return {
+    tone: ACTIVITY_STATE_DISPLAY[state].tone,
+    text: activityStateText(state, daysLate),
+  };
+}

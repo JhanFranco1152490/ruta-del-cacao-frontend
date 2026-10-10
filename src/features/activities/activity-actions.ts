@@ -22,7 +22,17 @@ export function activityActions(
   state: ActivityState,
   type: ActivityType,
   user: { permissions?: readonly string[] } | null | undefined,
+  // La realización ya está guardada en el dispositivo y espera conexión: la labor se hizo.
+  awaitingSync = false,
 ): ActivityActions {
+  if (awaitingSync) {
+    return {
+      edit: false,
+      complete: false,
+      remove: false,
+      awaitsHealthModule: false,
+    };
+  }
   const mayComplete = hasPermission(user, PERMISSIONS.ACTIVITIES_COMPLETE);
   return {
     edit: canEdit(state) && hasPermission(user, PERMISSIONS.ACTIVITIES_CHANGE),

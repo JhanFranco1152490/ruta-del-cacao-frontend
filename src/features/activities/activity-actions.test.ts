@@ -101,4 +101,13 @@ describe('activityActions', () => {
         .awaitsHealthModule,
     ).toBe(false);
   });
+
+  it('offers nothing while the completion waits in the device: the labor was done', () => {
+    expect(activityActions('scheduled', 'pruning', ALL, true)).toEqual({
+      edit: false,
+      complete: false,
+      remove: false,
+      awaitsHealthModule: false,
+    });
+  });
 });

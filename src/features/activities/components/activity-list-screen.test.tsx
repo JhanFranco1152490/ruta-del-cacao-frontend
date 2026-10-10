@@ -24,6 +24,9 @@ import {
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 
+import { discard } from '@/lib/offline/sync-queue';
+
+import { completionQueueId, enqueueCompletion } from '../completion-queue';
 import { ActivityListScreen } from './activity-list-screen';
 
 // Jueves 22 de octubre de 2026, a mediodía en Bogotá.
@@ -648,6 +651,62 @@ describe('ActivityListScreen', () => {
       expect(
         await screen.findByRole('button', { name: 'Eliminar' }),
       ).toBeDisabled();
+    });
+  });
+
+  describe('completions waiting in the device', () => {
+    const pruning = buildAgriculturalActivity({
+      activity_type: 'pruning',
+      scheduled_date: '2026-10-20',
+    });
+    const waiting = () =>
+      enqueueCompletion(userId, 'a1', {
+        request: { done_date: '2026-10-22', inputs: [] },
+        label: 'Poda · P-03',
+      });
+
+    it('shows the activity as done and pending to send, without actions', async () => {
+      await waiting();
+      server.use(agriculturalActivitiesHandler([pruning]));
+      renderScreen({
+        permissions: [
+          PERMISSIONS.ACTIVITIES_VIEW,
+          PERMISSIONS.ACTIVITIES_CHANGE,
+          PERMISSIONS.ACTIVITIES_COMPLETE,
+          PERMISSIONS.ACTIVITIES_DELETE,
+        ],
+      });
+
+      const card = await screen.findByRole('button', { name: /Poda/ });
+      await waitFor(() =>
+        expect(card).toHaveTextContent('Realizada · pendiente de enviar'),
+      );
+      expect(card).not.toHaveTextContent('Retrasada');
+
+      await userEvent.click(card);
+
+      const detail = await screen.findByRole('dialog');
+      expect(detail).toHaveTextContent('Guardada en este teléfono.');
+      expect(
+        within(detail).queryByRole('button', { name: 'Editar' }),
+      ).not.toBeInTheDocument();
+      expect(
+        within(detail).queryByRole('link', { name: 'Registrar realización' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('goes back to the state of the activity when the record leaves the device', async () => {
+      await waiting();
+      server.use(agriculturalActivitiesHandler([pruning]));
+      renderScreen();
+      const card = await screen.findByRole('button', { name: /Poda/ });
+      await waitFor(() =>
+        expect(card).toHaveTextContent('Realizada · pendiente de enviar'),
+      );
+
+      await discard(userId, completionQueueId('a1'));
+
+      await waitFor(() => expect(card).toHaveTextContent('Retrasada · 2 días'));
     });
   });
 });

@@ -18,6 +18,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { groupActivitiesByDay } from '../activity-days';
 import { useActivitiesOfMonth } from '../api';
 import { useActivityMonth } from '../use-activity-month';
+import { useQueuedCompletionStatuses } from '../use-completion-queue';
 import { ActivityDayList } from './activity-day-list';
 import {
   ActivityDialogs,
@@ -46,7 +47,12 @@ export function ActivityListScreen() {
   const neverLoaded =
     isPausedWithoutData(activities) ||
     (activities.isError && isNetworkFailure(activities.error));
-  const days = groupActivitiesByDay(activities.data?.data ?? [], today);
+  const completions = useQueuedCompletionStatuses(user?.id);
+  const days = groupActivitiesByDay(
+    activities.data?.data ?? [],
+    today,
+    completions,
+  );
   const [pending, setPending] = useState<PendingDialog>();
   // Lo último que pasó, en un aviso que leen los lectores de pantalla. Si la actividad quedó en
   // otro mes, la lista no salta: el aviso ofrece ir a verla.

@@ -71,4 +71,27 @@ describe('groupActivitiesByDay', () => {
     expect(day.date).toBe('2026-10-10');
     expect(day.activities[0]).toMatchObject({ state: 'done', daysLate: 0 });
   });
+
+  it('says which activities have their completion waiting in the device', () => {
+    const [day] = groupActivitiesByDay(
+      [
+        buildAgriculturalActivity({ id: 'a', scheduled_date: '2026-10-21' }),
+        buildAgriculturalActivity({ id: 'b', scheduled_date: '2026-10-21' }),
+        buildAgriculturalActivity({ id: 'c', scheduled_date: '2026-10-21' }),
+      ],
+      TODAY,
+      new Map([
+        ['a', 'pending'],
+        ['c', 'error'],
+      ]),
+    );
+
+    expect(day.activities.map(({ completion }) => completion)).toEqual([
+      'pending',
+      undefined,
+      'error',
+    ]);
+    // Sigue sabiendo cómo iba la actividad: si el envío falla, vuelve a mostrarse así.
+    expect(day.activities[0]).toMatchObject({ state: 'delayed', daysLate: 1 });
+  });
 });

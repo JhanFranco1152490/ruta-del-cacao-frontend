@@ -98,8 +98,14 @@ const optionsOf = (name: string) =>
   within(field(name))
     .getAllByRole('option')
     .map((option) => option.textContent);
+// Las opciones llegan del servidor simulado. La primera prueba del archivo carga además todos los
+// módulos, y con la máquina ocupada pasa del segundo que se espera por defecto.
 const choose = async (name: string, option: string) => {
-  await within(field(name)).findByRole('option', { name: option });
+  await within(field(name)).findByRole(
+    'option',
+    { name: option },
+    { timeout: 5000 },
+  );
   await userEvent.selectOptions(field(name), option);
 };
 const save = () =>
