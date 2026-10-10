@@ -9,9 +9,9 @@ import { SelectField } from '@/components/select-field';
 import { StatusBadge } from '@/components/status-badge';
 import { TextField } from '@/components/text-field';
 import { Skeleton } from '@/components/ui/skeleton';
+import { normalizeCatalogName } from '@/lib/format/search';
 
 import { type CacaoVariety, useCacaoVarietyCatalog } from '../api';
-import { normalizeVarietyName } from '../characterization-rules';
 import { VarietyFormDialog } from './variety-form-dialog';
 import { VarietyStatusDialog } from './variety-status-dialog';
 
@@ -22,10 +22,10 @@ type StatusFilter = '' | 'active' | 'inactive';
 function matches(variety: CacaoVariety, search: string, status: StatusFilter) {
   if (status === 'active' && !variety.is_active) return false;
   if (status === 'inactive' && variety.is_active) return false;
-  const needle = normalizeVarietyName(search);
+  const needle = normalizeCatalogName(search);
   if (!needle) return true;
   return [variety.name, ...variety.common_names, variety.description].some(
-    (text) => normalizeVarietyName(text).includes(needle),
+    (text) => normalizeCatalogName(text).includes(needle),
   );
 }
 

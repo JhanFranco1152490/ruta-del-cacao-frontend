@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import { MapPin, Pencil } from 'lucide-react';
+import { MapPin, Package, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -13,6 +13,7 @@ import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { formatDateTime } from '@/lib/format/dates';
 import { formatHectares } from '@/lib/format/hectares';
+import { inputListPath } from '@/lib/paths/inputs';
 import { producerLabelOf } from '@/lib/format/producer';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
@@ -204,6 +205,9 @@ function DetailLayout({
   const { data: user } = useSession();
   // De quién es la finca, para quien no tiene un productor propio (solo lectura: no cambia de dueño).
   const showProducer = !!view.producer && !user?.producer_id;
+  // Las existencias de insumos de esta finca. Solo la finca que ya está en el servidor las tiene.
+  const showInputs =
+    !!view.producer && hasPermission(user, PERMISSIONS.INPUTS_VIEW);
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
       <Breadcrumb
@@ -214,13 +218,32 @@ function DetailLayout({
         title={view.name}
         description={place}
         actions={
-          canEdit && (
-            <Link
-              className={buttonVariants({ size: 'office', variant: 'outline' })}
-              href={farmEditPath(view.id)}
-            >
-              <Pencil aria-hidden="true" className="size-4" /> Editar finca
-            </Link>
+          (showInputs || canEdit) && (
+            <div className="flex flex-wrap gap-3">
+              {showInputs && (
+                <Link
+                  className={buttonVariants({
+                    size: 'office',
+                    variant: 'outline',
+                  })}
+                  href={inputListPath(view.id, view.producer?.id)}
+                >
+                  <Package aria-hidden="true" className="size-4" /> Insumos de
+                  esta finca
+                </Link>
+              )}
+              {canEdit && (
+                <Link
+                  className={buttonVariants({
+                    size: 'office',
+                    variant: 'outline',
+                  })}
+                  href={farmEditPath(view.id)}
+                >
+                  <Pencil aria-hidden="true" className="size-4" /> Editar finca
+                </Link>
+              )}
+            </div>
           )
         }
       />

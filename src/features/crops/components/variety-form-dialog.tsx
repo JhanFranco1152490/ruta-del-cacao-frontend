@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import { applyApiFieldErrors } from '@/lib/api/form-errors';
+import { normalizeCatalogName } from '@/lib/format/search';
 
 import {
   type CacaoVariety,
@@ -27,7 +28,6 @@ import {
   useCreateCacaoVariety,
   useUpdateCacaoVariety,
 } from '../api';
-import { normalizeVarietyName } from '../characterization-rules';
 import {
   createVarietyFormSchema,
   DUPLICATE_VARIETY_MESSAGE,
@@ -59,7 +59,7 @@ export function VarietyFormDialog({
         new Set(
           catalog
             .filter((other) => other.id !== variety?.id)
-            .map((other) => normalizeVarietyName(other.name)),
+            .map((other) => normalizeCatalogName(other.name)),
         ),
       ),
     [catalog, variety?.id],

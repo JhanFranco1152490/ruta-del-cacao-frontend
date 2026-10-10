@@ -4,6 +4,42 @@
  */
 
 export interface paths {
+    "/api/agricultural-inputs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El catálogo completo del productor de la sesión, activos e inactivos, ordenado por nombre y sin paginar: la búsqueda y los filtros corren en el dispositivo. */
+        get: operations["agricultural_inputs_list"];
+        put?: never;
+        /** @description Registra un insumo en el catálogo del productor de la sesión. `producer_id` solo lo envía la cuenta técnica, y para ella es obligatorio. Si ya existe uno con el mismo nombre y tipo, 409 `duplicate_input` con el existente en `existing`. */
+        post: operations["agricultural_inputs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agricultural-inputs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["agricultural_inputs_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina un insumo creado por error. Requiere `expected_version` en la URL. Si algún registro lo usa, 409 `input_has_records` (se desactiva en su lugar). El historial del insumo se conserva. */
+        delete: operations["agricultural_inputs_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Edición parcial, incluida la activación o desactivación con `is_active`. Requiere `expected_version`; si el insumo cambió, 409 `stale_version` con el vigente en `current`. La unidad no cambia cuando el insumo ya tiene registros (422 `input_unit_locked`). Para quitar la presentación se envían `package_type` y `package_size` en `null`. */
+        patch: operations["agricultural_inputs_partial_update"];
+        trace?: never;
+    };
     "/api/auth/activation/confirm": {
         parameters: {
             query?: never;
@@ -260,6 +296,41 @@ export interface paths {
         };
         /** @description Las fincas con lo justo para dibujarlas, sin paginar, con el alcance y filtros del listado: de un municipio con `municipality`, o todas las del alcance sin él. */
         get: operations["farms_map_points_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/input-movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los movimientos de un insumo en una finca, del más nuevo al más viejo (por fecha del hecho y, a igual fecha, por hora de registro). `quantity` lleva el signo: positiva en las entradas, negativa en las salidas y la diferencia en los conteos. */
+        get: operations["input_movements_list"];
+        put?: never;
+        /** @description Registra una entrada (`quantity` mayor que cero) o un conteo (`counted_quantity` mayor o igual a cero). Las salidas por actividad no se aceptan aquí. Reenviar el mismo `id` con el mismo contenido responde 200 con el movimiento ya registrado y no duplica; con otro contenido, 409 `movement_id_conflict`. */
+        post: operations["input_movements_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/input-stocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las existencias, sin paginar y solo de los insumos que tienen movimientos (los demás están «Sin movimientos»). Con `farm`, las de esa finca; sin ella, una fila por insumo y finca de todo el alcance, para sumar el total. Una finca ajena o que no existe devuelve la lista vacía. `producer` solo lo usa la cuenta técnica. `quantity` es un decimal en texto, en la unidad del insumo, y puede ser negativo. */
+        get: operations["input_stocks_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -622,6 +693,46 @@ export interface components {
         ActivationEmailSent: {
             activation_email_sent: boolean;
         };
+        AgriculturalInput: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly producer: components["schemas"]["InputProducer"];
+            readonly name: string;
+            readonly input_type: components["schemas"]["InputTypeEnum"];
+            readonly unit: components["schemas"]["UnitEnum"];
+            readonly package_type: (components["schemas"]["PackageTypeEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: decimal */
+            readonly package_size: string | null;
+            readonly is_active: boolean;
+            readonly has_records: boolean;
+            readonly version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        AgriculturalInputConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["AgriculturalInput"];
+            existing?: components["schemas"]["ExistingInput"];
+        };
+        AgriculturalInputCreateRequest: {
+            name: string;
+            input_type: components["schemas"]["InputTypeEnum"];
+            unit: components["schemas"]["UnitEnum"];
+            package_type?: (components["schemas"]["PackageTypeEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: decimal */
+            package_size?: string | null;
+            /** Format: uuid */
+            producer_id?: string;
+        };
+        AgriculturalInputList: {
+            results: components["schemas"]["AgriculturalInput"][];
+        };
         ApiError: {
             detail: string;
             code: string;
@@ -663,6 +774,13 @@ export interface components {
          * @enum {string}
          */
         DocumentTypeEnum: "CC" | "CE" | "PPT" | "NIT";
+        ExistingInput: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            input_type: components["schemas"]["InputTypeEnum"];
+            is_active: boolean;
+        };
         Farm: {
             /** Format: uuid */
             readonly id: string;
@@ -733,13 +851,86 @@ export interface components {
             first_name: string;
             last_name: string;
         };
+        InputMovement: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["InputMovementKindEnum"];
+            /** Format: decimal */
+            readonly quantity: string;
+            /** Format: decimal */
+            readonly counted_quantity: string | null;
+            /** Format: date */
+            readonly occurred_on: string;
+            readonly note: string;
+            readonly actor_name: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         /**
-         * @description * `fixed` - Fijo
-         *     * `predefined` - Predefinido
-         *     * `custom` - Propio
+         * @description * `entry` - Entrada
+         *     * `count` - Conteo
          * @enum {string}
          */
-        KindEnum: "fixed" | "predefined" | "custom";
+        InputMovementCreateKindEnum: "entry" | "count";
+        InputMovementCreateRequest: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            input_id: string;
+            /** Format: uuid */
+            farm_id: string;
+            kind: components["schemas"]["InputMovementCreateKindEnum"];
+            /** Format: decimal */
+            quantity?: string;
+            /** Format: decimal */
+            counted_quantity?: string;
+            /** Format: date */
+            occurred_on: string;
+            /** @default  */
+            note: string;
+        };
+        /**
+         * @description * `entry` - Entrada
+         *     * `count` - Conteo
+         *     * `consumption` - Salida por actividad
+         * @enum {string}
+         */
+        InputMovementKindEnum: "entry" | "count" | "consumption";
+        InputMovementResult: {
+            movement: components["schemas"]["InputMovement"];
+            stock: components["schemas"]["InputStock"];
+        };
+        InputProducer: {
+            /** Format: uuid */
+            id: string;
+            member_code: string;
+            first_name: string;
+            last_name: string;
+        };
+        InputStock: {
+            /** Format: uuid */
+            readonly input_id: string;
+            /** Format: uuid */
+            readonly farm_id: string;
+            /** Format: decimal */
+            readonly quantity: string;
+            /** Format: date */
+            readonly last_count_date: string | null;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        InputStockList: {
+            results: components["schemas"]["InputStock"][];
+        };
+        /**
+         * @description * `fertilizer` - Fertilizante
+         *     * `organic_fertilizer` - Abono
+         *     * `fungicide` - Fungicida
+         *     * `insecticide` - Insecticida
+         *     * `other` - Otro
+         * @enum {string}
+         */
+        InputTypeEnum: "fertilizer" | "organic_fertilizer" | "fungicide" | "insecticide" | "other";
         Location: {
             /** Format: decimal */
             latitude: string;
@@ -785,6 +976,19 @@ export interface components {
             overlap_area_hectares: string;
             boundary: components["schemas"]["Vertex"][];
         };
+        /**
+         * @description * `sack` - Bulto
+         *     * `bag` - Bolsa
+         *     * `tub` - Pote
+         *     * `flask` - Frasco
+         *     * `bottle` - Botella
+         *     * `gallon` - Galón
+         *     * `drum` - Caneca
+         *     * `box` - Caja
+         *     * `sachet` - Sobre
+         * @enum {string}
+         */
+        PackageTypeEnum: "sack" | "bag" | "tub" | "flask" | "bottle" | "gallon" | "drum" | "box" | "sachet";
         PaginatedAccountList: {
             /** @example 123 */
             count: number;
@@ -844,6 +1048,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["FarmMunicipalityCount"][];
+        };
+        PaginatedInputMovementList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["InputMovement"][];
         };
         PaginatedPlotCharacterizationEventList: {
             /** @example 123 */
@@ -930,6 +1149,16 @@ export interface components {
             first_name?: string;
             last_name?: string;
             phone?: string | null;
+        };
+        PatchedAgriculturalInputUpdateRequest: {
+            name?: string;
+            input_type?: components["schemas"]["InputTypeEnum"];
+            unit?: components["schemas"]["UnitEnum"];
+            package_type?: (components["schemas"]["PackageTypeEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: decimal */
+            package_size?: string | null;
+            is_active?: boolean;
+            expected_version: number;
         };
         PatchedCacaoVarietyUpdateRequest: {
             name?: string;
@@ -1200,7 +1429,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             readonly code: string | null;
-            readonly kind: components["schemas"]["KindEnum"];
+            readonly kind: components["schemas"]["RoleKindEnum"];
             readonly name: string;
             readonly description: string;
             /** Format: uuid */
@@ -1217,6 +1446,13 @@ export interface components {
             /** Format: uuid */
             producer_id?: string;
         };
+        /**
+         * @description * `fixed` - Fijo
+         *     * `predefined` - Predefinido
+         *     * `custom` - Propio
+         * @enum {string}
+         */
+        RoleKindEnum: "fixed" | "predefined" | "custom";
         RolePermission: {
             code: string;
             name: string;
@@ -1296,6 +1532,15 @@ export interface components {
             id: string;
             name: string;
         };
+        /**
+         * @description * `kg` - Kilogramos
+         *     * `g` - Gramos
+         *     * `l` - Litros
+         *     * `ml` - Mililitros
+         *     * `unit` - Unidades
+         * @enum {string}
+         */
+        UnitEnum: "kg" | "g" | "l" | "ml" | "unit";
         VarietyRef: {
             /** Format: uuid */
             readonly id: string;
@@ -1333,6 +1578,296 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    agricultural_inputs_list: {
+        parameters: {
+            query?: {
+                /** @description Solo la cuenta técnica: el productor cuyo catálogo se quiere ver. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalInputList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_inputs_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgriculturalInputCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalInput"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalInputConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_inputs_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalInput"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_inputs_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` del insumo que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalInputConflictError"];
+                };
+            };
+        };
+    };
+    agricultural_inputs_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchedAgriculturalInputUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalInput"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalInputConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     auth_activation_confirm_create: {
         parameters: {
             query?: never;
@@ -2241,6 +2776,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedFarmMapPointList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    input_movements_list: {
+        parameters: {
+            query: {
+                farm: string;
+                input: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedInputMovementList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    input_movements_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InputMovementCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InputMovementResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InputMovementResult"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    input_stocks_list: {
+        parameters: {
+            query?: {
+                farm?: string;
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InputStockList"];
                 };
             };
             400: {

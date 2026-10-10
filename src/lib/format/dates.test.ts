@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { formatLongDate, formatMonthYear, todayInBogota } from './dates';
+import {
+  formatLongDate,
+  formatMonthYear,
+  formatTimestamp,
+  todayInBogota,
+} from './dates';
 
 afterEach(() => vi.useRealTimers());
 
@@ -24,5 +29,14 @@ describe('formatMonthYear', () => {
   it('formats a year and month in Spanish', () => {
     expect(formatMonthYear('2021-03')).toBe('marzo de 2021');
     expect(formatMonthYear('2024-12')).toBe('diciembre de 2024');
+  });
+});
+
+describe('formatTimestamp', () => {
+  it('shows a saved instant with the Bogotá time', () => {
+    // 17:05 UTC son las 12:05 en Bogotá.
+    expect(formatTimestamp(Date.UTC(2026, 9, 7, 17, 5))).toBe(
+      '7 de octubre de 2026, 12:05 p.m.',
+    );
   });
 });

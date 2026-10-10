@@ -9,14 +9,14 @@ type Schemas = components['schemas'];
 // Cuántas fincas se nombran: con más, el diálogo dice cuántas faltan por nombrar.
 export const DEPENDENT_FARM_NAMES = 20;
 
-// Lo que se eliminaría junto con un productor: sus fincas (por nombre) y sus cuentas (solo cuántas,
-// nunca quiénes). Vive aquí y no en un dominio para que el de productores lo use sin importar el
+// Lo que se eliminaría junto con un productor: sus fincas (por nombre), sus cuentas (solo cuántas,
+// nunca quiénes) y su catálogo de insumos (solo cuántos). Vive aquí y no en un dominio para que el de productores lo use sin importar el
 // de fincas ni el de cuentas.
 export const useProducerDependents = (producerId: string, enabled: boolean) =>
   useQuery({
     queryKey: queryKeys.producers.dependents(producerId),
     queryFn: async ({ signal }) => {
-      const [farms, accounts] = await Promise.all([
+      const [farms, accounts, inputs] = await Promise.all([
         apiFetch<Schemas['PaginatedFarmList']>(
           `/api/farms?${new URLSearchParams({
             producer: producerId,
@@ -33,11 +33,18 @@ export const useProducerDependents = (producerId: string, enabled: boolean) =>
           })}`,
           { signal },
         ),
+        // El catálogo no se pagina. Si no se puede leer, el diálogo no dice nada de los insumos
+        // y no impide ver lo demás.
+        apiFetch<Schemas['AgriculturalInputList']>(
+          `/api/agricultural-inputs?${new URLSearchParams({ producer: producerId })}`,
+          { signal },
+        ).catch(() => null),
       ]);
       return {
         farmNames: farms.results.map((farm) => farm.name),
         farmCount: farms.count,
         accountCount: accounts.count,
+        inputCount: inputs ? inputs.results.length : null,
       };
     },
     enabled,

@@ -254,6 +254,10 @@ Cada archivo lleva sus notas para implementar debajo del dibujo. Lo que aparece 
 
 | Archivo | Pantalla |
 |---|---|
+| `s2-12-insumos-lista.html` | Catálogo de insumos (escritorio) con filtros y menú de acciones |
+| `s2-13-insumo-registrar.html` | Registrar insumo: vista principal del formulario, sus listas desplegables y la versión en celular |
+| `s2-14-insumo-estados.html` | Estados del formulario: validaciones, bulto, duplicados, unidad bloqueada, confirmaciones |
+| `s2-15-insumos-movil.html` | Insumos en celular: tarjetas, sin conexión, sin resultados y catálogo vacío |
 | `s2-16-actividades-calendario.html` | Calendario de actividades del mes (escritorio): filtros, lista del día y una ficha por estado |
 | `s2-17-actividad-programar.html` | Programar actividad: diálogo, listas desplegables, selector de fecha y celular |
 | `s2-18-actividad-estados.html` | Actividades: errores, edición, detalle por estado, eliminar y sin conexión |

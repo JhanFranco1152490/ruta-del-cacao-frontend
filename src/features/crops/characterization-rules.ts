@@ -1,6 +1,7 @@
 import { differenceInCalendarMonths } from 'date-fns';
 
 import type { components } from '@/lib/api/schema';
+import { normalizeCatalogName } from '@/lib/format/search';
 import { isDecimal } from '@/lib/validation/decimal';
 
 type Schemas = components['schemas'];
@@ -163,24 +164,14 @@ export function densityPerHectare(
   return Math.round(trees / area);
 }
 
-// Para comparar nombres de variedades como lo hace el servidor: "CCN 51", "CCN51" y "ccn-51" son
-// la misma. También los guiones que llegan al pegar un nombre copiado de un documento: guion,
-// guion sin salto, cifra, semiraya, raya y signo menos.
-export const normalizeVarietyName = (name: string) =>
-  name
-    .normalize('NFKD')
-    .replace(/\p{M}/gu, '')
-    .toLowerCase()
-    .replace(/[\s\-\u2010-\u2014\u2212]+/gu, '');
-
-const CCN51 = normalizeVarietyName('CCN-51');
+const CCN51 = normalizeCatalogName('CCN-51');
 
 // La única variedad del catálogo inicial que es de semilla; las demás son clones, que se injertan.
-const SEED_VARIETY = normalizeVarietyName('Híbrido o común (sin identificar)');
+const SEED_VARIETY = normalizeCatalogName('Híbrido o común (sin identificar)');
 
 // De qué se propone la propagación al elegir variedad: la persona puede cambiarla.
 export const isSeedVariety = (name: string) =>
-  normalizeVarietyName(name) === SEED_VARIETY;
+  normalizeCatalogName(name) === SEED_VARIETY;
 
 export type CoherenceWarning = {
   code: 'density_out_of_range' | 'stage_age_mismatch' | 'ccn51_mixed';
@@ -242,7 +233,7 @@ export function coherenceWarnings({
   });
 
   // CCN-51 es un clon ordinario: mezclado con otros, afecta la calidad de los finos y de aroma.
-  const distinct = new Set(varietyNames.map(normalizeVarietyName));
+  const distinct = new Set(varietyNames.map(normalizeCatalogName));
   if (distinct.has(CCN51) && distinct.size > 1) {
     warnings.push({
       code: 'ccn51_mixed',

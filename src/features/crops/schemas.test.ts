@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeVarietyName } from './characterization-rules';
+import { normalizeCatalogName } from '@/lib/format/search';
+
 import {
   type CharacterizationFormInput,
   createCharacterizationFormSchema,
@@ -231,7 +232,7 @@ describe('characterization form schema', () => {
 
 describe('variety form schema', () => {
   const varietySchema = createVarietyFormSchema(
-    new Set([normalizeVarietyName('CCN-51')]),
+    new Set([normalizeCatalogName('CCN-51')]),
   );
 
   const values = (overrides = {}) => ({

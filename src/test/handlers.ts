@@ -35,6 +35,19 @@ export const characterizationsHandler = (
     return HttpResponse.json({ results });
   });
 
+// Una página de `items` como la arma la API, según `page` y `page_size` de la petición.
+function pageOf(items: unknown[], params: URLSearchParams) {
+  const page = Number(params.get('page') ?? '1');
+  const size = Number(params.get('page_size') ?? '20');
+  const start = (page - 1) * size;
+  return {
+    count: items.length,
+    next: start + size < items.length ? `?page=${page + 1}` : null,
+    previous: page > 1 ? `?page=${page - 1}` : null,
+    results: items.slice(start, start + size),
+  };
+}
+
 // Responde el historial de una ficha, paginado como la API, y guarda las búsquedas recibidas.
 export const characterizationHistoryHandler = (
   events: unknown[] = [],
@@ -45,17 +58,40 @@ export const characterizationHistoryHandler = (
     ({ request }) => {
       const params = new URL(request.url).searchParams;
       requests.push(params);
-      const page = Number(params.get('page') ?? '1');
-      const size = Number(params.get('page_size') ?? '20');
-      const start = (page - 1) * size;
-      return HttpResponse.json({
-        count: events.length,
-        next: start + size < events.length ? `?page=${page + 1}` : null,
-        previous: page > 1 ? `?page=${page - 1}` : null,
-        results: events.slice(start, start + size),
-      });
+      return HttpResponse.json(pageOf(events, params));
     },
   );
+
+// Responde el catálogo de insumos y guarda las búsquedas recibidas.
+export const agriculturalInputsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/agricultural-inputs'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// Responde las existencias de una finca y guarda las búsquedas recibidas.
+export const inputStocksHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/input-stocks'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// Responde los movimientos de un insumo en una finca, paginados como la API.
+export const inputMovementsHandler = (
+  movements: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/input-movements'), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    requests.push(params);
+    return HttpResponse.json(pageOf(movements, params));
+  });
 
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>

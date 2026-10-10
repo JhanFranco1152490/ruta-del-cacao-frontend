@@ -67,7 +67,7 @@ function Dependents({ producerId }: { producerId: string }) {
     );
   }
   if (dependents.isError) return null;
-  const { farmNames, farmCount, accountCount } = dependents.data;
+  const { farmNames, farmCount, accountCount, inputCount } = dependents.data;
   const unnamed = farmCount - farmNames.length;
   return (
     <div className="space-y-2 text-sm">
@@ -81,6 +81,15 @@ function Dependents({ producerId }: { producerId: string }) {
               ? '1 finca'
               : `${farmCount} fincas`}
         </li>
+        {inputCount !== null && (
+          <li>
+            {inputCount === 0
+              ? 'Ningún insumo'
+              : inputCount === 1
+                ? '1 insumo'
+                : `${inputCount} insumos`}
+          </li>
+        )}
       </ul>
       {farmNames.length > 0 && (
         <ul className="list-disc pl-5 text-muted-foreground">

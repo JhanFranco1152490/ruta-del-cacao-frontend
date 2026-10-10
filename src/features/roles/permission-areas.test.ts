@@ -20,12 +20,21 @@ const labelsOf = (areas: string[]) =>
 describe('groupPermissionsByArea', () => {
   it('orders the sections the way the work flows, not alphabetically', () => {
     expect(
-      labelsOf(['roles', 'users', 'crops', 'farms', 'plots', 'producers']),
+      labelsOf([
+        'roles',
+        'users',
+        'inputs',
+        'crops',
+        'farms',
+        'plots',
+        'producers',
+      ]),
     ).toEqual([
       'Productores',
       'Fincas',
       'Parcelas',
       'Caracterización de parcelas',
+      'Insumos',
       'Cuentas',
       'Roles',
     ]);
