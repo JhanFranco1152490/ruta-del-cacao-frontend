@@ -35,24 +35,34 @@ export function InputFiltersBar({
   const hasFilters =
     !!filters.search || !!filters.type || filters.status !== 'active';
 
+  // Una sola rejilla: el productor (solo la cuenta técnica) va con los demás filtros y no deja una
+  // fila a medias. En pantallas medianas son dos columnas; en anchas, una por filtro.
   return (
     <div className="space-y-4">
-      {onProducer && (
-        <ProducerFilter
-          className="sm:max-w-md"
-          onClear={() => onProducer(null)}
-          onSelect={onProducer}
-          producer={producer ?? undefined}
-          selected={selectedProducer}
-        />
-      )}
-      <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
+      <div
+        className={
+          onProducer
+            ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1fr]'
+            : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]'
+        }
+      >
+        {onProducer && (
+          <ProducerFilter
+            onClear={() => onProducer(null)}
+            onSelect={onProducer}
+            producer={producer ?? undefined}
+            selected={selectedProducer}
+          />
+        )}
         <TextField
           label="Buscar por nombre"
           onChange={(event) => onSearch(event.target.value)}
           placeholder="Por ejemplo, urea"
           type="search"
           value={filters.search}
+          wrapperClassName={
+            onProducer ? undefined : 'sm:col-span-2 lg:col-span-1'
+          }
         />
         <SelectField
           label="Filtrar por tipo"
