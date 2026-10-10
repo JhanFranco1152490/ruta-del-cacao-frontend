@@ -1,6 +1,7 @@
 'use client';
 
 import type { ActivityOfDay } from '../activity-days';
+import { activityCompletionPath } from '../activity-paths';
 import { ActivityDeleteDialog } from './activity-delete-dialog';
 import { ActivityDetailDialog } from './activity-detail-dialog';
 import { ActivityFormDialog } from './activity-form-dialog';
@@ -95,6 +96,7 @@ export function ActivityDialogs({
 
   return (
     <ActivityDetailDialog
+      completeHref={activityCompletionPath(id)}
       item={item}
       offline={offline}
       onClose={close}

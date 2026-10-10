@@ -32,7 +32,6 @@ function renderDetail(
   const handlers = {
     onClose: vi.fn(),
     onEdit: vi.fn(),
-    onComplete: vi.fn(),
     onDelete: vi.fn(),
   };
   const queryClient = createTestQueryClient();
@@ -44,7 +43,9 @@ function renderDetail(
     <ActivityDetailDialog
       item={{ activity, ...activityState(activity, TODAY) }}
       today={TODAY}
-      {...(withHandlers ? handlers : { onClose: handlers.onClose })}
+      {...(withHandlers
+        ? { ...handlers, completeHref: '/actividades/realizar?id=a1' }
+        : { onClose: handlers.onClose })}
     />,
     { queryClient },
   );
@@ -52,10 +53,10 @@ function renderDetail(
 }
 
 const dialog = () => screen.findByRole('dialog');
+// Los botones y el enlace a la pantalla de realización, en el orden en que se ven.
 const buttonNames = async () =>
-  within(await dialog())
-    .getAllByRole('button')
-    .map((button) => button.textContent?.trim())
+  Array.from((await dialog()).querySelectorAll('button, a'))
+    .map((action) => action.textContent?.trim())
     .filter((name) => name !== 'Close');
 
 describe('ActivityDetailDialog', () => {
@@ -87,12 +88,11 @@ describe('ActivityDetailDialog', () => {
     ]);
     await userEvent.click(screen.getByRole('button', { name: 'Editar' }));
     await userEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Registrar realización' }),
-    );
     expect(handlers.onEdit).toHaveBeenCalledOnce();
     expect(handlers.onDelete).toHaveBeenCalledOnce();
-    expect(handlers.onComplete).toHaveBeenCalledOnce();
+    expect(
+      screen.getByRole('link', { name: 'Registrar realización' }),
+    ).toHaveAttribute('href', '/actividades/realizar?id=a1');
   });
 
   it('tells what to do with a delayed activity and when it becomes overdue', async () => {

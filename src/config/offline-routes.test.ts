@@ -31,8 +31,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
-  it('saves the activities, read from the device copy of each month', () => {
-    expect(OFFLINE_PRECACHE_ROUTES).toContain('/actividades');
+  it('saves the activities, read from the device copy of each month, and the screen that records one in the field', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toEqual(
+      expect.arrayContaining(['/actividades', '/actividades/realizar']),
+    );
   });
 
   it('no longer saves the page of the retired section', () => {

@@ -20,6 +20,7 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/insumos',
   '/insumos/movimientos',
   '/actividades',
+  '/actividades/realizar',
   '/usuarios',
   '/roles',
   '/sin-conexion',

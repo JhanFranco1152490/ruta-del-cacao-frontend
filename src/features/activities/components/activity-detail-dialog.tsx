@@ -1,8 +1,9 @@
 'use client';
 
 import { Check, Info, Pencil, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,7 @@ function lateNotice({ state, daysLate }: ActivityOfDay) {
 }
 
 // El detalle de una actividad y lo que se puede hacer con ella. Cada acción aparece si el estado
-// y los permisos la permiten y quien abre el detalle sabe atenderla (`onEdit`, `onComplete`,
+// y los permisos la permiten y quien abre el detalle sabe atenderla (`onEdit`, `completeHref`,
 // `onDelete`).
 export function ActivityDetailDialog({
   item,
@@ -44,7 +45,7 @@ export function ActivityDetailDialog({
   offline = false,
   onClose,
   onEdit,
-  onComplete,
+  completeHref,
   onDelete,
 }: {
   item: ActivityOfDay;
@@ -53,7 +54,8 @@ export function ActivityDetailDialog({
   offline?: boolean;
   onClose: () => void;
   onEdit?: () => void;
-  onComplete?: () => void;
+  // La pantalla donde se registra la realización: es otra página, que abre también sin conexión.
+  completeHref?: string;
   onDelete?: () => void;
 }) {
   const { data: user } = useSession();
@@ -141,10 +143,10 @@ export function ActivityDetailDialog({
               <Pencil aria-hidden="true" /> Editar
             </Button>
           )}
-          {actions.complete && onComplete ? (
-            <Button onClick={onComplete}>
+          {actions.complete && completeHref ? (
+            <Link className={buttonVariants()} href={completeHref}>
               <Check aria-hidden="true" /> Registrar realización
-            </Button>
+            </Link>
           ) : (
             <Button onClick={onClose} variant="outline">
               Cerrar
