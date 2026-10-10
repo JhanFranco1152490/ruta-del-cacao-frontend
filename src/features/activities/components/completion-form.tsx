@@ -133,6 +133,7 @@ export function CompletionForm({
                   return (
                     <CompletionInputRow
                       catalog={catalog}
+                      control={control}
                       disabled={isSaving}
                       errors={{
                         input_id: errors.inputs?.[index]?.input_id?.message,

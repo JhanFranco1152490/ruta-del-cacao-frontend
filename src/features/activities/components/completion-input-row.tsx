@@ -1,30 +1,37 @@
 'use client';
 
 import { Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import type { UseFormRegister } from 'react-hook-form';
+import { useId } from 'react';
+import {
+  type Control,
+  Controller,
+  type UseFormRegister,
+} from 'react-hook-form';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
-import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
 import { UNIT_SYMBOLS, type InputUnit } from '@/lib/format/input-units';
 
 import {
   type CompletionFormInput,
+  type CompletionFormValues,
   stockReferenceText,
   usedQuantityText,
 } from '../completion-rules';
-import { type CatalogInput, inputChoices } from '../completion-values';
+import type { CatalogInput } from '../completion-values';
+import { CompletionInputPicker } from './completion-input-picker';
 
 const unitOf = (input: CatalogInput) =>
   UNIT_SYMBOLS[input.unit as InputUnit]?.plural ?? input.unit;
 
-// Un insumo usado en la labor: se busca en el catálogo, se elige y se escribe cuánto se gastó, en
-// la unidad del insumo. Debajo se ve lo que equivale en empaques y lo que hay en la finca, que es
-// solo una referencia: no limita la cantidad, porque la labor ya se hizo.
+// Un insumo usado en la labor: se busca y se elige en un solo campo, y se escribe cuánto se gastó,
+// en la unidad del insumo. Debajo se ve lo que equivale en empaques y lo que hay en la finca, que
+// es solo una referencia: no limita la cantidad, porque la labor ya se hizo. El número va una vez,
+// en el título de la fila, que nombra a sus campos para quien usa lector de pantalla.
 export function CompletionInputRow({
   index,
+  control,
   register,
   catalog,
   selectedId,
@@ -37,6 +44,7 @@ export function CompletionInputRow({
   onRemove,
 }: {
   index: number;
+  control: Control<CompletionFormInput, unknown, CompletionFormValues>;
   register: UseFormRegister<CompletionFormInput>;
   catalog: readonly CatalogInput[];
   selectedId: string;
@@ -51,16 +59,22 @@ export function CompletionInputRow({
   disabled: boolean;
   onRemove: () => void;
 }) {
-  const [search, setSearch] = useState('');
+  const titleId = useId();
   const number = index + 1;
   const selected = catalog.find((input) => input.id === selectedId);
-  const choices = inputChoices(catalog, { search, selectedId, takenIds });
   const equivalent = selected && usedQuantityText(quantity, selected);
 
   return (
-    <li className="space-y-3 rounded-(--radius-field) border border-border bg-card p-4">
+    <li
+      aria-labelledby={titleId}
+      className="space-y-3 rounded-(--radius-field) border border-border bg-card p-4"
+      role="group"
+    >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-sans text-base font-extrabold text-selva">
+        <h3
+          className="font-sans text-base font-extrabold text-selva"
+          id={titleId}
+        >
           Insumo {number}
         </h3>
         <Button
@@ -74,43 +88,27 @@ export function CompletionInputRow({
           <Trash2 aria-hidden="true" className="size-4" /> Quitar
         </Button>
       </div>
-      <TextField
-        className={CAPTURE_FIELD_CLASS}
-        disabled={disabled}
-        label={`Buscar insumo ${number}`}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder="Escribe parte del nombre"
-        type="search"
-        value={search}
+      <Controller
+        control={control}
+        name={`inputs.${index}.input_id`}
+        render={({ field }) => (
+          <CompletionInputPicker
+            catalog={catalog}
+            disabled={disabled}
+            error={errors.input_id ?? (field.value ? undefined : notice)}
+            onChange={field.onChange}
+            takenIds={takenIds}
+            value={field.value}
+          />
+        )}
       />
-      <SelectField
-        className={CAPTURE_FIELD_CLASS}
-        disabled={disabled}
-        error={errors.input_id ?? (selectedId ? undefined : notice)}
-        hint={
-          choices.length === 0 ? 'Ningún insumo activo coincide.' : undefined
-        }
-        label={`Insumo ${number}`}
-        {...register(`inputs.${index}.input_id`)}
-      >
-        <option value="">Elige un insumo</option>
-        {choices.map(({ id, label, disabled: taken }) => (
-          <option disabled={taken} key={id} value={id}>
-            {label}
-          </option>
-        ))}
-      </SelectField>
       <TextField
         className={CAPTURE_FIELD_CLASS}
         disabled={disabled}
         error={errors.quantity}
         hint={equivalent ?? undefined}
         inputMode="decimal"
-        label={
-          selected
-            ? `Cantidad del insumo ${number} (${unitOf(selected)})`
-            : `Cantidad del insumo ${number}`
-        }
+        label={selected ? `Cantidad (${unitOf(selected)})` : 'Cantidad'}
         {...register(`inputs.${index}.quantity`)}
       />
       {selected && stock !== undefined && (

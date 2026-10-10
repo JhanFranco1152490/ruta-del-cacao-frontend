@@ -102,11 +102,25 @@ const form = () => screen.findByRole('button', { name: /^Guardar/ });
 const addInput = () =>
   userEvent.click(screen.getByRole('button', { name: 'Agregar insumo' }));
 const field = (name: string) => screen.getByLabelText(name);
-const setQuantity = (row: number, value: string) =>
-  fireEvent.change(
-    screen.getByLabelText(new RegExp(`^Cantidad del insumo ${row}`)),
-    { target: { value } },
-  );
+// Cada insumo es un grupo con su título ("Insumo 1"); dentro, sus campos no repiten el número.
+const row = (number: number) =>
+  screen.getByRole('group', { name: `Insumo ${number}` });
+const picker = (number: number) => within(row(number)).getByLabelText('Insumo');
+const quantityOf = (number: number) =>
+  within(row(number)).getByLabelText(/^Cantidad/);
+// Se escribe parte del nombre en el mismo campo y se elige de lo que queda en la lista.
+const chooseInput = async (number: number, typed: string, name: string) => {
+  await userEvent.click(picker(number));
+  await userEvent.type(picker(number), typed);
+  await userEvent.click(await screen.findByRole('option', { name }));
+};
+const offered = async (number: number) => {
+  await userEvent.click(picker(number));
+  const options = await screen.findAllByRole('option');
+  return options.map((option) => option.textContent);
+};
+const setQuantity = (number: number, value: string) =>
+  fireEvent.change(quantityOf(number), { target: { value } });
 const save = async () => userEvent.click(await form());
 const confirm = async () => {
   const dialog = await screen.findByRole('dialog');
@@ -169,10 +183,10 @@ describe('CompletionScreen', () => {
     await form();
 
     await addInput();
-    await userEvent.selectOptions(field('Insumo 1'), 'urea');
+    await chooseInput(1, 'ure', 'Urea 46 %');
     setQuantity(1, '100');
     await addInput();
-    await userEvent.selectOptions(field('Insumo 2'), 'copper');
+    await chooseInput(2, 'cobre', 'Óxido de cobre');
     setQuantity(2, '2,5');
 
     // El equivalente en empaques y las existencias de la finca, como referencia.
@@ -181,9 +195,8 @@ describe('CompletionScreen', () => {
     expect(
       screen.getByText('Sin movimientos en esta finca'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByLabelText('Cantidad del insumo 2 (g)'),
-    ).toBeInTheDocument();
+    expect(within(row(2)).getByLabelText('Cantidad (g)')).toBeInTheDocument();
+    expect(picker(1)).toHaveValue('Urea 46 %');
 
     await save();
 
@@ -205,7 +218,7 @@ describe('CompletionScreen', () => {
     renderScreen();
     await form();
     await addInput();
-    await userEvent.selectOptions(field('Insumo 1'), 'urea');
+    await chooseInput(1, 'urea', 'Urea 46 %');
     setQuantity(1, '500');
 
     await save();
@@ -223,68 +236,89 @@ describe('CompletionScreen', () => {
     await form();
     await addInput();
     await addInput();
-    await userEvent.selectOptions(field('Insumo 1'), 'urea');
+    await chooseInput(1, 'urea', 'Urea 46 %');
 
-    const options = (name: string) =>
-      within(field(name))
-        .getAllByRole('option')
-        .map((option) => option.textContent);
-    expect(options('Insumo 1')).toEqual([
-      'Elige un insumo',
-      'Urea 46 %',
-      'Óxido de cobre',
-    ]);
-    expect(options('Insumo 2')).toEqual([
-      'Elige un insumo',
+    expect(await offered(2)).toEqual([
       'Urea 46 % · Ya en la lista',
       'Óxido de cobre',
     ]);
     expect(
-      within(field('Insumo 2')).getByRole('option', {
-        name: 'Urea 46 % · Ya en la lista',
-      }),
-    ).toBeDisabled();
+      screen.getByRole('option', { name: 'Urea 46 % · Ya en la lista' }),
+    ).toHaveAttribute('aria-disabled', 'true');
   });
 
-  it('searches the inputs without accents or capitals', async () => {
+  it('searches and chooses the input in one field, without accents or capitals', async () => {
+    renderScreen();
+    await form();
+    await addInput();
+    expect(within(row(1)).getAllByRole('combobox')).toHaveLength(1);
+
+    await userEvent.click(picker(1));
+    await userEvent.type(picker(1), 'OXIDO');
+
+    expect(
+      (await screen.findAllByRole('option')).map(
+        (option) => option.textContent,
+      ),
+    ).toEqual(['Óxido de cobre']);
+
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Óxido de cobre' }),
+    );
+
+    expect(picker(1)).toHaveValue('Óxido de cobre');
+  });
+
+  it('says that no active input matches what was typed', async () => {
     renderScreen();
     await form();
     await addInput();
 
-    await userEvent.type(field('Buscar insumo 1'), 'oxido');
+    await userEvent.click(picker(1));
+    await userEvent.type(picker(1), 'zzz');
 
     expect(
-      within(field('Insumo 1'))
-        .getAllByRole('option')
-        .map((option) => option.textContent),
-    ).toEqual(['Elige un insumo', 'Óxido de cobre']);
+      await screen.findByText('Ningún insumo activo coincide.'),
+    ).toBeInTheDocument();
+  });
+
+  it('numbers each input once, in its title, and not in every field', async () => {
+    renderScreen();
+    await form();
+    await addInput();
+
+    expect(within(row(1)).getAllByText(/Insumo 1/)).toHaveLength(1);
+    expect(within(row(1)).getByLabelText('Insumo')).toBeInTheDocument();
+    expect(within(row(1)).getByLabelText('Cantidad')).toBeInTheDocument();
   });
 
   it('removes an input from the list', async () => {
     renderScreen();
     await form();
     await addInput();
-    await userEvent.selectOptions(field('Insumo 1'), 'urea');
+    await chooseInput(1, 'urea', 'Urea 46 %');
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Quitar insumo 1' }),
     );
 
-    expect(screen.queryByLabelText('Insumo 1')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('group', { name: 'Insumo 1' }),
+    ).not.toBeInTheDocument();
   });
 
   it('marks an input without quantity and saves nothing', async () => {
     renderScreen();
     await form();
     await addInput();
-    await userEvent.selectOptions(field('Insumo 1'), 'urea');
+    await chooseInput(1, 'urea', 'Urea 46 %');
 
     await save();
 
     await waitFor(() =>
-      expect(
-        screen.getByLabelText(/^Cantidad del insumo 1/),
-      ).toHaveAccessibleDescription('Indique la cantidad del insumo'),
+      expect(quantityOf(1)).toHaveAccessibleDescription(
+        'Indique la cantidad del insumo',
+      ),
     );
     expect(
       screen.getByText('Revisa el dato marcado antes de guardar.'),
@@ -488,14 +522,14 @@ describe('CompletionScreen', () => {
       );
       // Lo capturado sigue ahí; el insumo que ya no sirve hay que volver a elegirlo.
       expect(field('Fecha de realización')).toHaveValue('2026-10-21');
-      expect(field('Insumo 1')).toHaveValue('urea');
-      expect(field('Insumo 2')).toHaveValue('');
-      expect(field('Insumo 2')).toHaveAccessibleDescription(
+      expect(picker(1)).toHaveValue('Urea 46 %');
+      expect(picker(2)).toHaveValue('');
+      expect(picker(2)).toHaveAccessibleDescription(
         'Este insumo ya no está disponible. Elige otro del catálogo.',
       );
-      expect(screen.getByLabelText(/^Cantidad del insumo 2/)).toHaveValue('20');
+      expect(quantityOf(2)).toHaveValue('20');
 
-      await userEvent.selectOptions(field('Insumo 2'), 'copper');
+      await chooseInput(2, 'cobre', 'Óxido de cobre');
       await save();
       await confirm();
 
