@@ -424,4 +424,125 @@ describe('ActivityListScreen', () => {
       );
     });
   });
+
+  describe('editing', () => {
+    const CAN_EDIT = [
+      PERMISSIONS.ACTIVITIES_VIEW,
+      PERMISSIONS.ACTIVITIES_CHANGE,
+    ];
+    const pruning = buildAgriculturalActivity({
+      activity_type: 'pruning',
+      scheduled_date: '2026-10-26',
+      version: 2,
+    });
+
+    const openEdit = async () => {
+      await userEvent.click(
+        await screen.findByRole('button', { name: /Poda/ }),
+      );
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Editar' }),
+      );
+      return screen.findByRole('heading', { name: 'Editar actividad' });
+    };
+
+    it('reschedules an activity from its detail and shows it in its new day', async () => {
+      let saved = pruning;
+      server.use(
+        http.get(apiUrl('/api/agricultural-activities'), () =>
+          HttpResponse.json({ results: [saved] }),
+        ),
+        activityAssigneesHandler([buildAssignee()]),
+        http.patch(
+          apiUrl('/api/agricultural-activities/a1'),
+          async ({ request }) => {
+            const body = (await request.json()) as Record<string, string>;
+            saved = { ...saved, scheduled_date: body.scheduled_date };
+            return HttpResponse.json(saved);
+          },
+        ),
+      );
+      renderScreen({ permissions: CAN_EDIT });
+      await openEdit();
+
+      fireEvent.change(screen.getByLabelText('Fecha programada'), {
+        target: { value: '2026-10-29' },
+      });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Guardar cambios' }),
+      );
+
+      expect(
+        await screen.findByText('Actividad actualizada'),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        within(await dayOf('jueves 29 de octubre')).getByText('Poda'),
+      ).toBeInTheDocument();
+    });
+
+    it('comes back to the detail when the edition is cancelled', async () => {
+      server.use(
+        agriculturalActivitiesHandler([pruning]),
+        activityAssigneesHandler([buildAssignee()]),
+      );
+      renderScreen({ permissions: CAN_EDIT });
+      await openEdit();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+      expect(
+        await screen.findByRole('heading', { name: 'Poda' }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar' })).toBeEnabled();
+    });
+
+    it('closes the form and says why when the activity can no longer be edited', async () => {
+      server.use(
+        agriculturalActivitiesHandler([pruning]),
+        activityAssigneesHandler([buildAssignee()]),
+        http.patch(apiUrl('/api/agricultural-activities/a1'), () =>
+          apiError(
+            409,
+            'activity_already_done',
+            'Las actividades realizadas no se pueden modificar.',
+          ),
+        ),
+      );
+      renderScreen({ permissions: CAN_EDIT });
+      await openEdit();
+
+      fireEvent.change(screen.getByLabelText('Fecha programada'), {
+        target: { value: '2026-10-29' },
+      });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Guardar cambios' }),
+      );
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Las actividades realizadas no se pueden modificar.',
+      );
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('disables editing without a connection and says why', async () => {
+      await getOfflineDb(userId).cache.put({
+        key: 'agricultural-activities:2026-10',
+        value: [pruning],
+        fetchedAt: 1_700_000_000_000,
+      });
+      server.use(offline());
+      renderScreen({ permissions: CAN_EDIT });
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: /Poda/ }),
+      );
+
+      const edit = await screen.findByRole('button', { name: 'Editar' });
+      expect(edit).toBeDisabled();
+      expect(edit).toHaveAccessibleDescription(
+        'Editar y eliminar una actividad necesitan conexión.',
+      );
+    });
+  });
 });

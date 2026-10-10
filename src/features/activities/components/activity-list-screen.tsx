@@ -19,8 +19,11 @@ import { groupActivitiesByDay } from '../activity-days';
 import { type UsedInput, useActivitiesOfMonth } from '../api';
 import { useActivityMonth } from '../use-activity-month';
 import { ActivityDayList } from './activity-day-list';
-import { ActivityDetailDialog } from './activity-detail-dialog';
-import { ActivityFormDialog } from './activity-form-dialog';
+import {
+  ActivityDialogs,
+  type ActivityNotice,
+  type PendingDialog,
+} from './activity-dialogs';
 import { ActivityMonthBar } from './activity-month-bar';
 
 // Cómo se escribe la cantidad de un insumo usado llega de la página: este dominio no conoce las
@@ -49,16 +52,10 @@ export function ActivityListScreen({
     isPausedWithoutData(activities) ||
     (activities.isError && isNetworkFailure(activities.error));
   const days = groupActivitiesByDay(activities.data?.data ?? [], today);
-  // Se guarda solo el id: el detalle muestra la actividad como está en la lista, también después
-  // de que una acción la cambie, y se cierra solo si deja de estar.
-  const [selectedId, setSelectedId] = useState<string>();
-  const selected = days
-    .flatMap((day) => day.activities)
-    .find(({ activity }) => activity.id === selectedId);
-  const [scheduling, setScheduling] = useState(false);
-  // Lo último que se guardó, en un aviso que leen los lectores de pantalla. Si quedó en otro mes,
-  // la lista no salta: el aviso ofrece ir a verlo.
-  const [saved, setSaved] = useState<{ message: string; month: string }>();
+  const [pending, setPending] = useState<PendingDialog>();
+  // Lo último que pasó, en un aviso que leen los lectores de pantalla. Si la actividad quedó en
+  // otro mes, la lista no salta: el aviso ofrece ir a verla.
+  const [notice, setNotice] = useState<ActivityNotice>();
 
   // Programar es solo en línea: sin conexión el botón lo dice en vez de fallar al guardar.
   const scheduleButton = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD) && (
@@ -67,8 +64,8 @@ export function ActivityListScreen({
         aria-describedby={offline ? 'schedule-needs-connection' : undefined}
         disabled={offline}
         onClick={() => {
-          setSaved(undefined);
-          setScheduling(true);
+          setNotice(undefined);
+          setPending({ kind: 'schedule' });
         }}
         size="office"
       >
@@ -94,10 +91,10 @@ export function ActivityListScreen({
         title="Actividades"
       />
       <div className="mt-6 space-y-3 empty:hidden">
-        <FormMessage variant="success">{saved?.message}</FormMessage>
-        {saved && saved.month !== month && (
+        <FormMessage variant={notice?.variant}>{notice?.message}</FormMessage>
+        {notice?.month && notice.month !== month && (
           <Button
-            onClick={() => goToMonth(saved.month)}
+            onClick={() => goToMonth(notice.month!)}
             size="office"
             variant="outline"
           >
@@ -155,30 +152,22 @@ export function ActivityListScreen({
           ) : (
             <ActivityDayList
               days={days}
-              onSelect={({ activity }) => setSelectedId(activity.id)}
+              onSelect={({ activity }) => {
+                setNotice(undefined);
+                setPending({ kind: 'detail', id: activity.id });
+              }}
             />
           ))}
       </div>
-      {scheduling && (
-        <ActivityFormDialog
-          onClose={() => setScheduling(false)}
-          onSaved={(activity) => {
-            setScheduling(false);
-            setSaved({
-              message: 'Actividad programada',
-              month: activity.scheduled_date.slice(0, 7),
-            });
-          }}
-        />
-      )}
-      {selected && (
-        <ActivityDetailDialog
-          formatUsedInput={formatUsedInput}
-          item={selected}
-          onClose={() => setSelectedId(undefined)}
-          today={today}
-        />
-      )}
+      <ActivityDialogs
+        formatUsedInput={formatUsedInput}
+        items={days.flatMap((day) => day.activities)}
+        offline={offline}
+        onNotice={setNotice}
+        onPending={setPending}
+        pending={pending}
+        today={today}
+      />
     </div>
   );
 }

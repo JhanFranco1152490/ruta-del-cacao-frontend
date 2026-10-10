@@ -18,6 +18,7 @@ export type AgriculturalActivity = Schemas['AgriculturalActivity'];
 export type Assignee = Schemas['Assignee'];
 export type UsedInput = Schemas['UsedInputOutput'];
 export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
+export type ActivityUpdateRequest = Schemas['PatchedActivityUpdateRequest'];
 
 export const ACTIVITY_ERROR = {
   staleVersion: 'stale_version',
@@ -141,5 +142,31 @@ export function useCreateActivity() {
     networkMode: 'always',
     mutationFn: postActivity,
     onSuccess: () => invalidate(),
+  });
+}
+
+export const patchActivity = (id: string, body: ActivityUpdateRequest) =>
+  apiFetch<AgriculturalActivity>(`/api/agricultural-activities/${id}`, {
+    method: 'PATCH',
+    body,
+  });
+
+// La actividad como está ahora en el servidor, cuando otra persona la cambió primero.
+export function currentActivityOf(error: unknown): AgriculturalActivity | null {
+  if (!isApiError(error) || error.code !== ACTIVITY_ERROR.staleVersion) {
+    return null;
+  }
+  return (error.body.current as AgriculturalActivity | undefined) ?? null;
+}
+
+// También al fallar: con una versión obsoleta, o si la actividad ya se realizó o venció, la lista
+// debe leer cómo quedó.
+export function useUpdateActivity() {
+  const invalidate = useInvalidateActivities();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({ id, body }: { id: string; body: ActivityUpdateRequest }) =>
+      patchActivity(id, body),
+    onSettled: () => invalidate(),
   });
 }

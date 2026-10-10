@@ -43,6 +43,7 @@ export function ActivityDetailDialog({
   item,
   today,
   formatUsedInput,
+  offline = false,
   onClose,
   onEdit,
   onComplete,
@@ -51,6 +52,8 @@ export function ActivityDetailDialog({
   item: ActivityOfDay;
   today: string;
   formatUsedInput: (used: UsedInput) => string;
+  // Sin conexión se consulta y se registra la realización; editar y eliminar necesitan al servidor.
+  offline?: boolean;
   onClose: () => void;
   onEdit?: () => void;
   onComplete?: () => void;
@@ -61,6 +64,9 @@ export function ActivityDetailDialog({
   const { plot } = activity;
   const actions = activityActions(state, activity.activity_type, user);
   const notice = lateNotice(item);
+  const showEdit = actions.edit && !!onEdit;
+  const showDelete = actions.remove && !!onDelete;
+  const onlineOnly = offline && (showEdit || showDelete);
 
   return (
     <Dialog
@@ -108,18 +114,38 @@ export function ActivityDetailDialog({
             El registro del monitoreo se habilita con el módulo de sanidad
           </p>
         )}
+        {onlineOnly && (
+          <p
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+            id="activity-needs-connection"
+          >
+            <Info aria-hidden="true" className="size-4 shrink-0" />
+            Editar y eliminar una actividad necesitan conexión.
+          </p>
+        )}
         <DialogFooter>
-          {actions.remove && onDelete && (
+          {showDelete && (
             <Button
+              aria-describedby={
+                offline ? 'activity-needs-connection' : undefined
+              }
               className="sm:mr-auto"
+              disabled={offline}
               onClick={onDelete}
               variant="destructive"
             >
               <Trash2 aria-hidden="true" /> Eliminar
             </Button>
           )}
-          {actions.edit && onEdit && (
-            <Button onClick={onEdit} variant="outline">
+          {showEdit && (
+            <Button
+              aria-describedby={
+                offline ? 'activity-needs-connection' : undefined
+              }
+              disabled={offline}
+              onClick={onEdit}
+              variant="outline"
+            >
               <Pencil aria-hidden="true" /> Editar
             </Button>
           )}

@@ -11,7 +11,6 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { formatHectares } from '@/lib/format/hectares';
 
-import { SCHEDULABLE_ACTIVITY_TYPE_OPTIONS } from '../activity-labels';
 import {
   type ActivityFormInput,
   type ActivityFormValues,
@@ -50,15 +49,18 @@ const options = (choices: readonly FormChoice[]) =>
 export const plotLabel = (plot: { code: string; areaHectares: string }) =>
   `${plot.code} · ${formatHectares(plot.areaHectares)}`;
 
-// Los campos de programar una actividad. Las listas llegan ya filtradas: solo fincas y parcelas
-// activas y cuentas activas.
+// Los campos de una actividad. Las listas llegan ya filtradas: solo fincas y parcelas activas y
+// cuentas activas. Al editar llega `fixedPlot`: la actividad mantiene su parcela, así que la finca
+// y la parcela se muestran pero no se cambian.
 export function ActivityFormFields({
   form,
   errors,
   disabled,
   today,
+  fixedPlot,
   farms,
   plots,
+  types,
   assignees,
 }: {
   form: UseFormReturn<ActivityFormInput, unknown, ActivityFormValues>;
@@ -66,17 +68,20 @@ export function ActivityFormFields({
   disabled: boolean;
   // La fecha de Bogotá: el selector no ofrece días anteriores.
   today: string;
+  fixedPlot?: { farm: string; plot: string };
   farms: ChoiceList;
   // Las de la finca elegida; sin finca, la lista está vacía y el campo deshabilitado.
   plots: ChoiceList;
+  types: readonly FormChoice[];
   assignees: ChoiceList;
 }) {
   const { register, control, setValue, getValues } = form;
   const farmId = useWatch({ control, name: 'farm_id' });
   const isOther = useWatch({ control, name: 'activity_type' }) === 'other';
 
-  // Un valor que ya estaba elegido (la finca y la parcela desde las que se abrió el formulario)
-  // no se ve en su lista hasta que llegan las opciones: al llegar, se vuelve a poner.
+  // Un valor que ya estaba elegido (la parcela desde la que se abrió el formulario, el responsable
+  // de la actividad que se edita) no se ve en su lista hasta que llegan las opciones: al llegar,
+  // se vuelve a poner.
   useEffect(() => {
     setValue('farm_id', getValues('farm_id'));
   }, [farms.choices, getValues, setValue]);
@@ -89,41 +94,56 @@ export function ActivityFormFields({
 
   return (
     <div className="space-y-4">
-      <SelectField
-        disabled={disabled}
-        error={errors.farm_id?.message}
-        hint={listHint(farms, {
-          loading: 'Cargando fincas…',
-          failed: 'No fue posible cargar las fincas.',
-          empty: 'No hay fincas activas.',
-        })}
-        label="Finca"
-        {...register('farm_id', {
-          // La parcela elegida era de la otra finca.
-          onChange: () => setValue('plot_id', ''),
-        })}
-      >
-        <option value="">Elige una finca</option>
-        {options(farms.choices)}
-      </SelectField>
-      <SelectField
-        disabled={disabled || !farmId}
-        error={errors.plot_id?.message}
-        hint={
-          farmId
-            ? listHint(plots, {
-                loading: 'Cargando parcelas…',
-                failed: 'No fue posible cargar las parcelas.',
-                empty: 'Esta finca no tiene parcelas activas.',
-              })
-            : 'Elige primero la finca.'
-        }
-        label="Parcela"
-        {...register('plot_id')}
-      >
-        <option value="">Elige una parcela</option>
-        {options(plots.choices)}
-      </SelectField>
+      {fixedPlot ? (
+        <dl className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt className="mb-1 font-bold text-selva">Finca</dt>
+            <dd>{fixedPlot.farm}</dd>
+          </div>
+          <div>
+            <dt className="mb-1 font-bold text-selva">Parcela</dt>
+            <dd>{fixedPlot.plot}</dd>
+          </div>
+        </dl>
+      ) : (
+        <>
+          <SelectField
+            disabled={disabled}
+            error={errors.farm_id?.message}
+            hint={listHint(farms, {
+              loading: 'Cargando fincas…',
+              failed: 'No fue posible cargar las fincas.',
+              empty: 'No hay fincas activas.',
+            })}
+            label="Finca"
+            {...register('farm_id', {
+              // La parcela elegida era de la otra finca.
+              onChange: () => setValue('plot_id', ''),
+            })}
+          >
+            <option value="">Elige una finca</option>
+            {options(farms.choices)}
+          </SelectField>
+          <SelectField
+            disabled={disabled || !farmId}
+            error={errors.plot_id?.message}
+            hint={
+              farmId
+                ? listHint(plots, {
+                    loading: 'Cargando parcelas…',
+                    failed: 'No fue posible cargar las parcelas.',
+                    empty: 'Esta finca no tiene parcelas activas.',
+                  })
+                : 'Elige primero la finca.'
+            }
+            label="Parcela"
+            {...register('plot_id')}
+          >
+            <option value="">Elige una parcela</option>
+            {options(plots.choices)}
+          </SelectField>
+        </>
+      )}
       <SelectField
         disabled={disabled}
         error={errors.activity_type?.message}
@@ -131,11 +151,7 @@ export function ActivityFormFields({
         {...register('activity_type')}
       >
         <option value="">Elige un tipo</option>
-        {SCHEDULABLE_ACTIVITY_TYPE_OPTIONS.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
+        {options(types)}
       </SelectField>
       {isOther && (
         <TextField

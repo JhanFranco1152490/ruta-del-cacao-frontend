@@ -33,6 +33,7 @@ type Body = Record<string, unknown>;
 let posted: Body[];
 const onSaved = vi.fn<(activity: AgriculturalActivity) => void>();
 const onClose = vi.fn<() => void>();
+const onRejected = vi.fn<(message: string) => void>();
 
 const postHandler = (
   respond: (body: Body) => Response | Promise<Response> = (body) =>
@@ -48,6 +49,7 @@ beforeEach(() => {
   posted = [];
   onSaved.mockClear();
   onClose.mockClear();
+  onRejected.mockClear();
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
   server.use(
@@ -81,7 +83,12 @@ function renderDialog(preset?: { farmId: string; plotId: string }) {
     }),
   );
   renderWithProviders(
-    <ActivityFormDialog onClose={onClose} onSaved={onSaved} preset={preset} />,
+    <ActivityFormDialog
+      onClose={onClose}
+      onRejected={onRejected}
+      onSaved={onSaved}
+      preset={preset}
+    />,
     { queryClient },
   );
 }
