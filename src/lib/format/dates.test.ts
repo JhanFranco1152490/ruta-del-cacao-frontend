@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  daysBetween,
   formatLongDate,
   formatMonthYear,
   formatTimestamp,
@@ -38,5 +39,18 @@ describe('formatTimestamp', () => {
     expect(formatTimestamp(Date.UTC(2026, 9, 7, 17, 5))).toBe(
       '7 de octubre de 2026, 12:05 p.m.',
     );
+  });
+});
+
+describe('daysBetween', () => {
+  it('counts calendar days from one date to a later one', () => {
+    expect(daysBetween('2026-10-20', '2026-10-20')).toBe(0);
+    expect(daysBetween('2026-10-20', '2026-10-23')).toBe(3);
+    expect(daysBetween('2026-12-31', '2027-01-01')).toBe(1);
+    expect(daysBetween('2028-02-28', '2028-03-01')).toBe(2);
+  });
+
+  it('is negative when the second date is earlier', () => {
+    expect(daysBetween('2026-10-20', '2026-10-18')).toBe(-2);
   });
 });

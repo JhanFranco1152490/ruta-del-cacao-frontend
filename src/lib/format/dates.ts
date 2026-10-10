@@ -1,5 +1,5 @@
 import { tz } from '@date-fns/tz';
-import { format, parseISO } from 'date-fns';
+import { differenceInCalendarDays, format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const BOGOTA = tz('America/Bogota');
@@ -26,3 +26,7 @@ export const formatLongDate = (isoDate: string) =>
 // Un mes y un año (yyyy-MM), sin día: la fecha de una siembra.
 export const formatMonthYear = (isoMonth: string) =>
   format(parseISO(`${isoMonth}-01`), "MMMM 'de' yyyy", { locale: es });
+
+// Días de calendario de una fecha sin hora (yyyy-MM-dd) a otra; negativo si la segunda es anterior.
+export const daysBetween = (fromIsoDate: string, toIsoDate: string) =>
+  differenceInCalendarDays(parseISO(toIsoDate), parseISO(fromIsoDate));
