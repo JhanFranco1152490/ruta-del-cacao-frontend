@@ -103,7 +103,10 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        '-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end',
+        '-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:items-center sm:justify-end',
+        // Cancelar y la acción principal miden lo mismo: sin esto, el botón de cancelar (de la
+        // altura base) queda más bajo que el de enviar.
+        '[&>button]:h-12 [&>button]:rounded-md [&>button]:px-5 [&>button]:text-base [&>button]:font-bold',
         className,
       )}
       {...props}
