@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprint 2 · Insumos, formulario y diálogos · Ruta del Cacao (referencia de diseño)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Karla:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Referencia de diseño, no código de producción. Ancho fijo a propósito. */
+:root {
+  --selva:#14362A; --selva-2:#1F5C45; --cobre:#9A5220; --crema:#F7F2EA; --ink:#231812;
+  --muted-fg:#5A4A40; --border:#DDD2C2; --input:#8F7F70;
+  --ok:#1F6B45; --ok-bg:#E1EFE6; --warn:#7D4E00; --warn-bg:#F8E7C2;
+  --err:#9E1F1F; --err-bg:#F6DEDA; --err-solid:#A3161B; --info:#20507A; --info-bg:#DFE9F2;
+  --shadow:0 1px 2px rgba(35,24,18,.06), 0 8px 24px rgba(35,24,18,.07);
+}
+html { background:#E9E4DA; }
+body { margin:0; padding:24px 0 48px; display:flex; justify-content:center; font-family:'Karla', sans-serif; color:var(--ink); }
+* { box-sizing:border-box; }
+.serif { font-family:'DM Serif Display', Georgia, serif; font-weight:400; }
+svg.i { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; display:block; }
+svg.sm { width:16px; height:16px; }
+
+.sheet { width:1440px; background:var(--crema); padding:32px 40px 40px; box-shadow:var(--shadow); }
+.eyebrow { font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--cobre); }
+h1 { margin:6px 0 0; font-size:34px; color:var(--selva); line-height:1.1; }
+h1::after { content:""; display:block; width:48px; height:4px; background:var(--cobre); margin-top:10px; border-radius:2px; }
+.lead { margin:12px 0 28px; color:var(--muted-fg); font-size:16px; max-width:900px; line-height:1.45; }
+
+.grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:28px 24px; align-items:start; }
+.state-label { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; font-weight:800; font-size:15px; }
+.state-label .k { width:26px; height:26px; border-radius:50%; background:var(--selva); color:#fff; font-size:13px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.state-label .ref { margin-left:auto; font-size:12px; color:var(--cobre); background:#F6EADF; border-radius:6px; padding:2px 6px; white-space:nowrap; }
+/* Velo del diálogo, como en la app */
+.backdrop { background:rgba(20,54,42,.45); border-radius:14px; padding:20px; }
+
+.dialog { background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:22px 22px 20px; }
+.dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.dialog h2 { margin:0; font-size:24px; color:var(--selva); line-height:1.15; }
+.dialog .sub { margin:6px 0 0; color:var(--muted-fg); font-size:14px; line-height:1.45; }
+.close { width:36px; height:36px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; color:var(--muted-fg); flex-shrink:0; }
+.form { display:flex; flex-direction:column; gap:14px; margin-top:16px; }
+.field label { display:block; font-size:14px; font-weight:800; margin-bottom:6px; }
+.field label .req { color:var(--muted-fg); font-weight:600; }
+.control { height:44px; border-radius:10px; border:1px solid var(--input); background:#fff; display:flex; align-items:center; gap:8px; padding:0 12px; font-size:15px; }
+.control .ph { color:var(--muted-fg); }
+.control .chev { margin-left:auto; color:var(--muted-fg); }
+.control.invalid { border:2px solid var(--err); padding:0 11px; }
+.control.disabled { background:#F3EEE5; border-color:var(--border); color:var(--muted-fg); }
+.control.focus { outline:3px solid var(--cobre); outline-offset:2px; }
+.help { margin-top:6px; font-size:13px; color:var(--muted-fg); display:flex; gap:6px; align-items:flex-start; line-height:1.4; }
+.err-msg { margin-top:6px; font-size:13px; font-weight:700; color:var(--err); display:flex; gap:6px; align-items:flex-start; line-height:1.4; }
+.err-msg a { color:var(--err); }
+.alert { border-radius:10px; padding:10px 12px; display:flex; gap:10px; align-items:flex-start; font-size:14px; font-weight:700; line-height:1.4; }
+.alert.err { background:var(--err-bg); color:var(--err); }
+.alert.warn { background:var(--warn-bg); color:var(--warn); }
+.alert.info { background:var(--info-bg); color:var(--info); }
+.foot { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.btn { height:44px; padding:0 18px; border-radius:10px; border:0; font-weight:800; font-size:15px; display:inline-flex; align-items:center; gap:8px; white-space:nowrap; font-family:inherit; }
+.btn-primary { background:var(--selva); color:#fff; }
+.btn-primary[disabled] { opacity:.6; }
+.btn-secondary { background:#fff; border:1px solid var(--input); color:var(--ink); }
+.btn-danger { background:var(--err-solid); color:#fff; }
+.btn-sm { height:36px; font-size:14px; padding:0 12px; }
+.spin { width:16px; height:16px; border-radius:50%; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; }
+
+.toasts { display:flex; gap:24px; margin-top:32px; align-items:flex-start; }
+.toast { width:380px; background:#fff; border-radius:12px; box-shadow:var(--shadow), 0 0 0 1px var(--border); padding:14px 16px; display:flex; gap:12px; align-items:center; font-weight:800; font-size:15px; }
+.toast .dot { width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; }
+
+.notes { margin-top:32px; background:#fff; border-radius:14px; padding:20px 28px; font-size:15px; line-height:1.5; box-shadow:var(--shadow); }
+.notes ul { margin:8px 0 0; padding-left:20px; columns:2; column-gap:40px; }
+.notes li { margin-bottom:8px; break-inside:avoid; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18 M6 6l12 12"/></symbol>
+  <symbol id="i-xc" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M15 9l-6 6 M9 9l6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z M12 9v4 M12 17h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><path d="M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10 M18.4 6.6a9 9 0 1 1-12.8 0"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M4.9 4.9l14.2 14.2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8 M21 3v5h-5"/></symbol>
+</svg>
+
+<div class="sheet">
+  <div class="eyebrow">Sprint 2 · Insumos · HU-07 y HU-09</div>
+  <h1 class="serif">Estados del formulario y diálogos</h1>
+  <p class="lead">Lo que pasa después de la vista principal (<code>s2-13</code>): errores, casos especiales y las confirmaciones de la lista (<code>s2-12</code>). El mismo componente sirve para registrar y para editar. En celular ocupa toda la pantalla, con controles de 48 px.</p>
+
+  <div class="grid">
+
+    <!-- 1 -->
+    <div>
+      <div class="state-label"><span class="k">1</span>Campos obligatorios vacíos<span class="ref">HU-07 CA-02</span></div>
+      <div class="backdrop"><div class="dialog" role="dialog" aria-labelledby="d1">
+        <div class="dialog-head"><div><h2 class="serif" id="d1">Registrar insumo</h2><p class="sub">Lo podrás elegir al registrar actividades y controles.</p></div><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <div class="form">
+          <div class="alert err" role="alert"><svg class="i"><use href="#i-xc"/></svg>Complete los datos obligatorios</div>
+          <div class="field"><label>Nombre</label><div class="control invalid" aria-invalid="true"><span class="ph">Ej.: Urea 46 %</span></div><div class="err-msg"><svg class="i sm"><use href="#i-xc"/></svg>Campo obligatorio</div></div>
+          <div class="field"><label>Tipo de insumo</label><div class="control invalid"><span class="ph">Elige un tipo</span><svg class="i chev"><use href="#i-chev"/></svg></div><div class="err-msg"><svg class="i sm"><use href="#i-xc"/></svg>Campo obligatorio</div></div>
+          <div class="field"><label>Unidad de medida</label><div class="control invalid"><span class="ph">Elige una unidad</span><svg class="i chev"><use href="#i-chev"/></svg></div><div class="err-msg"><svg class="i sm"><use href="#i-xc"/></svg>Campo obligatorio</div></div>
+        </div>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-primary">Guardar</span></div>
+      </div></div>
+    </div>
+
+    <!-- 2 -->
+    <div>
+      <div class="state-label"><span class="k">2</span>Bulto con su peso, guardando<span class="ref">HU-07 CA-01</span></div>
+      <div class="backdrop"><div class="dialog" role="dialog" aria-labelledby="d2">
+        <div class="dialog-head"><div><h2 class="serif" id="d2">Registrar insumo</h2><p class="sub">Lo podrás elegir al registrar actividades y controles.</p></div><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <div class="form">
+          <div class="field"><label>Nombre</label><div class="control">Urea 46 %</div></div>
+          <div class="field"><label>Tipo de insumo</label><div class="control">Fertilizante<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+          <div class="field"><label>Unidad de medida</label><div class="control">Bulto<svg class="i chev"><use href="#i-chev"/></svg></div><div class="help"><svg class="i sm"><use href="#i-info"/></svg>Es la unidad en que se van a registrar las cantidades aplicadas.</div></div>
+          <div class="field"><label>Peso del bulto (kg)</label><div class="control" style="width:160px">50</div><div class="help"><svg class="i sm"><use href="#i-info"/></svg>Según el producto, un bulto pesa 40, 46 o 50 kg.</div></div>
+        </div>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-primary" aria-disabled="true" style="opacity:.6"><span class="spin"></span>Guardando…</span></div>
+      </div></div>
+    </div>
+
+    <!-- 3 -->
+    <div>
+      <div class="state-label"><span class="k">3</span>Ya existe, activo<span class="ref">HU-07 CA-03</span></div>
+      <div class="backdrop"><div class="dialog" role="dialog" aria-labelledby="d3">
+        <div class="dialog-head"><div><h2 class="serif" id="d3">Registrar insumo</h2><p class="sub">Lo podrás elegir al registrar actividades y controles.</p></div><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <div class="form">
+          <div class="field"><label>Nombre</label><div class="control invalid" aria-invalid="true">urea 46%</div>
+            <div class="err-msg"><svg class="i sm"><use href="#i-xc"/></svg><span>Ya existe un insumo con este nombre y tipo. <a href="#">Ver Urea 46 %</a></span></div></div>
+          <div class="field"><label>Tipo de insumo</label><div class="control">Fertilizante<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+          <div class="field"><label>Unidad de medida</label><div class="control">Kilogramos<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+          <div class="help"><svg class="i sm"><use href="#i-info"/></svg>El mismo nombre con otro tipo sí se acepta.</div>
+        </div>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-primary">Guardar</span></div>
+      </div></div>
+    </div>
+
+    <!-- 4 -->
+    <div>
+      <div class="state-label"><span class="k">4</span>Ya existe, pero inactivo<span class="ref">features/007</span></div>
+      <div class="backdrop"><div class="dialog" role="dialog" aria-labelledby="d4">
+        <div class="dialog-head"><div><h2 class="serif" id="d4">Registrar insumo</h2><p class="sub">Lo podrás elegir al registrar actividades y controles.</p></div><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <div class="form">
+          <div class="field"><label>Nombre</label><div class="control invalid" aria-invalid="true">Clorpirifos 48%</div>
+            <div class="err-msg"><svg class="i sm"><use href="#i-xc"/></svg>Ya existe un insumo con este nombre y tipo, y está inactivo.</div></div>
+          <div class="alert warn"><svg class="i"><use href="#i-alert"/></svg><div style="flex:1">En vez de registrarlo de nuevo, puedes activar <b>Clorpirifós 48 %</b>.<div style="margin-top:10px"><span class="btn btn-secondary btn-sm"><svg class="i sm"><use href="#i-power"/></svg>Activarlo</span></div></div></div>
+          <div class="field"><label>Tipo de insumo</label><div class="control">Insecticida<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+          <div class="field"><label>Unidad de medida</label><div class="control">Litros<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+        </div>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-primary">Guardar</span></div>
+      </div></div>
+    </div>
+
+    <!-- 5 -->
+    <div>
+      <div class="state-label"><span class="k">5</span>Editar: unidad bloqueada por uso<span class="ref">HU-09 CA-01</span></div>
+      <div class="backdrop"><div class="dialog" role="dialog" aria-labelledby="d5">
+        <div class="dialog-head"><div><h2 class="serif" id="d5">Editar insumo</h2><p class="sub">Cada cambio queda en el historial con quién lo hizo y cuándo.</p></div><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <div class="form">
+          <div class="field"><label>Nombre</label><div class="control focus">Triple 15 granulado</div></div>
+          <div class="field"><label>Tipo de insumo</label><div class="control">Fertilizante<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+          <div class="field"><label>Unidad de medida</label><div class="control disabled" aria-disabled="true"><svg class="i sm"><use href="#i-lock"/></svg>Bulto<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+          <div class="field"><label>Peso del bulto (kg)</label><div class="control disabled" aria-disabled="true" style="width:160px"><svg class="i sm"><use href="#i-lock"/></svg>50</div>
+            <div class="help"><svg class="i sm"><use href="#i-lock"/></svg>No se puede cambiar: el insumo ya se usó en registros.</div></div>
+        </div>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-primary">Guardar cambios</span></div>
+      </div></div>
+    </div>
+
+    <!-- 6 -->
+    <div>
+      <div class="state-label"><span class="k">6</span>Editar: otra persona lo cambió<span class="ref">HU-09 CA-02</span></div>
+      <div class="backdrop"><div class="dialog" role="dialog" aria-labelledby="d6">
+        <div class="dialog-head"><div><h2 class="serif" id="d6">Editar insumo</h2><p class="sub">Cada cambio queda en el historial con quién lo hizo y cuándo.</p></div><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <div class="form">
+          <div class="alert info" role="alert"><svg class="i"><use href="#i-refresh"/></svg>Otra persona cambió este insumo. Revisa los datos actuales antes de guardar.</div>
+          <div class="field"><label>Nombre</label><div class="control">Oxicloruro de cobre 58 %</div></div>
+          <div class="field"><label>Tipo de insumo</label><div class="control">Fungicida<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+          <div class="field"><label>Unidad de medida</label><div class="control">Kilogramos<svg class="i chev"><use href="#i-chev"/></svg></div></div>
+        </div>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-primary">Guardar cambios</span></div>
+      </div></div>
+    </div>
+
+    <!-- 7 -->
+    <div>
+      <div class="state-label"><span class="k">7</span>Confirmar desactivar<span class="ref">features/007</span></div>
+      <div class="backdrop"><div class="dialog" role="alertdialog" aria-labelledby="d7">
+        <div class="dialog-head"><h2 class="serif" id="d7">¿Desactivar Oxicloruro de cobre?</h2><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <p class="sub" style="font-size:15px;color:var(--ink);margin-top:12px">Este insumo dejará de ofrecerse en nuevas actividades y controles. Los registros que ya lo usan no cambian.</p>
+        <p class="sub">Puedes activarlo de nuevo cuando quieras.</p>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-primary"><svg class="i sm"><use href="#i-ban"/></svg>Desactivar</span></div>
+      </div></div>
+    </div>
+
+    <!-- 8 -->
+    <div>
+      <div class="state-label"><span class="k">8</span>Confirmar eliminar<span class="ref">features/007</span></div>
+      <div class="backdrop"><div class="dialog" role="alertdialog" aria-labelledby="d8">
+        <div class="dialog-head"><h2 class="serif" id="d8">¿Eliminar Bocashi?</h2><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <p class="sub" style="font-size:15px;color:var(--ink);margin-top:12px">Eliminar es para un insumo creado por error. Esta acción no se puede deshacer.</p>
+        <p class="sub">Si solo dejaste de usarlo, mejor desactívalo.</p>
+        <div class="foot"><span class="btn btn-secondary">Cancelar</span><span class="btn btn-danger"><svg class="i sm"><use href="#i-trash"/></svg>Eliminar</span></div>
+      </div></div>
+    </div>
+
+    <!-- 9 -->
+    <div>
+      <div class="state-label"><span class="k">9</span>No se puede eliminar: ya se usó<span class="ref">input_has_records</span></div>
+      <div class="backdrop"><div class="dialog" role="alertdialog" aria-labelledby="d9">
+        <div class="dialog-head"><h2 class="serif" id="d9">¿Eliminar Gallinaza?</h2><span class="close" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></span></div>
+        <div class="alert err" role="alert" style="margin-top:14px"><svg class="i"><use href="#i-xc"/></svg>No se puede eliminar: el insumo ya se usó en registros.</div>
+        <p class="sub" style="font-size:15px;color:var(--ink)">Puedes desactivarlo para que no se ofrezca en registros nuevos.</p>
+        <div class="foot"><span class="btn btn-secondary">Cerrar</span><span class="btn btn-primary"><svg class="i sm"><use href="#i-ban"/></svg>Desactivar</span></div>
+      </div></div>
+    </div>
+
+  </div>
+
+  <div class="toasts">
+    <div>
+      <div class="state-label"><span class="k">10</span>Avisos al guardar<span class="ref">HU-07 CA-01 · HU-09 CA-01</span></div>
+      <div style="display:flex;gap:16px">
+        <div class="toast" role="status"><span class="dot" style="background:var(--ok-bg);color:var(--ok)"><svg class="i sm"><use href="#i-check"/></svg></span>Insumo guardado con éxito</div>
+        <div class="toast" role="status"><span class="dot" style="background:var(--ok-bg);color:var(--ok)"><svg class="i sm"><use href="#i-check"/></svg></span>Insumo actualizado</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="eyebrow">Notas para implementar</div>
+    <ul>
+      <li>Los tres campos son obligatorios. El error va junto al campo, con ícono y texto y con <code>aria-invalid</code>, nunca solo en rojo. El resumen de arriba es <b>Complete los datos obligatorios</b>.</li>
+      <li><b>Peso del bulto (kg)</b> solo aparece con la unidad <b>Bulto</b>. Va de 1 a 100 kg, con hasta dos decimales.</li>
+      <li><b>Guardar</b> se deshabilita mientras se envía (estado 2), para no registrar dos veces.</li>
+      <li>Nombres repetidos (estados 3 y 4): la comparación ignora mayúsculas, tildes, espacios y guiones, y es por tipo. El error trae el insumo existente (<code>duplicate_input</code> con <code>existing</code>), para enlazarlo o activarlo.</li>
+      <li>Unidad bloqueada (estado 5): se bloquean la unidad y el peso si <code>has_records</code> es verdadero o si la API responde <code>input_unit_locked</code>. Nombre y tipo siguen editables.</li>
+      <li>Conflicto (estado 6): ante <code>stale_version</code> se cargan los valores de <code>current</code> y se avisa. Ante cualquier otro error, el formulario sigue abierto con lo escrito.</li>
+      <li>Un insumo con registros no muestra <b>Eliminar</b> en la lista. El estado 9 solo aparece si alguien lo usó entre que se cargó la lista y se confirmó (<code>409 input_has_records</code>).</li>
+      <li>El diálogo de eliminar en rojo es la única acción destructiva. Desactivar usa el botón principal: se puede deshacer.</li>
+      <li>Sin conexión no se abre ninguno de estos diálogos: los botones que los abren están deshabilitados (ver <code>s2-15</code>).</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

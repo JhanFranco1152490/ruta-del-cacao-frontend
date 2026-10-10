@@ -15,6 +15,10 @@ export const formatDateTime = (isoDateTime: string) =>
     in: BOGOTA,
   });
 
+// Un instante guardado como milisegundos (la fecha de una copia del dispositivo).
+export const formatTimestamp = (milliseconds: number) =>
+  formatDateTime(new Date(milliseconds).toISOString());
+
 // Recibe una fecha sin hora (yyyy-MM-dd) y no la desplaza por zona horaria.
 export const formatLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM 'de' yyyy", { locale: es });

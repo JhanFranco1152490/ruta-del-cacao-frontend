@@ -10,7 +10,6 @@ import {
   formatAge,
   formatCount,
   isSeedVariety,
-  normalizeVarietyName,
   suggestStage,
   totalTrees,
 } from './characterization-rules';
@@ -164,32 +163,6 @@ describe('formatCount', () => {
   it('groups thousands with a dot, also for four digits', () => {
     expect(formatCount(2400)).toBe('2.400');
     expect(formatCount(950)).toBe('950');
-  });
-});
-
-describe('normalizeVarietyName', () => {
-  it('treats spaces, hyphens, case and accents as the same name', () => {
-    const expected = normalizeVarietyName('CCN-51');
-    expect(normalizeVarietyName('CCN 51')).toBe(expected);
-    expect(normalizeVarietyName('CCN51')).toBe(expected);
-    expect(normalizeVarietyName(' ccn-51 ')).toBe(expected);
-    expect(normalizeVarietyName('Híbrido común')).toBe(
-      normalizeVarietyName('hibrido comun'),
-    );
-  });
-
-  it('treats the dashes pasted from a document as hyphens, like the server', () => {
-    const expected = normalizeVarietyName('CCN-51');
-    for (const dash of [
-      '\u2010',
-      '\u2011',
-      '\u2012',
-      '\u2013',
-      '\u2014',
-      '\u2212',
-    ]) {
-      expect(normalizeVarietyName(`CCN${dash}51`)).toBe(expected);
-    }
   });
 });
 

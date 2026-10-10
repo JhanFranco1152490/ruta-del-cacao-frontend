@@ -94,6 +94,30 @@ describe('FarmDetailScreen', () => {
     ).toHaveAttribute('href', '/fincas/editar?id=f1');
   });
 
+  it('links to the stocks of inputs of the farm only with the permission to see them', async () => {
+    server.use(farmHandler(buildFarm()));
+    renderScreen({
+      permissions: [PERMISSIONS.FARMS_VIEW, PERMISSIONS.INPUTS_VIEW],
+    });
+
+    const link = await screen.findByRole('link', {
+      name: /Insumos de esta finca/,
+    });
+    expect(link.getAttribute('href')).toMatch(
+      /^\/insumos\?finca=f1&productor=/,
+    );
+  });
+
+  it('does not offer the inputs without the permission to see them', async () => {
+    server.use(farmHandler(buildFarm()));
+    renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW] });
+
+    await screen.findByRole('heading', { level: 1, name: 'La Esperanza' });
+    expect(
+      screen.queryByRole('link', { name: /Insumos de esta finca/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it('lets the association look without editing', async () => {
     server.use(farmHandler(buildFarm()));
     renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW] });

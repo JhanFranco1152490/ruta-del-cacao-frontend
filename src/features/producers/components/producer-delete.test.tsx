@@ -39,6 +39,7 @@ function signIn(permissions: string[]) {
 function dependents({
   farms = ['La Esperanza', 'El Roble'],
   accounts = 1,
+  inputs = 0,
 } = {}) {
   server.use(
     http.get(apiUrl('/api/farms'), () =>
@@ -48,6 +49,11 @@ function dependents({
     ),
     http.get(apiUrl('/api/users'), () =>
       HttpResponse.json(buildPage([], accounts)),
+    ),
+    http.get(apiUrl('/api/agricultural-inputs'), () =>
+      HttpResponse.json({
+        results: Array.from({ length: inputs }, (_, i) => ({ id: `i${i}` })),
+      }),
     ),
   );
 }
@@ -90,6 +96,46 @@ beforeEach(() => {
 });
 
 describe('deleting a producer from the record', () => {
+  it('counts the inputs of the catalog that go with the producer', async () => {
+    dependents({ inputs: 3 });
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+
+    const { dialog } = await openDeleteDialog();
+
+    expect(await within(dialog).findByText('3 insumos')).toBeInTheDocument();
+  });
+
+  it('says there are no inputs, and uses the singular for one', async () => {
+    dependents({ inputs: 0 });
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+    const first = await openDeleteDialog();
+    expect(
+      await within(first.dialog).findByText('Ningún insumo'),
+    ).toBeInTheDocument();
+    cleanup();
+
+    dependents({ inputs: 1 });
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+    const second = await openDeleteDialog();
+    expect(
+      await within(second.dialog).findByText('1 insumo'),
+    ).toBeInTheDocument();
+  });
+
+  it('still lists the rest when the catalog cannot be read', async () => {
+    server.use(
+      http.get(apiUrl('/api/agricultural-inputs'), () =>
+        apiError(403, 'permission_denied'),
+      ),
+    );
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+
+    const { dialog } = await openDeleteDialog();
+
+    expect(await within(dialog).findByText('2 fincas')).toBeInTheDocument();
+    expect(within(dialog).queryByText(/insumo/i)).not.toBeInTheDocument();
+  });
+
   it('offers it only with the permission', async () => {
     signIn([PERMISSIONS.PRODUCERS_VIEW]);
     renderWithProviders(<ProducerDetailScreen id="p1" />);

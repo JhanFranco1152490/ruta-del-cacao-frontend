@@ -89,6 +89,7 @@ describe('NAV_ITEMS', () => {
       '/fincas',
       '/parcelas',
       '/variedades',
+      '/insumos',
       '/roles',
       '/usuarios',
     ]);
@@ -103,6 +104,7 @@ describe('NAV_ITEMS', () => {
     expect(byHref['/variedades'].permission).toBe(
       PERMISSIONS.CROPS_MANAGE_VARIETIES,
     );
+    expect(byHref['/insumos'].permission).toBe(PERMISSIONS.INPUTS_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
     expect(byHref['/usuarios'].permission).toBe(PERMISSIONS.USERS_VIEW);
   });

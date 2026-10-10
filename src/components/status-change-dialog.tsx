@@ -26,8 +26,9 @@ export type StatusChangeAction = {
 };
 
 type StatusChangeDialogProps = {
-  // El botón sigue al estado actual; el contenido, a la acción con la que se abrió.
-  trigger: StatusChangeAction;
+  // El botón sigue al estado actual; el contenido, a la acción con la que se abrió. Sin `trigger`
+  // no hay botón: el diálogo lo abre quien lo monta (por ejemplo, desde un menú de acciones).
+  trigger?: StatusChangeAction;
   action: StatusChangeAction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -52,11 +53,14 @@ export function StatusChangeDialog({
 }: StatusChangeDialogProps) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogTrigger
-        render={<Button className="h-11" variant={trigger.variant} />}
-      >
-        <trigger.Icon aria-hidden="true" className="size-4" /> {trigger.trigger}
-      </DialogTrigger>
+      {trigger && (
+        <DialogTrigger
+          render={<Button className="h-11" variant={trigger.variant} />}
+        >
+          <trigger.Icon aria-hidden="true" className="size-4" />{' '}
+          {trigger.trigger}
+        </DialogTrigger>
+      )}
       <DialogContent showCloseButton={!isPending}>
         <DialogHeader>
           <DialogTitle>{action.title}</DialogTitle>

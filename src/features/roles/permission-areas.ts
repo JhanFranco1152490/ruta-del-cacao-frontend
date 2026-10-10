@@ -1,7 +1,7 @@
 import type { PermissionItem } from './api';
 
 // Las secciones del catálogo de permisos, en el orden en que se trabaja: primero lo de la asociación
-// (productores), luego lo del campo (fincas, sus parcelas y la ficha de cada parcela) y al final la
+// (productores), luego lo del campo (fincas, sus parcelas, la ficha de cada parcela y los insumos) y al final la
 // administración (cuentas y roles). El servidor manda el área como una clave interna ("farms",
 // "crops"); aquí se le da nombre. Un área que no está aquí va después de las conocidas, por su clave.
 const AREAS = [
@@ -9,6 +9,7 @@ const AREAS = [
   { area: 'farms', label: 'Fincas' },
   { area: 'plots', label: 'Parcelas' },
   { area: 'crops', label: 'Caracterización de parcelas' },
+  { area: 'inputs', label: 'Insumos' },
   { area: 'users', label: 'Cuentas' },
   { area: 'roles', label: 'Roles' },
 ] as const;
