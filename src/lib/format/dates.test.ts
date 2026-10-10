@@ -5,6 +5,7 @@ import {
   formatLongDate,
   formatMonthYear,
   formatTimestamp,
+  monthBounds,
   todayInBogota,
 } from './dates';
 
@@ -52,5 +53,23 @@ describe('daysBetween', () => {
 
   it('is negative when the second date is earlier', () => {
     expect(daysBetween('2026-10-20', '2026-10-18')).toBe(-2);
+  });
+});
+
+describe('monthBounds', () => {
+  it('gives the first and the last day of a month', () => {
+    expect(monthBounds('2026-10')).toEqual({
+      from: '2026-10-01',
+      to: '2026-10-31',
+    });
+    expect(monthBounds('2026-12')).toEqual({
+      from: '2026-12-01',
+      to: '2026-12-31',
+    });
+  });
+
+  it('knows a leap February', () => {
+    expect(monthBounds('2027-02').to).toBe('2027-02-28');
+    expect(monthBounds('2028-02').to).toBe('2028-02-29');
   });
 });

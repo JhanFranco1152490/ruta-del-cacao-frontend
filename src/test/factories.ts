@@ -296,3 +296,40 @@ export const buildInputMovement = (
   created_at: '2026-10-07T12:00:00-05:00',
   ...overrides,
 });
+
+export const buildAssignee = (
+  overrides: Partial<Schemas['Assignee']> = {},
+): Schemas['Assignee'] => ({
+  id: 'u1',
+  full_name: 'Cuenta de prueba',
+  is_active: true,
+  ...overrides,
+});
+
+export const buildAgriculturalActivity = (
+  overrides: Partial<Schemas['AgriculturalActivity']> = {},
+): Schemas['AgriculturalActivity'] => ({
+  id: 'a1',
+  plot: {
+    id: 'pl1',
+    code: 'P-03',
+    is_active: true,
+    farm: { id: 'f1', name: 'Finca de prueba', is_active: true },
+  },
+  producer_id: 'p1',
+  activity_type: 'fertilization',
+  other_description: null,
+  scheduled_date: '2026-10-20',
+  status: 'scheduled',
+  state: 'scheduled',
+  days_late: 0,
+  assignee: buildAssignee(),
+  done_date: null,
+  inputs: [],
+  completed_by: null,
+  completed_at: null,
+  version: 1,
+  created_at: '2026-10-08T09:00:00-05:00',
+  updated_at: '2026-10-08T09:00:00-05:00',
+  ...overrides,
+});

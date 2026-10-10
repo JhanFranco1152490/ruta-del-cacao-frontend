@@ -1,5 +1,10 @@
 import { tz } from '@date-fns/tz';
-import { differenceInCalendarDays, format, parseISO } from 'date-fns';
+import {
+  differenceInCalendarDays,
+  format,
+  lastDayOfMonth,
+  parseISO,
+} from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const BOGOTA = tz('America/Bogota');
@@ -30,3 +35,9 @@ export const formatMonthYear = (isoMonth: string) =>
 // Días de calendario de una fecha sin hora (yyyy-MM-dd) a otra; negativo si la segunda es anterior.
 export const daysBetween = (fromIsoDate: string, toIsoDate: string) =>
   differenceInCalendarDays(parseISO(toIsoDate), parseISO(fromIsoDate));
+
+// El primer y el último día de un mes (yyyy-MM), para pedir lo de ese mes completo.
+export function monthBounds(isoMonth: string) {
+  const from = `${isoMonth}-01`;
+  return { from, to: format(lastDayOfMonth(parseISO(from)), 'yyyy-MM-dd') };
+}
