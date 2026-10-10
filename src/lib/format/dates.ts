@@ -1,5 +1,6 @@
 import { tz } from '@date-fns/tz';
 import {
+  addMonths,
   differenceInCalendarDays,
   format,
   lastDayOfMonth,
@@ -41,3 +42,15 @@ export function monthBounds(isoMonth: string) {
   const from = `${isoMonth}-01`;
   return { from, to: format(lastDayOfMonth(parseISO(from)), 'yyyy-MM-dd') };
 }
+
+// Un mes escrito como yyyy-MM, como llega en la dirección de una pantalla.
+export const isIsoMonth = (value: string) =>
+  /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
+
+// El mes que queda tantos meses después (o antes, con un número negativo).
+export const shiftMonth = (isoMonth: string, months: number) =>
+  format(addMonths(parseISO(`${isoMonth}-01`), months), 'yyyy-MM');
+
+// Una fecha sin hora con su día de la semana: "lunes 19 de octubre".
+export const formatWeekdayDate = (isoDate: string) =>
+  format(parseISO(isoDate), "EEEE d 'de' MMMM", { locale: es });

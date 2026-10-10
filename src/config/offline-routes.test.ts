@@ -31,6 +31,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
+  it('saves the activities, read from the device copy of each month', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/actividades');
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });

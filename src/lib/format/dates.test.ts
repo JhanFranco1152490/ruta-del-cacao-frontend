@@ -5,7 +5,10 @@ import {
   formatLongDate,
   formatMonthYear,
   formatTimestamp,
+  formatWeekdayDate,
+  isIsoMonth,
   monthBounds,
+  shiftMonth,
   todayInBogota,
 } from './dates';
 
@@ -71,5 +74,35 @@ describe('monthBounds', () => {
   it('knows a leap February', () => {
     expect(monthBounds('2027-02').to).toBe('2027-02-28');
     expect(monthBounds('2028-02').to).toBe('2028-02-29');
+  });
+});
+
+describe('isIsoMonth', () => {
+  it('accepts a year and a month', () => {
+    expect(isIsoMonth('2026-10')).toBe(true);
+    expect(isIsoMonth('2026-01')).toBe(true);
+  });
+
+  it('rejects anything else', () => {
+    for (const value of ['2026-13', '2026-00', '2026-1', '26-10', 'zzz', '']) {
+      expect(isIsoMonth(value)).toBe(false);
+    }
+    expect(isIsoMonth('2026-10-05')).toBe(false);
+  });
+});
+
+describe('shiftMonth', () => {
+  it('moves forward and back across a year', () => {
+    expect(shiftMonth('2026-10', 1)).toBe('2026-11');
+    expect(shiftMonth('2026-12', 1)).toBe('2027-01');
+    expect(shiftMonth('2026-01', -1)).toBe('2025-12');
+    expect(shiftMonth('2026-10', 0)).toBe('2026-10');
+  });
+});
+
+describe('formatWeekdayDate', () => {
+  it('names the weekday in Spanish without shifting the day', () => {
+    expect(formatWeekdayDate('2026-10-19')).toBe('lunes 19 de octubre');
+    expect(formatWeekdayDate('2026-11-01')).toBe('domingo 1 de noviembre');
   });
 });

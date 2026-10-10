@@ -1,0 +1,74 @@
+import { describe, expect, it } from 'vitest';
+
+import { buildAgriculturalActivity } from '@/test/factories';
+
+import { groupActivitiesByDay } from './activity-days';
+
+const TODAY = '2026-10-22';
+
+describe('groupActivitiesByDay', () => {
+  it('groups the activities under their scheduled day, earliest first', () => {
+    const days = groupActivitiesByDay(
+      [
+        buildAgriculturalActivity({ id: 'c', scheduled_date: '2026-10-25' }),
+        buildAgriculturalActivity({ id: 'a', scheduled_date: '2026-10-19' }),
+        buildAgriculturalActivity({ id: 'b', scheduled_date: '2026-10-19' }),
+      ],
+      TODAY,
+    );
+
+    expect(days.map(({ date }) => date)).toEqual(['2026-10-19', '2026-10-25']);
+    expect(days[0].activities.map(({ activity }) => activity.id)).toEqual([
+      'a',
+      'b',
+    ]);
+  });
+
+  it('leaves out the days without activities', () => {
+    expect(groupActivitiesByDay([], TODAY)).toEqual([]);
+  });
+
+  it('marks today', () => {
+    const days = groupActivitiesByDay(
+      [
+        buildAgriculturalActivity({ id: 'a', scheduled_date: '2026-10-21' }),
+        buildAgriculturalActivity({ id: 'b', scheduled_date: TODAY }),
+      ],
+      TODAY,
+    );
+
+    expect(days.map(({ isToday }) => isToday)).toEqual([false, true]);
+  });
+
+  it('computes the state with the date of the device, not with the saved one', () => {
+    // La copia es de cuando la actividad estaba al día: hoy ya lleva tres días de retraso.
+    const [day] = groupActivitiesByDay(
+      [
+        buildAgriculturalActivity({
+          scheduled_date: '2026-10-19',
+          state: 'scheduled',
+          days_late: 0,
+        }),
+      ],
+      TODAY,
+    );
+
+    expect(day.activities[0]).toMatchObject({ state: 'overdue', daysLate: 3 });
+  });
+
+  it('keeps a done activity under its scheduled day', () => {
+    const [day] = groupActivitiesByDay(
+      [
+        buildAgriculturalActivity({
+          scheduled_date: '2026-10-10',
+          status: 'done',
+          done_date: '2026-10-12',
+        }),
+      ],
+      TODAY,
+    );
+
+    expect(day.date).toBe('2026-10-10');
+    expect(day.activities[0]).toMatchObject({ state: 'done', daysLate: 0 });
+  });
+});

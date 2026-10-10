@@ -1,0 +1,95 @@
+'use client';
+
+import { CloudOff } from 'lucide-react';
+
+import { EmptyState } from '@/components/empty-state';
+import { ErrorState } from '@/components/error-state';
+import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useHasConnection } from '@/hooks/use-has-connection';
+import { useSession } from '@/hooks/use-session';
+import { isNetworkFailure } from '@/lib/api/errors';
+import { isPausedWithoutData } from '@/lib/offline/paused-read';
+
+import { groupActivitiesByDay } from '../activity-days';
+import { useActivitiesOfMonth } from '../api';
+import { useActivityMonth } from '../use-activity-month';
+import { ActivityDayList } from './activity-day-list';
+import { ActivityMonthBar } from './activity-month-bar';
+
+export function ActivityListScreen() {
+  const { data: user } = useSession();
+  const hasConnection = useHasConnection();
+  const { month, today, isCurrentMonth, goPrevious, goNext, goToday } =
+    useActivityMonth();
+  const activities = useActivitiesOfMonth(user?.id, month, null);
+
+  const offline = !hasConnection || activities.data?.savedAt !== undefined;
+  // Sin red y sin copia de este mes: no es una carga en curso ni un fallo del servidor.
+  const neverLoaded =
+    isPausedWithoutData(activities) ||
+    (activities.isError && isNetworkFailure(activities.error));
+  const days = groupActivitiesByDay(activities.data?.data ?? [], today);
+
+  return (
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+      <PageHeader
+        description="Las labores de tus parcelas: lo programado, lo retrasado, lo vencido y lo realizado."
+        eyebrow="Manejo agrícola"
+        title="Actividades"
+      />
+      {offline && activities.isSuccess && (
+        <p
+          className="mt-6 flex gap-3 rounded-lg border border-border bg-card p-4 text-sm font-bold"
+          role="status"
+        >
+          <CloudOff aria-hidden="true" className="size-5 shrink-0" />
+          Sin conexión: estás viendo la última copia de las actividades.
+        </p>
+      )}
+      <div className="mt-8 space-y-6">
+        <ActivityMonthBar
+          isCurrentMonth={isCurrentMonth}
+          month={month}
+          onNext={goNext}
+          onPrevious={goPrevious}
+          onToday={goToday}
+        />
+        {activities.isPending && !neverLoaded && (
+          <div aria-label="Cargando actividades" role="status">
+            <Skeleton className="h-64" />
+          </div>
+        )}
+        {neverLoaded && (
+          <EmptyState
+            action={
+              !isCurrentMonth && (
+                <Button onClick={goToday} size="office" variant="outline">
+                  Ir a hoy
+                </Button>
+              )
+            }
+            description="Cuando tengas conexión, abre este mes una vez y quedará guardado para consultarlo sin conexión."
+            title="Necesitas conexión para ver las actividades de este mes."
+          />
+        )}
+        {activities.isError && !neverLoaded && (
+          <ErrorState
+            message="No fue posible cargar las actividades."
+            onRetry={() => void activities.refetch()}
+          />
+        )}
+        {activities.isSuccess &&
+          (days.length === 0 ? (
+            <EmptyState
+              description="Las labores que se programen en tus parcelas para este mes aparecerán aquí."
+              title="No hay actividades programadas en este periodo"
+            />
+          ) : (
+            <ActivityDayList days={days} />
+          ))}
+      </div>
+    </div>
+  );
+}
