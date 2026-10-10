@@ -4,6 +4,7 @@ import {
   addMonths,
   differenceInCalendarDays,
   format,
+  isValid,
   lastDayOfMonth,
   parseISO,
 } from 'date-fns';
@@ -63,3 +64,7 @@ export const shiftDays = (isoDate: string, days: number) =>
 // Una fecha sin hora con su día de la semana y su año: "jueves 22 de octubre de 2026".
 export const formatWeekdayLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "EEEE d 'de' MMMM 'de' yyyy", { locale: es });
+
+// Una fecha sin hora (yyyy-MM-dd) que existe en el calendario: el 30 de febrero no lo es.
+export const isIsoDate = (value: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(value) && isValid(parseISO(value));

@@ -7,6 +7,7 @@ import {
   formatTimestamp,
   formatWeekdayDate,
   formatWeekdayLongDate,
+  isIsoDate,
   isIsoMonth,
   monthBounds,
   shiftDays,
@@ -122,5 +123,25 @@ describe('formatWeekdayLongDate', () => {
     expect(formatWeekdayLongDate('2026-10-22')).toBe(
       'jueves 22 de octubre de 2026',
     );
+  });
+});
+
+describe('isIsoDate', () => {
+  it('accepts a date of the calendar', () => {
+    expect(isIsoDate('2026-10-22')).toBe(true);
+    expect(isIsoDate('2028-02-29')).toBe(true);
+  });
+
+  it('rejects a date that does not exist or is written another way', () => {
+    for (const value of [
+      '2026-02-30',
+      '2027-02-29',
+      '2026-13-01',
+      '22/10/2026',
+      '2026-10',
+      '',
+    ]) {
+      expect(isIsoDate(value)).toBe(false);
+    }
   });
 });

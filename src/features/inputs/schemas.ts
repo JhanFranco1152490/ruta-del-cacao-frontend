@@ -6,6 +6,10 @@ import {
   decimalText,
   isDecimal,
 } from '@/lib/validation/decimal';
+import {
+  MISSING_FIELDS_MESSAGE,
+  REQUIRED_FIELD_MESSAGE,
+} from '@/lib/validation/messages';
 
 import {
   INPUT_TYPE_OPTIONS,
@@ -16,8 +20,7 @@ import {
   type PackageType,
 } from './input-options';
 
-export const REQUIRED_FIELD_MESSAGE = 'Campo obligatorio';
-export const MISSING_FIELDS_MESSAGE = 'Complete los datos obligatorios';
+export { MISSING_FIELDS_MESSAGE, REQUIRED_FIELD_MESSAGE };
 export const DUPLICATE_INPUT_MESSAGE =
   'Ya existe un insumo con este nombre y tipo';
 
