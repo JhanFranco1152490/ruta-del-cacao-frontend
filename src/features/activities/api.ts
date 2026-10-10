@@ -19,6 +19,7 @@ export type Assignee = Schemas['Assignee'];
 export type UsedInput = Schemas['UsedInputOutput'];
 export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
 export type ActivityUpdateRequest = Schemas['PatchedActivityUpdateRequest'];
+export type CompletionRequest = Schemas['CompletionRequest'];
 type ActivityDeleteQuery =
   operations['agricultural_activities_destroy']['parameters']['query'];
 
@@ -199,3 +200,11 @@ export function useDeleteActivity() {
     onSettled: () => invalidate(),
   });
 }
+
+// La envía la cola del dispositivo, no una pantalla: la realización se guarda primero en el
+// teléfono y puede llegar horas después. El mismo envío repetido responde igual y no cambia nada.
+export const postCompletion = (id: string, body: CompletionRequest) =>
+  apiFetch<AgriculturalActivity>(
+    `/api/agricultural-activities/${id}/completion`,
+    { method: 'POST', body },
+  );
