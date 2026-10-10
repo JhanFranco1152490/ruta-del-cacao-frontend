@@ -93,10 +93,6 @@ export const queryKeys = {
     // La finca tal como la muestra su pantalla de detalle, con la fecha de la copia si vino del
     // dispositivo. Cuelga de `detail`, así que lo que invalida una finca invalida también esta.
     detailView: (id: string) => ['farms', 'detail', id, 'view'] as const,
-    // Todas las fincas de un productor para elegir una, con copia en el dispositivo. La cuenta
-    // técnica elige el productor; las demás cuentas leen las suyas y pasan `null`.
-    options: (producer: string | null) =>
-      ['farms', 'options', producer] as const,
     mapCounts: (query: object) => ['farms', 'map', 'counts', query] as const,
     mapPoints: (municipality: string, query: object) =>
       ['farms', 'map', 'points', municipality, query] as const,
