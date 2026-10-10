@@ -95,6 +95,8 @@ export const queryKeys = {
     // Una parcela que todavía está en la cola del dispositivo de esta persona.
     queued: (userId: string, id: string) =>
       ['plots', 'queued', userId, id] as const,
+    // Las parcelas de una finca para elegir una en un formulario de otro dominio.
+    options: (farmId: string) => ['plots', 'options', farmId] as const,
     // Una parcela leída sola, por su id.
     detail: (id: string) => ['plots', 'detail', id] as const,
   },

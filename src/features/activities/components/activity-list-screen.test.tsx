@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,9 +10,17 @@ import {
   apiError,
   buildAgriculturalActivity,
   buildAssignee,
+  buildFarm,
+  buildPlot,
   buildSession,
 } from '@/test/factories';
-import { agriculturalActivitiesHandler, apiUrl } from '@/test/handlers';
+import {
+  activityAssigneesHandler,
+  agriculturalActivitiesHandler,
+  apiUrl,
+  farmsHandler,
+  plotsHandler,
+} from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 
@@ -36,13 +44,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function renderScreen({ searchParams = '' } = {}) {
+function renderScreen({
+  searchParams = '',
+  permissions = [PERMISSIONS.ACTIVITIES_VIEW] as string[],
+} = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({
       id: userId,
-      permissions: [PERMISSIONS.ACTIVITIES_VIEW],
+      permissions,
     }),
   );
   return renderWithProviders(
@@ -287,5 +298,130 @@ describe('ActivityListScreen', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
+  });
+
+  describe('scheduling', () => {
+    const CAN_SCHEDULE = [
+      PERMISSIONS.ACTIVITIES_VIEW,
+      PERMISSIONS.ACTIVITIES_ADD,
+    ];
+
+    it('hides the button from who cannot schedule', async () => {
+      server.use(agriculturalActivitiesHandler([]));
+
+      renderScreen();
+
+      await screen.findByText('No hay actividades programadas en este periodo');
+      expect(
+        screen.queryByRole('button', { name: 'Programar actividad' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('opens the form and closes it without saving', async () => {
+      server.use(
+        agriculturalActivitiesHandler([]),
+        farmsHandler([]),
+        activityAssigneesHandler([]),
+      );
+      renderScreen({ permissions: CAN_SCHEDULE });
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Programar actividad' }),
+      );
+
+      const form = await screen.findByRole('dialog');
+      expect(
+        within(form).getByRole('heading', { name: 'Programar actividad' }),
+      ).toBeInTheDocument();
+
+      await userEvent.click(
+        within(form).getByRole('button', { name: 'Cancelar' }),
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+      );
+    });
+
+    it('says that an activity was scheduled and offers its month when it is another', async () => {
+      const scheduled: unknown[] = [];
+      server.use(
+        http.get(apiUrl('/api/agricultural-activities'), ({ request }) => {
+          const from = new URL(request.url).searchParams.get('from');
+          return HttpResponse.json({
+            results: from === '2026-11-01' ? scheduled : [],
+          });
+        }),
+        farmsHandler([buildFarm({ id: 'f1', name: 'La Esperanza' })]),
+        plotsHandler([buildPlot({ id: 'pl1', code: 'P-01' })]),
+        activityAssigneesHandler([buildAssignee({ id: 'u1' })]),
+        http.post(
+          apiUrl('/api/agricultural-activities'),
+          async ({ request }) => {
+            const body = (await request.json()) as Record<string, string>;
+            const created = buildAgriculturalActivity({
+              id: body.id,
+              activity_type: 'pruning',
+              scheduled_date: body.scheduled_date,
+            });
+            scheduled.push(created);
+            return HttpResponse.json(created, { status: 201 });
+          },
+        ),
+      );
+      renderScreen({ permissions: CAN_SCHEDULE });
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Programar actividad' }),
+      );
+      const form = await screen.findByRole('dialog');
+      const field = (name: string) => within(form).getByLabelText(name);
+      await within(field('Parcela')).findByRole('option', {
+        name: 'P-01 · 2,4 ha',
+      });
+      await userEvent.selectOptions(field('Parcela'), 'pl1');
+      await userEvent.selectOptions(field('Tipo de actividad'), 'pruning');
+      fireEvent.change(field('Fecha programada'), {
+        target: { value: '2026-11-03' },
+      });
+      await within(field('Responsable')).findByRole('option', {
+        name: 'Cuenta de prueba',
+      });
+      await userEvent.selectOptions(field('Responsable'), 'u1');
+
+      await userEvent.click(
+        within(form).getByRole('button', { name: 'Guardar' }),
+      );
+
+      expect(
+        await screen.findByText('Actividad programada'),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Ver en su mes' }),
+      );
+
+      expect(await screen.findByText('Poda')).toBeInTheDocument();
+      expect(urls.at(-1)).toBe('?mes=2026-11');
+    });
+
+    it('disables scheduling without a connection and says why', async () => {
+      await getOfflineDb(userId).cache.put({
+        key: 'agricultural-activities:2026-10',
+        value: [],
+        fetchedAt: 1_700_000_000_000,
+      });
+      server.use(offline());
+
+      renderScreen({ permissions: CAN_SCHEDULE });
+
+      const button = await screen.findByRole('button', {
+        name: 'Programar actividad',
+      });
+      await waitFor(() => expect(button).toBeDisabled());
+      expect(button).toHaveAccessibleDescription(
+        'Programar una actividad necesita conexión.',
+      );
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
@@ -17,6 +17,15 @@ type Schemas = components['schemas'];
 export type AgriculturalActivity = Schemas['AgriculturalActivity'];
 export type Assignee = Schemas['Assignee'];
 export type UsedInput = Schemas['UsedInputOutput'];
+export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
+
+export const ACTIVITY_ERROR = {
+  staleVersion: 'stale_version',
+  alreadyDone: 'activity_already_done',
+  overdue: 'activity_overdue',
+  plotInactive: 'plot_inactive',
+  farmInactive: 'farm_inactive',
+} as const;
 
 // La consulta pide un periodo y no se pagina: los filtros corren en el dispositivo, también sin
 // conexión. `producer` solo lo envía la cuenta técnica; las demás cuentas ven su productor.
@@ -108,3 +117,29 @@ export const useActivityAssignees = (
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
   });
+
+export const postActivity = (body: ActivityCreateRequest) =>
+  apiFetch<AgriculturalActivity>('/api/agricultural-activities', {
+    method: 'POST',
+    body,
+  });
+
+function useInvalidateActivities() {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.agriculturalActivities.all(),
+    });
+}
+
+// Programar es solo en línea: sin red debe fallar en el acto con un aviso, y no quedar en pausa
+// para ejecutarse sola al volver la red, cuando ya nadie lo está pidiendo. La lectura que sigue a
+// la invalidación rehace la copia del mes en el dispositivo.
+export function useCreateActivity() {
+  const invalidate = useInvalidateActivities();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: postActivity,
+    onSuccess: () => invalidate(),
+  });
+}

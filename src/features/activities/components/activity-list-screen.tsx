@@ -1,10 +1,11 @@
 'use client';
 
-import { CloudOff } from 'lucide-react';
+import { CloudOff, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FormMessage } from '@/components/form-message';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,12 +13,14 @@ import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { isNetworkFailure } from '@/lib/api/errors';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { groupActivitiesByDay } from '../activity-days';
 import { type UsedInput, useActivitiesOfMonth } from '../api';
 import { useActivityMonth } from '../use-activity-month';
 import { ActivityDayList } from './activity-day-list';
 import { ActivityDetailDialog } from './activity-detail-dialog';
+import { ActivityFormDialog } from './activity-form-dialog';
 import { ActivityMonthBar } from './activity-month-bar';
 
 // Cómo se escribe la cantidad de un insumo usado llega de la página: este dominio no conoce las
@@ -29,8 +32,15 @@ export function ActivityListScreen({
 }) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
-  const { month, today, isCurrentMonth, goPrevious, goNext, goToday } =
-    useActivityMonth();
+  const {
+    month,
+    today,
+    isCurrentMonth,
+    goPrevious,
+    goNext,
+    goToday,
+    goToMonth,
+  } = useActivityMonth();
   const activities = useActivitiesOfMonth(user?.id, month, null);
 
   const offline = !hasConnection || activities.data?.savedAt !== undefined;
@@ -45,14 +55,56 @@ export function ActivityListScreen({
   const selected = days
     .flatMap((day) => day.activities)
     .find(({ activity }) => activity.id === selectedId);
+  const [scheduling, setScheduling] = useState(false);
+  // Lo último que se guardó, en un aviso que leen los lectores de pantalla. Si quedó en otro mes,
+  // la lista no salta: el aviso ofrece ir a verlo.
+  const [saved, setSaved] = useState<{ message: string; month: string }>();
+
+  // Programar es solo en línea: sin conexión el botón lo dice en vez de fallar al guardar.
+  const scheduleButton = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD) && (
+    <div className="flex flex-col items-start gap-2 sm:items-end">
+      <Button
+        aria-describedby={offline ? 'schedule-needs-connection' : undefined}
+        disabled={offline}
+        onClick={() => {
+          setSaved(undefined);
+          setScheduling(true);
+        }}
+        size="office"
+      >
+        <Plus aria-hidden="true" className="size-5" /> Programar actividad
+      </Button>
+      {offline && (
+        <p
+          className="text-sm text-muted-foreground"
+          id="schedule-needs-connection"
+        >
+          Programar una actividad necesita conexión.
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
       <PageHeader
+        actions={scheduleButton || undefined}
         description="Las labores de tus parcelas: lo programado, lo retrasado, lo vencido y lo realizado."
         eyebrow="Manejo agrícola"
         title="Actividades"
       />
+      <div className="mt-6 space-y-3 empty:hidden">
+        <FormMessage variant="success">{saved?.message}</FormMessage>
+        {saved && saved.month !== month && (
+          <Button
+            onClick={() => goToMonth(saved.month)}
+            size="office"
+            variant="outline"
+          >
+            Ver en su mes
+          </Button>
+        )}
+      </div>
       {offline && activities.isSuccess && (
         <p
           className="mt-6 flex gap-3 rounded-lg border border-border bg-card p-4 text-sm font-bold"
@@ -107,6 +159,18 @@ export function ActivityListScreen({
             />
           ))}
       </div>
+      {scheduling && (
+        <ActivityFormDialog
+          onClose={() => setScheduling(false)}
+          onSaved={(activity) => {
+            setScheduling(false);
+            setSaved({
+              message: 'Actividad programada',
+              month: activity.scheduled_date.slice(0, 7),
+            });
+          }}
+        />
+      )}
       {selected && (
         <ActivityDetailDialog
           formatUsedInput={formatUsedInput}

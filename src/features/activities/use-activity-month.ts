@@ -27,5 +27,6 @@ export function useActivityMonth() {
     goPrevious: () => goTo(shiftMonth(month, -1)),
     goNext: () => goTo(shiftMonth(month, 1)),
     goToday: () => setSelected(null),
+    goToMonth: goTo,
   };
 }
