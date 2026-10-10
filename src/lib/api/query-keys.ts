@@ -54,6 +54,21 @@ export const queryKeys = {
     list: (inputId: string, farmId: string) =>
       ['input-movements', inputId, farmId] as const,
   },
+  agriculturalActivities: {
+    // Lo que invalida programar, editar, eliminar o registrar una realización.
+    all: () => ['agricultural-activities'] as const,
+    // Las actividades programadas en un mes (yyyy-MM), con copia en el dispositivo. La cuenta
+    // técnica elige el productor; las demás cuentas ven el suyo y pasan `null`.
+    month: (producer: string | null, month: string) =>
+      ['agricultural-activities', 'month', producer ?? '', month] as const,
+    detail: (id: string) => ['agricultural-activities', 'detail', id] as const,
+    // Las cuentas a las que se puede asignar una labor, con copia en el dispositivo.
+    assignees: (producer: string | null) =>
+      ['agricultural-activities', 'assignees', producer ?? ''] as const,
+    // La realización de una actividad que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, id: string) =>
+      ['agricultural-activities', 'queued', userId, id] as const,
+  },
   characterizations: {
     // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la
     // parcela).

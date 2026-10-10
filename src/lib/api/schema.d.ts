@@ -4,6 +4,76 @@
  */
 
 export interface paths {
+    "/api/agricultural-activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las actividades programadas en el periodo, `from` y `to` incluidos, de hasta 120 días. Sin paginar: los filtros de parcela, estado y responsable los aplica el dispositivo, para que funcionen igual sin conexión. `state` y `days_late` se calculan con la fecha de hoy en Bogotá. */
+        get: operations["agricultural_activities_list"];
+        put?: never;
+        /** @description Programa una actividad en una parcela activa. `id` lo genera el dispositivo: reenviar el mismo `id` con el mismo contenido responde 200 con la actividad ya creada. El control fitosanitario no se programa aquí (422 `activity_type_not_allowed`). */
+        post: operations["agricultural_activities_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agricultural-activities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["agricultural_activities_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina una actividad programada o retrasada creada por error. Requiere `expected_version` en la URL. Una realizada o una vencida no se eliminan (409). El historial se conserva. */
+        delete: operations["agricultural_activities_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Edita o reprograma una actividad programada o retrasada; la parcela no cambia. Requiere `expected_version`. La fecha y el responsable se validan solo si cambian. 409 `stale_version` trae la actividad vigente en `current`; una realizada responde 409 `activity_already_done` y una vencida, 409 `activity_overdue`. */
+        patch: operations["agricultural_activities_partial_update"];
+        trace?: never;
+    };
+    "/api/agricultural-activities/{id}/completion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registra la realización con los insumos que gastó (ninguno, uno o varios), que se descuentan del inventario de la finca aunque las existencias queden negativas. Llega desde la cola del dispositivo: no pide versión, y el mismo registro reenviado responde 200 sin cambios ni otro descuento. Una realizada con otros datos responde 409 `activity_already_done`; un monitoreo, 422 `monitoring_requires_result`; un insumo inactivo, 422 `input_inactive` con los afectados en `input_ids`. Un insumo que no es del catálogo del productor es 400, no 404. */
+        post: operations["agricultural_activities_completion_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agricultural-activities/assignees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las cuentas del productor a las que se puede asignar una labor, activas e inactivas, solo con id y nombre. La cuenta técnica envía `producer`. */
+        get: operations["agricultural_activities_assignees_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agricultural-inputs": {
         parameters: {
             query?: never;
@@ -693,6 +763,87 @@ export interface components {
         ActivationEmailSent: {
             activation_email_sent: boolean;
         };
+        ActivityConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["AgriculturalActivity"];
+        };
+        ActivityCreateRequest: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            plot_id: string;
+            activity_type: components["schemas"]["ActivityTypeEnum"];
+            other_description?: string | null;
+            /** Format: date */
+            scheduled_date: string;
+            /** Format: uuid */
+            assignee_id: string;
+        };
+        ActivityFarm: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_active: boolean;
+        };
+        ActivityList: {
+            results: components["schemas"]["AgriculturalActivity"][];
+        };
+        ActivityPlot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            is_active: boolean;
+            farm: components["schemas"]["ActivityFarm"];
+        };
+        /**
+         * @description * `scheduled` - Programada
+         *     * `done` - Realizada
+         * @enum {string}
+         */
+        ActivityStatusEnum: "scheduled" | "done";
+        /**
+         * @description * `pruning` - Poda
+         *     * `fertilization` - Fertilización
+         *     * `irrigation` - Riego
+         *     * `weed_control` - Control de malezas
+         *     * `phytosanitary_monitoring` - Monitoreo fitosanitario
+         *     * `phytosanitary_control` - Control fitosanitario
+         *     * `cleaning_or_liming` - Limpieza o encalado
+         *     * `inventory` - Inventario
+         *     * `other` - Otro
+         * @enum {string}
+         */
+        ActivityTypeEnum: "pruning" | "fertilization" | "irrigation" | "weed_control" | "phytosanitary_monitoring" | "phytosanitary_control" | "cleaning_or_liming" | "inventory" | "other";
+        AgriculturalActivity: {
+            /** Format: uuid */
+            readonly id: string;
+            plot: components["schemas"]["ActivityPlot"];
+            /** Format: uuid */
+            producer_id: string;
+            readonly activity_type: components["schemas"]["ActivityTypeEnum"];
+            readonly other_description: string | null;
+            /** Format: date */
+            readonly scheduled_date: string;
+            status: components["schemas"]["ActivityStatusEnum"];
+            readonly state: components["schemas"]["StateEnum"];
+            readonly days_late: number;
+            readonly assignee: components["schemas"]["Assignee"];
+            /** Format: date */
+            readonly done_date: string | null;
+            readonly inputs: components["schemas"]["UsedInputOutput"][];
+            readonly completed_by: components["schemas"]["Recorder"] | null;
+            /** Format: date-time */
+            readonly completed_at: string | null;
+            readonly version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
         AgriculturalInput: {
             /** Format: uuid */
             readonly id: string;
@@ -740,6 +891,15 @@ export interface components {
                 [key: string]: string[];
             };
         };
+        Assignee: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+        };
+        AssigneeList: {
+            results: components["schemas"]["Assignee"][];
+        };
         CacaoVariety: {
             /** Format: uuid */
             readonly id: string;
@@ -755,6 +915,13 @@ export interface components {
         };
         CacaoVarietyList: {
             results: components["schemas"]["CacaoVariety"][];
+        };
+        CompletionRequest: {
+            /** Format: date */
+            done_date: string;
+            inputs?: components["schemas"]["UsedInputRequest"][];
+            /** Format: date-time */
+            captured_at?: string | null;
         };
         CsrfToken: {
             csrf_token: string;
@@ -1004,6 +1171,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Account"][];
         };
+        PaginatedActivityListList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ActivityList"][];
+        };
         PaginatedFarmList: {
             /** @example 123 */
             count: number;
@@ -1149,6 +1331,15 @@ export interface components {
             first_name?: string;
             last_name?: string;
             phone?: string | null;
+        };
+        PatchedActivityUpdateRequest: {
+            activity_type?: components["schemas"]["ActivityTypeEnum"];
+            other_description?: string | null;
+            /** Format: date */
+            scheduled_date?: string;
+            /** Format: uuid */
+            assignee_id?: string;
+            expected_version: number;
         };
         PatchedAgriculturalInputUpdateRequest: {
             name?: string;
@@ -1425,6 +1616,11 @@ export interface components {
          * @enum {string}
          */
         PropagationEnum: "grafted" | "seed";
+        Recorder: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+        };
         Role: {
             /** Format: uuid */
             readonly id: string;
@@ -1523,6 +1719,14 @@ export interface components {
             current: components["schemas"]["PlotCharacterization"] | null;
         };
         /**
+         * @description * `scheduled` - Programada
+         *     * `delayed` - Retrasada
+         *     * `overdue` - Vencida
+         *     * `done` - Realizada
+         * @enum {string}
+         */
+        StateEnum: "scheduled" | "delayed" | "overdue" | "done";
+        /**
          * @description * `active` - Activo
          *     * `inactive` - Inactivo
          * @enum {string}
@@ -1541,6 +1745,27 @@ export interface components {
          * @enum {string}
          */
         UnitEnum: "kg" | "g" | "l" | "ml" | "unit";
+        UsedInputItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            unit: string;
+            package_type: string | null;
+            /** Format: decimal */
+            package_size: string | null;
+            is_active: boolean;
+        };
+        UsedInputOutput: {
+            input: components["schemas"]["UsedInputItem"];
+            /** Format: decimal */
+            quantity: string;
+        };
+        UsedInputRequest: {
+            /** Format: uuid */
+            input_id: string;
+            /** Format: decimal */
+            quantity: string;
+        };
         VarietyRef: {
             /** Format: uuid */
             readonly id: string;
@@ -1578,6 +1803,431 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    agricultural_activities_list: {
+        parameters: {
+            query: {
+                /** @description Fecha inicial (incluida). */
+                from: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /** @description Fecha final (incluida). */
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedActivityListList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` de la actividad que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityConflictError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchedActivityUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_completion_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompletionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_assignees_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssigneeList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     agricultural_inputs_list: {
         parameters: {
             query?: {
