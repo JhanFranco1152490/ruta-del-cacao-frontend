@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  dateInBogota,
   daysBetween,
   formatLongDate,
   formatMonthYear,
@@ -143,5 +144,13 @@ describe('isIsoDate', () => {
     ]) {
       expect(isIsoDate(value)).toBe(false);
     }
+  });
+});
+
+describe('dateInBogota', () => {
+  it('gives the Bogotá day of an instant, not the UTC one', () => {
+    expect(dateInBogota('2026-10-09T02:00:00Z')).toBe('2026-10-08');
+    expect(dateInBogota('2026-10-08T09:00:00-05:00')).toBe('2026-10-08');
+    expect(dateInBogota('2026-10-09T05:00:00Z')).toBe('2026-10-09');
   });
 });

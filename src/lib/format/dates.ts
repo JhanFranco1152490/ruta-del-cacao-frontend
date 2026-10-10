@@ -68,3 +68,7 @@ export const formatWeekdayLongDate = (isoDate: string) =>
 // Una fecha sin hora (yyyy-MM-dd) que existe en el calendario: el 30 de febrero no lo es.
 export const isIsoDate = (value: string) =>
   /^\d{4}-\d{2}-\d{2}$/.test(value) && isValid(parseISO(value));
+
+// El día de Bogotá (yyyy-MM-dd) en que ocurrió un momento exacto (ISO con zona).
+export const dateInBogota = (isoDateTime: string) =>
+  format(parseISO(isoDateTime), 'yyyy-MM-dd', { in: BOGOTA });
