@@ -7,11 +7,11 @@ import {
   formatWeekdayLongDate,
   shiftDays,
 } from '@/lib/format/dates';
+import { formatStock, inputPackageOf } from '@/lib/format/input-quantity';
 
 import type { ActivityOfDay } from '../activity-days';
 import { ACTIVITY_STATE_DISPLAY, activityStateText } from '../activity-labels';
 import { OVERDUE_AFTER_DAYS } from '../activity-state';
-import type { UsedInput } from '../api';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -28,18 +28,15 @@ const Aside = ({ children }: { children: ReactNode }) => (
   <span className="text-muted-foreground"> {children}</span>
 );
 
-// Todo lo registrado de una actividad. `formatUsedInput` escribe la cantidad de un insumo usado
-// con su unidad y su equivalente en empaques: lo sabe el dominio de insumos, no este.
+// Todo lo registrado de una actividad.
 export function ActivityDetailFacts({
   item: { activity, state, daysLate },
   today,
   userId,
-  formatUsedInput,
 }: {
   item: ActivityOfDay;
   today: string;
   userId: string | undefined;
-  formatUsedInput: (used: UsedInput) => string;
 }) {
   const { assignee, completed_by: recorder } = activity;
   const done = state === 'done';
@@ -86,7 +83,13 @@ export function ActivityDetailFacts({
                   key={used.input.id}
                 >
                   <span className="font-bold">{used.input.name}</span>
-                  <span className="tabular-nums">{formatUsedInput(used)}</span>
+                  <span className="tabular-nums">
+                    {formatStock(
+                      used.quantity,
+                      used.input.unit,
+                      inputPackageOf(used.input),
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

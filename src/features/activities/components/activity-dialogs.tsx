@@ -1,7 +1,6 @@
 'use client';
 
 import type { ActivityOfDay } from '../activity-days';
-import type { UsedInput } from '../api';
 import { ActivityDeleteDialog } from './activity-delete-dialog';
 import { ActivityDetailDialog } from './activity-detail-dialog';
 import { ActivityFormDialog } from './activity-form-dialog';
@@ -28,7 +27,6 @@ export function ActivityDialogs({
   items,
   today,
   offline,
-  formatUsedInput,
   onPending,
   onNotice,
 }: {
@@ -38,7 +36,6 @@ export function ActivityDialogs({
   today: string;
   // Sin conexión solo se consulta: editar y eliminar necesitan al servidor.
   offline: boolean;
-  formatUsedInput: (used: UsedInput) => string;
   onPending: (pending: PendingDialog | undefined) => void;
   onNotice: (notice: ActivityNotice) => void;
 }) {
@@ -98,7 +95,6 @@ export function ActivityDialogs({
 
   return (
     <ActivityDetailDialog
-      formatUsedInput={formatUsedInput}
       item={item}
       offline={offline}
       onClose={close}

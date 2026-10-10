@@ -56,16 +56,11 @@ function renderScreen({
       permissions,
     }),
   );
-  return renderWithProviders(
-    <ActivityListScreen
-      formatUsedInput={({ quantity, input }) => `${quantity} ${input.unit}`}
-    />,
-    {
-      queryClient,
-      searchParams,
-      onUrlUpdate: ({ queryString }) => urls.push(queryString),
-    },
-  );
+  return renderWithProviders(<ActivityListScreen />, {
+    queryClient,
+    searchParams,
+    onUrlUpdate: ({ queryString }) => urls.push(queryString),
+  });
 }
 
 const dayOf = (name: string) => screen.findByRole('region', { name });

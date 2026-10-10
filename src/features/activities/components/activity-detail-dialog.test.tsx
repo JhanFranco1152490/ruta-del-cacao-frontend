@@ -42,7 +42,6 @@ function renderDetail(
   );
   renderWithProviders(
     <ActivityDetailDialog
-      formatUsedInput={({ quantity, input }) => `${quantity} ${input.unit}`}
       item={{ activity, ...activityState(activity, TODAY) }}
       today={TODAY}
       {...(withHandlers ? handlers : { onClose: handlers.onClose })}
@@ -153,7 +152,7 @@ describe('ActivityDetailDialog', () => {
       'Realizada elmiércoles 14 de octubre de 2026',
     );
     expect(within(detail).getByText('Urea 46 %')).toBeInTheDocument();
-    expect(within(detail).getByText('100.000 kg')).toBeInTheDocument();
+    expect(within(detail).getByText('100 kg · 2 bultos')).toBeInTheDocument();
     expect(detail).toHaveTextContent(
       'Otra cuenta de prueba · 14 de octubre de 2026, 4:12 p.m.',
     );

@@ -8,7 +8,7 @@ import {
   formatCountDifference,
   formatStock,
   inputPackageOf,
-} from '../stock-format';
+} from '@/lib/format/input-quantity';
 
 // Lo que el sistema tiene antes de contar y la diferencia que va a registrar lo contado. El
 // servidor la vuelve a calcular al guardar, contra las existencias de ese momento.

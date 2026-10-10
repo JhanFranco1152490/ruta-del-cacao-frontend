@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
@@ -322,9 +322,13 @@ describe('ActivityFormDialog', () => {
   });
 
   it('disables saving while it sends, so it sends once', async () => {
+    let respond = () => {};
+    const answered = new Promise<void>((resolve) => {
+      respond = resolve;
+    });
     server.use(
       postHandler(async (body) => {
-        await delay(50);
+        await answered;
         return HttpResponse.json(buildAgriculturalActivity(body), {
           status: 201,
         });
@@ -338,6 +342,7 @@ describe('ActivityFormDialog', () => {
     expect(
       await screen.findByRole('button', { name: 'Guardando…' }),
     ).toBeDisabled();
+    respond();
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
     expect(posted).toHaveLength(1);
   });

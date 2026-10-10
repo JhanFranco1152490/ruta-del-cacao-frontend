@@ -5,7 +5,7 @@ import { todayInBogota } from '@/lib/format/dates';
 import { decimalPattern, isDecimal } from '@/lib/validation/decimal';
 
 import { REQUIRED_FIELD_MESSAGE } from './schemas';
-import { packagesToUnit } from './stock-format';
+import { packagesToUnit } from '@/lib/format/input-quantity';
 
 // Lo máximo que guarda el servidor por movimiento (12 dígitos con 3 decimales).
 const MAX_QUANTITY = 9_999_999.999;

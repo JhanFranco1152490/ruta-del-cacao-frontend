@@ -16,7 +16,7 @@ import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { groupActivitiesByDay } from '../activity-days';
-import { type UsedInput, useActivitiesOfMonth } from '../api';
+import { useActivitiesOfMonth } from '../api';
 import { useActivityMonth } from '../use-activity-month';
 import { ActivityDayList } from './activity-day-list';
 import {
@@ -27,13 +27,7 @@ import {
 import { ActivityMonthBar } from './activity-month-bar';
 import { ScheduleActivityButton } from './schedule-activity-button';
 
-// Cómo se escribe la cantidad de un insumo usado llega de la página: este dominio no conoce las
-// unidades ni las presentaciones de los insumos.
-export function ActivityListScreen({
-  formatUsedInput,
-}: {
-  formatUsedInput: (used: UsedInput) => string;
-}) {
+export function ActivityListScreen() {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
   const {
@@ -146,7 +140,6 @@ export function ActivityListScreen({
           ))}
       </div>
       <ActivityDialogs
-        formatUsedInput={formatUsedInput}
         items={days.flatMap((day) => day.activities)}
         offline={offline}
         onNotice={setNotice}

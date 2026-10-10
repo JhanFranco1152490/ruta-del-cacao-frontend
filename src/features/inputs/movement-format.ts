@@ -1,5 +1,5 @@
 import type { InputMovement } from './api';
-import { formatQuantity } from './stock-format';
+import { formatQuantity } from '@/lib/format/input-quantity';
 
 export const MOVEMENT_KIND_LABELS: Record<InputMovement['kind'], string> = {
   entry: 'Entrada',

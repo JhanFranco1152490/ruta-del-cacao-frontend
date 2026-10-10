@@ -16,7 +16,6 @@ import { useSession } from '@/hooks/use-session';
 import { activityActions } from '../activity-actions';
 import type { ActivityOfDay } from '../activity-days';
 import { activityStateText, activityTitle } from '../activity-labels';
-import type { UsedInput } from '../api';
 import { ActivityDetailFacts } from './activity-detail-facts';
 
 // Lo que conviene hacer con una actividad atrasada, dicho donde se decide.
@@ -42,7 +41,6 @@ function lateNotice({ state, daysLate }: ActivityOfDay) {
 export function ActivityDetailDialog({
   item,
   today,
-  formatUsedInput,
   offline = false,
   onClose,
   onEdit,
@@ -51,7 +49,6 @@ export function ActivityDetailDialog({
 }: {
   item: ActivityOfDay;
   today: string;
-  formatUsedInput: (used: UsedInput) => string;
   // Sin conexión se consulta y se registra la realización; editar y eliminar necesitan al servidor.
   offline?: boolean;
   onClose: () => void;
@@ -96,12 +93,7 @@ export function ActivityDetailDialog({
             {notice.text}
           </p>
         )}
-        <ActivityDetailFacts
-          formatUsedInput={formatUsedInput}
-          item={item}
-          today={today}
-          userId={user?.id}
-        />
+        <ActivityDetailFacts item={item} today={today} userId={user?.id} />
         {state === 'done' && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Info aria-hidden="true" className="size-4 shrink-0" />

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { apiError, buildAgriculturalActivity } from '@/test/factories';
@@ -108,9 +108,13 @@ describe('ActivityDeleteDialog', () => {
   });
 
   it('disables the confirmation while it deletes, so it asks once', async () => {
+    let respond = () => {};
+    const answered = new Promise<void>((resolve) => {
+      respond = resolve;
+    });
     server.use(
       deleteHandler(async () => {
-        await delay(50);
+        await answered;
         return new HttpResponse(null, { status: 204 });
       }),
     );
@@ -121,6 +125,7 @@ describe('ActivityDeleteDialog', () => {
     expect(
       await screen.findByRole('button', { name: 'Eliminando…' }),
     ).toBeDisabled();
+    respond();
     await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
     expect(deleted).toHaveLength(1);
   });
