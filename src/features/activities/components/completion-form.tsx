@@ -1,9 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from 'lucide-react';
-import { type ReactNode, useMemo, useState } from 'react';
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { type ReactNode, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
 
 import {
   CAPTURE_BUTTON_CLASS,
@@ -20,14 +19,8 @@ import {
   type CompletionFormValues,
   createCompletionSchema,
 } from '../completion-rules';
-import {
-  type CatalogInput,
-  UNAVAILABLE_INPUT_MESSAGE,
-} from '../completion-values';
-import { CompletionInputRow } from './completion-input-row';
-
-export const NO_CATALOG_MESSAGE =
-  'Necesitas conexión una vez para cargar los insumos.';
+import type { CatalogInput } from '../completion-values';
+import { CompletionInputsSection } from './completion-inputs-section';
 
 // Lo que se registra de una labor hecha: cuándo y, si aplica, con qué insumos. Al enviar entrega
 // los valores ya validados; quien lo usa los confirma con la persona antes de guardarlos, porque
@@ -76,12 +69,6 @@ export function CompletionForm({
     resolver: zodResolver(schema),
     defaultValues,
   });
-  const { fields, append, remove } = useFieldArray({ control, name: 'inputs' });
-  const rows = useWatch({ control, name: 'inputs' });
-  // Se fija al abrir, por el id de cada fila: el aviso sigue a su fila aunque se quiten otras.
-  const [unavailableIds] = useState(
-    () => new Set(unavailableRows.map((index) => fields[index]?.id)),
-  );
   // El inventario es el recordatorio de contar la bodega: no lleva insumos.
   const acceptsInputs = activity.activity_type !== 'inventory';
   const rowErrors = Array.isArray(errors.inputs) ? errors.inputs : [];
@@ -121,74 +108,15 @@ export function CompletionForm({
         />
       </FormSection>
       {acceptsInputs && (
-        <FormSection title="Insumos utilizados">
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Si la labor no usó insumos, guárdala sin agregar ninguno.
-            </p>
-            {fields.length > 0 && catalog && (
-              <ul className="space-y-4">
-                {fields.map((field, index) => {
-                  const row = rows?.[index] ?? field;
-                  return (
-                    <CompletionInputRow
-                      catalog={catalog}
-                      control={control}
-                      disabled={isSaving}
-                      errors={{
-                        input_id: errors.inputs?.[index]?.input_id?.message,
-                        quantity: errors.inputs?.[index]?.quantity?.message,
-                      }}
-                      index={index}
-                      key={field.id}
-                      notice={
-                        unavailableIds.has(field.id)
-                          ? UNAVAILABLE_INPUT_MESSAGE
-                          : undefined
-                      }
-                      onRemove={() => remove(index)}
-                      quantity={row.quantity}
-                      register={register}
-                      selectedId={row.input_id}
-                      stock={
-                        stocks && row.input_id
-                          ? (stocks.get(row.input_id) ?? null)
-                          : undefined
-                      }
-                      takenIds={
-                        new Set(
-                          (rows ?? [])
-                            .filter((_, other) => other !== index)
-                            .map((other) => other.input_id)
-                            .filter(Boolean),
-                        )
-                      }
-                    />
-                  );
-                })}
-              </ul>
-            )}
-            <Button
-              aria-describedby={catalog ? undefined : 'completion-no-catalog'}
-              className={CAPTURE_BUTTON_CLASS}
-              disabled={isSaving || !catalog}
-              onClick={() => append({ input_id: '', quantity: '' })}
-              size="office"
-              type="button"
-              variant="outline"
-            >
-              <Plus aria-hidden="true" className="size-5" /> Agregar insumo
-            </Button>
-            {!catalog && (
-              <p
-                className="text-sm font-bold text-warn"
-                id="completion-no-catalog"
-              >
-                {NO_CATALOG_MESSAGE}
-              </p>
-            )}
-          </div>
-        </FormSection>
+        <CompletionInputsSection
+          catalog={catalog}
+          control={control}
+          disabled={isSaving}
+          errors={errors}
+          register={register}
+          stocks={stocks}
+          unavailableRows={unavailableRows}
+        />
       )}
       <div className="space-y-4">
         {error && (
