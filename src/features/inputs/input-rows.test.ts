@@ -27,6 +27,27 @@ describe('buildInputRows', () => {
     ]);
   });
 
+  it('adds the stocks of the same input across farms', () => {
+    const rows = buildInputRows(
+      [urea],
+      [
+        buildInputStock({
+          input_id: 'urea',
+          farm_id: 'f1',
+          quantity: '100.000',
+        }),
+        buildInputStock({
+          input_id: 'urea',
+          farm_id: 'f2',
+          quantity: '-30.500',
+        }),
+      ],
+      all,
+    );
+
+    expect(rows[0].quantity).toBe('69.500');
+  });
+
   it('keeps the order of the catalog and applies the filters', () => {
     const rows = buildInputRows([urea, sulfur], [], {
       ...all,

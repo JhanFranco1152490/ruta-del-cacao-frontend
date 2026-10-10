@@ -329,7 +329,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Las existencias de una finca, sin paginar y solo de los insumos que tienen movimientos en ella (los demás están «Sin movimientos»). Una finca ajena o que no existe devuelve la lista vacía. `quantity` es un decimal en texto, en la unidad del insumo, y puede ser negativo. */
+        /** @description Las existencias, sin paginar y solo de los insumos que tienen movimientos (los demás están «Sin movimientos»). Con `farm`, las de esa finca; sin ella, una fila por insumo y finca de todo el alcance, para sumar el total. Una finca ajena o que no existe devuelve la lista vacía. `producer` solo lo usa la cuenta técnica. `quantity` es un decimal en texto, en la unidad del insumo, y puede ser negativo. */
         get: operations["input_stocks_list"];
         put?: never;
         post?: never;
@@ -2943,8 +2943,9 @@ export interface operations {
     };
     input_stocks_list: {
         parameters: {
-            query: {
-                farm: string;
+            query?: {
+                farm?: string;
+                producer?: string;
             };
             header?: never;
             path?: never;

@@ -30,17 +30,20 @@ export type InputPermissions = {
 export function InputRowActions({
   input,
   farm,
+  stockFarms,
   permissions: { canChange, canDelete, canManageStock },
   disabled,
   onAction,
 }: {
   input: AgriculturalInput;
   farm: string | null;
+  // Hay una finca elegida o fincas entre las que elegir en el diálogo.
+  stockFarms: boolean;
   permissions: InputPermissions;
   disabled: boolean;
   onAction: (kind: InputActionKind, input: AgriculturalInput) => void;
 }) {
-  const stockActions = canManageStock && !!farm;
+  const stockActions = canManageStock && stockFarms;
   const canRemove = canDelete && !input.has_records;
   const hasMenu = !!farm || canChange || canRemove || stockActions;
 

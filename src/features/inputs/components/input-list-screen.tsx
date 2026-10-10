@@ -16,7 +16,11 @@ import { formatTimestamp } from '@/lib/format/dates';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { useAgriculturalInputs, useInputStocks } from '../api';
+import {
+  useAgriculturalInputs,
+  useInputStocks,
+  useInputStockTotals,
+} from '../api';
 import { buildInputRows } from '../input-rows';
 import { useInputFilters } from '../use-input-filters';
 import { type FarmChoice, InputFarmSelect } from './input-farm-select';
@@ -42,7 +46,8 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   const filters = useInputFilters();
   const superuser = user?.is_superuser === true;
   const producer = superuser ? filters.producer : null;
-  // La cuenta técnica ve todos los catálogos, pero las existencias son de la finca de un productor.
+  // Las fincas se eligen dentro de un productor: la cuenta técnica sin uno elegido ve el total de
+  // todos los catálogos y no puede escoger una finca.
   const needsProducer = superuser && !producer;
   const catalog = useAgriculturalInputs(user?.id, producer);
   const choices = needsProducer ? undefined : farms.choices;
@@ -54,7 +59,12 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         ? filters.farm
         : null
       : filters.farm;
-  const stocks = useInputStocks(user?.id, farm);
+  // Con una finca, sus existencias; sin ella, el total de todas las del alcance.
+  const farmStocks = useInputStocks(user?.id, farm);
+  const totalStocks = useInputStockTotals(user?.id, producer, {
+    enabled: !farm,
+  });
+  const stocks = farm ? farmStocks : totalStocks;
   const [pending, setPending] = useState<PendingAction>();
   // La confirmación de lo último que se guardó, en un aviso que leen los lectores de pantalla.
   const [saved, setSaved] = useState<string>();
@@ -119,7 +129,8 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
         {needsProducer ? (
           <p className="text-sm text-muted-foreground">
-            Elige un productor para ver las existencias de sus fincas.
+            Ves el total de todos los productores. Elige uno para ver las
+            existencias de una finca en particular.
           </p>
         ) : choices?.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -185,6 +196,8 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
               permissions={permissions}
               rows={rows}
               showProducer={needsProducer}
+              // Entrada y conteo piden una finca: la de la lista o la que se elija en el diálogo.
+              stockFarms={!!farm || (choices?.length ?? 0) > 0}
               stockState={stockState}
             />
           ))}

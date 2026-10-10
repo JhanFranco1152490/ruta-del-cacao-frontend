@@ -84,14 +84,19 @@ export const useAgriculturalInputs = (
     networkMode: 'offlineFirst',
   });
 
-// Solo vienen los insumos con movimientos en la finca: los demás no tienen existencias.
+// Solo vienen los insumos con movimientos: los demás no tienen existencias. Con `farm`, las de esa
+// finca; sin ella, una fila por insumo y finca de todo el alcance, para sumar el total. `producer`
+// solo lo usa la cuenta técnica.
 export async function fetchInputStocks(
-  farmId: string,
+  { farm, producer }: { farm: string | null; producer: string | null },
   signal?: AbortSignal,
 ): Promise<InputStock[]> {
-  const params = new URLSearchParams({ farm: farmId });
+  const params = new URLSearchParams();
+  if (farm) params.set('farm', farm);
+  if (producer) params.set('producer', producer);
+  const suffix = params.size ? `?${params}` : '';
   const { results } = await apiFetch<Schemas['InputStockList']>(
-    `/api/input-stocks?${params}`,
+    `/api/input-stocks${suffix}`,
     { signal },
   );
   return results;
@@ -105,9 +110,27 @@ export const useInputStocks = (
     queryKey: queryKeys.inputStocks.byFarm(farmId ?? ''),
     queryFn: ({ signal }) =>
       readThroughCache(userId!, `input-stocks:farm:${farmId}`, () =>
-        fetchInputStocks(farmId!, signal),
+        fetchInputStocks({ farm: farmId, producer: null }, signal),
       ),
     enabled: !!userId && !!farmId,
+    networkMode: 'offlineFirst',
+  });
+
+// Las existencias de todas las fincas, para ver el total de cada insumo sin elegir una.
+export const useInputStockTotals = (
+  userId: string | undefined,
+  producer: string | null,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.inputStocks.totals(producer),
+    queryFn: ({ signal }) =>
+      readThroughCache(
+        userId!,
+        producer ? `input-stocks:totals:${producer}` : 'input-stocks:totals',
+        () => fetchInputStocks({ farm: null, producer }, signal),
+      ),
+    enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
   });
 

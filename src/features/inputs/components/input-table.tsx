@@ -31,25 +31,7 @@ export type StockState = 'ready' | 'loading' | 'unavailable';
 const producerLabel = ({ producer }: AgriculturalInput) =>
   `${producer.first_name} ${producer.last_name} · ${producer.member_code}`;
 
-function StockValue({
-  row,
-  state,
-  farm,
-  needsProducer,
-}: {
-  row: InputRow;
-  state: StockState;
-  farm: string | null;
-  needsProducer: boolean;
-}) {
-  // La columna siempre está: sin finca elegida dice qué falta, en vez de esconder el inventario.
-  if (!farm) {
-    return (
-      <span className="text-muted-foreground">
-        {needsProducer ? 'Elige un productor y una finca' : 'Elige una finca'}
-      </span>
-    );
-  }
+function StockValue({ row, state }: { row: InputRow; state: StockState }) {
   if (state === 'loading') return <span>Cargando…</span>;
   if (state === 'unavailable') {
     return (
@@ -70,6 +52,7 @@ function StockValue({
 export function InputTable({
   rows,
   farm,
+  stockFarms,
   stockState,
   showProducer,
   permissions,
@@ -77,8 +60,10 @@ export function InputTable({
   onAction,
 }: {
   rows: readonly InputRow[];
-  // Las existencias son de la finca elegida; sin ella la columna pide elegirla.
+  // La finca elegida; sin ella las existencias son el total de todas.
   farm: string | null;
+  // Si se puede registrar una entrada o un conteo: hay una finca elegida o fincas entre las que elegir.
+  stockFarms: boolean;
   stockState: StockState;
   showProducer: boolean;
   permissions: InputPermissions;
@@ -133,12 +118,7 @@ export function InputTable({
                   : '—'}
               </TableCell>
               <TableCell className="whitespace-normal" data-label="Existencias">
-                <StockValue
-                  farm={farm}
-                  needsProducer={showProducer}
-                  row={row}
-                  state={stockState}
-                />
+                <StockValue row={row} state={stockState} />
               </TableCell>
               {showProducer && (
                 <TableCell
@@ -157,6 +137,7 @@ export function InputTable({
                 <InputRowActions
                   disabled={actionsDisabled}
                   farm={farm}
+                  stockFarms={stockFarms}
                   input={input}
                   onAction={onAction}
                   permissions={permissions}

@@ -126,21 +126,7 @@ describe('InputListScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('chooses the only active farm and asks for its stocks', async () => {
-    const requests: URLSearchParams[] = [];
-    server.use(
-      agriculturalInputsHandler([urea]),
-      inputStocksHandler([], requests),
-    );
-
-    renderScreen();
-
-    await waitFor(() => expect(requests[0]?.get('farm')).toBe('f1'));
-    expect(urls.at(-1)).toContain('finca=f1');
-    expect(screen.getByLabelText('Finca')).toHaveValue('f1');
-  });
-
-  it('waits for a farm when the producer has several', async () => {
+  it('shows the total of every farm by default and one farm when it is chosen', async () => {
     const requests: URLSearchParams[] = [];
     server.use(
       agriculturalInputsHandler([urea]),
@@ -150,15 +136,39 @@ describe('InputListScreen', () => {
     renderScreen({ farms: twoFarms });
 
     await table();
-    // La columna está, y pide elegir una finca en vez de esconder el inventario.
-    expect(
-      within(await rowOf('Urea 46 %')).getByText('Elige una finca'),
-    ).toBeInTheDocument();
-    expect(requests).toHaveLength(0);
+    await waitFor(() => expect(requests).toHaveLength(1));
+    expect(requests[0].has('farm')).toBe(false);
+    expect(screen.getByLabelText('Finca')).toHaveValue('');
 
     await userEvent.selectOptions(screen.getByLabelText('Finca'), 'f2');
 
-    await waitFor(() => expect(requests[0]?.get('farm')).toBe('f2'));
+    await waitFor(() => expect(requests.at(-1)?.get('farm')).toBe('f2'));
+    expect(urls.at(-1)).toContain('finca=f2');
+  });
+
+  it('adds the stocks of the farms into one total per input', async () => {
+    server.use(
+      agriculturalInputsHandler([urea]),
+      inputStocksHandler([
+        buildInputStock({
+          input_id: 'urea',
+          farm_id: 'f1',
+          quantity: '100.000',
+        }),
+        buildInputStock({
+          input_id: 'urea',
+          farm_id: 'f2',
+          quantity: '50.500',
+        }),
+      ]),
+    );
+
+    renderScreen({ farms: twoFarms });
+
+    const row = await rowOf('Urea 46 %');
+    await waitFor(() =>
+      expect(within(row).getByText(/150,5/)).toBeInTheDocument(),
+    );
   });
 
   it('warns when the stock is negative, with text and not only color', async () => {
@@ -243,7 +253,7 @@ describe('InputListScreen', () => {
   it('offers every action to someone with every permission', async () => {
     server.use(agriculturalInputsHandler([urea]), inputStocksHandler());
 
-    renderScreen();
+    renderScreen({ searchParams: '?finca=f1' });
 
     expect(
       await screen.findByRole('button', { name: 'Editar Urea 46 %' }),
@@ -270,7 +280,7 @@ describe('InputListScreen', () => {
   it('does not offer to delete an input with records, nor an entry of an inactive one', async () => {
     server.use(agriculturalInputsHandler([sulfur]), inputStocksHandler());
 
-    renderScreen({ searchParams: '?estado=all' });
+    renderScreen({ searchParams: '?estado=all&finca=f1' });
 
     expect(await menuItemsOf('Azufre')).toEqual([
       'Registrar conteo',
@@ -282,7 +292,10 @@ describe('InputListScreen', () => {
   it('shows only what the permissions allow', async () => {
     server.use(agriculturalInputsHandler([urea]), inputStocksHandler());
 
-    renderScreen({ permissions: [PERMISSIONS.INPUTS_VIEW] });
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [PERMISSIONS.INPUTS_VIEW],
+    });
 
     await rowOf('Urea 46 %');
     expect(
@@ -360,11 +373,12 @@ describe('InputListScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('lets the technical account see every catalog with its producer, and stocks only for one', async () => {
+  it('lets the technical account see every catalog with its producer and the total of all of them', async () => {
     const requests: URLSearchParams[] = [];
+    const stockRequests: URLSearchParams[] = [];
     server.use(
       agriculturalInputsHandler([urea], requests),
-      inputStocksHandler(),
+      inputStocksHandler([], stockRequests),
     );
 
     renderScreen({
@@ -378,18 +392,22 @@ describe('InputListScreen', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Elige un productor para ver las existencias de sus fincas.',
+        'Ves el total de todos los productores. Elige uno para ver las existencias de una finca en particular.',
       ),
     ).toBeInTheDocument();
     expect(screen.queryByLabelText('Finca')).not.toBeInTheDocument();
     expect(requests[0].has('producer')).toBe(false);
+    await waitFor(() => expect(stockRequests).toHaveLength(1));
+    expect(stockRequests[0].has('farm')).toBe(false);
+    expect(stockRequests[0].has('producer')).toBe(false);
   });
 
   it('reads the catalog of the producer chosen by the technical account', async () => {
     const requests: URLSearchParams[] = [];
+    const stockRequests: URLSearchParams[] = [];
     server.use(
       agriculturalInputsHandler([urea], requests),
-      inputStocksHandler(),
+      inputStocksHandler([], stockRequests),
       http.get(apiUrl('/api/producers/p2'), () =>
         HttpResponse.json({
           id: 'p2',
@@ -418,6 +436,7 @@ describe('InputListScreen', () => {
     expect(
       screen.queryByText('Productora De Prueba · ASO-001'),
     ).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Finca')).toHaveValue('f1');
+    expect(screen.getByLabelText('Finca')).toHaveValue('');
+    await waitFor(() => expect(stockRequests[0]?.get('producer')).toBe('p2'));
   });
 });

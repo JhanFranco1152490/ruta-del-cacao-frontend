@@ -44,6 +44,9 @@ export const queryKeys = {
     all: () => ['input-stocks'] as const,
     // Las existencias de una finca, con copia en el dispositivo.
     byFarm: (farmId: string) => ['input-stocks', 'farm', farmId] as const,
+    // Las de todas las fincas del alcance (de un productor, para la cuenta técnica), para el total.
+    totals: (producer: string | null) =>
+      ['input-stocks', 'totals', producer ?? ''] as const,
   },
   inputMovements: {
     all: () => ['input-movements'] as const,
