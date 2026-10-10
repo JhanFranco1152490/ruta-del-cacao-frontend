@@ -1,7 +1,4 @@
-export const INPUTS_PATH = '/insumos';
-
-export const inputListPath = (farmId: string) =>
-  `${INPUTS_PATH}?${new URLSearchParams({ finca: farmId })}`;
+export { INPUTS_PATH, inputListPath } from '@/lib/paths/inputs';
 
 // Ruta fija con los ids como parámetros: una sola página guardada sirve para cualquier insumo.
 export const inputMovementsPath = (inputId: string, farmId: string) =>
