@@ -31,7 +31,25 @@ export type StockState = 'ready' | 'loading' | 'unavailable';
 const producerLabel = ({ producer }: AgriculturalInput) =>
   `${producer.first_name} ${producer.last_name} · ${producer.member_code}`;
 
-function StockValue({ row, state }: { row: InputRow; state: StockState }) {
+function StockValue({
+  row,
+  state,
+  farm,
+  needsProducer,
+}: {
+  row: InputRow;
+  state: StockState;
+  farm: string | null;
+  needsProducer: boolean;
+}) {
+  // La columna siempre está: sin finca elegida dice qué falta, en vez de esconder el inventario.
+  if (!farm) {
+    return (
+      <span className="text-muted-foreground">
+        {needsProducer ? 'Elige un productor y una finca' : 'Elige una finca'}
+      </span>
+    );
+  }
   if (state === 'loading') return <span>Cargando…</span>;
   if (state === 'unavailable') {
     return (
@@ -59,7 +77,7 @@ export function InputTable({
   onAction,
 }: {
   rows: readonly InputRow[];
-  // Sin finca elegida no hay columna de existencias.
+  // Las existencias son de la finca elegida; sin ella la columna pide elegirla.
   farm: string | null;
   stockState: StockState;
   showProducer: boolean;
@@ -75,7 +93,7 @@ export function InputTable({
           <TableHead>Tipo</TableHead>
           <TableHead>Unidad</TableHead>
           <TableHead>Presentación</TableHead>
-          {farm && <TableHead>Existencias</TableHead>}
+          <TableHead>Existencias</TableHead>
           {showProducer && <TableHead>Productor</TableHead>}
           <TableHead>Estado</TableHead>
           <TableHead>
@@ -114,14 +132,14 @@ export function InputTable({
                     )
                   : '—'}
               </TableCell>
-              {farm && (
-                <TableCell
-                  className="whitespace-normal"
-                  data-label="Existencias"
-                >
-                  <StockValue row={row} state={stockState} />
-                </TableCell>
-              )}
+              <TableCell className="whitespace-normal" data-label="Existencias">
+                <StockValue
+                  farm={farm}
+                  needsProducer={showProducer}
+                  row={row}
+                  state={stockState}
+                />
+              </TableCell>
               {showProducer && (
                 <TableCell
                   className="max-w-64 break-words whitespace-normal"

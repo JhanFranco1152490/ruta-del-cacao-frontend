@@ -150,7 +150,10 @@ describe('InputListScreen', () => {
     renderScreen({ farms: twoFarms });
 
     await table();
-    expect(screen.queryByText('Existencias')).not.toBeInTheDocument();
+    // La columna está, y pide elegir una finca en vez de esconder el inventario.
+    expect(
+      within(await rowOf('Urea 46 %')).getByText('Elige una finca'),
+    ).toBeInTheDocument();
     expect(requests).toHaveLength(0);
 
     await userEvent.selectOptions(screen.getByLabelText('Finca'), 'f2');
@@ -252,6 +255,13 @@ describe('InputListScreen', () => {
       'Desactivar',
       'Eliminar',
     ]);
+    // Entrada y movimientos, además, a la vista en la fila.
+    expect(
+      screen.getByRole('button', { name: 'Registrar entrada de Urea 46 %' }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole('link', { name: 'Ver movimientos de Urea 46 %' }),
+    ).toHaveAttribute('href', '/insumos/movimientos?id=urea&finca=f1');
     expect(
       screen.getByRole('menuitem', { name: 'Ver movimientos' }),
     ).toHaveAttribute('href', '/insumos/movimientos?id=urea&finca=f1');

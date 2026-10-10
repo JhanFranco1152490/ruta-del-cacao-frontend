@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/ui/menu';
 
 import type { AgriculturalInput } from '../api';
@@ -46,6 +46,27 @@ export function InputRowActions({
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
+      {/* Lo que más se hace con el inventario va a la vista; el menú tiene todas las acciones. */}
+      {stockActions && input.is_active && (
+        <Button
+          aria-label={`Registrar entrada de ${input.name}`}
+          disabled={disabled}
+          onClick={() => onAction('entry', input)}
+          size="office"
+          variant="outline"
+        >
+          <PackagePlus aria-hidden="true" /> Entrada
+        </Button>
+      )}
+      {farm && (
+        <Link
+          aria-label={`Ver movimientos de ${input.name}`}
+          className={buttonVariants({ size: 'office', variant: 'outline' })}
+          href={inputMovementsPath(input.id, farm)}
+        >
+          <History aria-hidden="true" /> Movimientos
+        </Link>
+      )}
       {canChange && (
         <Button
           aria-label={`Editar ${input.name}`}
