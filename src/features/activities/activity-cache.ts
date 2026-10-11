@@ -1,4 +1,5 @@
 import type { components } from '@/lib/api/schema';
+import { shiftMonth } from '@/lib/format/dates';
 import type { CachedRead } from '@/lib/offline/cached-read';
 import { getOfflineDb } from '@/lib/offline/db';
 
@@ -20,6 +21,14 @@ export const assigneesCacheKey = (producer: string | null) =>
   producer
     ? `agricultural-activity-assignees:producer:${producer}`
     : 'agricultural-activity-assignees';
+
+// Los meses que se guardan siempre para trabajar en campo sin conexión: desde el anterior al actual
+// hasta dos después. Así quien sale sin señal lleva las labores que va a cerrar, sin haber abierto
+// antes cada mes en el calendario. `today` es la fecha de Bogotá (yyyy-MM-dd).
+const OFFLINE_WINDOW_OFFSETS = [-1, 0, 1, 2];
+
+export const offlineWindowMonths = (today: string) =>
+  OFFLINE_WINDOW_OFFSETS.map((offset) => shiftMonth(today.slice(0, 7), offset));
 
 // Una actividad buscada en los meses guardados. Una reprogramada puede seguir en la copia vieja
 // de su mes anterior: vale la de la copia más reciente.

@@ -4,13 +4,14 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
-import { monthBounds } from '@/lib/format/dates';
+import { monthBounds, todayInBogota } from '@/lib/format/dates';
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
 
 import {
   activityMonthCacheKey,
   assigneesCacheKey,
   findSavedActivity,
+  offlineWindowMonths,
 } from './activity-cache';
 
 type Schemas = components['schemas'];
@@ -46,7 +47,38 @@ export async function fetchActivities(
   return results;
 }
 
-// Las actividades programadas en un mes (yyyy-MM), con copia en el dispositivo.
+const windowsInFlight = new Map<string, Promise<void>>();
+
+// Guarda la copia de los meses de la ventana sin conexión, menos el que se está viendo (que se
+// acaba de guardar). Un mes por petición: cuatro meses pueden pasar de los 120 días que acepta la
+// consulta. Corre una sola vez a la vez por persona y productor, aunque varias lecturas la pidan,
+// y un mes que falla no impide guardar los demás.
+function saveOfflineWindow(
+  userId: string,
+  producer: string | null,
+  viewedMonth: string,
+): Promise<void> {
+  const key = `${userId}:${producer ?? ''}`;
+  const running = windowsInFlight.get(key);
+  if (running) return running;
+  const months = offlineWindowMonths(todayInBogota()).filter(
+    (month) => month !== viewedMonth,
+  );
+  const saving = Promise.allSettled(
+    months.map((month) =>
+      readThroughCache(userId, activityMonthCacheKey(producer, month), () =>
+        fetchActivities({ ...monthBounds(month), producer }),
+      ),
+    ),
+  )
+    .then(() => undefined)
+    .finally(() => windowsInFlight.delete(key));
+  windowsInFlight.set(key, saving);
+  return saving;
+}
+
+// Las actividades programadas en un mes (yyyy-MM), con copia en el dispositivo. Cada vez que la
+// lectura llega del servidor, además se renueva la copia de la ventana sin conexión.
 export const useActivitiesOfMonth = (
   userId: string | undefined,
   month: string,
@@ -54,10 +86,19 @@ export const useActivitiesOfMonth = (
 ) =>
   useQuery({
     queryKey: queryKeys.agriculturalActivities.month(producer, month),
-    queryFn: ({ signal }) =>
-      readThroughCache(userId!, activityMonthCacheKey(producer, month), () =>
-        fetchActivities({ ...monthBounds(month), producer }, signal),
-      ),
+    queryFn: async ({ signal }) => {
+      const read = await readThroughCache(
+        userId!,
+        activityMonthCacheKey(producer, month),
+        () => fetchActivities({ ...monthBounds(month), producer }, signal),
+      );
+      // Sin `savedAt` la lectura llegó del servidor: hay red para guardar el resto. No se espera,
+      // para que el calendario aparezca con su mes.
+      if (read.savedAt === undefined) {
+        void saveOfflineWindow(userId!, producer, month);
+      }
+      return read;
+    },
     enabled: !!userId,
     networkMode: 'offlineFirst',
   });

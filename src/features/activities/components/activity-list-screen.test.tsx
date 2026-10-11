@@ -167,7 +167,9 @@ describe('ActivityListScreen', () => {
       await screen.findByRole('heading', { name: 'noviembre de 2026' }),
     ).toBeInTheDocument();
     expect(urls.at(-1)).toBe('?mes=2026-11');
-    expect(requests.at(-1)?.get('from')).toBe('2026-11-01');
+    expect(requests.map((request) => request.get('from'))).toContain(
+      '2026-11-01',
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Mes anterior' }));
     await userEvent.click(screen.getByRole('button', { name: 'Mes anterior' }));

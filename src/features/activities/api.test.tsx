@@ -2,7 +2,7 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -82,6 +82,107 @@ describe('useActivitiesOfMonth', () => {
         'agricultural-activities:producer:p2:2026-10',
       ),
     ).toBeDefined();
+  });
+
+  describe('the window kept for working without a network', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-10-09T15:00:00Z'));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const cached = (userId: string) =>
+      getOfflineDb(userId)
+        .cache.toArray()
+        .then((rows) => rows.map(({ key }) => key).sort());
+
+    it('also keeps the month before and the two after the current one', async () => {
+      const userId = newUser();
+      const requests: URLSearchParams[] = [];
+      server.use(agriculturalActivitiesHandler([], requests));
+
+      const { result } = render(() =>
+        useActivitiesOfMonth(userId, '2026-10', null),
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitFor(async () =>
+        expect(await cached(userId)).toEqual([
+          'agricultural-activities:2026-09',
+          'agricultural-activities:2026-10',
+          'agricultural-activities:2026-11',
+          'agricultural-activities:2026-12',
+        ]),
+      );
+      expect(requests.map((request) => request.get('from')).sort()).toEqual([
+        '2026-09-01',
+        '2026-10-01',
+        '2026-11-01',
+        '2026-12-01',
+      ]);
+    });
+
+    it('keeps the month being viewed even when it is outside the window', async () => {
+      const userId = newUser();
+      server.use(agriculturalActivitiesHandler([]));
+
+      const { result } = render(() =>
+        useActivitiesOfMonth(userId, '2027-03', null),
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitFor(async () =>
+        expect(await cached(userId)).toEqual([
+          'agricultural-activities:2026-09',
+          'agricultural-activities:2026-10',
+          'agricultural-activities:2026-11',
+          'agricultural-activities:2026-12',
+          'agricultural-activities:2027-03',
+        ]),
+      );
+    });
+
+    it('does not touch the saved months when there is no network', async () => {
+      const userId = newUser();
+      await saveMonth(userId, 'agricultural-activities:2026-10', [
+        buildAgriculturalActivity(),
+      ]);
+      server.use(offline('/api/agricultural-activities'));
+
+      const { result } = render(() =>
+        useActivitiesOfMonth(userId, '2026-10', null),
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(await cached(userId)).toEqual(['agricultural-activities:2026-10']);
+    });
+
+    it('keeps the other months when one of them fails', async () => {
+      const userId = newUser();
+      server.use(
+        http.get(apiUrl('/api/agricultural-activities'), ({ request }) =>
+          new URL(request.url).searchParams.get('from') === '2026-11-01'
+            ? apiError(500, 'server_error', 'Error del servidor.')
+            : HttpResponse.json({ results: [] }),
+        ),
+      );
+
+      const { result } = render(() =>
+        useActivitiesOfMonth(userId, '2026-10', null),
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitFor(async () =>
+        expect(await cached(userId)).toEqual([
+          'agricultural-activities:2026-09',
+          'agricultural-activities:2026-10',
+          'agricultural-activities:2026-12',
+        ]),
+      );
+    });
   });
 
   it('falls back to the saved month, with its date, without a network', async () => {
