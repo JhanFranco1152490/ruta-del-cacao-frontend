@@ -550,5 +550,27 @@ describe('CompletionScreen', () => {
         }),
       );
     });
+
+    it('does not let save a correction whose inputs cannot be shown without the catalog', async () => {
+      await enqueueCompletion(userId, 'a1', payload);
+      await getOfflineDb(userId).queue.update(completionQueueId('a1'), {
+        status: 'error',
+        errorCode: 'validation_error',
+        errorMessage: 'Los datos enviados no son válidos.',
+      });
+      // Sin red y sin copia del catálogo en el dispositivo.
+      server.use(
+        http.get(apiUrl('/api/agricultural-inputs'), () =>
+          HttpResponse.error(),
+        ),
+      );
+      renderScreen();
+
+      const saveButton = await form();
+      expect(saveButton).toBeDisabled();
+      expect(saveButton).toHaveAccessibleDescription(
+        'Este registro tiene insumos y el catálogo no está en este dispositivo. Necesitas conexión una vez para cargarlo y poder corregirlo.',
+      );
+    });
   });
 });

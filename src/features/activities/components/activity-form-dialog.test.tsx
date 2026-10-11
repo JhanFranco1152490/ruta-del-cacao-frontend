@@ -25,6 +25,10 @@ import { server } from '@/test/server';
 import type { AgriculturalActivity } from '../api';
 import { ActivityFormDialog } from './activity-form-dialog';
 
+// Cada prueba llena un formulario de cinco campos con tres listas que llegan del servidor
+// simulado: con toda la suite corriendo a la vez pasa de los 5 segundos por defecto.
+vi.setConfig({ testTimeout: 20_000 });
+
 // Jueves 22 de octubre de 2026, a mediodía en Bogotá.
 const NOW = new Date('2026-10-22T17:00:00Z');
 

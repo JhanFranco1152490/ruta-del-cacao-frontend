@@ -34,6 +34,8 @@ const SAVE_FAILED =
   'No fue posible guardar la realización en el dispositivo. Inténtalo nuevamente.';
 const ALREADY_WAITING =
   'Esta actividad ya tiene una realización guardada en este dispositivo.';
+export const CATALOG_NEEDED_TO_CORRECT =
+  'Este registro tiene insumos y el catálogo no está en este dispositivo. Necesitas conexión una vez para cargarlo y poder corregirlo.';
 
 const BACK_LINK = (
   <Link
@@ -76,6 +78,9 @@ export function CompletionCapture({
       ? queuedToFormInput(rejected, new Set(catalog?.map(({ id }) => id)))
       : { values: emptyCompletionForm(today), unavailableRows: [] },
   );
+  // Lo capturado tiene insumos, pero sin catálogo no se pueden mostrar ni volver a elegir (pasa
+  // tras cerrar sesión, que borra las copias y conserva la cola): guardar así los perdería.
+  const inputsWithoutCatalog = !catalog && defaultValues.inputs.length > 0;
   // El botón dice qué va a pasar: sin conexión, el registro se queda en el teléfono.
   const submitLabel = sync.status.isOnline
     ? 'Guardar'
@@ -125,7 +130,11 @@ export function CompletionCapture({
         <CompletionActivityCard item={item} />
         <CompletionForm
           activity={activity}
-          blockedMessage={sync.blockedMessage}
+          blockedMessage={
+            inputsWithoutCatalog
+              ? CATALOG_NEEDED_TO_CORRECT
+              : sync.blockedMessage
+          }
           catalog={catalog}
           defaultValues={defaultValues}
           isSaving={save.isPending}
