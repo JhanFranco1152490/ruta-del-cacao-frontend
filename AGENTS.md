@@ -81,11 +81,12 @@ src/
                        /restablecer-contrasena, /activar-cuenta
     (app)/             con sesión (lo garantiza SessionGuard en su layout): / (puerta de
                        entrada: lleva a la primera sección permitida), /productores,
-                       /fincas, /usuarios, /roles y sus pantallas hijas. El
+                       /fincas, /actividades, /usuarios, /roles y sus pantallas hijas. El
                        permiso y la conexión de cada sección se comprueban en el shell a
                        partir de config/navigation.ts: una sección nueva solo se suma ahí
     providers.tsx      QueryClientProvider + NuqsAdapter
-  features/<dominio>/  un dominio (hoy auth, producers, farms y plots): api.ts, schemas.ts, hooks propios
+  features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
+                       users y roles): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
   hooks/               hooks de React compartidos entre dominios (sin JSX; si el hook es de
@@ -93,7 +94,8 @@ src/
   config/              configuración de la app sin lógica de dominio (hoy el registro del menú
                        de navegación: cada sección nueva suma una entrada)
   lib/                 código sin interfaz: api/ (cliente HTTP), offline/ (Dexie, cola de
-                       sincronización), format/ (dates, mask), validation/ (is-email), env,
+                       sincronización), format/ (dates, mask, input-quantity), validation/
+                       (is-email, messages), env,
                        query-client, document-types, permissions
   types/               types que cruzan más de un dominio o módulo (NavItem, SyncStatus); un
                        type usado por un solo módulo se queda junto a ese módulo, no aquí
@@ -116,6 +118,17 @@ src/
   función (`renderPlots`) y quien las une es la página en `app/`, que sí puede importar de ambos.
   Esa página es de cliente (`'use client'`): una función no pasa de un componente de servidor a
   uno de cliente.
+- **Lo que leen o escriben varios dominios vive en `lib/`, no en el dominio que lo creó.** Hoy:
+  las fincas, las parcelas y el catálogo de insumos con sus existencias para elegirlos en un
+  formulario de otro dominio (`lib/api/farm-options.ts`, `plot-options.ts`, `input-catalog.ts`); y
+  cómo se escribe la cantidad de un insumo con su unidad y su equivalente en empaques
+  (`lib/format/input-quantity.ts`, `input-units.ts`). El dominio dueño los usa desde ahí.
+- **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
+  realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
+  en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
+  dispositivo con la fecha de Bogotá (`activity-state.ts`), porque la copia puede ser de ayer;
+  `OVERDUE_AFTER_DAYS` tiene el mismo valor que la constante del servidor, y cada lado lo fija en
+  su prueba. Las actividades se leen por mes y cada mes guarda su copia (`activity-cache.ts`).
 
 ### Capa de API
 

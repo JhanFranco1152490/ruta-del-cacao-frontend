@@ -1,10 +1,9 @@
-import { formatDecimal } from '@/lib/format/decimal';
-
+import { formatDecimal } from './decimal';
 import {
+  type InputUnit,
   PACKAGE_TYPE_OPTIONS,
   UNIT_SYMBOLS,
-  type InputUnit,
-} from './input-options';
+} from './input-units';
 
 // Las cantidades de insumos se guardan con hasta tres decimales.
 const QUANTITY_DECIMALS = 3;

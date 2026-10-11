@@ -7,7 +7,7 @@ import { getOfflineDb } from '@/lib/offline/db';
 
 export type QueuedRecordState =
   | { status: 'pending' }
-  | { status: 'error'; errorMessage?: string }
+  | { status: 'error'; errorMessage?: string; errorCode?: string }
   // Ya no está en la cola: el envío terminó bien y el registro está en el servidor.
   | { status: 'synced' };
 
@@ -30,7 +30,11 @@ export function useQueuedRecordState(
           !item
             ? { status: 'synced' }
             : item.status === 'error'
-              ? { status: 'error', errorMessage: item.errorMessage }
+              ? {
+                  status: 'error',
+                  errorMessage: item.errorMessage,
+                  errorCode: item.errorCode,
+                }
               : { status: 'pending' },
         ),
     });

@@ -15,7 +15,7 @@ import {
   amountInUnit,
   type MovementFormInput,
 } from '../movement-schemas';
-import { formatQuantity, type InputPackage } from '../stock-format';
+import { formatQuantity, type InputPackage } from '@/lib/format/input-quantity';
 
 const capitalize = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1);

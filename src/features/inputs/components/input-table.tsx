@@ -16,7 +16,7 @@ import {
   formatStock,
   inputPackageOf,
   isNegativeStock,
-} from '../stock-format';
+} from '@/lib/format/input-quantity';
 import {
   type InputActionKind,
   type InputPermissions,

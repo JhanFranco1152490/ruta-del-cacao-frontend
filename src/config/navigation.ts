@@ -1,4 +1,5 @@
 import {
+  CalendarDays,
   FlaskConical,
   LandPlot,
   Leaf,
@@ -50,6 +51,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Insumos',
     icon: FlaskConical,
     permission: PERMISSIONS.INPUTS_VIEW,
+  },
+  {
+    href: '/actividades',
+    label: 'Actividades',
+    icon: CalendarDays,
+    permission: PERMISSIONS.ACTIVITIES_VIEW,
   },
   {
     href: '/roles',

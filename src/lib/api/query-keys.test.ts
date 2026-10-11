@@ -43,3 +43,26 @@ describe('input stock query keys', () => {
     expect(movements).not.toEqual(queryKeys.inputMovements.list('i-2', 'f-1'));
   });
 });
+
+describe('agricultural activity query keys', () => {
+  it('hangs every read from the key that writes invalidate', () => {
+    const all = queryKeys.agriculturalActivities.all();
+    const { month, detail, assignees } = queryKeys.agriculturalActivities;
+    expect(startsWith(month(null, '2026-10'), all)).toBe(true);
+    expect(startsWith(detail('a-1'), all)).toBe(true);
+    expect(startsWith(assignees(null), all)).toBe(true);
+  });
+
+  it('keeps each month of each producer apart', () => {
+    const { month } = queryKeys.agriculturalActivities;
+    expect(month(null, '2026-10')).not.toEqual(month(null, '2026-11'));
+    expect(month('p-1', '2026-10')).not.toEqual(month('p-2', '2026-10'));
+    expect(month(null, '2026-10')).not.toEqual(month('p-1', '2026-10'));
+  });
+
+  it('keeps the completion waiting in each device user apart', () => {
+    const { queued } = queryKeys.agriculturalActivities;
+    expect(queued('u-1', 'a-1')).not.toEqual(queued('u-2', 'a-1'));
+    expect(queued('u-1', 'a-1')).not.toEqual(queued('u-1', 'a-2'));
+  });
+});

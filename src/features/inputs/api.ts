@@ -8,17 +8,32 @@ import {
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
+import {
+  type AgriculturalInput,
+  fetchAgriculturalInputs,
+  fetchInputStocks,
+  type InputStock,
+  useAgriculturalInputs,
+  useInputStocks,
+} from '@/lib/api/input-catalog';
 import type { components, operations } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
 
 type Schemas = components['schemas'];
-export type AgriculturalInput = Schemas['AgriculturalInput'];
+// El catálogo y las existencias de una finca los leen también otros dominios: viven en `lib/api`.
+export {
+  type AgriculturalInput,
+  fetchAgriculturalInputs,
+  fetchInputStocks,
+  type InputStock,
+  useAgriculturalInputs,
+  useInputStocks,
+};
 export type AgriculturalInputCreateRequest =
   Schemas['AgriculturalInputCreateRequest'];
 export type AgriculturalInputUpdateRequest =
   Schemas['PatchedAgriculturalInputUpdateRequest'];
 export type ExistingInput = Schemas['ExistingInput'];
-export type InputStock = Schemas['InputStock'];
 export type InputMovement = Schemas['InputMovement'];
 export type InputMovementCreateRequest = Schemas['InputMovementCreateRequest'];
 export type InputMovementResult = Schemas['InputMovementResult'];
@@ -49,72 +64,6 @@ export function currentInputOf(error: unknown): AgriculturalInput | null {
   }
   return (error.body.current as AgriculturalInput | undefined) ?? null;
 }
-
-// El catálogo no se pagina: búsqueda y filtros corren en el dispositivo, también sin conexión.
-// `producer` solo lo envía la cuenta técnica; las demás cuentas leen el catálogo de su productor.
-export async function fetchAgriculturalInputs(
-  { producer }: { producer: string | null },
-  signal?: AbortSignal,
-): Promise<AgriculturalInput[]> {
-  const suffix = producer ? `?${new URLSearchParams({ producer })}` : '';
-  const { results } = await apiFetch<Schemas['AgriculturalInputList']>(
-    `/api/agricultural-inputs${suffix}`,
-    { signal },
-  );
-  return results;
-}
-
-// Con copia en el dispositivo, para consultar el catálogo y elegir insumos sin conexión.
-export const useAgriculturalInputs = (
-  userId: string | undefined,
-  producer: string | null,
-  { enabled = true } = {},
-) =>
-  useQuery({
-    queryKey: queryKeys.agriculturalInputs.list(producer),
-    queryFn: ({ signal }) =>
-      readThroughCache(
-        userId!,
-        producer
-          ? `agricultural-inputs:producer:${producer}`
-          : 'agricultural-inputs',
-        () => fetchAgriculturalInputs({ producer }, signal),
-      ),
-    enabled: enabled && !!userId,
-    networkMode: 'offlineFirst',
-  });
-
-// Solo vienen los insumos con movimientos: los demás no tienen existencias. Con `farm`, las de esa
-// finca; sin ella, una fila por insumo y finca de todo el alcance, para sumar el total. `producer`
-// solo lo usa la cuenta técnica.
-export async function fetchInputStocks(
-  { farm, producer }: { farm: string | null; producer: string | null },
-  signal?: AbortSignal,
-): Promise<InputStock[]> {
-  const params = new URLSearchParams();
-  if (farm) params.set('farm', farm);
-  if (producer) params.set('producer', producer);
-  const suffix = params.size ? `?${params}` : '';
-  const { results } = await apiFetch<Schemas['InputStockList']>(
-    `/api/input-stocks${suffix}`,
-    { signal },
-  );
-  return results;
-}
-
-export const useInputStocks = (
-  userId: string | undefined,
-  farmId: string | null,
-) =>
-  useQuery({
-    queryKey: queryKeys.inputStocks.byFarm(farmId ?? ''),
-    queryFn: ({ signal }) =>
-      readThroughCache(userId!, `input-stocks:farm:${farmId}`, () =>
-        fetchInputStocks({ farm: farmId, producer: null }, signal),
-      ),
-    enabled: !!userId && !!farmId,
-    networkMode: 'offlineFirst',
-  });
 
 // Las existencias de todas las fincas, para ver el total de cada insumo sin elegir una.
 export const useInputStockTotals = (

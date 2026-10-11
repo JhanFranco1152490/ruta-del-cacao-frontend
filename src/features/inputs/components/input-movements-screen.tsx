@@ -22,7 +22,7 @@ import {
   useInputStocks,
 } from '../api';
 import { inputListPath } from '../input-paths';
-import { formatStock, inputPackageOf } from '../stock-format';
+import { formatStock, inputPackageOf } from '@/lib/format/input-quantity';
 import type { FarmChoice } from './input-farm-select';
 import { InputMovementDialog } from './input-movement-dialog';
 import { InputMovementItem } from './input-movement-item';
