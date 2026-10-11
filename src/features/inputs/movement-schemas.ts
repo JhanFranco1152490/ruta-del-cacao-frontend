@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 import type { components } from '@/lib/api/schema';
 import { todayInBogota } from '@/lib/format/dates';
+import { packagesToUnit } from '@/lib/format/input-quantity';
 import { decimalPattern, isDecimal } from '@/lib/validation/decimal';
 
 import { REQUIRED_FIELD_MESSAGE } from './schemas';
-import { packagesToUnit } from './stock-format';
 
 // Lo máximo que guarda el servidor por movimiento (12 dígitos con 3 decimales).
 const MAX_QUANTITY = 9_999_999.999;

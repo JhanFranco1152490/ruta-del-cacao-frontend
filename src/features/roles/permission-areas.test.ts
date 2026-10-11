@@ -23,6 +23,7 @@ describe('groupPermissionsByArea', () => {
       labelsOf([
         'roles',
         'users',
+        'activities',
         'inputs',
         'crops',
         'farms',
@@ -35,6 +36,7 @@ describe('groupPermissionsByArea', () => {
       'Parcelas',
       'Caracterización de parcelas',
       'Insumos',
+      'Actividades',
       'Cuentas',
       'Roles',
     ]);

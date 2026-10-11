@@ -1,0 +1,251 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { apiFetch } from '@/lib/api/client';
+import { isApiError } from '@/lib/api/errors';
+import { queryKeys } from '@/lib/api/query-keys';
+import type { components, operations } from '@/lib/api/schema';
+import { monthBounds, todayInBogota } from '@/lib/format/dates';
+import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
+
+import {
+  activityMonthCacheKey,
+  assigneesCacheKey,
+  findSavedActivity,
+  offlineWindowMonths,
+} from './activity-cache';
+
+type Schemas = components['schemas'];
+export type AgriculturalActivity = Schemas['AgriculturalActivity'];
+export type Assignee = Schemas['Assignee'];
+export type UsedInput = Schemas['UsedInputOutput'];
+export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
+export type ActivityUpdateRequest = Schemas['PatchedActivityUpdateRequest'];
+export type CompletionRequest = Schemas['CompletionRequest'];
+type ActivityDeleteQuery =
+  operations['agricultural_activities_destroy']['parameters']['query'];
+
+export const ACTIVITY_ERROR = {
+  staleVersion: 'stale_version',
+  alreadyDone: 'activity_already_done',
+  overdue: 'activity_overdue',
+  plotInactive: 'plot_inactive',
+  farmInactive: 'farm_inactive',
+} as const;
+
+// La consulta pide un periodo y no se pagina: los filtros corren en el dispositivo, también sin
+// conexión. `producer` solo lo envía la cuenta técnica; las demás cuentas ven su productor.
+export async function fetchActivities(
+  { from, to, producer }: { from: string; to: string; producer: string | null },
+  signal?: AbortSignal,
+): Promise<AgriculturalActivity[]> {
+  const params = new URLSearchParams({ from, to });
+  if (producer) params.set('producer', producer);
+  const { results } = await apiFetch<Schemas['ActivityList']>(
+    `/api/agricultural-activities?${params}`,
+    { signal },
+  );
+  return results;
+}
+
+const windowsInFlight = new Map<string, Promise<void>>();
+
+// Guarda la copia de los meses de la ventana sin conexión, menos el que se está viendo (que se
+// acaba de guardar). Un mes por petición: cuatro meses pueden pasar de los 120 días que acepta la
+// consulta. Corre una sola vez a la vez por persona y productor, aunque varias lecturas la pidan,
+// y un mes que falla no impide guardar los demás.
+function saveOfflineWindow(
+  userId: string,
+  producer: string | null,
+  viewedMonth: string,
+): Promise<void> {
+  const key = `${userId}:${producer ?? ''}`;
+  const running = windowsInFlight.get(key);
+  if (running) return running;
+  const months = offlineWindowMonths(todayInBogota()).filter(
+    (month) => month !== viewedMonth,
+  );
+  const saving = Promise.allSettled(
+    months.map((month) =>
+      readThroughCache(userId, activityMonthCacheKey(producer, month), () =>
+        fetchActivities({ ...monthBounds(month), producer }),
+      ),
+    ),
+  )
+    .then(() => undefined)
+    .finally(() => windowsInFlight.delete(key));
+  windowsInFlight.set(key, saving);
+  return saving;
+}
+
+// Las actividades programadas en un mes (yyyy-MM), con copia en el dispositivo. Cada vez que la
+// lectura llega del servidor, además se renueva la copia de la ventana sin conexión.
+export const useActivitiesOfMonth = (
+  userId: string | undefined,
+  month: string,
+  producer: string | null,
+) =>
+  useQuery({
+    queryKey: queryKeys.agriculturalActivities.month(producer, month),
+    queryFn: async ({ signal }) => {
+      const read = await readThroughCache(
+        userId!,
+        activityMonthCacheKey(producer, month),
+        () => fetchActivities({ ...monthBounds(month), producer }, signal),
+      );
+      // Sin `savedAt` la lectura llegó del servidor: hay red para guardar el resto. No se espera,
+      // para que el calendario aparezca con su mes.
+      if (read.savedAt === undefined) {
+        void saveOfflineWindow(userId!, producer, month);
+      }
+      return read;
+    },
+    enabled: !!userId,
+    networkMode: 'offlineFirst',
+  });
+
+export const fetchActivity = (id: string, signal?: AbortSignal) =>
+  apiFetch<AgriculturalActivity>(`/api/agricultural-activities/${id}`, {
+    signal,
+  });
+
+// Sin respuesta del servidor (sin red) la actividad sale de los meses guardados, con la fecha de
+// esa copia. Un error de la API (ya no existe, sin permiso) se muestra como siempre.
+async function readActivity(
+  userId: string,
+  id: string,
+  signal?: AbortSignal,
+): Promise<CachedRead<AgriculturalActivity>> {
+  try {
+    return { data: await fetchActivity(id, signal) };
+  } catch (error) {
+    if (isApiError(error)) throw error;
+    const saved = await findSavedActivity(userId, id).catch(() => null);
+    if (!saved) throw error;
+    return saved;
+  }
+}
+
+// Una actividad sola: la que se va a registrar como realizada, también sin conexión.
+export const useActivity = (userId: string | undefined, id: string) =>
+  useQuery({
+    queryKey: queryKeys.agriculturalActivities.detail(id),
+    queryFn: ({ signal }) => readActivity(userId!, id, signal),
+    enabled: !!userId && !!id,
+    networkMode: 'offlineFirst',
+  });
+
+export async function fetchActivityAssignees(
+  { producer }: { producer: string | null },
+  signal?: AbortSignal,
+): Promise<Assignee[]> {
+  const suffix = producer ? `?${new URLSearchParams({ producer })}` : '';
+  const { results } = await apiFetch<Schemas['AssigneeList']>(
+    `/api/agricultural-activities/assignees${suffix}`,
+    { signal },
+  );
+  return results;
+}
+
+// Las cuentas del productor, activas e inactivas: las inactivas siguen apareciendo en sus
+// actividades, pero el formulario solo ofrece las activas. Con copia en el dispositivo.
+export const useActivityAssignees = (
+  userId: string | undefined,
+  producer: string | null,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.agriculturalActivities.assignees(producer),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, assigneesCacheKey(producer), () =>
+        fetchActivityAssignees({ producer }, signal),
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
+  });
+
+export const postActivity = (body: ActivityCreateRequest) =>
+  apiFetch<AgriculturalActivity>('/api/agricultural-activities', {
+    method: 'POST',
+    body,
+  });
+
+function useInvalidateActivities() {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.agriculturalActivities.all(),
+    });
+}
+
+// Programar es solo en línea: sin red debe fallar en el acto con un aviso, y no quedar en pausa
+// para ejecutarse sola al volver la red, cuando ya nadie lo está pidiendo. La lectura que sigue a
+// la invalidación rehace la copia del mes en el dispositivo.
+export function useCreateActivity() {
+  const invalidate = useInvalidateActivities();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: postActivity,
+    onSuccess: () => invalidate(),
+  });
+}
+
+export const patchActivity = (id: string, body: ActivityUpdateRequest) =>
+  apiFetch<AgriculturalActivity>(`/api/agricultural-activities/${id}`, {
+    method: 'PATCH',
+    body,
+  });
+
+// La actividad como está ahora en el servidor, cuando otra persona la cambió primero.
+export function currentActivityOf(error: unknown): AgriculturalActivity | null {
+  if (!isApiError(error) || error.code !== ACTIVITY_ERROR.staleVersion) {
+    return null;
+  }
+  return (error.body.current as AgriculturalActivity | undefined) ?? null;
+}
+
+// También al fallar: con una versión obsoleta, o si la actividad ya se realizó o venció, la lista
+// debe leer cómo quedó.
+export function useUpdateActivity() {
+  const invalidate = useInvalidateActivities();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({ id, body }: { id: string; body: ActivityUpdateRequest }) =>
+      patchActivity(id, body),
+    onSettled: () => invalidate(),
+  });
+}
+
+// La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP.
+export const deleteActivity = (id: string, expectedVersion: number) => {
+  const query: ActivityDeleteQuery = { expected_version: expectedVersion };
+  const params = new URLSearchParams({
+    expected_version: String(query.expected_version),
+  });
+  return apiFetch<void>(`/api/agricultural-activities/${id}?${params}`, {
+    method: 'DELETE',
+  });
+};
+
+// También al fallar: la lista debe leer cómo quedó la actividad que no se pudo eliminar.
+export function useDeleteActivity() {
+  const invalidate = useInvalidateActivities();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({
+      id,
+      expectedVersion,
+    }: {
+      id: string;
+      expectedVersion: number;
+    }) => deleteActivity(id, expectedVersion),
+    onSettled: () => invalidate(),
+  });
+}
+
+// La envía la cola del dispositivo, no una pantalla: la realización se guarda primero en el
+// teléfono y puede llegar horas después. El mismo envío repetido responde igual y no cambia nada.
+export const postCompletion = (id: string, body: CompletionRequest) =>
+  apiFetch<AgriculturalActivity>(
+    `/api/agricultural-activities/${id}/completion`,
+    { method: 'POST', body },
+  );

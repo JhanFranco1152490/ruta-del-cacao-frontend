@@ -93,6 +93,26 @@ export const inputMovementsHandler = (
     return HttpResponse.json(pageOf(movements, params));
   });
 
+// Responde las actividades de un periodo y guarda las búsquedas recibidas.
+export const agriculturalActivitiesHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/agricultural-activities'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// Responde las cuentas a las que se puede asignar una labor y guarda las búsquedas recibidas.
+export const activityAssigneesHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/agricultural-activities/assignees'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

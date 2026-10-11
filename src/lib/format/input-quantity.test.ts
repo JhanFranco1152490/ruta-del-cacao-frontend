@@ -8,7 +8,7 @@ import {
   inputPackageOf,
   isNegativeStock,
   packagesToUnit,
-} from './stock-format';
+} from './input-quantity';
 
 const tub = { package_type: 'tub', package_size: '100.000' };
 const sack = { package_type: 'sack', package_size: '50.000' };

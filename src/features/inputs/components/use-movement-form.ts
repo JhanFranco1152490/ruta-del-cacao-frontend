@@ -17,7 +17,7 @@ import {
   type MovementFormInput,
 } from '../movement-schemas';
 import { REQUIRED_FIELD_MESSAGE } from '../schemas';
-import { inputPackageOf } from '../stock-format';
+import { inputPackageOf } from '@/lib/format/input-quantity';
 import type { FarmChoice } from './input-farm-select';
 
 export type MovementKind = 'entry' | 'count';
