@@ -358,10 +358,7 @@ describe('the views of the calendar', () => {
       await screen.findByRole('heading', { name: 'Próximos 14 días 1' }),
     ).toBeInTheDocument();
 
-    await userEvent.selectOptions(
-      screen.getByLabelText('Mirar hacia adelante'),
-      '60',
-    );
+    await userEvent.click(screen.getByRole('button', { name: '60' }));
 
     expect(
       await screen.findByRole('heading', { name: 'Próximos 60 días 2' }),
@@ -926,6 +923,30 @@ describe('moving through the periods', () => {
       changedTouches: [{ clientX: 300, clientY: 400 }],
     });
     await waitFor(() => expect(urls.at(-1)).not.toContain('mes=2026-11'));
+  });
+
+  it('moves the calendar with the finger and brings it back when the gesture is not completed', async () => {
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen({ searchParams: '?vista=lista' });
+    const region = await screen.findByRole('region', {
+      name: 'sábado 10 de octubre',
+    });
+    const moving = () => {
+      let element: HTMLElement | null = region;
+      while (element && !element.style.touchAction)
+        element = element.parentElement;
+      return element!;
+    };
+
+    fireEvent.touchStart(region, { touches: [{ clientX: 300, clientY: 400 }] });
+    fireEvent.touchMove(region, { touches: [{ clientX: 220, clientY: 402 }] });
+    expect(moving().style.transform).toBe('translateX(-40px)');
+
+    fireEvent.touchEnd(region, {
+      changedTouches: [{ clientX: 220, clientY: 402 }],
+    });
+    expect(moving().style.transform).toBe('');
+    expect(urls).toEqual([]);
   });
 
   it('changes the week with a wide swipe', async () => {

@@ -12,7 +12,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useSession } from '@/hooks/use-session';
-import { useSwipeNavigation } from '@/hooks/use-swipe-navigation';
 import { formatMonthYear } from '@/lib/format/dates';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -41,6 +40,7 @@ import { ActivityFiltersBar } from './activity-filters-bar';
 import { ActivityFiltersToggle } from './activity-filters-toggle';
 import { ActivityLegend } from './activity-legend';
 import { ActivityPeriodControl } from './activity-period-control';
+import { ActivityPeriodSlider } from './activity-period-slider';
 import { ActivityScheduleFab } from './activity-schedule-fab';
 import { ActivityStatePills } from './activity-state-pills';
 import { ActivityTypeBreakdown } from './activity-type-breakdown';
@@ -169,12 +169,7 @@ export function ActivityCalendarScreen() {
     (superuser || data.items.length > 0 || filtersSet) && !data.neverLoaded;
   // Deslizar el dedo cambia de mes o de semana. En escritorio la tabla de Por parcela se desplaza
   // sola de lado a lado, y Pendientes no tiene periodo.
-  const swipe = useSwipeNavigation({
-    enabled: isPeriodView(view) && !(view === 'parcela' && isDesktop),
-    onNext: view === 'semana' ? viewState.goNextWeek : period.goNext,
-    onPrevious:
-      view === 'semana' ? viewState.goPreviousWeek : period.goPrevious,
-  });
+  const swipeEnabled = isPeriodView(view) && !(view === 'parcela' && isDesktop);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-8 sm:pb-5">
@@ -240,71 +235,80 @@ export function ActivityCalendarScreen() {
             />
           </div>
         </div>
-        {data.isPending && (
-          <div aria-label="Cargando actividades" role="status">
-            <Skeleton className="h-64" />
-          </div>
-        )}
-        {data.neverLoaded && (
-          <EmptyState
-            action={
-              inMonthView && !isCurrentMonth ? (
-                <Button
-                  onClick={period.goToday}
-                  size="office"
-                  variant="outline"
-                >
-                  Ir a hoy
-                </Button>
-              ) : view === 'semana' && !viewState.isCurrentWeek ? (
-                <Button
-                  onClick={viewState.goThisWeek}
-                  size="office"
-                  variant="outline"
-                >
-                  Ir a hoy
-                </Button>
-              ) : undefined
-            }
-            description="Cuando tengas conexión, abre esta vista una vez y quedará guardada para consultarla sin conexión."
-            title={NEEDS_CONNECTION[view]}
-          />
-        )}
-        {data.error !== null && !data.isPending && (
-          <ErrorState
-            message="No fue posible cargar las actividades."
-            onRetry={data.refetch}
-          />
-        )}
+        <ActivityPeriodSlider
+          enabled={swipeEnabled}
+          onNext={view === 'semana' ? viewState.goNextWeek : period.goNext}
+          onPrevious={
+            view === 'semana' ? viewState.goPreviousWeek : period.goPrevious
+          }
+          periodKey={view === 'semana' ? week : month}
+          ready={loaded}
+          scope={view}
+        >
+          {data.isPending && (
+            <div aria-label="Cargando actividades" role="status">
+              <Skeleton className="h-64" />
+            </div>
+          )}
+          {data.neverLoaded && (
+            <EmptyState
+              action={
+                inMonthView && !isCurrentMonth ? (
+                  <Button
+                    onClick={period.goToday}
+                    size="office"
+                    variant="outline"
+                  >
+                    Ir a hoy
+                  </Button>
+                ) : view === 'semana' && !viewState.isCurrentWeek ? (
+                  <Button
+                    onClick={viewState.goThisWeek}
+                    size="office"
+                    variant="outline"
+                  >
+                    Ir a hoy
+                  </Button>
+                ) : undefined
+              }
+              description="Cuando tengas conexión, abre esta vista una vez y quedará guardada para consultarla sin conexión."
+              title={NEEDS_CONNECTION[view]}
+            />
+          )}
+          {data.error !== null && !data.isPending && (
+            <ErrorState
+              message="No fue posible cargar las actividades."
+              onRetry={data.refetch}
+            />
+          )}
+          {loaded && (
+            <ActivityCalendarBody
+              canSchedule={canSchedule}
+              hasFilters={filtersSet}
+              isDesktop={isDesktop}
+              items={filtered}
+              keyboard={keyboard}
+              month={month}
+              offline={offline}
+              onClear={filterState.clear}
+              onOpenDay={(date, plotId) => open({ kind: 'day', date, plotId })}
+              onSchedule={() => open({ kind: 'schedule' })}
+              onScheduleDay={scheduleOnDay}
+              onSelect={({ activity }) =>
+                open({ kind: 'detail', id: activity.id })
+              }
+              onSelectDay={selectedDay.setDay}
+              pendingDays={viewState.pendingDays}
+              selectedDay={selectedDay.day}
+              today={today}
+              unfilteredCount={data.items.length}
+              view={view}
+              week={week}
+            />
+          )}
+        </ActivityPeriodSlider>
         {loaded && (
           <>
-            <div {...swipe}>
-              <ActivityCalendarBody
-                canSchedule={canSchedule}
-                hasFilters={filtersSet}
-                isDesktop={isDesktop}
-                items={filtered}
-                keyboard={keyboard}
-                month={month}
-                offline={offline}
-                onClear={filterState.clear}
-                onOpenDay={(date, plotId) =>
-                  open({ kind: 'day', date, plotId })
-                }
-                onSchedule={() => open({ kind: 'schedule' })}
-                onScheduleDay={scheduleOnDay}
-                onSelect={({ activity }) =>
-                  open({ kind: 'detail', id: activity.id })
-                }
-                onSelectDay={selectedDay.setDay}
-                pendingDays={viewState.pendingDays}
-                selectedDay={selectedDay.day}
-                today={today}
-                unfilteredCount={data.items.length}
-                view={view}
-                week={week}
-              />
-            </div>
             {isPeriodView(view) && (
               <ActivityTypeBreakdown rows={summary.byType} />
             )}
