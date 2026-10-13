@@ -18,7 +18,7 @@ const SOLID_VARIANTS = {
   info: 'info-solid',
 } as const;
 
-const ICONS: Record<Tone, LucideIcon> = {
+export const TONE_ICONS: Record<Tone, LucideIcon> = {
   ok: CheckCircle2,
   warn: TriangleAlert,
   err: CircleX,
@@ -35,7 +35,7 @@ export function StatusBadge({
   children: ReactNode;
   solid?: boolean;
 }) {
-  const Icon = ICONS[tone];
+  const Icon = TONE_ICONS[tone];
   return (
     <Badge variant={solid ? SOLID_VARIANTS[tone] : tone}>
       <Icon aria-hidden="true" className="size-4" />

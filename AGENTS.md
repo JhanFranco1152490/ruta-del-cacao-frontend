@@ -129,6 +129,36 @@ src/
   dispositivo con la fecha de Bogotá (`activity-state.ts`), porque la copia puede ser de ayer;
   `OVERDUE_AFTER_DAYS` tiene el mismo valor que la constante del servidor, y cada lado lo fija en
   su prueba. Las actividades se leen por mes y cada mes guarda su copia (`activity-cache.ts`).
+  - **El calendario** (`/actividades`) tiene cinco vistas (Mes, Semana, Lista, Por parcela y
+    Pendientes) y un resumen; la vista, el mes, la semana y los filtros viven en la URL con `nuqs`
+    (`use-activity-view.ts`, `use-activity-month.ts`, `use-activity-filters.ts`). `use-calendar-data.ts`
+    decide qué se lee según la vista: el mes, los meses que toca la semana (`use-activities-of-range.ts`
+    une las copias mensuales, sin endpoint nuevo) o `GET …/pending` para Pendientes, que no tiene el
+    límite de 120 días del listado y tiene su propia copia (`agricultural-activities:pending`).
+  - **Filtrar, agrupar y contar son funciones puras** sobre `ActivityOfDay` (la actividad con el
+    estado de hoy y su realización en cola): `activity-filters.ts`, `activity-plots.ts`,
+    `activity-pending.ts`, `activity-summary.ts`. Una realización que espera envío cuenta como
+    realizada (`effectiveState`). Las vistas solo pintan; los filtros corren en el dispositivo, así
+    que funcionan igual sin conexión.
+  - **Cambiar de periodo con el dedo y con el teclado.** Un deslizamiento amplio y horizontal
+    (`lib/swipe.ts`, `use-swipe-navigation.ts`: 110 px y el doble de horizontal que de vertical) pasa
+    al periodo siguiente o al anterior, y el calendario sigue al dedo, se devuelve si el gesto no se
+    completa y entra deslizándose al cambiar de periodo (`activity-period-slider.tsx`, sin
+    librerías, con `element.animate` y sin movimiento si el sistema lo pide); lo que se desplaza
+    solo lleva `data-no-swipe`. Las flechas
+    que se salen del mes o de la semana piden el cambio (`grid-navigation.ts`,
+    `use-grid-navigation.ts`) y el día vecino recibe el foco (`focusDate`) cuando llega el periodo
+    nuevo. El selector de periodo va junto a los recuentos, pegado al calendario.
+  - **Los días de Pendientes** se eligen dentro de su lista (`activity-pending-view.tsx`), en la fila del
+    título del primer grupo; esa vista no tiene fila de periodo.
+  - **El formulario de programar** le pide el productor primero a la cuenta técnica
+    (`activity-producer-field.tsx`): las fincas y los responsables son los de ese productor, y desde una
+    finca el productor es el de la finca. No viaja en la petición.
+  - **Mes y Por parcela tienen forma de escritorio y de celular** (`useIsDesktop`): cuadrícula grande y
+    tabla donde caben; en celular, una cuadrícula compacta con la agenda del día elegido (`?dia=`) y
+    tarjetas por parcela. La cuadrícula es `role="grid"` con una sola parada de
+    teclado; las fichas dentro de la celda no son paradas (`tabIndex={-1}`) y se alcanzan desde la
+    lista del día.
 
 ### Capa de API
 

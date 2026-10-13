@@ -47,8 +47,10 @@ describe('input stock query keys', () => {
 describe('agricultural activity query keys', () => {
   it('hangs every read from the key that writes invalidate', () => {
     const all = queryKeys.agriculturalActivities.all();
-    const { month, detail, assignees } = queryKeys.agriculturalActivities;
+    const { month, detail, assignees, pending } =
+      queryKeys.agriculturalActivities;
     expect(startsWith(month(null, '2026-10'), all)).toBe(true);
+    expect(startsWith(pending(null), all)).toBe(true);
     expect(startsWith(detail('a-1'), all)).toBe(true);
     expect(startsWith(assignees(null), all)).toBe(true);
   });
@@ -58,6 +60,12 @@ describe('agricultural activity query keys', () => {
     expect(month(null, '2026-10')).not.toEqual(month(null, '2026-11'));
     expect(month('p-1', '2026-10')).not.toEqual(month('p-2', '2026-10'));
     expect(month(null, '2026-10')).not.toEqual(month('p-1', '2026-10'));
+  });
+
+  it('keeps the pending activities of each producer apart', () => {
+    const { pending } = queryKeys.agriculturalActivities;
+    expect(pending(null)).not.toEqual(pending('p-1'));
+    expect(pending('p-1')).not.toEqual(pending('p-2'));
   });
 
   it('keeps the completion waiting in each device user apart', () => {

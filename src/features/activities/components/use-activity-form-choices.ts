@@ -32,6 +32,10 @@ const ALL_TYPES = toChoices(ACTIVITY_TYPE_OPTIONS);
 export function useActivityFormChoices(
   farmId: string,
   activity?: AgriculturalActivity,
+  // El productor que eligió la cuenta técnica (o el de la finca desde la que se abrió el
+  // formulario): sus fincas y sus cuentas son las que se ofrecen. Sin él, la cuenta técnica no
+  // tiene nada que ofrecer todavía.
+  chosenProducer?: string,
 ): {
   farms: ChoiceList;
   plots: ChoiceList;
@@ -43,7 +47,9 @@ export function useActivityFormChoices(
   const superuser = user?.is_superuser === true;
   const editing = !!activity;
 
-  const farms = useFarmOptions(userId, undefined, { enabled: !editing });
+  const farms = useFarmOptions(userId, superuser ? chosenProducer : undefined, {
+    enabled: !editing && (!superuser || !!chosenProducer),
+  });
   const activeFarms = useMemo(
     () => (farms.data?.data.options ?? []).filter((farm) => farm.isActive),
     [farms.data],
@@ -53,6 +59,7 @@ export function useActivityFormChoices(
   // entre las de su propio productor.
   const producerId =
     activity?.producer_id ??
+    chosenProducer ??
     activeFarms.find((option) => option.id === farmId)?.producer.id;
   const assignees = useActivityAssignees(
     userId,

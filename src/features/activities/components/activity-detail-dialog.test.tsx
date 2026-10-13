@@ -7,9 +7,14 @@ import { PERMISSIONS } from '@/lib/permissions';
 import {
   buildAgriculturalActivity,
   buildAssignee,
+  buildProducer,
   buildSession,
 } from '@/test/factories';
+import { http, HttpResponse } from 'msw';
+
+import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { server } from '@/test/server';
 
 import { activityState } from '../activity-state';
 import type { AgriculturalActivity } from '../api';
@@ -253,5 +258,53 @@ describe('ActivityDetailDialog', () => {
       'Editar',
       'Registrar realización',
     ]);
+  });
+});
+
+describe('the producer of the activity', () => {
+  function renderAs(user: Parameters<typeof buildSession>[0]) {
+    const activity = buildAgriculturalActivity({ producer_id: 'p1' });
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(queryKeys.session(), buildSession(user));
+    renderWithProviders(
+      <ActivityDetailDialog
+        item={{ activity, ...activityState(activity, TODAY) }}
+        onClose={vi.fn()}
+        today={TODAY}
+      />,
+      { queryClient },
+    );
+  }
+
+  it('is shown to the technical account, which reaches every producer', async () => {
+    server.use(
+      http.get(apiUrl('/api/producers/p1'), () =>
+        HttpResponse.json(
+          buildProducer({
+            id: 'p1',
+            first_name: 'Ana',
+            last_name: 'Gómez',
+            member_code: 'S-00012',
+          }),
+        ),
+      ),
+    );
+
+    renderAs({
+      id: 'me',
+      is_superuser: true,
+      producer_id: null,
+      permissions: [PERMISSIONS.ACTIVITIES_VIEW],
+    });
+
+    expect(await screen.findByText('Ana Gómez · S-00012')).toBeInTheDocument();
+    expect(screen.getByText('Productor')).toBeInTheDocument();
+  });
+
+  it('is not shown to the other accounts, which only see their own', async () => {
+    renderAs({ id: 'me', permissions: [PERMISSIONS.ACTIVITIES_VIEW] });
+
+    await dialog();
+    expect(screen.queryByText('Productor')).not.toBeInTheDocument();
   });
 });

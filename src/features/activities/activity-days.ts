@@ -19,25 +19,38 @@ export type ActivityDay = {
   activities: ActivityOfDay[];
 };
 
-// Las actividades bajo su día programado, del más antiguo al más reciente, y solo los días que
-// tienen alguna. Una realizada se queda en el día en que estaba planeada: la lista muestra la
-// planeación y su cumplimiento. El estado se calcula con `today`, la fecha del dispositivo.
-// `completions` trae, por actividad, la realización que sigue en la cola del dispositivo.
-export function groupActivitiesByDay(
-  activities: readonly AgriculturalActivity[],
+// Una actividad con el estado que tiene hoy en el dispositivo (no el que trajo la copia) y, si su
+// realización sigue en la cola, cuál es. `completions` trae, por actividad, esa realización.
+export function toActivityOfDay(
+  activity: AgriculturalActivity,
   today: string,
   completions: ReadonlyMap<string, QueuedCompletionStatus> = new Map(),
+): ActivityOfDay {
+  const completion = completions.get(activity.id);
+  return {
+    activity,
+    ...activityState(activity, today),
+    ...(completion && { completion }),
+  };
+}
+
+// El estado con el que se cuenta y se filtra una actividad: una cuya realización espera en el
+// dispositivo ya se hizo, aunque el servidor todavía no lo sepa. Una rechazada conserva el suyo.
+export const effectiveState = ({ state, completion }: ActivityOfDay) =>
+  completion === 'pending' ? 'done' : state;
+
+// Las actividades bajo su día programado, del más antiguo al más reciente, y solo los días que
+// tienen alguna. Una realizada se queda en el día en que estaba planeada: la lista muestra la
+// planeación y su cumplimiento. `today` marca el día de hoy.
+export function groupItemsByDay(
+  items: readonly ActivityOfDay[],
+  today: string,
 ): ActivityDay[] {
   const byDate = new Map<string, ActivityOfDay[]>();
-  for (const activity of activities) {
-    const day = byDate.get(activity.scheduled_date) ?? [];
-    const completion = completions.get(activity.id);
-    day.push({
-      activity,
-      ...activityState(activity, today),
-      ...(completion && { completion }),
-    });
-    byDate.set(activity.scheduled_date, day);
+  for (const item of items) {
+    const day = byDate.get(item.activity.scheduled_date) ?? [];
+    day.push(item);
+    byDate.set(item.activity.scheduled_date, day);
   }
   return [...byDate.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
@@ -47,3 +60,15 @@ export function groupActivitiesByDay(
       activities: ofDay,
     }));
 }
+
+// Lo mismo, partiendo de las actividades tal como llegan: el estado se calcula con `today`, la
+// fecha del dispositivo, y `completions` trae la realización que sigue en la cola.
+export const groupActivitiesByDay = (
+  activities: readonly AgriculturalActivity[],
+  today: string,
+  completions: ReadonlyMap<string, QueuedCompletionStatus> = new Map(),
+): ActivityDay[] =>
+  groupItemsByDay(
+    activities.map((activity) => toActivityOfDay(activity, today, completions)),
+    today,
+  );

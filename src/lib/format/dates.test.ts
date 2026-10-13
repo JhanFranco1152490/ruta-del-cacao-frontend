@@ -8,12 +8,19 @@ import {
   formatTimestamp,
   formatWeekdayDate,
   formatWeekdayLongDate,
+  formatWeekRange,
   isIsoDate,
   isIsoMonth,
   monthBounds,
+  monthDates,
+  monthGridDates,
+  monthsBetween,
   shiftDays,
   shiftMonth,
   todayInBogota,
+  weekDates,
+  weekdayIndex,
+  weekStart,
 } from './dates';
 
 afterEach(() => vi.useRealTimers());
@@ -152,5 +159,130 @@ describe('dateInBogota', () => {
     expect(dateInBogota('2026-10-09T02:00:00Z')).toBe('2026-10-08');
     expect(dateInBogota('2026-10-08T09:00:00-05:00')).toBe('2026-10-08');
     expect(dateInBogota('2026-10-09T05:00:00Z')).toBe('2026-10-09');
+  });
+});
+
+describe('weekStart', () => {
+  it('gives the Monday of the week of any day', () => {
+    expect(weekStart('2026-10-12')).toBe('2026-10-12');
+    expect(weekStart('2026-10-14')).toBe('2026-10-12');
+    expect(weekStart('2026-10-18')).toBe('2026-10-12');
+    expect(weekStart('2026-10-19')).toBe('2026-10-19');
+  });
+
+  it('goes back across the end of a month and of a year', () => {
+    expect(weekStart('2026-11-01')).toBe('2026-10-26');
+    expect(weekStart('2027-01-01')).toBe('2026-12-28');
+  });
+});
+
+describe('weekDates', () => {
+  it('gives the seven days from Monday to Sunday', () => {
+    expect(weekDates('2026-10-26')).toEqual([
+      '2026-10-26',
+      '2026-10-27',
+      '2026-10-28',
+      '2026-10-29',
+      '2026-10-30',
+      '2026-10-31',
+      '2026-11-01',
+    ]);
+  });
+});
+
+describe('monthGridDates', () => {
+  const flat = (month: string) => monthGridDates(month).flat();
+
+  it('lays out whole weeks from Monday to Sunday', () => {
+    const weeks = monthGridDates('2026-10');
+    expect(weeks).toHaveLength(5);
+    for (const week of weeks) expect(week).toHaveLength(7);
+    expect(weeks[0][0]).toEqual({ date: '2026-09-28', inMonth: false });
+    expect(weeks[0][3]).toEqual({ date: '2026-10-01', inMonth: true });
+    expect(weeks[4][6]).toEqual({ date: '2026-11-01', inMonth: false });
+  });
+
+  it('adds a sixth week for a month that starts late in the week', () => {
+    // Agosto de 2026 empieza en sábado y termina en lunes 31.
+    expect(monthGridDates('2026-08')).toHaveLength(6);
+  });
+
+  it('needs only four weeks for a February that starts on Monday', () => {
+    // Febrero de 2027 va del lunes 1 al domingo 28.
+    const weeks = monthGridDates('2027-02');
+    expect(weeks).toHaveLength(4);
+    expect(flat('2027-02').every(({ inMonth }) => inMonth)).toBe(true);
+  });
+
+  it('handles a leap February and a month that starts on Sunday', () => {
+    expect(flat('2028-02').filter(({ inMonth }) => inMonth)).toHaveLength(29);
+    // Febrero de 2026 empieza en domingo: la primera semana trae seis días de enero.
+    const weeks = monthGridDates('2026-02');
+    expect(weeks[0][0].date).toBe('2026-01-26');
+    expect(weeks[0][6]).toEqual({ date: '2026-02-01', inMonth: true });
+  });
+
+  it('crosses the end of the year in both directions', () => {
+    const december = monthGridDates('2026-12');
+    expect(december.at(-1)?.at(-1)?.date).toBe('2027-01-03');
+    expect(monthGridDates('2027-01')[0][0].date).toBe('2026-12-28');
+  });
+});
+
+describe('formatWeekRange', () => {
+  it('names a week inside one month', () => {
+    expect(formatWeekRange('2026-10-12')).toBe('12 al 18 de octubre');
+  });
+
+  it('names both months when the week crosses them', () => {
+    expect(formatWeekRange('2026-09-28')).toBe(
+      '28 de septiembre al 4 de octubre',
+    );
+  });
+
+  it('names both years when the week crosses the new year', () => {
+    expect(formatWeekRange('2026-12-28')).toBe(
+      '28 de diciembre de 2026 al 3 de enero de 2027',
+    );
+  });
+});
+
+describe('monthsBetween', () => {
+  it('gives the months a range touches, both ends included', () => {
+    expect(monthsBetween('2026-10-05', '2026-10-20')).toEqual(['2026-10']);
+    expect(monthsBetween('2026-09-28', '2026-11-02')).toEqual([
+      '2026-09',
+      '2026-10',
+      '2026-11',
+    ]);
+  });
+
+  it('crosses the end of the year', () => {
+    expect(monthsBetween('2026-12-28', '2027-01-03')).toEqual([
+      '2026-12',
+      '2027-01',
+    ]);
+  });
+});
+
+describe('monthDates', () => {
+  it('gives every day of the month', () => {
+    const october = monthDates('2026-10');
+    expect(october).toHaveLength(31);
+    expect(october[0]).toBe('2026-10-01');
+    expect(october.at(-1)).toBe('2026-10-31');
+  });
+
+  it('knows the length of a short and of a leap February', () => {
+    expect(monthDates('2026-02')).toHaveLength(28);
+    expect(monthDates('2028-02')).toHaveLength(29);
+  });
+});
+
+describe('weekdayIndex', () => {
+  it('counts from Monday', () => {
+    expect(weekdayIndex('2026-10-19')).toBe(0);
+    expect(weekdayIndex('2026-10-22')).toBe(3);
+    expect(weekdayIndex('2026-10-25')).toBe(6);
   });
 });

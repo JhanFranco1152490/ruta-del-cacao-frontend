@@ -62,6 +62,10 @@ export const queryKeys = {
     month: (producer: string | null, month: string) =>
       ['agricultural-activities', 'month', producer ?? '', month] as const,
     detail: (id: string) => ['agricultural-activities', 'detail', id] as const,
+    // Las actividades sin realizar hasta hoy más unos días, sin límite hacia atrás: lo que lee la
+    // vista de pendientes, con copia en el dispositivo.
+    pending: (producer: string | null) =>
+      ['agricultural-activities', 'pending', producer ?? ''] as const,
     // Las cuentas a las que se puede asignar una labor, con copia en el dispositivo.
     assignees: (producer: string | null) =>
       ['agricultural-activities', 'assignees', producer ?? ''] as const,
