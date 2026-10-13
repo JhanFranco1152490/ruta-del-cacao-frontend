@@ -24,6 +24,7 @@ describe('ActivityPendingView', () => {
     render(
       <ActivityPendingView
         days={14}
+        onDays={vi.fn()}
         groups={groupsOf({
           up: '2026-10-30',
           late: '2026-10-21',
@@ -43,13 +44,16 @@ describe('ActivityPendingView', () => {
     render(
       <ActivityPendingView
         days={14}
+        onDays={vi.fn()}
         groups={groupsOf({ b: '2026-09-01', a: '2026-03-02' })}
         onSelect={vi.fn()}
       />,
     );
 
     const section = screen.getByRole('region', { name: /Vencidas/ });
-    const buttons = within(section).getAllByRole('button');
+    const buttons = within(section).getAllByRole('button', {
+      name: /Fertilización/,
+    });
     expect(buttons[0]).toHaveTextContent('Vencida · 234 días');
     expect(buttons[1]).toHaveTextContent('Vencida · 51 días');
   });
@@ -59,6 +63,7 @@ describe('ActivityPendingView', () => {
     render(
       <ActivityPendingView
         days={14}
+        onDays={vi.fn()}
         groups={groupsOf({ a: '2026-10-21' })}
         onSelect={onSelect}
       />,
@@ -79,6 +84,7 @@ describe('ActivityPendingView', () => {
     render(
       <ActivityPendingView
         days={14}
+        onDays={vi.fn()}
         groups={groupsOf({})}
         onSelect={vi.fn()}
       />,
@@ -87,13 +93,16 @@ describe('ActivityPendingView', () => {
     expect(
       screen.getByRole('heading', { name: 'Todo al día' }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Fertilización/ }),
+    ).not.toBeInTheDocument();
   });
 
   it('names the days in the group and in the message of all up to date', () => {
     render(
       <ActivityPendingView
         days={30}
+        onDays={vi.fn()}
         groups={groupsOf({ a: '2026-11-15' }, 30)}
         onSelect={vi.fn()}
       />,
@@ -102,5 +111,85 @@ describe('ActivityPendingView', () => {
     expect(
       screen.getByRole('heading', { name: 'Próximos 30 días 1' }),
     ).toBeInTheDocument();
+  });
+
+  describe('the days to look ahead', () => {
+    const row = (name: string | RegExp) =>
+      screen.getByRole('heading', { name }).parentElement!;
+
+    it('are chosen on the row of the title of the first group', () => {
+      render(
+        <ActivityPendingView
+          days={14}
+          groups={groupsOf({ today: TODAY, old: '2026-03-02' })}
+          onDays={vi.fn()}
+          onSelect={vi.fn()}
+        />,
+      );
+
+      expect(
+        within(row('Vencidas 1')).getByRole('group', {
+          name: 'Mirar hacia adelante, en días',
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByRole('group', { name: 'Mirar hacia adelante, en días' }),
+      ).toHaveLength(1);
+    });
+
+    it('stay on the first group that is shown, whichever it is', () => {
+      render(
+        <ActivityPendingView
+          days={14}
+          groups={groupsOf({ soon: '2026-10-30' })}
+          onDays={vi.fn()}
+          onSelect={vi.fn()}
+        />,
+      );
+
+      expect(
+        within(row('Próximos 14 días 1')).getByRole('group', {
+          name: 'Mirar hacia adelante, en días',
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it('stay above the message when all is up to date', () => {
+      render(
+        <ActivityPendingView
+          days={14}
+          groups={groupsOf({})}
+          onDays={vi.fn()}
+          onSelect={vi.fn()}
+        />,
+      );
+
+      const control = screen.getByRole('group', {
+        name: 'Mirar hacia adelante, en días',
+      });
+      const message = screen.getByRole('heading', { name: 'Todo al día' });
+      expect(
+        Boolean(
+          control.compareDocumentPosition(message) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ).toBe(true);
+    });
+
+    it('report the days that the person chooses', async () => {
+      const onDays = vi.fn();
+      render(
+        <ActivityPendingView
+          days={14}
+          groups={groupsOf({ today: TODAY })}
+          onDays={onDays}
+          onSelect={vi.fn()}
+        />,
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: '60' }));
+
+      expect(onDays).toHaveBeenCalledWith(60);
+    });
   });
 });

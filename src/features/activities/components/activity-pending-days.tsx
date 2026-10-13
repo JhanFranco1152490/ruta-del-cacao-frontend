@@ -17,8 +17,10 @@ export function ActivityPendingDays({
   onDays: (days: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 text-sm font-bold text-selva">
-      <span aria-hidden="true">Mirar hacia adelante</span>
+    <div className="ml-auto flex items-center gap-2 text-sm font-bold text-selva">
+      <span aria-hidden="true" className="hidden sm:inline">
+        Mirar hacia adelante
+      </span>
       <SegmentedControl
         compact
         label="Mirar hacia adelante, en días"

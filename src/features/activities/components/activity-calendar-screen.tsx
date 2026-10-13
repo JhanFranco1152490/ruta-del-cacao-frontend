@@ -218,23 +218,25 @@ export function ActivityCalendarScreen() {
             </ActivityFiltersToggle>
           ))}
         {/* Los recuentos y el periodo van juntos y pegados al calendario. */}
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-          {loaded && isPeriodView(view) && data.items.length > 0 && (
-            <ActivityStatePills
-              counts={summary.byState}
-              onState={filterState.setState}
-              state={filters.state}
-              total={summary.total}
-            />
-          )}
-          <div className="lg:ml-auto">
-            <ActivityPeriodControl
-              period={period}
-              view={view}
-              viewState={viewState}
-            />
+        {view !== 'pendientes' && (
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+            {loaded && isPeriodView(view) && data.items.length > 0 && (
+              <ActivityStatePills
+                counts={summary.byState}
+                onState={filterState.setState}
+                state={filters.state}
+                total={summary.total}
+              />
+            )}
+            <div className="lg:ml-auto">
+              <ActivityPeriodControl
+                period={period}
+                view={view}
+                viewState={viewState}
+              />
+            </div>
           </div>
-        </div>
+        )}
         <ActivityPeriodSlider
           enabled={swipeEnabled}
           onNext={view === 'semana' ? viewState.goNextWeek : period.goNext}
@@ -297,6 +299,7 @@ export function ActivityCalendarScreen() {
               onSelect={({ activity }) =>
                 open({ kind: 'detail', id: activity.id })
               }
+              onPendingDays={viewState.setPendingDays}
               onSelectDay={selectedDay.setDay}
               pendingDays={viewState.pendingDays}
               selectedDay={selectedDay.day}

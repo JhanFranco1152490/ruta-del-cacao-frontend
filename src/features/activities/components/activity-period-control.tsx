@@ -3,11 +3,10 @@ import { formatMonthYear, formatWeekRange } from '@/lib/format/dates';
 import type { ActivityView } from '../activity-view';
 import type { useActivityMonth } from '../use-activity-month';
 import type { useActivityView } from '../use-activity-view';
-import { ActivityPendingDays } from './activity-pending-days';
 import { ActivityPeriodBar } from './activity-period-bar';
 
-// El control de lo que se mira, según la vista: el mes, la semana o, en Pendientes, cuántos días
-// hacia adelante. Va pegado a su calendario, junto a los recuentos.
+// El control de lo que se mira, según la vista: el mes o la semana. Va pegado a su calendario,
+// junto a los recuentos.
 export function ActivityPeriodControl({
   view,
   period,
@@ -17,14 +16,8 @@ export function ActivityPeriodControl({
   period: ReturnType<typeof useActivityMonth>;
   viewState: ReturnType<typeof useActivityView>;
 }) {
-  if (view === 'pendientes') {
-    return (
-      <ActivityPendingDays
-        days={viewState.pendingDays}
-        onDays={viewState.setPendingDays}
-      />
-    );
-  }
+  // Pendientes no tiene periodo: sus días se eligen dentro de su lista.
+  if (view === 'pendientes') return null;
   if (view === 'semana') {
     return (
       <ActivityPeriodBar

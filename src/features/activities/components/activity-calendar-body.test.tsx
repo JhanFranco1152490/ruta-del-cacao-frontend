@@ -45,6 +45,7 @@ function setup(options: Options = {}) {
     onSchedule: vi.fn(),
     onScheduleDay: vi.fn(),
     onSelectDay: vi.fn(),
+    onPendingDays: vi.fn(),
   };
   renderWithProviders(
     <ActivityCalendarBody
@@ -238,6 +239,14 @@ describe('ActivityCalendarBody', () => {
     expect(
       screen.getByRole('heading', { name: 'Próximos 30 días 1' }),
     ).toBeInTheDocument();
+  });
+
+  it('reports the days that the person chooses in the pending view', async () => {
+    const { onPendingDays } = setup({ view: 'pendientes', items: [] });
+
+    await userEvent.click(screen.getByRole('button', { name: '90' }));
+
+    expect(onPendingDays).toHaveBeenCalledWith(90);
   });
 
   it.each(['lista', 'parcela'] as const)(

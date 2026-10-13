@@ -46,6 +46,7 @@ export function ActivityCalendarBody({
   onSchedule,
   onScheduleDay,
   onSelectDay,
+  onPendingDays,
   keyboard,
 }: {
   view: ActivityView;
@@ -72,6 +73,7 @@ export function ActivityCalendarBody({
   // (sin permiso o sin conexión) los días no lo ofrecen.
   onScheduleDay?: (date: string, farmId?: string, plotId?: string) => void;
   onSelectDay: (date: string) => void;
+  onPendingDays: (days: number) => void;
   keyboard?: CalendarKeyboard;
 }) {
   const monthKeyboard = keyboard && {
@@ -163,6 +165,7 @@ export function ActivityCalendarBody({
       return (
         <ActivityPendingView
           days={pendingDays}
+          onDays={onPendingDays}
           groups={groupPendingActivities(items, today, pendingDays)}
           onSelect={onSelect}
         />
