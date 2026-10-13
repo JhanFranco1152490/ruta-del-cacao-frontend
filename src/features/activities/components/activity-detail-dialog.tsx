@@ -120,7 +120,12 @@ export function ActivityDetailDialog({
             Corrígela o descártala desde Registros del dispositivo.
           </p>
         )}
-        <ActivityDetailFacts item={item} today={today} userId={user?.id} />
+        <ActivityDetailFacts
+          item={item}
+          showProducer={user?.is_superuser === true}
+          today={today}
+          userId={user?.id}
+        />
         {state === 'done' && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Info aria-hidden="true" className="size-4 shrink-0" />

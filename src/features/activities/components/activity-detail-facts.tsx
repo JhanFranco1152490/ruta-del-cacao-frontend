@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { StatusBadge } from '@/components/status-badge';
+import { useProducerSummary } from '@/lib/api/producer-options';
 import {
   formatDateTime,
   formatWeekdayDate,
@@ -8,6 +9,7 @@ import {
   shiftDays,
 } from '@/lib/format/dates';
 import { formatStock, inputPackageOf } from '@/lib/format/input-quantity';
+import { producerLabelOf } from '@/lib/format/producer';
 
 import type { ActivityOfDay } from '../activity-days';
 import { activityBadge } from '../activity-labels';
@@ -28,15 +30,27 @@ const Aside = ({ children }: { children: ReactNode }) => (
   <span className="text-muted-foreground"> {children}</span>
 );
 
+// De quién es la actividad: lo ve quien alcanza las de varios productores (la cuenta técnica).
+function ProducerFact({ producerId }: { producerId: string }) {
+  const { data: producer } = useProducerSummary(producerId);
+  return (
+    <Fact label="Productor">
+      {producer ? producerLabelOf(producer) : 'Cargando…'}
+    </Fact>
+  );
+}
+
 // Todo lo registrado de una actividad.
 export function ActivityDetailFacts({
   item,
   today,
   userId,
+  showProducer = false,
 }: {
   item: ActivityOfDay;
   today: string;
   userId: string | undefined;
+  showProducer?: boolean;
 }) {
   const { activity, state } = item;
   const badge = activityBadge(item);
@@ -62,6 +76,7 @@ export function ActivityDetailFacts({
         {assignee.id === userId && <Aside>(tú)</Aside>}
         {!assignee.is_active && <Aside>· Cuenta inactiva</Aside>}
       </Fact>
+      {showProducer && <ProducerFact producerId={activity.producer_id} />}
       {state === 'delayed' && item.completion !== 'pending' && (
         <Fact label="Vence">
           El{' '}

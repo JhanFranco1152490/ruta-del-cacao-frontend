@@ -77,7 +77,11 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-function renderDialog(preset?: { farmId: string; plotId: string }) {
+function renderDialog(preset?: {
+  farmId?: string;
+  plotId?: string;
+  date?: string;
+}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
@@ -126,6 +130,18 @@ async function fillValidForm() {
 }
 
 describe('ActivityFormDialog', () => {
+  it('starts on the day it was opened from, when it comes from a day of the calendar', () => {
+    renderDialog({ date: '2026-10-28' });
+
+    expect(field('Fecha programada')).toHaveValue('2026-10-28');
+  });
+
+  it('starts with the date empty when it does not come from a day', () => {
+    renderDialog();
+
+    expect(field('Fecha programada')).toHaveValue('');
+  });
+
   it('schedules an activity with what was chosen and the id of the device', async () => {
     renderDialog();
     await fillValidForm();

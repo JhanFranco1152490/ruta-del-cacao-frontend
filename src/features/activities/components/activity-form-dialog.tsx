@@ -41,8 +41,9 @@ import { useActivitySubmit } from './use-activity-submit';
 export const DELAYED_EDIT_NOTICE =
   'Esta actividad está retrasada: elige una fecha nueva o registra su realización.';
 
-// Programar una actividad, o editar `activity` si llega. `preset` trae la finca y la parcela
-// cuando se programa desde una parcela. Se monta al abrirse: parte de los valores de ese momento y
+// Programar una actividad, o editar `activity` si llega. `preset` trae lo que ya se sabe de
+// dónde se programa: la finca y la parcela (desde una parcela) o la fecha (desde un día del
+// calendario). Se monta al abrirse: parte de los valores de ese momento y
 // no adopta lecturas posteriores, porque guardar la versión nueva con valores viejos pisaría lo
 // que otra persona cambió; y el id de la actividad nueva nace aquí, así que reenviar este mismo
 // formulario no la programa dos veces.
@@ -54,7 +55,7 @@ export function ActivityFormDialog({
   onRejected,
 }: {
   activity?: AgriculturalActivity;
-  preset?: { farmId: string; plotId: string };
+  preset?: { farmId?: string; plotId?: string; date?: string };
   onClose: () => void;
   onSaved: (activity: AgriculturalActivity, message: string) => void;
   onRejected: (message: string) => void;
@@ -79,6 +80,7 @@ export function ActivityFormDialog({
           ...EMPTY_ACTIVITY_FORM,
           farm_id: preset?.farmId ?? '',
           plot_id: preset?.plotId ?? '',
+          scheduled_date: preset?.date ?? '',
         },
   });
   const submission = useActivitySubmit({
