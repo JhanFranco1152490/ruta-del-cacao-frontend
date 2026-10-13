@@ -140,6 +140,12 @@ src/
     `activity-pending.ts`, `activity-summary.ts`. Una realización que espera envío cuenta como
     realizada (`effectiveState`). Las vistas solo pintan; los filtros corren en el dispositivo, así
     que funcionan igual sin conexión.
+  - **Cambiar de periodo con el dedo y con el teclado.** Un deslizamiento amplio y horizontal
+    (`lib/swipe.ts`, `use-swipe-navigation.ts`: 110 px y el doble de horizontal que de vertical) pasa
+    al periodo siguiente o al anterior; lo que se desplaza solo lleva `data-no-swipe`. Las flechas
+    que se salen del mes o de la semana piden el cambio (`grid-navigation.ts`,
+    `use-grid-navigation.ts`) y el día vecino recibe el foco (`focusDate`) cuando llega el periodo
+    nuevo. El selector de periodo va junto a los recuentos, pegado al calendario.
   - **El formulario de programar** le pide el productor primero a la cuenta técnica
     (`activity-producer-field.tsx`): las fincas y los responsables son los de ese productor, y desde una
     finca el productor es el de la finca. No viaja en la petición.
