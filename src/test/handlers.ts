@@ -103,6 +103,16 @@ export const agriculturalActivitiesHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde las actividades pendientes y guarda las búsquedas recibidas.
+export const pendingActivitiesHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/agricultural-activities/pending'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 // Responde las cuentas a las que se puede asignar una labor y guarda las búsquedas recibidas.
 export const activityAssigneesHandler = (
   results: unknown[] = [],
@@ -169,4 +179,10 @@ export const profileHandler = (profile = buildProfile()) =>
 
 // "Mi cuenta" se puede abrir desde cualquier pantalla con sesión: su perfil tiene una respuesta por
 // defecto para que las pruebas que no lo miran no fallen por una petición sin atender.
-export const defaultHandlers = [csrfHandler, profileHandler()];
+// Las pendientes se piden al guardar la copia sin conexión de las actividades: una prueba que no
+// las espera no debe fallar por eso.
+export const defaultHandlers = [
+  csrfHandler,
+  profileHandler(),
+  pendingActivitiesHandler(),
+];
