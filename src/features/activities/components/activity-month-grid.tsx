@@ -1,17 +1,12 @@
 'use client';
 
-import { type KeyboardEvent, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 
-import {
-  formatMonthYear,
-  monthBounds,
-  monthGridDates,
-  shiftDays,
-  weekStart,
-} from '@/lib/format/dates';
+import { formatMonthYear, monthGridDates } from '@/lib/format/dates';
 
 import { canScheduleOn } from '../activity-actions';
 import type { ActivityDay, ActivityOfDay } from '../activity-days';
+import { useGridNavigation } from '../use-grid-navigation';
 import { ActivityGridCell } from './activity-grid-cell';
 
 const WEEKDAYS = [
@@ -24,9 +19,8 @@ const WEEKDAYS = [
   { short: 'Dom', full: 'domingo' },
 ] as const;
 
-// El mes en una cuadrícula de lunes a domingo, con las fichas de cada día. Con el teclado hay una
-// sola parada (el día de hoy, o el primero del mes); las flechas mueven por día y por semana, Inicio
-// y Fin van a los extremos de la semana, y Enter abre la lista del día.
+// El mes en una cuadrícula de lunes a domingo, con las fichas de cada día. El teclado es el de
+// `useGridNavigation`; Enter abre la lista del día o, si está vacío, programa en él.
 export function ActivityMonthGrid({
   month,
   today,
@@ -48,45 +42,23 @@ export function ActivityMonthGrid({
     () => new Map(days.map((day) => [day.date, day.activities])),
     [days],
   );
-  const cells = useRef(new Map<string, HTMLDivElement>());
-  const [active, setActive] = useState<string | null>(null);
-  const { from: first, to: last } = monthBounds(month);
-  const defaultStop = today.startsWith(month) ? today : first;
-  const tabStop = active?.startsWith(month) ? active : defaultStop;
-
   const canScheduleDay = (date: string) =>
     !!onScheduleDay && date.startsWith(month) && canScheduleOn(date, today);
-  const clamp = (date: string) =>
-    date < first ? first : date > last ? last : date;
-  const goTo = (date: string) => {
-    setActive(date);
-    cells.current.get(date)?.focus();
-  };
-
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>, date: string) {
-    // Solo manda la celda; lo que ocurre dentro de una ficha es de la ficha.
-    if (event.target !== event.currentTarget) return;
-    const moves: Record<string, string> = {
-      ArrowLeft: shiftDays(date, -1),
-      ArrowRight: shiftDays(date, 1),
-      ArrowUp: shiftDays(date, -7),
-      ArrowDown: shiftDays(date, 7),
-      Home: weekStart(date),
-      End: shiftDays(weekStart(date), 6),
-    };
-    if (event.key in moves) {
-      event.preventDefault();
-      goTo(clamp(moves[event.key]));
-    } else if (event.key === 'Enter') {
+  const navigation = useGridNavigation({
+    month,
+    today,
+    onActivate: (date) => {
       if (byDate.get(date)?.length) {
-        event.preventDefault();
         onOpenDay(date);
-      } else if (canScheduleDay(date)) {
-        event.preventDefault();
-        onScheduleDay?.(date);
+        return true;
       }
-    }
-  }
+      if (canScheduleDay(date)) {
+        onScheduleDay?.(date);
+        return true;
+      }
+      return false;
+    },
+  });
 
   return (
     <div
@@ -112,17 +84,14 @@ export function ActivityMonthGrid({
             <ActivityGridCell
               activities={byDate.get(date) ?? []}
               canSchedule={inMonth && canScheduleDay(date)}
-              cellRef={(element) => {
-                if (element) cells.current.set(date, element);
-                else cells.current.delete(date);
-              }}
+              cellRef={navigation.register(date)}
               date={date}
               inMonth={inMonth}
-              isTabStop={inMonth && date === tabStop}
+              isTabStop={inMonth && date === navigation.tabStop}
               isToday={date === today}
               key={date}
-              onFocus={() => inMonth && setActive(date)}
-              onKeyDown={(event) => onKeyDown(event, date)}
+              onFocus={() => inMonth && navigation.onFocus(date)}
+              onKeyDown={(event) => navigation.onKeyDown(event, date)}
               onOpenDay={onOpenDay}
               onSchedule={(day) => onScheduleDay?.(day)}
               onSelect={onSelect}
