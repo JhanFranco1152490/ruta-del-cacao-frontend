@@ -142,7 +142,10 @@ src/
     que funcionan igual sin conexión.
   - **Cambiar de periodo con el dedo y con el teclado.** Un deslizamiento amplio y horizontal
     (`lib/swipe.ts`, `use-swipe-navigation.ts`: 110 px y el doble de horizontal que de vertical) pasa
-    al periodo siguiente o al anterior; lo que se desplaza solo lleva `data-no-swipe`. Las flechas
+    al periodo siguiente o al anterior, y el calendario sigue al dedo, se devuelve si el gesto no se
+    completa y entra deslizándose al cambiar de periodo (`activity-period-slider.tsx`, sin
+    librerías, con `element.animate` y sin movimiento si el sistema lo pide); lo que se desplaza
+    solo lleva `data-no-swipe`. Las flechas
     que se salen del mes o de la semana piden el cambio (`grid-navigation.ts`,
     `use-grid-navigation.ts`) y el día vecino recibe el foco (`focusDate`) cuando llega el periodo
     nuevo. El selector de periodo va junto a los recuentos, pegado al calendario.
