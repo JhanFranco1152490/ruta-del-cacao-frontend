@@ -140,6 +140,9 @@ src/
     `activity-pending.ts`, `activity-summary.ts`. Una realización que espera envío cuenta como
     realizada (`effectiveState`). Las vistas solo pintan; los filtros corren en el dispositivo, así
     que funcionan igual sin conexión.
+  - **El formulario de programar** le pide el productor primero a la cuenta técnica
+    (`activity-producer-field.tsx`): las fincas y los responsables son los de ese productor, y desde una
+    finca el productor es el de la finca. No viaja en la petición.
   - **Mes y Por parcela tienen forma de escritorio y de celular** (`useIsDesktop`): cuadrícula grande y
     tabla donde caben; en celular, una cuadrícula compacta con la agenda del día elegido (`?dia=`) y
     tarjetas por parcela. La cuadrícula es `role="grid"` con una sola parada de
