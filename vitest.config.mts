@@ -10,6 +10,9 @@ export default defineConfig({
     // usa la zona de la máquina en vez de la del negocio (en un equipo en Bogotá no fallarían).
     env: { TZ: 'UTC' },
     globals: true,
+    // Cada worker crea su propio jsdom: con un worker por procesador la suite agota la memoria de
+    // un equipo de desarrollo y los tiempos de espera de las pruebas se estiran hasta fallar.
+    maxWorkers: 4,
     setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
