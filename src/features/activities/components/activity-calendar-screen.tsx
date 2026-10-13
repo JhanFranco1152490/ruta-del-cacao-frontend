@@ -12,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useSession } from '@/hooks/use-session';
-import { formatMonthYear, formatWeekRange } from '@/lib/format/dates';
+import { useSwipeNavigation } from '@/hooks/use-swipe-navigation';
+import { formatMonthYear } from '@/lib/format/dates';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import {
@@ -39,8 +40,8 @@ import {
 import { ActivityFiltersBar } from './activity-filters-bar';
 import { ActivityFiltersToggle } from './activity-filters-toggle';
 import { ActivityLegend } from './activity-legend';
-import { ActivityPendingDays } from './activity-pending-days';
-import { ActivityPeriodBar } from './activity-period-bar';
+import { ActivityPeriodControl } from './activity-period-control';
+import { ActivityScheduleFab } from './activity-schedule-fab';
 import { ActivityStatePills } from './activity-state-pills';
 import { ActivityTypeBreakdown } from './activity-type-breakdown';
 import { ActivityViewSwitch } from './activity-view-switch';
@@ -109,6 +110,22 @@ export function ActivityCalendarScreen() {
     ).values(),
   ]);
 
+  // El día que recibe el foco cuando una flecha del teclado cruza de mes o de semana.
+  const [focusDate, setFocusDate] = useState<string>();
+  const keyboard = {
+    focusDate,
+    onFocusHandled: () => setFocusDate(undefined),
+    onCrossMonth: (date: string) => {
+      setFocusDate(date);
+      goToMonth(date.slice(0, 7));
+      if (!isDesktop) selectedDay.setDay(date);
+    },
+    onCrossWeek: (date: string) => {
+      setFocusDate(date);
+      if (date < week) viewState.goPreviousWeek();
+      else viewState.goNextWeek();
+    },
+  };
   const [pending, setPending] = useState<PendingDialog>();
   // Lo último que pasó, en un aviso que leen los lectores de pantalla. Si la actividad quedó en
   // otro mes, la vista no salta: el aviso ofrece ir a verla.
@@ -119,12 +136,7 @@ export function ActivityCalendarScreen() {
   };
 
   const canSchedule = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD);
-  const scheduleButton = canSchedule && (
-    <ScheduleActivityButton
-      offline={offline}
-      onClick={() => open({ kind: 'schedule' })}
-    />
-  );
+  const openScheduleForm = () => open({ kind: 'schedule' });
   // Programar desde un día del calendario necesita permiso y conexión.
   const scheduleOnDay =
     canSchedule && !offline
@@ -155,14 +167,18 @@ export function ActivityCalendarScreen() {
   const inMonthView = view === 'mes' || view === 'lista' || view === 'parcela';
   const showFilters =
     (superuser || data.items.length > 0 || filtersSet) && !data.neverLoaded;
+  // Deslizar el dedo cambia de mes o de semana. En escritorio la tabla de Por parcela se desplaza
+  // sola de lado a lado, y Pendientes no tiene periodo.
+  const swipe = useSwipeNavigation({
+    enabled: isPeriodView(view) && !(view === 'parcela' && isDesktop),
+    onNext: view === 'semana' ? viewState.goNextWeek : period.goNext,
+    onPrevious:
+      view === 'semana' ? viewState.goPreviousWeek : period.goPrevious,
+  });
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-8">
-      <PageHeader
-        actions={scheduleButton || undefined}
-        compact
-        title="Actividades"
-      />
+    <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-8 sm:pb-5">
+      <PageHeader compact title="Actividades" />
       <div className="mt-3 space-y-2 empty:hidden">
         <FormMessage variant={notice?.variant}>{notice?.message}</FormMessage>
         {inMonthView && notice?.month && notice.month !== month && (
@@ -191,43 +207,13 @@ export function ActivityCalendarScreen() {
       <div className="mt-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <ActivityViewSwitch onChange={viewState.setView} value={view} />
-          {isPeriodView(view) &&
-            (view === 'semana' ? (
-              <ActivityPeriodBar
-                isCurrent={viewState.isCurrentWeek}
-                nextLabel="Semana siguiente"
-                onNext={viewState.goNextWeek}
-                onPrevious={viewState.goPreviousWeek}
-                onToday={viewState.goThisWeek}
-                previousLabel="Semana anterior"
-                title={formatWeekRange(week)}
-              />
-            ) : (
-              <ActivityPeriodBar
-                isCurrent={isCurrentMonth}
-                nextLabel="Mes siguiente"
-                onNext={period.goNext}
-                onPrevious={period.goPrevious}
-                onToday={period.goToday}
-                previousLabel="Mes anterior"
-                title={formatMonthYear(month)}
-              />
-            ))}
-          {view === 'pendientes' && (
-            <ActivityPendingDays
-              days={viewState.pendingDays}
-              onDays={viewState.setPendingDays}
+          {canSchedule && isDesktop && (
+            <ScheduleActivityButton
+              offline={offline}
+              onClick={openScheduleForm}
             />
           )}
         </div>
-        {loaded && isPeriodView(view) && data.items.length > 0 && (
-          <ActivityStatePills
-            counts={summary.byState}
-            onState={filterState.setState}
-            state={filters.state}
-            total={summary.total}
-          />
-        )}
         {showFilters &&
           (isDesktop ? (
             filtersBar
@@ -236,6 +222,24 @@ export function ActivityCalendarScreen() {
               {filtersBar}
             </ActivityFiltersToggle>
           ))}
+        {/* Los recuentos y el periodo van juntos y pegados al calendario. */}
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+          {loaded && isPeriodView(view) && data.items.length > 0 && (
+            <ActivityStatePills
+              counts={summary.byState}
+              onState={filterState.setState}
+              state={filters.state}
+              total={summary.total}
+            />
+          )}
+          <div className="lg:ml-auto">
+            <ActivityPeriodControl
+              period={period}
+              view={view}
+              viewState={viewState}
+            />
+          </div>
+        </div>
         {data.isPending && (
           <div aria-label="Cargando actividades" role="status">
             <Skeleton className="h-64" />
@@ -274,28 +278,33 @@ export function ActivityCalendarScreen() {
         )}
         {loaded && (
           <>
-            <ActivityCalendarBody
-              canSchedule={canSchedule}
-              hasFilters={filtersSet}
-              isDesktop={isDesktop}
-              items={filtered}
-              month={month}
-              offline={offline}
-              onClear={filterState.clear}
-              onOpenDay={(date, plotId) => open({ kind: 'day', date, plotId })}
-              onSchedule={() => open({ kind: 'schedule' })}
-              onScheduleDay={scheduleOnDay}
-              onSelect={({ activity }) =>
-                open({ kind: 'detail', id: activity.id })
-              }
-              onSelectDay={selectedDay.setDay}
-              pendingDays={viewState.pendingDays}
-              selectedDay={selectedDay.day}
-              today={today}
-              unfilteredCount={data.items.length}
-              view={view}
-              week={week}
-            />
+            <div {...swipe}>
+              <ActivityCalendarBody
+                canSchedule={canSchedule}
+                hasFilters={filtersSet}
+                isDesktop={isDesktop}
+                items={filtered}
+                keyboard={keyboard}
+                month={month}
+                offline={offline}
+                onClear={filterState.clear}
+                onOpenDay={(date, plotId) =>
+                  open({ kind: 'day', date, plotId })
+                }
+                onSchedule={() => open({ kind: 'schedule' })}
+                onScheduleDay={scheduleOnDay}
+                onSelect={({ activity }) =>
+                  open({ kind: 'detail', id: activity.id })
+                }
+                onSelectDay={selectedDay.setDay}
+                pendingDays={viewState.pendingDays}
+                selectedDay={selectedDay.day}
+                today={today}
+                unfilteredCount={data.items.length}
+                view={view}
+                week={week}
+              />
+            </div>
             {isPeriodView(view) && (
               <ActivityTypeBreakdown rows={summary.byType} />
             )}
@@ -303,6 +312,9 @@ export function ActivityCalendarScreen() {
           </>
         )}
       </div>
+      {canSchedule && !isDesktop && (
+        <ActivityScheduleFab offline={offline} onClick={openScheduleForm} />
+      )}
       <ActivityDialogs
         items={filtered}
         offline={offline}

@@ -15,6 +15,15 @@ import { ActivityPlotCards } from './activity-plot-cards';
 import { ActivityPlotTable } from './activity-plot-table';
 import { ActivityWeekView } from './activity-week-view';
 
+// El teclado cruzando de periodo: al salir de un mes o de una semana con una flecha, la pantalla
+// cambia de periodo y el foco llega al día vecino (`focusDate`) cuando el periodo nuevo se ve.
+export type CalendarKeyboard = {
+  focusDate?: string;
+  onFocusHandled: () => void;
+  onCrossMonth: (date: string) => void;
+  onCrossWeek: (date: string) => void;
+};
+
 // La vista del calendario que está abierta, con las actividades que dejaron los filtros. Mes y
 // Por parcela tienen forma de escritorio (cuadrícula, tabla) y de celular (la lista, tarjetas):
 // la cuadrícula de siete columnas no cabe en una pantalla angosta.
@@ -37,6 +46,7 @@ export function ActivityCalendarBody({
   onSchedule,
   onScheduleDay,
   onSelectDay,
+  keyboard,
 }: {
   view: ActivityView;
   isDesktop: boolean;
@@ -62,7 +72,18 @@ export function ActivityCalendarBody({
   // (sin permiso o sin conexión) los días no lo ofrecen.
   onScheduleDay?: (date: string, farmId?: string, plotId?: string) => void;
   onSelectDay: (date: string) => void;
+  keyboard?: CalendarKeyboard;
 }) {
+  const monthKeyboard = keyboard && {
+    focusDate: keyboard.focusDate,
+    onFocusHandled: keyboard.onFocusHandled,
+    onCross: keyboard.onCrossMonth,
+  };
+  const weekKeyboard = keyboard && {
+    focusDate: keyboard.focusDate,
+    onFocusHandled: keyboard.onFocusHandled,
+    onCross: keyboard.onCrossWeek,
+  };
   const days = useMemo(() => groupItemsByDay(items, today), [items, today]);
   const farms = useMemo(() => groupActivitiesByPlot(items), [items]);
 
@@ -93,6 +114,7 @@ export function ActivityCalendarBody({
           {isDesktop ? (
             <ActivityMonthGrid
               days={days}
+              keyboard={monthKeyboard}
               month={month}
               onOpenDay={onOpenDay}
               onScheduleDay={onScheduleDay && ((date) => onScheduleDay(date))}
@@ -102,6 +124,7 @@ export function ActivityCalendarBody({
           ) : (
             <ActivityMonthCompact
               days={days}
+              keyboard={monthKeyboard}
               month={month}
               onScheduleDay={onScheduleDay && ((date) => onScheduleDay(date))}
               onSelect={onSelect}
@@ -116,6 +139,7 @@ export function ActivityCalendarBody({
       return (
         <ActivityWeekView
           days={days}
+          keyboard={weekKeyboard}
           onScheduleDay={onScheduleDay && ((date) => onScheduleDay(date))}
           onSelect={onSelect}
           today={today}

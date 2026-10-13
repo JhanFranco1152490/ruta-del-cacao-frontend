@@ -100,7 +100,10 @@ export function ActivityPlotTable({
   const days = monthDates(month);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-card">
+    <div
+      className="overflow-x-auto rounded-xl border border-border bg-card shadow-card"
+      data-no-swipe=""
+    >
       <table
         aria-label={`Actividades por parcela, ${formatMonthYear(month)}`}
         className="min-w-full border-collapse text-sm"

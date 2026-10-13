@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -827,5 +827,180 @@ describe('the technical account', () => {
     await screen.findByRole('region', { name: 'sábado 10 de octubre' });
     expect(requests[0].has('producer')).toBe(false);
     expect(screen.queryByLabelText('Productor')).not.toBeInTheDocument();
+  });
+});
+
+describe('moving through the periods', () => {
+  it('goes to the next month when the arrow leaves the last day, and keeps the focus', async () => {
+    vi.mocked(useIsDesktop).mockReturnValue(true);
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen();
+    const lastDay = await screen.findByRole('gridcell', {
+      name: /sábado 31 de octubre/,
+    });
+    lastDay.focus();
+
+    await userEvent.keyboard('{ArrowRight}');
+
+    expect(
+      await screen.findByRole('grid', {
+        name: 'Calendario de noviembre de 2026',
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole('gridcell', { name: /domingo 1 de noviembre/ }),
+      ).toHaveFocus(),
+    );
+    expect(urls.at(-1)).toContain('mes=2026-11');
+  });
+
+  it('goes to the previous month when the arrow leaves the first day', async () => {
+    vi.mocked(useIsDesktop).mockReturnValue(true);
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen();
+    const firstDay = await screen.findByRole('gridcell', {
+      name: /jueves 1 de octubre/,
+    });
+    firstDay.focus();
+
+    await userEvent.keyboard('{ArrowLeft}');
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('gridcell', { name: /miércoles 30 de septiembre/ }),
+      ).toHaveFocus(),
+    );
+  });
+
+  it('goes to the next week when the arrow leaves the Sunday', async () => {
+    server.use(agriculturalActivitiesHandler([]));
+    renderScreen({ searchParams: '?vista=semana' });
+    const sunday = (
+      await screen.findByRole('heading', { name: 'domingo 25 de octubre' })
+    ).closest('li')!;
+    sunday.focus();
+
+    await userEvent.keyboard('{ArrowRight}');
+
+    expect(
+      await screen.findByRole('region', {
+        name: 'Semana del 26 de octubre al 1 de noviembre',
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole('heading', { name: 'lunes 26 de octubre' })
+          .closest('li'),
+      ).toHaveFocus(),
+    );
+  });
+
+  it('changes the month with a wide swipe of the finger and not with a short one', async () => {
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen({ searchParams: '?vista=lista' });
+    const region = await screen.findByRole('region', {
+      name: 'sábado 10 de octubre',
+    });
+
+    fireEvent.touchStart(region, { touches: [{ clientX: 300, clientY: 400 }] });
+    fireEvent.touchEnd(region, {
+      changedTouches: [{ clientX: 250, clientY: 400 }],
+    });
+    expect(urls).toEqual([]);
+
+    fireEvent.touchStart(region, { touches: [{ clientX: 300, clientY: 400 }] });
+    fireEvent.touchEnd(region, {
+      changedTouches: [{ clientX: 120, clientY: 410 }],
+    });
+    await waitFor(() => expect(urls.at(-1)).toContain('mes=2026-11'));
+
+    await screen.findByRole('heading', { name: 'noviembre de 2026' });
+    const next = await screen.findByRole('region', {
+      name: 'sábado 10 de octubre',
+    });
+
+    fireEvent.touchStart(next, { touches: [{ clientX: 100, clientY: 400 }] });
+    fireEvent.touchEnd(next, {
+      changedTouches: [{ clientX: 300, clientY: 400 }],
+    });
+    await waitFor(() => expect(urls.at(-1)).not.toContain('mes=2026-11'));
+  });
+
+  it('changes the week with a wide swipe', async () => {
+    server.use(agriculturalActivitiesHandler([]));
+    renderScreen({ searchParams: '?vista=semana' });
+    const week = await screen.findByRole('region', {
+      name: 'Semana del 19 al 25 de octubre',
+    });
+
+    fireEvent.touchStart(week, { touches: [{ clientX: 300, clientY: 400 }] });
+    fireEvent.touchEnd(week, {
+      changedTouches: [{ clientX: 100, clientY: 400 }],
+    });
+
+    expect(
+      await screen.findByRole('region', {
+        name: 'Semana del 26 de octubre al 1 de noviembre',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not take a swipe in the pending view, which has no period', async () => {
+    server.use(pendingActivitiesHandler([]));
+    renderScreen({ searchParams: '?vista=pendientes' });
+    const done = await screen.findByRole('heading', { name: 'Todo al día' });
+
+    fireEvent.touchStart(done, { touches: [{ clientX: 300, clientY: 400 }] });
+    fireEvent.touchEnd(done, {
+      changedTouches: [{ clientX: 100, clientY: 400 }],
+    });
+
+    expect(urls.some((url) => url.includes('mes='))).toBe(false);
+  });
+});
+
+describe('the button to schedule', () => {
+  it('is a floating icon button in a phone, apart from the title', async () => {
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen();
+    await screen.findByRole('region', { name: 'sábado 10 de octubre' });
+
+    const buttons = screen.getAllByRole('button', {
+      name: 'Programar actividad',
+    });
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveTextContent('');
+    expect(
+      screen.getByRole('heading', { level: 1 }).parentElement?.parentElement,
+    ).not.toContainElement(buttons[0]);
+  });
+
+  it('is next to the views in a desktop, with its text', async () => {
+    vi.mocked(useIsDesktop).mockReturnValue(true);
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen();
+    await screen.findByRole('grid');
+
+    const buttons = screen.getAllByRole('button', {
+      name: 'Programar actividad',
+    });
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveTextContent('Programar actividad');
+  });
+
+  it('keeps the month controls after the counts and before the calendar', async () => {
+    vi.mocked(useIsDesktop).mockReturnValue(true);
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen();
+    const grid = await screen.findByRole('grid');
+    const counts = screen.getByRole('group', { name: 'Estados del periodo' });
+    const nextMonth = screen.getByRole('button', { name: 'Mes siguiente' });
+
+    const after = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(after(counts, nextMonth)).toBe(true);
+    expect(after(nextMonth, grid)).toBe(true);
   });
 });
