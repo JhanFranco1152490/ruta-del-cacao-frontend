@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PERMISSIONS } from '@/lib/permissions';
 
-import { activityActions } from './activity-actions';
+import { activityActions, canScheduleOn } from './activity-actions';
 
 const ALL = {
   permissions: [
@@ -109,5 +109,17 @@ describe('activityActions', () => {
       remove: false,
       awaitsHealthModule: false,
     });
+  });
+});
+
+describe('canScheduleOn', () => {
+  it('offers today and the days after it', () => {
+    expect(canScheduleOn('2026-10-22', '2026-10-22')).toBe(true);
+    expect(canScheduleOn('2026-10-23', '2026-10-22')).toBe(true);
+    expect(canScheduleOn('2027-01-01', '2026-10-22')).toBe(true);
+  });
+
+  it('does not offer a day that already passed', () => {
+    expect(canScheduleOn('2026-10-21', '2026-10-22')).toBe(false);
   });
 });
