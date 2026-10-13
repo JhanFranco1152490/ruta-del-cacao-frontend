@@ -31,4 +31,38 @@ describe('SegmentedControl', () => {
 
     expect(onChange).toHaveBeenCalledWith('b');
   });
+
+  it('is lower and tighter when it is compact, and works the same', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <SegmentedControl
+        compact
+        label="Opciones"
+        onChange={onChange}
+        options={OPTIONS}
+        value="a"
+      />,
+    );
+
+    const button = screen.getByRole('button', { name: 'Segunda' });
+    expect(button).toHaveClass('min-h-9');
+    await user.click(button);
+    expect(onChange).toHaveBeenCalledWith('b');
+  });
+
+  it('keeps the usual height when it is not compact', () => {
+    render(
+      <SegmentedControl
+        label="Opciones"
+        onChange={vi.fn()}
+        options={OPTIONS}
+        value="a"
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Primera' })).toHaveClass(
+      'min-h-11',
+    );
+  });
 });
