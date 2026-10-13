@@ -74,6 +74,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agricultural-activities/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las actividades sin realizar con fecha programada hasta `through`, incluida, sin fecha mínima ni paginar: una vencida sigue pendiente mientras no se registre. `state` y `days_late` se calculan con la fecha de hoy en Bogotá. */
+        get: operations["agricultural_activities_pending_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agricultural-inputs": {
         parameters: {
             query?: never;
@@ -2200,6 +2217,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssigneeList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_pending_retrieve: {
+        parameters: {
+            query: {
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /** @description Última fecha incluida. */
+                through: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityList"];
                 };
             };
             400: {

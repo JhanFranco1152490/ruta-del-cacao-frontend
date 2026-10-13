@@ -44,6 +44,19 @@ export const ACTIVITY_STATE_DISPLAY = {
   { label: string; tone: 'ok' | 'warn' | 'err' | 'info' }
 >;
 
+// Los estados en el orden en que se explican: el de la leyenda y el del resumen.
+export const ACTIVITY_STATES = Object.keys(
+  ACTIVITY_STATE_DISPLAY,
+) as ActivityState[];
+
+// Qué se puede hacer con una actividad en cada estado, para la leyenda del calendario.
+export const ACTIVITY_STATE_HINT = {
+  scheduled: 'Todavía no llega su fecha',
+  delayed: 'Pasó su fecha: se puede reprogramar',
+  overdue: 'Solo registrar la realización',
+  done: 'Ya se registró',
+} as const satisfies Record<ActivityState, string>;
+
 // "Retrasada · 1 día", "Vencida · 5 días": el retraso se dice junto al estado.
 export function activityStateText(state: ActivityState, daysLate: number) {
   const { label } = ACTIVITY_STATE_DISPLAY[state];

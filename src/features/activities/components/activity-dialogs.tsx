@@ -2,6 +2,7 @@
 
 import type { ActivityOfDay } from '../activity-days';
 import { activityCompletionPath } from '../activity-paths';
+import { ActivityDayDialog } from './activity-day-dialog';
 import { ActivityDeleteDialog } from './activity-delete-dialog';
 import { ActivityDetailDialog } from './activity-detail-dialog';
 import { ActivityFormDialog } from './activity-form-dialog';
@@ -9,7 +10,10 @@ import { ActivityFormDialog } from './activity-form-dialog';
 // El diálogo abierto sobre la lista. De una actividad se guarda solo el id: el detalle la muestra
 // como está en la lista, también después de que una acción la cambie.
 export type PendingDialog =
-  | { kind: 'schedule' }
+  // Programar, con lo que ya se sabe cuando se hace desde un día o una parcela del calendario.
+  | { kind: 'schedule'; date?: string; farmId?: string; plotId?: string }
+  // Todas las de un día (de una parcela, si viene `plotId`) cuando la celda no las muestra todas.
+  | { kind: 'day'; date: string; plotId?: string }
   | { kind: 'detail'; id: string }
   | { kind: 'edit'; id: string }
   | { kind: 'delete'; id: string };
@@ -32,7 +36,7 @@ export function ActivityDialogs({
   onNotice,
 }: {
   pending: PendingDialog | undefined;
-  // Las actividades de la lista, con su estado de hoy.
+  // Las actividades que se ven, con su estado de hoy.
   items: readonly ActivityOfDay[];
   today: string;
   // Sin conexión solo se consulta: editar y eliminar necesitan al servidor.
@@ -57,7 +61,31 @@ export function ActivityDialogs({
       <ActivityFormDialog
         onClose={close}
         onRejected={close}
+        preset={{
+          date: pending.date,
+          farmId: pending.farmId,
+          plotId: pending.plotId,
+        }}
         onSaved={(activity, message) => saved(message, activity.scheduled_date)}
+      />
+    );
+  }
+
+  if (pending.kind === 'day') {
+    const ofDay = items.filter(
+      ({ activity }) =>
+        activity.scheduled_date === pending.date &&
+        (!pending.plotId || activity.plot.id === pending.plotId),
+    );
+    if (ofDay.length === 0) return null;
+    return (
+      <ActivityDayDialog
+        date={pending.date}
+        items={ofDay}
+        onClose={close}
+        onSelect={({ activity }) =>
+          onPending({ kind: 'detail', id: activity.id })
+        }
       />
     );
   }

@@ -18,7 +18,8 @@ export function ScheduleActivityButton({
         onClick={onClick}
         size="office"
       >
-        <Plus aria-hidden="true" className="size-5" /> Programar actividad
+        <Plus aria-hidden="true" className="size-5" /> Programar{' '}
+        <span className="sr-only sm:not-sr-only">actividad</span>
       </Button>
       {offline && (
         <p

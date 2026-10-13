@@ -17,6 +17,13 @@ export const activityMonthCacheKey = (
     ? `${MONTH_KEY_PREFIX}producer:${producer}:${month}`
     : `${MONTH_KEY_PREFIX}${month}`;
 
+// Lo que lee la vista de pendientes. Lleva la misma forma que una copia de mes (una lista de
+// actividades), así que la búsqueda de una actividad suelta también la recorre.
+export const pendingCacheKey = (producer: string | null) =>
+  producer
+    ? `${MONTH_KEY_PREFIX}producer:${producer}:pending`
+    : `${MONTH_KEY_PREFIX}pending`;
+
 export const assigneesCacheKey = (producer: string | null) =>
   producer
     ? `agricultural-activity-assignees:producer:${producer}`

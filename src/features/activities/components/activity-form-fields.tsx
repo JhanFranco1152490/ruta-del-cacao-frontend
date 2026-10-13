@@ -11,6 +11,8 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { formatHectares } from '@/lib/format/hectares';
 
+import { ActivityProducerField } from './activity-producer-field';
+
 import {
   type ActivityFormInput,
   type ActivityFormValues,
@@ -62,6 +64,7 @@ export function ActivityFormFields({
   plots,
   types,
   assignees,
+  producer,
 }: {
   form: UseFormReturn<ActivityFormInput, unknown, ActivityFormValues>;
   errors: FieldErrors<ActivityFormInput>;
@@ -74,6 +77,8 @@ export function ActivityFormFields({
   plots: ChoiceList;
   types: readonly FormChoice[];
   assignees: ChoiceList;
+  // Solo la cuenta técnica elige el productor, antes que la finca; sin él, la finca espera.
+  producer?: { value: string | undefined; onChange: (id?: string) => void };
 }) {
   const { register, control, setValue, getValues } = form;
   const farmId = useWatch({ control, name: 'farm_id' });
@@ -107,14 +112,25 @@ export function ActivityFormFields({
         </dl>
       ) : (
         <>
+          {producer && (
+            <ActivityProducerField
+              disabled={disabled}
+              onChange={producer.onChange}
+              value={producer.value}
+            />
+          )}
           <SelectField
-            disabled={disabled}
+            disabled={disabled || (!!producer && !producer.value)}
             error={errors.farm_id?.message}
-            hint={listHint(farms, {
-              loading: 'Cargando fincas…',
-              failed: 'No fue posible cargar las fincas.',
-              empty: 'No hay fincas activas.',
-            })}
+            hint={
+              producer && !producer.value
+                ? 'Elige primero el productor.'
+                : listHint(farms, {
+                    loading: 'Cargando fincas…',
+                    failed: 'No fue posible cargar las fincas.',
+                    empty: 'No hay fincas activas.',
+                  })
+            }
             label="Finca"
             {...register('farm_id', {
               // La parcela elegida era de la otra finca.

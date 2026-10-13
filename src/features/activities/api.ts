@@ -1,17 +1,24 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
-import { monthBounds, todayInBogota } from '@/lib/format/dates';
+import { monthBounds, shiftDays, todayInBogota } from '@/lib/format/dates';
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
 
+import { PENDING_FETCH_DAYS } from './activity-pending';
 import {
   activityMonthCacheKey,
   assigneesCacheKey,
   findSavedActivity,
   offlineWindowMonths,
+  pendingCacheKey,
 } from './activity-cache';
 
 type Schemas = components['schemas'];
@@ -50,7 +57,7 @@ export async function fetchActivities(
 const windowsInFlight = new Map<string, Promise<void>>();
 
 // Guarda la copia de los meses de la ventana sin conexión, menos el que se está viendo (que se
-// acaba de guardar). Un mes por petición: cuatro meses pueden pasar de los 120 días que acepta la
+// acaba de guardar), y la de lo pendiente. Un mes por petición: cuatro meses pueden pasar de los 120 días que acepta la
 // consulta. Corre una sola vez a la vez por persona y productor, aunque varias lecturas la pidan,
 // y un mes que falla no impide guardar los demás.
 function saveOfflineWindow(
@@ -61,30 +68,37 @@ function saveOfflineWindow(
   const key = `${userId}:${producer ?? ''}`;
   const running = windowsInFlight.get(key);
   if (running) return running;
-  const months = offlineWindowMonths(todayInBogota()).filter(
+  const today = todayInBogota();
+  const months = offlineWindowMonths(today).filter(
     (month) => month !== viewedMonth,
   );
-  const saving = Promise.allSettled(
-    months.map((month) =>
+  const saving = Promise.allSettled([
+    ...months.map((month) =>
       readThroughCache(userId, activityMonthCacheKey(producer, month), () =>
         fetchActivities({ ...monthBounds(month), producer }),
       ),
     ),
-  )
+    // También lo pendiente: quien sale sin señal lleva lo vencido y lo retrasado, aunque nunca
+    // haya abierto esa vista.
+    readThroughCache(userId, pendingCacheKey(producer), () =>
+      fetchPendingActivities({ through: pendingLimit(today), producer }),
+    ),
+  ])
     .then(() => undefined)
     .finally(() => windowsInFlight.delete(key));
   windowsInFlight.set(key, saving);
   return saving;
 }
 
-// Las actividades programadas en un mes (yyyy-MM), con copia en el dispositivo. Cada vez que la
-// lectura llega del servidor, además se renueva la copia de la ventana sin conexión.
-export const useActivitiesOfMonth = (
+// La consulta de las actividades programadas en un mes (yyyy-MM), con copia en el dispositivo.
+// Cada vez que la lectura llega del servidor, además se renueva la copia de la ventana sin
+// conexión. La comparten la lectura de un mes y la de un rango de meses.
+export const activityMonthQuery = (
   userId: string | undefined,
   month: string,
   producer: string | null,
 ) =>
-  useQuery({
+  queryOptions({
     queryKey: queryKeys.agriculturalActivities.month(producer, month),
     queryFn: async ({ signal }) => {
       const read = await readThroughCache(
@@ -100,6 +114,51 @@ export const useActivitiesOfMonth = (
       return read;
     },
     enabled: !!userId,
+    networkMode: 'offlineFirst',
+  });
+
+export const useActivitiesOfMonth = (
+  userId: string | undefined,
+  month: string,
+  producer: string | null,
+) => useQuery(activityMonthQuery(userId, month, producer));
+
+// Hasta qué fecha se piden las pendientes: hoy más el máximo de días que se puede mostrar. La
+// vista recorta a los días que la persona eligió.
+const pendingLimit = (today: string) => shiftDays(today, PENDING_FETCH_DAYS);
+
+// Lo que sigue sin realizar hasta la fecha dada, por viejo que sea el atraso: el listado por
+// periodo se limita a 120 días y una vencida de hace meses seguiría pendiente.
+export async function fetchPendingActivities(
+  { through, producer }: { through: string; producer: string | null },
+  signal?: AbortSignal,
+): Promise<AgriculturalActivity[]> {
+  const params = new URLSearchParams({ through });
+  if (producer) params.set('producer', producer);
+  const { results } = await apiFetch<Schemas['ActivityList']>(
+    `/api/agricultural-activities/pending?${params}`,
+    { signal },
+  );
+  return results;
+}
+
+// Las pendientes hasta 90 días después de `today` (yyyy-MM-dd), con copia en el dispositivo.
+export const usePendingActivities = (
+  userId: string | undefined,
+  today: string,
+  producer: string | null,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.agriculturalActivities.pending(producer),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, pendingCacheKey(producer), () =>
+        fetchPendingActivities(
+          { through: pendingLimit(today), producer },
+          signal,
+        ),
+      ),
+    enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
   });
 

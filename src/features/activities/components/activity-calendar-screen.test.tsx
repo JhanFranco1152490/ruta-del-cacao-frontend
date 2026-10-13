@@ -27,7 +27,7 @@ import { server } from '@/test/server';
 import { discard } from '@/lib/offline/sync-queue';
 
 import { completionQueueId, enqueueCompletion } from '../completion-queue';
-import { ActivityListScreen } from './activity-list-screen';
+import { ActivityCalendarScreen } from './activity-calendar-screen';
 
 // Jueves 22 de octubre de 2026, a mediodía en Bogotá.
 const NOW = new Date('2026-10-22T17:00:00Z');
@@ -59,7 +59,7 @@ function renderScreen({
       permissions,
     }),
   );
-  return renderWithProviders(<ActivityListScreen />, {
+  return renderWithProviders(<ActivityCalendarScreen />, {
     queryClient,
     searchParams,
     onUrlUpdate: ({ queryString }) => urls.push(queryString),
@@ -71,7 +71,7 @@ const dayOf = (name: string) => screen.findByRole('region', { name });
 const offline = () =>
   http.get(apiUrl('/api/agricultural-activities'), () => HttpResponse.error());
 
-describe('ActivityListScreen', () => {
+describe('ActivityCalendarScreen', () => {
   it('asks for the current month and lists its activities by day', async () => {
     const requests: URLSearchParams[] = [];
     server.use(
@@ -130,8 +130,12 @@ describe('ActivityListScreen', () => {
 
     expect(await screen.findByText('Vencida · 5 días')).toBeInTheDocument();
     expect(screen.getByText('Retrasada · 1 día')).toBeInTheDocument();
-    expect(screen.getByText('Programada')).toBeInTheDocument();
-    expect(screen.getByText('Realizada')).toBeInTheDocument();
+    expect(
+      within(await dayOf('jueves 22 de octubre')).getByText('Programada'),
+    ).toBeInTheDocument();
+    expect(
+      within(await dayOf('lunes 5 de octubre')).getByText('Realizada'),
+    ).toBeInTheDocument();
   });
 
   it('names an activity of type other by its description and marks an inactive assignee', async () => {
@@ -149,7 +153,9 @@ describe('ActivityListScreen', () => {
 
     expect(await screen.findByText('Resiembra')).toBeInTheDocument();
     expect(
-      screen.getByText('Cuenta de prueba (cuenta inactiva)'),
+      within(await dayOf('martes 20 de octubre')).getByText(
+        'Cuenta de prueba (cuenta inactiva)',
+      ),
     ).toBeInTheDocument();
   });
 
@@ -231,7 +237,9 @@ describe('ActivityListScreen', () => {
 
     renderScreen();
 
-    expect(await screen.findByText('Riego')).toBeInTheDocument();
+    expect(
+      within(await dayOf('martes 20 de octubre')).getByText('Riego'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(
       'Sin conexión: estás viendo la última copia de las actividades.',
     );
@@ -401,7 +409,9 @@ describe('ActivityListScreen', () => {
         screen.getByRole('button', { name: 'Ver en su mes' }),
       );
 
-      expect(await screen.findByText('Poda')).toBeInTheDocument();
+      expect(
+        within(await dayOf('martes 3 de noviembre')).getByText('Poda'),
+      ).toBeInTheDocument();
       expect(urls.at(-1)).toBe('?mes=2026-11');
     });
 

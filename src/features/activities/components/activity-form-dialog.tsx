@@ -15,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useSession } from '@/hooks/use-session';
+import { useFarmDetail } from '@/lib/api/farm-detail';
 import { todayInBogota } from '@/lib/format/dates';
 import {
   MISSING_FIELDS_MESSAGE,
@@ -41,8 +43,9 @@ import { useActivitySubmit } from './use-activity-submit';
 export const DELAYED_EDIT_NOTICE =
   'Esta actividad está retrasada: elige una fecha nueva o registra su realización.';
 
-// Programar una actividad, o editar `activity` si llega. `preset` trae la finca y la parcela
-// cuando se programa desde una parcela. Se monta al abrirse: parte de los valores de ese momento y
+// Programar una actividad, o editar `activity` si llega. `preset` trae lo que ya se sabe de
+// dónde se programa: la finca y la parcela (desde una parcela) o la fecha (desde un día del
+// calendario). Se monta al abrirse: parte de los valores de ese momento y
 // no adopta lecturas posteriores, porque guardar la versión nueva con valores viejos pisaría lo
 // que otra persona cambió; y el id de la actividad nueva nace aquí, así que reenviar este mismo
 // formulario no la programa dos veces.
@@ -54,7 +57,7 @@ export function ActivityFormDialog({
   onRejected,
 }: {
   activity?: AgriculturalActivity;
-  preset?: { farmId: string; plotId: string };
+  preset?: { farmId?: string; plotId?: string; date?: string };
   onClose: () => void;
   onSaved: (activity: AgriculturalActivity, message: string) => void;
   onRejected: (message: string) => void;
@@ -79,6 +82,7 @@ export function ActivityFormDialog({
           ...EMPTY_ACTIVITY_FORM,
           farm_id: preset?.farmId ?? '',
           plot_id: preset?.plotId ?? '',
+          scheduled_date: preset?.date ?? '',
         },
   });
   const submission = useActivitySubmit({
@@ -94,7 +98,18 @@ export function ActivityFormDialog({
   });
   const { errors } = form.formState;
   const farmId = useWatch({ control: form.control, name: 'farm_id' });
-  const choices = useActivityFormChoices(farmId, activity);
+  // La cuenta técnica elige el productor al programar, salvo que el formulario venga de una finca,
+  // que ya lo dice. Para las demás cuentas no hay nada que elegir.
+  const { data: user } = useSession();
+  const needsProducer =
+    user?.is_superuser === true && !activity && !preset?.farmId;
+  const [chosenProducer, setChosenProducer] = useState<string>();
+  const presetFarm = useFarmDetail(
+    user?.id,
+    user?.is_superuser === true && !activity ? (preset?.farmId ?? '') : '',
+  );
+  const producerId = chosenProducer ?? presetFarm.data?.data.producer.id;
+  const choices = useActivityFormChoices(farmId, activity, producerId);
   const fixedPlot = useMemo(
     () =>
       activity && {
@@ -113,6 +128,13 @@ export function ActivityFormDialog({
     }
   }, [farmChoices, getValues, setValue]);
 
+  // Lo elegido bajo el productor anterior ya no vale.
+  const changeProducer = (producer: string | undefined) => {
+    setChosenProducer(producer);
+    setValue('farm_id', '');
+    setValue('plot_id', '');
+    setValue('assignee_id', '');
+  };
   const reportInvalid = (fieldErrors: FieldErrors<ActivityFormInput>) => {
     const missing = Object.values(fieldErrors).some(
       (error) => error?.message === REQUIRED_FIELD_MESSAGE,
@@ -166,6 +188,11 @@ export function ActivityFormDialog({
             errors={errors}
             fixedPlot={fixedPlot}
             form={form}
+            producer={
+              needsProducer
+                ? { value: chosenProducer, onChange: changeProducer }
+                : undefined
+            }
             today={today}
           />
           <DialogFooter>

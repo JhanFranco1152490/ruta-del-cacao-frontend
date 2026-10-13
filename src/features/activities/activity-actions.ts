@@ -43,3 +43,7 @@ export function activityActions(
       type === 'phytosanitary_monitoring' && state !== 'done' && mayComplete,
   };
 }
+
+// Programar solo vale desde hoy: una fecha pasada la rechaza el formulario y el servidor. Decide si
+// un día del calendario ofrece "programar aquí".
+export const canScheduleOn = (date: string, today: string) => date >= today;

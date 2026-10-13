@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { buildAgriculturalActivity } from '@/test/factories';
 
-import { groupActivitiesByDay } from './activity-days';
+import {
+  effectiveState,
+  groupActivitiesByDay,
+  groupItemsByDay,
+  toActivityOfDay,
+} from './activity-days';
 
 const TODAY = '2026-10-22';
 
@@ -93,5 +98,72 @@ describe('groupActivitiesByDay', () => {
     ]);
     // Sigue sabiendo cómo iba la actividad: si el envío falla, vuelve a mostrarse así.
     expect(day.activities[0]).toMatchObject({ state: 'delayed', daysLate: 1 });
+  });
+});
+
+describe('toActivityOfDay', () => {
+  it('gives the activity with its state of today and the completion that waits', () => {
+    const activity = buildAgriculturalActivity({
+      id: 'x',
+      scheduled_date: '2026-10-20',
+    });
+
+    expect(
+      toActivityOfDay(activity, TODAY, new Map([['x', 'pending']])),
+    ).toEqual({
+      activity,
+      state: 'delayed',
+      daysLate: 2,
+      completion: 'pending',
+    });
+  });
+
+  it('leaves out the completion when there is none', () => {
+    const item = toActivityOfDay(buildAgriculturalActivity(), TODAY);
+
+    expect(item).not.toHaveProperty('completion');
+  });
+});
+
+describe('effectiveState', () => {
+  it('says done for an activity whose completion waits to be sent', () => {
+    const activity = buildAgriculturalActivity({
+      scheduled_date: '2026-10-25',
+    });
+
+    expect(
+      effectiveState(
+        toActivityOfDay(activity, TODAY, new Map([['a1', 'pending']])),
+      ),
+    ).toBe('done');
+    expect(
+      effectiveState(
+        toActivityOfDay(activity, TODAY, new Map([['a1', 'error']])),
+      ),
+    ).toBe('scheduled');
+    expect(effectiveState(toActivityOfDay(activity, TODAY))).toBe('scheduled');
+  });
+});
+
+describe('groupItemsByDay', () => {
+  it('groups items that already carry their state, and marks today', () => {
+    const items = [
+      toActivityOfDay(
+        buildAgriculturalActivity({ id: 'b', scheduled_date: TODAY }),
+        TODAY,
+      ),
+      toActivityOfDay(
+        buildAgriculturalActivity({ id: 'a', scheduled_date: '2026-10-19' }),
+        TODAY,
+      ),
+    ];
+
+    const days = groupItemsByDay(items, TODAY);
+
+    expect(days.map(({ date, isToday }) => [date, isToday])).toEqual([
+      ['2026-10-19', false],
+      [TODAY, true],
+    ]);
+    expect(days[0].activities[0]).toBe(items[1]);
   });
 });

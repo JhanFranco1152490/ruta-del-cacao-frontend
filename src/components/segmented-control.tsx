@@ -7,23 +7,30 @@ export function SegmentedControl<T extends string>({
   options,
   value,
   onChange,
+  compact = false,
 }: {
   label: string;
   options: readonly { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  // Más bajo y apretado, para las barras de herramientas donde cada fila cuenta.
+  compact?: boolean;
 }) {
   return (
     <div
       aria-label={label}
-      className="inline-flex rounded-md border border-border bg-card p-1"
+      className={cn(
+        'inline-flex rounded-md border border-border bg-card',
+        compact ? 'p-0.5' : 'p-1',
+      )}
       role="group"
     >
       {options.map((option) => (
         <button
           aria-pressed={value === option.value}
           className={cn(
-            'min-h-11 rounded-[calc(var(--radius)-2px)] px-4 text-sm font-bold focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-cobre',
+            'rounded-[calc(var(--radius)-2px)] text-sm font-bold whitespace-nowrap focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-cobre',
+            compact ? 'min-h-9 px-3' : 'min-h-11 px-4',
             value === option.value
               ? 'bg-selva text-white'
               : 'text-selva hover:bg-surface-alt',
