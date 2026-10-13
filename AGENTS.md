@@ -129,6 +129,21 @@ src/
   dispositivo con la fecha de Bogotá (`activity-state.ts`), porque la copia puede ser de ayer;
   `OVERDUE_AFTER_DAYS` tiene el mismo valor que la constante del servidor, y cada lado lo fija en
   su prueba. Las actividades se leen por mes y cada mes guarda su copia (`activity-cache.ts`).
+  - **El calendario** (`/actividades`) tiene cinco vistas (Mes, Semana, Lista, Por parcela y
+    Pendientes) y un resumen; la vista, el mes, la semana y los filtros viven en la URL con `nuqs`
+    (`use-activity-view.ts`, `use-activity-month.ts`, `use-activity-filters.ts`). `use-calendar-data.ts`
+    decide qué se lee según la vista: el mes, los meses que toca la semana (`use-activities-of-range.ts`
+    une las copias mensuales, sin endpoint nuevo) o `GET …/pending` para Pendientes, que no tiene el
+    límite de 120 días del listado y tiene su propia copia (`agricultural-activities:pending`).
+  - **Filtrar, agrupar y contar son funciones puras** sobre `ActivityOfDay` (la actividad con el
+    estado de hoy y su realización en cola): `activity-filters.ts`, `activity-plots.ts`,
+    `activity-pending.ts`, `activity-summary.ts`. Una realización que espera envío cuenta como
+    realizada (`effectiveState`). Las vistas solo pintan; los filtros corren en el dispositivo, así
+    que funcionan igual sin conexión.
+  - **Mes y Por parcela tienen forma de escritorio y de celular** (`useIsDesktop`): cuadrícula y tabla
+    donde caben, lista y tarjetas donde no. La cuadrícula es `role="grid"` con una sola parada de
+    teclado; las fichas dentro de la celda no son paradas (`tabIndex={-1}`) y se alcanzan desde la
+    lista del día.
 
 ### Capa de API
 
