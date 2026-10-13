@@ -149,6 +149,8 @@ src/
     que se salen del mes o de la semana piden el cambio (`grid-navigation.ts`,
     `use-grid-navigation.ts`) y el día vecino recibe el foco (`focusDate`) cuando llega el periodo
     nuevo. El selector de periodo va junto a los recuentos, pegado al calendario.
+  - **Los días de Pendientes** se eligen dentro de su lista (`activity-pending-view.tsx`), en la fila del
+    título del primer grupo; esa vista no tiene fila de periodo.
   - **El formulario de programar** le pide el productor primero a la cuenta técnica
     (`activity-producer-field.tsx`): las fincas y los responsables son los de ese productor, y desde una
     finca el productor es el de la finca. No viaja en la petición.
