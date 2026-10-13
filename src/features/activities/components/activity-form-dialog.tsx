@@ -15,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useSession } from '@/hooks/use-session';
+import { useFarmDetail } from '@/lib/api/farm-detail';
 import { todayInBogota } from '@/lib/format/dates';
 import {
   MISSING_FIELDS_MESSAGE,
@@ -96,7 +98,18 @@ export function ActivityFormDialog({
   });
   const { errors } = form.formState;
   const farmId = useWatch({ control: form.control, name: 'farm_id' });
-  const choices = useActivityFormChoices(farmId, activity);
+  // La cuenta técnica elige el productor al programar, salvo que el formulario venga de una finca,
+  // que ya lo dice. Para las demás cuentas no hay nada que elegir.
+  const { data: user } = useSession();
+  const needsProducer =
+    user?.is_superuser === true && !activity && !preset?.farmId;
+  const [chosenProducer, setChosenProducer] = useState<string>();
+  const presetFarm = useFarmDetail(
+    user?.id,
+    user?.is_superuser === true && !activity ? (preset?.farmId ?? '') : '',
+  );
+  const producerId = chosenProducer ?? presetFarm.data?.data.producer.id;
+  const choices = useActivityFormChoices(farmId, activity, producerId);
   const fixedPlot = useMemo(
     () =>
       activity && {
@@ -115,6 +128,13 @@ export function ActivityFormDialog({
     }
   }, [farmChoices, getValues, setValue]);
 
+  // Lo elegido bajo el productor anterior ya no vale.
+  const changeProducer = (producer: string | undefined) => {
+    setChosenProducer(producer);
+    setValue('farm_id', '');
+    setValue('plot_id', '');
+    setValue('assignee_id', '');
+  };
   const reportInvalid = (fieldErrors: FieldErrors<ActivityFormInput>) => {
     const missing = Object.values(fieldErrors).some(
       (error) => error?.message === REQUIRED_FIELD_MESSAGE,
@@ -168,6 +188,11 @@ export function ActivityFormDialog({
             errors={errors}
             fixedPlot={fixedPlot}
             form={form}
+            producer={
+              needsProducer
+                ? { value: chosenProducer, onChange: changeProducer }
+                : undefined
+            }
             today={today}
           />
           <DialogFooter>
