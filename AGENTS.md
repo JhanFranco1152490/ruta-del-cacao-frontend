@@ -140,8 +140,9 @@ src/
     `activity-pending.ts`, `activity-summary.ts`. Una realización que espera envío cuenta como
     realizada (`effectiveState`). Las vistas solo pintan; los filtros corren en el dispositivo, así
     que funcionan igual sin conexión.
-  - **Mes y Por parcela tienen forma de escritorio y de celular** (`useIsDesktop`): cuadrícula y tabla
-    donde caben, lista y tarjetas donde no. La cuadrícula es `role="grid"` con una sola parada de
+  - **Mes y Por parcela tienen forma de escritorio y de celular** (`useIsDesktop`): cuadrícula grande y
+    tabla donde caben; en celular, una cuadrícula compacta con la agenda del día elegido (`?dia=`) y
+    tarjetas por parcela. La cuadrícula es `role="grid"` con una sola parada de
     teclado; las fichas dentro de la celda no son paradas (`tabIndex={-1}`) y se alcanzan desde la
     lista del día.
 
