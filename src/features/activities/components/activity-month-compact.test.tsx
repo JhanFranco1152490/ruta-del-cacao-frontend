@@ -22,8 +22,10 @@ function setup({
   const onSelectDate = vi.fn();
   const onSelect = vi.fn();
   const onScheduleDay = vi.fn();
+  const onCross = vi.fn();
   render(
     <ActivityMonthCompact
+      keyboard={{ onCross, onFocusHandled: vi.fn() }}
       days={groupActivitiesByDay(activities, TODAY)}
       month={month}
       onScheduleDay={canSchedule ? onScheduleDay : undefined}
@@ -33,7 +35,7 @@ function setup({
       today={TODAY}
     />,
   );
-  return { onSelectDate, onSelect, onScheduleDay };
+  return { onSelectDate, onSelect, onScheduleDay, onCross };
 }
 
 const cell = (name: RegExp | string) => screen.getByRole('gridcell', { name });
@@ -212,6 +214,17 @@ describe('ActivityMonthCompact', () => {
       expect(cell(/23 de octubre/)).toHaveFocus();
       await userEvent.keyboard('{ArrowDown}');
       expect(cell(/30 de octubre/)).toHaveFocus();
+    });
+
+    it('asks for the next or the previous month at the edges of this one', async () => {
+      const { onCross } = setup();
+      cell(/31 de octubre/).focus();
+      await userEvent.keyboard('{ArrowRight}');
+      expect(onCross).toHaveBeenLastCalledWith('2026-11-01');
+
+      cell(/^\S+ 1 de octubre/).focus();
+      await userEvent.keyboard('{ArrowLeft}');
+      expect(onCross).toHaveBeenLastCalledWith('2026-09-30');
     });
 
     it('chooses the day with Enter', async () => {

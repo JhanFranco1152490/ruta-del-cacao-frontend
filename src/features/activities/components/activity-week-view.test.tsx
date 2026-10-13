@@ -13,11 +13,15 @@ function setup(
   activities = [buildAgriculturalActivity({ scheduled_date: '2026-10-21' })],
   week = '2026-10-19',
   canSchedule = false,
+  focusDate: string | undefined = undefined,
 ) {
   const onSelect = vi.fn();
   const onScheduleDay = vi.fn();
+  const onCross = vi.fn();
+  const onFocusHandled = vi.fn();
   render(
     <ActivityWeekView
+      keyboard={{ onCross, focusDate, onFocusHandled }}
       days={groupActivitiesByDay(activities, TODAY)}
       onScheduleDay={canSchedule ? onScheduleDay : undefined}
       onSelect={onSelect}
@@ -25,7 +29,7 @@ function setup(
       week={week}
     />,
   );
-  return { onSelect, onScheduleDay };
+  return { onSelect, onScheduleDay, onCross, onFocusHandled };
 }
 
 describe('ActivityWeekView', () => {
@@ -124,6 +128,64 @@ describe('ActivityWeekView', () => {
       expect(
         screen.queryByRole('button', { name: /Programar una actividad/ }),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('with the keyboard', () => {
+    const day = (name: string) =>
+      screen.getByRole('heading', { name }).closest('li')!;
+
+    it('has a single tab stop on the day, which is today', () => {
+      setup();
+
+      const stops = screen
+        .getAllByRole('listitem')
+        .filter((item) => item.getAttribute('tabindex') === '0');
+      expect(stops).toEqual([day('jueves 22 de octubre')]);
+    });
+
+    it('moves from one day to the next with the arrows', async () => {
+      setup();
+      day('jueves 22 de octubre').focus();
+
+      await userEvent.keyboard('{ArrowRight}');
+      expect(day('viernes 23 de octubre')).toHaveFocus();
+      await userEvent.keyboard('{ArrowLeft}{ArrowLeft}');
+      expect(day('miércoles 21 de octubre')).toHaveFocus();
+    });
+
+    it('goes to the Monday and to the Sunday with Home and End', async () => {
+      setup();
+      day('jueves 22 de octubre').focus();
+
+      await userEvent.keyboard('{End}');
+      expect(day('domingo 25 de octubre')).toHaveFocus();
+      await userEvent.keyboard('{Home}');
+      expect(day('lunes 19 de octubre')).toHaveFocus();
+    });
+
+    it('asks for the next week after the Sunday and for the previous one before the Monday', async () => {
+      const { onCross } = setup();
+      day('domingo 25 de octubre').focus();
+
+      await userEvent.keyboard('{ArrowRight}');
+      expect(onCross).toHaveBeenLastCalledWith('2026-10-26');
+
+      day('lunes 19 de octubre').focus();
+      await userEvent.keyboard('{ArrowLeft}');
+      expect(onCross).toHaveBeenLastCalledWith('2026-10-18');
+    });
+
+    it('gives the focus to the day that a crossing asked for, once', () => {
+      const { onFocusHandled } = setup(
+        undefined,
+        '2026-10-19',
+        false,
+        '2026-10-19',
+      );
+
+      expect(day('lunes 19 de octubre')).toHaveFocus();
+      expect(onFocusHandled).toHaveBeenCalledTimes(1);
     });
   });
 });

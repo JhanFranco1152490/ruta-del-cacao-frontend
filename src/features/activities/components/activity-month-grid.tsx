@@ -6,7 +6,7 @@ import { formatMonthYear, monthGridDates } from '@/lib/format/dates';
 
 import { canScheduleOn } from '../activity-actions';
 import type { ActivityDay, ActivityOfDay } from '../activity-days';
-import { useGridNavigation } from '../use-grid-navigation';
+import { type DayKeyboard, useGridNavigation } from '../use-grid-navigation';
 import { ActivityGridCell } from './activity-grid-cell';
 
 const WEEKDAYS = [
@@ -28,6 +28,7 @@ export function ActivityMonthGrid({
   onSelect,
   onOpenDay,
   onScheduleDay,
+  keyboard,
 }: {
   month: string;
   today: string;
@@ -36,6 +37,8 @@ export function ActivityMonthGrid({
   onOpenDay: (date: string) => void;
   // Programar una actividad en un día; sin él (sin permiso o sin conexión) los días no lo ofrecen.
   onScheduleDay?: (date: string) => void;
+  // Pasar de mes con el teclado al salir por una flecha, y dónde queda el foco.
+  keyboard?: DayKeyboard;
 }) {
   const weeks = useMemo(() => monthGridDates(month), [month]);
   const byDate = useMemo(
@@ -45,6 +48,7 @@ export function ActivityMonthGrid({
   const canScheduleDay = (date: string) =>
     !!onScheduleDay && date.startsWith(month) && canScheduleOn(date, today);
   const navigation = useGridNavigation({
+    ...keyboard,
     month,
     today,
     onActivate: (date) => {

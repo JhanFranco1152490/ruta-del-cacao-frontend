@@ -15,13 +15,23 @@ const activity = (id: string, scheduled_date: string, extra = {}) =>
 
 function setup(
   activities = [activity('a', '2026-10-22')],
-  { month = '2026-10', canSchedule = false } = {},
+  {
+    month = '2026-10',
+    canSchedule = false,
+    withKeyboard = false,
+    focusDate = undefined as string | undefined,
+  } = {},
 ) {
   const onSelect = vi.fn();
   const onOpenDay = vi.fn();
   const onScheduleDay = vi.fn();
+  const onCross = vi.fn();
+  const onFocusHandled = vi.fn();
   render(
     <ActivityMonthGrid
+      keyboard={
+        withKeyboard ? { onCross, focusDate, onFocusHandled } : undefined
+      }
       onScheduleDay={canSchedule ? onScheduleDay : undefined}
       days={groupActivitiesByDay(activities, TODAY)}
       month={month}
@@ -30,7 +40,7 @@ function setup(
       today={TODAY}
     />,
   );
-  return { onSelect, onOpenDay, onScheduleDay };
+  return { onSelect, onOpenDay, onScheduleDay, onCross, onFocusHandled };
 }
 
 const cell = (name: RegExp | string) => screen.getByRole('gridcell', { name });
@@ -218,17 +228,78 @@ describe('ActivityMonthGrid', () => {
       expect(cell(/19 de octubre/)).toHaveFocus();
     });
 
-    it('stays inside the month', async () => {
+    it('stays where it is at the edge of the month when nothing handles the crossing', async () => {
       setup();
-      cell(/30 de octubre/).focus();
+      cell(/31 de octubre/).focus();
 
-      await userEvent.keyboard('{ArrowDown}');
-      expect(cell(/31 de octubre/)).toHaveFocus();
       await userEvent.keyboard('{ArrowRight}');
+
       expect(cell(/31 de octubre/)).toHaveFocus();
+    });
+
+    it('moves inside the month without asking to cross', async () => {
+      const { onCross } = setup(undefined, { withKeyboard: true });
+      cell(/29 de octubre/).focus();
+
+      await userEvent.keyboard('{ArrowRight}');
+
+      expect(cell(/30 de octubre/)).toHaveFocus();
+      expect(onCross).not.toHaveBeenCalled();
+    });
+
+    it('asks for the next month when an arrow leaves the end of this one', async () => {
+      const { onCross } = setup(undefined, { withKeyboard: true });
+      cell(/31 de octubre/).focus();
+
+      await userEvent.keyboard('{ArrowRight}');
+      expect(onCross).toHaveBeenLastCalledWith('2026-11-01');
+
+      cell(/29 de octubre/).focus();
+      await userEvent.keyboard('{ArrowDown}');
+      expect(onCross).toHaveBeenLastCalledWith('2026-11-05');
+    });
+
+    it('asks for the previous month when an arrow leaves the start of this one', async () => {
+      const { onCross } = setup(undefined, { withKeyboard: true });
+      cell(/^\S+ 1 de octubre/).focus();
+
+      await userEvent.keyboard('{ArrowLeft}');
+      expect(onCross).toHaveBeenLastCalledWith('2026-09-30');
+
       cell(/^\S+ 2 de octubre/).focus();
       await userEvent.keyboard('{ArrowUp}');
-      expect(cell(/^\S+ 1 de octubre/)).toHaveFocus();
+      expect(onCross).toHaveBeenLastCalledWith('2026-09-25');
+    });
+
+    it('never changes the month with Home and End', async () => {
+      const { onCross } = setup(undefined, { withKeyboard: true });
+      cell(/^\S+ 1 de octubre/).focus();
+
+      await userEvent.keyboard('{Home}');
+      cell(/31 de octubre/).focus();
+      await userEvent.keyboard('{End}');
+
+      expect(onCross).not.toHaveBeenCalled();
+      expect(cell(/31 de octubre/)).toHaveFocus();
+    });
+
+    it('gives the focus to the day that a crossing asked for, once, when its month is in sight', () => {
+      const { onFocusHandled } = setup(undefined, {
+        withKeyboard: true,
+        focusDate: '2026-10-05',
+      });
+
+      expect(cell(/lunes 5 de octubre/)).toHaveFocus();
+      expect(onFocusHandled).toHaveBeenCalledTimes(1);
+    });
+
+    it('waits when the day it asked for belongs to another month', () => {
+      const { onFocusHandled } = setup(undefined, {
+        withKeyboard: true,
+        focusDate: '2026-11-03',
+      });
+
+      expect(onFocusHandled).not.toHaveBeenCalled();
     });
 
     it('opens the list of the day with Enter when it has activities', async () => {
