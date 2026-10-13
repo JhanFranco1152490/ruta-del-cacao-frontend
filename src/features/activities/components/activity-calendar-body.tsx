@@ -8,6 +8,7 @@ import { groupActivitiesByPlot } from '../activity-plots';
 import type { ActivityView } from '../activity-view';
 import { ActivityDayList } from './activity-day-list';
 import { ActivityEmpty, ActivityEmptyNote } from './activity-empty';
+import { ActivityMonthCompact } from './activity-month-compact';
 import { ActivityMonthGrid } from './activity-month-grid';
 import { ActivityPendingView } from './activity-pending-view';
 import { ActivityPlotCards } from './activity-plot-cards';
@@ -23,6 +24,7 @@ export function ActivityCalendarBody({
   month,
   week,
   today,
+  selectedDay,
   pendingDays,
   items,
   hasFilters,
@@ -34,12 +36,15 @@ export function ActivityCalendarBody({
   onClear,
   onSchedule,
   onScheduleDay,
+  onSelectDay,
 }: {
   view: ActivityView;
   isDesktop: boolean;
   month: string;
   week: string;
   today: string;
+  // El día elegido en el mes de un celular, que muestra su agenda.
+  selectedDay: string;
   // Cuántos días hacia adelante cuenta Pendientes.
   pendingDays: number;
   // Las que quedan tras los filtros.
@@ -56,14 +61,15 @@ export function ActivityCalendarBody({
   // Programar desde un día del calendario (y desde una parcela, en la vista por parcela). Sin él
   // (sin permiso o sin conexión) los días no lo ofrecen.
   onScheduleDay?: (date: string, farmId?: string, plotId?: string) => void;
+  onSelectDay: (date: string) => void;
 }) {
   const days = useMemo(() => groupItemsByDay(items, today), [items, today]);
   const farms = useMemo(() => groupActivitiesByPlot(items), [items]);
 
   const noneMeetFilters = hasFilters && unfilteredCount > 0;
-  // La semana siempre muestra sus siete días, y la cuadrícula del mes sigue ahí aunque esté vacía:
-  // sus días sirven para programar. Los demás avisan con un cartel.
-  const keepsItsShape = view === 'semana' || (view === 'mes' && isDesktop);
+  // La semana siempre muestra sus siete días, y la cuadrícula del mes (grande o compacta) sigue ahí
+  // aunque esté vacía: sus días sirven para programar. Los demás avisan con un cartel.
+  const keepsItsShape = view === 'semana' || view === 'mes';
   if (items.length === 0 && !keepsItsShape) {
     if (view !== 'pendientes' || noneMeetFilters) {
       return (
@@ -79,22 +85,32 @@ export function ActivityCalendarBody({
 
   switch (view) {
     case 'mes':
-      return isDesktop ? (
+      return (
         <div className="space-y-3">
           {items.length === 0 && (
             <ActivityEmptyNote filtered={noneMeetFilters} onClear={onClear} />
           )}
-          <ActivityMonthGrid
-            days={days}
-            month={month}
-            onOpenDay={onOpenDay}
-            onScheduleDay={onScheduleDay && ((date) => onScheduleDay(date))}
-            onSelect={onSelect}
-            today={today}
-          />
+          {isDesktop ? (
+            <ActivityMonthGrid
+              days={days}
+              month={month}
+              onOpenDay={onOpenDay}
+              onScheduleDay={onScheduleDay && ((date) => onScheduleDay(date))}
+              onSelect={onSelect}
+              today={today}
+            />
+          ) : (
+            <ActivityMonthCompact
+              days={days}
+              month={month}
+              onScheduleDay={onScheduleDay && ((date) => onScheduleDay(date))}
+              onSelect={onSelect}
+              onSelectDate={onSelectDay}
+              selectedDate={selectedDay}
+              today={today}
+            />
+          )}
         </div>
-      ) : (
-        <ActivityDayList days={days} onSelect={onSelect} />
       );
     case 'semana':
       return (

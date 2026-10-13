@@ -1,14 +1,9 @@
 'use client';
 
-import {
-  createParser,
-  parseAsInteger,
-  parseAsStringLiteral,
-  useQueryState,
-} from 'nuqs';
+import { parseAsInteger, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { useIsDesktop } from '@/hooks/use-is-desktop';
-import { isIsoDate, shiftDays, weekStart } from '@/lib/format/dates';
+import { shiftDays, weekStart } from '@/lib/format/dates';
 
 import { DEFAULT_PENDING_DAYS, isPendingDays } from './activity-pending';
 import {
@@ -16,13 +11,8 @@ import {
   type ActivityView,
   initialActivityView,
 } from './activity-view';
+import { parseAsIsoDate } from './iso-date-parser';
 import type { useActivityMonth } from './use-activity-month';
-
-// Una fecha mal escrita en la URL (?semana=zzz, ?semana=2026-02-30) cae a la semana actual.
-const parseAsDate = createParser({
-  parse: (value) => (isIsoDate(value) ? value : null),
-  serialize: (value: string) => value,
-});
 
 type ActivityPeriod = ReturnType<typeof useActivityMonth>;
 
@@ -36,7 +26,10 @@ export function useActivityView(period: ActivityPeriod) {
     'vista',
     parseAsStringLiteral(ACTIVITY_VIEWS),
   );
-  const [selectedWeek, setSelectedWeek] = useQueryState('semana', parseAsDate);
+  const [selectedWeek, setSelectedWeek] = useQueryState(
+    'semana',
+    parseAsIsoDate,
+  );
   const [selectedDays, setSelectedDays] = useQueryState('dias', parseAsInteger);
 
   const thisWeek = weekStart(period.today);

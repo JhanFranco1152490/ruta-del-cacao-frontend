@@ -128,6 +128,69 @@ describe('the views of the calendar', () => {
     );
   });
 
+  it('shows a compact month with the agenda of today in a phone', async () => {
+    server.use(agriculturalActivitiesHandler(october));
+
+    renderScreen({ searchParams: '?vista=mes' });
+
+    expect(
+      await screen.findByRole('grid', {
+        name: 'Calendario de octubre de 2026',
+      }),
+    ).toBeInTheDocument();
+    const agenda = screen.getByRole('region', { name: /jueves 22 de octubre/ });
+    expect(
+      within(agenda).getByText('Sin actividades este día'),
+    ).toBeInTheDocument();
+  });
+
+  it('changes the agenda when a day of the compact month is touched, and keeps it in the address', async () => {
+    server.use(agriculturalActivitiesHandler(october));
+    renderScreen({ searchParams: '?vista=mes' });
+
+    await userEvent.click(
+      await screen.findByRole('gridcell', { name: /miércoles 21 de octubre/ }),
+    );
+
+    const agenda = await screen.findByRole('region', {
+      name: /miércoles 21 de octubre/,
+    });
+    expect(within(agenda).getByText('1 actividad')).toBeInTheDocument();
+    expect(urls.at(-1)).toContain('dia=2026-10-21');
+  });
+
+  it('opens on the day of the address', async () => {
+    server.use(agriculturalActivitiesHandler(october));
+
+    renderScreen({ searchParams: '?vista=mes&dia=2026-10-10' });
+
+    expect(
+      await screen.findByRole('region', { name: /sábado 10 de octubre/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('schedules on the chosen day from its agenda', async () => {
+    server.use(
+      agriculturalActivitiesHandler(october),
+      farmsHandler([]),
+      plotsHandler([]),
+    );
+    renderScreen({ searchParams: '?vista=mes&dia=2026-10-28' });
+    const agenda = await screen.findByRole('region', {
+      name: /miércoles 28 de octubre/,
+    });
+
+    await userEvent.click(
+      within(agenda).getByRole('button', { name: 'Programar' }),
+    );
+
+    expect(
+      within(await screen.findByRole('dialog')).getByLabelText(
+        'Fecha programada',
+      ),
+    ).toHaveValue('2026-10-28');
+  });
+
   it('opens on the month grid in a desktop', async () => {
     vi.mocked(useIsDesktop).mockReturnValue(true);
     server.use(agriculturalActivitiesHandler(october));

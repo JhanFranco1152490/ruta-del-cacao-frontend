@@ -6,6 +6,7 @@ import { toActivityOfDay } from './activity-days';
 import {
   countByState,
   countByType,
+  describeStateCounts,
   summarizeActivities,
 } from './activity-summary';
 
@@ -99,5 +100,25 @@ describe('summarizeActivities', () => {
     expect(summary.total).toBe(2);
     expect(summary.byState.done).toBe(1);
     expect(summary.byType).toHaveLength(1);
+  });
+});
+
+describe('describeStateCounts', () => {
+  it('says each state that has activities, the most urgent first', () => {
+    expect(
+      describeStateCounts({ scheduled: 2, delayed: 0, overdue: 1, done: 3 }),
+    ).toBe('1 vencida, 2 programadas, 3 realizadas');
+  });
+
+  it('uses the singular for one and leaves out the states without any', () => {
+    expect(
+      describeStateCounts({ scheduled: 0, delayed: 1, overdue: 0, done: 0 }),
+    ).toBe('1 retrasada');
+  });
+
+  it('is empty when there is nothing', () => {
+    expect(
+      describeStateCounts({ scheduled: 0, delayed: 0, overdue: 0, done: 0 }),
+    ).toBe('');
   });
 });

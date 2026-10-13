@@ -25,6 +25,7 @@ import {
 import { summarizeActivities } from '../activity-summary';
 import { isPeriodView } from '../activity-view';
 import { useActivityAssignees } from '../api';
+import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';
 import { useActivityMonth } from '../use-activity-month';
 import { useActivityView } from '../use-activity-view';
@@ -63,6 +64,7 @@ export function ActivityCalendarScreen() {
   const period = useActivityMonth();
   const { month, today, isCurrentMonth, goToMonth } = period;
   const viewState = useActivityView(period);
+  const selectedDay = useActivityDay(month, today);
   const { view, week } = viewState;
   const filterState = useActivityFilters(user?.id);
   const { filters } = filterState;
@@ -286,7 +288,9 @@ export function ActivityCalendarScreen() {
               onSelect={({ activity }) =>
                 open({ kind: 'detail', id: activity.id })
               }
+              onSelectDay={selectedDay.setDay}
               pendingDays={viewState.pendingDays}
+              selectedDay={selectedDay.day}
               today={today}
               unfilteredCount={data.items.length}
               view={view}

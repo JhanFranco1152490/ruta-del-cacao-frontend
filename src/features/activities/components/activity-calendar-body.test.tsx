@@ -17,6 +17,7 @@ const itemOf = (id: string, scheduled_date: string) =>
 type Options = {
   canScheduleDay?: boolean;
   pendingDays?: number;
+  selectedDay?: string;
   view?: ActivityView;
   isDesktop?: boolean;
   items?: ActivityOfDay[];
@@ -35,6 +36,7 @@ function setup(options: Options = {}) {
     canSchedule = true,
     canScheduleDay = false,
     pendingDays = 14,
+    selectedDay = TODAY,
   } = options;
   const handlers = {
     onSelect: vi.fn(),
@@ -42,6 +44,7 @@ function setup(options: Options = {}) {
     onClear: vi.fn(),
     onSchedule: vi.fn(),
     onScheduleDay: vi.fn(),
+    onSelectDay: vi.fn(),
   };
   renderWithProviders(
     <ActivityCalendarBody
@@ -52,6 +55,7 @@ function setup(options: Options = {}) {
       month="2026-10"
       offline={false}
       pendingDays={pendingDays}
+      selectedDay={selectedDay}
       today={TODAY}
       unfilteredCount={unfilteredCount}
       view={view}
@@ -77,13 +81,48 @@ describe('ActivityCalendarBody', () => {
     expect(screen.getByRole('grid')).toBeInTheDocument();
   });
 
-  it('turns the month into the list in a phone', () => {
-    setup({ view: 'mes', isDesktop: false });
+  it('shows a compact month with the agenda of the chosen day in a phone', () => {
+    setup({ view: 'mes', isDesktop: false, selectedDay: '2026-10-23' });
 
-    expect(screen.queryByRole('grid')).not.toBeInTheDocument();
     expect(
-      screen.getByRole('region', { name: 'viernes 23 de octubre' }),
+      screen.getByRole('grid', { name: 'Calendario de octubre de 2026' }),
     ).toBeInTheDocument();
+    const agenda = screen.getByRole('region', {
+      name: /viernes 23 de octubre/,
+    });
+    expect(within(agenda).getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('keeps the compact month when it is empty, with the note', () => {
+    setup({ view: 'mes', isDesktop: false, items: [] });
+
+    expect(screen.getByRole('grid')).toBeInTheDocument();
+    expect(
+      screen.getByText('No hay actividades programadas en este periodo.'),
+    ).toBeInTheDocument();
+  });
+
+  it('chooses a day of the compact month', async () => {
+    const { onSelectDay } = setup({ view: 'mes', isDesktop: false });
+
+    await userEvent.click(
+      screen.getByRole('gridcell', { name: /sábado 24 de octubre/ }),
+    );
+
+    expect(onSelectDay).toHaveBeenCalledWith('2026-10-24');
+  });
+
+  it('schedules from the agenda of the chosen day', async () => {
+    const { onScheduleDay } = setup({
+      view: 'mes',
+      isDesktop: false,
+      canScheduleDay: true,
+      selectedDay: '2026-10-24',
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Programar' }));
+
+    expect(onScheduleDay).toHaveBeenCalledWith('2026-10-24');
   });
 
   it('keeps the month grid when it is empty, with a note instead of a sign', () => {
@@ -201,7 +240,7 @@ describe('ActivityCalendarBody', () => {
     ).toBeInTheDocument();
   });
 
-  it.each(['mes', 'lista', 'parcela'] as const)(
+  it.each(['lista', 'parcela'] as const)(
     'says the period has no activities in the %s view and offers to schedule',
     async (view) => {
       const { onSchedule } = setup({ view, items: [] });
