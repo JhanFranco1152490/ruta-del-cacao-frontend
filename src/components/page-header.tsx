@@ -21,8 +21,10 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'flex flex-col sm:flex-row sm:items-end sm:justify-between',
-        compact ? 'mt-1 gap-3' : 'mt-4 gap-5',
+        'flex sm:items-end sm:justify-between',
+        compact
+          ? 'mt-1 flex-row flex-wrap items-end justify-between gap-3'
+          : 'mt-4 flex-col gap-5 sm:flex-row',
         className,
       )}
     >

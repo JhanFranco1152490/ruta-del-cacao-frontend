@@ -29,7 +29,7 @@ export function ActivityStatePills({
   return (
     <div
       aria-label="Estados del periodo"
-      className="flex flex-wrap items-center gap-2"
+      className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
       role="group"
     >
       {ACTIVITY_STATES.map((key) => {
@@ -39,7 +39,7 @@ export function ActivityStatePills({
         return (
           <button
             aria-pressed={selected}
-            className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm font-bold ${TONE_CLASSES[tone]} ${
+            className={`inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm font-bold ${TONE_CLASSES[tone]} ${
               selected
                 ? 'ring-2 ring-selva ring-offset-1'
                 : 'hover:brightness-95'
@@ -56,7 +56,7 @@ export function ActivityStatePills({
           </button>
         );
       })}
-      <span className="px-1 text-sm font-semibold text-muted-foreground">
+      <span className="shrink-0 px-1 text-sm font-semibold whitespace-nowrap text-muted-foreground">
         {total === 1 ? '1 actividad' : `${total} actividades`}
       </span>
     </div>
