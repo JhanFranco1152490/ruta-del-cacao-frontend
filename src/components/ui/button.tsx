@@ -13,6 +13,10 @@ const buttonVariants = cva(
         copper: 'bg-cobre text-primary-foreground hover:bg-cobre/90',
         outline:
           'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+        // Botón de acción sobre una tarjeta o la cabecera: borde y texto en `--selva` sobre blanco,
+        // para que se distinga tanto de la tarjeta como del fondo crema y de las franjas grises.
+        action:
+          'border-selva/35 bg-card text-selva hover:bg-selva/10 aria-expanded:bg-selva/10',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
         ghost:

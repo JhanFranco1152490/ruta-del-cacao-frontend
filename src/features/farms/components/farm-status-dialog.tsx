@@ -7,7 +7,10 @@ import {
   type StatusChangeAction,
 } from '@/components/status-change-dialog';
 
-import { useConfirmAction } from '@/hooks/use-confirm-action';
+import {
+  type ConfirmControl,
+  useConfirmAction,
+} from '@/hooks/use-confirm-action';
 import { notify } from '@/lib/notify';
 
 type FarmActivity = 'active' | 'inactive';
@@ -43,19 +46,32 @@ export function FarmStatusDialog({
   onChangeStatus,
   errorMessage = () =>
     'No fue posible cambiar el estado de la finca. Inténtalo nuevamente.',
+  control,
 }: {
   farm: { name: string; status: FarmActivity };
   onChangeStatus: (target: FarmActivity) => Promise<unknown>;
   errorMessage?: (error: unknown) => string;
+  // Abierto desde un menú de acciones: sin botón propio.
+  control?: ConfirmControl;
 }) {
   const target = farm.status === 'active' ? 'inactive' : 'active';
   const action = actionFor(target, farm.name);
-  const dialog = useConfirmAction(async () => {
-    await onChangeStatus(target);
-    notify.success(
-      target === 'active' ? 'Finca activada' : 'Finca desactivada',
-    );
-  }, errorMessage);
+  const dialog = useConfirmAction(
+    async () => {
+      await onChangeStatus(target);
+      notify.success(
+        target === 'active' ? 'Finca activada' : 'Finca desactivada',
+      );
+    },
+    errorMessage,
+    control,
+  );
 
-  return <StatusChangeDialog trigger={action} action={action} {...dialog} />;
+  return (
+    <StatusChangeDialog
+      trigger={control ? undefined : action}
+      action={action}
+      {...dialog}
+    />
+  );
 }
