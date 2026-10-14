@@ -165,6 +165,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `DiseaseTile` | Tarjeta ilustrada de estado sanitario | Monitoreo fitosanitario |
 | `PermissionMatrix` | Matriz permisos × roles | Roles y permisos |
 | `CheckboxField` | Compone la casilla de shadcn/ui con `FormField`: etiqueta, ayuda o error, explicación de deshabilitado y foco cobre; reutiliza la accesibilidad de Base UI | Selección de roles y permisos |
+| `SearchSelect` | Lista que se abre al enfocar y se acota al escribir, en lugar del select nativo, con una entrada fija opcional de «Todas…» y grupos. Se filtra en el navegador (lista cargada) o avisa lo escrito (lista del servidor). `ProducerFilter` y `FarmFilter` se arman con él. Regla: más de unas 10 opciones o lista que crece, `SearchSelect`; lista corta y fija (tipo, etapa, mes, estados), el select nativo | Finca, parcela, productor, municipio |
 | `MaskedValue` | Muestra `CC ••••4821` y registra en bitácora al revelar | Productores, usuarios |
 | `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos, página no encontrada y de error |
 | `BotanicalVine` | Línea botánica en oro, solo sobre fondo oscuro | Inicio de sesión, barra lateral y menú móvil |

@@ -16,7 +16,7 @@ import {
   type ChoiceList,
   type FormChoice,
   plotLabel,
-} from './activity-form-fields';
+} from './activity-choices';
 
 const toChoices = (
   types: readonly { value: string; label: string }[],

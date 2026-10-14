@@ -1,6 +1,6 @@
 'use client';
 
-import { SelectField } from '@/components/select-field';
+import { SearchSelect } from '@/components/search-select';
 import { SubmitButton } from '@/components/submit-button';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,10 @@ export function InputMovementDialog({
   const text = MOVEMENT_TEXT[kind];
   const { data: user } = useSession();
   const movement = useMovementForm({ kind, input, farms, farm, onSaved });
+  const farmOptions = movement.activeFarms.map(({ id, name }) => ({
+    id,
+    label: name,
+  }));
   const { form, farmId, isSaving } = movement;
   const { errors } = form.formState;
   const stocks = useInputStocks(user?.id, farmId);
@@ -78,22 +82,15 @@ export function InputMovementDialog({
               {movement.general}
             </p>
           )}
-          <SelectField
-            placeholder="Elige una finca"
+          <SearchSelect
             disabled={isSaving}
             error={movement.farmError}
             label="Finca"
-            onChange={(event) =>
-              movement.chooseFarm(event.target.value || null)
-            }
-            value={farmId ?? ''}
-          >
-            {movement.activeFarms.map((choice) => (
-              <option key={choice.id} value={choice.id}>
-                {choice.name}
-              </option>
-            ))}
-          </SelectField>
+            onChange={(option) => movement.chooseFarm(option?.id ?? null)}
+            options={farmOptions}
+            placeholder="Elige una finca"
+            value={farmOptions.find(({ id }) => id === farmId) ?? null}
+          />
           {kind === 'count' && farmId && (
             <MovementCountSummary
               form={form}

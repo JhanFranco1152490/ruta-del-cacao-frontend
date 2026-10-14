@@ -20,6 +20,7 @@ import {
   plotsHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { listedOptions, pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
 import type { AgriculturalActivity } from '../api';
@@ -137,8 +138,8 @@ const save = () =>
   userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
 
 async function fillValidForm() {
-  await choose('Finca', 'La Esperanza');
-  await choose('Parcela', 'P-01 · 2,4 ha');
+  await pick('Finca', 'La Esperanza');
+  await pick('Parcela', 'P-01 · 2,4 ha');
   await choose('Tipo de actividad', 'Fertilización');
   fireEvent.change(field('Fecha programada'), {
     target: { value: '2026-10-25' },
@@ -180,19 +181,19 @@ describe('ActivityFormDialog', () => {
   it('offers only active farms, active plots and active accounts', async () => {
     renderDialog();
 
-    await within(field('Parcela')).findByRole('option', {
-      name: 'P-01 · 2,4 ha',
-    });
     await within(field('Responsable')).findByRole('option', {
       name: 'Otra cuenta',
     });
 
-    expect(optionsOf('Finca')).toEqual([
+    expect(await listedOptions('Finca')).toEqual([
       'Todas las fincas',
       'La Esperanza',
       'El Retiro',
     ]);
-    expect(optionsOf('Parcela')).toEqual(['P-01 · 2,4 ha', 'P-03 · 1 ha']);
+    expect(await listedOptions('Parcela')).toEqual([
+      'P-01 · 2,4 ha',
+      'P-03 · 1 ha',
+    ]);
     expect(optionsOf('Responsable')).toEqual([
       'Cuenta propia (tú)',
       'Otra cuenta',
@@ -203,36 +204,51 @@ describe('ActivityFormDialog', () => {
     renderDialog();
 
     expect(field('Parcela')).toBeEnabled();
-    await within(field('Parcela')).findByRole('option', {
-      name: 'P-03 · 1 ha',
-    });
+    await listedOptions('Parcela');
+    await userEvent.click(field('Parcela'));
+
     expect(
-      within(field('Parcela'))
-        .getAllByRole('group')
-        .map((group) => group.getAttribute('label')),
-    ).toEqual(['La Esperanza', 'El Retiro']);
+      await screen.findByRole('group', { name: 'La Esperanza' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('group', { name: 'El Retiro' }),
+    ).toBeInTheDocument();
     expect(plotRequests[0].has('farm')).toBe(false);
   });
 
   it('fills the farm when a plot is chosen without choosing the farm first', async () => {
     renderDialog();
 
-    await choose('Parcela', 'P-03 · 1 ha');
+    await pick('Parcela', 'P-03 · 1 ha');
 
-    expect(field('Finca')).toHaveValue('f2');
+    expect(field('Finca')).toHaveValue('El Retiro');
     // Elegir una parcela no acota la lista: las demás siguen a la vista.
-    expect(optionsOf('Parcela')).toEqual(['P-01 · 2,4 ha', 'P-03 · 1 ha']);
+    expect(await listedOptions('Parcela')).toEqual([
+      'P-01 · 2,4 ha',
+      'P-03 · 1 ha',
+    ]);
     expect(plotRequests).toHaveLength(1);
   });
 
   it('narrows the plots to the farm chosen and forgets a plot of another farm', async () => {
     renderDialog();
-    await choose('Parcela', 'P-03 · 1 ha');
+    await pick('Parcela', 'P-03 · 1 ha');
 
-    await choose('Finca', 'La Esperanza');
+    await pick('Finca', 'La Esperanza');
 
     expect(field('Parcela')).toHaveValue('');
     await waitFor(() => expect(plotRequests.at(-1)?.get('farm')).toBe('f1'));
+  });
+
+  it('finds a plot by typing part of its code', async () => {
+    renderDialog();
+    await listedOptions('Parcela');
+
+    await userEvent.type(field('Parcela'), 'p-03');
+
+    expect(
+      screen.getAllByRole('option').map((option) => option.textContent),
+    ).toEqual(['P-03 · 1 ha']);
   });
 
   it('says the list is cut when there are more plots than a page holds', async () => {
@@ -250,17 +266,17 @@ describe('ActivityFormDialog', () => {
 
     expect(
       await screen.findByText(
-        'Se muestran las primeras parcelas. Elige una finca para ver las demás.',
+        'Se muestran las primeras parcelas. Elige una finca o escribe para ver las demás.',
       ),
     ).toBeInTheDocument();
   });
 
   it('starts over when every farm is chosen again', async () => {
     renderDialog();
-    await choose('Finca', 'La Esperanza');
-    await choose('Parcela', 'P-01 · 2,4 ha');
+    await pick('Finca', 'La Esperanza');
+    await pick('Parcela', 'P-01 · 2,4 ha');
 
-    await choose('Finca', 'Todas las fincas');
+    await pick('Finca', 'Todas las fincas');
 
     expect(field('Parcela')).toHaveValue('');
     await waitFor(() => expect(plotRequests.at(-1)?.has('farm')).toBe(false));
@@ -270,7 +286,7 @@ describe('ActivityFormDialog', () => {
     server.use(plotsHandler([buildPlot({ is_active: false })]));
     renderDialog();
 
-    await choose('Finca', 'La Esperanza');
+    await pick('Finca', 'La Esperanza');
 
     expect(
       await screen.findByText('Esta finca no tiene parcelas activas.'),
@@ -279,10 +295,7 @@ describe('ActivityFormDialog', () => {
 
   it('marks each missing field and saves nothing', async () => {
     renderDialog();
-    await within(field('Finca')).findByRole('option', { name: 'El Retiro' });
-    await within(field('Parcela')).findByRole('option', {
-      name: 'P-01 · 2,4 ha',
-    });
+    await listedOptions('Parcela');
 
     await save();
 
@@ -431,7 +444,7 @@ describe('ActivityFormDialog', () => {
   it('opens with the farm and the plot it was asked from', async () => {
     renderDialog({ farmId: 'f1', plotId: 'pl1' });
 
-    await waitFor(() => expect(field('Parcela')).toHaveValue('pl1'));
-    await waitFor(() => expect(field('Finca')).toHaveValue('f1'));
+    await waitFor(() => expect(field('Parcela')).toHaveValue('P-01 · 2,4 ha'));
+    await waitFor(() => expect(field('Finca')).toHaveValue('La Esperanza'));
   });
 });

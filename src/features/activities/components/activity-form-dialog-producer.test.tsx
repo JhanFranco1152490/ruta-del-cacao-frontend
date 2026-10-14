@@ -20,6 +20,7 @@ import {
   plotsHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { listedOptions, pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
 import { ActivityFormDialog } from './activity-form-dialog';
@@ -146,13 +147,17 @@ describe('ActivityFormDialog for the technical account', () => {
     expect(field('Productor')).toBeInTheDocument();
     expect(field('Finca')).toBeEnabled();
     expect(field('Parcela')).toBeEnabled();
+    await userEvent.click(field('Finca'));
     expect(
-      await within(field('Finca')).findByRole('option', {
+      await screen.findByRole('option', {
         name: 'La Esperanza · Ana Prueba · PROD-000007',
       }),
     ).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await listedOptions('Parcela');
+    await userEvent.click(field('Parcela'));
     expect(
-      await within(field('Parcela')).findByRole('group', {
+      await screen.findByRole('group', {
         name: 'La Esperanza · Ana Prueba · PROD-000007',
       }),
     ).toBeInTheDocument();
@@ -192,23 +197,19 @@ describe('ActivityFormDialog for the technical account', () => {
     renderDialog();
     expect(assigneeRequests).toEqual([]);
 
-    await within(field('Parcela')).findByRole('option', {
-      name: 'P-01 · 2,4 ha',
-    });
-    await userEvent.selectOptions(field('Parcela'), 'pl1');
+    await pick('Parcela', 'P-01 · 2,4 ha');
 
     await waitFor(() =>
       expect(assigneeRequests.at(-1)?.get('producer')).toBe('p1'),
     );
-    expect(field('Finca')).toHaveValue('f1');
+    expect(field('Finca')).toHaveValue(
+      'La Esperanza · Ana Prueba · PROD-000007',
+    );
   });
 
   it('schedules an activity from a plot chosen directly, which already says the producer', async () => {
     renderDialog();
-    await within(field('Parcela')).findByRole('option', {
-      name: 'P-01 · 2,4 ha',
-    });
-    await userEvent.selectOptions(field('Parcela'), 'pl1');
+    await pick('Parcela', 'P-01 · 2,4 ha');
     await userEvent.selectOptions(field('Tipo de actividad'), 'fertilization');
     fireEvent.change(field('Fecha programada'), {
       target: { value: '2026-10-25' },
@@ -228,16 +229,13 @@ describe('ActivityFormDialog for the technical account', () => {
   it('forgets the farm, the plot and the responsible when the producer is cleared', async () => {
     renderDialog();
     await pickProducer();
-    await within(field('Finca')).findByRole('option', {
-      name: 'La Esperanza · Ana Prueba · PROD-000007',
-    });
-    await userEvent.selectOptions(field('Finca'), 'f1');
+    await pick('Finca', 'La Esperanza · Ana Prueba · PROD-000007');
 
     await userEvent.click(
       document.querySelector<HTMLElement>('[data-slot="combobox-clear"]')!,
     );
 
-    await waitFor(() => expect(field('Finca')).toHaveValue(''));
+    await waitFor(() => expect(field('Finca')).toHaveValue('Todas las fincas'));
     expect(field('Parcela')).toHaveValue('');
     expect(field('Finca')).toBeEnabled();
   });
