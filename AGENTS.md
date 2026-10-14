@@ -109,7 +109,7 @@ src/
 - Componentes en **tres niveles**: (1) `components/ui/`, primitivas de shadcn/ui con las
   variantes del sistema de diseño, sin conocer el dominio; (2) `components/`, piezas
   compartidas con el aspecto de la app (`TextField`, `SelectField`, `PasswordField`,
-  `FormField`, `SubmitButton`, `PageHeader`, `Pagination`, `EmptyState`, `ErrorState`,
+  `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `Pagination`, `EmptyState`, `ErrorState`,
   `MaskedValue`...) que solo reciben props y no conocen la API; (3)
   `features/<dominio>/components/`, pantallas (`*-screen.tsx`) y piezas de un dominio: la
   pantalla compone y obtiene los datos de los hooks de `features/<dominio>/api.ts`.
@@ -151,9 +151,12 @@ src/
     nuevo. El selector de periodo va junto a los recuentos, pegado al calendario.
   - **Los días de Pendientes** se eligen dentro de su lista (`activity-pending-view.tsx`), en la fila del
     título del primer grupo; esa vista no tiene fila de periodo.
-  - **El formulario de programar** le pide el productor primero a la cuenta técnica
-    (`activity-producer-field.tsx`): las fincas y los responsables son los de ese productor, y desde una
-    finca el productor es el de la finca. No viaja en la petición.
+  - **El formulario de programar** (`activity-plot-fields.tsx`) deja empezar por la finca o por la
+    parcela: ambas listas se ven completas desde el inicio (hasta 100, ordenadas por productor, finca y
+    código), **Finca** es un filtro con «Todas las fincas» y elegir una parcela rellena su finca sin acotar
+    la lista (`activity-form-dialog.tsx` guarda la finca elegida aparte, `farmFilter`). La cuenta técnica
+    puede acotar por productor (`activity-producer-field.tsx`), pero es opcional: el productor de los
+    responsables sale de la parcela o la finca elegida. No viaja en la petición.
   - **Mes y Por parcela tienen forma de escritorio y de celular** (`useIsDesktop`): cuadrícula grande y
     tabla donde caben; en celular, una cuadrícula compacta con la agenda del día elegido (`?dia=`) y
     tarjetas por parcela. La cuadrícula es `role="grid"` con una sola parada de
@@ -228,6 +231,11 @@ src/
 
 ### Reglas de diseño del código
 
+- **Elegir de una lista: `SearchSelect` o el select nativo.** Más de unas 10 opciones o una lista que
+  crece (fincas, parcelas, municipios, productores): `SearchSelect`, que se abre con la lista completa y
+  se acota al escribir, con una entrada fija «Todas…» si el campo es un filtro, grupos y modo servidor
+  (`onSearch`). `ProducerFilter` y `FarmFilter` se arman con él. Lista corta y fija (tipo, etapa, mes,
+  estados): el select nativo con `placeholder` si es obligatorio, sin una opción vacía de relleno.
 - **Una responsabilidad por archivo**, un componente por archivo (kebab-case), ~150 líneas
   como referencia: si crece, se parte.
 - **No duplicar.** La segunda vez que aparece algo se extrae: a `components/` si es

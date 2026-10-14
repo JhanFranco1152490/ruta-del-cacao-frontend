@@ -106,8 +106,8 @@ describe('SchedulePlotActivity', () => {
 
     const form = await screen.findByRole('dialog');
     const field = (name: string) => within(form).getByLabelText(name);
-    await waitFor(() => expect(field('Finca')).toHaveValue('f1'));
-    await waitFor(() => expect(field('Parcela')).toHaveValue('pl2'));
+    await waitFor(() => expect(field('Finca')).toHaveValue('La Esperanza'));
+    await waitFor(() => expect(field('Parcela')).toHaveValue('P-02 · 2,4 ha'));
 
     await userEvent.selectOptions(field('Tipo de actividad'), 'pruning');
     fireEvent.change(field('Fecha programada'), {

@@ -56,7 +56,7 @@ describe('entry', () => {
     renderInputsScreen({ searchParams: '?finca=f1' });
     const dialog = await openMenuAction('Urea 46 %', 'Registrar entrada');
 
-    expect(within(dialog).getByLabelText('Finca')).toHaveValue('f1');
+    expect(within(dialog).getByLabelText('Finca')).toHaveValue('La Esperanza');
     expect(within(dialog).getByLabelText('Fecha')).toHaveValue(todayInBogota());
     await userEvent.type(
       within(dialog).getByLabelText('Cantidad (bultos)'),

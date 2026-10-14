@@ -21,6 +21,7 @@ import {
   plotsHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { listedOptions, pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
 import { ActivityCalendarScreen } from './activity-calendar-screen';
@@ -575,7 +576,7 @@ describe('the filters of the calendar', () => {
     await screen.findByRole('region', { name: 'sábado 10 de octubre' });
 
     await openFilters();
-    await userEvent.selectOptions(screen.getByLabelText('Finca'), 'f2');
+    await pick('Finca', 'El Paraíso');
 
     await waitFor(() =>
       expect(
@@ -586,11 +587,10 @@ describe('the filters of the calendar', () => {
       screen.getByRole('region', { name: 'lunes 5 de octubre' }),
     ).toBeInTheDocument();
     expect(urls.at(-1)).toContain('finca=f2');
-    expect(
-      within(screen.getByLabelText('Parcela'))
-        .getAllByRole('option')
-        .map((option) => option.textContent),
-    ).toEqual(['Todas las parcelas', 'P-01']);
+    expect(await listedOptions('Parcela')).toEqual([
+      'Todas las parcelas',
+      'P-01',
+    ]);
   });
 
   const loaded = () =>
@@ -604,7 +604,8 @@ describe('the filters of the calendar', () => {
     renderScreen();
     await loaded();
 
-    await userEvent.selectOptions(screen.getByLabelText('Parcela'), 'p2');
+    await openFilters();
+    await pick('Parcela', 'P-02');
 
     await waitFor(() =>
       expect(
@@ -807,6 +808,9 @@ describe('the technical account', () => {
       expect(assigneeRequests[0]?.get('producer')).toBe('p2'),
     );
     await openFilters();
+    await userEvent.click(
+      screen.getByRole('combobox', { name: 'Responsable' }),
+    );
     expect(
       await screen.findByRole('option', { name: 'Marta Peña' }),
     ).toBeInTheDocument();

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from '@/test/render';
+import { listedOptions, pick } from '@/test/search-select';
 
 import { NO_ACTIVITY_FILTERS } from '../activity-filters';
 import { ActivityFiltersBar } from './activity-filters-bar';
@@ -55,14 +56,17 @@ function setup(props: Partial<Parameters<typeof ActivityFiltersBar>[0]> = {}) {
 }
 
 describe('ActivityFiltersBar', () => {
-  it('groups the plots by farm and includes the inactive ones, marked', () => {
+  it('groups the plots by farm and includes the inactive ones, marked', async () => {
     setup();
 
-    const groups = screen.getAllByRole('group');
-    expect(groups.map((group) => group.getAttribute('label'))).toEqual([
-      'La Esperanza',
-      'El Paraíso',
-    ]);
+    await userEvent.click(screen.getByRole('combobox', { name: 'Parcela' }));
+
+    expect(
+      screen.getByRole('group', { name: 'La Esperanza' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('group', { name: 'El Paraíso' }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('option', { name: 'P-02 (inactiva)' }),
     ).toBeInTheDocument();
@@ -77,25 +81,30 @@ describe('ActivityFiltersBar', () => {
     expect(screen.queryByLabelText('Estado')).not.toBeInTheDocument();
   });
 
-  it('offers the farms of the period', () => {
+  it('offers the farms of the period', async () => {
     setup();
 
-    expect(
-      within(screen.getByLabelText('Finca'))
-        .getAllByRole('option')
-        .map((option) => option.textContent),
-    ).toEqual(['Todas las fincas', 'El Paraíso', 'La Esperanza']);
+    expect(await listedOptions('Finca')).toEqual([
+      'Todas las fincas',
+      'El Paraíso',
+      'La Esperanza',
+    ]);
   });
 
-  it('shows only the plots of the farm that was chosen', () => {
+  it('shows only the plots of the farm that was chosen', async () => {
     setup({
       filters: { ...NO_ACTIVITY_FILTERS, farm: 'f2' },
       hasFilters: true,
     });
 
+    await userEvent.click(screen.getByRole('combobox', { name: 'Parcela' }));
+
     expect(
-      screen.getAllByRole('group').map((group) => group.getAttribute('label')),
-    ).toEqual(['El Paraíso']);
+      screen.getByRole('group', { name: 'El Paraíso' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('group', { name: 'La Esperanza' }),
+    ).not.toBeInTheDocument();
   });
 
   it('keeps a chosen farm that is not among the options of this period', () => {
@@ -104,20 +113,24 @@ describe('ActivityFiltersBar', () => {
       hasFilters: true,
     });
 
-    expect(screen.getByLabelText('Finca')).toHaveValue('gone');
-    expect(
-      screen.getByRole('option', {
-        name: 'Finca sin actividades en este periodo',
-      }),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Finca')).toHaveValue(
+      'Finca sin actividades en este periodo',
+    );
   });
 
   it('reports each filter that changes', async () => {
     const handlers = setup();
 
-    await userEvent.selectOptions(screen.getByLabelText('Finca'), 'f2');
-    await userEvent.selectOptions(screen.getByLabelText('Parcela'), 'p3');
-    await userEvent.selectOptions(screen.getByLabelText('Responsable'), 'u2');
+    await pick('Finca', 'El Paraíso');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Parcela' }));
+    // «P-01» se repite en dos fincas: se elige la de la finca que se quiere.
+    await userEvent.click(
+      within(screen.getByRole('group', { name: 'El Paraíso' })).getByRole(
+        'option',
+        { name: 'P-01' },
+      ),
+    );
+    await pick('Responsable', 'Luis Rincón (cuenta inactiva)');
 
     expect(handlers.onFarm).toHaveBeenCalledWith('f2');
     expect(handlers.onPlot).toHaveBeenCalledWith('p3');
@@ -127,7 +140,7 @@ describe('ActivityFiltersBar', () => {
   it('reports "all" as no filter', async () => {
     const handlers = setup({ filters: { ...NO_ACTIVITY_FILTERS, plot: 'p1' } });
 
-    await userEvent.selectOptions(screen.getByLabelText('Parcela'), '');
+    await pick('Parcela', 'Todas las parcelas');
 
     expect(handlers.onPlot).toHaveBeenCalledWith(null);
   });
@@ -138,9 +151,9 @@ describe('ActivityFiltersBar', () => {
       hasFilters: true,
     });
 
-    expect(screen.getByLabelText('Finca')).toHaveValue('f2');
-    expect(screen.getByLabelText('Parcela')).toHaveValue('p3');
-    expect(screen.getByLabelText('Responsable')).toHaveValue('u1');
+    expect(screen.getByLabelText('Finca')).toHaveValue('El Paraíso');
+    expect(screen.getByLabelText('Parcela')).toHaveValue('P-01');
+    expect(screen.getByLabelText('Responsable')).toHaveValue('Ana Gómez');
   });
 
   it('keeps a chosen plot that is not among the options of this period', () => {
@@ -149,12 +162,9 @@ describe('ActivityFiltersBar', () => {
       hasFilters: true,
     });
 
-    expect(screen.getByLabelText('Parcela')).toHaveValue('gone');
-    expect(
-      screen.getByRole('option', {
-        name: 'Parcela sin actividades en este periodo',
-      }),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Parcela')).toHaveValue(
+      'Parcela sin actividades en este periodo',
+    );
   });
 
   it('has the shortcut for the activities assigned to the person', async () => {

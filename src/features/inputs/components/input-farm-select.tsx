@@ -1,6 +1,6 @@
 'use client';
 
-import { SelectField } from '@/components/select-field';
+import { SearchSelect } from '@/components/search-select';
 
 export type FarmChoice = { id: string; name: string; is_active: boolean };
 
@@ -14,20 +14,19 @@ export function InputFarmSelect({
   farm: string | null;
   onChange: (farm: string | null) => void;
 }) {
+  const options = farms.map((choice) => ({
+    id: choice.id,
+    label: choice.is_active ? choice.name : `${choice.name} (inactiva)`,
+  }));
   return (
-    <SelectField
+    <SearchSelect
+      allLabel="Todas las fincas"
+      className="sm:max-w-sm"
       hint="Las existencias se llevan por finca. Con «Todas las fincas» ves el total."
       label="Finca"
-      onChange={(event) => onChange(event.target.value || null)}
-      value={farm ?? ''}
-      wrapperClassName="sm:max-w-sm"
-    >
-      <option value="">Todas las fincas</option>
-      {farms.map((choice) => (
-        <option key={choice.id} value={choice.id}>
-          {choice.is_active ? choice.name : `${choice.name} (inactiva)`}
-        </option>
-      ))}
-    </SelectField>
+      onChange={(option) => onChange(option?.id ?? null)}
+      options={options}
+      value={options.find((option) => option.id === farm) ?? null}
+    />
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { MunicipalityFilter } from '@/components/municipality-filter';
 import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
@@ -87,29 +88,15 @@ export function AccountFilters({
             </SelectField>
           )}
           {municipalities && (
-            <SelectField
+            <MunicipalityFilter
+              className="min-w-40 flex-1"
               label="Municipio"
-              value={filters.municipality ?? ''}
-              onChange={(event) => {
-                void filters.setMunicipality(event.target.value || null);
+              municipalities={municipalities}
+              onChange={(code) => {
+                void filters.setMunicipality(code);
               }}
-              wrapperClassName="min-w-40 flex-1"
-            >
-              <option value="">Todos los municipios</option>
-              {filters.municipality &&
-                !municipalities.some(
-                  (municipality) => municipality.code === filters.municipality,
-                ) && (
-                  <option value={filters.municipality}>
-                    Municipio seleccionado
-                  </option>
-                )}
-              {municipalities.map((municipality) => (
-                <option key={municipality.code} value={municipality.code}>
-                  {municipality.name}
-                </option>
-              ))}
-            </SelectField>
+              value={filters.municipality}
+            />
           )}
         </div>
       )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { type FieldErrors, useForm, useWatch } from 'react-hook-form';
 
 import { SubmitButton } from '@/components/submit-button';
@@ -97,9 +97,13 @@ export function ActivityFormDialog({
     onRejected,
   });
   const { errors } = form.formState;
-  const farmId = useWatch({ control: form.control, name: 'farm_id' });
-  // La cuenta técnica elige el productor al programar, salvo que el formulario venga de una finca,
-  // que ya lo dice. Para las demás cuentas no hay nada que elegir.
+  const plotId = useWatch({ control: form.control, name: 'plot_id' });
+  // La finca que se eligió en su campo acota las parcelas. No es lo mismo que la finca del
+  // formulario: al elegir una parcela, esa finca se rellena sola y las demás parcelas deben seguir
+  // a la vista.
+  const [farmFilter, setFarmFilter] = useState(preset?.farmId ?? '');
+  // La cuenta técnica puede acotar por productor al programar, salvo que el formulario venga de una
+  // finca, que ya lo dice. Es opcional; para las demás cuentas no hay nada que elegir.
   const { data: user } = useSession();
   const needsProducer =
     user?.is_superuser === true && !activity && !preset?.farmId;
@@ -109,7 +113,12 @@ export function ActivityFormDialog({
     user?.is_superuser === true && !activity ? (preset?.farmId ?? '') : '',
   );
   const producerId = chosenProducer ?? presetFarm.data?.data.producer.id;
-  const choices = useActivityFormChoices(farmId, activity, producerId);
+  const choices = useActivityFormChoices(
+    farmFilter,
+    plotId,
+    activity,
+    producerId,
+  );
   const fixedPlot = useMemo(
     () =>
       activity && {
@@ -119,18 +128,12 @@ export function ActivityFormDialog({
     [activity],
   );
 
-  // Con una sola finca activa no hay nada que elegir.
-  const { setValue, getValues } = form;
-  const farmChoices = choices.farms.choices;
-  useEffect(() => {
-    if (farmChoices.length === 1 && !getValues('farm_id')) {
-      setValue('farm_id', farmChoices[0].id);
-    }
-  }, [farmChoices, getValues, setValue]);
+  const { setValue } = form;
 
   // Lo elegido bajo el productor anterior ya no vale.
   const changeProducer = (producer: string | undefined) => {
     setChosenProducer(producer);
+    setFarmFilter('');
     setValue('farm_id', '');
     setValue('plot_id', '');
     setValue('assignee_id', '');
@@ -188,6 +191,7 @@ export function ActivityFormDialog({
             errors={errors}
             fixedPlot={fixedPlot}
             form={form}
+            onFarmFilter={setFarmFilter}
             producer={
               needsProducer
                 ? { value: chosenProducer, onChange: changeProducer }

@@ -145,9 +145,10 @@ export function ProducerForm({
               {...register('last_name')}
             />
             <MunicipalitySelectField
-              label="Municipio"
+              control={control}
               error={errors.municipality_code?.message}
-              {...register('municipality_code')}
+              label="Municipio"
+              name="municipality_code"
             />
             <TextField
               label="Fecha de vinculación"

@@ -9,8 +9,9 @@ import {
 
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
-import { formatHectares } from '@/lib/format/hectares';
 
+import { type ChoiceList, type FormChoice, listHint } from './activity-choices';
+import { ActivityPlotFields } from './activity-plot-fields';
 import { ActivityProducerField } from './activity-producer-field';
 
 import {
@@ -19,37 +20,12 @@ import {
   OTHER_DESCRIPTION_MAX_LENGTH,
 } from '../schemas';
 
-export type FormChoice = { id: string; label: string };
-
-// Una lista que se llena con una lectura: mientras llega o si falla, el campo lo dice.
-export type ChoiceList = {
-  choices: readonly FormChoice[];
-  isLoading: boolean;
-  isError: boolean;
-};
-
-function listHint(
-  list: ChoiceList,
-  {
-    loading,
-    failed,
-    empty,
-  }: { loading: string; failed: string; empty: string },
-) {
-  if (list.isLoading) return loading;
-  if (list.isError) return failed;
-  return list.choices.length === 0 ? empty : undefined;
-}
-
 const options = (choices: readonly FormChoice[]) =>
   choices.map(({ id, label }) => (
     <option key={id} value={id}>
       {label}
     </option>
   ));
-
-export const plotLabel = (plot: { code: string; areaHectares: string }) =>
-  `${plot.code} · ${formatHectares(plot.areaHectares)}`;
 
 // Los campos de una actividad. Las listas llegan ya filtradas: solo fincas y parcelas activas y
 // cuentas activas. Al editar llega `fixedPlot`: la actividad mantiene su parcela, así que la finca
@@ -65,6 +41,7 @@ export function ActivityFormFields({
   types,
   assignees,
   producer,
+  onFarmFilter,
 }: {
   form: UseFormReturn<ActivityFormInput, unknown, ActivityFormValues>;
   errors: FieldErrors<ActivityFormInput>;
@@ -73,26 +50,20 @@ export function ActivityFormFields({
   today: string;
   fixedPlot?: { farm: string; plot: string };
   farms: ChoiceList;
-  // Las de la finca elegida; sin finca, la lista está vacía y el campo deshabilitado.
+  // Las de la finca elegida o, sin ella, las de todas (hasta el tope de una página).
   plots: ChoiceList;
   types: readonly FormChoice[];
   assignees: ChoiceList;
-  // Solo la cuenta técnica elige el productor, antes que la finca; sin él, la finca espera.
+  // Solo la cuenta técnica puede acotar por productor; es opcional: sin él se ve todo lo que alcanza.
   producer?: { value: string | undefined; onChange: (id?: string) => void };
+  // Avisa de la finca que se eligió en su campo, para acotar las parcelas con ella.
+  onFarmFilter: (farmId: string) => void;
 }) {
   const { register, control, setValue, getValues } = form;
-  const farmId = useWatch({ control, name: 'farm_id' });
   const isOther = useWatch({ control, name: 'activity_type' }) === 'other';
 
-  // Un valor que ya estaba elegido (la parcela desde la que se abrió el formulario, el responsable
-  // de la actividad que se edita) no se ve en su lista hasta que llegan las opciones: al llegar,
-  // se vuelve a poner.
-  useEffect(() => {
-    setValue('farm_id', getValues('farm_id'));
-  }, [farms.choices, getValues, setValue]);
-  useEffect(() => {
-    setValue('plot_id', getValues('plot_id'));
-  }, [plots.choices, getValues, setValue]);
+  // El responsable de la actividad que se edita no se ve en su lista hasta que llegan las
+  // opciones: al llegar, se vuelve a poner.
   useEffect(() => {
     setValue('assignee_id', getValues('assignee_id'));
   }, [assignees.choices, getValues, setValue]);
@@ -119,54 +90,24 @@ export function ActivityFormFields({
               value={producer.value}
             />
           )}
-          <SelectField
-            disabled={disabled || (!!producer && !producer.value)}
-            error={errors.farm_id?.message}
-            hint={
-              producer && !producer.value
-                ? 'Elige primero el productor.'
-                : listHint(farms, {
-                    loading: 'Cargando fincas…',
-                    failed: 'No fue posible cargar las fincas.',
-                    empty: 'No hay fincas activas.',
-                  })
-            }
-            label="Finca"
-            {...register('farm_id', {
-              // La parcela elegida era de la otra finca.
-              onChange: () => setValue('plot_id', ''),
-            })}
-          >
-            <option value="">Elige una finca</option>
-            {options(farms.choices)}
-          </SelectField>
-          <SelectField
-            disabled={disabled || !farmId}
-            error={errors.plot_id?.message}
-            hint={
-              farmId
-                ? listHint(plots, {
-                    loading: 'Cargando parcelas…',
-                    failed: 'No fue posible cargar las parcelas.',
-                    empty: 'Esta finca no tiene parcelas activas.',
-                  })
-                : 'Elige primero la finca.'
-            }
-            label="Parcela"
-            {...register('plot_id')}
-          >
-            <option value="">Elige una parcela</option>
-            {options(plots.choices)}
-          </SelectField>
+          <ActivityPlotFields
+            disabled={disabled}
+            errors={errors}
+            farms={farms}
+            form={form}
+            hasProducer={!!producer}
+            onFarmFilter={onFarmFilter}
+            plots={plots}
+          />
         </>
       )}
       <SelectField
+        placeholder="Elige un tipo"
         disabled={disabled}
         error={errors.activity_type?.message}
         label="Tipo de actividad"
         {...register('activity_type')}
       >
-        <option value="">Elige un tipo</option>
         {options(types)}
       </SelectField>
       {isOther && (
@@ -188,6 +129,7 @@ export function ActivityFormFields({
         {...register('scheduled_date')}
       />
       <SelectField
+        placeholder="Elige un responsable"
         disabled={disabled}
         error={errors.assignee_id?.message}
         hint={listHint(assignees, {
@@ -198,7 +140,6 @@ export function ActivityFormFields({
         label="Responsable"
         {...register('assignee_id')}
       >
-        <option value="">Elige un responsable</option>
         {options(assignees.choices)}
       </SelectField>
     </div>

@@ -149,6 +149,7 @@ export function PlantingLine({
       >
         <div className="sm:col-span-2">
           <SelectField
+            placeholder="Elige la variedad"
             className={CAPTURE_FIELD_CLASS}
             error={lineErrors?.variety_id?.message}
             hint={
@@ -161,7 +162,6 @@ export function PlantingLine({
             label={`Variedad ${position}`}
             {...register(`plantings.${index}.variety_id`)}
           >
-            <option value="">Elige la variedad</option>
             {choices.map((choice) => (
               <option key={choice.id} value={choice.id}>
                 {choice.label}
@@ -205,6 +205,7 @@ export function PlantingLine({
           ))}
         </SelectField>
         <SelectField
+          placeholder="Elige la etapa"
           className={CAPTURE_FIELD_CLASS}
           error={lineErrors?.stage?.message}
           hint={stageSuggested ? SUGGESTED_STAGE_HINT : undefined}
@@ -215,7 +216,6 @@ export function PlantingLine({
             return stage.onChange(event);
           }}
         >
-          <option value="">Elige la etapa</option>
           {STAGE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}

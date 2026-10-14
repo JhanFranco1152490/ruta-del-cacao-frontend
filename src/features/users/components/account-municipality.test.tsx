@@ -1,10 +1,10 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildPage, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
+import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
 import { AccountListScreen } from './account-list-screen';
@@ -84,8 +84,7 @@ describe('municipality of the accounts', () => {
       searchParams: '?pagina=2',
       onUrlUpdate,
     });
-    await screen.findByRole('option', { name: 'Cúcuta' });
-    await userEvent.selectOptions(screen.getByLabelText('Municipio'), '54001');
+    await pick('Municipio', 'Cúcuta');
 
     await waitFor(() =>
       expect(requests.at(-1)?.searchParams.get('municipality')).toBe('54001'),

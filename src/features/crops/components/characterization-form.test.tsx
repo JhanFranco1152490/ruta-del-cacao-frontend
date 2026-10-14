@@ -347,7 +347,6 @@ describe('CharacterizationForm', () => {
       .getAllByRole('option')
       .map((option) => option.textContent);
     expect(offered).toEqual([
-      'Elige la variedad',
       'CCN-51',
       'FSA-12 · Saravena',
       'Híbrido o común (sin identificar)',

@@ -53,12 +53,12 @@ export function InputFormFields({
       />
       {extra}
       <SelectField
+        placeholder="Elige un tipo"
         disabled={disabled}
         error={errors.input_type?.message}
         label="Tipo de insumo"
         {...register('input_type')}
       >
-        <option value="">Elige un tipo</option>
         {INPUT_TYPE_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
@@ -78,13 +78,13 @@ export function InputFormFields({
         </SelectField>
       ) : (
         <SelectField
+          placeholder="Elige una unidad"
           disabled={disabled}
           error={errors.unit?.message}
           hint="En ella se cuentan las existencias y lo que gasta cada labor."
           label="Unidad de medida"
           {...register('unit')}
         >
-          <option value="">Elige una unidad</option>
           {INPUT_UNIT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}

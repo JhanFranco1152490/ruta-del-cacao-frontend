@@ -3,8 +3,9 @@
 import { useMemo } from 'react';
 
 import { useSession } from '@/hooks/use-session';
-import { useFarmOptions } from '@/lib/api/farm-options';
-import { usePlotOptions } from '@/lib/api/plot-options';
+import { FARM_OPTIONS_SIZE, useFarmOptions } from '@/lib/api/farm-options';
+import { PLOT_OPTIONS_SIZE, usePlotOptions } from '@/lib/api/plot-options';
+import { producerLabelOf } from '@/lib/format/producer';
 
 import {
   ACTIVITY_TYPE_OPTIONS,
@@ -15,7 +16,7 @@ import {
   type ChoiceList,
   type FormChoice,
   plotLabel,
-} from './activity-form-fields';
+} from './activity-choices';
 
 const toChoices = (
   types: readonly { value: string; label: string }[],
@@ -24,17 +25,21 @@ const toChoices = (
 const SCHEDULABLE_TYPES = toChoices(SCHEDULABLE_ACTIVITY_TYPE_OPTIONS);
 const ALL_TYPES = toChoices(ACTIVITY_TYPE_OPTIONS);
 
-// Lo que ofrece el formulario de una actividad: fincas y parcelas activas, tipos que se pueden
+// Lo que ofrece el formulario de una actividad: fincas y parcelas activas (hasta el tope de una
+// página, y acotadas por la finca o el productor que se haya elegido), tipos que se pueden
 // programar y cuentas activas. Al editar (`activity`) no se elige parcela, y lo que la actividad
 // ya tiene se conserva aunque hoy no se ofrecería: su responsable, si la cuenta se desactivó, y
 // su tipo, si es un control fitosanitario. Las listas se arman una vez por lectura, porque cada
 // campo vuelve a poner su valor cuando la suya cambia.
 export function useActivityFormChoices(
-  farmId: string,
+  // La finca con la que se acotan las parcelas: la que se eligió en su campo, no la que dedujo
+  // una parcela elegida (así se puede seguir mirando todas).
+  farmFilter: string,
+  // La parcela elegida: de ella salen su finca y su productor.
+  plotId: string,
   activity?: AgriculturalActivity,
-  // El productor que eligió la cuenta técnica (o el de la finca desde la que se abrió el
-  // formulario): sus fincas y sus cuentas son las que se ofrecen. Sin él, la cuenta técnica no
-  // tiene nada que ofrecer todavía.
+  // El productor que eligió la cuenta técnica para acotar las listas (o el de la finca desde la
+  // que se abrió el formulario). Sin él se ofrece todo lo que alcanza quien pregunta.
   chosenProducer?: string,
 ): {
   farms: ChoiceList;
@@ -46,21 +51,33 @@ export function useActivityFormChoices(
   const userId = user?.id;
   const superuser = user?.is_superuser === true;
   const editing = !!activity;
+  // Quien ve los de varios productores necesita leer de quién es cada finca y parcela.
+  const showProducer = superuser;
+  const producerFilter = superuser ? chosenProducer : undefined;
 
-  const farms = useFarmOptions(userId, superuser ? chosenProducer : undefined, {
-    enabled: !editing && (!superuser || !!chosenProducer),
-  });
+  const farms = useFarmOptions(userId, producerFilter, { enabled: !editing });
   const activeFarms = useMemo(
     () => (farms.data?.data.options ?? []).filter((farm) => farm.isActive),
     [farms.data],
   );
-  const plots = usePlotOptions(editing ? '' : farmId);
+  const plots = usePlotOptions(
+    { farm: farmFilter || undefined, producer: producerFilter },
+    { enabled: !editing },
+  );
+  const offeredPlots = useMemo(
+    () =>
+      (plots.data?.options ?? []).filter(
+        (plot) => plot.isActive && plot.farm.isActive,
+      ),
+    [plots.data],
+  );
   // La cuenta técnica asigna entre las cuentas del productor de la parcela; las demás cuentas,
   // entre las de su propio productor.
   const producerId =
     activity?.producer_id ??
     chosenProducer ??
-    activeFarms.find((option) => option.id === farmId)?.producer.id;
+    offeredPlots.find((plot) => plot.id === plotId)?.farm.producer.id ??
+    activeFarms.find((option) => option.id === farmFilter)?.producer.id;
   const assignees = useActivityAssignees(
     userId,
     superuser ? (producerId ?? null) : null,
@@ -68,15 +85,24 @@ export function useActivityFormChoices(
   );
 
   const farmChoices = useMemo(
-    () => activeFarms.map(({ id, name }) => ({ id, label: name })),
-    [activeFarms],
+    () =>
+      activeFarms.map(({ id, name, producer }) => ({
+        id,
+        label: showProducer ? `${name} · ${producerLabelOf(producer)}` : name,
+      })),
+    [activeFarms, showProducer],
   );
   const plotChoices = useMemo(
     () =>
-      (plots.data ?? [])
-        .filter((plot) => plot.isActive)
-        .map((plot) => ({ id: plot.id, label: plotLabel(plot) })),
-    [plots.data],
+      offeredPlots.map((plot) => ({
+        id: plot.id,
+        label: plotLabel(plot),
+        group: showProducer
+          ? `${plot.farm.name} · ${producerLabelOf(plot.farm.producer)}`
+          : plot.farm.name,
+        farmId: plot.farm.id,
+      })),
+    [offeredPlots, showProducer],
   );
   const current = activity?.assignee;
   const assigneeChoices = useMemo(() => {
@@ -98,11 +124,13 @@ export function useActivityFormChoices(
       choices: farmChoices,
       isLoading: farms.isLoading,
       isError: farms.isError,
+      truncated: (farms.data?.data.count ?? 0) > FARM_OPTIONS_SIZE,
     },
     plots: {
       choices: plotChoices,
       isLoading: plots.isLoading,
       isError: plots.isError,
+      truncated: (plots.data?.count ?? 0) > PLOT_OPTIONS_SIZE,
     },
     types:
       activity?.activity_type === 'phytosanitary_control'

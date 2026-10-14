@@ -56,7 +56,6 @@ describe('the activity form', () => {
     );
 
     expect(errorsOf(result)).toEqual({
-      farm_id: 'Campo obligatorio',
       plot_id: 'Campo obligatorio',
       activity_type: 'Campo obligatorio',
       scheduled_date: 'Campo obligatorio',
