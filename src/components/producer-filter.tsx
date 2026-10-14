@@ -28,6 +28,7 @@ export function ProducerFilter({
   label = 'Productor',
   placeholder = 'Nombre, documento o código de socio',
   showTrigger = true,
+  compact = false,
   className,
 }: {
   producer: string | undefined;
@@ -38,6 +39,9 @@ export function ProducerFilter({
   placeholder?: string;
   // Sin la flecha se lee como un campo para escribir y no como una lista cerrada.
   showTrigger?: boolean;
+  // Para una fila de filtros compactos: mismo tamaño que los demás y la etiqueta solo para lectores
+  // de pantalla, así que el texto de ayuda debe decir qué se busca.
+  compact?: boolean;
   // Para encajar en la fila de filtros de quien lo use, junto a otros campos.
   className?: string;
 }) {
@@ -69,6 +73,7 @@ export function ProducerFilter({
   return (
     <SearchSelect
       className={className}
+      compact={compact}
       emptyMessage={emptyMessage}
       hint={paginationHint}
       label={label}

@@ -7,6 +7,7 @@ import { apiError, buildMunicipalities, buildProducer } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
+import { pick } from '@/test/search-select';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
 
@@ -38,7 +39,7 @@ function updateHandler(response?: () => Response | Promise<Response>) {
 
 async function renderForm(producer?: Producer) {
   const result = renderWithProviders(<ProducerForm producer={producer} />);
-  await screen.findByRole('option', { name: 'Pamplona' });
+  await waitFor(() => expect(screen.getByLabelText('Municipio')).toBeEnabled());
   return result;
 }
 
@@ -50,7 +51,7 @@ async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Número de documento'), '1234567890');
   await user.type(screen.getByLabelText('Nombres'), 'Ana');
   await user.type(screen.getByLabelText('Apellidos'), 'Prueba');
-  await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+  await pick('Municipio', 'Pamplona');
   fireEvent.change(screen.getByLabelText('Fecha de vinculación'), {
     target: { value: '2026-03-15' },
   });
@@ -475,7 +476,7 @@ describe('ProducerForm', () => {
       );
       expect(screen.getByLabelText('Nombres')).toHaveValue('Ana');
       expect(screen.getByLabelText('Teléfono')).toHaveValue('3001234567');
-      expect(screen.getByLabelText('Municipio')).toHaveValue('54001');
+      expect(screen.getByLabelText('Municipio')).toHaveValue('Cúcuta');
       expect(
         screen.getByRole('heading', { name: 'Editar productor' }),
       ).toBeInTheDocument();
@@ -561,12 +562,14 @@ describe('ProducerForm', () => {
       );
       renderWithProviders(<ProducerForm producer={buildProducer()} />);
 
-      expect(screen.getByText('Cargando municipios…')).toBeInTheDocument();
+      expect(screen.getByLabelText('Municipio')).toHaveAttribute(
+        'placeholder',
+        'Cargando municipios…',
+      );
       expect(screen.getByLabelText('Municipio')).toBeDisabled();
 
-      await screen.findByRole('option', { name: 'Cúcuta' });
       await waitFor(() =>
-        expect(screen.getByLabelText('Municipio')).toHaveValue('54001'),
+        expect(screen.getByLabelText('Municipio')).toHaveValue('Cúcuta'),
       );
       expect(screen.getByLabelText('Municipio')).toBeEnabled();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from 'cn';
 
 import { FormField } from '@/components/form-field';
@@ -46,6 +46,7 @@ export function SearchSelect({
   options,
   value,
   onChange,
+  onBlur,
   allLabel,
   onSearch,
   placeholder,
@@ -55,6 +56,8 @@ export function SearchSelect({
   disabled = false,
   showTrigger = true,
   compact = false,
+  hideLabel = false,
+  inputClassName,
   id,
   className,
 }: {
@@ -64,6 +67,8 @@ export function SearchSelect({
   // se agrega aparte para que el campo la siga mostrando.
   value: SearchSelectOption | null;
   onChange: (option: SearchSelectOption | null) => void;
+  // Al salir del campo: los formularios que validan al salir lo necesitan.
+  onBlur?: () => void;
   allLabel?: string;
   onSearch?: (text: string) => void;
   placeholder?: string;
@@ -76,6 +81,10 @@ export function SearchSelect({
   // Para una fila de filtros: 40 px en lugar de 44, texto pequeño y la etiqueta solo para lectores
   // de pantalla (la entrada «Todas…» ya dice a qué se refiere el campo).
   compact?: boolean;
+  // Solo la etiqueta para lectores de pantalla, sin cambiar el tamaño.
+  hideLabel?: boolean;
+  // Se suma al estilo del campo: la densidad de captura en campo, por ejemplo.
+  inputClassName?: string;
   id?: string;
   className?: string;
 }) {
@@ -90,6 +99,11 @@ export function SearchSelect({
     );
     return () => clearTimeout(timer);
   }, [typed, onSearch]);
+
+  // Al enfocar el campo se selecciona su texto para que lo que se escriba lo reemplace: sin esto,
+  // escribir se agregaría a «Todas las fincas» o al nombre elegido y la lista quedaría vacía. Con el
+  // ratón, soltar el botón después de enfocar mueve el cursor y borra la selección, así que se evita.
+  const focusedByMouse = useRef(false);
 
   const allOption = useMemo<SearchSelectOption | null>(
     () => (allLabel ? { id: ALL_ID, label: allLabel } : null),
@@ -130,7 +144,7 @@ export function SearchSelect({
     <FormField
       className={className}
       error={error}
-      hideLabel={compact}
+      hideLabel={compact || hideLabel}
       hint={hint}
       id={id}
       label={label}
@@ -165,8 +179,23 @@ export function SearchSelect({
             {...control}
             // Los controles de oficina del sistema de diseño miden 44 px (h-11); el combobox trae
             // 32 px por defecto (h-8).
-            className={cn('w-full', compact ? 'h-10 text-sm' : 'h-11')}
+            className={cn(
+              'w-full',
+              compact ? 'h-10 text-sm' : 'h-11',
+              inputClassName,
+            )}
             disabled={disabled}
+            onBlur={onBlur}
+            onFocus={(event) => event.currentTarget.select()}
+            onMouseDown={(event) => {
+              focusedByMouse.current =
+                document.activeElement !== event.currentTarget;
+            }}
+            onMouseUp={(event) => {
+              if (!focusedByMouse.current) return;
+              focusedByMouse.current = false;
+              event.preventDefault();
+            }}
             placeholder={placeholder}
             showClear={!allOption}
             showTrigger={showTrigger}

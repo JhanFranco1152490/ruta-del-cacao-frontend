@@ -61,6 +61,28 @@ describe('SearchSelect', () => {
     expect(optionNames()).toEqual(['Cañas Gordas']);
   });
 
+  it('selects its text when it is focused, so what is typed replaces it', async () => {
+    render(<Harness allLabel="Todas las fincas" />);
+    const input = field() as HTMLInputElement;
+
+    await userEvent.tab();
+
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe('Todas las fincas'.length);
+    await userEvent.keyboard('ret');
+    expect(input).toHaveValue('ret');
+    expect(optionNames()).toEqual(['El Retiro']);
+  });
+
+  it('narrows the list when typing over a chosen option', async () => {
+    render(<Harness initial={FARMS[0]} />);
+
+    await userEvent.click(field());
+    await userEvent.keyboard('cañas');
+
+    expect(optionNames()).toEqual(['Cañas Gordas']);
+  });
+
   it('says so when nothing matches', async () => {
     render(<Harness emptyMessage="Ninguna finca coincide." />);
 

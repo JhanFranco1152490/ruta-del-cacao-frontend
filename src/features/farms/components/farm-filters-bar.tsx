@@ -1,8 +1,8 @@
 'use client';
 
+import { MunicipalityFilter } from '@/components/municipality-filter';
 import { ProducerFilter } from '@/components/producer-filter';
 import { TextField } from '@/components/text-field';
-import { NativeSelect } from '@/components/ui/native-select';
 import { useMunicipalities } from '@/lib/api/municipalities';
 import { useProducerSummary } from '@/lib/api/producer-options';
 
@@ -32,21 +32,12 @@ export function FarmFiltersBar({
         value={filters.searchInput}
         wrapperClassName="w-full max-w-md"
       />
-      <NativeSelect
-        aria-label="Filtrar por municipio"
-        className="text-sm sm:w-64"
-        onChange={(event) =>
-          void filters.setMunicipality(event.target.value || null)
-        }
-        value={filters.municipality ?? ''}
-      >
-        <option value="">Todos los municipios</option>
-        {(municipalities.data ?? []).map((municipality) => (
-          <option key={municipality.code} value={municipality.code}>
-            {municipality.name}
-          </option>
-        ))}
-      </NativeSelect>
+      <MunicipalityFilter
+        className="w-full sm:w-64"
+        municipalities={municipalities.data ?? []}
+        onChange={(code) => void filters.setMunicipality(code)}
+        value={filters.municipality}
+      />
       {pickProducer && (
         <ProducerFilter
           className="w-full sm:w-80"

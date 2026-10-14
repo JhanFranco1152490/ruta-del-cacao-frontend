@@ -12,6 +12,7 @@ import { buildPage, buildProducer, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
 import { FarmForm } from './farm-form';
@@ -34,7 +35,7 @@ async function renderForm(session: Parameters<typeof buildSession>[0] = {}) {
     buildSession({ id: userId, ...session }),
   );
   const result = renderWithProviders(<FarmForm />, { queryClient });
-  await screen.findByRole('option', { name: 'Pamplona' });
+  await waitFor(() => expect(screen.getByLabelText('Municipio')).toBeEnabled());
   return result;
 }
 
@@ -47,7 +48,7 @@ async function fillField(user: User, label: string, text: string) {
 
 async function fillValidFarm(user: User) {
   await fillField(user, 'Nombre de la finca', 'La Esperanza');
-  await user.selectOptions(screen.getByLabelText('Municipio'), '54001');
+  await pick('Municipio', 'Cúcuta');
   await fillField(user, 'Área total (hectáreas)', '12,5');
   await fillField(user, 'Altitud (m s. n. m.)', '950');
   await fillField(user, 'Latitud', '7.8234567');
@@ -78,13 +79,13 @@ describe('FarmForm', () => {
     const user = userEvent.setup();
     await renderForm();
 
-    await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+    await pick('Municipio', 'Pamplona');
     expect(
       screen.getByText('En Pamplona el terreno va de 1450 a 3902 m.'),
     ).toBeInTheDocument();
 
     await fillValidFarm(user);
-    await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+    await pick('Municipio', 'Pamplona');
     await save(user);
 
     expect(
@@ -313,14 +314,14 @@ describe('FarmForm', () => {
     it('switches to the municipality of the point when asked', async () => {
       const user = userEvent.setup();
       await renderForm();
-      await user.selectOptions(screen.getByLabelText('Municipio'), '54001');
+      await pick('Municipio', 'Cúcuta');
       await typePoint(user, PAMPLONA);
 
       await user.click(
         await screen.findByRole('button', { name: 'Cambiar a Pamplona' }),
       );
 
-      expect(screen.getByLabelText('Municipio')).toHaveValue('54518');
+      expect(screen.getByLabelText('Municipio')).toHaveValue('Pamplona');
       expect(
         screen.queryByText(/El punto parece estar en/),
       ).not.toBeInTheDocument();
@@ -333,7 +334,7 @@ describe('FarmForm', () => {
 
       await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
 
-      expect(screen.getByLabelText('Municipio')).toHaveValue('54001');
+      expect(screen.getByLabelText('Municipio')).toHaveValue('Cúcuta');
       expect(
         screen.getByText(
           'Elegimos Cúcuta como municipio según la ubicación del GPS. Cámbialo si no corresponde.',
@@ -345,12 +346,12 @@ describe('FarmForm', () => {
       const user = userEvent.setup();
       gpsAt(CUCUTA);
       await renderForm();
-      await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+      await pick('Municipio', 'Pamplona');
       await screen.findByText(/Encuadre:/);
 
       await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
 
-      expect(screen.getByLabelText('Municipio')).toHaveValue('54518');
+      expect(screen.getByLabelText('Municipio')).toHaveValue('Pamplona');
       expect(
         await screen.findByText(
           'El punto parece estar en Cúcuta, ¿confirmas Pamplona?',
@@ -362,7 +363,7 @@ describe('FarmForm', () => {
       const user = userEvent.setup();
       await renderForm();
 
-      await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
+      await pick('Municipio', 'Pamplona');
       expect(await screen.findByText(/Encuadre:/)).toBeInTheDocument();
 
       await typePoint(user, PAMPLONA);

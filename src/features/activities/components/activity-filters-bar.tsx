@@ -78,9 +78,11 @@ export function ActivityFiltersBar({
     <div className="flex flex-wrap items-end gap-2">
       {onProducer && (
         <ProducerFilter
-          className="min-w-64 flex-1 basis-72"
+          className={FILTER_WIDTH}
+          compact
           onClear={() => onProducer(null)}
           onSelect={onProducer}
+          placeholder="Buscar productor"
           producer={producer ?? undefined}
           selected={selectedProducer}
         />

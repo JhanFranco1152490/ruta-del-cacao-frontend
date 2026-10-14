@@ -19,6 +19,7 @@ export function FarmFilter({
   onSelect,
   onClear,
   label = 'Finca',
+  compact = false,
   className,
 }: {
   farm: string | undefined;
@@ -30,6 +31,8 @@ export function FarmFilter({
   onSelect: (farm: FarmOption) => void;
   onClear: () => void;
   label?: string;
+  // Para una fila de filtros compactos, como en `ProducerFilter`.
+  compact?: boolean;
   className?: string;
 }) {
   const [search, setSearch] = useState('');
@@ -58,6 +61,7 @@ export function FarmFilter({
   return (
     <SearchSelect
       className={className}
+      compact={compact}
       emptyMessage={emptyMessage}
       label={label}
       onChange={(option) => {

@@ -186,11 +186,12 @@ export function FarmFormFields({
                 value={OPERATING_DEPARTMENT.name}
               />
               <MunicipalitySelectField
-                className={CAPTURE_FIELD_CLASS}
+                control={control}
                 error={errors.municipality_id?.message}
+                inputClassName={CAPTURE_FIELD_CLASS}
                 label="Municipio"
+                name="municipality_id"
                 placeholder="Elige un municipio"
-                {...register('municipality_id')}
               />
               <TextField
                 className={CAPTURE_FIELD_CLASS}

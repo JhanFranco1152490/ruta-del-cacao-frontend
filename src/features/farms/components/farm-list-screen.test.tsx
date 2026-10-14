@@ -24,6 +24,7 @@ import {
   municipalitiesHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
 import { enqueueFarmCreate, enqueueFarmUpdate } from '../farm-queue';
@@ -466,7 +467,7 @@ describe('FarmListScreen map', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('combobox', { name: 'Filtrar por municipio' }),
-    ).toHaveValue('');
+    ).toHaveValue('Todos los municipios');
     expect(farmRequests.every((request) => !request.has('municipality'))).toBe(
       true,
     );
@@ -513,7 +514,6 @@ describe('FarmListScreen map', () => {
   });
 
   it('filters the list and the map by municipality from the select', async () => {
-    const user = userEvent.setup();
     const farmRequests: URLSearchParams[] = [];
     server.use(
       farmMapCountsHandler([
@@ -524,11 +524,7 @@ describe('FarmListScreen map', () => {
     );
     renderScreen({ searchParams: '?vista=municipios' });
 
-    await screen.findByRole('option', { name: 'Pamplona' });
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Filtrar por municipio' }),
-      '54518',
-    );
+    await pick('Filtrar por municipio', 'Pamplona');
 
     expect(
       await screen.findByText('Municipio del mapa: 54518'),

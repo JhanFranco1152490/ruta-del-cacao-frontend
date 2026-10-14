@@ -11,7 +11,10 @@ export async function pick(
   container?: HTMLElement,
 ) {
   const scope = container ? within(container) : screen;
-  await userEvent.click(scope.getByRole('combobox', { name: label }));
+  // El campo puede dibujarse cuando llega el catálogo, no al montar la pantalla.
+  await userEvent.click(
+    await scope.findByRole('combobox', { name: label }, { timeout: 5000 }),
+  );
   await userEvent.click(
     await screen.findByRole('option', { name: option }, { timeout: 5000 }),
   );
