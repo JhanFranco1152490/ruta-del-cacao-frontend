@@ -64,7 +64,8 @@ export const createActivityFormSchema = ({
 }) =>
   z
     .object({
-      farm_id: requiredText(),
+      // Es un filtro y, al elegir una parcela, lo que esta dedujo: la parcela es lo que se exige.
+      farm_id: z.string(),
       plot_id: requiredText(),
       // La lista llega vacía al abrir el formulario: vacío y un valor desconocido se señalan igual.
       activity_type: z
