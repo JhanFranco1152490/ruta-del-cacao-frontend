@@ -5,7 +5,6 @@ import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { FormMessage } from '@/components/form-message';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,11 +30,7 @@ import { useActivityMonth } from '../use-activity-month';
 import { useActivityView } from '../use-activity-view';
 import { useCalendarData } from '../use-calendar-data';
 import { ActivityCalendarBody } from './activity-calendar-body';
-import {
-  ActivityDialogs,
-  type ActivityNotice,
-  type PendingDialog,
-} from './activity-dialogs';
+import { ActivityDialogs, type PendingDialog } from './activity-dialogs';
 import { ActivityFiltersBar } from './activity-filters-bar';
 import { ActivityFiltersToggle } from './activity-filters-toggle';
 import { ActivityLegend } from './activity-legend';
@@ -127,13 +122,7 @@ export function ActivityCalendarScreen() {
     },
   };
   const [pending, setPending] = useState<PendingDialog>();
-  // Lo último que pasó, en un aviso que leen los lectores de pantalla. Si la actividad quedó en
-  // otro mes, la vista no salta: el aviso ofrece ir a verla.
-  const [notice, setNotice] = useState<ActivityNotice>();
-  const open = (dialog: PendingDialog) => {
-    setNotice(undefined);
-    setPending(dialog);
-  };
+  const open = (dialog: PendingDialog) => setPending(dialog);
 
   const canSchedule = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD);
   const openScheduleForm = () => open({ kind: 'schedule' });
@@ -175,16 +164,6 @@ export function ActivityCalendarScreen() {
     <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-8 sm:pb-5">
       <PageHeader compact title="Actividades" />
       <div className="mt-3 space-y-2 empty:hidden">
-        <FormMessage variant={notice?.variant}>{notice?.message}</FormMessage>
-        {inMonthView && notice?.month && notice.month !== month && (
-          <Button
-            onClick={() => goToMonth(notice.month!)}
-            size="office"
-            variant="outline"
-          >
-            Ver en su mes
-          </Button>
-        )}
         {offline && loaded && (
           <p className={STATUS_NOTE_CLASS} role="status">
             <CloudOff aria-hidden="true" className="size-4 shrink-0" />
@@ -325,7 +304,8 @@ export function ActivityCalendarScreen() {
       <ActivityDialogs
         items={filtered}
         offline={offline}
-        onNotice={setNotice}
+        currentMonth={month}
+        onGoToMonth={inMonthView ? goToMonth : undefined}
         onPending={setPending}
         pending={pending}
         today={today}

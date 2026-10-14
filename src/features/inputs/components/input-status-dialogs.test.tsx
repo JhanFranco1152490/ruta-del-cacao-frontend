@@ -4,6 +4,7 @@ import { http } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { apiError, buildAgriculturalInput } from '@/test/factories';
+import { queryDialog } from '@/test/dialog';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
@@ -34,7 +35,7 @@ const confirm = (dialog: HTMLElement, name: string) =>
   userEvent.click(within(dialog).getByRole('button', { name }));
 
 const dialogClosed = () =>
-  waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
 
 describe('InputStatusDialog', () => {
   it('deactivates an input saying what changes and what does not', async () => {

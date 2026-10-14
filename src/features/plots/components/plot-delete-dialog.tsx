@@ -9,6 +9,7 @@ import {
 } from '@/components/status-change-dialog';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { notify } from '@/lib/notify';
 
 import { useChangePlotStatus, useDeletePlot } from '../api';
 import type { KnownPlot } from '../known-plots';
@@ -76,6 +77,7 @@ export function PlotDeleteDialog({
           isActive: false,
           expectedVersion: plot.version,
         });
+        notify.success('Parcela desactivada');
         return;
       }
       try {
@@ -91,6 +93,7 @@ export function PlotDeleteDialog({
         }
         throw error;
       }
+      notify.success('Parcela eliminada');
     },
     (error) =>
       offerDeactivate

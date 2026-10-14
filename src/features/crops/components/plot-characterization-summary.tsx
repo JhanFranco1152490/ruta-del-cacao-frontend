@@ -4,6 +4,7 @@ import { ClipboardList, History } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
@@ -131,7 +132,7 @@ export function PlotCharacterizationSummary({
       {withActions && (canEdit || failed || saved) && (
         <div className="flex flex-wrap gap-2">
           {canEdit && (
-            <Link
+            <EditorLink
               aria-label={
                 actionLabel === 'Caracterizar'
                   ? `Caracterizar ${plot.code}`
@@ -142,7 +143,7 @@ export function PlotCharacterizationSummary({
             >
               <ClipboardList aria-hidden="true" className="size-4" />{' '}
               {actionLabel}
-            </Link>
+            </EditorLink>
           )}
           {/* Solo hay historial si la ficha ya llegó al servidor: lo que espera en el dispositivo
               todavía no tiene versiones. */}

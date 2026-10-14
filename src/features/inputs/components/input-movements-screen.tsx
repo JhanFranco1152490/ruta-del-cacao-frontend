@@ -6,13 +6,13 @@ import { useState } from 'react';
 import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { FormMessage } from '@/components/form-message';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { formatLongDate } from '@/lib/format/dates';
+import { notify } from '@/lib/notify';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -43,7 +43,6 @@ export function InputMovementsScreen({
   const stocks = useInputStocks(user?.id, farm.id);
   const movements = useInputMovements(inputId, farm.id);
   const [dialog, setDialog] = useState<MovementKind>();
-  const [saved, setSaved] = useState<string>();
   const input = catalog.data?.data.find(
     (candidate) => candidate.id === inputId,
   );
@@ -122,9 +121,6 @@ export function InputMovementsScreen({
           </div>
         </dl>
       )}
-      <div className="mt-6 empty:hidden">
-        <FormMessage variant="success">{saved}</FormMessage>
-      </div>
       <div className="mt-6">
         {offline ? (
           <EmptyState
@@ -184,7 +180,7 @@ export function InputMovementsScreen({
           onClose={() => setDialog(undefined)}
           onSaved={(message) => {
             setDialog(undefined);
-            setSaved(message);
+            notify.success(message);
           }}
         />
       )}

@@ -10,12 +10,16 @@ import {
 import type { FarmListItem } from '../farm-list-item';
 import { queueErrorMessage } from '../queue-error-message';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
+import { notify } from '@/lib/notify';
 import { useFarmDiscard } from '../use-farm-queue';
 
 export function FarmDiscardDialog({ farm }: { farm: FarmListItem }) {
   const discard = useFarmDiscard();
   const dialog = useConfirmAction(
-    () => discard.mutateAsync(farm.id),
+    async () => {
+      await discard.mutateAsync(farm.id);
+      notify.success('Finca pendiente descartada');
+    },
     (error) =>
       queueErrorMessage(
         error,

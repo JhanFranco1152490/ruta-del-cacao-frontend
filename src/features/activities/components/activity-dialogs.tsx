@@ -1,5 +1,7 @@
 'use client';
 
+import { notify } from '@/lib/notify';
+
 import type { ActivityOfDay } from '../activity-days';
 import { activityCompletionPath } from '../activity-paths';
 import { ActivityDayDialog } from './activity-day-dialog';
@@ -18,13 +20,6 @@ export type PendingDialog =
   | { kind: 'edit'; id: string }
   | { kind: 'delete'; id: string };
 
-export type ActivityNotice = {
-  message: string;
-  variant: 'success' | 'error';
-  // El mes (yyyy-MM) en que quedó la actividad, para ofrecer ir a verla si es otro.
-  month?: string;
-};
-
 const monthOf = (isoDate: string) => isoDate.slice(0, 7);
 
 export function ActivityDialogs({
@@ -32,8 +27,9 @@ export function ActivityDialogs({
   items,
   today,
   offline,
+  currentMonth,
+  onGoToMonth,
   onPending,
-  onNotice,
 }: {
   pending: PendingDialog | undefined;
   // Las actividades que se ven, con su estado de hoy.
@@ -41,18 +37,32 @@ export function ActivityDialogs({
   today: string;
   // Sin conexión solo se consulta: editar y eliminar necesitan al servidor.
   offline: boolean;
+  // El mes que se ve. Si la actividad queda en otro, el aviso ofrece ir a verla: la vista no salta.
+  currentMonth: string;
+  // Solo en la vista de mes; en las demás no hay a dónde ir.
+  onGoToMonth?: (month: string) => void;
   onPending: (pending: PendingDialog | undefined) => void;
-  onNotice: (notice: ActivityNotice) => void;
 }) {
   const close = () => onPending(undefined);
   const saved = (message: string, isoDate: string) => {
     close();
-    onNotice({ message, variant: 'success', month: monthOf(isoDate) });
+    const month = monthOf(isoDate);
+    notify.success(
+      message,
+      onGoToMonth && month !== currentMonth
+        ? {
+            action: {
+              label: 'Ver en su mes',
+              onClick: () => onGoToMonth(month),
+            },
+          }
+        : undefined,
+    );
   };
 
   const rejected = (message: string) => {
     close();
-    onNotice({ message, variant: 'error' });
+    notify.error(message);
   };
 
   if (!pending) return null;
@@ -115,7 +125,7 @@ export function ActivityDialogs({
         onClose={() => onPending({ kind: 'detail', id })}
         onDone={(message) => {
           close();
-          onNotice({ message, variant: 'success' });
+          notify.success(message);
         }}
         onRejected={rejected}
       />

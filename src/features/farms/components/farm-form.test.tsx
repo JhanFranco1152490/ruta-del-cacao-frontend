@@ -2,6 +2,7 @@ import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { onlineManager } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
+import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchMunicipalities } from '@/lib/api/municipalities';
@@ -12,8 +13,14 @@ import { buildPage, buildProducer, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { installFakeGps, restoreGeolocation } from '@/test/fake-geolocation';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
+
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 import { FarmForm } from './farm-form';
 
@@ -23,18 +30,25 @@ let userId: string;
 
 beforeEach(async () => {
   userId = `farm-form-${crypto.randomUUID()}`;
+  vi.clearAllMocks();
+  resetLocation();
   // La app lo registra cada vez que el servidor confirma la sesión.
   await recordLogin(userId);
   server.use(municipalitiesHandler());
 });
 
-async function renderForm(session: Parameters<typeof buildSession>[0] = {}) {
+async function renderForm(
+  session: Parameters<typeof buildSession>[0] = {},
+  nextStep?: ComponentProps<typeof FarmForm>['nextStep'],
+) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: userId, ...session }),
   );
-  const result = renderWithProviders(<FarmForm />, { queryClient });
+  const result = renderWithProviders(<FarmForm nextStep={nextStep} />, {
+    queryClient,
+  });
   await waitFor(() => expect(screen.getByLabelText('Municipio')).toBeEnabled());
   return result;
 }
@@ -123,11 +137,8 @@ describe('FarmForm', () => {
     await fillValidFarm(user);
     await save(user);
 
-    const title = await screen.findByRole('heading', {
-      name: 'Finca registrada exitosamente',
-    });
-    expect(title).toHaveFocus();
-    expect(screen.getByText('Pendiente de sincronización')).toBeInTheDocument();
+    expect(await screen.findByText('Finca registrada')).toBeInTheDocument();
+    expect(router.replace).toHaveBeenCalledWith('/fincas');
 
     const [item] = await queuedFarms();
     expect(item).toMatchObject({
@@ -145,25 +156,52 @@ describe('FarmForm', () => {
     });
   });
 
-  it('starts a new farm with its own id after registering one', async () => {
+  it('goes back to the list it was opened from, with its filters', async () => {
     const user = userEvent.setup();
+    mockLocation.search = `origen=${encodeURIComponent('/fincas?buscar=la&pagina=2')}`;
     await renderForm();
 
     await fillValidFarm(user);
     await save(user);
-    await user.click(
-      await screen.findByRole('button', { name: 'Registrar otra finca' }),
-    );
 
-    expect(screen.getByLabelText('Nombre de la finca')).toHaveValue('');
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/fincas?buscar=la&pagina=2'),
+    );
+  });
+
+  it('offers the next step in the notice when the page gives one', async () => {
+    const user = userEvent.setup();
+    await renderForm({}, (farmId) => ({
+      label: 'Registrar parcela',
+      href: `/fincas/parcelas/nueva?finca=${farmId}`,
+    }));
+
     await fillValidFarm(user);
     await save(user);
-    await screen.findByRole('heading', {
-      name: 'Finca registrada exitosamente',
-    });
+    await user.click(
+      await screen.findByRole('button', { name: 'Registrar parcela' }),
+    );
 
-    const items = await queuedFarms();
-    expect(new Set(items.map((item) => item.id)).size).toBe(2);
+    const [item] = await queuedFarms();
+    expect(router.push).toHaveBeenCalledWith(
+      `/fincas/parcelas/nueva?finca=${item.id}`,
+    );
+  });
+
+  it('says in the notice that the farm waits on the device without a connection', async () => {
+    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    try {
+      const user = userEvent.setup();
+      await renderForm();
+      await fillValidFarm(user);
+      await save(user);
+
+      expect(
+        await screen.findByText('Se enviará cuando haya conexión.'),
+      ).toBeInTheDocument();
+    } finally {
+      onLine.mockRestore();
+    }
   });
 
   it('leaves the connection state to the header while there is a connection', async () => {
@@ -199,48 +237,6 @@ describe('FarmForm', () => {
     await fillValidFarm(user);
     await user.click(button);
     expect(await queuedFarms()).toEqual([]);
-  });
-
-  it('tells when the saved farm reached the server', async () => {
-    const user = userEvent.setup();
-    await renderForm();
-    await fillValidFarm(user);
-    await save(user);
-    await screen.findByRole('heading', {
-      name: 'Finca registrada exitosamente',
-    });
-
-    // La cola la envió con éxito y la retiró.
-    const [item] = await queuedFarms();
-    await getOfflineDb(userId).queue.delete(item.id);
-
-    expect(
-      await screen.findByText('ya quedó guardada en el servidor.'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Activa')).toBeInTheDocument();
-  });
-
-  it('offers to correct a saved farm the server rejected', async () => {
-    const user = userEvent.setup();
-    await renderForm();
-    await fillValidFarm(user);
-    await save(user);
-    await screen.findByRole('heading', {
-      name: 'Finca registrada exitosamente',
-    });
-
-    const [item] = await queuedFarms();
-    await getOfflineDb(userId).queue.update(item.id, {
-      status: 'error',
-      errorMessage: 'Ya existe una finca con este nombre.',
-    });
-
-    expect(
-      await screen.findByText(/Ya existe una finca con este nombre\./),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'Corregir finca' }),
-    ).toHaveAttribute('href', `/fincas/editar?id=${item.id}`);
   });
 
   // Puntos conocidos del catálogo geográfico (MGN 2025 del DANE).
@@ -304,11 +300,7 @@ describe('FarmForm', () => {
       ).toBeInTheDocument();
 
       await save(user);
-      expect(
-        await screen.findByRole('heading', {
-          name: 'Finca registrada exitosamente',
-        }),
-      ).toBeInTheDocument();
+      expect(await screen.findByText('Finca registrada')).toBeInTheDocument();
     });
 
     it('switches to the municipality of the point when asked', async () => {
@@ -395,11 +387,7 @@ describe('FarmForm', () => {
       await fillValidFarm(user);
       await save(user);
 
-      expect(
-        await screen.findByRole('heading', {
-          name: 'Finca registrada exitosamente',
-        }),
-      ).toBeInTheDocument();
+      expect(await screen.findByText('Finca registrada')).toBeInTheDocument();
       expect(await queuedFarms()).toHaveLength(1);
     });
   });

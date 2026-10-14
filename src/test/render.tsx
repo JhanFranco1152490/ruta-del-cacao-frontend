@@ -6,6 +6,8 @@ import {
 } from 'nuqs/adapters/testing';
 import type { ReactElement, ReactNode } from 'react';
 
+import { Toaster } from '@/components/toaster';
+
 export function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -41,6 +43,7 @@ export function renderWithProviders(
           hasMemory
         >
           {children}
+          <Toaster />
         </NuqsTestingAdapter>
       </QueryClientProvider>
     );

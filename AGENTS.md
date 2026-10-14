@@ -213,10 +213,12 @@ src/
   de la sesión, que siempre está) las invalida cuando el motor avisa que el envío terminó bien.
   Un recurso nuevo de la cola declara ahí sus consultas; no se escribe un hook por pantalla que
   mire la cola, porque solo funciona si esa pantalla está abierta en el momento del envío.
-- **Un registro recién guardado se sigue con `useQueuedRecordState`** (`hooks/`): dice si sigue
-  esperando, si el servidor lo rechazó o si ya llegó (salió de la cola), y
-  `describeQueuedRecord` (`lib/offline/`) escribe lo que le pasó. Los paneles de "guardado" de
-  cada dominio los usan; no se escribe un hook ni un texto propio por recurso.
+- **Guardar en la cola no abre una pantalla de confirmación.** Un alta o una edición que pasa por la
+  cola termina como cualquier guardado: vuelve al origen y avisa (`useFinishSave`). Lo que le pase
+  después al registro lo cuentan la bandeja y el indicador de la cabecera, y, si el servidor lo
+  rechaza, `useNotifyRejected` (en el marco de la sesión): un error que no se cierra solo, con
+  «Revisar», que abre la bandeja donde se corrige o se descarta. Un recurso nuevo de la cola registra
+  su `QueueView` (`kind`, `title`, `Actions`) y con eso ya tiene bandeja y aviso de rechazo.
 - Formularios con react-hook-form + `zodResolver`. El esquema y los mapeos formulario ↔
   petición viven en el dominio (`features/<dominio>/schemas.ts`). Los errores de campo del
   servidor se vuelcan con `applyApiFieldErrors(error, setError, campos)`, que devuelve
@@ -228,6 +230,31 @@ src/
   `useProducerFilters` como modelo.
 - Fechas solo con `lib/format/dates.ts` (`date-fns`, zona `America/Bogota`): los componentes no
   llaman a `Intl` ni a `new Date()` para formatear o comparar fechas de negocio.
+
+### Avisos y volver al origen al guardar
+
+- **Lo que terminó bien se avisa con `notify`** (`lib/notify.ts`): `notify.success('Finca actualizada')`,
+  y `info`, `warning` o `error`. Se puede llamar desde cualquier archivo; el `Toaster`
+  (`components/toaster.tsx`, montado en `app/providers.tsx`) los pinta con el Toast de Base UI. Duran
+  5 s (8 s si llevan una acción, `{ action: { label, onClick } }`); el de error no se cierra solo. No
+  se escribe un banner de éxito en la pantalla: si hay que confirmar algo, es un aviso. Quedan en
+  pantalla (no son avisos) lo que sigue pendiente (la bandeja de la cola y el indicador) y la
+  validación junto al campo; eliminar y desactivar conservan su diálogo de
+  confirmación **antes**, y avisan al terminar. Cada diálogo avisa en la rama que corresponde (un 404
+  al borrar algo que ya no existe no es un éxito). Con la cola, `useNotifyAfterSync` da un solo aviso
+  («Se enviaron N registros») cuando termina de enviar lo que esperó sin conexión.
+- **Un editor de página completa vuelve a donde se abrió.** El enlace que lo abre lleva
+  `?origen=<ruta con sus filtros>` (`EditorLink` lo agrega solo; `withOrigin` si hace falta a mano);
+  al guardar o cancelar, `useFinishSave(destinoDeSiempre)` (o `useReturnPath` para solo el destino)
+  navega a ese origen y avisa; el aviso de un alta puede ofrecer el siguiente paso con `action`
+  («Registrar otra parcela»). Cuando ese paso es de otro dominio, la página en `app/` lo entrega
+  como función (`FarmForm` recibe `nextStep`). El valor lo puede escribir cualquiera, así que solo se acepta una ruta de
+  la app (`isInternalPath` en `lib/navigation/origin.ts`); si no es válida o no hay, va al destino de
+  siempre. Una pantalla nueva con editor usa `EditorLink` en lugar de `Link` para abrirlo.
+- En pruebas, el aviso es un `role="dialog"` no modal: para afirmar que **no hay diálogo abierto** usa
+  `queryDialog()` (`test/dialog.ts`) y no `queryByRole('dialog')`. Los componentes que leen la ruta
+  usan el mock `navigation` de `test/router.ts` (`vi.mock('next/navigation', async () =>
+  (await import('@/test/router')).navigation)`), con `mockLocation` para fijar ruta y parámetros.
 
 ### Reglas de diseño del código
 

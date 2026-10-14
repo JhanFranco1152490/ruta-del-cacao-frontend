@@ -16,6 +16,8 @@ import { SyncTray } from '@/components/sync-tray/sync-tray';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 import { HOME_PATH, SIGN_IN_PATH } from '@/config/routes';
 import { useQueueItems } from '@/hooks/use-queue-items';
+import { useNotifyAfterSync } from '@/hooks/use-notify-after-sync';
+import { useNotifyRejected } from '@/hooks/use-notify-rejected';
 import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
 import { useSyncStatus } from '@/hooks/use-sync-status';
 import { fullName } from '@/lib/format/person-name';
@@ -42,12 +44,15 @@ export function SessionShell({
   const logout = useLogout();
   const sidebar = useSidebarVisibility();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [trayOpen, setTrayOpen] = useState(false);
   const syncStatus = useSyncStatus(user?.id);
   const queueItems = useQueueItems(user?.id);
   const items = visibleNavItems(NAV_ITEMS, user?.permissions, {
     ownProducer: !!user?.producer_id,
   });
   useRefreshAfterSync();
+  useNotifyAfterSync();
+  useNotifyRejected(queueViews, () => setTrayOpen(true));
 
   // Toca el reloj de sesión y guarda la copia del dispositivo cada vez que el servidor confirma
   // la sesión (no solo cuando se escribe la contraseña): la sesión se renueva sola en segundo
@@ -94,6 +99,8 @@ export function SessionShell({
               <SyncTray
                 status={syncStatus}
                 items={queueItems}
+                onOpenChange={setTrayOpen}
+                open={trayOpen}
                 views={queueViews}
               />
               <AccountMenu

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { components } from '@/lib/api/schema';
 import { apiError, buildAgriculturalInput } from '@/test/factories';
+import { queryDialog } from '@/test/dialog';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
@@ -99,9 +100,7 @@ describe('InputFormDialog', () => {
     );
     await save(form);
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(backend.posted).toEqual([
       {
         name: 'Oxicloruro de cobre',
@@ -111,9 +110,9 @@ describe('InputFormDialog', () => {
         package_size: '100.5',
       },
     ]);
-    expect(await screen.findByRole('status', { name: '' })).toHaveTextContent(
-      'Insumo guardado con éxito',
-    );
+    expect(
+      await screen.findByText('Insumo guardado con éxito'),
+    ).toBeInTheDocument();
     expect(await screen.findByText('Oxicloruro de cobre')).toBeInTheDocument();
   });
 
@@ -159,9 +158,7 @@ describe('InputFormDialog', () => {
       within(form).getByRole('button', { name: 'Ver el insumo existente' }),
     );
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(urls.at(-1)).toContain('estado=all');
     expect(urls.at(-1)).toContain('tipo=fertilizer');
   });
@@ -185,7 +182,7 @@ describe('InputFormDialog', () => {
       ]),
     );
     expect(await screen.findByText('Insumo activado')).toBeInTheDocument();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(queryDialog()).not.toBeInTheDocument();
   });
 
   it('shows the duplicate the server finds, with the link', async () => {
@@ -435,9 +432,7 @@ describe('InputFormDialog', () => {
       within(form).getByRole('button', { name: 'Cancelar' }),
     );
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(backend.posted).toHaveLength(0);
   });
 });

@@ -15,6 +15,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { createQueryClient } from '@/lib/query-client';
 
 import { AccountListScreen } from './account-list-screen';
+import { queryDialog } from '@/test/dialog';
 
 const id = '11111111-1111-4111-8111-111111111111';
 const roleId = '22222222-2222-4222-8222-222222222222';
@@ -172,9 +173,7 @@ describe('AccountListScreen', () => {
     }
     await screen.findByText('Correo enviado');
     await userEvent.keyboard('{Escape}');
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
   });
   it('resets pagination and writes the selected role to the URL', async () => {
     const requests: URL[] = [];

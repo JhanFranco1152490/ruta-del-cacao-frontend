@@ -11,6 +11,7 @@ import {
   type Account,
   type AccountStatus,
 } from '@/lib/api/accounts';
+import { notify } from '@/lib/notify';
 
 const ACTIONS: Record<AccountStatus, StatusChangeAction> = {
   inactive: {
@@ -64,6 +65,9 @@ export function AccountStatusDialog({
     change.mutate(opened, {
       onSuccess: () => {
         setOpen(false);
+        notify.success(
+          opened === 'active' ? 'Cuenta activada' : 'Cuenta desactivada',
+        );
         onChanged?.();
       },
       onSettled: () => onBusy(false),

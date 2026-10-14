@@ -37,19 +37,6 @@ const ALREADY_WAITING =
 export const CATALOG_NEEDED_TO_CORRECT =
   'Este registro tiene insumos y el catálogo no está en este dispositivo. Necesitas conexión una vez para cargarlo y poder corregirlo.';
 
-const BACK_LINK = (
-  <Link
-    className={buttonVariants({
-      size: 'office',
-      variant: 'outline',
-      className: CAPTURE_BUTTON_CLASS,
-    })}
-    href={ACTIVITIES_PATH}
-  >
-    Cancelar
-  </Link>
-);
-
 // La captura de una realización: la actividad arriba, el formulario y, antes de guardar, el
 // resumen que la persona confirma. `rejected` es lo que el servidor no aceptó: con él se corrige
 // en vez de registrar de nuevo.
@@ -60,6 +47,7 @@ export function CompletionCapture({
   catalog,
   stocks,
   onSaved,
+  cancelHref,
 }: {
   item: ActivityOfDay;
   today: string;
@@ -67,6 +55,8 @@ export function CompletionCapture({
   catalog: readonly CatalogInput[] | undefined;
   stocks: ReadonlyMap<string, string> | undefined;
   onSaved: () => void;
+  // A dónde lleva Cancelar: la pantalla desde la que se abrió la captura.
+  cancelHref: string;
 }) {
   const { activity } = item;
   const save = useSaveCompletion();
@@ -139,7 +129,18 @@ export function CompletionCapture({
           defaultValues={defaultValues}
           isSaving={save.isPending}
           onSubmit={setConfirming}
-          secondaryAction={BACK_LINK}
+          secondaryAction={
+            <Link
+              className={buttonVariants({
+                size: 'office',
+                variant: 'outline',
+                className: CAPTURE_BUTTON_CLASS,
+              })}
+              href={cancelHref}
+            >
+              Cancelar
+            </Link>
+          }
           stocks={stocks}
           submitLabel={submitLabel}
           today={today}

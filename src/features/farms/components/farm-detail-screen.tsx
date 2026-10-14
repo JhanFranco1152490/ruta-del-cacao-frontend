@@ -5,6 +5,7 @@ import { MapPin, Package, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { EditorLink } from '@/components/editor-link';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { PageHeader } from '@/components/page-header';
 import { ProducerLine } from '@/components/producer-line';
@@ -233,7 +234,7 @@ function DetailLayout({
                 </Link>
               )}
               {canEdit && (
-                <Link
+                <EditorLink
                   className={buttonVariants({
                     size: 'office',
                     variant: 'outline',
@@ -241,7 +242,7 @@ function DetailLayout({
                   href={farmEditPath(view.id)}
                 >
                   <Pencil aria-hidden="true" className="size-4" /> Editar finca
-                </Link>
+                </EditorLink>
               )}
             </div>
           )

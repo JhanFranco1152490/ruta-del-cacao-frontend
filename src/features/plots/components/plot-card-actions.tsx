@@ -1,8 +1,8 @@
 'use client';
 
 import { Pencil } from 'lucide-react';
-import Link from 'next/link';
 
+import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -53,13 +53,13 @@ export function PlotCardActions({
   return (
     <>
       {showEdit && (
-        <Link
+        <EditorLink
           aria-label={`${label} ${plot.code}`}
           className={buttonVariants({ size: 'office', variant: 'outline' })}
           href={plotEditPath(plot.id, farm.id)}
         >
           <Pencil aria-hidden="true" className="size-4" /> {label}
-        </Link>
+        </EditorLink>
       )}
       {/* Descartar solo cuando falló: una pendiente todavía puede llegar bien. */}
       {isError && <PlotDiscardDialog code={plot.code} plotId={plot.id} />}
