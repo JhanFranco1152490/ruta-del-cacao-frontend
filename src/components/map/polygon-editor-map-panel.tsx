@@ -5,16 +5,14 @@ import { useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
 
-import { BaseLayerToggle } from './base-layer-toggle';
-import { MapFocusControls } from './map-focus-controls';
 import type { BaseLayerKind } from './base-layers';
+import { MapFrame, MapHiddenBar } from './map-frame';
 import type {
   LoadPolygonEditorMapProvider,
   MapFocusTarget,
   PolygonEditorMapProviderProps,
 } from './map-provider';
 import { MapSkeleton } from './map-states';
-import { MapVisibilityButton } from './map-visibility-button';
 import { useMapProvider } from './use-map-provider';
 
 type PanelProps = Omit<
@@ -66,44 +64,24 @@ export function PolygonEditorMapPanel({
 
   return (
     <section aria-label="Mapa de la parcela" className="space-y-3">
-      {/* Encima del recuadro y no sobre el mapa: en celular no tapa sus controles. */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {visible ? (
-          <MapFocusControls
-            canGoToFarm={!!providerProps.farmPoint}
-            farmLabel="Ir a la finca"
-            hasGps={!!providerProps.gpsPosition}
-            onFocus={(target) => setFocus({ target })}
-            onRequestGps={onRequestGps}
-          />
-        ) : (
-          <span />
-        )}
-        <div className="flex items-center gap-2">
-          {visible && (
-            <BaseLayerToggle
-              onChange={(next) => {
-                setBaseUnavailable(false);
-                setBaseLayer(next);
-              }}
-              value={baseLayer}
-            />
-          )}
-          <MapVisibilityButton
-            onToggle={() => setVisible((value) => !value)}
-            visible={visible}
-          />
-        </div>
-      </div>
-      {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
-          quedaría por encima de los diálogos y del menú móvil (z-50). */}
-      {visible && (
-        <div
-          data-slot="map-frame"
-          className={cn(
-            'isolate h-80 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
-            frameClassName,
-          )}
+      {visible ? (
+        <MapFrame
+          baseLayer={{
+            value: baseLayer,
+            onChange: (next) => {
+              setBaseUnavailable(false);
+              setBaseLayer(next);
+            },
+          }}
+          className={cn('h-80', frameClassName)}
+          focus={{
+            canGoToFarm: !!providerProps.farmPoint,
+            farmLabel: 'Ir a la finca',
+            hasGps: !!providerProps.gpsPosition,
+            onFocus: (target) => setFocus({ target }),
+            onRequestGps,
+          }}
+          onHide={() => setVisible(false)}
         >
           <Provider
             {...providerProps}
@@ -111,7 +89,9 @@ export function PolygonEditorMapPanel({
             focus={focus}
             onBaseLayerUnavailable={() => setBaseUnavailable(true)}
           />
-        </div>
+        </MapFrame>
+      ) : (
+        <MapHiddenBar onShow={() => setVisible(true)} />
       )}
       {visible && baseUnavailable && (
         <p className="text-sm font-bold text-muted-foreground" role="status">

@@ -4,12 +4,11 @@ import { type ReactNode, useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
 
-import { BaseLayerToggle } from './base-layer-toggle';
 import type { BaseLayerKind } from './base-layers';
+import { MapFrame, MapHiddenBar } from './map-frame';
 import type { LoadPointsMapProvider, MapPoint, MapShape } from './map-provider';
 import { MapSkeleton } from './map-states';
 import { useMapProvider } from './use-map-provider';
-import { MapVisibilityButton } from './map-visibility-button';
 
 // Mapa de consulta con varios puntos. Es un apoyo visual: la lista que lo acompaña sigue
 // siendo la forma accesible de recorrer los mismos datos.
@@ -43,22 +42,7 @@ export function PointsMapPanel({
 
   return (
     <section aria-label={label} className="space-y-2">
-      {(toolbar || Provider) && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>{toolbar}</div>
-          {Provider && (
-            <div className="ml-auto flex items-center gap-2">
-              {visible && (
-                <BaseLayerToggle onChange={setBaseLayer} value={baseLayer} />
-              )}
-              <MapVisibilityButton
-                onToggle={() => setVisible((value) => !value)}
-                visible={visible}
-              />
-            </div>
-          )}
-        </div>
-      )}
+      {toolbar && <div>{toolbar}</div>}
       {map.isLoading ? (
         <MapSkeleton className="h-64 md:h-80" />
       ) : !Provider ? (
@@ -68,12 +52,11 @@ export function PointsMapPanel({
         />
       ) : (
         <>
-          {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
-              quedaría por encima de los diálogos y del menú móvil (z-50). */}
-          {visible && (
-            <div
-              data-slot="map-frame"
-              className="isolate h-64 overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted md:h-80"
+          {visible ? (
+            <MapFrame
+              baseLayer={{ value: baseLayer, onChange: setBaseLayer }}
+              className="h-64 md:h-80"
+              onHide={() => setVisible(false)}
             >
               <Provider
                 baseLayer={baseLayer}
@@ -83,7 +66,9 @@ export function PointsMapPanel({
                 points={points}
                 shapes={shapes}
               />
-            </div>
+            </MapFrame>
+          ) : (
+            <MapHiddenBar onShow={() => setVisible(true)} />
           )}
           {visible && points.length === 0 && shapes.length === 0 && (
             <p className="text-sm font-bold text-muted-foreground">

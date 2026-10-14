@@ -18,10 +18,14 @@ const municipality: MunicipalityMapView = {
   points: [],
 };
 
-function renderPanel(view: MunicipalityMapView) {
+function renderPanel(
+  view: MunicipalityMapView,
+  extra: Partial<React.ComponentProps<typeof MunicipalityMapPanel>> = {},
+) {
   const onBack = vi.fn();
   renderWithProviders(
     <MunicipalityMapPanel
+      {...extra}
       controls={<button type="button">Control extra</button>}
       describeMunicipality={(code, count) => `${code} · ${count}`}
       label="Mapa de fincas"
@@ -37,6 +41,41 @@ function renderPanel(view: MunicipalityMapView) {
 }
 
 describe('MunicipalityMapPanel', () => {
+  describe('with a summary beside the map', () => {
+    const aside = <p>Resumen de prueba</p>;
+
+    it('shows it, and a legend of the shades, on the department level only', async () => {
+      renderPanel(department, { aside, legendLabel: 'Fincas por municipio' });
+
+      expect(await screen.findByText('Resumen de prueba')).toBeInTheDocument();
+      expect(screen.getByText('Fincas por municipio')).toBeInTheDocument();
+      expect(screen.getByText('Sin fincas')).toBeInTheDocument();
+      // El máximo de fincas de un municipio cierra la escala.
+      expect(screen.getByText('3')).toBeInTheDocument();
+    });
+
+    it('leaves the whole width to the map inside a municipality', async () => {
+      renderPanel(municipality, { aside, legendLabel: 'Fincas por municipio' });
+
+      await screen.findByRole('group', { name: 'Mapa base' });
+      expect(screen.queryByText('Resumen de prueba')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Fincas por municipio'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('keeps the summary when the map is hidden', async () => {
+      const user = userEvent.setup();
+      renderPanel(department, { aside });
+      await screen.findByText('Resumen de prueba');
+
+      await user.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
+
+      expect(screen.getByText('Mapa oculto')).toBeInTheDocument();
+      expect(screen.getByText('Resumen de prueba')).toBeInTheDocument();
+    });
+  });
+
   it('shows the municipalities without back or base layer controls', async () => {
     renderPanel(department);
 
