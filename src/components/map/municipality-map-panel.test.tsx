@@ -64,16 +64,30 @@ describe('MunicipalityMapPanel', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('keeps the summary when the map is hidden', async () => {
+    it('hides the summary together with the map and brings both back', async () => {
       const user = userEvent.setup();
       renderPanel(department, { aside });
       await screen.findByText('Resumen de prueba');
 
       await user.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
 
-      expect(screen.getByText('Mapa oculto')).toBeInTheDocument();
-      expect(screen.getByText('Resumen de prueba')).toBeInTheDocument();
+      expect(screen.getByText('Mapa y resumen ocultos')).toBeInTheDocument();
+      expect(screen.queryByText('Resumen de prueba')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Mostrar mapa' }));
+
+      expect(await screen.findByText('Resumen de prueba')).toBeInTheDocument();
     });
+  });
+
+  it('keeps saying only «Mapa oculto» when there is no summary', async () => {
+    const user = userEvent.setup();
+    renderPanel(department);
+    await screen.findByRole('button', { name: '54810: 3' });
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
+
+    expect(screen.getByText('Mapa oculto')).toBeInTheDocument();
   });
 
   it('shows the municipalities without back or base layer controls', async () => {

@@ -72,13 +72,20 @@ export function MapFrame({
 }
 
 // Lo que queda donde estaba el mapa cuando se oculta: dice que existe y cómo volver a verlo.
-export function MapHiddenBar({ onShow }: { onShow: () => void }) {
+export function MapHiddenBar({
+  onShow,
+  label = 'Mapa oculto',
+}: {
+  onShow: () => void;
+  // Lo que se oculta junto con el mapa, si es más que el mapa («Mapa y resumen ocultos»).
+  label?: string;
+}) {
   return (
     <div
       className="flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-card)] border border-dashed border-border bg-card px-4"
       data-slot="map-hidden"
     >
-      <p className="text-sm font-bold text-muted-foreground">Mapa oculto</p>
+      <p className="text-sm font-bold text-muted-foreground">{label}</p>
       <MapVisibilityButton onToggle={onShow} visible={false} />
     </div>
   );

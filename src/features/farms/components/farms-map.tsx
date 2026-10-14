@@ -154,6 +154,7 @@ export function FarmsMap({
         `${municipalityName(code)} · ${farmsLabel(count)}`
       }
       controls={switcher}
+      hiddenOnMobile
       label="Mapa de fincas"
       legendLabel="Fincas por municipio"
       loadProvider={loadProvider}

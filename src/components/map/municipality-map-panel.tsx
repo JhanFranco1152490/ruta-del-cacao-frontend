@@ -15,9 +15,10 @@ import type {
   MunicipalityMapView,
 } from './map-provider';
 import { MapSkeleton } from './map-states';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useMapProvider } from './use-map-provider';
 
-export const MUNICIPALITY_MAP_HEIGHT = 'h-80 lg:h-[28rem]';
+export const MUNICIPALITY_MAP_HEIGHT = 'h-64 lg:h-80';
 
 // El departamento por municipios y, al elegir uno, ese municipio; o el mapa libre. Es un apoyo
 // visual: la lista que lo acompaña es la forma accesible de recorrer las mismas fincas.
@@ -34,6 +35,7 @@ export function MunicipalityMapPanel({
   onSelectMunicipality,
   onSelectPoint,
   loadProvider,
+  hiddenOnMobile = false,
 }: {
   label: string;
   title: string;
@@ -52,12 +54,17 @@ export function MunicipalityMapPanel({
   onSelectPoint: (id: string) => void;
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadMunicipalityMapProvider;
+  // En celular el mapa empieza oculto para que la lista llegue antes; un toque lo muestra. Lo que
+  // la persona elige después se respeta.
+  hiddenOnMobile?: boolean;
 }) {
   const map = useMapProvider(loadProvider);
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
   const [baseLayerMissing, setBaseLayerMissing] = useState(false);
   const [baseLayerBackup, setBaseLayerBackup] = useState(false);
-  const [visible, setVisible] = useState(true);
+  const isDesktop = useIsDesktop();
+  const [chosenVisible, setVisible] = useState<boolean>();
+  const visible = chosenVisible ?? (hiddenOnMobile ? isDesktop : true);
 
   if (map.isLoading) return <MapSkeleton className={MUNICIPALITY_MAP_HEIGHT} />;
 
@@ -74,7 +81,10 @@ export function MunicipalityMapPanel({
   const inMunicipality = view.level === 'municipality';
   // Solo el nivel del departamento va sin mapa base.
   const hasBaseLayer = view.level !== 'department';
-  const withAside = !!aside && view.level === 'department';
+  // El resumen va con el mapa: al ocultar uno se ocultan los dos, y el botón de mostrar vuelve a
+  // traer ambos.
+  const hasAside = !!aside && view.level === 'department';
+  const withAside = hasAside && visible;
 
   return (
     <section aria-label={label} className="space-y-3">
@@ -144,7 +154,10 @@ export function MunicipalityMapPanel({
               />
             </MapFrame>
           ) : (
-            <MapHiddenBar onShow={() => setVisible(true)} />
+            <MapHiddenBar
+              label={hasAside ? 'Mapa y resumen ocultos' : undefined}
+              onShow={() => setVisible(true)}
+            />
           )}
           {visible && hasBaseLayer && baseLayerBackup && !baseLayerMissing && (
             <p
