@@ -5,6 +5,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { useState, type ReactNode } from 'react';
 
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
+import { Toaster } from '@/components/toaster';
 import { SYNC_ADAPTERS } from '@/config/sync-adapters';
 import { registerAdapter } from '@/lib/offline/sync-queue';
 import { createQueryClient } from '@/lib/query-client';
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <NuqsAdapter>
         <ServiceWorkerRegistration />
         {children}
+        <Toaster />
       </NuqsAdapter>
     </QueryClientProvider>
   );
