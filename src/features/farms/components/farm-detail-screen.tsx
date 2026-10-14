@@ -210,11 +210,12 @@ function DetailLayout({
   const showInputs =
     !!view.producer && hasPermission(user, PERMISSIONS.INPUTS_VIEW);
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
       <Breadcrumb
         items={[{ label: 'Fincas', href: '/fincas' }, { label: view.name }]}
       />
       <PageHeader
+        compact
         eyebrow="Detalle de la finca"
         title={view.name}
         description={place}
@@ -223,41 +224,48 @@ function DetailLayout({
             <div className="flex flex-wrap gap-3">
               {showInputs && (
                 <Link
+                  aria-label="Insumos de esta finca"
                   className={buttonVariants({
                     size: 'office',
-                    variant: 'outline',
+                    variant: 'action',
                   })}
                   href={inputListPath(view.id, view.producer?.id)}
                 >
-                  <Package aria-hidden="true" className="size-4" /> Insumos de
-                  esta finca
+                  <Package aria-hidden="true" className="size-4" />
+                  <span>
+                    Insumos
+                    <span className="hidden sm:inline"> de esta finca</span>
+                  </span>
                 </Link>
               )}
               {canEdit && (
                 <EditorLink
+                  aria-label="Editar finca"
                   className={buttonVariants({
                     size: 'office',
-                    variant: 'outline',
+                    variant: 'action',
                   })}
                   href={farmEditPath(view.id)}
                 >
-                  <Pencil aria-hidden="true" className="size-4" /> Editar finca
+                  <Pencil aria-hidden="true" className="size-4" />
+                  <span>
+                    Editar
+                    <span className="hidden sm:inline"> finca</span>
+                  </span>
                 </EditorLink>
               )}
             </div>
           )
         }
       />
-      {showProducer && view.producer && (
-        <div className="mt-4">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        {badge}
+        {showProducer && view.producer && (
           <ProducerLine
             producer={view.producer}
             linkable={hasPermission(user, PERMISSIONS.PRODUCERS_VIEW)}
           />
-        </div>
-      )}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        {badge}
+        )}
         {savedAt !== undefined && (
           <p className="text-sm font-bold text-muted-foreground" role="status">
             Datos guardados el {formatDateTime(new Date(savedAt).toISOString())}
@@ -268,7 +276,7 @@ function DetailLayout({
       {notice && (
         <p
           className={cn(
-            'mt-4 rounded-(--radius) px-4 py-3 font-bold',
+            'mt-3 rounded-(--radius) px-4 py-3 font-bold',
             noticeIsError ? 'bg-err-bg text-err' : 'bg-info-bg text-info',
           )}
           role={noticeIsError ? 'alert' : 'status'}
@@ -278,9 +286,9 @@ function DetailLayout({
       )}
       <section
         aria-label="Datos de la finca"
-        className="mt-6 rounded-[var(--radius-card)] bg-card p-5 shadow-card"
+        className="mt-4 rounded-[var(--radius-card)] bg-card px-4 py-3 shadow-card sm:px-5"
       >
-        <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="flex flex-wrap gap-x-8 gap-y-2">
           <Fact label="Área total" value={formatHectares(view.areaHectares)} />
           {view.altitudeMasl != null && (
             <Fact label="Altitud" value={`${view.altitudeMasl} m s. n. m.`} />
@@ -304,7 +312,7 @@ function DetailLayout({
 
 function Fact({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div>
+    <div className="flex flex-wrap items-baseline gap-x-2">
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="font-bold text-foreground">{value}</dd>
     </div>
