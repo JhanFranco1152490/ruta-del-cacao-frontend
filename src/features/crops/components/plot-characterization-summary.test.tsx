@@ -31,7 +31,10 @@ import {
   enqueueCharacterization,
 } from '../characterization-queue';
 import { characterizationSyncAdapter } from '../sync-adapter';
-import { PlotCharacterizationSummary } from './plot-characterization-summary';
+import {
+  PlotCharacterizationActions,
+  PlotCharacterizationSummary,
+} from './plot-characterization-summary';
 
 let userId: string;
 
@@ -55,7 +58,7 @@ function renderSummaries(
     queryClient = createTestQueryClient(),
     extra = null,
     pagePlotIds,
-    withActions,
+    withActions = true,
   }: {
     permissions?: string[];
     farmIsActive?: boolean;
@@ -79,8 +82,15 @@ function renderSummaries(
             farmIsActive={farmIsActive}
             pagePlotIds={pagePlotIds}
             plot={plot}
-            withActions={withActions}
           />
+          {withActions && (
+            <PlotCharacterizationActions
+              farmId="f1"
+              farmIsActive={farmIsActive}
+              pagePlotIds={pagePlotIds}
+              plot={plot}
+            />
+          )}
         </article>
       ))}
     </>,

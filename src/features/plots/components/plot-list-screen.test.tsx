@@ -155,11 +155,14 @@ describe('PlotListScreen', () => {
     server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
     renderScreen();
 
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Más acciones de P1' }),
+    );
     expect(
-      await screen.findByRole('link', { name: 'Editar P1' }),
+      await screen.findByRole('menuitem', { name: 'Editar' }),
     ).toHaveAttribute('href', '/fincas/parcelas/editar?id=a&finca=f1');
-    expect(screen.getByRole('button', { name: 'Desactivar' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Eliminar' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'Desactivar' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'Eliminar' })).toBeVisible();
   });
 
   it('offers no changes on the plots of an inactive farm', async () => {
@@ -176,10 +179,7 @@ describe('PlotListScreen', () => {
 
     await screen.findByText('P1');
     expect(
-      screen.queryByRole('link', { name: 'Editar P1' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Desactivar' }),
+      screen.queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();
   });
 

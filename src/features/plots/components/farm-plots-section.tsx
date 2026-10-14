@@ -42,10 +42,12 @@ const toNumber = (value: string) => Number(value.trim().replace(',', '.'));
 export function FarmPlotsSection({
   farm,
   renderPlotDetails,
+  renderPlotShortcuts,
 }: {
   farm: PlotsFarm;
   // Ver `PlotList`: lo que otro dominio agrega a cada parcela.
   renderPlotDetails?: (plot: KnownPlot) => React.ReactNode;
+  renderPlotShortcuts?: (plot: KnownPlot) => React.ReactNode;
 }) {
   const { data: user } = useSession();
   const canView = hasPermission(user, PERMISSIONS.PLOTS_VIEW);
@@ -77,21 +79,25 @@ export function FarmPlotsSection({
   return (
     <section
       aria-labelledby="plots-heading"
-      className="mt-6 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card"
+      className="mt-5 space-y-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card sm:p-5"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <h2 id="plots-heading" className="text-2xl text-selva">
           Parcelas de esta finca
           {known.plots ? ` · ${known.plots.length}` : ''}
         </h2>
-        {known.plots && known.plots.length > 0 && registerLink}
+        {farm.allocatedAreaHectares !== undefined && (
+          <div className="min-w-64 flex-1 sm:max-w-xl">
+            <PlotAreaBar
+              allocatedAreaHectares={farm.allocatedAreaHectares}
+              areaHectares={farm.areaHectares}
+            />
+          </div>
+        )}
+        {known.plots && known.plots.length > 0 && (
+          <div className="ml-auto">{registerLink}</div>
+        )}
       </div>
-      {farm.allocatedAreaHectares !== undefined && (
-        <PlotAreaBar
-          allocatedAreaHectares={farm.allocatedAreaHectares}
-          areaHectares={farm.areaHectares}
-        />
-      )}
       {known.isLoading && (
         <div aria-label="Cargando parcelas" role="status">
           <Skeleton className="h-64" />
@@ -114,9 +120,10 @@ export function FarmPlotsSection({
           mapRef={mapRef}
           onShowOnMap={(shapeId) => {
             setFocus({ shapeId });
-            // La lista está debajo del mapa: se sube hasta él para ver la parcela.
+            // En el celular el mapa está arriba de la lista: se sube hasta él para ver la parcela.
+            // Si ya está a la vista (pantallas anchas) no se mueve nada.
             mapRef.current?.scrollIntoView({
-              block: 'start',
+              block: 'nearest',
               behavior: 'smooth',
             });
           }}
@@ -124,6 +131,7 @@ export function FarmPlotsSection({
           registerLink={registerLink}
           renderActions={renderActions}
           renderPlotDetails={renderPlotDetails}
+          renderPlotShortcuts={renderPlotShortcuts}
           savedAt={known.savedAt}
         />
       )}
@@ -141,6 +149,7 @@ function PlotsContent({
   registerLink,
   renderActions,
   renderPlotDetails,
+  renderPlotShortcuts,
   onShowOnMap,
 }: {
   farm: PlotsFarm;
@@ -152,6 +161,7 @@ function PlotsContent({
   registerLink: React.ReactNode;
   renderActions: (plot: KnownPlot) => React.ReactNode;
   renderPlotDetails?: (plot: KnownPlot) => React.ReactNode;
+  renderPlotShortcuts?: (plot: KnownPlot) => React.ReactNode;
   onShowOnMap: (shapeId: string) => void;
 }) {
   const shapes = plotsToShapes(plots);
@@ -168,43 +178,53 @@ function PlotsContent({
           {formatDateTime(new Date(savedAt).toISOString())}.
         </p>
       )}
-      <div className="scroll-mt-6" ref={mapRef}>
-        <PointsMapPanel
-          emptyMessage="La finca no tiene ubicación para mostrar en el mapa."
-          focus={focus}
-          label="Mapa de la finca y sus parcelas"
-          loadProvider={loadPointsMapProvider!}
-          points={[
-            {
-              id: farm.id,
-              label: farm.name,
-              detail: 'Punto de la finca',
-              position: farmPoint,
-              tone: 'ok',
-            },
-          ]}
-          shapes={shapes}
-        />
-      </div>
       {hasMore && (
         <p className="font-bold text-warn" role="status">
           Esta finca tiene más parcelas de las que se muestran aquí.
         </p>
       )}
-      {plots.length ? (
-        <PlotList
-          onShowOnMap={(plot) => onShowOnMap(plot.id)}
-          plots={plots}
-          renderActions={renderActions}
-          renderDetails={renderPlotDetails}
-        />
-      ) : (
-        <EmptyState
-          title="Esta finca aún no tiene parcelas"
-          description="Registra la primera con su código, su área y, si quieres, su polígono. Puedes hacerlo sin conexión."
-          action={registerLink || undefined}
-        />
-      )}
+      {/* Con espacio, las parcelas van junto al mapa y este se queda a la vista mientras se
+          recorre la lista; en el celular, la lista primero y el mapa plegado arriba. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
+        <div className="scroll-mt-6 lg:sticky lg:top-4 lg:order-2" ref={mapRef}>
+          <PointsMapPanel
+            emptyMessage="La finca no tiene ubicación para mostrar en el mapa."
+            focus={focus}
+            heightClassName="h-64 lg:h-[28rem]"
+            hiddenOnMobile
+            label="Mapa de la finca y sus parcelas"
+            loadProvider={loadPointsMapProvider!}
+            points={[
+              {
+                id: farm.id,
+                label: farm.name,
+                detail: 'Punto de la finca',
+                position: farmPoint,
+                tone: 'ok',
+              },
+            ]}
+            shapes={shapes}
+          />
+        </div>
+        <div className="lg:order-1">
+          {plots.length ? (
+            <PlotList
+              className="grid-cols-1 2xl:grid-cols-2"
+              onShowOnMap={(plot) => onShowOnMap(plot.id)}
+              plots={plots}
+              renderActions={renderActions}
+              renderDetails={renderPlotDetails}
+              renderShortcuts={renderPlotShortcuts}
+            />
+          ) : (
+            <EmptyState
+              title="Esta finca aún no tiene parcelas"
+              description="Registra la primera con su código, su área y, si quieres, su polígono. Puedes hacerlo sin conexión."
+              action={registerLink || undefined}
+            />
+          )}
+        </div>
+      </div>
     </>
   );
 }

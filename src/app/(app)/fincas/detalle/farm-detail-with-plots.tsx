@@ -1,7 +1,10 @@
 'use client';
 
 import { SchedulePlotActivity } from '@/features/activities/components/schedule-plot-activity';
-import { PlotCharacterizationSummary } from '@/features/crops/components/plot-characterization-summary';
+import {
+  PlotCharacterizationActions,
+  PlotCharacterizationSummary,
+} from '@/features/crops/components/plot-characterization-summary';
 import { FarmDetailFromQuery } from '@/features/farms/components/farm-detail-from-query';
 import { FarmPlotsSection } from '@/features/plots/components/farm-plots-section';
 
@@ -16,8 +19,15 @@ export function FarmDetailWithPlots() {
         <FarmPlotsSection
           farm={farm}
           renderPlotDetails={(plot) => (
+            <PlotCharacterizationSummary
+              farmId={farm.id}
+              farmIsActive={farm.isActive}
+              plot={{ id: plot.id, code: plot.code, isActive: plot.isActive }}
+            />
+          )}
+          renderPlotShortcuts={(plot) => (
             <>
-              <PlotCharacterizationSummary
+              <PlotCharacterizationActions
                 farmId={farm.id}
                 farmIsActive={farm.isActive}
                 plot={{ id: plot.id, code: plot.code, isActive: plot.isActive }}

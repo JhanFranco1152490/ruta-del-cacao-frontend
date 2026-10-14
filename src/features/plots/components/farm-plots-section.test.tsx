@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -16,6 +17,7 @@ import {
 import { buildPlot, buildSession, buildVertex } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { chooseFromActionsMenu } from '@/test/menu';
 import { server } from '@/test/server';
 
 vi.mock('@/config/map', async () => {
@@ -25,6 +27,8 @@ vi.mock('@/config/map', async () => {
 
 import { enqueuePlotCreate } from '../plot-queue';
 import { plotSyncAdapter } from '../sync-adapter';
+vi.mock('@/hooks/use-is-desktop', () => ({ useIsDesktop: vi.fn() }));
+
 import { FarmPlotsSection } from './farm-plots-section';
 
 const BOUNDARY = [
@@ -45,6 +49,7 @@ const FARM = {
 let userId: string;
 
 beforeEach(() => {
+  vi.mocked(useIsDesktop).mockReturnValue(true);
   userId = `plots-section-${crypto.randomUUID()}`;
 });
 
@@ -94,7 +99,9 @@ describe('FarmPlotsSection', () => {
     const map = await screen.findByRole('region', {
       name: 'Mapa de la finca y sus parcelas',
     });
-    expect(within(map).getByText(/La Esperanza \(ok\)/)).toBeInTheDocument();
+    expect(
+      await within(map).findByText(/La Esperanza \(ok\)/),
+    ).toBeInTheDocument();
     expect(within(map).getByText('P1 (ok) 3 vértices')).toBeInTheDocument();
     expect(within(map).queryByText(/P2/)).not.toBeInTheDocument();
   });
@@ -146,6 +153,26 @@ describe('FarmPlotsSection', () => {
     );
 
     expect(await screen.findByText('Enfocado: a')).toBeInTheDocument();
+  });
+
+  it('starts with the map hidden on a phone and shows it when asked to show a plot', async () => {
+    vi.mocked(useIsDesktop).mockReturnValue(false);
+    const user = userEvent.setup();
+    Element.prototype.scrollIntoView = vi.fn();
+    server.use(plotsHandler([buildPlot({ id: 'a', boundary: BOUNDARY })]));
+    renderSection();
+
+    expect(
+      await screen.findByRole('button', { name: 'Mostrar mapa' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/La Esperanza \(ok\)/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Ver P1 en el mapa' }));
+
+    expect(await screen.findByText('Enfocado: a')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Ocultar mapa' }),
+    ).toBeInTheDocument();
   });
 
   it('invites to register plots when the farm has none', async () => {
@@ -255,16 +282,20 @@ describe('FarmPlotsSection', () => {
         screen.queryByRole('link', { name: 'Registrar parcela' }),
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByRole('link', { name: 'Editar P1' }),
+        screen.queryByRole('button', { name: /^Más acciones de/ }),
       ).not.toBeInTheDocument();
     });
 
     it('offers to edit each plot with the farm in the address', async () => {
       server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
+      const user = userEvent.setup();
       renderSection({ permissions: ALL });
 
+      await user.click(
+        await screen.findByRole('button', { name: 'Más acciones de P1' }),
+      );
       expect(
-        await screen.findByRole('link', { name: 'Editar P1' }),
+        await screen.findByRole('menuitem', { name: 'Editar' }),
       ).toHaveAttribute('href', '/fincas/parcelas/editar?id=a&finca=f1');
     });
 
@@ -323,11 +354,11 @@ describe('FarmPlotsSection', () => {
       const user = userEvent.setup();
       renderSection({ permissions: ALL });
 
-      const buttons = await screen.findAllByRole('button', {
-        name: 'Descartar',
+      const menus = await screen.findAllByRole('button', {
+        name: /^Más acciones de/,
       });
-      expect(buttons).toHaveLength(1);
-      await user.click(buttons[0]);
+      expect(menus).toHaveLength(1);
+      await chooseFromActionsMenu(user, 'Descartar');
       await user.click(
         await screen.findByRole('button', { name: 'Descartar parcela' }),
       );
@@ -353,7 +384,7 @@ describe('FarmPlotsSection', () => {
       renderSection({ permissions: ALL });
 
       expect(
-        await screen.findByRole('button', { name: 'Descartar' }),
+        await screen.findByRole('button', { name: 'Más acciones de P1' }),
       ).toBeInTheDocument();
       expect(
         screen.queryByRole('link', { name: 'Corregir P1' }),

@@ -40,7 +40,7 @@ export function SchedulePlotActivity({
   }
 
   return (
-    <div className="space-y-2">
+    <>
       <Button
         aria-describedby={hasConnection ? undefined : helpId}
         aria-label={`Programar actividad en ${plot.code}`}
@@ -49,19 +49,20 @@ export function SchedulePlotActivity({
           setScheduledMonth(undefined);
           setOpen(true);
         }}
+        className="px-3"
         size="office"
-        variant="outline"
+        title="Programar actividad"
+        variant="action"
       >
-        <CalendarPlus aria-hidden="true" className="size-4" /> Programar
-        actividad
+        <CalendarPlus aria-hidden="true" className="size-4" />
       </Button>
       {!hasConnection && (
-        <p className="text-sm text-muted-foreground" id={helpId}>
+        <p className="basis-full text-sm text-muted-foreground" id={helpId}>
           Programar una actividad necesita conexión.
         </p>
       )}
       {scheduledMonth && (
-        <p className="text-sm font-bold text-ok" role="status">
+        <p className="basis-full text-sm font-bold text-ok" role="status">
           Actividad programada.{' '}
           <Link className="underline" href={activitiesPath(scheduledMonth)}>
             Ver en Actividades
@@ -79,6 +80,6 @@ export function SchedulePlotActivity({
           preset={{ farmId: farm.id, plotId: plot.id }}
         />
       )}
-    </div>
+    </>
   );
 }
