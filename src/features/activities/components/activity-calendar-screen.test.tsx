@@ -22,6 +22,7 @@ import {
   plotsHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
 import { discard } from '@/lib/offline/sync-queue';
@@ -383,10 +384,7 @@ describe('ActivityCalendarScreen', () => {
       );
       const form = await screen.findByRole('dialog');
       const field = (name: string) => within(form).getByLabelText(name);
-      await within(field('Parcela')).findByRole('option', {
-        name: 'P-01 · 2,4 ha',
-      });
-      await userEvent.selectOptions(field('Parcela'), 'pl1');
+      await pick('Parcela', 'P-01 · 2,4 ha', form);
       await userEvent.selectOptions(field('Tipo de actividad'), 'pruning');
       fireEvent.change(field('Fecha programada'), {
         target: { value: '2026-11-03' },

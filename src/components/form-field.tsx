@@ -15,6 +15,8 @@ type FormFieldProps = {
   hint?: string;
   id?: string;
   className?: string;
+  // La etiqueta solo para lectores de pantalla, en filtros compactos donde el campo ya dice qué es.
+  hideLabel?: boolean;
   children: (control: FieldControl) => ReactNode;
 };
 
@@ -25,6 +27,7 @@ export function FormField({
   hint,
   id: idProp,
   className,
+  hideLabel = false,
   children,
 }: FormFieldProps) {
   const generatedId = useId();
@@ -34,7 +37,13 @@ export function FormField({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-2 block text-sm font-bold text-selva">
+      <label
+        htmlFor={id}
+        className={cn(
+          'block text-sm font-bold text-selva',
+          hideLabel ? 'sr-only' : 'mb-2',
+        )}
+      >
         {label}
       </label>
       {children({

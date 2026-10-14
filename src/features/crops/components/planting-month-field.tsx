@@ -79,12 +79,12 @@ export function PlantingMonthField({
             {`Mes de siembra${suffix}`}
           </label>
           <NativeSelect
+            placeholder="Mes"
             {...control}
             id={`${id}-month`}
             value={month}
             onChange={(event) => change(year, event.target.value)}
           >
-            <option value="">Mes</option>
             {MONTHS.map((name, index) => (
               <option key={name} value={String(index + 1).padStart(2, '0')}>
                 {name}
@@ -97,12 +97,12 @@ export function PlantingMonthField({
             {`Año de siembra${suffix}`}
           </label>
           <NativeSelect
+            placeholder="Año"
             {...control}
             id={`${id}-year`}
             value={year}
             onChange={(event) => change(event.target.value, month)}
           >
-            <option value="">Año</option>
             {years.map((option) => (
               <option key={option} value={option}>
                 {option}

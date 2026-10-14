@@ -3,6 +3,7 @@
 import { cn } from 'cn';
 import { Search } from 'lucide-react';
 
+import { MunicipalityFilter } from '@/components/municipality-filter';
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -56,21 +57,13 @@ export function ProducerFilters({
         <option value="active">Activos</option>
         <option value="inactive">Inactivos</option>
       </NativeSelect>
-      <NativeSelect
-        aria-label="Filtrar por municipio"
-        className="text-sm"
-        onChange={(event) =>
-          filters.setMunicipality(event.target.value || null)
-        }
-        value={filters.municipality ?? ''}
-      >
-        <option value="">Todos los municipios</option>
-        {municipalities.map((municipality) => (
-          <option key={municipality.code} value={municipality.code}>
-            {municipality.name}
-          </option>
-        ))}
-      </NativeSelect>
+      <MunicipalityFilter
+        hideLabel
+        inputClassName="text-sm"
+        municipalities={municipalities}
+        onChange={filters.setMunicipality}
+        value={filters.municipality}
+      />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
+import { pick } from '@/test/search-select';
 import { router } from '@/test/router';
 import { server } from '@/test/server';
 
@@ -189,7 +190,6 @@ describe('ProducerListScreen', () => {
     const user = userEvent.setup();
     renderWithProviders(<ProducerListScreen />, { onUrlUpdate });
     await screen.findByText('Ana Prueba');
-    await screen.findByRole('option', { name: 'Pamplona' });
 
     await user.selectOptions(
       screen.getByLabelText('Filtrar por estado'),
@@ -197,10 +197,7 @@ describe('ProducerListScreen', () => {
     );
     await waitFor(() => expect(lastParams().get('status')).toBe('inactive'));
 
-    await user.selectOptions(
-      screen.getByLabelText('Filtrar por municipio'),
-      '54518',
-    );
+    await pick('Filtrar por municipio', 'Pamplona');
     await waitFor(() =>
       expect(lastParams().get('municipality_code')).toBe('54518'),
     );

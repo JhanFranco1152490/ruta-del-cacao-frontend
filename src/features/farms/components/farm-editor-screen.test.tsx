@@ -84,8 +84,10 @@ describe('FarmEditorScreen', () => {
     expect(await screen.findByLabelText('Nombre de la finca')).toHaveValue(
       'La Esperanza',
     );
-    await screen.findByRole('option', { name: 'Pamplona' });
-    expect(screen.getByLabelText('Municipio')).toHaveValue('54518');
+    await waitFor(() =>
+      expect(screen.getByLabelText('Municipio')).toBeEnabled(),
+    );
+    expect(screen.getByLabelText('Municipio')).toHaveValue('Pamplona');
     expect(
       screen.getByText(/Ya existe una finca con este nombre\./),
     ).toBeInTheDocument();

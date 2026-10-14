@@ -20,6 +20,7 @@ import {
   inputStocksHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
 import { type FarmChoices, InputListScreen } from './input-list-screen';
@@ -140,9 +141,9 @@ describe('InputListScreen', () => {
     await table();
     await waitFor(() => expect(requests).toHaveLength(1));
     expect(requests[0].has('farm')).toBe(false);
-    expect(screen.getByLabelText('Finca')).toHaveValue('');
+    expect(screen.getByLabelText('Finca')).toHaveValue('Todas las fincas');
 
-    await userEvent.selectOptions(screen.getByLabelText('Finca'), 'f2');
+    await pick('Finca', 'El Retiro');
 
     await waitFor(() => expect(requests.at(-1)?.get('farm')).toBe('f2'));
     expect(urls.at(-1)).toContain('finca=f2');
@@ -438,7 +439,7 @@ describe('InputListScreen', () => {
     expect(
       screen.queryByText('Productora De Prueba · ASO-001'),
     ).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Finca')).toHaveValue('');
+    expect(screen.getByLabelText('Finca')).toHaveValue('Todas las fincas');
     await waitFor(() => expect(stockRequests[0]?.get('producer')).toBe('p2'));
   });
 
@@ -465,8 +466,11 @@ describe('InputListScreen', () => {
     );
     const dialog = await screen.findByRole('dialog');
 
+    await userEvent.click(
+      within(dialog).getByRole('combobox', { name: 'Finca' }),
+    );
     expect(
-      await within(dialog).findByRole('option', { name: 'Finca del insumo' }),
+      await screen.findByRole('option', { name: 'Finca del insumo' }),
     ).toBeInTheDocument();
     expect(farmRequests[0].get('producer')).toBe(urea.producer.id);
   });
