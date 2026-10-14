@@ -1,5 +1,5 @@
 import { onlineManager } from '@tanstack/react-query';
-import { screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -337,7 +337,12 @@ describe('CharacterizationScreen when the connection drops with the app open', (
   }
 
   beforeEach(() => onlineManager.setOnline(false));
-  afterEach(() => onlineManager.setOnline(true));
+  // Se desmonta antes de volver a poner la conexión: con la pantalla montada, el reintento
+  // pausado de la consulta sale justo cuando el desmontaje lo aborta y deja un rechazo sin capturar.
+  afterEach(() => {
+    cleanup();
+    onlineManager.setOnline(true);
+  });
 
   it('says it needs the variety catalog once instead of loading forever', async () => {
     server.use(
