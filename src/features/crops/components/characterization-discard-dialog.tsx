@@ -11,6 +11,7 @@ import {
   QueueItemBusyError,
   QueueItemMissingError,
 } from '@/lib/offline/sync-queue';
+import { notify } from '@/lib/notify';
 
 import { useDiscardCharacterization } from '../use-characterization-queue';
 
@@ -33,10 +34,10 @@ export function CharacterizationDiscardDialog({
   code: string;
 }) {
   const discard = useDiscardCharacterization();
-  const dialog = useConfirmAction(
-    () => discard.mutateAsync(plotId),
-    discardErrorMessage,
-  );
+  const dialog = useConfirmAction(async () => {
+    await discard.mutateAsync(plotId);
+    notify.success('Ficha pendiente descartada');
+  }, discardErrorMessage);
   const action: StatusChangeAction = {
     trigger: 'Descartar caracterización',
     title: `¿Descartar la caracterización de ${code}?`,

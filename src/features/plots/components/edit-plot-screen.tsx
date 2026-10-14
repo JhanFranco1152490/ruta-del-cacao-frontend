@@ -1,10 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useFinishEdit } from '@/hooks/use-finish-edit';
 
 import { formatHectares } from '@/lib/format/hectares';
 
@@ -93,7 +93,7 @@ function SavedPlotEditor({
   plot: Plot;
   knownPlots: Parameters<typeof PlotEditor>[0]['knownPlots'];
 }) {
-  const router = useRouter();
+  const { returnPath, finish } = useFinishEdit(farm.detailPath);
   const update = usePlotUpdate();
   const sync = useCaptureSyncStatus('parcelas');
 
@@ -103,7 +103,7 @@ function SavedPlotEditor({
       blockedMessage={
         !farm.isActive ? INACTIVE_FARM_MESSAGE : sync.blockedMessage
       }
-      cancelHref={farm.detailPath}
+      cancelHref={returnPath}
       defaultValues={plotToFormValues(plot)}
       description="Los cambios se guardan en este dispositivo y se envían cuando haya conexión. Al editar, el polígono se reemplaza completo."
       error={update.isError ? SAVE_FAILED : null}
@@ -118,7 +118,7 @@ function SavedPlotEditor({
             values,
             expectedVersion: plot.version,
           },
-          { onSuccess: () => router.push(farm.detailPath) },
+          { onSuccess: () => finish('Parcela actualizada') },
         )
       }
       selfId={plot.id}
@@ -136,7 +136,7 @@ function QueuedPlotEditor({
   farm: PlotScreenFarm;
   plot: QueuedPlot;
 }) {
-  const router = useRouter();
+  const { returnPath, finish } = useFinishEdit(farm.detailPath);
   const resubmit = usePlotResubmit();
   const sync = useCaptureSyncStatus('parcelas');
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
@@ -161,7 +161,7 @@ function QueuedPlotEditor({
       blockedMessage={
         !farm.isActive ? INACTIVE_FARM_MESSAGE : sync.blockedMessage
       }
-      cancelHref={farm.detailPath}
+      cancelHref={returnPath}
       defaultValues={plot.values}
       description="Los cambios se guardan en este dispositivo y la parcela se vuelve a enviar cuando haya conexión."
       error={resubmit.isError ? SAVE_FAILED : null}
@@ -201,7 +201,7 @@ function QueuedPlotEditor({
       onSubmit={(values) =>
         resubmit.mutate(
           { plot, values, expectedVersion: current?.version },
-          { onSuccess: () => router.push(farm.detailPath) },
+          { onSuccess: () => finish('Parcela actualizada') },
         )
       }
       selfId={plot.id}

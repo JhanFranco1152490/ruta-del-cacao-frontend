@@ -8,6 +8,7 @@ import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
 import { RoleScreen } from './role-screen';
+import { queryDialog } from '@/test/dialog';
 
 const id = '11111111-1111-4111-8111-111111111111';
 const role = {
@@ -66,9 +67,7 @@ describe('RoleScreen', () => {
     await user.click(trigger);
     await screen.findByRole('button', { name: 'Editar rol' });
     await user.keyboard('{Escape}');
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     await waitFor(() => expect(trigger).toHaveFocus());
     expect(onUrlUpdate.mock.lastCall?.[0].searchParams.has('rol')).toBe(false);
   });
@@ -265,9 +264,7 @@ describe('RoleScreen', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Confirmar borrado' }),
     );
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(count).toBe(2);
   });
   it('resets the page when filtering and sends the type to the server', async () => {

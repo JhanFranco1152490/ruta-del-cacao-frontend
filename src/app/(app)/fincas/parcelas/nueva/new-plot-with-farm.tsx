@@ -1,11 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { FarmGateFromQuery } from '@/features/farms/components/farm-gate-from-query';
 import { FarmPicker } from '@/features/farms/components/farm-picker';
 import { NewPlotScreen } from '@/features/plots/components/new-plot-screen';
 import { plotNewPath } from '@/features/plots/plot-paths';
+import { ORIGIN_PARAM, readOrigin } from '@/lib/navigation/origin';
 
 // Aquí se juntan los dos dominios: la pantalla de parcelas recibe la finca ya leída, sin saber
 // cómo se lee. Es de cliente porque la finca se entrega como función. Sin finca en la dirección
@@ -13,6 +14,9 @@ import { plotNewPath } from '@/features/plots/plot-paths';
 // antes la finca.
 export function NewPlotWithFarm() {
   const router = useRouter();
+  const origin = readOrigin(useSearchParams());
+  const withOriginParam = (path: string) =>
+    origin ? `${path}&${ORIGIN_PARAM}=${encodeURIComponent(origin)}` : path;
   return (
     <FarmGateFromQuery
       missing={
@@ -21,7 +25,9 @@ export function NewPlotWithFarm() {
           <p className="text-muted-foreground">
             ¿En qué finca? Busca la finca por su nombre.
           </p>
-          <FarmPicker onPick={(id) => router.push(plotNewPath(id))} />
+          <FarmPicker
+            onPick={(id) => router.push(withOriginParam(plotNewPath(id)))}
+          />
         </div>
       }
     >

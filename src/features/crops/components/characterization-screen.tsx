@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useReturnPath } from '@/hooks/use-return-path';
 import { useSession } from '@/hooks/use-session';
 import { queryKeys } from '@/lib/api/query-keys';
 import { formatDateTime } from '@/lib/format/dates';
@@ -81,6 +82,7 @@ export function CharacterizationScreen({
 }) {
   const queryClient = useQueryClient();
   const { data: user } = useSession();
+  const returnPath = useReturnPath(farm.detailPath);
   const queued = useQueuedCharacterization(plot.id);
   const server = useFarmCharacterizations(user?.id, farm.id);
   const catalog = useActiveCacaoVarieties(user?.id);
@@ -257,7 +259,7 @@ export function CharacterizationScreen({
                 variant: 'outline',
                 className: CAPTURE_BUTTON_CLASS,
               })}
-              href={farm.detailPath}
+              href={returnPath}
             >
               Cancelar
             </Link>

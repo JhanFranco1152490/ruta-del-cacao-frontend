@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { getErrorMessage } from '@/lib/api/errors';
+import { notify } from '@/lib/notify';
 
 import {
   useChangeProducerStatus,
@@ -40,7 +41,16 @@ export function useProducerStatusChange(
         status: opened.target,
         expectedVersion: opened.version,
       },
-      { onSuccess: () => setOpen(false) },
+      {
+        onSuccess: () => {
+          setOpen(false);
+          notify.success(
+            opened.target === 'active'
+              ? 'Productor activado'
+              : 'Productor desactivado',
+          );
+        },
+      },
     );
 
   return {

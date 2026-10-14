@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { OfflineBanner } from '@/components/offline-banner';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useFinishEdit } from '@/hooks/use-finish-edit';
 import { useSession } from '@/hooks/use-session';
 import { isApiError } from '@/lib/api/errors';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -89,6 +90,7 @@ function ServerFarmEditor({ id }: { id: string }) {
 
 function SavedFarmEditor({ farm }: { farm: Farm }) {
   const router = useRouter();
+  const { finish } = useFinishEdit('/fincas');
   const update = useFarmUpdate();
   const sync = useFarmSyncStatus();
   const { data: user } = useSession();
@@ -126,7 +128,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
       onSubmit={(values) =>
         update.mutate(
           { id: farm.id, values, expectedVersion: farm.version },
-          { onSuccess: () => router.push('/fincas') },
+          { onSuccess: () => finish('Finca actualizada') },
         )
       }
     />
@@ -134,7 +136,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
 }
 
 function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
-  const router = useRouter();
+  const { finish } = useFinishEdit('/fincas');
   const resubmit = useFarmResubmit();
   const sync = useFarmSyncStatus();
   const isStale = farm.errorCode === 'stale_version';
@@ -190,7 +192,7 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
       onSubmit={(values) =>
         resubmit.mutate(
           { farm, values, expectedVersion: current?.version },
-          { onSuccess: () => router.push('/fincas') },
+          { onSuccess: () => finish('Finca actualizada') },
         )
       }
     />

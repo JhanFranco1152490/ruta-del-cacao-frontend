@@ -8,13 +8,17 @@ import { apiError, buildProducer, buildSession } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
-import { router } from '@/test/router';
+import { mockLocation } from '@/test/router';
 import { server } from '@/test/server';
 
 import type { Producer } from '../api';
 import { ProducerDetailScreen } from './producer-detail-screen';
+import { queryDialog } from '@/test/dialog';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 const PRODUCER = apiUrl('/api/producers/p1');
 const STATUS = apiUrl('/api/producers/p1/status');
@@ -45,6 +49,7 @@ async function openDialog(name: 'Desactivar' | 'Reactivar') {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockLocation.path = '/productores';
   statusBodies = [];
   server.use(
     municipalitiesHandler(),
@@ -147,7 +152,7 @@ describe('ProducerDetailScreen', () => {
 
     expect(
       await screen.findByRole('link', { name: /Editar datos/ }),
-    ).toHaveAttribute('href', '/productores/p1/editar');
+    ).toHaveAttribute('href', '/productores/p1/editar?origen=%2Fproductores');
   });
 
   it('keeps the visible focus outline on the edit link', async () => {
@@ -205,9 +210,7 @@ describe('ProducerDetailScreen - deactivation', () => {
 
     expect(await screen.findByText('Productor inactivo')).toBeInTheDocument();
     expect(statusBodies).toEqual([{ status: 'inactive', expected_version: 3 }]);
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(
       screen.queryByRole('button', { name: 'Desactivar' }),
     ).not.toBeInTheDocument();
@@ -223,9 +226,7 @@ describe('ProducerDetailScreen - deactivation', () => {
     const { user, dialog } = await openDialog('Desactivar');
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(statusBodies).toEqual([]);
     expect(screen.getByText('Productor activo')).toBeInTheDocument();
   });
@@ -334,9 +335,7 @@ describe('ProducerDetailScreen - deactivation', () => {
     await within(dialog).findByRole('alert');
     await waitFor(() => expect(reads).toBe(2));
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: 'Desactivar' }));
     const reopened = await screen.findByRole('dialog');
@@ -363,9 +362,7 @@ describe('ProducerDetailScreen - deactivation', () => {
     );
     await within(dialog).findByRole('alert');
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: 'Desactivar' }));
 
@@ -450,9 +447,7 @@ describe('ProducerDetailScreen - reactivation', () => {
 
     expect(await screen.findByText('Productor activo')).toBeInTheDocument();
     expect(statusBodies).toEqual([{ status: 'active', expected_version: 4 }]);
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(
       screen.queryByRole('button', { name: 'Reactivar' }),
     ).not.toBeInTheDocument();
@@ -467,9 +462,7 @@ describe('ProducerDetailScreen - reactivation', () => {
     const { user, dialog } = await openDialog('Reactivar');
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(statusBodies).toEqual([]);
     expect(screen.getByText('Productor inactivo')).toBeInTheDocument();
   });

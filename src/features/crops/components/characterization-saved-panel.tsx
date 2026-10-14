@@ -8,6 +8,7 @@ import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { StatusBadge } from '@/components/status-badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useBackLink } from '@/hooks/use-return-path';
 import { useQueuedRecordState } from '@/hooks/use-queued-record-state';
 import { useSession } from '@/hooks/use-session';
 import { describeQueuedRecord } from '@/lib/offline/queued-record-text';
@@ -35,6 +36,10 @@ export function CharacterizationSavedPanel({
   const { data: user } = useSession();
   const state = useQueuedRecordState(user?.id, characterizationQueueId(plotId));
   const { status: sync } = useCaptureSyncStatus('caracterizaciones');
+  const back = useBackLink({
+    href: farmDetailPath,
+    label: 'Volver a la finca',
+  });
   const badge = BADGES[state.status];
 
   // El panel reemplaza al formulario: el foco va al título para que se anuncie el resultado y
@@ -83,9 +88,9 @@ export function CharacterizationSavedPanel({
                 size: 'office',
                 className: CAPTURE_BUTTON_CLASS,
               })}
-              href={farmDetailPath}
+              href={back.href}
             >
-              Volver a la finca
+              {back.label}
             </Link>
           )}
         </div>

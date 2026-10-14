@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useReturnPath } from '@/hooks/use-return-path';
 import { useSession } from '@/hooks/use-session';
 
 import type { PlotFormValues } from '../plot-queue';
@@ -29,6 +30,7 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
   const sync = useCaptureSyncStatus('parcelas');
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
   const { data: user } = useSession();
+  const returnPath = useReturnPath(farm.detailPath);
 
   if (savedCode) {
     return (
@@ -72,7 +74,7 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
       blockedMessage={
         !farm.isActive ? INACTIVE_FARM_MESSAGE : sync.blockedMessage
       }
-      cancelHref={farm.detailPath}
+      cancelHref={returnPath}
       defaultValues={defaultValues}
       description="El código y el área son obligatorios; el polígono es opcional. Si no hay conexión, la parcela se guarda en este dispositivo y se envía cuando vuelva la conexión."
       error={

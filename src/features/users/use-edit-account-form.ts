@@ -10,6 +10,7 @@ import {
   type AccountDataValues,
 } from './schemas';
 import { useAccountSubmit } from '@/hooks/use-account-submit';
+import { notify } from '@/lib/notify';
 
 export function useEditAccountForm({
   account,
@@ -41,6 +42,7 @@ export function useEditAccountForm({
   const submit = (values: AccountDataValues) =>
     run(async () => {
       await mutation.mutateAsync(toAccountUpdate(values, identityLocked));
+      notify.success('Cuenta actualizada');
       onSaved();
     });
   return { form, submit, failure, identityLocked };

@@ -19,6 +19,7 @@ import {
   toRoleRequest,
   type RoleValues,
 } from '../schemas';
+import { notify } from '@/lib/notify';
 import { RolePermissionPicker } from './role-permission-picker';
 
 export function RoleForm({
@@ -64,6 +65,7 @@ export function RoleForm({
       const saved = role
         ? await update.mutateAsync({ id: role.id, input: values })
         : await create.mutateAsync(toRoleRequest(values, producer));
+      notify.success(role ? 'Rol actualizado' : 'Rol creado');
       onSaved(saved);
     } catch (error) {
       lock.current = false;

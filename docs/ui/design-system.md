@@ -136,7 +136,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 ### Base shadcn/ui (con nuestros tokens)
 
 `button`, `input`, `label`, `badge`, `table`, `card`, `tabs`, `checkbox`, `switch`, `select`,
-`radio-group`, `progress`, `dialog`, `dropdown-menu`, `tooltip`, `sonner`, `skeleton`, `pagination`.
+`radio-group`, `progress`, `dialog`, `dropdown-menu`, `tooltip`, `toast`, `skeleton`, `pagination`.
 
 - **Button:** `default` = fondo `--selva`, texto blanco. `secondary` = fondo blanco, borde `--input`.
   `ghost` = solo texto `--selva-2`. `copper` (variante propia) = fondo `--cobre`.
@@ -167,6 +167,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `PermissionMatrix` | Matriz permisos × roles | Roles y permisos |
 | `CheckboxField` | Compone la casilla de shadcn/ui con `FormField`: etiqueta, ayuda o error, explicación de deshabilitado y foco cobre; reutiliza la accesibilidad de Base UI | Selección de roles y permisos |
 | `SearchSelect` | Lista que se abre al enfocar y se acota al escribir, en lugar del select nativo, con una entrada fija opcional de «Todas…» y grupos. Se filtra en el navegador (lista cargada) o avisa lo escrito (lista del servidor). `ProducerFilter` y `FarmFilter` se arman con él. Regla: más de unas 10 opciones o lista que crece, `SearchSelect`; lista corta y fija (tipo, etapa, mes, estados), el select nativo | Finca, parcela, productor, municipio |
+| `Toaster` / `notify` | Aviso flotante de lo que terminó bien («Finca actualizada»), basado en el Toast de Base UI. Se invoca con `notify.success / info / warning / error` desde cualquier archivo. Dura 5 s (8 s con acción, p. ej. «Ver productor»); el de error no se cierra solo. Botón de cerrar de 44 px y cierre deslizando, para usarlo con guantes; sin movimiento si el sistema lo pide. Hasta 3 a la vez, abajo a la derecha. Solo para lo que terminó: lo pendiente de enviar y los errores del servidor siguen en la bandeja y el indicador, y la validación junto al campo | Toda la app |
 | `MaskedValue` | Muestra `CC ••••4821` y registra en bitácora al revelar | Productores, usuarios |
 | `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos, página no encontrada y de error |
 | `BotanicalVine` | Línea botánica en oro, solo sobre fondo oscuro | Inicio de sesión, barra lateral y menú móvil |

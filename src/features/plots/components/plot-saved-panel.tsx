@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { useBackLink } from '@/hooks/use-return-path';
 import { useQueuedRecordState } from '@/hooks/use-queued-record-state';
 import { useSession } from '@/hooks/use-session';
 import { describeQueuedRecord } from '@/lib/offline/queued-record-text';
@@ -37,6 +38,10 @@ export function PlotSavedPanel({
   const { data: user } = useSession();
   const state = useQueuedRecordState(user?.id, plotId);
   const { status: sync } = useCaptureSyncStatus('parcelas');
+  const back = useBackLink({
+    href: farmDetailPath,
+    label: 'Volver a la finca',
+  });
   const badge = BADGES[state.status];
   const text = describeQueuedRecord(state, sync.isOnline);
 
@@ -85,9 +90,9 @@ export function PlotSavedPanel({
                 size: 'office',
                 className: CAPTURE_BUTTON_CLASS,
               })}
-              href={farmDetailPath}
+              href={back.href}
             >
-              Volver a la finca
+              {back.label}
             </Link>
           )}
           <Button

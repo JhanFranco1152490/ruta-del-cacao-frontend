@@ -9,6 +9,7 @@ import {
   buildAgriculturalInput,
   buildInputStock,
 } from '@/test/factories';
+import { queryDialog } from '@/test/dialog';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
@@ -40,7 +41,7 @@ const save = (dialog: HTMLElement, name: string) =>
   userEvent.click(within(dialog).getByRole('button', { name }));
 
 const dialogClosed = () =>
-  waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
 
 const rowOf = async (name: string) => {
   const table = await screen.findByRole('table', { name: 'Insumos' });

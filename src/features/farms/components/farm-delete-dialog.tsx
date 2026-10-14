@@ -11,6 +11,7 @@ import { getErrorMessage, isApiError } from '@/lib/api/errors';
 
 import { type Farm, useChangeFarmStatus, useDeleteFarm } from '../api';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
+import { notify } from '@/lib/notify';
 
 const HAS_RECORDS = 'farm_has_records';
 
@@ -89,6 +90,7 @@ export function FarmDeleteDialog({
           throw error;
         }
       }
+      notify.success(offerDeactivate ? 'Finca desactivada' : 'Finca eliminada');
       onDone();
     },
     (error) =>

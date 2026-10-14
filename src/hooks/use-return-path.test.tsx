@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useReturnPath } from './use-return-path';
+import { useBackLink, useReturnPath } from './use-return-path';
 
 let search = '';
 vi.mock('next/navigation', () => ({
@@ -33,5 +33,29 @@ describe('useReturnPath', () => {
     const { result } = renderHook(() => useReturnPath('/fincas'));
 
     expect(result.current).toBe('/fincas');
+  });
+});
+
+describe('useBackLink', () => {
+  const fallback = {
+    href: '/fincas/detalle?id=f1',
+    label: 'Volver a la finca',
+  };
+
+  it('says only «Volver» when it goes back to the screen of origin', () => {
+    search = `origen=${encodeURIComponent('/parcelas?pagina=2')}`;
+
+    const { result } = renderHook(() => useBackLink(fallback));
+
+    expect(result.current).toEqual({
+      href: '/parcelas?pagina=2',
+      label: 'Volver',
+    });
+  });
+
+  it('keeps its own link and text without an origin', () => {
+    const { result } = renderHook(() => useBackLink(fallback));
+
+    expect(result.current).toEqual(fallback);
   });
 });

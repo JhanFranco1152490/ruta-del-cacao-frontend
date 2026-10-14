@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useQueuedRecordState } from '@/hooks/use-queued-record-state';
+import { useReturnPath } from '@/hooks/use-return-path';
 import { useSession } from '@/hooks/use-session';
 import { describeQueuedRecord } from '@/lib/offline/queued-record-text';
 
@@ -33,6 +34,7 @@ export function FarmSavedPanel({
   const { data: user } = useSession();
   const state = useQueuedRecordState(user?.id, farmId);
   const { status: sync } = useFarmSyncStatus();
+  const listPath = useReturnPath('/fincas');
   const badge = BADGES[state.status];
   const text = describeQueuedRecord(state, sync.isOnline);
 
@@ -81,7 +83,7 @@ export function FarmSavedPanel({
                 size: 'office',
                 className: CAPTURE_BUTTON_CLASS,
               })}
-              href="/fincas"
+              href={listPath}
             >
               Ver mis fincas
             </Link>

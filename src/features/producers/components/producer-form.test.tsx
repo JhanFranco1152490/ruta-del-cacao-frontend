@@ -8,13 +8,16 @@ import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
 import { pick } from '@/test/search-select';
-import { router } from '@/test/router';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 import type { Producer } from '../api';
 import { ProducerForm } from './producer-form';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 const PRODUCERS = apiUrl('/api/producers');
 const PRODUCER = apiUrl('/api/producers/p1');
@@ -68,6 +71,7 @@ const messageOf = (label: string) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetLocation();
   bodies = [];
   server.use(municipalitiesHandler());
 });
@@ -463,6 +467,24 @@ describe('ProducerForm', () => {
     expect(bodies).toHaveLength(1);
   });
 
+  it('returns to the list it was opened from and offers the new record', async () => {
+    const user = userEvent.setup();
+    mockLocation.search = `origen=${encodeURIComponent('/productores?buscar=ana')}`;
+    server.use(createHandler());
+    await renderForm();
+    await fillRequiredFields(user);
+
+    await submitCreate(user);
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/productores?buscar=ana'),
+    );
+    await user.click(
+      await screen.findByRole('button', { name: 'Ver productor' }),
+    );
+    expect(router.push).toHaveBeenCalledWith('/productores/p1');
+  });
+
   describe('editing', () => {
     it('preloads the data and saves with the version of the record', async () => {
       const user = userEvent.setup();
@@ -501,6 +523,22 @@ describe('ProducerForm', () => {
           expected_version: 3,
         },
       ]);
+    });
+
+    it('returns to the list it was opened from and confirms with a notice', async () => {
+      const user = userEvent.setup();
+      mockLocation.search = `origen=${encodeURIComponent('/productores?pagina=2')}`;
+      server.use(updateHandler());
+      await renderForm(buildProducer());
+
+      await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith('/productores?pagina=2'),
+      );
+      expect(
+        await screen.findByText('Productor actualizado'),
+      ).toBeInTheDocument();
     });
 
     it('sends the version the form was initialised with when the record is refreshed in the background', async () => {

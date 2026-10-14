@@ -16,14 +16,17 @@ import {
 } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
-import { router } from '@/test/router';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 import { enqueueFarmCreate, enqueueFarmUpdate } from '../farm-queue';
 import type { FarmFormValues } from '../schemas';
 import { FarmEditorScreen } from './farm-editor-screen';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 const farm: FarmFormValues = {
   name: 'La Esperanza',
@@ -41,7 +44,9 @@ beforeEach(async () => {
   userId = `farm-editor-${crypto.randomUUID()}`;
   // La app lo registra cada vez que el servidor confirma la sesión.
   await recordLogin(userId);
+  router.replace.mockClear();
   router.push.mockClear();
+  resetLocation();
   server.use(municipalitiesHandler());
 });
 
@@ -103,13 +108,50 @@ describe('FarmEditorScreen', () => {
     await user.type(name, 'La Esperanza 2');
     await save(user);
 
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/fincas'));
     const item = await getOfflineDb(userId).queue.get('f1');
     expect(item).toMatchObject({
       status: 'pending',
       payload: { id: 'f1', name: 'La Esperanza 2' },
     });
     expect(item).not.toHaveProperty('errorMessage');
+  });
+
+  it('confirms the save with a notice instead of a banner', async () => {
+    const user = userEvent.setup();
+    await enqueueFailedFarm();
+    renderEditor();
+    await screen.findByLabelText('Nombre de la finca');
+
+    await save(user);
+
+    expect(await screen.findByText('Finca actualizada')).toBeInTheDocument();
+  });
+
+  it('returns to the list it was opened from, with its filters', async () => {
+    const user = userEvent.setup();
+    await enqueueFailedFarm();
+    mockLocation.search = `origen=${encodeURIComponent('/fincas?buscar=la&pagina=2')}`;
+    renderEditor();
+    await screen.findByLabelText('Nombre de la finca');
+
+    await save(user);
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/fincas?buscar=la&pagina=2'),
+    );
+  });
+
+  it('ignores an origin that is not a page of the app', async () => {
+    const user = userEvent.setup();
+    await enqueueFailedFarm();
+    mockLocation.search = `origen=${encodeURIComponent('//otro.sitio')}`;
+    renderEditor();
+    await screen.findByLabelText('Nombre de la finca');
+
+    await save(user);
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/fincas'));
   });
 
   it('asks to wait when the farm is being sent at that moment', async () => {
@@ -124,7 +166,7 @@ describe('FarmEditorScreen', () => {
     expect(
       await screen.findByText(/se está enviando en este momento/),
     ).toBeInTheDocument();
-    expect(router.push).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('explains when the farm is neither pending nor among the person farms', async () => {
@@ -160,7 +202,7 @@ describe('FarmEditorScreen', () => {
     await user.type(name, 'Finca renombrada');
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/fincas'));
     expect(
       screen.queryByText(/La altitud no corresponde/),
     ).not.toBeInTheDocument();
@@ -193,7 +235,7 @@ describe('FarmEditorScreen', () => {
         'La altitud no corresponde a Cúcuta: el terreno del municipio va de 0 a 1647 m.',
       ),
     ).toBeInTheDocument();
-    expect(router.push).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('does not let the area go below what the active plots already take', async () => {
@@ -209,7 +251,7 @@ describe('FarmEditorScreen', () => {
     expect(
       await screen.findByText(/Sus parcelas activas ya ocupan 5 ha/),
     ).toBeInTheDocument();
-    expect(router.push).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
     expect(await getOfflineDb(userId).queue.get('s1')).toBeUndefined();
   });
 
@@ -228,7 +270,7 @@ describe('FarmEditorScreen', () => {
     await user.type(name, 'La Esperanza Alta');
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/fincas'));
     expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
       operation: 'update',
       status: 'pending',
@@ -259,7 +301,7 @@ describe('FarmEditorScreen', () => {
     );
     await save(user);
 
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/fincas'));
     expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
       status: 'pending',
       payload: { expected_version: 4 },
@@ -322,7 +364,9 @@ describe('FarmEditorScreen', () => {
       await user.type(name, 'Segunda edición');
       await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
-      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith('/fincas'),
+      );
       expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
         payload: { name: 'Segunda edición', expected_version: 6 },
       });
@@ -351,7 +395,9 @@ describe('FarmEditorScreen', () => {
       );
       await save(user);
 
-      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith('/fincas'),
+      );
       expect(await getOfflineDb(userId).queue.get('s1')).toMatchObject({
         status: 'pending',
         payload: { expected_version: 4 },
@@ -529,7 +575,9 @@ describe('FarmEditorScreen', () => {
       await user.type(name, 'Corregida sin red');
       await save(user);
 
-      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/fincas'));
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith('/fincas'),
+      );
       expect(
         (await getOfflineDb(userId).queue.get('f1'))?.payload,
       ).toMatchObject({ name: 'Corregida sin red' });

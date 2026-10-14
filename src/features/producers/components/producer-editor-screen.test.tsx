@@ -14,7 +14,10 @@ import { server } from '@/test/server';
 
 import { ProducerEditorScreen } from './producer-editor-screen';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 const PRODUCER = apiUrl('/api/producers/p1');
 

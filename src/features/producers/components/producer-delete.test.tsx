@@ -20,7 +20,10 @@ import { server } from '@/test/server';
 import type { Producer } from '../api';
 import { ProducerDetailScreen } from './producer-detail-screen';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 const PRODUCER = apiUrl('/api/producers/p1');
 const STATUS = apiUrl('/api/producers/p1/status');

@@ -7,6 +7,7 @@ import {
   StatusChangeDialog,
 } from '@/components/status-change-dialog';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
+import { notify } from '@/lib/notify';
 
 import { plotQueueErrorMessage } from '../queue-error-message';
 import { usePlotDiscard } from '../use-plot-queue';
@@ -20,7 +21,10 @@ export function PlotDiscardDialog({
 }) {
   const discard = usePlotDiscard();
   const dialog = useConfirmAction(
-    () => discard.mutateAsync(plotId),
+    async () => {
+      await discard.mutateAsync(plotId);
+      notify.success('Parcela pendiente descartada');
+    },
     (error) =>
       plotQueueErrorMessage(
         error,

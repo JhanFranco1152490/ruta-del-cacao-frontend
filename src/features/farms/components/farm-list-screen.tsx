@@ -1,9 +1,9 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { useRef, useState } from 'react';
 
+import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
@@ -71,20 +71,23 @@ export function FarmListScreen() {
   const hasError = list.isLoadingError || local.isError;
 
   const registerLink = canAdd && (
-    <Link className={buttonVariants({ size: 'office' })} href="/fincas/nueva">
+    <EditorLink
+      className={buttonVariants({ size: 'office' })}
+      href="/fincas/nueva"
+    >
       <Plus aria-hidden="true" className="size-5" /> Registrar finca
-    </Link>
+    </EditorLink>
   );
   // Quien no tiene un productor propio (la cuenta técnica) registra parcelas en fincas de muchos:
   // el atajo le ahorra abrir antes la finca. Un productor llega desde la suya.
   const registerPlotLink = isAssociation &&
     hasPermission(user, PERMISSIONS.PLOTS_ADD) && (
-      <Link
+      <EditorLink
         className={buttonVariants({ size: 'office', variant: 'outline' })}
         href="/fincas/parcelas/nueva"
       >
         <Plus aria-hidden="true" className="size-5" /> Registrar parcela
-      </Link>
+      </EditorLink>
     );
 
   const renderActions = (farm: FarmListItem) =>

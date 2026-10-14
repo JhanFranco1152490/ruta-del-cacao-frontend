@@ -1,9 +1,9 @@
 'use client';
 
 import { Pencil } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import { EditorLink } from '@/components/editor-link';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
@@ -43,7 +43,7 @@ export function ProducerDetailScreen({ id }: { id: string }) {
             description={`Código de asociado: ${producer.member_code}`}
             actions={
               <>
-                <Link
+                <EditorLink
                   className={buttonVariants({
                     variant: 'outline',
                     size: 'office',
@@ -52,7 +52,7 @@ export function ProducerDetailScreen({ id }: { id: string }) {
                   href={`/productores/${producer.id}/editar`}
                 >
                   <Pencil aria-hidden="true" className="size-4" /> Editar datos
-                </Link>
+                </EditorLink>
                 <ProducerStatusDialog
                   producer={producer}
                   target={producer.status === 'active' ? 'inactive' : 'active'}

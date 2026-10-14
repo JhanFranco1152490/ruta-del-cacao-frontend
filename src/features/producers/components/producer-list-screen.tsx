@@ -1,8 +1,8 @@
 'use client';
 
 import { UserRoundPlus } from 'lucide-react';
-import Link from 'next/link';
 
+import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
@@ -42,13 +42,13 @@ export function ProducerListScreen() {
         title="Productores asociados"
         description="Consulta y administra los expedientes de productores de la asociación."
         actions={
-          <Link
+          <EditorLink
             className={buttonVariants({ size: 'office' })}
             href="/productores/nuevo"
           >
             <UserRoundPlus aria-hidden="true" className="size-5" /> Registrar
             productor
-          </Link>
+          </EditorLink>
         }
       />
       <section className="mt-8 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
@@ -74,7 +74,7 @@ export function ProducerListScreen() {
               title="No hay productores para mostrar"
               description="Ajusta los filtros o registra el primer productor asociado."
               action={
-                <Link
+                <EditorLink
                   className={buttonVariants({
                     size: 'office',
                     className: 'px-4',
@@ -82,7 +82,7 @@ export function ProducerListScreen() {
                   href="/productores/nuevo"
                 >
                   Registrar productor
-                </Link>
+                </EditorLink>
               }
             />
           )}

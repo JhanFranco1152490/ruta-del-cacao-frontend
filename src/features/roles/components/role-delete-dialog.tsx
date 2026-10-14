@@ -12,6 +12,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { notify } from '@/lib/notify';
 import { useDeleteRole, type Role } from '../api';
 
 export function RoleDeleteDialog({
@@ -35,6 +36,7 @@ export function RoleDeleteDialog({
     try {
       await mutation.mutateAsync(role.id);
       setOpen(false);
+      notify.success('Rol eliminado');
       onDeleted();
     } catch (error) {
       setFailure(

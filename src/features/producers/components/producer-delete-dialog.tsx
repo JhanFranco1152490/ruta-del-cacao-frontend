@@ -13,6 +13,7 @@ import {
   DEPENDENT_FARM_NAMES,
   useProducerDependents,
 } from '@/lib/api/producer-dependents';
+import { notify } from '@/lib/notify';
 
 import {
   type Producer,
@@ -131,6 +132,7 @@ export function ProducerDeleteDialog({
           status: 'inactive',
           expectedVersion: producer.version,
         });
+        notify.success('Productor desactivado');
         return;
       }
       try {
@@ -144,6 +146,7 @@ export function ProducerDeleteDialog({
         }
         throw error;
       }
+      notify.success('Productor eliminado');
       onDone();
     },
     (error) =>

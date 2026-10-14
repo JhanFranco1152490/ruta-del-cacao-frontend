@@ -10,10 +10,13 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { buildPlot, buildSession, buildVertex } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
-import { router } from '@/test/router';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 vi.mock('@/config/map', async () => {
   const { loadFakePolygonEditor } = await import('@/test/fake-map');
   return { loadPolygonEditorMapProvider: loadFakePolygonEditor };
@@ -39,7 +42,9 @@ let userId: string;
 beforeEach(async () => {
   userId = `edit-plot-${crypto.randomUUID()}`;
   await recordLogin(userId);
+  router.replace.mockClear();
   router.push.mockClear();
+  resetLocation();
 });
 
 function renderScreen(plotId: string, farm: PlotScreenFarm = FARM) {
@@ -79,7 +84,7 @@ describe('EditPlotScreen — a plot of the server', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
     await vi.waitFor(() =>
-      expect(router.push).toHaveBeenCalledWith('/fincas/detalle?id=f1'),
+      expect(router.replace).toHaveBeenCalledWith('/fincas/detalle?id=f1'),
     );
     const queued = await getQueuedPlot(userId, 'pl1');
     expect(queued).toMatchObject({
@@ -88,6 +93,27 @@ describe('EditPlotScreen — a plot of the server', () => {
       farmId: 'f1',
     });
     expect(queued?.values.code).toBe('P1 renombrada');
+  });
+
+  it('returns to the screen it was opened from and confirms with a notice', async () => {
+    mockLocation.search = `origen=${encodeURIComponent('/fincas/detalle?id=f1&pestana=parcelas')}`;
+    server.use(
+      plotsHandler([
+        buildPlot({ id: 'pl1', code: 'P1', area_hectares: '2.00', version: 4 }),
+      ]),
+    );
+    const { user } = renderScreen('pl1');
+
+    const code = await screen.findByLabelText('Código de la parcela');
+    await user.type(code, 'x');
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    await vi.waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(
+        '/fincas/detalle?id=f1&pestana=parcelas',
+      ),
+    );
+    expect(await screen.findByText('Parcela actualizada')).toBeInTheDocument();
   });
 
   it('does not count the plot against its own area or its own code', async () => {
@@ -101,7 +127,7 @@ describe('EditPlotScreen — a plot of the server', () => {
     await screen.findByLabelText('Código de la parcela');
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
-    await vi.waitFor(() => expect(router.push).toHaveBeenCalled());
+    await vi.waitFor(() => expect(router.replace).toHaveBeenCalled());
     expect(
       screen.queryByText(/supera el área disponible/),
     ).not.toBeInTheDocument();
@@ -158,7 +184,7 @@ describe('EditPlotScreen — a plot waiting on the device', () => {
     );
 
     await vi.waitFor(() =>
-      expect(router.push).toHaveBeenCalledWith('/fincas/detalle?id=f1'),
+      expect(router.replace).toHaveBeenCalledWith('/fincas/detalle?id=f1'),
     );
     const fixed = await getQueuedPlot(userId, 'pl9');
     expect(fixed).toMatchObject({ status: 'pending' });
@@ -232,7 +258,7 @@ describe('EditPlotScreen — correcting what the server sent back', () => {
       screen.getByRole('button', { name: 'Guardar y reenviar' }),
     );
 
-    await vi.waitFor(() => expect(router.push).toHaveBeenCalled());
+    await vi.waitFor(() => expect(router.replace).toHaveBeenCalled());
     expect((await getQueuedPlot(userId, 'pl1'))?.expectedVersion).toBe(5);
   });
 

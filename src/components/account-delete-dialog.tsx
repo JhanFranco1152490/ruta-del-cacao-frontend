@@ -14,6 +14,7 @@ import {
   type Account,
 } from '@/lib/api/accounts';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { notify } from '@/lib/notify';
 
 const HAS_ACTIVITY = 'account_has_activity';
 
@@ -58,6 +59,7 @@ export function AccountDeleteDialog({
     async () => {
       if (offerDeactivate) {
         await deactivate.mutateAsync('inactive');
+        notify.success('Cuenta desactivada');
         return;
       }
       try {
@@ -68,6 +70,7 @@ export function AccountDeleteDialog({
         }
         throw error;
       }
+      notify.success('Cuenta eliminada');
       onDeleted();
     },
     (error) =>

@@ -5,13 +5,13 @@ import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { FormMessage } from '@/components/form-message';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { isNetworkFailure } from '@/lib/api/errors';
+import { notify } from '@/lib/notify';
 import { formatTimestamp } from '@/lib/format/dates';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -66,8 +66,6 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   });
   const stocks = farm ? farmStocks : totalStocks;
   const [pending, setPending] = useState<PendingAction>();
-  // La confirmación de lo último que se guardó, en un aviso que leen los lectores de pantalla.
-  const [saved, setSaved] = useState<string>();
 
   const savedAt = catalog.data?.savedAt;
   const offline = !hasConnection || savedAt !== undefined;
@@ -96,10 +94,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   const registerButton = canAdd && (
     <Button
       disabled={offline}
-      onClick={() => {
-        setSaved(undefined);
-        setPending({ kind: 'create' });
-      }}
+      onClick={() => setPending({ kind: 'create' })}
       size="office"
     >
       <Plus aria-hidden="true" className="size-5" /> Registrar insumo
@@ -114,9 +109,6 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         eyebrow="Inventario"
         title="Insumos"
       />
-      <div className="mt-6 empty:hidden">
-        <FormMessage variant="success">{saved}</FormMessage>
-      </div>
       {offline && catalog.isSuccess && (
         <p
           className="mt-6 flex gap-3 rounded-lg border border-border bg-card p-4 text-sm font-bold"
@@ -189,10 +181,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
             <InputTable
               actionsDisabled={offline}
               farm={farm}
-              onAction={(kind, input) => {
-                setSaved(undefined);
-                setPending({ kind, input });
-              }}
+              onAction={(kind, input) => setPending({ kind, input })}
               permissions={permissions}
               rows={rows}
               showProducer={needsProducer}
@@ -211,7 +200,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         onClose={() => setPending(undefined)}
         onSaved={(message) => {
           setPending(undefined);
-          setSaved(message);
+          notify.success(message);
         }}
         onShowExisting={(existing) => {
           setPending(undefined);

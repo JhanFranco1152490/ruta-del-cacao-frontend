@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ```bash
 npx shadcn@latest init
-npx shadcn@latest add button input label badge table card tabs checkbox switch select radio-group progress dialog dropdown-menu tooltip sonner skeleton pagination
+npx shadcn@latest add button input label badge table card tabs checkbox switch select radio-group progress dialog dropdown-menu tooltip skeleton pagination
 ```
 
 3. Importar `@import "tw-animate-css";` en `globals.css` (el paso anterior lo instala).

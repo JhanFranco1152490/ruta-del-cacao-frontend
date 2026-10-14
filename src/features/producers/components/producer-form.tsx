@@ -23,6 +23,7 @@ import {
   toFormValues,
   type ProducerFormValues,
 } from '../schemas';
+import { useReturnPath } from '@/hooks/use-return-path';
 import { useProducerSave } from '../use-producer-save';
 
 export function ProducerForm({
@@ -36,6 +37,10 @@ export function ProducerForm({
   // haría que el servidor aceptara el cambio y pisara lo que otra persona guardó.
   const [producer] = useState(initialProducer);
   const submitLabel = producer ? 'Guardar cambios' : 'Guardar productor';
+  // Cancelar vuelve a donde se abrió el formulario, o a la ficha (o a la lista, si es un alta).
+  const cancelPath = useReturnPath(
+    producer ? `/productores/${producer.id}` : '/productores',
+  );
   const {
     register,
     control,
@@ -175,7 +180,7 @@ export function ProducerForm({
               size: 'office',
               className: 'border-input bg-card px-4',
             })}
-            href={producer ? `/productores/${producer.id}` : '/productores'}
+            href={cancelPath}
           >
             Cancelar
           </Link>

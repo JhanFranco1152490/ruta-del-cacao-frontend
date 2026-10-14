@@ -8,6 +8,7 @@ import {
 } from '@/components/status-change-dialog';
 
 import { useConfirmAction } from '@/hooks/use-confirm-action';
+import { notify } from '@/lib/notify';
 
 type FarmActivity = 'active' | 'inactive';
 
@@ -49,7 +50,12 @@ export function FarmStatusDialog({
 }) {
   const target = farm.status === 'active' ? 'inactive' : 'active';
   const action = actionFor(target, farm.name);
-  const dialog = useConfirmAction(() => onChangeStatus(target), errorMessage);
+  const dialog = useConfirmAction(async () => {
+    await onChangeStatus(target);
+    notify.success(
+      target === 'active' ? 'Finca activada' : 'Finca desactivada',
+    );
+  }, errorMessage);
 
   return <StatusChangeDialog trigger={action} action={action} {...dialog} />;
 }
