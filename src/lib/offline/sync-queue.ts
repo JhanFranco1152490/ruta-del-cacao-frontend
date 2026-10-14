@@ -25,9 +25,33 @@ export function onItemSynced(listener: SyncedListener) {
   };
 }
 
+const rejectedListeners = new Set<SyncedListener>();
+
+// Avisa cada vez que el servidor rechaza un registro y este pasa a la bandeja con error, para que
+// la persona se entere aunque ya haya salido de la pantalla donde lo guardó. Devuelve la función
+// que deja de escuchar.
+export function onItemRejected(listener: SyncedListener) {
+  rejectedListeners.add(listener);
+  return () => {
+    rejectedListeners.delete(listener);
+  };
+}
+
 // El registro ya salió de la cola: un fallo de quien escucha no debe frenar el resto del envío.
 function notifySynced(item: QueueItem, adapter: SyncAdapter) {
-  for (const listener of syncedListeners) {
+  emit(syncedListeners, item, adapter);
+}
+
+function notifyRejected(item: QueueItem, adapter: SyncAdapter) {
+  emit(rejectedListeners, item, adapter);
+}
+
+function emit(
+  listeners: Set<SyncedListener>,
+  item: QueueItem,
+  adapter: SyncAdapter,
+) {
+  for (const listener of listeners) {
     try {
       listener(item, adapter);
     } catch {
@@ -256,6 +280,15 @@ async function runQueue(userId: string) {
             errorData: conflict.data,
             updatedAt: Date.now(),
           });
+          notifyRejected(
+            {
+              ...claimed,
+              status: 'error',
+              errorCode: conflict.code,
+              errorMessage: conflict.message,
+            },
+            adapter,
+          );
         } else {
           await db.queue.update(item.id, {
             status: 'pending',

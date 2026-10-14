@@ -1,10 +1,17 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { notify } from '@/lib/notify';
 
 import { FarmStatusDialog } from './farm-status-dialog';
+import { queryDialog } from '@/test/dialog';
 
 describe('FarmStatusDialog', () => {
+  beforeEach(() => {
+    vi.spyOn(notify, 'success').mockImplementation(() => '');
+  });
+
   it('deactivates an active farm after confirmation, explaining nothing is deleted', async () => {
     const user = userEvent.setup();
     const onChangeStatus = vi.fn().mockResolvedValue(undefined);
@@ -27,9 +34,7 @@ describe('FarmStatusDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Desactivar finca' }));
 
     expect(onChangeStatus).toHaveBeenCalledWith('inactive');
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
   });
 
   it('activates an inactive farm', async () => {
@@ -46,6 +51,9 @@ describe('FarmStatusDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Activar finca' }));
 
     expect(onChangeStatus).toHaveBeenCalledWith('active');
+    await waitFor(() =>
+      expect(notify.success).toHaveBeenCalledWith('Finca activada'),
+    );
   });
 
   it('keeps the dialog open with a message when the change fails', async () => {
@@ -86,9 +94,7 @@ describe('FarmStatusDialog', () => {
     ).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
     finish();
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(onChangeStatus).toHaveBeenCalledOnce();
   });
 });

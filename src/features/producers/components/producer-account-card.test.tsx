@@ -11,12 +11,15 @@ import {
 } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
-import { router } from '@/test/router';
 import { server } from '@/test/server';
 import type { Producer } from '../api';
 import { ProducerDetailScreen } from './producer-detail-screen';
+import { queryDialog } from '@/test/dialog';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 const accountId = '11111111-1111-4111-8111-111111111111';
 const producerRoleId = '22222222-2222-4222-8222-222222222222';
@@ -133,7 +136,7 @@ describe('ProducerAccountCard', () => {
         producer_id: 'p1',
       },
     ]);
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(queryDialog()).toBeNull());
   });
 
   it.each([

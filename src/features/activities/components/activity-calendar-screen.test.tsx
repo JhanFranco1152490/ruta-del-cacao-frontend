@@ -401,7 +401,9 @@ describe('ActivityCalendarScreen', () => {
       expect(
         await screen.findByText('Actividad programada'),
       ).toBeInTheDocument();
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('dialog', { name: 'Programar actividad' }),
+      ).not.toBeInTheDocument();
 
       await userEvent.click(
         screen.getByRole('button', { name: 'Ver en su mes' }),
@@ -483,7 +485,9 @@ describe('ActivityCalendarScreen', () => {
       expect(
         await screen.findByText('Actividad actualizada'),
       ).toBeInTheDocument();
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('dialog', { name: 'Editar actividad' }),
+      ).not.toBeInTheDocument();
       expect(
         within(await dayOf('jueves 29 de octubre')).getByText('Poda'),
       ).toBeInTheDocument();
@@ -606,7 +610,9 @@ describe('ActivityCalendarScreen', () => {
         await screen.findByText('Actividad eliminada'),
       ).toBeInTheDocument();
       expect(versions).toEqual(['2']);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('dialog', { name: '¿Eliminar esta actividad?' }),
+      ).not.toBeInTheDocument();
       expect(
         await screen.findByText(
           'No hay actividades programadas en este periodo',

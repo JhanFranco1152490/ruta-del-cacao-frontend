@@ -1,6 +1,6 @@
 import { Pencil } from 'lucide-react';
-import Link from 'next/link';
 
+import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
 
 import type { FarmListItem } from '../farm-list-item';
@@ -24,14 +24,14 @@ export function FarmQueueActions({
   return (
     <div className="flex flex-wrap gap-3">
       {canCorrect && (
-        <Link
+        <EditorLink
           aria-label={`Corregir ${farm.name}`}
           className={buttonVariants({ variant: 'outline', className: 'h-11' })}
           href={farmEditPath(farm.id)}
           onClick={onNavigate}
         >
           <Pencil aria-hidden="true" className="size-4" /> Corregir
-        </Link>
+        </EditorLink>
       )}
       {farm.status === 'error' && <FarmDiscardDialog farm={farm} />}
     </div>

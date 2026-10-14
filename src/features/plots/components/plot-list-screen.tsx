@@ -1,9 +1,9 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import type { ComponentProps } from 'react';
 
+import { EditorLink } from '@/components/editor-link';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
@@ -25,12 +25,12 @@ export function PlotListScreen(
   const { data: user } = useSession();
   const ownProducer = !!user?.producer_id;
   const registerLink = hasPermission(user, PERMISSIONS.PLOTS_ADD) && (
-    <Link
+    <EditorLink
       className={buttonVariants({ size: 'office' })}
       href={REGISTER_PLOT_PATH}
     >
       <Plus aria-hidden="true" className="size-5" /> Registrar parcela
-    </Link>
+    </EditorLink>
   );
 
   return (

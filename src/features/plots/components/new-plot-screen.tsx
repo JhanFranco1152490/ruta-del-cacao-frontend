@@ -1,18 +1,21 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
+import { readOrigin, withOrigin } from '@/lib/navigation/origin';
 
+import { plotNewPath } from '../plot-paths';
 import type { PlotFormValues } from '../plot-queue';
 import { suggestPlotCode } from '../suggest-code';
 import { useKnownPlots } from '../use-known-plots';
 import { usePlotCreate } from '../use-plot-queue';
 import { PlotContextBanner } from './plot-context-banner';
 import { PlotEditor } from './plot-editor';
-import { PlotSavedPanel } from './plot-saved-panel';
 import {
   INACTIVE_FARM_MESSAGE,
   NO_SERVER_PLOTS_NOTICE,
@@ -22,29 +25,16 @@ import { PlotEditorSkeleton } from './plot-screen-states';
 
 export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
   // Un id por formulario: si se guarda dos veces (doble toque, reintento), la cola lo reconoce y
-  // no duplica la parcela. Registrar otra parcela monta un formulario nuevo con otro id.
-  const [plotId, setPlotId] = useState(() => crypto.randomUUID());
-  const [savedCode, setSavedCode] = useState<string | null>(null);
+  // no duplica la parcela. Registrar otra parcela abre el formulario de nuevo, con otro id.
+  const [plotId] = useState(() => crypto.randomUUID());
+  const router = useRouter();
   const create = usePlotCreate();
   const sync = useCaptureSyncStatus('parcelas');
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });
   const { data: user } = useSession();
+  const { returnPath, finish } = useFinishSave(farm.detailPath);
+  const origin = readOrigin(useSearchParams());
 
-  if (savedCode) {
-    return (
-      <PlotSavedPanel
-        code={savedCode}
-        farmDetailPath={farm.detailPath}
-        farmId={farm.id}
-        onRegisterAnother={() => {
-          setPlotId(crypto.randomUUID());
-          setSavedCode(null);
-          create.reset();
-        }}
-        plotId={plotId}
-      />
-    );
-  }
   if (known.isLoading) return <PlotEditorSkeleton />;
 
   // Se propone el código siguiente de la finca: la persona puede cambiarlo, pero casi nunca hace
@@ -57,7 +47,6 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
 
   return (
     <PlotEditor
-      key={plotId}
       banner={
         <>
           {!user?.producer_id && farm.producerLabel && (
@@ -72,7 +61,7 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
       blockedMessage={
         !farm.isActive ? INACTIVE_FARM_MESSAGE : sync.blockedMessage
       }
-      cancelHref={farm.detailPath}
+      cancelHref={returnPath}
       defaultValues={defaultValues}
       description="El código y el área son obligatorios; el polígono es opcional. Si no hay conexión, la parcela se guarda en este dispositivo y se envía cuando vuelva la conexión."
       error={
@@ -93,7 +82,16 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
       onSubmit={(values) =>
         create.mutate(
           { id: plotId, farmId: farm.id, values },
-          { onSuccess: () => setSavedCode(values.code) },
+          {
+            onSuccess: () =>
+              finish('Parcela guardada', {
+                action: {
+                  label: 'Registrar otra parcela',
+                  onClick: () =>
+                    router.push(withOrigin(plotNewPath(farm.id), origin ?? '')),
+                },
+              }),
+          },
         )
       }
       submitLabel="Guardar parcela"

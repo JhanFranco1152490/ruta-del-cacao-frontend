@@ -1,6 +1,8 @@
 import { Eye, Pencil } from 'lucide-react';
 import Link from 'next/link';
 
+import { EditorLink } from '@/components/editor-link';
+
 import { MaskedValue } from '@/components/masked-value';
 
 import type { ProducerListItem } from '../api';
@@ -107,13 +109,13 @@ export function ProducerTable({
                     <Eye aria-hidden="true" className="size-4" />
                     Ver<span className="sr-only"> ficha de {name}</span>
                   </Link>
-                  <Link
+                  <EditorLink
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-selva px-3 text-xs font-extrabold text-white hover:bg-selva-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selva"
                     href={`/productores/${producer.id}/editar`}
                   >
                     <Pencil aria-hidden="true" className="size-4" />
                     Editar<span className="sr-only"> ficha de {name}</span>
-                  </Link>
+                  </EditorLink>
                 </div>
               </td>
             </tr>

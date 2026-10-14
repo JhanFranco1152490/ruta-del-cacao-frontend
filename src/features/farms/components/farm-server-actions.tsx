@@ -1,8 +1,8 @@
 'use client';
 
 import { Pencil } from 'lucide-react';
-import Link from 'next/link';
 
+import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 
@@ -34,13 +34,13 @@ export function FarmServerActions({ farm }: { farm: FarmListItem }) {
 
   return (
     <div className="flex flex-wrap gap-3">
-      <Link
+      <EditorLink
         aria-label={`Editar ${farm.name}`}
         className={buttonVariants({ variant: 'outline', className: 'h-11' })}
         href={farmEditPath(farm.id)}
       >
         <Pencil aria-hidden="true" className="size-4" /> Editar
-      </Link>
+      </EditorLink>
       <FarmStatusDialog
         farm={{ name: farm.name, status: farm.status }}
         errorMessage={statusErrorMessage}

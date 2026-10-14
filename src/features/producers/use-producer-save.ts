@@ -1,11 +1,13 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import type { UseFormSetError } from 'react-hook-form';
 
 import { getErrorMessage } from '@/lib/api/errors';
 import { applyApiFieldErrors } from '@/lib/api/form-errors';
+import { readOrigin } from '@/lib/navigation/origin';
+import { notify } from '@/lib/notify';
 
 import { useCreateProducer, useUpdateProducer, type Producer } from './api';
 import {
@@ -20,7 +22,8 @@ const SAVE_FALLBACK_MESSAGE =
 
 // Guardado del formulario: alta, o edición con la versión de `producer`, que debe ser la
 // misma ficha con la que se inicializó el formulario (no una lectura posterior). Al terminar
-// va a la ficha; un error de un campo del formulario se marca en su campo y todo lo demás
+// vuelve a la pantalla desde la que se abrió (la lista con sus filtros, o la ficha) y, si no vino
+// de ninguna, va a la ficha; un error de un campo del formulario se marca en su campo y todo lo demás
 // (versión obsoleta, la conexión, los mensajes de campos que el formulario no tiene) queda
 // en un aviso general.
 export function useProducerSave(
@@ -28,6 +31,7 @@ export function useProducerSave(
   setError: UseFormSetError<ProducerFormValues>,
 ) {
   const router = useRouter();
+  const origin = readOrigin(useSearchParams());
   const create = useCreateProducer();
   const update = useUpdateProducer();
   const [generalError, setGeneralError] = useState('');
@@ -50,8 +54,26 @@ export function useProducerSave(
     setGeneralError('');
     const input = toProducerRequest(values);
     const options = {
-      onSuccess: (saved: Producer) =>
-        router.replace(`/productores/${saved.id}`),
+      onSuccess: (saved: Producer) => {
+        const detail = `/productores/${saved.id}`;
+        router.replace(origin ?? detail);
+        if (producer) {
+          notify.success('Productor actualizado');
+        } else {
+          // Si se vuelve a la lista, la ficha del productor nuevo es un paso más.
+          notify.success(
+            'Productor registrado',
+            origin
+              ? {
+                  action: {
+                    label: 'Ver productor',
+                    onClick: () => router.push(detail),
+                  },
+                }
+              : undefined,
+          );
+        }
+      },
       onError: onFailure,
     };
     if (producer) {

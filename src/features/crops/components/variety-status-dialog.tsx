@@ -8,6 +8,7 @@ import {
 } from '@/components/status-change-dialog';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { getErrorMessage } from '@/lib/api/errors';
+import { notify } from '@/lib/notify';
 
 import { type CacaoVariety, useUpdateCacaoVariety } from '../api';
 
@@ -42,11 +43,15 @@ export function VarietyStatusDialog({ variety }: { variety: CacaoVariety }) {
   const target = variety.is_active ? 'inactive' : 'active';
   const action = actionFor(target, variety.name);
   const dialog = useConfirmAction(
-    () =>
-      update.mutateAsync({
+    async () => {
+      await update.mutateAsync({
         id: variety.id,
         body: { is_active: target === 'active' },
-      }),
+      });
+      notify.success(
+        target === 'active' ? 'Variedad activada' : 'Variedad desactivada',
+      );
+    },
     (error) =>
       getErrorMessage(
         error,

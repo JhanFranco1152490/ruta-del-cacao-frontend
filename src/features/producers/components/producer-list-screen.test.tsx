@@ -19,13 +19,16 @@ import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
 import { pick } from '@/test/search-select';
-import { router } from '@/test/router';
+import { mockLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 import type { ProducerListItem } from '../api';
 import { ProducerListScreen } from './producer-list-screen';
 
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 const PRODUCERS = apiUrl('/api/producers');
 const ME = apiUrl('/api/auth/me');
@@ -60,6 +63,7 @@ const lastUrlUpdate = (spy: Mock<OnUrlUpdateFunction>) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockLocation.path = '/productores';
   requests = [];
   server.use(municipalitiesHandler(), listHandler());
 });
@@ -80,7 +84,7 @@ describe('ProducerListScreen', () => {
     ).toHaveAttribute('href', '/productores/p1');
     expect(
       within(row).getByRole('link', { name: /Editar\s?ficha de Ana Prueba/ }),
-    ).toHaveAttribute('href', '/productores/p1/editar');
+    ).toHaveAttribute('href', '/productores/p1/editar?origen=%2Fproductores');
   });
 
   it('contains the visually hidden link labels inside the scrolling table wrapper', async () => {
@@ -114,7 +118,7 @@ describe('ProducerListScreen', () => {
       .parentElement!;
     expect(
       within(empty).getByRole('link', { name: 'Registrar productor' }),
-    ).toHaveAttribute('href', '/productores/nuevo');
+    ).toHaveAttribute('href', '/productores/nuevo?origen=%2Fproductores');
   });
 
   it('keeps the table on screen when a background refresh fails', async () => {

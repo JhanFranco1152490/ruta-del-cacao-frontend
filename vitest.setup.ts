@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
+import { toastManager } from '@/lib/notify';
 import { server } from '@/test/server';
 
 // Leaflet necesita un navegador real (tamaños, teselas por red): en las pruebas cada mapa se
@@ -25,5 +26,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
   server.resetHandlers();
+  // El gestor de avisos es global: lo que un test avisó no debe verse en el siguiente.
+  toastManager.close();
 });
 afterAll(() => server.close());

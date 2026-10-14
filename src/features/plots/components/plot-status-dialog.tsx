@@ -8,6 +8,7 @@ import {
 } from '@/components/status-change-dialog';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { notify } from '@/lib/notify';
 
 import type { KnownPlot } from '../known-plots';
 import { useChangePlotStatus } from '../api';
@@ -72,13 +73,17 @@ export function PlotStatusDialog({
   const target = plot.isActive ? 'inactive' : 'active';
   const action = actionFor(target, plot.code);
   const dialog = useConfirmAction(
-    () =>
-      changeStatus.mutateAsync({
+    async () => {
+      await changeStatus.mutateAsync({
         id: plot.id,
         farmId,
         isActive: target === 'active',
         expectedVersion: plot.version,
-      }),
+      });
+      notify.success(
+        target === 'active' ? 'Parcela activada' : 'Parcela desactivada',
+      );
+    },
     (error) => statusErrorMessage(error, target === 'active'),
   );
 

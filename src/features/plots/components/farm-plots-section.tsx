@@ -1,9 +1,9 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { useRef, useState } from 'react';
 
+import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
@@ -62,12 +62,12 @@ export function FarmPlotsSection({
 
   // Registrar parcelas en una finca inactiva no se puede: sus parcelas quedan congeladas.
   const registerLink = canAdd && farm.isActive && (
-    <Link
+    <EditorLink
       className={buttonVariants({ size: 'office' })}
       href={plotNewPath(farm.id)}
     >
       <Plus aria-hidden="true" className="size-5" /> Registrar parcela
-    </Link>
+    </EditorLink>
   );
 
   const renderActions = (plot: KnownPlot) => (

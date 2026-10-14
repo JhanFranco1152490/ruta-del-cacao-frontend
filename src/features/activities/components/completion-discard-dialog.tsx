@@ -11,6 +11,7 @@ import {
   QueueItemBusyError,
   QueueItemMissingError,
 } from '@/lib/offline/sync-queue';
+import { notify } from '@/lib/notify';
 
 import { useDiscardCompletion } from '../use-completion-queue';
 
@@ -34,10 +35,10 @@ export function CompletionDiscardDialog({
   label: string;
 }) {
   const discard = useDiscardCompletion();
-  const dialog = useConfirmAction(
-    () => discard.mutateAsync(activityId),
-    discardErrorMessage,
-  );
+  const dialog = useConfirmAction(async () => {
+    await discard.mutateAsync(activityId);
+    notify.success('Realización pendiente descartada');
+  }, discardErrorMessage);
   const action: StatusChangeAction = {
     trigger: 'Descartar',
     title: `¿Descartar la realización de ${label}?`,

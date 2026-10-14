@@ -10,6 +10,7 @@ import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 
 import { VarietyListScreen } from './variety-list-screen';
+import { queryDialog } from '@/test/dialog';
 
 type CacaoVariety = components['schemas']['CacaoVariety'];
 
@@ -164,9 +165,7 @@ describe('VarietyListScreen', () => {
       within(dialog).getByRole('button', { name: 'Registrar variedad' }),
     );
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(posted).toEqual([
       {
         name: 'FEAR-5',

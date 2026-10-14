@@ -21,6 +21,7 @@ import {
   inputStocksHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 import type { AgriculturalActivity } from '../api';
@@ -30,6 +31,11 @@ import {
   enqueueCompletion,
 } from '../completion-queue';
 import { completionSyncAdapter } from '../sync-adapter';
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
+
 import { CompletionScreen } from './completion-screen';
 
 // Jueves 22 de octubre de 2026, a mediodía en Bogotá.
@@ -64,6 +70,8 @@ const activityHandler = (overrides: Partial<AgriculturalActivity> = {}) =>
 
 beforeEach(async () => {
   userId = `completion-screen-${crypto.randomUUID()}`;
+  vi.clearAllMocks();
+  resetLocation();
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
   // Con el reloj de la prueba: la sesión se confirmó hoy, dentro de la ventana sin conexión.
@@ -161,13 +169,9 @@ describe('CompletionScreen', () => {
     await confirm();
 
     expect(
-      await screen.findByRole('heading', {
-        name: 'Realización guardada en este dispositivo',
-      }),
+      await screen.findByText('Realización registrada'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('Realizada · pendiente de enviar'),
-    ).toBeInTheDocument();
+    expect(router.replace).toHaveBeenCalledWith('/actividades');
     expect(await queuedPayload()).toEqual({
       request: {
         done_date: '2026-10-22',
@@ -402,7 +406,7 @@ describe('CompletionScreen', () => {
     );
   });
 
-  it('sends the record to the server and says that the activity was recorded', async () => {
+  it('sends the record to the server and goes back to the activities', async () => {
     const received: unknown[] = [];
     server.use(
       http.post(
@@ -422,17 +426,42 @@ describe('CompletionScreen', () => {
     await confirm();
 
     expect(
-      await screen.findByRole('heading', {
-        name: 'Actividad registrada como realizada',
-      }),
+      await screen.findByText('Realización registrada'),
     ).toBeInTheDocument();
+    await waitFor(() => expect(received).toHaveLength(1));
     expect(received).toEqual([
       { done_date: '2026-10-22', inputs: [], captured_at: NOW.toISOString() },
     ]);
-    expect(await queuedPayload()).toBeUndefined();
+    await waitFor(async () => expect(await queuedPayload()).toBeUndefined());
+  });
+
+  it('goes back to the calendar view it was opened from', async () => {
+    mockLocation.search = `origen=${encodeURIComponent('/actividades?vista=semana&finca=f1')}`;
+    renderScreen();
+
     expect(
-      screen.getByRole('link', { name: 'Volver a Actividades' }),
-    ).toHaveAttribute('href', '/actividades');
+      await screen.findByRole('link', { name: 'Cancelar' }),
+    ).toHaveAttribute('href', '/actividades?vista=semana&finca=f1');
+    await save();
+    await confirm();
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(
+        '/actividades?vista=semana&finca=f1',
+      ),
+    );
+  });
+
+  it('says in the notice that the record waits on the device without a connection', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    renderScreen();
+
+    await save();
+    await confirm();
+
+    expect(
+      await screen.findByText('Se enviará cuando haya conexión.'),
+    ).toBeInTheDocument();
   });
 
   describe('what cannot be recorded', () => {
@@ -495,7 +524,7 @@ describe('CompletionScreen', () => {
 
       expect(
         await screen.findByRole('heading', {
-          name: 'Realización guardada en este dispositivo',
+          name: 'Esta realización ya está guardada.',
         }),
       ).toBeInTheDocument();
       expect(

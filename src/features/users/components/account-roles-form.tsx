@@ -8,6 +8,7 @@ import type { Role } from '@/lib/api/roles';
 import { useSetAccountRoles, type Account } from '../api';
 import { roleIdsSchema } from '../schemas';
 import { useAccountSubmit } from '@/hooks/use-account-submit';
+import { notify } from '@/lib/notify';
 import { RoleCheckboxes } from './role-checkboxes';
 
 const rolesSchema = z.object({ role_ids: roleIdsSchema });
@@ -47,6 +48,7 @@ export function AccountRolesForm({
   const submit = (values: RolesValues) =>
     run(async () => {
       await mutation.mutateAsync(values.role_ids);
+      notify.success('Roles actualizados');
       onDone();
     });
   return (

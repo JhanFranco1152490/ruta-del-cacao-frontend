@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -14,11 +14,22 @@ import { http, HttpResponse } from 'msw';
 
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { mockLocation, resetLocation } from '@/test/router';
 import { server } from '@/test/server';
 
 import { activityState } from '../activity-state';
 import type { AgriculturalActivity } from '../api';
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
+
 import { ActivityDetailDialog } from './activity-detail-dialog';
+
+beforeEach(() => {
+  resetLocation();
+  mockLocation.path = '/actividades';
+});
 
 const TODAY = '2026-10-22';
 
@@ -101,7 +112,22 @@ describe('ActivityDetailDialog', () => {
     expect(handlers.onDelete).toHaveBeenCalledOnce();
     expect(
       screen.getByRole('link', { name: 'Registrar realización' }),
-    ).toHaveAttribute('href', '/actividades/realizar?id=a1');
+    ).toHaveAttribute(
+      'href',
+      '/actividades/realizar?id=a1&origen=%2Factividades',
+    );
+  });
+
+  it('remembers the calendar view so the record comes back to it', async () => {
+    mockLocation.search = 'vista=semana&finca=f1';
+    renderDetail({ scheduled_date: '2026-10-30' });
+
+    expect(
+      await screen.findByRole('link', { name: 'Registrar realización' }),
+    ).toHaveAttribute(
+      'href',
+      `/actividades/realizar?id=a1&origen=${encodeURIComponent('/actividades?vista=semana&finca=f1')}`,
+    );
   });
 
   it('tells what to do with a delayed activity and when it becomes overdue', async () => {
