@@ -17,6 +17,7 @@ import { SegmentedControl } from '@/components/segmented-control';
 import { loadMunicipalityMapProvider as appMunicipalityMap } from '@/config/map';
 import { formatDateTime } from '@/lib/format/dates';
 
+import { farmsLabel } from '../farm-count-label';
 import type { FarmListItem } from '../farm-list-item';
 import { farmMapPoints, withLocalCounts } from '../farm-map-data';
 import {
@@ -25,14 +26,12 @@ import {
   useFarmMunicipalityCounts,
 } from '../map-api';
 import type { FarmMapMode } from '../use-farm-map-mode';
+import { FarmMapSummary } from './farm-map-summary';
 
 const MODE_OPTIONS = [
   { value: 'municipalities', label: 'Por municipios' },
   { value: 'free', label: 'Libre' },
 ] as const satisfies readonly { value: FarmMapMode; label: string }[];
-
-const farmsLabel = (count: number) =>
-  `${count} ${count === 1 ? 'finca' : 'fincas'}`;
 
 function SavedNotice({ savedAt }: { savedAt?: number }) {
   if (!savedAt) return null;
@@ -144,11 +143,19 @@ export function FarmsMap({
 
   return (
     <MunicipalityMapPanel
+      aside={
+        <FarmMapSummary
+          counts={merged}
+          municipalityName={municipalityName}
+          onSelect={onMunicipalityChange}
+        />
+      }
       describeMunicipality={(code, count) =>
         `${municipalityName(code)} · ${farmsLabel(count)}`
       }
       controls={switcher}
       label="Mapa de fincas"
+      legendLabel="Fincas por municipio"
       loadProvider={loadProvider}
       notice={
         <>

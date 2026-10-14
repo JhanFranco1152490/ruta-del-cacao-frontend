@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import { ArrowLeft } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 
 import type { BaseLayerKind } from './base-layers';
 import { MapFrame, MapHiddenBar } from './map-frame';
+import { MapLevelLegend } from './map-level-legend';
 import type {
   LoadMunicipalityMapProvider,
   MunicipalityMapView,
@@ -24,6 +26,8 @@ export function MunicipalityMapPanel({
   title,
   view,
   notice,
+  aside,
+  legendLabel,
   controls,
   onBack,
   describeMunicipality,
@@ -35,6 +39,11 @@ export function MunicipalityMapPanel({
   title: string;
   view: MunicipalityMapView;
   notice?: ReactNode;
+  // Junto al mapa del departamento (debajo en celular): resúmenes de lo que el mapa muestra. En los
+  // otros niveles el mapa ocupa todo el ancho, que es lo que necesita para recorrerse.
+  aside?: ReactNode;
+  // Con él, el mapa del departamento lleva una leyenda de sus tonos con este título.
+  legendLabel?: string;
   // Controles de quien usa el panel (p. ej. la vista del mapa), después del selector del mapa base.
   controls?: ReactNode;
   onBack: () => void;
@@ -65,6 +74,7 @@ export function MunicipalityMapPanel({
   const inMunicipality = view.level === 'municipality';
   // Solo el nivel del departamento va sin mapa base.
   const hasBaseLayer = view.level !== 'department';
+  const withAside = !!aside && view.level === 'department';
 
   return (
     <section aria-label={label} className="space-y-3">
@@ -90,47 +100,71 @@ export function MunicipalityMapPanel({
           <div className="flex flex-wrap items-center gap-3">{controls}</div>
         )}
       </div>
-      {visible ? (
-        <MapFrame
-          baseLayer={
-            hasBaseLayer
-              ? {
-                  value: baseLayer,
-                  onChange: (next) => {
-                    setBaseLayer(next);
-                    setBaseLayerMissing(false);
-                    setBaseLayerBackup(false);
-                  },
-                }
-              : undefined
-          }
-          className={MUNICIPALITY_MAP_HEIGHT}
-          onHide={() => setVisible(false)}
-        >
-          <Provider
-            baseLayer={baseLayer}
-            describeMunicipality={describeMunicipality}
-            onBaseLayerFallback={() => setBaseLayerBackup(true)}
-            onBaseLayerUnavailable={() => setBaseLayerMissing(true)}
-            onError={map.fail}
-            onSelectMunicipality={onSelectMunicipality}
-            onSelectPoint={onSelectPoint}
-            view={view}
-          />
-        </MapFrame>
-      ) : (
-        <MapHiddenBar onShow={() => setVisible(true)} />
-      )}
-      {visible && hasBaseLayer && baseLayerBackup && !baseLayerMissing && (
-        <p className="text-sm font-bold text-muted-foreground" role="status">
-          Se muestra el mapa de respaldo: el principal no está disponible.
-        </p>
-      )}
-      {visible && hasBaseLayer && baseLayerMissing && (
-        <p className="text-sm font-bold text-muted-foreground" role="status">
-          No cargó el mapa base: se ven solo los límites y las fincas.
-        </p>
-      )}
+      <div
+        className={cn(
+          withAside &&
+            'grid gap-4 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)]',
+        )}
+      >
+        <div className="space-y-3">
+          {visible ? (
+            <MapFrame
+              baseLayer={
+                hasBaseLayer
+                  ? {
+                      value: baseLayer,
+                      onChange: (next) => {
+                        setBaseLayer(next);
+                        setBaseLayerMissing(false);
+                        setBaseLayerBackup(false);
+                      },
+                    }
+                  : undefined
+              }
+              className={MUNICIPALITY_MAP_HEIGHT}
+              legend={
+                legendLabel && view.level === 'department' ? (
+                  <MapLevelLegend
+                    label={legendLabel}
+                    max={Math.max(0, ...view.counts.map(({ count }) => count))}
+                  />
+                ) : undefined
+              }
+              onHide={() => setVisible(false)}
+            >
+              <Provider
+                baseLayer={baseLayer}
+                describeMunicipality={describeMunicipality}
+                onBaseLayerFallback={() => setBaseLayerBackup(true)}
+                onBaseLayerUnavailable={() => setBaseLayerMissing(true)}
+                onError={map.fail}
+                onSelectMunicipality={onSelectMunicipality}
+                onSelectPoint={onSelectPoint}
+                view={view}
+              />
+            </MapFrame>
+          ) : (
+            <MapHiddenBar onShow={() => setVisible(true)} />
+          )}
+          {visible && hasBaseLayer && baseLayerBackup && !baseLayerMissing && (
+            <p
+              className="text-sm font-bold text-muted-foreground"
+              role="status"
+            >
+              Se muestra el mapa de respaldo: el principal no está disponible.
+            </p>
+          )}
+          {visible && hasBaseLayer && baseLayerMissing && (
+            <p
+              className="text-sm font-bold text-muted-foreground"
+              role="status"
+            >
+              No cargó el mapa base: se ven solo los límites y las fincas.
+            </p>
+          )}
+        </div>
+        {withAside && aside}
+      </div>
       {notice}
     </section>
   );

@@ -19,6 +19,7 @@ export function MapFrame({
   children,
   baseLayer,
   focus,
+  legend,
   onHide,
 }: {
   className?: string;
@@ -30,6 +31,8 @@ export function MapFrame({
   };
   // Llevar el mapa al punto de la finca o a la posición de la persona.
   focus?: MapFocusProps;
+  // Abajo a la izquierda, donde no tapa los controles ni la atribución.
+  legend?: ReactNode;
   onHide: () => void;
 }) {
   return (
@@ -59,6 +62,11 @@ export function MapFrame({
         </div>
         {focus && <MapFocusControls {...focus} />}
       </div>
+      {legend && (
+        <div className="pointer-events-auto absolute bottom-3 left-3 z-[1100]">
+          {legend}
+        </div>
+      )}
     </div>
   );
 }
