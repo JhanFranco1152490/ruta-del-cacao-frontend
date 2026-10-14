@@ -181,8 +181,13 @@ export const profileHandler = (profile = buildProfile()) =>
 // defecto para que las pruebas que no lo miran no fallen por una petición sin atender.
 // Las pendientes se piden al guardar la copia sin conexión de las actividades: una prueba que no
 // las espera no debe fallar por eso.
+// Los municipios y las cuentas asignables los piden filtros y formularios de muchas pantallas que
+// no los miran: sin respuesta por defecto cada una llenaba el registro de avisos de peticiones
+// sin atender.
 export const defaultHandlers = [
   csrfHandler,
   profileHandler(),
   pendingActivitiesHandler(),
+  municipalitiesHandler(),
+  activityAssigneesHandler(),
 ];

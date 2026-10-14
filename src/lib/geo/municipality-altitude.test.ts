@@ -1,5 +1,8 @@
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
+import altitudes from './municipality-altitude.json';
 import municipalities from './norte-de-santander-municipalities.json';
 import { ALTITUDE_MARGIN_M, altitudeRangeFor } from './municipality-altitude';
 
@@ -34,5 +37,27 @@ describe('altitudeRangeFor', () => {
 
   it('has no range for a code that is not a municipality of the department', () => {
     expect(altitudeRangeFor('99999')).toBeNull();
+  });
+});
+
+// La misma tabla y el mismo margen viven copiados en el servidor, que los valida al guardar. Los dos
+// repos fijan esta misma huella: si cambia la tabla o el margen, esta prueba falla y obliga a
+// actualizar la huella en ambos lados a la vez.
+const SHARED_TABLE_FINGERPRINT =
+  'b430c1a23646da285ea354451dc3139b3f95649f1836a4292ffcbb8d9e4778cc';
+
+describe('the altitude table', () => {
+  it('matches the copy the server validates with', () => {
+    const ranges = altitudes as unknown as Record<string, [number, number]>;
+    const lines = [
+      `margin:${ALTITUDE_MARGIN_M}`,
+      ...Object.keys(ranges)
+        .sort()
+        .map((code) => `${code}:${ranges[code][0]}-${ranges[code][1]}`),
+    ];
+    const fingerprint = createHash('sha256')
+      .update(lines.join('\n'))
+      .digest('hex');
+    expect(fingerprint).toBe(SHARED_TABLE_FINGERPRINT);
   });
 });
