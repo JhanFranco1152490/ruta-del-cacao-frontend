@@ -1,8 +1,6 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useState } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
@@ -11,9 +9,8 @@ import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
-import { useReturnPath } from '@/hooks/use-return-path';
+import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
-import { queryKeys } from '@/lib/api/query-keys';
 import { formatDateTime } from '@/lib/format/dates';
 import { formatHectares } from '@/lib/format/hectares';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
@@ -40,7 +37,6 @@ import {
   CharacterizationForm,
   emptyCharacterizationForm,
 } from './characterization-form';
-import { CharacterizationSavedPanel } from './characterization-saved-panel';
 
 // Lo que la pantalla necesita de la finca y de la parcela. Lo entrega la página, que los lee de
 // sus dominios: este no los importa.
@@ -80,40 +76,13 @@ export function CharacterizationScreen({
   farm: CharacterizationFarm;
   plot: CharacterizationPlot;
 }) {
-  const queryClient = useQueryClient();
   const { data: user } = useSession();
-  const returnPath = useReturnPath(farm.detailPath);
+  const { returnPath, finish } = useFinishSave(farm.detailPath);
   const queued = useQueuedCharacterization(plot.id);
   const server = useFarmCharacterizations(user?.id, farm.id);
   const catalog = useActiveCacaoVarieties(user?.id);
   const save = useSaveCharacterization();
   const sync = useCaptureSyncStatus('caracterizaciones');
-  const [saved, setSaved] = useState(false);
-  // Al corregir después de guardar se monta un formulario nuevo con lo que quedó en la cola.
-  const [round, setRound] = useState(0);
-
-  if (saved) {
-    return (
-      <CharacterizationSavedPanel
-        farmDetailPath={farm.detailPath}
-        onCorrect={() => {
-          void queryClient
-            .invalidateQueries({
-              queryKey: queryKeys.characterizations.queued(
-                user?.id ?? '',
-                plot.id,
-              ),
-            })
-            .then(() => {
-              setRound((value) => value + 1);
-              setSaved(false);
-            });
-        }}
-        plotCode={plot.code}
-        plotId={plot.id}
-      />
-    );
-  }
 
   const serverUnreachable = isPausedWithoutData(server);
   const waiting =
@@ -245,11 +214,10 @@ export function CharacterizationScreen({
           error={save.isError ? SAVE_FAILED : null}
           isSaving={save.isPending}
           keptVarietyIds={keptVarietyIds}
-          key={round}
           onSubmit={(fields) =>
             save.mutate(
               { plotId: plot.id, fields, queued: pending, expectedVersion },
-              { onSuccess: () => setSaved(true) },
+              { onSuccess: () => finish('Caracterización guardada') },
             )
           }
           secondaryAction={

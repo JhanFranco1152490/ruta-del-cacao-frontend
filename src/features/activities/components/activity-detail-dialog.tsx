@@ -1,8 +1,8 @@
 'use client';
 
 import { Check, Info, Pencil, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 
+import { EditorLink } from '@/components/editor-link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
@@ -174,9 +174,9 @@ export function ActivityDetailDialog({
             </Button>
           )}
           {actions.complete && completeHref ? (
-            <Link className={buttonVariants()} href={completeHref}>
+            <EditorLink className={buttonVariants()} href={completeHref}>
               <Check aria-hidden="true" /> Registrar realización
-            </Link>
+            </EditorLink>
           ) : (
             <Button onClick={onClose} variant="outline">
               Cerrar

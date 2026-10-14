@@ -38,12 +38,20 @@ export function SyncTray({
   status,
   items,
   views,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   status: SyncStatus;
   items: readonly QueueItem[] | undefined;
   views: readonly QueueView[];
+  // Si quien lo monta necesita abrir la bandeja (el aviso de un registro rechazado), la controla;
+  // si no, se abre y cierra sola.
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = controlledOpen ?? ownOpen;
+  const setOpen = onOpenChange ?? setOwnOpen;
   const attention = syncAttention(status);
   const close = () => setOpen(false);
   const failed = items?.filter((item) => item.status === 'error') ?? [];

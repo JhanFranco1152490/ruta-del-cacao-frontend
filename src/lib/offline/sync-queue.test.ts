@@ -6,6 +6,7 @@ import {
   clearAdapters,
   discard,
   enqueue,
+  onItemRejected,
   onItemSynced,
   processQueue,
   QueueItemBusyError,
@@ -570,5 +571,90 @@ describe('onItemSynced', () => {
     await processQueue(userId);
 
     expect(listener).not.toHaveBeenCalled();
+  });
+});
+
+describe('onItemRejected', () => {
+  const enqueueFarm = (userId: string, id: string) =>
+    enqueue(userId, {
+      id,
+      resource: 'farms',
+      operation: 'create',
+      payload: {},
+    });
+  const rejecting = () =>
+    fakeAdapter({
+      send: vi.fn().mockRejectedValue(new Error('duplicada')),
+      parseConflict: () => ({
+        code: 'duplicate_farm_name',
+        message: 'Ya existe una finca con este nombre.',
+      }),
+    });
+
+  it('tells about a record the server rejected, with the reason it was given', async () => {
+    const userId = randomUserId();
+    const adapter = rejecting();
+    registerAdapter(adapter);
+    await enqueueFarm(userId, 'a1');
+    const listener = vi.fn();
+    const stop = onItemRejected(listener);
+
+    await processQueue(userId);
+    stop();
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'a1',
+        status: 'error',
+        errorCode: 'duplicate_farm_name',
+        errorMessage: 'Ya existe una finca con este nombre.',
+      }),
+      adapter,
+    );
+  });
+
+  it('does not tell about a record that only has to wait for the network', async () => {
+    const userId = randomUserId();
+    registerAdapter(
+      fakeAdapter({ send: vi.fn().mockRejectedValue(new Error('sin red')) }),
+    );
+    await enqueueFarm(userId, 'a1');
+    const listener = vi.fn();
+    const stop = onItemRejected(listener);
+
+    await processQueue(userId);
+    stop();
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('does not tell about a record that reached the server', async () => {
+    const userId = randomUserId();
+    registerAdapter(fakeAdapter());
+    await enqueueFarm(userId, 'a1');
+    const listener = vi.fn();
+    const stop = onItemRejected(listener);
+
+    await processQueue(userId);
+    stop();
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('keeps going when a listener fails', async () => {
+    const userId = randomUserId();
+    registerAdapter(rejecting());
+    await enqueueFarm(userId, 'a1');
+    await enqueueFarm(userId, 'a2');
+    const stop = onItemRejected(() => {
+      throw new Error('falla del que escucha');
+    });
+
+    await processQueue(userId);
+    stop();
+
+    const items = await getOfflineDb(userId).queue.toArray();
+    expect(items.map((item) => item.status)).toEqual(['error', 'error']);
   });
 });

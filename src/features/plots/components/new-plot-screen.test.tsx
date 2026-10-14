@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,12 +10,18 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { buildPlot, buildSession } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 vi.mock('@/config/map', async () => {
   const { loadFakePolygonEditor } = await import('@/test/fake-map');
   return { loadPolygonEditorMapProvider: loadFakePolygonEditor };
 });
+
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 import { NewPlotScreen } from './new-plot-screen';
 import type { PlotScreenFarm } from './plot-screen-farm';
@@ -35,6 +41,8 @@ let userId: string;
 
 beforeEach(async () => {
   userId = `new-plot-${crypto.randomUUID()}`;
+  vi.clearAllMocks();
+  resetLocation();
   await recordLogin(userId);
 });
 
@@ -95,7 +103,7 @@ describe('NewPlotScreen', () => {
     await user.type(screen.getByLabelText('Área declarada (hectáreas)'), '1');
     await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 
-    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
+    await screen.findByText('Parcela guardada');
     const [item] = await getOfflineDb(userId).queue.toArray();
     expect(item.payload).toMatchObject({ code: 'P1' });
   });
@@ -104,29 +112,28 @@ describe('NewPlotScreen', () => {
     server.use(plotsHandler([]));
     const { user } = renderScreen();
     await fillAndSave(user, 'P1', '1');
-    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
+    await screen.findByText('Parcela guardada');
 
     await user.click(
       screen.getByRole('button', { name: 'Registrar otra parcela' }),
     );
+    expect(router.push).toHaveBeenCalledWith('/fincas/parcelas/nueva?finca=f1');
+    cleanup();
+    renderScreen();
 
     expect(await screen.findByLabelText('Código de la parcela')).toHaveValue(
       'P2',
     );
   });
 
-  it('saves the plot on the device under its farm and says how it is going', async () => {
+  it('saves the plot on the device under its farm and goes back to it', async () => {
     server.use(plotsHandler([]));
     const { user } = renderScreen();
 
     await fillAndSave(user, 'P1', '2,4');
 
-    expect(
-      await screen.findByRole('heading', {
-        name: 'Parcela guardada con éxito',
-      }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('P1', { selector: 'strong' })).toBeInTheDocument();
+    expect(await screen.findByText('Parcela guardada')).toBeInTheDocument();
+    expect(router.replace).toHaveBeenCalledWith('/fincas/detalle?id=f1');
     const [item] = await getOfflineDb(userId).queue.toArray();
     expect(item).toMatchObject({
       resource: 'plots',
@@ -140,22 +147,56 @@ describe('NewPlotScreen', () => {
     });
   });
 
-  it('lets the person register another plot with a fresh form and a new id', async () => {
+  it('gives every form its own id, so two plots do not collide', async () => {
     server.use(plotsHandler([]));
     const { user } = renderScreen();
     await fillAndSave(user, 'P1', '1');
-    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
+    await screen.findByText('Parcela guardada');
+    cleanup();
 
-    await user.click(
-      screen.getByRole('button', { name: 'Registrar otra parcela' }),
+    const another = renderScreen();
+    await fillAndSave(another.user, 'P2', '1');
+    await waitFor(async () =>
+      expect(await getOfflineDb(userId).queue.count()).toBe(2),
     );
-    await fillAndSave(user, 'P2', '1');
-    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
 
     const ids = (await getOfflineDb(userId).queue.toArray()).map(
       (item) => item.id,
     );
     expect(new Set(ids).size).toBe(2);
+  });
+
+  it('goes back to the screen it was opened from and carries it to the next plot', async () => {
+    mockLocation.search = `origen=${encodeURIComponent('/fincas?buscar=la')}`;
+    server.use(plotsHandler([]));
+    const { user } = renderScreen();
+
+    await fillAndSave(user, 'P1', '1');
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/fincas?buscar=la'),
+    );
+    await user.click(
+      await screen.findByRole('button', { name: 'Registrar otra parcela' }),
+    );
+    expect(router.push).toHaveBeenCalledWith(
+      `/fincas/parcelas/nueva?finca=f1&origen=${encodeURIComponent('/fincas?buscar=la')}`,
+    );
+  });
+
+  it('says in the notice that the plot waits on the device without a connection', async () => {
+    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    try {
+      server.use(plotsHandler([]));
+      const { user } = renderScreen();
+      await fillAndSave(user, 'P1', '1');
+
+      expect(
+        await screen.findByText('Se enviará cuando haya conexión.'),
+      ).toBeInTheDocument();
+    } finally {
+      onLine.mockRestore();
+    }
   });
 
   it('uses the plots already in the farm to check the available area', async () => {
@@ -181,7 +222,7 @@ describe('NewPlotScreen', () => {
     server.use(plotsHandler([]));
     const first = renderScreen();
     await fillAndSave(first.user, 'P1', '9');
-    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
+    await screen.findByText('Parcela guardada');
     first.unmount();
 
     const { user } = renderScreen();
@@ -206,7 +247,7 @@ describe('NewPlotScreen', () => {
 
     await fillAndSave(user, 'P1', '1');
 
-    await screen.findByRole('heading', { name: 'Parcela guardada con éxito' });
+    await screen.findByText('Parcela guardada');
     expect(requests).toHaveLength(0);
   });
 
@@ -259,19 +300,5 @@ describe('NewPlotScreen and whose farm it is', () => {
     expect(
       screen.queryByText(/Registras una parcela en la finca/),
     ).not.toBeInTheDocument();
-  });
-
-  it('keeps saying it when registering another plot', async () => {
-    server.use(plotsHandler([]));
-    const { user } = renderScreen(OF_ANA, null);
-    await fillAndSave(user, 'P-01', '1');
-
-    await user.click(
-      await screen.findByRole('button', { name: 'Registrar otra parcela' }),
-    );
-
-    expect(
-      await screen.findByText(/Registras una parcela en la finca/),
-    ).toBeVisible();
   });
 });

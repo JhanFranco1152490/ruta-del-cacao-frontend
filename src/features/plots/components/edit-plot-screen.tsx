@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
-import { useFinishEdit } from '@/hooks/use-finish-edit';
+import { useFinishSave } from '@/hooks/use-finish-save';
 
 import { formatHectares } from '@/lib/format/hectares';
 
@@ -93,7 +93,7 @@ function SavedPlotEditor({
   plot: Plot;
   knownPlots: Parameters<typeof PlotEditor>[0]['knownPlots'];
 }) {
-  const { returnPath, finish } = useFinishEdit(farm.detailPath);
+  const { returnPath, finish } = useFinishSave(farm.detailPath);
   const update = usePlotUpdate();
   const sync = useCaptureSyncStatus('parcelas');
 
@@ -136,7 +136,7 @@ function QueuedPlotEditor({
   farm: PlotScreenFarm;
   plot: QueuedPlot;
 }) {
-  const { returnPath, finish } = useFinishEdit(farm.detailPath);
+  const { returnPath, finish } = useFinishSave(farm.detailPath);
   const resubmit = usePlotResubmit();
   const sync = useCaptureSyncStatus('parcelas');
   const known = useKnownPlots(farm.id, { fromServer: !farm.isPendingCreate });

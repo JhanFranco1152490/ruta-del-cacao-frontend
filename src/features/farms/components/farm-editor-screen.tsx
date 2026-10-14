@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { OfflineBanner } from '@/components/offline-banner';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFinishEdit } from '@/hooks/use-finish-edit';
+import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
 import { isApiError } from '@/lib/api/errors';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -90,7 +90,7 @@ function ServerFarmEditor({ id }: { id: string }) {
 
 function SavedFarmEditor({ farm }: { farm: Farm }) {
   const router = useRouter();
-  const { finish } = useFinishEdit('/fincas');
+  const { finish } = useFinishSave('/fincas');
   const update = useFarmUpdate();
   const sync = useFarmSyncStatus();
   const { data: user } = useSession();
@@ -136,7 +136,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
 }
 
 function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
-  const { finish } = useFinishEdit('/fincas');
+  const { finish } = useFinishSave('/fincas');
   const resubmit = useFarmResubmit();
   const sync = useFarmSyncStatus();
   const isStale = farm.errorCode === 'stale_version';

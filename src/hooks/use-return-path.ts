@@ -8,10 +8,3 @@ import { readOrigin } from '@/lib/navigation/origin';
 export function useReturnPath(fallback: string): string {
   return readOrigin(useSearchParams()) ?? fallback;
 }
-
-// El enlace de «volver» de un panel de guardado: a la pantalla de origen con el texto genérico
-// «Volver», o al destino de siempre con el texto propio de esa pantalla («Volver a la finca»).
-export function useBackLink(fallback: { href: string; label: string }) {
-  const origin = readOrigin(useSearchParams());
-  return origin ? { href: origin, label: 'Volver' } : fallback;
-}

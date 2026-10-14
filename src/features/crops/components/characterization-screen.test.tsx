@@ -2,7 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -20,7 +20,13 @@ import {
   characterizationsHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
+
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 import {
   characterizationQueueId,
@@ -51,6 +57,8 @@ let userId: string;
 
 beforeEach(async () => {
   userId = `characterization-screen-${crypto.randomUUID()}`;
+  vi.clearAllMocks();
+  resetLocation();
   await recordLogin(userId);
   server.use(
     cacaoVarietiesHandler([
@@ -112,10 +120,9 @@ describe('CharacterizationScreen', () => {
     await save(user);
 
     expect(
-      await screen.findByRole('heading', {
-        name: 'Caracterización guardada exitosamente',
-      }),
-    ).toHaveFocus();
+      await screen.findByText('Caracterización guardada'),
+    ).toBeInTheDocument();
+    expect(router.replace).toHaveBeenCalledWith('/fincas/detalle?id=f1');
     expect(await queuedPayload()).toMatchObject({
       plantings: [
         {
@@ -140,9 +147,7 @@ describe('CharacterizationScreen', () => {
     await user.selectOptions(screen.getByLabelText('Etapa 1'), 'renovation');
     await save(user);
 
-    await screen.findByRole('heading', {
-      name: 'Caracterización guardada exitosamente',
-    });
+    await screen.findByText('Caracterización guardada');
     expect(await queuedPayload()).toMatchObject({
       plantings: [
         { variety_id: 'v-ccn-51', stage: 'renovation' },
@@ -201,9 +206,7 @@ describe('CharacterizationScreen', () => {
     expect(screen.getByLabelText('Variedad 1')).toHaveValue('v-ccn-51');
     await save(user, 'Guardar y reenviar');
 
-    await screen.findByRole('heading', {
-      name: 'Caracterización guardada exitosamente',
-    });
+    await screen.findByText('Caracterización guardada');
     await waitFor(async () =>
       expect(await queuedPayload()).toMatchObject({
         expected_version: 5,
@@ -305,6 +308,31 @@ describe('CharacterizationScreen', () => {
     expect(
       screen.queryByRole('link', { name: 'Ver historial' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('goes back to the screen it was opened from after saving', async () => {
+    mockLocation.search = `origen=${encodeURIComponent('/fincas/detalle?id=f1&pestana=parcelas')}`;
+    server.use(characterizationsHandler([]));
+    const user = renderScreen();
+    await fillNewCharacterization(user);
+
+    await save(user);
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(
+        '/fincas/detalle?id=f1&pestana=parcelas',
+      ),
+    );
+  });
+
+  it('cancels back to the screen it was opened from', async () => {
+    mockLocation.search = `origen=${encodeURIComponent('/fincas/detalle?id=f1&pestana=parcelas')}`;
+    server.use(characterizationsHandler([]));
+    renderScreen();
+
+    expect(
+      await screen.findByRole('link', { name: 'Cancelar' }),
+    ).toHaveAttribute('href', '/fincas/detalle?id=f1&pestana=parcelas');
   });
 
   it('links back to its farm', async () => {

@@ -1,20 +1,15 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { PageNotice } from '@/components/page-notice';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSession } from '@/hooks/use-session';
-import { queryKeys } from '@/lib/api/query-keys';
+import { useFinishSave } from '@/hooks/use-finish-save';
 import { todayInBogota } from '@/lib/format/dates';
 
 import { ACTIVITIES_PATH } from '../activity-paths';
 import { activityState, canComplete } from '../activity-state';
-import { completionLabel } from '../completion-values';
-import { isCorrectableCompletionError } from '../sync-adapter';
 import { CompletionCapture } from './completion-capture';
-import { CompletionSavedPanel } from './completion-saved-panel';
 import { useCompletionSources } from './use-completion-sources';
 
 // La pantalla de campo donde se registra una labor como realizada. Todo se guarda primero en el
@@ -22,13 +17,12 @@ import { useCompletionSources } from './use-completion-sources';
 // mostrar: un aviso si la actividad no se puede registrar, lo que le pasó a lo ya guardado, o la
 // captura.
 export function CompletionScreen({ activityId }: { activityId: string }) {
-  const queryClient = useQueryClient();
-  const { data: user } = useSession();
   const today = todayInBogota();
   const sources = useCompletionSources(activityId);
+  const { returnPath, finish } = useFinishSave(ACTIVITIES_PATH);
+  // Entre guardar y que la navegación llegue, la lectura de lo guardado ya cambió: sin esto se vería
+  // un instante el aviso de «ya está guardada».
   const [saved, setSaved] = useState(false);
-  // Al corregir después de guardar se monta una captura nueva con lo que quedó en la cola.
-  const [round, setRound] = useState(0);
 
   if (sources.status === 'missing') {
     return <PageNotice title="Esta actividad ya no existe." />;
@@ -55,27 +49,14 @@ export function CompletionScreen({ activityId }: { activityId: string }) {
   }
 
   const { activity, queued } = sources;
-  // Ya quedó guardada en el dispositivo (ahora, o en otra visita) y no hay nada que corregir.
-  if (saved || (queued && queued.status !== 'error')) {
+  // Ya quedó guardada en el dispositivo (en otra visita) y no hay nada que corregir: si el
+  // servidor la rechaza, el aviso y la bandeja ofrecen corregirla.
+  if (saved) return null;
+  if (queued && queued.status !== 'error') {
     return (
-      <CompletionSavedPanel
-        activityId={activityId}
-        backPath={ACTIVITIES_PATH}
-        canCorrect={isCorrectableCompletionError}
-        label={completionLabel(activity)}
-        onCorrect={() => {
-          void queryClient
-            .invalidateQueries({
-              queryKey: queryKeys.agriculturalActivities.queued(
-                user?.id ?? '',
-                activityId,
-              ),
-            })
-            .then(() => {
-              setRound((value) => value + 1);
-              setSaved(false);
-            });
-        }}
+      <PageNotice
+        description="Está en los registros del dispositivo y se enviará al servidor."
+        title="Esta realización ya está guardada."
       />
     );
   }
@@ -103,8 +84,11 @@ export function CompletionScreen({ activityId }: { activityId: string }) {
     <CompletionCapture
       catalog={sources.catalog}
       item={item}
-      key={round}
-      onSaved={() => setSaved(true)}
+      cancelHref={returnPath}
+      onSaved={() => {
+        setSaved(true);
+        finish('Realización registrada');
+      }}
       rejected={queued}
       stocks={sources.stocks}
       today={today}
