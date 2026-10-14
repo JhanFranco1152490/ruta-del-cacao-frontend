@@ -21,11 +21,11 @@ export function MunicipalitySelectField({
       <SelectField
         key={municipalities.isSuccess ? 'ready' : 'loading'}
         disabled={!municipalities.isSuccess}
+        placeholder={
+          municipalities.isPending ? 'Cargando municipios…' : placeholder
+        }
         {...selectProps}
       >
-        <option value="">
-          {municipalities.isPending ? 'Cargando municipios…' : placeholder}
-        </option>
         {municipalities.data?.map((municipality) => (
           <option key={municipality.code} value={municipality.code}>
             {municipality.name}

@@ -330,10 +330,6 @@ describe('FarmForm', () => {
       const user = userEvent.setup();
       gpsAt(CUCUTA);
       await renderForm();
-      // Los contornos cargan aparte: se espera a que estén antes de capturar.
-      await user.selectOptions(screen.getByLabelText('Municipio'), '54518');
-      await screen.findByText(/Encuadre:/);
-      await user.selectOptions(screen.getByLabelText('Municipio'), '');
 
       await user.click(screen.getByRole('button', { name: 'Capturar GPS' }));
 

@@ -561,9 +561,7 @@ describe('ProducerForm', () => {
       );
       renderWithProviders(<ProducerForm producer={buildProducer()} />);
 
-      expect(
-        screen.getByRole('option', { name: 'Cargando municipios…' }),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Cargando municipios…')).toBeInTheDocument();
       expect(screen.getByLabelText('Municipio')).toBeDisabled();
 
       await screen.findByRole('option', { name: 'Cúcuta' });

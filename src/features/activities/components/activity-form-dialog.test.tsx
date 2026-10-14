@@ -171,17 +171,9 @@ describe('ActivityFormDialog', () => {
       name: 'Otra cuenta',
     });
 
-    expect(optionsOf('Finca')).toEqual([
-      'Elige una finca',
-      'La Esperanza',
-      'El Retiro',
-    ]);
-    expect(optionsOf('Parcela')).toEqual([
-      'Elige una parcela',
-      'P-01 · 2,4 ha',
-    ]);
+    expect(optionsOf('Finca')).toEqual(['La Esperanza', 'El Retiro']);
+    expect(optionsOf('Parcela')).toEqual(['P-01 · 2,4 ha']);
     expect(optionsOf('Responsable')).toEqual([
-      'Elige un responsable',
       'Cuenta propia (tú)',
       'Otra cuenta',
     ]);
@@ -193,7 +185,7 @@ describe('ActivityFormDialog', () => {
     const types = optionsOf('Tipo de actividad');
     expect(types).toContain('Monitoreo fitosanitario');
     expect(types).not.toContain('Control fitosanitario');
-    expect(types).toHaveLength(9);
+    expect(types).toHaveLength(8);
   });
 
   it('keeps the plot disabled until a farm is chosen and cleans it when the farm changes', async () => {

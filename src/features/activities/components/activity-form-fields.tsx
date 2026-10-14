@@ -120,6 +120,7 @@ export function ActivityFormFields({
             />
           )}
           <SelectField
+            placeholder="Elige una finca"
             disabled={disabled || (!!producer && !producer.value)}
             error={errors.farm_id?.message}
             hint={
@@ -137,10 +138,10 @@ export function ActivityFormFields({
               onChange: () => setValue('plot_id', ''),
             })}
           >
-            <option value="">Elige una finca</option>
             {options(farms.choices)}
           </SelectField>
           <SelectField
+            placeholder="Elige una parcela"
             disabled={disabled || !farmId}
             error={errors.plot_id?.message}
             hint={
@@ -155,18 +156,17 @@ export function ActivityFormFields({
             label="Parcela"
             {...register('plot_id')}
           >
-            <option value="">Elige una parcela</option>
             {options(plots.choices)}
           </SelectField>
         </>
       )}
       <SelectField
+        placeholder="Elige un tipo"
         disabled={disabled}
         error={errors.activity_type?.message}
         label="Tipo de actividad"
         {...register('activity_type')}
       >
-        <option value="">Elige un tipo</option>
         {options(types)}
       </SelectField>
       {isOther && (
@@ -188,6 +188,7 @@ export function ActivityFormFields({
         {...register('scheduled_date')}
       />
       <SelectField
+        placeholder="Elige un responsable"
         disabled={disabled}
         error={errors.assignee_id?.message}
         hint={listHint(assignees, {
@@ -198,7 +199,6 @@ export function ActivityFormFields({
         label="Responsable"
         {...register('assignee_id')}
       >
-        <option value="">Elige un responsable</option>
         {options(assignees.choices)}
       </SelectField>
     </div>

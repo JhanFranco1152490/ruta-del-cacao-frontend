@@ -79,6 +79,7 @@ export function InputMovementDialog({
             </p>
           )}
           <SelectField
+            placeholder="Elige una finca"
             disabled={isSaving}
             error={movement.farmError}
             label="Finca"
@@ -87,7 +88,6 @@ export function InputMovementDialog({
             }
             value={farmId ?? ''}
           >
-            <option value="">Elige una finca</option>
             {movement.activeFarms.map((choice) => (
               <option key={choice.id} value={choice.id}>
                 {choice.name}
