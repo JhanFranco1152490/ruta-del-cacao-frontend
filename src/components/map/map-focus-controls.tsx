@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2, LocateFixed, MapPinned } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
@@ -30,18 +30,26 @@ export function MapFocusControls({
 }: MapFocusProps) {
   // La persona pidió ir a su ubicación sin GPS: se va cuando llegue la primera lectura.
   const [waitingForGps, setWaitingForGps] = useState(false);
+  const [hadGps, setHadGps] = useState(hasGps);
 
-  // Llegó la lectura que se esperaba: se va a la posición. Se resuelve al dibujar y no en un
-  // efecto, porque es un estado que se deriva de lo que acaba de cambiar.
-  if (waitingForGps && hasGps) {
-    setWaitingForGps(false);
-    onFocus('gps');
+  // Si el GPS se apaga, el pedido pendiente se olvida: al volver a encenderlo el mapa no debe
+  // saltar solo a la posición. Es estado propio que se ajusta al dibujar, no un efecto.
+  if (hasGps !== hadGps) {
+    setHadGps(hasGps);
+    if (!hasGps) setWaitingForGps(false);
   }
 
-  const gpsLabel = waitingForGps
-    ? 'Buscando tu ubicación…'
-    : 'Ir a mi ubicación';
-  const GpsIcon = waitingForGps ? Loader2 : LocateFixed;
+  // Avisar al panel actualiza su estado, así que no puede hacerse mientras se dibuja este
+  // componente: va en un efecto. Solo corre cuando cambia `hasGps` o se hace un pedido nuevo, y no
+  // cuando el panel crea otro `onFocus` al dibujarse (cada aviso lo redibuja y volvería a avisar).
+  const goToPosition = useEffectEvent(() => onFocus('gps'));
+  useEffect(() => {
+    if (waitingForGps && hasGps) goToPosition();
+  }, [waitingForGps, hasGps]);
+
+  const waiting = waitingForGps && !hasGps;
+  const gpsLabel = waiting ? 'Buscando tu ubicación…' : 'Ir a mi ubicación';
+  const GpsIcon = waiting ? Loader2 : LocateFixed;
 
   return (
     <div className="pointer-events-auto flex flex-col gap-2">
@@ -76,7 +84,7 @@ export function MapFocusControls({
       >
         <GpsIcon
           aria-hidden="true"
-          className={waitingForGps ? 'size-4 animate-spin' : 'size-4'}
+          className={waiting ? 'size-4 animate-spin' : 'size-4'}
         />
       </Button>
     </div>
