@@ -72,6 +72,9 @@ function frame(
   zoom: L.Control.Zoom,
   target: MunicipalityOutline | 'department' | 'free',
 ) {
+  // El recuadro puede haber cambiado de ancho al cambiar de nivel (el del departamento comparte la
+  // fila con un resumen): hay que medirlo de nuevo antes de encuadrar.
+  map.invalidateSize({ animate: false });
   map.setMaxBounds(undefined);
   map.setMinZoom(0);
   map.setMaxZoom(MAX_ZOOM);
@@ -227,8 +230,9 @@ export function LeafletMunicipalityMap({
   return (
     <div
       className="h-full w-full"
+      data-map-level={view.level}
       ref={containerRef}
-      style={{ background: 'var(--map-mask)' }}
+      style={{ backgroundColor: 'var(--map-mask)' }}
     />
   );
 }

@@ -61,17 +61,17 @@ Colores de ilustración (mazorcas, estados sanitarios): `--amarillo-mazorca #E3A
 ### Mapa por municipios
 
 Escala de verdes para colorear cada municipio según cuántas fincas tiene frente al que más tiene.
-El color nunca va solo: cada municipio con fincas lleva su cifra encima.
+El color nunca va solo: cada municipio con fincas lleva su cifra encima, y el mapa del departamento lleva una leyenda (`MapLevelLegend`) y, junto a él, un resumen con el total y las fincas de cada municipio.
 
 | Token | Hex | Uso |
 |---|---|---|
-| `--map-level-0` | `#F1EBE1` | Municipio sin fincas |
+| `--map-level-0` | `#EBE3D3` | Municipio sin fincas |
 | `--map-level-1` | `#D7E8DC` | Hasta una quinta parte del máximo |
 | `--map-level-2` | `#A9CDB5` | Hasta dos quintas partes |
 | `--map-level-3` | `#6FA684` | Hasta tres quintas partes |
 | `--map-level-4` | `#3D7A58` | Hasta cuatro quintas partes |
 | `--map-level-5` | `#14362A` | El máximo (igual a `--selva`) |
-| `--map-mask` | `#E7ECE9` | Lo que queda fuera del municipio elegido, sobre el mapa base |
+| `--map-mask` | `#F6F1E7` | Fondo del mapa del departamento (con puntos y sombra bajo los municipios) y lo que queda fuera del municipio elegido, sobre el mapa base |
 
 ### Estados semánticos
 
@@ -159,6 +159,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `StageFlow` | Cadena de etapas cosecha → venta | Dashboard, página QR |
 | `PageHeader` | Migas, H1 en serif, subtítulo y acciones | Todas las de oficina |
 | `SectionLabel` | Etiqueta cobre en versalitas | Todas |
+| `MapFrame` | El recuadro del mapa con sus controles encima, arriba a la derecha (mapa base, ocultar, ir a la finca, ir a mi ubicación), una leyenda opcional abajo a la izquierda y la franja «Mapa oculto» cuando se oculta. Los cuatro paneles de mapa lo usan | Todos los mapas |
 | `MapPanel` | Mapa con controles propios, capas, escala y lectura de coordenadas | Finca, parcela |
 | `PolygonEditor` | Dibujo y lista de vértices con área y perímetro calculados | Parcela |
 | `FieldStepper` | Menos / número grande / más, 64 px | Captura en campo |

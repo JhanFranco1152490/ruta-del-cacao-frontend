@@ -3,7 +3,8 @@ import { PanelTopClose, PanelTopOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Ocultar el mapa libera la pantalla cuando lo que se trabaja está debajo (la lista, el
-// formulario). Solo lleva el símbolo: el nombre accesible dice qué hará el toque.
+// formulario). Solo lleva el símbolo: el nombre accesible dice qué hará el toque. Sobre el mapa
+// es del tamaño de los demás controles y con fondo, para leerse sobre cualquier imagen.
 export function MapVisibilityButton({
   visible,
   onToggle,
@@ -17,7 +18,11 @@ export function MapVisibilityButton({
     <Button
       aria-expanded={visible}
       aria-label={label}
-      className="size-11"
+      className={
+        visible
+          ? 'size-10.5 bg-card shadow-sm aria-expanded:bg-card'
+          : 'size-10.5'
+      }
       onClick={onToggle}
       size="icon"
       title={label}
