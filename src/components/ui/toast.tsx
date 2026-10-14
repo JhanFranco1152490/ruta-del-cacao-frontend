@@ -4,35 +4,18 @@ import { Toast as ToastPrimitive } from '@base-ui/react/toast';
 import { cva } from 'class-variance-authority';
 import { cn } from 'cn';
 
-import type { ToastPosition } from '@/config/toast';
-
-// En celular el contenedor ocupa casi todo el ancho; desde `sm` mide lo de un aviso y se pega al
-// lado elegido. Por encima de los diálogos (z-50) y del mapa, que va aislado.
-const viewportPlace = cva(
-  'fixed z-[100] flex flex-col gap-2 outline-none inset-x-3 sm:inset-x-auto sm:w-96',
-  {
-    variants: {
-      vertical: {
-        bottom: 'bottom-[max(0.75rem,env(safe-area-inset-bottom))]',
-        top: 'top-[max(0.75rem,env(safe-area-inset-top))]',
-      },
-      horizontal: {
-        left: 'sm:left-4',
-        center: 'sm:left-1/2 sm:-translate-x-1/2',
-        right: 'sm:right-4',
-      },
-    },
-  },
-);
-
+// Abajo: en celular ocupa casi todo el ancho, al alcance del pulgar; desde `sm` mide lo de un aviso
+// y se pega a la esquina derecha. Por encima de los diálogos (z-50) y del mapa, que va aislado.
 export function ToastViewport({
-  position,
   className,
   ...props
-}: ToastPrimitive.Viewport.Props & { position: ToastPosition }) {
+}: ToastPrimitive.Viewport.Props) {
   return (
     <ToastPrimitive.Viewport
-      className={cn(viewportPlace(position), className)}
+      className={cn(
+        'fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[100] flex flex-col gap-2 outline-none sm:inset-x-auto sm:right-4 sm:w-96',
+        className,
+      )}
       data-slot="toast-viewport"
       {...props}
     />

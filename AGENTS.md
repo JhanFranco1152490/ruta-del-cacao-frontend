@@ -251,8 +251,6 @@ src/
   `queryDialog()` (`test/dialog.ts`) y no `queryByRole('dialog')`. Los componentes que leen la ruta
   usan el mock `navigation` de `test/router.ts` (`vi.mock('next/navigation', async () =>
   (await import('@/test/router')).navigation)`), con `mockLocation` para fijar ruta y parámetros.
-- El selector de posición del aviso (`ToastPositionPicker`) solo aparece en desarrollo y es temporal,
-  para escoger dónde queda mejor; al decidirlo se fija en `config/toast.ts` y se borra.
 
 ### Reglas de diseño del código
 

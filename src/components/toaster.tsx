@@ -1,7 +1,6 @@
 'use client';
 
 import { CircleCheck, CircleX, Info, TriangleAlert, X } from 'lucide-react';
-import { ToastPositionPicker } from '@/components/toast-position-picker';
 import {
   ToastAction,
   ToastClose,
@@ -14,12 +13,7 @@ import {
   ToastViewport,
   useToastManager,
 } from '@/components/ui/toast';
-import {
-  TOAST_DURATION_MS,
-  TOAST_LIMIT,
-  type ToastPosition,
-} from '@/config/toast';
-import { setToastPosition, useToastPosition } from '@/hooks/use-toast-position';
+import { TOAST_DURATION_MS, TOAST_LIMIT } from '@/config/toast';
 import { toastManager, type NoticeType } from '@/lib/notify';
 
 const ICONS: Record<NoticeType, typeof Info> = {
@@ -36,25 +30,23 @@ const ICON_COLORS: Record<NoticeType, string> = {
   error: 'text-err',
 };
 
-function Notices({ position }: { position: ToastPosition }) {
+const SWIPE_TO_DISMISS = ['down', 'right'] as ('down' | 'right')[];
+
+function Notices() {
   const { toasts } = useToastManager();
-  // Se desliza hacia el borde más cercano, y de lado hacia el que lo pega: no hace falta acertar el
-  // botón de cerrar.
-  const swipe = [
-    position.vertical === 'bottom' ? ('down' as const) : ('up' as const),
-    position.horizontal === 'left' ? ('left' as const) : ('right' as const),
-  ];
+  // Se desliza hacia abajo (el borde más cercano) o hacia la derecha: no hace falta acertar el botón
+  // de cerrar.
 
   return (
     <ToastPortal>
-      <ToastViewport position={position}>
+      <ToastViewport>
         {toasts.map((toast) => {
           const type = (toast.type ?? 'info') as NoticeType;
           const Icon = ICONS[type] ?? Info;
           return (
             <ToastRoot
               key={toast.id}
-              swipeDirection={swipe}
+              swipeDirection={SWIPE_TO_DISMISS}
               toast={toast}
               type={type}
             >
@@ -82,16 +74,13 @@ function Notices({ position }: { position: ToastPosition }) {
 
 // Los avisos flotantes de la app: se monta una vez, en los proveedores, y se lanzan con `notify`.
 export function Toaster() {
-  const position = useToastPosition();
-
   return (
     <ToastProvider
       limit={TOAST_LIMIT}
       timeout={TOAST_DURATION_MS.notice}
       toastManager={toastManager}
     >
-      <Notices position={position} />
-      <ToastPositionPicker onChange={setToastPosition} value={position} />
+      <Notices />
     </ToastProvider>
   );
 }

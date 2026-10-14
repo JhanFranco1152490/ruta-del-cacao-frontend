@@ -175,12 +175,6 @@ describe('Toaster', () => {
       screen.getByRole('button', { name: 'Ver octubre' }).className,
     ).toMatch(/\bmin-h-11\b/);
   });
-
-  it('has no position picker outside development', () => {
-    expect(
-      screen.queryByLabelText(/Posición de los avisos/),
-    ).not.toBeInTheDocument();
-  });
 });
 
 describe('Toaster without fake timers', () => {
