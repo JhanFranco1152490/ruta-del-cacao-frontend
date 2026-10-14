@@ -1,21 +1,19 @@
 'use client';
 
-import { cn } from 'cn';
 import { ArrowLeft } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 
-import { BaseLayerToggle } from './base-layer-toggle';
 import type { BaseLayerKind } from './base-layers';
+import { MapFrame, MapHiddenBar } from './map-frame';
 import type {
   LoadMunicipalityMapProvider,
   MunicipalityMapView,
 } from './map-provider';
 import { MapSkeleton } from './map-states';
 import { useMapProvider } from './use-map-provider';
-import { MapVisibilityButton } from './map-visibility-button';
 
 export const MUNICIPALITY_MAP_HEIGHT = 'h-80 lg:h-[28rem]';
 
@@ -88,33 +86,26 @@ export function MunicipalityMapPanel({
           )}
           <p className="font-bold text-selva">{title}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {visible && hasBaseLayer && (
-            <BaseLayerToggle
-              onChange={(next) => {
-                setBaseLayer(next);
-                setBaseLayerMissing(false);
-                setBaseLayerBackup(false);
-              }}
-              value={baseLayer}
-            />
-          )}
-          {controls}
-          <MapVisibilityButton
-            onToggle={() => setVisible((value) => !value)}
-            visible={visible}
-          />
-        </div>
+        {controls && (
+          <div className="flex flex-wrap items-center gap-3">{controls}</div>
+        )}
       </div>
-      {/* `isolate`: Leaflet apila sus capas con z-index de 400 a 1000; sin encerrarlas, el mapa
-          quedaría por encima de los diálogos y del menú móvil (z-50). */}
-      {visible && (
-        <div
-          className={cn(
-            'isolate overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
-            MUNICIPALITY_MAP_HEIGHT,
-          )}
-          data-slot="map-frame"
+      {visible ? (
+        <MapFrame
+          baseLayer={
+            hasBaseLayer
+              ? {
+                  value: baseLayer,
+                  onChange: (next) => {
+                    setBaseLayer(next);
+                    setBaseLayerMissing(false);
+                    setBaseLayerBackup(false);
+                  },
+                }
+              : undefined
+          }
+          className={MUNICIPALITY_MAP_HEIGHT}
+          onHide={() => setVisible(false)}
         >
           <Provider
             baseLayer={baseLayer}
@@ -126,7 +117,9 @@ export function MunicipalityMapPanel({
             onSelectPoint={onSelectPoint}
             view={view}
           />
-        </div>
+        </MapFrame>
+      ) : (
+        <MapHiddenBar onShow={() => setVisible(true)} />
       )}
       {visible && hasBaseLayer && baseLayerBackup && !baseLayerMissing && (
         <p className="text-sm font-bold text-muted-foreground" role="status">
