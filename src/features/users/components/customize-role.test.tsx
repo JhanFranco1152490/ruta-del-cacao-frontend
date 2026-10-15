@@ -131,6 +131,7 @@ describe('Personalizar permisos', () => {
         name: 'Operario',
         description: 'Basado en Capataz/Operario.',
         permission_codes: [PERMISSIONS.ACTIVITIES_COMPLETE],
+        farm_scope: 'many',
       },
     ]);
     // Guardar el rol no envía la cuenta.

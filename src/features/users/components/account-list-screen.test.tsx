@@ -85,6 +85,9 @@ async function fillForm(selectRole = true) {
     await userEvent.click(
       await screen.findByRole('checkbox', { name: 'Capataz' }),
     );
+  // Todo empleado lleva un alcance: aquí, todas las fincas (si la cuenta lo ofrece).
+  const everywhere = screen.queryByRole('radio', { name: /Todas las fincas/ });
+  if (everywhere) await userEvent.click(everywhere);
 }
 describe('AccountListScreen', () => {
   it('shows loading before an empty result', async () => {
@@ -564,6 +567,7 @@ describe('AccountListScreen', () => {
       last_name: 'Prueba',
       phone: null,
       role_ids: [roleId],
+      all_farms: true,
     });
   });
   it('keeps input when the email is duplicated', async () => {

@@ -1,10 +1,11 @@
 'use client';
-import { Controller } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
+import { scopeOfRoles } from '@/lib/farm-scope';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import type { Account } from '../api';
 import { useEditAccountForm } from '../use-edit-account-form';
-import { AccountFarmsField } from './account-farm-field';
+import { AccountScopeField } from './account-scope-field';
 import { AccountFields } from './account-fields';
 
 export function AccountEditForm({
@@ -26,6 +27,8 @@ export function AccountEditForm({
     onBusy,
   });
   const { errors, isSubmitting } = form.formState;
+  const farmIds = useWatch({ control: form.control, name: 'farm_ids' });
+  const allFarms = useWatch({ control: form.control, name: 'all_farms' });
   return (
     <form
       className="space-y-5"
@@ -36,22 +39,22 @@ export function AccountEditForm({
       <fieldset disabled={isSubmitting} className="space-y-4">
         <AccountFields form={form} identityLocked={identityLocked} />
         {farmsOf && (
-          <Controller
-            name="farm_ids"
-            control={form.control}
-            render={({ field }) => (
-              <AccountFarmsField
-                userId={farmsOf.userId}
-                producer={farmsOf.producer}
-                // Si sus roles las exigen lo sabe el servidor, que marca el campo al guardar.
-                required={account.needs_farm || account.farms.length > 0}
-                current={account.farms}
-                value={field.value}
-                onChange={field.onChange}
-                error={errors.farm_ids?.message}
-                disabled={isSubmitting}
-              />
-            )}
+          <AccountScopeField
+            userId={farmsOf.userId}
+            producer={farmsOf.producer}
+            // Lo que piden sus roles; el servidor lo vuelve a comprobar al guardar.
+            required={scopeOfRoles(account.roles)}
+            current={account.farms}
+            currentAll={account.all_farms}
+            value={{ all_farms: allFarms, farm_ids: farmIds }}
+            onChange={(scope) => {
+              form.setValue('all_farms', scope.all_farms, {
+                shouldDirty: true,
+              });
+              form.setValue('farm_ids', scope.farm_ids, { shouldDirty: true });
+            }}
+            error={errors.farm_ids?.message}
+            disabled={isSubmitting}
           />
         )}
       </fieldset>

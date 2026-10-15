@@ -17,12 +17,18 @@ const esperanza = buildFarm({ id: 'farm-a', name: 'La Esperanza' });
 const recreo = buildFarm({ id: 'farm-b', name: 'El Recreo' });
 const closed = buildFarm({ id: 'farm-c', name: 'Cerrada', is_active: false });
 
-const role = (roleId: string, name: string, permissions: string[]) => ({
+const role = (
+  roleId: string,
+  name: string,
+  permissions: string[],
+  farm_scope: 'all' | 'one' | 'many' = 'many',
+) => ({
   id: roleId,
   code: null,
   kind: 'predefined',
   name,
   description: '',
+  farm_scope,
   producer_id: null,
   permissions,
 });
@@ -37,6 +43,7 @@ const account = {
   producer: { id: producerId, member_code: 'PROD-000001', status: 'active' },
   farms: [{ id: 'farm-a', name: 'La Esperanza', is_active: true }],
   needs_farm: false,
+  all_farms: false,
   roles: [{ id: foremanId, code: 'foreman', name: 'Capataz' }],
   status: 'active',
   activation_pending: false,
@@ -120,8 +127,13 @@ const farmsGroup = (name: RegExp) => screen.findByRole('group', { name });
 const farmBox = (group: HTMLElement, name: string) =>
   within(group).findByRole('checkbox', { name });
 
-describe('las fincas al crear un empleado', () => {
-  it('son obligatorias si el rol trabaja en campo y viajan en la petición', async () => {
+const scopeGroup = () =>
+  screen.findByRole('group', { name: /fincas en las que trabaja/i });
+const everywhereRadio = () =>
+  screen.findByRole('radio', { name: /Todas las fincas/ });
+
+describe('el alcance al crear un empleado', () => {
+  it('es obligatorio y las fincas viajan en la petición', async () => {
     const created = record('post', '/api/users', (body) =>
       HttpResponse.json(
         { ...account, ...body, activation_email_sent: true },
@@ -136,11 +148,13 @@ describe('las fincas al crear un empleado', () => {
     await userEvent.click(create);
 
     expect(
-      await screen.findByText('Marca al menos una finca en la que trabaje.'),
+      await screen.findByText(
+        'Indica en qué fincas trabaja o marca todas las fincas.',
+      ),
     ).toBeVisible();
     expect(created).toEqual([]);
 
-    const group = await farmsGroup(/Fincas en las que trabaja/);
+    const group = await scopeGroup();
     // Solo las fincas activas.
     expect(within(group).queryByText('Cerrada')).not.toBeInTheDocument();
     // Puede trabajar en varias fincas vecinas.
@@ -155,9 +169,10 @@ describe('las fincas al crear un empleado', () => {
       role_ids: [foremanId],
       farm_ids: ['farm-a', 'farm-b'],
     });
+    expect(created[0]).not.toHaveProperty('all_farms');
   });
 
-  it('son opcionales si el rol no trabaja en campo y entonces no se envían', async () => {
+  it('también lo necesita quien no trabaja en campo, y «todas» viaja sin lista', async () => {
     const created = record('post', '/api/users', (body) =>
       HttpResponse.json(
         { ...account, ...body, farms: [], activation_email_sent: true },
@@ -169,17 +184,145 @@ describe('las fincas al crear un empleado', () => {
     await userEvent.click(
       screen.getByRole('checkbox', { name: 'Comercializador' }),
     );
+    const create = screen.getByRole('button', { name: 'Crear cuenta' });
 
-    expect(await farmsGroup(/Fincas \(opcional\)/)).toBeVisible();
+    await userEvent.click(create);
+    expect(
+      await screen.findByText(
+        'Indica en qué fincas trabaja o marca todas las fincas.',
+      ),
+    ).toBeVisible();
+    expect(created).toEqual([]);
+
+    await userEvent.click(await everywhereRadio());
+    await userEvent.click(create);
+
+    expect(
+      await screen.findByRole('heading', { name: /Prueba/ }),
+    ).toBeVisible();
+    expect(created[0]).toMatchObject({ all_farms: true });
+    expect(created[0]).not.toHaveProperty('farm_ids');
+  });
+
+  it('un rol de una sola finca pide exactamente una y no ofrece todas', async () => {
+    server.use(
+      http.get(apiUrl('/api/roles'), () =>
+        HttpResponse.json(
+          buildPage([
+            role(foremanId, 'Capataz', [PERMISSIONS.ACTIVITIES_VIEW], 'one'),
+          ]),
+        ),
+      ),
+    );
+    const created = record('post', '/api/users', (body) =>
+      HttpResponse.json(
+        { ...account, ...body, activation_email_sent: true },
+        { status: 201 },
+      ),
+    );
+    open('?cuenta=nueva');
+    await fillEmployee();
+    await userEvent.click(
+      await screen.findByRole('checkbox', { name: 'Capataz' }),
+    );
+
+    const group = await screen.findByRole('group', {
+      name: 'Finca en la que trabaja',
+    });
+    expect(
+      screen.queryByRole('radio', { name: /Todas las fincas/ }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(
+      await within(group).findByRole('radio', { name: 'El Recreo' }),
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 
     expect(
       await screen.findByRole('heading', { name: /Prueba/ }),
     ).toBeVisible();
-    expect(created[0]).not.toHaveProperty('farm_ids');
+    expect(created[0]).toMatchObject({ farm_ids: ['farm-b'] });
   });
 
-  it('muestra junto a las fincas lo que el servidor rechaza', async () => {
+  it('un rol de siempre todas las fincas no deja elegir otra cosa', async () => {
+    server.use(
+      http.get(apiUrl('/api/roles'), () =>
+        HttpResponse.json(
+          buildPage([role(foremanId, 'Administrador de confianza', [], 'all')]),
+        ),
+      ),
+    );
+    const created = record('post', '/api/users', (body) =>
+      HttpResponse.json(
+        { ...account, ...body, activation_email_sent: true },
+        { status: 201 },
+      ),
+    );
+    open('?cuenta=nueva');
+    await fillEmployee();
+    await userEvent.click(
+      await screen.findByRole('checkbox', {
+        name: 'Administrador de confianza',
+      }),
+    );
+
+    expect(
+      await screen.findByText(/Sus roles trabajan en todas las fincas/),
+    ).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+
+    expect(
+      await screen.findByRole('heading', { name: /Prueba/ }),
+    ).toBeVisible();
+    expect(created[0]).toMatchObject({ all_farms: true });
+  });
+
+  it('avisa del choque entre un rol de todas las fincas y uno de una sola', async () => {
+    server.use(
+      http.get(apiUrl('/api/roles'), () =>
+        HttpResponse.json(
+          buildPage([
+            role(foremanId, 'Capataz', [], 'one'),
+            role(sellerId, 'Administrador de confianza', [], 'all'),
+          ]),
+        ),
+      ),
+    );
+    const created = record('post', '/api/users', () =>
+      HttpResponse.json(account, { status: 201 }),
+    );
+    open('?cuenta=nueva');
+    await fillEmployee();
+    await userEvent.click(
+      await screen.findByRole('checkbox', { name: 'Capataz' }),
+    );
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'Administrador de confianza' }),
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+
+    expect(await screen.findByText(/piden alcances distintos/)).toBeVisible();
+    expect(created).toEqual([]);
+  });
+
+  it('un empleado limitado no puede dar «todas las fincas»', async () => {
+    session({
+      all_farms: false,
+      farms: [{ id: 'farm-a', name: 'La Esperanza', is_active: true }],
+    });
+    open('?cuenta=nueva');
+    await fillEmployee();
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Capataz' }));
+
+    const group = await scopeGroup();
+
+    expect(await farmBox(group, 'La Esperanza')).toBeVisible();
+    expect(
+      screen.queryByRole('radio', { name: /Todas las fincas/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('muestra junto al alcance lo que el servidor rechaza', async () => {
     server.use(
       http.post(apiUrl('/api/users'), () =>
         apiError(400, 'validation_error', 'No válido.', {
@@ -190,7 +333,7 @@ describe('las fincas al crear un empleado', () => {
     open('?cuenta=nueva');
     await fillEmployee();
     await userEvent.click(screen.getByRole('checkbox', { name: 'Capataz' }));
-    const group = await farmsGroup(/Fincas en las que trabaja/);
+    const group = await scopeGroup();
     await userEvent.click(await farmBox(group, 'La Esperanza'));
 
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
@@ -250,7 +393,7 @@ describe('las fincas de una cuenta que ya existe', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: 'Editar datos' }),
     );
-    const group = await farmsGroup(/Fincas en las que trabaja/);
+    const group = await farmsGroup(/fincas en las que trabaja/i);
     expect(await farmBox(group, 'La Esperanza')).toBeChecked();
 
     await userEvent.click(await farmBox(group, 'El Recreo'));
@@ -277,7 +420,7 @@ describe('las fincas de una cuenta que ya existe', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: 'Editar datos' }),
     );
-    const group = await farmsGroup(/Fincas en las que trabaja/);
+    const group = await farmsGroup(/fincas en las que trabaja/i);
     expect(screen.queryByText(/Le quitas/)).not.toBeInTheDocument();
 
     await userEvent.click(await farmBox(group, 'El Recreo'));
@@ -301,7 +444,7 @@ describe('las fincas de una cuenta que ya existe', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: 'Editar datos' }),
     );
-    await farmsGroup(/Fincas en las que trabaja/);
+    await farmsGroup(/fincas en las que trabaja/i);
     await userEvent.type(
       screen.getByLabelText('Teléfono (opcional)'),
       '3001234567',
@@ -326,7 +469,7 @@ describe('las fincas de una cuenta que ya existe', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: 'Editar datos' }),
     );
-    const group = await farmsGroup(/Fincas en las que trabaja/);
+    const group = await farmsGroup(/fincas en las que trabaja/i);
 
     expect(await farmBox(group, 'Cerrada')).toBeChecked();
   });
@@ -368,12 +511,14 @@ describe('las fincas de una cuenta que ya existe', () => {
     await userEvent.click(
       await screen.findByRole('checkbox', { name: 'Capataz' }),
     );
-    const group = await farmsGroup(/Fincas en las que trabaja/);
+    const group = await farmsGroup(/fincas en las que trabaja/i);
     await userEvent.click(
       screen.getByRole('button', { name: 'Guardar roles' }),
     );
     expect(
-      await screen.findByText('Marca al menos una finca en la que trabaje.'),
+      await screen.findByText(
+        'Indica en qué fincas trabaja o marca todas las fincas.',
+      ),
     ).toBeVisible();
     expect(saved).toEqual([]);
 

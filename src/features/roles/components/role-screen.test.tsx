@@ -214,6 +214,7 @@ describe('RoleScreen', () => {
       name: 'Coordinador',
       description: role.description,
       permission_codes: role.permissions,
+      farm_scope: 'many',
     });
   });
   it('explains self_role_lockout beside the permissions and keeps the form', async () => {
@@ -427,6 +428,7 @@ describe('RoleScreen', () => {
         name: 'Auxiliar',
         description: '',
         permission_codes: [],
+        farm_scope: 'many',
         producer_id: id,
       }),
     );
@@ -522,6 +524,7 @@ describe('RoleScreen', () => {
       name: 'Auxiliar',
       description: '',
       permission_codes: ['accounts.users_view'],
+      farm_scope: 'many',
     });
   });
   it('keeps an ungrantable role read-only without hiding its permissions', async () => {
@@ -705,6 +708,7 @@ describe('permissions that depend on another', () => {
         name: 'Auxiliar',
         description: '',
         permission_codes: ['accounts.roles_manage', 'accounts.users_view'],
+        farm_scope: 'many',
       }),
     );
   });

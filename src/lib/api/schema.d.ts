@@ -726,6 +726,7 @@ export interface components {
             readonly producer: components["schemas"]["AccountProducer"] | null;
             readonly farms: components["schemas"]["AccountFarm"][];
             readonly needs_farm: boolean;
+            readonly all_farms: boolean;
             readonly roles: components["schemas"]["AccountRole"][];
             readonly status: string;
             readonly activation_pending: boolean;
@@ -745,6 +746,7 @@ export interface components {
             /** Format: uuid */
             producer_id?: string;
             farm_ids?: string[];
+            all_farms?: boolean;
         };
         AccountCreated: {
             /** Format: uuid */
@@ -761,6 +763,7 @@ export interface components {
             readonly producer: components["schemas"]["AccountProducer"] | null;
             readonly farms: components["schemas"]["AccountFarm"][];
             readonly needs_farm: boolean;
+            readonly all_farms: boolean;
             readonly roles: components["schemas"]["AccountRole"][];
             readonly status: string;
             readonly activation_pending: boolean;
@@ -789,10 +792,12 @@ export interface components {
             id: string;
             code: string | null;
             name: string;
+            readonly farm_scope: string | null;
         };
         AccountRoleIdsRequest: {
             role_ids: string[];
             farm_ids?: string[];
+            all_farms?: boolean;
         };
         /**
          * @description * `created` - Caracterización registrada
@@ -954,6 +959,7 @@ export interface components {
             full_name: string;
             is_active: boolean;
             farm_ids: string[];
+            all_farms: boolean;
             assignable: boolean;
         };
         CacaoVariety: {
@@ -1087,6 +1093,13 @@ export interface components {
             first_name: string;
             last_name: string;
         };
+        /**
+         * @description * `all` - Siempre todas las fincas
+         *     * `one` - Una sola finca
+         *     * `many` - Una o varias fincas
+         * @enum {string}
+         */
+        FarmScopeEnum: "all" | "one" | "many";
         InputMovement: {
             /** Format: uuid */
             readonly id: string;
@@ -1394,6 +1407,7 @@ export interface components {
         };
         PatchedAccountUpdateRequest: {
             farm_ids?: string[];
+            all_farms?: boolean;
             /** Format: email */
             email?: string;
             document_type?: components["schemas"]["DocumentTypeEnum"];
@@ -1471,6 +1485,7 @@ export interface components {
             name?: string;
             description?: string;
             permission_codes?: string[];
+            farm_scope?: components["schemas"]["FarmScopeEnum"];
         };
         Permission: {
             code: string;
@@ -1699,6 +1714,7 @@ export interface components {
             readonly kind: components["schemas"]["RoleKindEnum"];
             readonly name: string;
             readonly description: string;
+            readonly farm_scope: (components["schemas"]["FarmScopeEnum"] | components["schemas"]["NullEnum"]) | null;
             /** Format: uuid */
             readonly producer_id: string | null;
             readonly producer: components["schemas"]["RoleProducer"] | null;
@@ -1712,6 +1728,8 @@ export interface components {
             permission_codes?: string[];
             /** Format: uuid */
             producer_id?: string;
+            /** @default many */
+            farm_scope: components["schemas"]["FarmScopeEnum"];
         };
         /**
          * @description * `fixed` - Fijo

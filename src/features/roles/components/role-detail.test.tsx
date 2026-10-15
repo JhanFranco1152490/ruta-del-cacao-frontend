@@ -10,6 +10,7 @@ const systemRole: Role = {
   kind: 'fixed',
   name: 'Administrador',
   description: '',
+  farm_scope: null,
   producer_id: null,
   producer: null,
   permissions: ['accounts.users_view', 'producers.view'],

@@ -59,6 +59,8 @@ export function CustomizeRoleDialog({
           name: trimmed,
           description: `Basado en ${base.name}.`,
           permission_codes: codes,
+          // El atajo parte del rol base: un Operario sigue siendo de una sola finca.
+          farm_scope: base.farm_scope ?? 'many',
           ...(producer ? { producer_id: producer } : {}),
         }),
       );

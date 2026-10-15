@@ -23,6 +23,8 @@ const account = {
   phone: null,
   producer: { id: producerId, member_code: 'PROD-000001', status: 'active' },
   farms: [],
+  // Un empleado con todas las fincas: ya tiene alcance, y cambiarle los roles no pide otro.
+  all_farms: true,
   roles: [{ id: foremanId, code: 'foreman', name: 'Capataz' }],
   status: 'active',
   activation_pending: false,
@@ -31,6 +33,7 @@ const account = {
 const producerAccount = {
   ...account,
   farms: [],
+  all_farms: true,
   roles: [{ id: 'role-producer', code: 'producer', name: 'Productor' }],
 };
 const role = (roleId: string, name: string) => ({

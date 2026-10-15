@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Account } from '../api';
+import { hasFixedRole } from '../schemas';
 import { ChevronRight } from 'lucide-react';
 
 import {
@@ -76,7 +77,9 @@ export function AccountTable({
                 className="max-w-64 break-words whitespace-normal"
                 data-label="Fincas"
               >
-                {account.farms.length ? (
+                {account.all_farms && !hasFixedRole(account) ? (
+                  'Todas'
+                ) : account.farms.length ? (
                   account.farms.map((farm) => farm.name).join(', ')
                 ) : account.needs_farm ? (
                   <span className="font-bold text-warn">Sin asignar</span>

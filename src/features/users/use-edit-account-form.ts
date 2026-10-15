@@ -5,12 +5,13 @@ import { useUpdateAccount, type Account } from '@/lib/api/accounts';
 import {
   accountEditSchema,
   isProducerAccount,
-  sameFarms,
+  scopeOfAccount,
   toAccountEditValues,
   toAccountUpdate,
   type AccountEditValues,
 } from './schemas';
 import { useAccountSubmit } from '@/hooks/use-account-submit';
+import { sameScope } from '@/lib/farm-scope';
 import { notify } from '@/lib/notify';
 
 export function useEditAccountForm({
@@ -43,12 +44,11 @@ export function useEditAccountForm({
     },
     onBusy,
   });
-  const initialFarms = account.farms.map((farm) => farm.id);
+  const initial = scopeOfAccount(account);
   const submit = (values: AccountEditValues) =>
     run(async () => {
-      // Solo si cambiaron: corregir el teléfono de alguien no reabre la decisión de sus fincas.
-      const farmsChanged =
-        withFarm && !sameFarms(values.farm_ids, initialFarms);
+      // Solo si cambió: corregir el teléfono de alguien no reabre la decisión de su alcance.
+      const farmsChanged = withFarm && !sameScope(values, initial);
       await mutation.mutateAsync(
         toAccountUpdate(values, identityLocked, farmsChanged),
       );

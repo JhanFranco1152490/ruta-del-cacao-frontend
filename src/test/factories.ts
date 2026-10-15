@@ -26,7 +26,14 @@ export const buildSessionUser = (
 ): Schemas['SessionUser'] => ({
   id: 'u1',
   email: 'persona@example.com',
-  roles: [{ id: 'role-producer', code: 'producer', name: 'Productor' }],
+  roles: [
+    {
+      id: 'role-producer',
+      code: 'producer',
+      name: 'Productor',
+      farm_scope: null,
+    },
+  ],
   producer_id: 'p1',
   permissions: [],
   is_superuser: false,
@@ -310,6 +317,7 @@ export const buildAssignee = (
   full_name: 'Cuenta de prueba',
   is_active: true,
   farm_ids: [],
+  all_farms: true,
   assignable: true,
   ...overrides,
 });

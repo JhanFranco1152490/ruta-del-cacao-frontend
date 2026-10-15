@@ -2,13 +2,14 @@
 import { Controller, useWatch } from 'react-hook-form';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
+import { scopeOfRoles } from '@/lib/farm-scope';
 import type { Role } from '@/lib/api/roles';
 import type { AccountCreated } from '../api';
-import { rolesNeedFarm } from '../schemas';
+import { rolesById } from '../schemas';
 import { useCreateAccountForm } from '../use-create-account-form';
 import { useRoleCustomization } from '../use-role-customization';
 import { CustomizeRoleDialog } from './customize-role-dialog';
-import { AccountFarmsField } from './account-farm-field';
+import { AccountScopeField } from './account-scope-field';
 import { AccountFields } from './account-fields';
 import { RoleCheckboxes } from './role-checkboxes';
 
@@ -38,13 +39,14 @@ export function AccountForm({
     canCustomizeRoles && !administrator,
   );
   const offered = customization.roles;
-  const needsFarm = (roleIds: string[]) =>
-    Boolean(farmsOf) && rolesNeedFarm(roleIds, offered);
+  // Lo que piden los roles elegidos; sin `farmsOf` la cuenta no lleva fincas.
+  const scopeOf = (roleIds: string[]) =>
+    farmsOf ? scopeOfRoles(rolesById(roleIds, offered)) : null;
   const { form, submit, failure } = useCreateAccountForm({
     producer,
     administratorRole: administrator ? roles[0]?.id : undefined,
     allowedRoleIds: offered.map((role) => role.id),
-    needsFarm,
+    scopeOf,
     onCreated,
     onBusy,
   });
@@ -54,6 +56,8 @@ export function AccountForm({
     formState: { errors, isSubmitting },
   } = form;
   const roleIds = useWatch({ control, name: 'role_ids' });
+  const farmIds = useWatch({ control, name: 'farm_ids' });
+  const allFarms = useWatch({ control, name: 'all_farms' });
   return (
     <>
       <form
@@ -98,20 +102,19 @@ export function AccountForm({
             />
           )}
           {farmsOf && (
-            <Controller
-              name="farm_ids"
-              control={control}
-              render={({ field }) => (
-                <AccountFarmsField
-                  userId={farmsOf.userId}
-                  producer={farmsOf.producer}
-                  required={needsFarm(roleIds)}
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={errors.farm_ids?.message}
-                  disabled={isSubmitting}
-                />
-              )}
+            <AccountScopeField
+              userId={farmsOf.userId}
+              producer={farmsOf.producer}
+              required={scopeOfRoles(rolesById(roleIds, offered))}
+              value={{ all_farms: allFarms, farm_ids: farmIds }}
+              onChange={(scope) => {
+                form.setValue('all_farms', scope.all_farms);
+                form.setValue('farm_ids', scope.farm_ids, {
+                  shouldValidate: true,
+                });
+              }}
+              error={errors.farm_ids?.message}
+              disabled={isSubmitting}
             />
           )}
         </fieldset>

@@ -171,6 +171,7 @@ describe('ActivityCalendarScreen', () => {
         buildAssignee({
           id: 'moved',
           full_name: 'Luis Rincón',
+          all_farms: false,
           farm_ids: ['f2'],
         }),
       ]),

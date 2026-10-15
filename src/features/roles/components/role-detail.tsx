@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
+import { roleScopeLabel } from '@/lib/farm-scope';
 import { groupRolePermissions } from '../permission-areas';
 import { canEditRole } from '../schemas';
 import type { PermissionItem, Role } from '../api';
@@ -61,6 +62,11 @@ export function RoleDetail({
             {role.permissions.length}{' '}
             {role.permissions.length === 1 ? 'permiso' : 'permisos'}
           </span>
+          {role.farm_scope && (
+            <span className="rounded-full bg-white/20 px-3 py-1">
+              {roleScopeLabel(role.farm_scope)}
+            </span>
+          )}
           <span className="rounded-full bg-white/20 px-3 py-1">
             {editable ? 'Se puede editar' : 'Solo lectura'}
           </span>

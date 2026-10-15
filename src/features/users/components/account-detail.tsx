@@ -180,18 +180,22 @@ function AccountSummary({ account }: { account: Account }) {
             {account.roles.map((role) => role.name).join(', ') || 'Sin roles'}
           </dd>
         </div>
-        {(account.farms.length > 0 || account.needs_farm) && (
+        {(account.farms.length > 0 ||
+          account.needs_farm ||
+          (account.all_farms && !hasFixedRole(account))) && (
           <div>
             <dt className="font-bold">Fincas en las que trabaja</dt>
             <dd>
-              {account.farms.length
-                ? account.farms
-                    .map(
-                      (farm) =>
-                        `${farm.name}${farm.is_active ? '' : ' (inactiva)'}`,
-                    )
-                    .join(', ')
-                : 'Sin asignar'}
+              {account.all_farms
+                ? 'Todas las fincas'
+                : account.farms.length
+                  ? account.farms
+                      .map(
+                        (farm) =>
+                          `${farm.name}${farm.is_active ? '' : ' (inactiva)'}`,
+                      )
+                      .join(', ')
+                  : 'Sin asignar'}
             </dd>
           </div>
         )}
@@ -202,8 +206,8 @@ function AccountSummary({ account }: { account: Account }) {
             aria-hidden="true"
             className="mt-0.5 size-4 shrink-0"
           />
-          Sin una finca asignada esta persona no ve ni registra nada de campo.
-          Asígnasela con «Editar datos».
+          Sin fincas asignadas esta persona no ve ni registra nada de campo.
+          Asígnale las fincas, o todas, con «Editar datos».
         </p>
       )}
       {account.producer?.status === 'inactive' && (

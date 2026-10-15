@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { apiError, buildAgriculturalInput } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { listedOptions, pick } from '@/test/search-select';
+import { chooseFromActionsMenu } from '@/test/menu';
 import { server } from '@/test/server';
 
 import {
@@ -166,9 +167,7 @@ describe('un empleado en la pantalla de insumos', () => {
 
   it('ve la unidad sin poder cambiarla', async () => {
     renderInputsScreen({ user: EMPLOYEE });
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Editar Urea' }),
-    );
+    await chooseFromActionsMenu(userEvent.setup(), 'Editar');
 
     const unit = await screen.findByLabelText('Unidad de medida');
 
@@ -185,9 +184,7 @@ describe('un empleado en la pantalla de insumos', () => {
       ),
     );
     renderInputsScreen({ user: EMPLOYEE });
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Editar Urea' }),
-    );
+    await chooseFromActionsMenu(userEvent.setup(), 'Editar');
     const name = await screen.findByLabelText('Nombre');
     await userEvent.clear(name);
     await userEvent.type(name, 'Urea 46');
