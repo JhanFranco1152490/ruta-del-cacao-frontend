@@ -114,7 +114,12 @@ describe('sectionPlots', () => {
         label: 'Ana Prueba · PROD-000001',
         continues: true,
       },
-      { level: 'farm', label: 'La Esperanza', continues: false },
+      {
+        level: 'farm',
+        label: 'La Esperanza',
+        farmId: 'f1',
+        continues: false,
+      },
     ]);
   });
 

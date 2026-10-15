@@ -125,6 +125,15 @@ describe('PlotListScreen', () => {
     expect(screen.queryByText(/Productor:/)).not.toBeInTheDocument();
   });
 
+  it('takes the name of a farm group to its detail', async () => {
+    server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
+    renderScreen();
+
+    expect(
+      await screen.findByRole('link', { name: 'La Esperanza' }),
+    ).toHaveAttribute('href', '/fincas/detalle?id=f1');
+  });
+
   it('lists them flat, by code, when told not to group', async () => {
     const requests: URLSearchParams[] = [];
     server.use(

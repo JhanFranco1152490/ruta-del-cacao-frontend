@@ -147,6 +147,7 @@ export function PlotOverview({
             </div>
           ) : plots.length ? (
             <PlotSections
+              farmHref={farmHref}
               renderList={(groupPlots) => {
                 const headers =
                   sections.find((section) => section.plots === groupPlots)
