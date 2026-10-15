@@ -64,10 +64,15 @@ export function PlotCardActions({
   const editLink = (
     <EditorLink
       aria-label={`${label} ${plot.code}`}
-      className={buttonVariants({ size: 'office', variant: 'action' })}
+      className={buttonVariants({
+        size: 'office',
+        variant: 'action',
+        className: 'size-10 px-0',
+      })}
       href={plotEditPath(plot.id, farm.id)}
+      title={label}
     >
-      <Pencil aria-hidden="true" className="size-4" /> {label}
+      <Pencil aria-hidden="true" className="size-4" />
     </EditorLink>
   );
   const menuLabel = `Más acciones de ${plot.code}`;
@@ -80,7 +85,7 @@ export function PlotCardActions({
         {showEdit && editLink}
         {isError && (
           <>
-            <ActionsMenu label={menuLabel}>
+            <ActionsMenu className="size-10 px-0" label={menuLabel}>
               <MenuItem
                 className="text-destructive"
                 onClick={() => setDialog('discard')}
@@ -105,7 +110,7 @@ export function PlotCardActions({
 
   return (
     <>
-      <ActionsMenu label={menuLabel}>
+      <ActionsMenu className="size-10 px-0" label={menuLabel}>
         {showEdit && (
           <MenuItem
             render={<EditorLink href={plotEditPath(plot.id, farm.id)} />}

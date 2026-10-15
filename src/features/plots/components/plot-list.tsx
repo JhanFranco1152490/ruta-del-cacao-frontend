@@ -54,7 +54,7 @@ export function PlotList<T extends KnownPlot>({
               className="flex h-full flex-col gap-2 rounded-[var(--radius-card)] border border-border bg-card p-4 data-[highlighted]:ring-3 data-[highlighted]:ring-cobre"
               data-highlighted={plot.id === highlightedId || undefined}
             >
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <h3 id={`plot-${plot.id}-code`} className="text-lg text-selva">
                   {plot.code}
                 </h3>
@@ -64,9 +64,27 @@ export function PlotList<T extends KnownPlot>({
                     {formatHectares(plot.areaHectares)}
                   </strong>
                 </p>
-                <div className="ml-auto">
-                  <PlotStatusBadge status={plotStatus(plot)} />
-                </div>
+                <PlotStatusBadge status={plotStatus(plot)} />
+                {/* Lo que se hace con la parcela, arriba a la derecha y sin gastar una fila. */}
+                {(canShowOnMap || shortcuts || actions) && (
+                  <div className="ml-auto flex items-center gap-1.5">
+                    {canShowOnMap && (
+                      <Button
+                        aria-label={`Ver ${plot.code} en el mapa`}
+                        className="size-10 px-0"
+                        onClick={() => onShowOnMap?.(plot)}
+                        size="office"
+                        title="Ver en el mapa"
+                        type="button"
+                        variant="action"
+                      >
+                        <MapPinned aria-hidden="true" className="size-4" />
+                      </Button>
+                    )}
+                    {shortcuts}
+                    {actions}
+                  </div>
+                )}
               </div>
               {plot.queue?.status === 'error' && plot.queue.errorMessage && (
                 <p className="rounded-(--radius) bg-err-bg px-3 py-2 text-sm font-bold text-err">
@@ -79,25 +97,6 @@ export function PlotList<T extends KnownPlot>({
                 </p>
               )}
               {renderDetails?.(plot)}
-              {(canShowOnMap || shortcuts || actions) && (
-                <div className="mt-auto flex items-center justify-end gap-2 pt-1">
-                  {shortcuts}
-                  {canShowOnMap && (
-                    <Button
-                      aria-label={`Ver ${plot.code} en el mapa`}
-                      onClick={() => onShowOnMap?.(plot)}
-                      size="office"
-                      title="Ver en el mapa"
-                      type="button"
-                      variant="action"
-                      className="px-3"
-                    >
-                      <MapPinned aria-hidden="true" className="size-4" />
-                    </Button>
-                  )}
-                  {actions}
-                </div>
-              )}
             </article>
           </li>
         );

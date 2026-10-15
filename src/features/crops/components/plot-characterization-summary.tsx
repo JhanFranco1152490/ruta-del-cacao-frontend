@@ -25,40 +25,55 @@ type CardProps = {
   pagePlotIds?: readonly string[];
 };
 
-// Cómo está la ficha de la parcela, dentro de su tarjeta. Sus acciones van aparte
-// (`PlotCharacterizationActions`), en la fila de botones de la tarjeta.
-export function PlotCharacterizationSummary(props: CardProps) {
+type SummaryProps = CardProps & {
+  // Sin acciones, solo dice cómo está la ficha (la pantalla de parcelas).
+  withActions?: boolean;
+};
+
+// Cómo está la ficha de la parcela, dentro de su tarjeta, y a su derecha lo que se hace con ella: así
+// la franja es una sola cosa y la parcela no carga con botones de la ficha.
+export function PlotCharacterizationSummary({
+  withActions = true,
+  ...props
+}: SummaryProps) {
   const { isLoading, pending, failed, summary, unreadable } =
     usePlotCharacterization(props);
 
   return (
-    <div className="space-y-1 rounded-(--radius) bg-muted px-3 py-2 text-sm">
-      {unreadable ? (
-        <p className="font-bold text-warn">
-          No pudimos leer la caracterización de esta parcela.
-        </p>
-      ) : isLoading ? (
-        <p className="text-muted-foreground">Cargando caracterización…</p>
-      ) : (
-        <p className="line-clamp-2">
-          <span className="font-bold text-selva">Caracterización: </span>
-          {summary ?? (
-            <span className="font-bold text-muted-foreground">
-              Sin caracterizar
-            </span>
-          )}
-        </p>
-      )}
-      {pending && !failed && (
-        <p className="font-bold text-info">
-          Pendiente de sincronizar en este dispositivo.
-        </p>
-      )}
-      {failed && (
-        <p className="font-bold text-err">
-          No se pudo sincronizar la caracterización
-          {pending?.errorMessage ? `: ${pending.errorMessage}` : '.'}
-        </p>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-(--radius) bg-muted px-3 py-2 text-sm">
+      <div className="min-w-48 flex-1 space-y-1">
+        {unreadable ? (
+          <p className="font-bold text-warn">
+            No pudimos leer la caracterización de esta parcela.
+          </p>
+        ) : isLoading ? (
+          <p className="text-muted-foreground">Cargando caracterización…</p>
+        ) : (
+          <p className="line-clamp-2">
+            <span className="font-bold text-selva">Caracterización: </span>
+            {summary ?? (
+              <span className="font-bold text-muted-foreground">
+                Sin caracterizar
+              </span>
+            )}
+          </p>
+        )}
+        {pending && !failed && (
+          <p className="font-bold text-info">
+            Pendiente de sincronizar en este dispositivo.
+          </p>
+        )}
+        {failed && (
+          <p className="font-bold text-err">
+            No se pudo sincronizar la caracterización
+            {pending?.errorMessage ? `: ${pending.errorMessage}` : '.'}
+          </p>
+        )}
+      </div>
+      {withActions && (
+        <div className="flex items-center gap-2">
+          <PlotCharacterizationActions {...props} />
+        </div>
       )}
     </div>
   );
@@ -71,8 +86,7 @@ export function PlotCharacterizationActions(props: CardProps) {
   const { saved, failed, canEdit, actionLabel } =
     usePlotCharacterization(props);
 
-  const [verb, ...restWords] = actionLabel.split(' ');
-  const rest = restWords.join(' ');
+  const [verb] = actionLabel.split(' ');
 
   return (
     <>
@@ -87,17 +101,14 @@ export function PlotCharacterizationActions(props: CardProps) {
             buttonVariants({
               size: 'office',
               variant: 'action',
-              className: 'min-w-0 flex-1',
+              className: 'min-w-0',
             }),
           )}
           href={characterizationPath(plot.id, farmId)}
         >
           <ClipboardList aria-hidden="true" className="size-4" />
-          {/* En el celular solo el verbo: la tarjeta es angosta y el nombre accesible sigue completo. */}
-          <span className="truncate">
-            {verb}
-            {rest && <span className="hidden sm:inline"> {rest}</span>}
-          </span>
+          {/* Solo el verbo: la franja es angosta y el nombre accesible sigue completo. */}
+          <span className="truncate">{verb}</span>
         </EditorLink>
       )}
       {/* Solo hay historial si la ficha ya llegó al servidor: lo que espera en el dispositivo

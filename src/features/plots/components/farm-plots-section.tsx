@@ -186,11 +186,14 @@ function PlotsContent({
       {/* Con espacio, las parcelas van junto al mapa y este se queda a la vista mientras se
           recorre la lista; en el celular, la lista primero y el mapa plegado arriba. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
-        <div className="scroll-mt-6 lg:sticky lg:top-4 lg:order-2" ref={mapRef}>
+        <div
+          className="scroll-mt-6 lg:sticky lg:top-20 lg:order-2"
+          ref={mapRef}
+        >
           <PointsMapPanel
             emptyMessage="La finca no tiene ubicación para mostrar en el mapa."
             focus={focus}
-            heightClassName="h-64 lg:h-[28rem]"
+            heightClassName="h-64 lg:h-[min(32rem,calc(100dvh-7rem))]"
             hiddenOnMobile
             label="Mapa de la finca y sus parcelas"
             loadProvider={loadPointsMapProvider!}

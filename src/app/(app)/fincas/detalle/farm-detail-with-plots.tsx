@@ -1,10 +1,7 @@
 'use client';
 
 import { SchedulePlotActivity } from '@/features/activities/components/schedule-plot-activity';
-import {
-  PlotCharacterizationActions,
-  PlotCharacterizationSummary,
-} from '@/features/crops/components/plot-characterization-summary';
+import { PlotCharacterizationSummary } from '@/features/crops/components/plot-characterization-summary';
 import { FarmDetailFromQuery } from '@/features/farms/components/farm-detail-from-query';
 import { FarmPlotsSection } from '@/features/plots/components/farm-plots-section';
 
@@ -26,23 +23,16 @@ export function FarmDetailWithPlots() {
             />
           )}
           renderPlotShortcuts={(plot) => (
-            <>
-              <PlotCharacterizationActions
-                farmId={farm.id}
-                farmIsActive={farm.isActive}
-                plot={{ id: plot.id, code: plot.code, isActive: plot.isActive }}
-              />
-              <SchedulePlotActivity
-                farm={{ id: farm.id, isActive: farm.isActive }}
-                plot={{
-                  id: plot.id,
-                  code: plot.code,
-                  isActive: plot.isActive,
-                  // Una parcela que sigue en la cola todavía no existe en el servidor.
-                  isSynced: !plot.queue,
-                }}
-              />
-            </>
+            <SchedulePlotActivity
+              farm={{ id: farm.id, isActive: farm.isActive }}
+              plot={{
+                id: plot.id,
+                code: plot.code,
+                isActive: plot.isActive,
+                // Una parcela que sigue en la cola todavía no existe en el servidor.
+                isSynced: !plot.queue,
+              }}
+            />
           )}
         />
       )}

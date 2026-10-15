@@ -1,16 +1,18 @@
 'use client';
 
 import { CalendarPlus } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
+import { notify } from '@/lib/notify';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { activitiesPath } from '../activity-paths';
 import { ActivityFormDialog } from './activity-form-dialog';
+import { ACTIVITY_SCHEDULED_MESSAGE } from './use-activity-submit';
 
 // Programar una actividad desde una parcela: el formulario abre con su finca y esa parcela ya
 // elegidas. Solo se ofrece en una parcela activa de una finca activa que ya está en el servidor,
@@ -27,8 +29,7 @@ export function SchedulePlotActivity({
   const hasConnection = useHasConnection();
   const helpId = useId();
   const [open, setOpen] = useState(false);
-  // El mes (yyyy-MM) de la actividad recién programada, para ofrecer ir a verla.
-  const [scheduledMonth, setScheduledMonth] = useState<string>();
+  const router = useRouter();
 
   if (
     !hasPermission(user, PERMISSIONS.ACTIVITIES_ADD) ||
@@ -46,28 +47,20 @@ export function SchedulePlotActivity({
         aria-label={`Programar actividad en ${plot.code}`}
         disabled={!hasConnection}
         onClick={() => {
-          setScheduledMonth(undefined);
           setOpen(true);
         }}
-        className="px-3"
+        className="size-10 px-0"
         size="office"
         title="Programar actividad"
         variant="action"
       >
         <CalendarPlus aria-hidden="true" className="size-4" />
       </Button>
+      {/* Sin conexión el botón se ve deshabilitado; el motivo lo oyen los lectores de pantalla. */}
       {!hasConnection && (
-        <p className="basis-full text-sm text-muted-foreground" id={helpId}>
+        <span className="sr-only" id={helpId}>
           Programar una actividad necesita conexión.
-        </p>
-      )}
-      {scheduledMonth && (
-        <p className="basis-full text-sm font-bold text-ok" role="status">
-          Actividad programada.{' '}
-          <Link className="underline" href={activitiesPath(scheduledMonth)}>
-            Ver en Actividades
-          </Link>
-        </p>
+        </span>
       )}
       {open && (
         <ActivityFormDialog
@@ -75,7 +68,16 @@ export function SchedulePlotActivity({
           onRejected={() => setOpen(false)}
           onSaved={(activity) => {
             setOpen(false);
-            setScheduledMonth(activity.scheduled_date.slice(0, 7));
+            // El aviso ofrece ir a verla en el mes en que quedó.
+            notify.success(ACTIVITY_SCHEDULED_MESSAGE, {
+              action: {
+                label: 'Ver en Actividades',
+                onClick: () =>
+                  router.push(
+                    activitiesPath(activity.scheduled_date.slice(0, 7)),
+                  ),
+              },
+            });
           }}
           preset={{ farmId: farm.id, plotId: plot.id }}
         />

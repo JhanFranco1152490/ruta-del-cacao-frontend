@@ -19,8 +19,15 @@ import {
   farmsHandler,
   plotsHandler,
 } from '@/test/handlers';
+import { queryDialog } from '@/test/dialog';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { router } from '@/test/router';
 import { server } from '@/test/server';
+
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/router')).navigation,
+);
 
 import { SchedulePlotActivity } from './schedule-plot-activity';
 
@@ -121,14 +128,13 @@ describe('SchedulePlotActivity', () => {
       within(form).getByRole('button', { name: 'Guardar' }),
     );
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Actividad programada.',
-    );
+    expect(await screen.findByText('Actividad programada')).toBeInTheDocument();
     expect(posted[0]).toMatchObject({ plot_id: 'pl2' });
-    expect(
-      screen.getByRole('link', { name: 'Ver en Actividades' }),
-    ).toHaveAttribute('href', '/actividades?mes=2026-11');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Ver en Actividades' }),
+    );
+    expect(router.push).toHaveBeenCalledWith('/actividades?mes=2026-11');
+    expect(queryDialog()).not.toBeInTheDocument();
   });
 
   it('is not offered to who cannot schedule', () => {
