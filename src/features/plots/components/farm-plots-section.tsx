@@ -21,7 +21,7 @@ import { plotNewPath } from '../plot-paths';
 import { useKnownPlots } from '../use-known-plots';
 import { PlotAreaBar } from './plot-area-bar';
 import { PlotCardActions } from './plot-card-actions';
-import { PlotList } from './plot-list';
+import { PlotList, type PlotCardContext } from './plot-list';
 
 // Lo mismo que entrega la pantalla de la finca, escrito aquí para no importar del dominio de
 // fincas.
@@ -43,11 +43,17 @@ export function FarmPlotsSection({
   farm,
   renderPlotDetails,
   renderPlotShortcuts,
+  renderPlotMenuItems,
 }: {
   farm: PlotsFarm;
   // Ver `PlotList`: lo que otro dominio agrega a cada parcela.
   renderPlotDetails?: (plot: KnownPlot) => React.ReactNode;
-  renderPlotShortcuts?: (plot: KnownPlot) => React.ReactNode;
+  renderPlotShortcuts?: (
+    plot: KnownPlot,
+    card: PlotCardContext,
+  ) => React.ReactNode;
+  // Lo mismo que los atajos, como opciones del menú «⋯» cuando la tarjeta es angosta.
+  renderPlotMenuItems?: (plot: KnownPlot) => React.ReactNode;
 }) {
   const { data: user } = useSession();
   const canView = hasPermission(user, PERMISSIONS.PLOTS_VIEW);
@@ -72,8 +78,14 @@ export function FarmPlotsSection({
     </EditorLink>
   );
 
-  const renderActions = (plot: KnownPlot) => (
-    <PlotCardActions farm={farm} plot={plot} />
+  const renderActions = (plot: KnownPlot, card: PlotCardContext) => (
+    <PlotCardActions
+      compact={card.compact}
+      extraItems={renderPlotMenuItems?.(plot)}
+      farm={farm}
+      onShowOnMap={card.showOnMap}
+      plot={plot}
+    />
   );
 
   return (
@@ -159,9 +171,12 @@ function PlotsContent({
   focus?: { shapeId: string };
   mapRef: React.RefObject<HTMLDivElement | null>;
   registerLink: React.ReactNode;
-  renderActions: (plot: KnownPlot) => React.ReactNode;
+  renderActions: (plot: KnownPlot, card: PlotCardContext) => React.ReactNode;
   renderPlotDetails?: (plot: KnownPlot) => React.ReactNode;
-  renderPlotShortcuts?: (plot: KnownPlot) => React.ReactNode;
+  renderPlotShortcuts?: (
+    plot: KnownPlot,
+    card: PlotCardContext,
+  ) => React.ReactNode;
   onShowOnMap: (shapeId: string) => void;
 }) {
   const shapes = plotsToShapes(plots);

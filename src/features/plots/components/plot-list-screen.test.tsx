@@ -125,6 +125,15 @@ describe('PlotListScreen', () => {
     expect(screen.queryByText(/Productor:/)).not.toBeInTheDocument();
   });
 
+  it('takes the name of a farm group to its detail', async () => {
+    server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
+    renderScreen();
+
+    expect(
+      await screen.findByRole('link', { name: 'La Esperanza' }),
+    ).toHaveAttribute('href', '/fincas/detalle?id=f1');
+  });
+
   it('lists them flat, by code, when told not to group', async () => {
     const requests: URLSearchParams[] = [];
     server.use(
@@ -292,6 +301,33 @@ describe('PlotListScreen', () => {
     ).getAllByRole('article');
     expect(touched).toHaveAttribute('data-highlighted', 'true');
     expect(other).not.toHaveAttribute('data-highlighted');
+  });
+
+  it('offers to show on the map, from the menu, only the plots that have a polygon', async () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    server.use(
+      plotsHandler([
+        buildPlot({ id: 'pl1', code: 'P1', boundary: BOUNDARY }),
+        buildPlot({ id: 'pl2', code: 'P2' }),
+      ]),
+    );
+    const { user } = renderScreen();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Más acciones de P2' }),
+    );
+    expect(
+      screen.queryByRole('menuitem', { name: 'Ver en el mapa' }),
+    ).not.toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await user.click(
+      screen.getByRole('button', { name: 'Más acciones de P1' }),
+    );
+    await user.click(
+      await screen.findByRole('menuitem', { name: 'Ver en el mapa' }),
+    );
+
+    expect(await screen.findByText('Enfocado: pl1')).toBeInTheDocument();
   });
 
   it('gives each card what another domain adds, with the ids of the page', async () => {

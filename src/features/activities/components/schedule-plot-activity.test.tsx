@@ -29,7 +29,12 @@ vi.mock(
   async () => (await import('@/test/router')).navigation,
 );
 
-import { SchedulePlotActivity } from './schedule-plot-activity';
+import { ActionsMenu } from '@/components/actions-menu';
+
+import {
+  SchedulePlotActivity,
+  SchedulePlotMenuItem,
+} from './schedule-plot-activity';
 
 // Jueves 22 de octubre de 2026, a mediodía en Bogotá.
 const NOW = new Date('2026-10-22T17:00:00Z');
@@ -135,6 +140,37 @@ describe('SchedulePlotActivity', () => {
     );
     expect(router.push).toHaveBeenCalledWith('/actividades?mes=2026-11');
     expect(queryDialog()).not.toBeInTheDocument();
+  });
+
+  it('in a narrow card has no button: the menu option opens the same form', async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      queryKeys.session(),
+      buildSession({ id: 'me', permissions: CAN_SCHEDULE }),
+    );
+    const farm = { id: 'f1', isActive: true };
+    const plot = { id: 'pl2', code: 'P-02', isActive: true, isSynced: true };
+    renderWithProviders(
+      <>
+        <SchedulePlotActivity compact farm={farm} plot={plot} />
+        <ActionsMenu label="Más acciones de P-02">
+          <SchedulePlotMenuItem farm={farm} plot={plot} />
+        </ActionsMenu>
+      </>,
+      { queryClient },
+    );
+
+    expect(button()).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Más acciones de P-02' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitem', {
+        name: 'Programar actividad en P-02',
+      }),
+    );
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 
   it('is not offered to who cannot schedule', () => {

@@ -1,6 +1,9 @@
 'use client';
 
-import { SchedulePlotActivity } from '@/features/activities/components/schedule-plot-activity';
+import {
+  SchedulePlotActivity,
+  SchedulePlotMenuItem,
+} from '@/features/activities/components/schedule-plot-activity';
 import { PlotCharacterizationSummary } from '@/features/crops/components/plot-characterization-summary';
 import { FarmDetailFromQuery } from '@/features/farms/components/farm-detail-from-query';
 import { FarmPlotsSection } from '@/features/plots/components/farm-plots-section';
@@ -22,8 +25,20 @@ export function FarmDetailWithPlots() {
               plot={{ id: plot.id, code: plot.code, isActive: plot.isActive }}
             />
           )}
-          renderPlotShortcuts={(plot) => (
+          renderPlotMenuItems={(plot) => (
+            <SchedulePlotMenuItem
+              farm={{ id: farm.id, isActive: farm.isActive }}
+              plot={{
+                id: plot.id,
+                code: plot.code,
+                isActive: plot.isActive,
+                isSynced: !plot.queue,
+              }}
+            />
+          )}
+          renderPlotShortcuts={(plot, card) => (
             <SchedulePlotActivity
+              compact={card.compact}
               farm={{ id: farm.id, isActive: farm.isActive }}
               plot={{
                 id: plot.id,
