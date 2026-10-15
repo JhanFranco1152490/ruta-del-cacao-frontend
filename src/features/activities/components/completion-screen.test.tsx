@@ -12,6 +12,7 @@ import {
   apiError,
   buildAgriculturalActivity,
   buildAgriculturalInput,
+  buildAssignee,
   buildInputStock,
   buildSession,
 } from '@/test/factories';
@@ -142,11 +143,42 @@ const queuedPayload = async () =>
     CompletionPayload | undefined;
 
 describe('CompletionScreen', () => {
+  it('sends back, without a notice, a worker who opens an activity of someone else', async () => {
+    renderScreen({
+      all_farms: false,
+      farms: [{ id: 'f1', name: 'Finca de prueba', is_active: true }],
+    });
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: /^Guardar/ })).toBeNull();
+    expect(screen.queryByRole('heading')).toBeNull();
+  });
+
+  it('lets a worker record the activity assigned to it', async () => {
+    server.use(
+      activityHandler({
+        assignee: buildAssignee({ id: userId }),
+      }),
+    );
+    renderScreen({
+      all_farms: false,
+      farms: [{ id: 'f1', name: 'Finca de prueba', is_active: true }],
+    });
+
+    expect(await form()).toBeTruthy();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
   it('offers an employee of several farms only the inputs of the farm of the activity', async () => {
     const requests: URLSearchParams[] = [];
     server.use(agriculturalInputsHandler([urea], requests));
     renderScreen({
       all_farms: false,
+      permissions: [
+        PERMISSIONS.ACTIVITIES_VIEW,
+        PERMISSIONS.ACTIVITIES_ADD,
+        PERMISSIONS.ACTIVITIES_COMPLETE,
+      ],
       farms: [
         { id: 'f1', name: 'Finca de prueba', is_active: true },
         { id: 'f2', name: 'Catalina', is_active: true },
