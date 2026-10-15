@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
@@ -26,6 +27,8 @@ vi.mock('@/config/map', async () => {
 
 import { enqueuePlotCreate } from '../plot-queue';
 import type { RenderPlotDetails } from './plot-overview';
+vi.mock('@/hooks/use-is-desktop', () => ({ useIsDesktop: vi.fn() }));
+
 import { PlotListScreen } from './plot-list-screen';
 
 const BOUNDARY = [
@@ -55,6 +58,7 @@ const LUIS_FARM = {
 let userId: string;
 
 beforeEach(async () => {
+  vi.mocked(useIsDesktop).mockReturnValue(true);
   userId = `plot-list-${crypto.randomUUID()}`;
   await recordLogin(userId);
   server.use(plotsHandler(), farmsHandler());
