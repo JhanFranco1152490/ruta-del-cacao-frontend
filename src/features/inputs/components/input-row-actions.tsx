@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/ui/menu';
 
 import type { AgriculturalInput } from '../api';
@@ -48,44 +48,25 @@ export function InputRowActions({
   const hasMenu = !!farm || canChange || canRemove || stockActions;
 
   return (
-    <div className="flex flex-wrap justify-end gap-2">
-      {/* Lo que más se hace con el inventario va a la vista; el menú tiene todas las acciones. */}
+    <div className="flex justify-end gap-2">
+      {/* Lo que más se hace con el inventario va a la vista; lo demás, en el menú «⋯». */}
       {stockActions && input.is_active && (
         <Button
           aria-label={`Registrar entrada de ${input.name}`}
           disabled={disabled}
+          className="max-md:flex-1"
           onClick={() => onAction('entry', input)}
           size="office"
-          variant="outline"
+          variant="action"
         >
           <PackagePlus aria-hidden="true" /> Entrada
-        </Button>
-      )}
-      {farm && (
-        <Link
-          aria-label={`Ver movimientos de ${input.name}`}
-          className={buttonVariants({ size: 'office', variant: 'outline' })}
-          href={inputMovementsPath(input.id, farm)}
-        >
-          <History aria-hidden="true" /> Movimientos
-        </Link>
-      )}
-      {canChange && (
-        <Button
-          aria-label={`Editar ${input.name}`}
-          disabled={disabled}
-          onClick={() => onAction('edit', input)}
-          size="office"
-          variant="outline"
-        >
-          <Pencil aria-hidden="true" /> Editar
         </Button>
       )}
       {hasMenu && (
         <Menu>
           <MenuTrigger
             aria-label={`Más acciones de ${input.name}`}
-            render={<Button size="office" variant="outline" />}
+            render={<Button size="office" variant="action" className="px-3" />}
           >
             <MoreHorizontal aria-hidden="true" />
           </MenuTrigger>
@@ -114,6 +95,15 @@ export function InputRowActions({
               >
                 <History aria-hidden="true" className="size-4" />
                 Ver movimientos
+              </MenuItem>
+            )}
+            {canChange && (
+              <MenuItem
+                disabled={disabled}
+                onClick={() => onAction('edit', input)}
+              >
+                <Pencil aria-hidden="true" className="size-4" />
+                Editar
               </MenuItem>
             )}
             {canChange && (

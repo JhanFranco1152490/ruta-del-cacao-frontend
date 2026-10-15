@@ -4,7 +4,9 @@ import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FilterRow } from '@/components/filter-row';
 import { PageHeader } from '@/components/page-header';
+import { PageStepper, Pagination } from '@/components/pagination';
 import { SelectField } from '@/components/select-field';
 import { StatusBadge } from '@/components/status-badge';
 import { TextField } from '@/components/text-field';
@@ -14,6 +16,8 @@ import { normalizeCatalogName } from '@/lib/format/search';
 import { type CacaoVariety, useCacaoVarietyCatalog } from '../api';
 import { VarietyFormDialog } from './variety-form-dialog';
 import { VarietyStatusDialog } from './variety-status-dialog';
+
+const PAGE_SIZE = 20;
 
 type StatusFilter = '' | 'active' | 'inactive';
 
@@ -35,8 +39,25 @@ export function VarietyListScreen() {
   const catalog = useCacaoVarietyCatalog();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('');
+  const [page, setPage] = useState(1);
   const varieties = catalog.data ?? [];
   const shown = varieties.filter((variety) => matches(variety, search, status));
+  // Al cambiar la búsqueda o el filtro se vuelve a la primera página; una página que ya no existe
+  // (se desactivó la última variedad de ella) cae en la última.
+  const lastPage = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+  const currentPage = Math.min(page, lastPage);
+  const pageItems = shown.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+  const changeSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+  const changeStatus = (value: StatusFilter) => {
+    setStatus(value);
+    setPage(1);
+  };
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
@@ -51,23 +72,50 @@ export function VarietyListScreen() {
         title="Variedades de cacao"
       />
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField
-            label="Buscar variedades"
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Nombre o procedencia"
-            value={search}
-          />
+        <FilterRow
+          activeCount={status ? 1 : 0}
+          search={
+            <TextField
+              hideLabel
+              label="Buscar variedades"
+              onChange={(event) => changeSearch(event.target.value)}
+              placeholder="Buscar variedad: nombre o procedencia"
+              type="search"
+              value={search}
+              wrapperClassName="min-w-0 flex-1 sm:min-w-72"
+            />
+          }
+          trailing={
+            catalog.isSuccess && (
+              <div className="flex items-center gap-4 self-center sm:ml-auto">
+                <p className="text-sm font-bold text-muted-foreground">
+                  {shown.length} variedades
+                </p>
+                <PageStepper
+                  label="variedades"
+                  onPageChange={setPage}
+                  page={currentPage}
+                  pageSize={PAGE_SIZE}
+                  total={shown.length}
+                />
+              </div>
+            )
+          }
+        >
           <SelectField
+            hideLabel
             label="Filtrar por estado"
-            onChange={(event) => setStatus(event.target.value as StatusFilter)}
+            onChange={(event) =>
+              changeStatus(event.target.value as StatusFilter)
+            }
             value={status}
+            wrapperClassName="w-full sm:w-52"
           >
-            <option value="">Todas</option>
+            <option value="">Todas las variedades</option>
             <option value="active">Activas</option>
             <option value="inactive">Inactivas</option>
           </SelectField>
-        </div>
+        </FilterRow>
 
         {catalog.isPending && (
           <div aria-label="Cargando variedades" role="status">
@@ -82,13 +130,22 @@ export function VarietyListScreen() {
         )}
         {catalog.isSuccess &&
           (shown.length ? (
-            <ul aria-label="Variedades" className="divide-y divide-border">
-              {shown.map((variety) => (
-                <li
-                  className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-                  key={variety.id}
-                >
-                  <div className="min-w-0 space-y-1">
+            <>
+              <div
+                aria-hidden="true"
+                className="hidden gap-x-4 px-1 text-xs font-extrabold tracking-[0.1em] text-muted-foreground uppercase md:grid md:grid-cols-[12rem_minmax(0,1fr)_minmax(0,1.3fr)_13rem]"
+              >
+                <span>Variedad</span>
+                <span>Nombres comunes</span>
+                <span>Procedencia</span>
+                <span />
+              </div>
+              <ul aria-label="Variedades" className="divide-y divide-border">
+                {pageItems.map((variety) => (
+                  <li
+                    className="grid gap-x-4 gap-y-1 py-3 md:grid-cols-[12rem_minmax(0,1fr)_minmax(0,1.3fr)_13rem] md:items-center md:px-1 md:py-2"
+                    key={variety.id}
+                  >
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-bold text-selva">
                         {variety.name}
@@ -97,27 +154,41 @@ export function VarietyListScreen() {
                         {variety.is_active ? 'Activa' : 'Inactiva'}
                       </StatusBadge>
                     </div>
-                    {variety.common_names.length > 0 && (
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">
-                          Nombres comunes:{' '}
+                    <p className="text-sm">
+                      {variety.common_names.length > 0 ? (
+                        <>
+                          <span className="text-muted-foreground md:hidden">
+                            Nombres comunes:{' '}
+                          </span>
+                          {variety.common_names.join(', ')}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground max-md:hidden">
+                          —
                         </span>
-                        {variety.common_names.join(', ')}
-                      </p>
-                    )}
-                    {variety.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {variety.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <VarietyFormDialog catalog={varieties} variety={variety} />
-                    <VarietyStatusDialog variety={variety} />
-                  </div>
-                </li>
-              ))}
-            </ul>
+                      )}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {variety.description}
+                    </p>
+                    <div className="flex gap-2 max-md:mt-1 max-md:justify-end md:justify-end">
+                      <VarietyFormDialog
+                        catalog={varieties}
+                        variety={variety}
+                      />
+                      <VarietyStatusDialog variety={variety} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <Pagination
+                label="variedades"
+                onPageChange={setPage}
+                page={currentPage}
+                pageSize={PAGE_SIZE}
+                total={shown.length}
+              />
+            </>
           ) : (
             <EmptyState
               description={

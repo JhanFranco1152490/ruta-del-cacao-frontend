@@ -45,6 +45,34 @@ function renderPanel(
 }
 
 describe('PointsMapPanel', () => {
+  it('goes to full screen and comes back with the button or with Escape', async () => {
+    const user = userEvent.setup();
+    renderPanel([POINT]);
+    const region = await screen.findByRole('region', {
+      name: 'Mapa de mis fincas',
+    });
+    const frame = () => document.querySelector('[data-slot="map-frame"]');
+    expect(region).toContainElement(frame() as HTMLElement);
+    expect(frame()).not.toHaveAttribute('data-expanded');
+
+    await user.click(screen.getByRole('button', { name: 'Pantalla completa' }));
+
+    expect(frame()).toHaveAttribute('data-expanded', 'true');
+    expect(region).not.toContainElement(frame() as HTMLElement);
+    expect(
+      screen.queryByRole('button', { name: 'Ocultar mapa' }),
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'Salir de pantalla completa' }),
+    );
+    expect(frame()).not.toHaveAttribute('data-expanded');
+
+    await user.click(screen.getByRole('button', { name: 'Pantalla completa' }));
+    await user.keyboard('{Escape}');
+    expect(frame()).not.toHaveAttribute('data-expanded');
+    expect(screen.getByRole('button', { name: 'Ocultar mapa' })).toBeVisible();
+  });
+
   it('shows a skeleton while the map loads', () => {
     renderPanel([POINT], () => new Promise(() => {}));
 

@@ -100,12 +100,9 @@ export function FarmLocationFields({
 
   return (
     <section aria-labelledby="farm-location-title" className="space-y-4">
-      <div>
-        <p className="section-label">Georreferenciación</p>
-        <h2 id="farm-location-title" className="mt-1 text-2xl text-selva">
-          Ubicación de la finca
-        </h2>
-      </div>
+      <h2 className="sr-only" id="farm-location-title">
+        Ubicación de la finca
+      </h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           className={CAPTURE_FIELD_CLASS}

@@ -24,6 +24,9 @@ export type TextFieldProps = Omit<
   hint?: string;
   id?: string;
   wrapperClassName?: string;
+  // Solo la etiqueta para lectores de pantalla, sin cambiar el tamaño (el texto de ayuda dice qué
+  // se busca).
+  hideLabel?: boolean;
 };
 
 export function TextField({
@@ -32,6 +35,7 @@ export function TextField({
   hint,
   id,
   wrapperClassName,
+  hideLabel,
   className,
   ...inputProps
 }: TextFieldProps) {
@@ -40,6 +44,7 @@ export function TextField({
       label={label}
       error={error}
       hint={hint}
+      hideLabel={hideLabel}
       id={id}
       className={wrapperClassName}
     >

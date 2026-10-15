@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
@@ -26,6 +27,8 @@ vi.mock('@/config/map', async () => {
 
 import { enqueuePlotCreate } from '../plot-queue';
 import type { RenderPlotDetails } from './plot-overview';
+vi.mock('@/hooks/use-is-desktop', () => ({ useIsDesktop: vi.fn() }));
+
 import { PlotListScreen } from './plot-list-screen';
 
 const BOUNDARY = [
@@ -55,6 +58,7 @@ const LUIS_FARM = {
 let userId: string;
 
 beforeEach(async () => {
+  vi.mocked(useIsDesktop).mockReturnValue(true);
   userId = `plot-list-${crypto.randomUUID()}`;
   await recordLogin(userId);
   server.use(plotsHandler(), farmsHandler());
@@ -155,11 +159,14 @@ describe('PlotListScreen', () => {
     server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
     renderScreen();
 
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Más acciones de P1' }),
+    );
     expect(
-      await screen.findByRole('link', { name: 'Editar P1' }),
+      await screen.findByRole('menuitem', { name: 'Editar' }),
     ).toHaveAttribute('href', '/fincas/parcelas/editar?id=a&finca=f1');
-    expect(screen.getByRole('button', { name: 'Desactivar' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Eliminar' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'Desactivar' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'Eliminar' })).toBeVisible();
   });
 
   it('offers no changes on the plots of an inactive farm', async () => {
@@ -176,10 +183,7 @@ describe('PlotListScreen', () => {
 
     await screen.findByText('P1');
     expect(
-      screen.queryByRole('link', { name: 'Editar P1' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Desactivar' }),
+      screen.queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();
   });
 

@@ -7,7 +7,10 @@ import {
   type StatusChangeAction,
   StatusChangeDialog,
 } from '@/components/status-change-dialog';
-import { useConfirmAction } from '@/hooks/use-confirm-action';
+import {
+  type ConfirmControl,
+  useConfirmAction,
+} from '@/hooks/use-confirm-action';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import { notify } from '@/lib/notify';
 
@@ -59,9 +62,12 @@ const deactivateAction = (code: string): StatusChangeAction => ({
 export function PlotDeleteDialog({
   plot,
   farmId,
+  control,
 }: {
   plot: KnownPlot & { version: number };
   farmId: string;
+  // Abierto desde un menú de acciones: sin botón propio.
+  control?: ConfirmControl;
 }) {
   const remove = useDeletePlot();
   const changeStatus = useChangePlotStatus();
@@ -102,6 +108,7 @@ export function PlotDeleteDialog({
             'No fue posible desactivar la parcela. Inténtalo nuevamente.',
           )
         : deleteErrorMessage(error),
+    control,
   );
 
   const action = offerDeactivate
@@ -118,7 +125,7 @@ export function PlotDeleteDialog({
         // Al cerrar se vuelve a ofrecer eliminar: el siguiente intento consulta de nuevo.
         if (!open) setHasRecords(false);
       }}
-      trigger={deleteAction(plot.code)}
+      trigger={control ? undefined : deleteAction(plot.code)}
     />
   );
 }

@@ -143,20 +143,21 @@ export function FarmFormFields({
   const warm = useWarmGps(COORDINATES_ALTERNATIVES);
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
       {breadcrumb && <Breadcrumb items={breadcrumb} />}
       <PageHeader
+        compact
         eyebrow="Gestión de fincas"
         title={title}
         description={description}
       />
-      {banner && <div className="mt-6">{banner}</div>}
+      {banner && <div className="mt-4">{banner}</div>}
       {notice}
       {/* En escritorio, datos a la izquierda y mapa a la derecha (fijo al bajar); en celular,
           una columna con el mapa antes de guardar, porque el punto se marca antes de guardar.
           Bajo el mapa queda sitio para lo que dependa de la finca (sus parcelas). */}
       <form
-        className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+        className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
         noValidate
         onSubmit={handleSubmit(onSubmit)}
       >
@@ -218,8 +219,19 @@ export function FarmFormFields({
               />
             </div>
           </FormSection>
+        </div>
 
-          <div className="space-y-4 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+        <div className="space-y-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card lg:sticky lg:top-20 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <FarmLocationMap
+            disabled={geolocation.isCapturing}
+            focusBounds={hints.focusBounds}
+            gpsPosition={warm.fix}
+            onRequestGps={warm.start}
+            frameClassName="lg:h-[min(28rem,calc(100dvh-22rem))]"
+            location={location}
+            onLocationChange={changeLocation}
+          />
+          <div className="space-y-4 border-t border-border pt-4">
             <FarmLocationFields
               geolocation={geolocation}
               warm={warm}
@@ -243,18 +255,6 @@ export function FarmFormFields({
               />
             )}
           </div>
-        </div>
-
-        <div className="rounded-[var(--radius-card)] bg-card p-4 shadow-card empty:hidden lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <FarmLocationMap
-            disabled={geolocation.isCapturing}
-            focusBounds={hints.focusBounds}
-            gpsPosition={warm.fix}
-            onRequestGps={warm.start}
-            frameClassName="lg:h-[34rem]"
-            location={location}
-            onLocationChange={changeLocation}
-          />
         </div>
 
         <div className="space-y-4 lg:col-start-1 lg:row-start-2">

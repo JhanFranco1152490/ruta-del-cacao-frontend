@@ -8,6 +8,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { apiError, buildPlot, buildSession } from '@/test/factories';
 import { apiUrl, plotsHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { chooseFromActionsMenu } from '@/test/menu';
 import { server } from '@/test/server';
 
 vi.mock('@/config/map', async () => {
@@ -71,7 +72,7 @@ describe('deactivating and reactivating a plot', () => {
     );
     const { user } = renderSection();
 
-    await user.click(await screen.findByRole('button', { name: 'Desactivar' }));
+    await chooseFromActionsMenu(user, 'Desactivar');
     await user.click(
       await screen.findByRole('button', { name: 'Desactivar parcela' }),
     );
@@ -83,10 +84,13 @@ describe('deactivating and reactivating a plot', () => {
 
   it('offers to activate an inactive plot', async () => {
     server.use(plotsHandler([buildPlot({ is_active: false })]));
-    renderSection();
+    const { user } = renderSection();
 
+    await user.click(
+      await screen.findByRole('button', { name: 'Más acciones de P1' }),
+    );
     expect(
-      await screen.findByRole('button', { name: 'Activar' }),
+      await screen.findByRole('menuitem', { name: 'Activar' }),
     ).toBeInTheDocument();
   });
 
@@ -103,7 +107,7 @@ describe('deactivating and reactivating a plot', () => {
     );
     const { user } = renderSection();
 
-    await user.click(await screen.findByRole('button', { name: 'Activar' }));
+    await chooseFromActionsMenu(user, 'Activar');
     await user.click(
       await screen.findByRole('button', { name: 'Activar parcela' }),
     );
@@ -122,7 +126,7 @@ describe('deactivating and reactivating a plot', () => {
     );
     const { user } = renderSection();
 
-    await user.click(await screen.findByRole('button', { name: 'Desactivar' }));
+    await chooseFromActionsMenu(user, 'Desactivar');
     await user.click(
       await screen.findByRole('button', { name: 'Desactivar parcela' }),
     );
@@ -140,20 +144,14 @@ describe('deactivating and reactivating a plot', () => {
     ]);
     await screen.findByText('P1');
     expect(
-      screen.queryByRole('button', { name: 'Desactivar' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Eliminar' }),
+      screen.queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();
     first.unmount();
 
     renderSection(ALL, { ...FARM, isActive: false });
     await screen.findByText('P1');
     expect(
-      screen.queryByRole('button', { name: 'Desactivar' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Eliminar' }),
+      screen.queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();
   });
 });
@@ -175,7 +173,7 @@ describe('deleting a plot created by mistake', () => {
     const requests = deleteRequests();
     const { user } = renderSection();
 
-    await user.click(await screen.findByRole('button', { name: 'Eliminar' }));
+    await chooseFromActionsMenu(user, 'Eliminar');
     await user.click(
       await screen.findByRole('button', { name: 'Eliminar parcela' }),
     );
@@ -198,7 +196,7 @@ describe('deleting a plot created by mistake', () => {
     );
     const { user } = renderSection();
 
-    await user.click(await screen.findByRole('button', { name: 'Eliminar' }));
+    await chooseFromActionsMenu(user, 'Eliminar');
     await user.click(
       await screen.findByRole('button', { name: 'Eliminar parcela' }),
     );
@@ -217,7 +215,7 @@ describe('deleting a plot created by mistake', () => {
     deleteRequests(404, apiError(404, 'not_found', 'No encontrada.'));
     const { user } = renderSection();
 
-    await user.click(await screen.findByRole('button', { name: 'Eliminar' }));
+    await chooseFromActionsMenu(user, 'Eliminar');
     await user.click(
       await screen.findByRole('button', { name: 'Eliminar parcela' }),
     );
@@ -235,7 +233,7 @@ describe('deleting a plot created by mistake', () => {
     deleteRequests(409, apiError(409, 'stale_version', 'Cambió.'));
     const { user } = renderSection();
 
-    await user.click(await screen.findByRole('button', { name: 'Eliminar' }));
+    await chooseFromActionsMenu(user, 'Eliminar');
     await user.click(
       await screen.findByRole('button', { name: 'Eliminar parcela' }),
     );
