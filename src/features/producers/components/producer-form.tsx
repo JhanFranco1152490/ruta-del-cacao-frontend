@@ -61,7 +61,7 @@ export function ProducerForm({
   );
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8">
       <Breadcrumb
         items={[
           { label: 'Productores', href: '/productores' },
@@ -77,6 +77,7 @@ export function ProducerForm({
         ]}
       />
       <PageHeader
+        compact
         className="mt-5"
         eyebrow="Administración"
         title={producer ? 'Editar productor' : 'Registrar productor'}
@@ -87,7 +88,7 @@ export function ProducerForm({
         }
       />
       <form
-        className="mt-8 grid items-start gap-6 lg:grid-cols-2"
+        className="mt-5 grid items-start gap-5 lg:grid-cols-2"
         noValidate
         onSubmit={handleSubmit(save, clearError)}
       >
@@ -135,58 +136,61 @@ export function ProducerForm({
           </FormSection>
         </div>
 
-        <FormSection title="Datos del productor">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <TextField
-              label="Nombres"
-              maxLength={100}
-              error={errors.first_name?.message}
-              {...register('first_name')}
-            />
-            <TextField
-              label="Apellidos"
-              maxLength={100}
-              error={errors.last_name?.message}
-              {...register('last_name')}
-            />
-            <MunicipalitySelectField
-              control={control}
-              error={errors.municipality_code?.message}
-              label="Municipio"
-              name="municipality_code"
-            />
-            <TextField
-              label="Fecha de vinculación"
-              type="date"
-              error={errors.joined_on?.message}
-              {...register('joined_on')}
-            />
+        {/* Guardar queda junto a los datos, a la altura de Contacto, para que todo se vea sin bajar. */}
+        <div className="space-y-6">
+          <FormSection title="Datos del productor">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <TextField
+                label="Nombres"
+                maxLength={100}
+                error={errors.first_name?.message}
+                {...register('first_name')}
+              />
+              <TextField
+                label="Apellidos"
+                maxLength={100}
+                error={errors.last_name?.message}
+                {...register('last_name')}
+              />
+              <MunicipalitySelectField
+                control={control}
+                error={errors.municipality_code?.message}
+                label="Municipio"
+                name="municipality_code"
+              />
+              <TextField
+                label="Fecha de vinculación"
+                type="date"
+                error={errors.joined_on?.message}
+                {...register('joined_on')}
+              />
+            </div>
+          </FormSection>
+
+          {generalError && (
+            <p
+              className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
+              role="alert"
+            >
+              {generalError}
+            </p>
+          )}
+
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Link
+              className={buttonVariants({
+                variant: 'outline',
+                size: 'office',
+                className: 'border-input bg-card px-4',
+              })}
+              href={cancelPath}
+            >
+              Cancelar
+            </Link>
+            <Button className="h-11 px-6" disabled={isSaving} type="submit">
+              {isSaving ? 'Guardando…' : submitLabel}
+            </Button>
           </div>
-        </FormSection>
-
-        {generalError && (
-          <p
-            className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err lg:col-span-2"
-            role="alert"
-          >
-            {generalError}
-          </p>
-        )}
-
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end lg:col-span-2">
-          <Link
-            className={buttonVariants({
-              variant: 'outline',
-              size: 'office',
-              className: 'border-input bg-card px-4',
-            })}
-            href={cancelPath}
-          >
-            Cancelar
-          </Link>
-          <Button className="h-11 px-6" disabled={isSaving} type="submit">
-            {isSaving ? 'Guardando…' : submitLabel}
-          </Button>
         </div>
       </form>
     </div>
