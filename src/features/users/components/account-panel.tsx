@@ -40,6 +40,7 @@ export function AccountPanel({
     association && user.is_superuser ? null : {},
   );
   const lock = useRef(false);
+  const existing = selected !== 'nueva' && isUuid(selected);
   function onBusy(value: boolean) {
     lock.current = value;
     setBusy(value);
@@ -51,8 +52,17 @@ export function AccountPanel({
         if (!open && !lock.current) close();
       }}
     >
-      <SheetContent side="right" showCloseButton={!busy}>
-        <SheetHeader>
+      {/* Una cuenta que ya existe tiene su franja de color hasta los bordes y su propio relleno. */}
+      <SheetContent
+        className={
+          existing
+            ? 'gap-0 p-0 sm:max-w-lg has-[[data-band]]:[&_[data-slot=sheet-close]]:text-white has-[[data-band]]:[&_[data-slot=sheet-close]]:hover:bg-white/15 has-[[data-band]]:[&_[data-slot=sheet-close]]:hover:text-white'
+            : undefined
+        }
+        side="right"
+        showCloseButton={!busy}
+      >
+        <SheetHeader className={existing ? 'sr-only' : undefined}>
           <SheetTitle>
             {selected === 'nueva'
               ? !chosen

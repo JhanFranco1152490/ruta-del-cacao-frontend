@@ -362,7 +362,36 @@ describe('las fincas de una cuenta que ya existe', () => {
     expect(
       await within(detail).findByText('Fincas en las que trabaja'),
     ).toBeVisible();
-    expect(within(detail).getByText('La Esperanza, El Recreo')).toBeVisible();
+    expect(within(detail).getByText('La Esperanza')).toBeVisible();
+    expect(within(detail).getByText('El Recreo')).toBeVisible();
+  });
+
+  it('dice «Todas las fincas» y qué alcance admite cada rol', async () => {
+    mockAccount({
+      ...account,
+      farms: [],
+      all_farms: true,
+      roles: [
+        {
+          id: sellerId,
+          code: 'sales_manager',
+          name: 'Comercializador',
+          farm_scope: 'many',
+        },
+      ],
+    });
+    open(`?cuenta=${id}`);
+
+    const detail = await screen.findByRole('dialog', {
+      name: 'Detalle de la cuenta',
+    });
+
+    expect(await within(detail).findByText('Todas las fincas')).toBeVisible();
+    expect(
+      within(detail).getByText('Incluye las que se registren después.'),
+    ).toBeVisible();
+    expect(within(detail).getByText('Comercializador')).toBeVisible();
+    expect(within(detail).getByText('Una o varias fincas')).toBeVisible();
   });
 
   it('avisa cuando a un empleado de campo le falta finca', async () => {
@@ -401,7 +430,10 @@ describe('las fincas de una cuenta que ya existe', () => {
       screen.getByRole('button', { name: 'Guardar cambios' }),
     );
 
-    expect(await screen.findByText('La Esperanza, El Recreo')).toBeVisible();
+    const detail = await screen.findByRole('dialog', {
+      name: 'Detalle de la cuenta',
+    });
+    expect(await within(detail).findByText('El Recreo')).toBeVisible();
     expect(updates[0]).toMatchObject({ farm_ids: ['farm-a', 'farm-b'] });
   });
 
@@ -465,7 +497,10 @@ describe('las fincas de una cuenta que ya existe', () => {
     });
     open(`?cuenta=${id}`);
 
-    expect(await screen.findByText('Cerrada (inactiva)')).toBeVisible();
+    const detail = await screen.findByRole('dialog', {
+      name: 'Detalle de la cuenta',
+    });
+    expect(await within(detail).findByText('(inactiva)')).toBeVisible();
     await userEvent.click(
       await screen.findByRole('button', { name: 'Editar datos' }),
     );

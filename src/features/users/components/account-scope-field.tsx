@@ -1,5 +1,5 @@
 'use client';
-import { TriangleAlert } from 'lucide-react';
+import { MapPin, TriangleAlert } from 'lucide-react';
 import { CheckboxField } from '@/components/checkbox-field';
 import { useSession } from '@/hooks/use-session';
 import { useFarmOptions } from '@/lib/api/farm-options';
@@ -105,13 +105,15 @@ export function AccountScopeField({
         : 'Solo verá y registrará lo de las fincas que marques.';
 
   return (
-    <>
+    <div className="space-y-3 rounded-[var(--radius-card)] border border-border p-4">
       <fieldset
         aria-invalid={Boolean(error)}
         aria-describedby={error ? 'account-scope-error' : 'account-scope-hint'}
+        className="space-y-1.5"
         disabled={disabled}
       >
-        <legend className="mb-2 font-bold text-selva">
+        <legend className="mb-2 flex items-center gap-2 font-bold text-selva">
+          <MapPin aria-hidden="true" className="size-4 text-cobre" />
           {single
             ? 'Finca en la que trabaja'
             : 'Alcance: fincas en las que trabaja'}
@@ -128,7 +130,11 @@ export function AccountScopeField({
         ) : (
           <>
             {offerAll && offerSome && (
-              <div role="radiogroup" aria-label="Alcance" className="mb-1">
+              <div
+                role="radiogroup"
+                aria-label="Alcance"
+                className="mb-3 space-y-2"
+              >
                 <ScopeRadio
                   checked={scope.all_farms}
                   label="Todas las fincas, también las que se registren después"
@@ -144,7 +150,7 @@ export function AccountScopeField({
               </div>
             )}
             {!scope.all_farms && (
-              <>
+              <div className="space-y-2 pl-2">
                 {farms.isPending && <p role="status">Cargando fincas…</p>}
                 {listed.map((farm) =>
                   single ? (
@@ -173,7 +179,7 @@ export function AccountScopeField({
                     />
                   ),
                 )}
-              </>
+              </div>
             )}
           </>
         )}
@@ -187,7 +193,7 @@ export function AccountScopeField({
           {error}
         </p>
       )}
-    </>
+    </div>
   );
 }
 
@@ -203,7 +209,7 @@ function ScopeRadio({
   name?: string;
 }) {
   return (
-    <label className="flex min-h-11 items-center gap-3">
+    <label className="flex min-h-11 items-center gap-3 rounded-md border border-border px-3 has-checked:border-selva has-checked:bg-selva/5 has-checked:font-bold">
       <input
         checked={checked}
         className="size-5 accent-selva"

@@ -155,6 +155,18 @@ describe('FarmPlotsSection', () => {
     expect(await screen.findByText('Enfocado: a')).toBeInTheDocument();
   });
 
+  it('also offers to show the plot on the map from its menu', async () => {
+    const user = userEvent.setup();
+    Element.prototype.scrollIntoView = vi.fn();
+    server.use(plotsHandler([buildPlot({ id: 'a', boundary: BOUNDARY })]));
+    renderSection();
+    await screen.findByRole('button', { name: 'Ver P1 en el mapa' });
+
+    await chooseFromActionsMenu(user, 'Ver en el mapa');
+
+    expect(await screen.findByText('Enfocado: a')).toBeInTheDocument();
+  });
+
   it('starts with the map hidden on a phone and shows it when asked to show a plot', async () => {
     vi.mocked(useIsDesktop).mockReturnValue(false);
     const user = userEvent.setup();

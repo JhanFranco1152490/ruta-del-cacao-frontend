@@ -6,6 +6,8 @@ import type { Grouping } from './use-plot-filters';
 export type SectionHeader = {
   level: 'device' | 'producer' | 'farm';
   label: string;
+  // Solo en el encabezado de una finca ya registrada en el servidor: a donde lleva su nombre.
+  farmId?: string;
   // El grupo empezó en la página anterior.
   continues: boolean;
 };
@@ -79,6 +81,7 @@ export function sectionPlots(
       headers.push({
         level: 'farm',
         label: plot.farm.name ?? PENDING_FARM_LABEL,
+        farmId: plot.farm.name ? plot.farm.id : undefined,
         continues: first && !!before && before.farm.id === plot.farm.id,
       });
     }
