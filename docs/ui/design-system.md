@@ -167,6 +167,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `PermissionMatrix` | Matriz permisos × roles | Roles y permisos |
 | `CheckboxField` | Compone la casilla de shadcn/ui con `FormField`: etiqueta, ayuda o error, explicación de deshabilitado y foco cobre; reutiliza la accesibilidad de Base UI | Selección de roles y permisos |
 | `SearchSelect` | Lista que se abre al enfocar y se acota al escribir, en lugar del select nativo, con una entrada fija opcional de «Todas…» y grupos. Se filtra en el navegador (lista cargada) o avisa lo escrito (lista del servidor). `ProducerFilter` y `FarmFilter` se arman con él. Regla: más de unas 10 opciones o lista que crece, `SearchSelect`; lista corta y fija (tipo, etapa, mes, estados), el select nativo | Finca, parcela, productor, municipio |
+| `ActionsMenu` | El botón «⋯» (44 px, con `aria-label` «Más acciones de …») que reúne lo que no se hace a diario en una tarjeta o fila: editar, activar, desactivar, eliminar, descartar. Las opciones son `MenuItem`; las que piden confirmación abren su diálogo desde fuera del menú (con `ConfirmControl`), porque el menú se desmonta al cerrarse. Cada dominio arma su propio menú | Tarjetas de fincas y parcelas |
 | `Toaster` / `notify` | Aviso flotante de lo que terminó bien («Finca actualizada»), basado en el Toast de Base UI. Se invoca con `notify.success / info / warning / error` desde cualquier archivo. Dura 5 s (8 s con acción, p. ej. «Ver productor»); el de error no se cierra solo. Botón de cerrar de 44 px y cierre deslizando, para usarlo con guantes; sin movimiento si el sistema lo pide. Hasta 3 a la vez: abajo a la derecha en pantallas anchas y abajo, a todo el ancho, en celular. Solo para lo que terminó: lo pendiente de enviar y los errores del servidor siguen en la bandeja y el indicador, y la validación junto al campo | Toda la app |
 | `MaskedValue` | Muestra `CC ••••4821` y registra en bitácora al revelar | Productores, usuarios |
 | `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos, página no encontrada y de error |
@@ -215,6 +216,32 @@ poscosecha cobre, calidad azul). Nunca emojis.
   itálica. Los botones del encabezado siguen siendo claros (fondo blanco, texto oscuro).
 - **Título de página:** H1 en serif con un subrayado `--cobre` de 48 × 4 px debajo.
 - **Lista:** PageHeader + buscador + chips de filtro + tabla + paginación + fila de contexto al pie.
+- **Tarjeta de lista compacta:** nombre y estado en una fila, los datos en una o dos líneas, y al
+  pie la acción principal (ancho completo, p. ej. «Ver detalle»), un botón de icono por cada atajo
+  frecuente (ver en el mapa, programar) y el «⋯» con el resto, pero solo si el resto son al menos
+  dos acciones: con dos acciones en total van las dos como botones. Lo que necesita atención (corregir
+  un registro que no llegó al servidor) queda a la vista, no en el menú. Con ancho, 2 o 3 columnas.
+- **Tabla en celular:** cada fila se vuelve una tarjeta compacta de dos o tres líneas (nombre y estado
+  arriba, los datos debajo sin etiquetas, y toda la tarjeta abre el registro con una flecha). La
+  versión «etiqueta: valor» por línea hacía la lista cuatro veces más larga.
+- **Botones de acción:** variante `action` (borde y texto `--selva` sobre blanco) para los botones de
+  tarjetas y cabeceras, que el `outline` beige no distinguía de la tarjeta.
+- **Mapa a pantalla completa:** los mapas de consulta lo ofrecen con un botón junto a «ocultar». Es una
+  capa fija sobre la página (no la API nativa, que no funciona en iPhone) que se cierra con el botón o
+  con Esc; los editores no la tienen porque sus botones están fuera del recuadro.
+- **Tarjeta de parcela:** código, área y estado a la izquierda y, a la derecha, un botón de icono por
+  cada atajo (ver en el mapa, programar una actividad) y el «⋯». La caracterización va en su franja,
+  con «Editar» y el historial dentro: lo de la ficha vive con la ficha.
+- **Detalle de un registro en hoja:** al costado en pantallas anchas y desde abajo en celular, con una
+  franja `--selva` arriba (nombre, tipo y recuentos) y el contenido agrupado en secciones plegables
+  (los permisos de un rol, por área).
+- **Filtros de lista:** una sola fila con la búsqueda y los selects (los poco usados, tras «Más filtros»), sin etiquetas visibles (el
+  placeholder dice qué se filtra; la etiqueta sigue ahí para los lectores de pantalla). En el
+  celular, la búsqueda y un botón «Filtros» con el número de filtros activos que despliega el resto.
+- **Mapa junto a una lista:** el mapa y su resumen se ocultan juntos («Mapa y resumen ocultos»); en
+  el celular empiezan ocultos para que la lista quede arriba, y pedir ver una forma en el mapa lo
+  muestra. Con ancho, el mapa de una finca va al lado de sus parcelas y se queda a la vista
+  mientras se recorre la lista.
 - **Ficha:** dos columnas (2/3 contenido, 1/3 relaciones e historial de cambios).
 - **Formulario de oficina:** columna de 520 px con cards por sección; el mapa o la vista previa
   ocupa el resto.

@@ -23,8 +23,7 @@ import { useFarmMapMode } from '../use-farm-map-mode';
 import { useLocalFarms } from '../use-local-farms';
 import { FarmCardList } from './farm-card-list';
 import { FarmFiltersBar } from './farm-filters-bar';
-import { FarmQueueActions } from './farm-queue-actions';
-import { FarmServerActions } from './farm-server-actions';
+import { FarmCardActions } from './farm-card-actions';
 import { FarmsMap } from './farms-map';
 
 const isQueued = (farm: FarmListItem) =>
@@ -91,9 +90,9 @@ export function FarmListScreen() {
     );
 
   const renderActions = (farm: FarmListItem) =>
-    isQueued(farm)
-      ? (canAdd || canChange) && <FarmQueueActions farm={farm} />
-      : canChange && <FarmServerActions farm={farm} />;
+    (isQueued(farm) ? canAdd || canChange : canChange) && (
+      <FarmCardActions farm={farm} />
+    );
 
   const emptyState =
     filters.query.search || filters.municipality || filters.producer ? (
@@ -119,8 +118,9 @@ export function FarmListScreen() {
     );
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
       <PageHeader
+        compact
         eyebrow="Gestión de fincas"
         title={isAssociation ? 'Fincas' : 'Mis fincas'}
         description={
@@ -137,7 +137,7 @@ export function FarmListScreen() {
           ) : undefined
         }
       />
-      <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+      <section className="mt-5 space-y-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card">
         <FarmFiltersBar
           filters={filters}
           pickProducer={isAssociation && canPickProducer}

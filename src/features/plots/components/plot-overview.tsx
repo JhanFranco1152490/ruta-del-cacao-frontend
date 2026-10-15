@@ -22,7 +22,10 @@ import { PlotCardActions } from './plot-card-actions';
 import { PlotCharacterizationProgress } from './plot-characterization-progress';
 import { PlotFarmLine } from './plot-farm-line';
 import { PlotList } from './plot-list';
-import { PlotOverviewFiltersBar } from './plot-overview-filters-bar';
+import {
+  PlotGroupingControl,
+  PlotOverviewFiltersBar,
+} from './plot-overview-filters-bar';
 import { PlotSections } from './plot-sections';
 
 // Lo que otro dominio agrega a cada tarjeta (la ficha agronómica, con sus acciones). Recibe los
@@ -74,12 +77,13 @@ export function PlotOverview({
 
   const showOnMap = (plot: OverviewPlot) => {
     setFocus({ shapeId: plot.id });
-    // La lista está debajo del mapa: se sube hasta él para ver la parcela.
-    mapRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // En el celular el mapa está arriba de la lista: se sube hasta él para ver la parcela. Con ancho
+    // ya está a la vista y no se mueve nada.
+    mapRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   };
 
   return (
-    <section className="mt-8 space-y-5 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+    <section className="mt-5 space-y-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card sm:p-5">
       <PlotOverviewFiltersBar filters={filters} pickProducer={!ownProducer} />
       {overview.queueError && (
         <ErrorState message="No fue posible leer las parcelas guardadas en este dispositivo." />
@@ -102,83 +106,106 @@ export function PlotOverview({
           {formatDateTime(new Date(overview.savedAt).toISOString())}.
         </p>
       )}
-      {!overview.isLoading && (
-        <div className="scroll-mt-6" ref={mapRef}>
-          <PointsMapPanel
-            emptyMessage="Ninguna parcela de esta página tiene polígono para mostrar."
-            focus={focus}
-            label="Mapa de las parcelas"
-            loadProvider={loadPointsMapProvider!}
-            onSelectShape={(id) => {
-              setHighlightedId(id);
-              document
-                .getElementById(`plot-${id}-code`)
-                ?.closest('article')
-                ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }}
-            points={[]}
-            shapes={plotsToShapes(plots)}
-            toolbar={
-              overview.counts && (
-                <PlotCharacterizationProgress
-                  done={overview.counts.done}
-                  pending={overview.counts.pending}
-                />
-              )
-            }
-          />
-        </div>
-      )}
-      {overview.isLoading ? (
-        <div aria-label="Cargando parcelas" role="status">
-          <Skeleton className="h-40" />
-        </div>
-      ) : plots.length ? (
-        <PlotSections
-          renderList={(groupPlots) => (
-            <PlotList
-              highlightedId={highlightedId}
-              label={labelOf(sections, groupPlots)}
-              onShowOnMap={showOnMap}
-              plots={groupPlots}
-              renderActions={(plot) => (
-                <PlotCardActions farm={plot.farm} plot={plot} />
-              )}
-              renderDetails={(plot) => (
-                <>
-                  <PlotFarmLine
-                    canOpenProducer={canOpenProducer}
-                    farm={plot.farm}
-                    farmHref={farmHref}
-                    showProducer={!ownProducer}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
+        {!overview.isLoading && (
+          <div
+            className="scroll-mt-6 lg:sticky lg:top-20 lg:order-2"
+            ref={mapRef}
+          >
+            <PointsMapPanel
+              emptyMessage="Ninguna parcela de esta página tiene polígono para mostrar."
+              focus={focus}
+              heightClassName="h-64 lg:h-[min(32rem,calc(100dvh-7rem))]"
+              hiddenOnMobile
+              label="Mapa de las parcelas"
+              loadProvider={loadPointsMapProvider!}
+              onSelectShape={(id) => {
+                setHighlightedId(id);
+                document
+                  .getElementById(`plot-${id}-code`)
+                  ?.closest('article')
+                  ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              }}
+              points={[]}
+              shapes={plotsToShapes(plots)}
+              toolbar={
+                overview.counts && (
+                  <PlotCharacterizationProgress
+                    done={overview.counts.done}
+                    pending={overview.counts.pending}
                   />
-                  {renderPlotDetails?.(plot, pagePlotIds)}
-                </>
-              )}
+                )
+              }
             />
+          </div>
+        )}
+        <div className="space-y-3 lg:order-1">
+          <PlotGroupingControl filters={filters} pickProducer={!ownProducer} />
+          {overview.isLoading ? (
+            <div aria-label="Cargando parcelas" role="status">
+              <Skeleton className="h-40" />
+            </div>
+          ) : plots.length ? (
+            <PlotSections
+              renderList={(groupPlots) => {
+                const headers =
+                  sections.find((section) => section.plots === groupPlots)
+                    ?.headers ?? [];
+                const hasHeader = (level: string) =>
+                  headers.some((header) => header.level === level);
+                return (
+                  <PlotList
+                    className="grid-cols-1 2xl:grid-cols-2"
+                    highlightedId={highlightedId}
+                    label={labelOf(sections, groupPlots)}
+                    onShowOnMap={showOnMap}
+                    plots={groupPlots}
+                    renderActions={(plot) => (
+                      <PlotCardActions farm={plot.farm} plot={plot} />
+                    )}
+                    renderDetails={(plot) => (
+                      <>
+                        <PlotFarmLine
+                          canOpenProducer={canOpenProducer}
+                          farm={plot.farm}
+                          farmHref={farmHref}
+                          showFarm={!hasHeader('farm')}
+                          showProducer={
+                            !ownProducer &&
+                            (filters.grouping === 'ninguno' ||
+                              hasHeader('device'))
+                          }
+                        />
+                        {renderPlotDetails?.(plot, pagePlotIds)}
+                      </>
+                    )}
+                  />
+                );
+              }}
+              sections={sections}
+            />
+          ) : (
+            !overview.serverError &&
+            !overview.serverUnreachable &&
+            (filters.filtered ? (
+              <EmptyState
+                title="No hay parcelas que coincidan"
+                description="Prueba con otro código, otra finca, otro productor u otra caracterización."
+              />
+            ) : (
+              <EmptyState
+                title={
+                  ownProducer
+                    ? 'Aún no tienes parcelas registradas'
+                    : 'Aún no hay parcelas registradas'
+                }
+                description="Las parcelas se registran dentro de una finca, con su código, su área y, si quieres, su polígono."
+                action={emptyAction}
+              />
+            ))
           )}
-          sections={sections}
-        />
-      ) : (
-        !overview.serverError &&
-        !overview.serverUnreachable &&
-        (filters.filtered ? (
-          <EmptyState
-            title="No hay parcelas que coincidan"
-            description="Prueba con otro código, otra finca, otro productor u otra caracterización."
-          />
-        ) : (
-          <EmptyState
-            title={
-              ownProducer
-                ? 'Aún no tienes parcelas registradas'
-                : 'Aún no hay parcelas registradas'
-            }
-            description="Las parcelas se registran dentro de una finca, con su código, su área y, si quieres, su polígono."
-            action={emptyAction}
-          />
-        ))
-      )}
+        </div>
+      </div>
       {overview.total !== undefined && (
         <Pagination
           label="parcelas"

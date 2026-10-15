@@ -1,10 +1,10 @@
 'use client';
-import { cn } from 'cn';
 import { PageHeader } from '@/components/page-header';
 import { PermissionGate } from '@/components/permission-gate';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
+import { FilterRow } from '@/components/filter-row';
 import { ProducerFilter } from '@/components/producer-filter';
 import { useProducerSummary } from '@/lib/api/producer-options';
 import { useSession } from '@/hooks/use-session';
@@ -74,19 +74,22 @@ function RoleWorkspace({
         }
       />
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
-        <div
-          className={cn(
-            'grid gap-4',
-            pickProducer ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
-          )}
+        <FilterRow
+          activeCount={(filters.kind ? 1 : 0) + (filters.producer ? 1 : 0)}
+          search={
+            <TextField
+              hideLabel
+              label="Buscar roles"
+              value={filters.searchInput}
+              onChange={(event) => filters.setSearchInput(event.target.value)}
+              placeholder="Buscar por nombre"
+              type="search"
+              wrapperClassName="min-w-0 flex-1 sm:min-w-64"
+            />
+          }
         >
-          <TextField
-            label="Buscar roles"
-            value={filters.searchInput}
-            onChange={(event) => filters.setSearchInput(event.target.value)}
-            placeholder="Buscar por nombre"
-          />
           <SelectField
+            hideLabel
             label="Filtrar por tipo"
             value={filters.kind ?? ''}
             onChange={(event) => {
@@ -94,6 +97,7 @@ function RoleWorkspace({
                 (event.target.value || null) as Role['kind'] | null,
               );
             }}
+            wrapperClassName="w-full sm:w-48"
           >
             <option value="">Todos los tipos</option>
             <option value="fixed">Fijos</option>
@@ -102,6 +106,9 @@ function RoleWorkspace({
           </SelectField>
           {pickProducer && (
             <ProducerFilter
+              className="w-full sm:w-72"
+              hideLabel
+              placeholder="Productor: nombre, documento o código"
               producer={filters.producer}
               selected={selectedProducer}
               onSelect={(id) => {
@@ -112,7 +119,7 @@ function RoleWorkspace({
               }}
             />
           )}
-        </div>
+        </FilterRow>
         <RoleList filters={filters} open={panel.open} byProducer={superuser} />
       </section>
       {panel.selected !== null && (

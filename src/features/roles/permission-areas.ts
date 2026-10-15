@@ -49,3 +49,37 @@ export function groupPermissionsByArea(
     return rankA - rankB || a.area.localeCompare(b.area);
   });
 }
+
+export type RolePermissionGroup = {
+  area: string;
+  label: string;
+  items: { code: string; name: string }[];
+};
+
+// Lo que un rol tiene concedido, por área. El permiso trae su área en el código (`farms.view_farm`),
+// no como campo aparte, porque el rol solo manda el código y el nombre.
+export function groupRolePermissions(
+  details: readonly { code: string; name: string }[],
+): RolePermissionGroup[] {
+  const known = new Map<string, number>(
+    AREAS.map(({ area }, index) => [area, index]),
+  );
+  const labelOf = new Map<string, string>(
+    AREAS.map(({ area, label }) => [area, label]),
+  );
+  const groups = new Map<string, RolePermissionGroup>();
+  for (const item of details) {
+    const area = item.code.split('.')[0] ?? item.code;
+    let group = groups.get(area);
+    if (!group) {
+      group = { area, label: labelOf.get(area) ?? area, items: [] };
+      groups.set(area, group);
+    }
+    group.items.push(item);
+  }
+  return [...groups.values()].sort((a, b) => {
+    const rankA = known.get(a.area) ?? Number.POSITIVE_INFINITY;
+    const rankB = known.get(b.area) ?? Number.POSITIVE_INFINITY;
+    return rankA - rankB || a.area.localeCompare(b.area);
+  });
+}

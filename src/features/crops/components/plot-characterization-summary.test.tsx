@@ -55,7 +55,7 @@ function renderSummaries(
     queryClient = createTestQueryClient(),
     extra = null,
     pagePlotIds,
-    withActions,
+    withActions = true,
   }: {
     permissions?: string[];
     farmIsActive?: boolean;

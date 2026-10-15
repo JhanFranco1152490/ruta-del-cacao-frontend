@@ -28,6 +28,9 @@ const SIDE_CLASSES = {
   left: 'inset-y-0 left-0 w-72 max-w-full border-r data-open:slide-in-from-left data-closed:slide-out-to-left',
   right:
     'inset-y-0 right-0 w-full border-l sm:max-w-md data-open:slide-in-from-right data-closed:slide-out-to-right',
+  // Hoja que sube desde abajo: en celular deja ver la pantalla de atrás y se cierra deslizando.
+  bottom:
+    'inset-x-0 bottom-0 max-h-[92dvh] w-full rounded-t-2xl border-t data-open:slide-in-from-bottom data-closed:slide-out-to-bottom',
 } as const;
 
 function SheetContent({

@@ -26,7 +26,7 @@ export function FarmMapSummary({
   return (
     <aside
       aria-label="Resumen de fincas"
-      className="flex min-h-0 flex-col rounded-[var(--radius-card)] border border-border bg-card p-5 lg:h-[28rem]"
+      className="flex min-h-0 flex-col rounded-[var(--radius-card)] border border-border bg-card p-4 lg:h-80"
     >
       <p className="section-label">Resumen</p>
       <p className="mt-1 font-serif text-3xl text-selva">{farmsLabel(total)}</p>
@@ -36,7 +36,7 @@ export function FarmMapSummary({
           : `en ${rows.length} ${rows.length === 1 ? 'municipio' : 'municipios'}`}
       </p>
       {rows.length > 0 && (
-        <ul className="mt-4 max-h-80 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 lg:max-h-none">
+        <ul className="mt-3 max-h-64 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 lg:max-h-none">
           {rows.map(({ code, count, name }) => (
             <li key={code}>
               <button

@@ -101,7 +101,7 @@ export function ProducerTable({
                 role="cell"
                 className="px-4 py-4 text-left max-md:col-span-2 max-md:p-0"
               >
-                <div className="flex flex-wrap justify-start gap-2">
+                <div className="flex flex-wrap justify-start gap-2 max-md:[&>*]:flex-1 max-md:[&>*]:justify-center">
                   <Link
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-card px-3 text-xs font-extrabold text-selva hover:bg-surface-alt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selva"
                     href={`/productores/${producer.id}`}

@@ -1,13 +1,14 @@
 'use client';
 
 import { FarmFilter } from '@/components/farm-filter';
+import { FilterRow } from '@/components/filter-row';
 import { ProducerFilter } from '@/components/producer-filter';
 import { SegmentedControl } from '@/components/segmented-control';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { useSession } from '@/hooks/use-session';
-import { useFarmDetail } from '@/lib/api/farm-detail';
 import { onlyFarmOf } from '@/lib/farm-scope';
+import { useFarmDetail } from '@/lib/api/farm-detail';
 import { useProducerSummary } from '@/lib/api/producer-options';
 
 import type {
@@ -36,6 +37,86 @@ export function PlotOverviewFiltersBar({
   const selectedProducer = useProducerSummary(
     pickProducer ? (filters.producer ?? undefined) : undefined,
   );
+  return (
+    <FilterRow
+      activeCount={
+        (filters.farm ? 1 : 0) +
+        (filters.producer ? 1 : 0) +
+        (filters.characterization ? 1 : 0)
+      }
+      search={
+        <TextField
+          hideLabel
+          label="Buscar parcela"
+          onChange={(event) => filters.setSearchInput(event.target.value)}
+          placeholder="Código de la parcela"
+          type="search"
+          value={filters.searchInput}
+          wrapperClassName="min-w-0 flex-1 sm:w-52 sm:flex-none"
+        />
+      }
+    >
+      {/* Quien trabaja en una sola finca no tiene otra que buscar. */}
+      {!onlyFarmOf(user) && (
+        <FarmFilter
+          className="w-full sm:w-56"
+          farm={filters.farm ?? undefined}
+          hideLabel
+          label="Filtrar por finca"
+          onClear={() => void filters.setFarm(null)}
+          onSelect={(option) =>
+            void filters.setFarm(option.id, option.producer.id)
+          }
+          producer={filters.producer ?? undefined}
+          selectedLabel={filters.farm ? farm.data?.data.name : undefined}
+          showProducer={pickProducer}
+        />
+      )}
+      {pickProducer && (
+        <ProducerFilter
+          className="w-full sm:w-64"
+          hideLabel
+          label="Filtrar por productor"
+          onClear={() => void filters.setProducer(null)}
+          onSelect={(id) => void filters.setProducer(id)}
+          placeholder="Productor: nombre, documento o código"
+          producer={filters.producer ?? undefined}
+          selected={selectedProducer}
+          showTrigger={false}
+        />
+      )}
+      <SelectField
+        hideLabel
+        label="Caracterización"
+        onChange={(event) =>
+          void filters.setCharacterization(
+            (event.target.value || null) as CharacterizationState | null,
+          )
+        }
+        value={filters.characterization ?? ''}
+        wrapperClassName="w-full sm:w-52"
+      >
+        <option value="">Caracterización: todas</option>
+        {(Object.keys(CHARACTERIZATION_LABELS) as CharacterizationState[]).map(
+          (value) => (
+            <option key={value} value={value}>
+              {CHARACTERIZATION_LABELS[value]}
+            </option>
+          ),
+        )}
+      </SelectField>
+    </FilterRow>
+  );
+}
+
+// Cómo se agrupa la lista: va sobre las tarjetas y no en la fila de filtros, que ya está llena.
+export function PlotGroupingControl({
+  filters,
+  pickProducer = false,
+}: {
+  filters: ReturnType<typeof usePlotFilters>;
+  pickProducer?: boolean;
+}) {
   const groupings: { value: Grouping; label: string }[] = [
     { value: 'ninguno', label: 'Sin agrupar' },
     ...(pickProducer
@@ -43,73 +124,12 @@ export function PlotOverviewFiltersBar({
       : []),
     { value: 'finca', label: 'Por finca' },
   ];
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <TextField
-          label="Buscar parcela"
-          onChange={(event) => filters.setSearchInput(event.target.value)}
-          placeholder="Código de la parcela"
-          type="search"
-          value={filters.searchInput}
-          wrapperClassName="w-full max-w-md"
-        />
-        {/* Quien trabaja en una sola finca no tiene otra que buscar. */}
-        {!onlyFarmOf(user) && (
-          <FarmFilter
-            className="w-full sm:w-80"
-            farm={filters.farm ?? undefined}
-            label="Filtrar por finca"
-            onClear={() => void filters.setFarm(null)}
-            onSelect={(option) =>
-              void filters.setFarm(option.id, option.producer.id)
-            }
-            producer={filters.producer ?? undefined}
-            selectedLabel={filters.farm ? farm.data?.data.name : undefined}
-            showProducer={pickProducer}
-          />
-        )}
-        {pickProducer && (
-          <ProducerFilter
-            className="w-full sm:w-80"
-            label="Filtrar por productor"
-            onClear={() => void filters.setProducer(null)}
-            onSelect={(id) => void filters.setProducer(id)}
-            placeholder="Nombre, documento o código"
-            producer={filters.producer ?? undefined}
-            selected={selectedProducer}
-            showTrigger={false}
-          />
-        )}
-      </div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <SelectField
-          label="Caracterización"
-          onChange={(event) =>
-            void filters.setCharacterization(
-              (event.target.value || null) as CharacterizationState | null,
-            )
-          }
-          value={filters.characterization ?? ''}
-          wrapperClassName="w-full sm:w-56"
-        >
-          <option value="">Todas</option>
-          {(
-            Object.keys(CHARACTERIZATION_LABELS) as CharacterizationState[]
-          ).map((value) => (
-            <option key={value} value={value}>
-              {CHARACTERIZATION_LABELS[value]}
-            </option>
-          ))}
-        </SelectField>
-        <SegmentedControl
-          label="Agrupar"
-          onChange={(value) => void filters.setGrouping(value)}
-          options={groupings}
-          value={filters.grouping}
-        />
-      </div>
-    </div>
+    <SegmentedControl
+      label="Agrupar"
+      onChange={(value) => void filters.setGrouping(value)}
+      options={groupings}
+      value={filters.grouping}
+    />
   );
 }

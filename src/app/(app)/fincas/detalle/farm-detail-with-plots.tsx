@@ -16,23 +16,23 @@ export function FarmDetailWithPlots() {
         <FarmPlotsSection
           farm={farm}
           renderPlotDetails={(plot) => (
-            <>
-              <PlotCharacterizationSummary
-                farmId={farm.id}
-                farmIsActive={farm.isActive}
-                plot={{ id: plot.id, code: plot.code, isActive: plot.isActive }}
-              />
-              <SchedulePlotActivity
-                farm={{ id: farm.id, isActive: farm.isActive }}
-                plot={{
-                  id: plot.id,
-                  code: plot.code,
-                  isActive: plot.isActive,
-                  // Una parcela que sigue en la cola todavía no existe en el servidor.
-                  isSynced: !plot.queue,
-                }}
-              />
-            </>
+            <PlotCharacterizationSummary
+              farmId={farm.id}
+              farmIsActive={farm.isActive}
+              plot={{ id: plot.id, code: plot.code, isActive: plot.isActive }}
+            />
+          )}
+          renderPlotShortcuts={(plot) => (
+            <SchedulePlotActivity
+              farm={{ id: farm.id, isActive: farm.isActive }}
+              plot={{
+                id: plot.id,
+                code: plot.code,
+                isActive: plot.isActive,
+                // Una parcela que sigue en la cola todavía no existe en el servidor.
+                isSynced: !plot.queue,
+              }}
+            />
           )}
         />
       )}

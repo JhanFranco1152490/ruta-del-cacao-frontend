@@ -89,7 +89,9 @@ export function AccountWorkspace({
                 onClear={() => {
                   void filters.clearProducer();
                 }}
-                className="min-w-56 flex-1"
+                className="w-full sm:w-72"
+                hideLabel
+                placeholder="Productor: nombre, documento o código"
               />
             )
           }

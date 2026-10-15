@@ -14,6 +14,8 @@ type SelectFieldProps = Omit<
   hint?: string;
   id?: string;
   wrapperClassName?: string;
+  // Solo la etiqueta para lectores de pantalla: la primera opción dice qué se filtra.
+  hideLabel?: boolean;
 };
 
 export function SelectField({
@@ -22,6 +24,7 @@ export function SelectField({
   hint,
   id,
   wrapperClassName,
+  hideLabel,
   className,
   children,
   ...selectProps
@@ -31,6 +34,7 @@ export function SelectField({
       label={label}
       error={error}
       hint={hint}
+      hideLabel={hideLabel}
       id={id}
       className={wrapperClassName}
     >

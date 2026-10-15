@@ -29,6 +29,7 @@ export function ProducerFilter({
   placeholder = 'Nombre, documento o código de socio',
   showTrigger = true,
   compact = false,
+  hideLabel = false,
   className,
 }: {
   producer: string | undefined;
@@ -42,6 +43,8 @@ export function ProducerFilter({
   // Para una fila de filtros compactos: mismo tamaño que los demás y la etiqueta solo para lectores
   // de pantalla, así que el texto de ayuda debe decir qué se busca.
   compact?: boolean;
+  // Solo la etiqueta para lectores de pantalla, sin cambiar el tamaño.
+  hideLabel?: boolean;
   // Para encajar en la fila de filtros de quien lo use, junto a otros campos.
   className?: string;
 }) {
@@ -75,6 +78,7 @@ export function ProducerFilter({
       className={className}
       compact={compact}
       emptyMessage={emptyMessage}
+      hideLabel={hideLabel}
       hint={paginationHint}
       label={label}
       onChange={(option) => {

@@ -128,7 +128,7 @@ export function VarietyFormDialog({
             <Button
               aria-label={`Editar ${variety.name}`}
               className="h-11"
-              variant="outline"
+              variant="action"
             />
           ) : (
             <Button size="office" />

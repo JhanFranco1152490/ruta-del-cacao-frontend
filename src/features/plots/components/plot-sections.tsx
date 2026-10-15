@@ -40,12 +40,14 @@ export function PlotSections({
   renderList: (plots: readonly OverviewPlot[]) => ReactNode;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {sections.map((section) => (
-        <section className="space-y-3" key={section.key}>
-          {section.headers.map((header) => (
-            <GroupHeading header={header} key={header.level} />
-          ))}
+        <section className="space-y-2" key={section.key}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {section.headers.map((header) => (
+              <GroupHeading header={header} key={header.level} />
+            ))}
+          </div>
           {renderList(section.plots)}
         </section>
       ))}
