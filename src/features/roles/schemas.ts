@@ -10,12 +10,15 @@ export const roleSchema = z.object({
     .max(100, 'Usa máximo 100 caracteres.'),
   description: z.string().trim().max(255, 'Usa máximo 255 caracteres.'),
   permission_codes: z.array(z.string()),
+  // Qué alcance admiten las cuentas con el rol.
+  farm_scope: z.enum(['all', 'one', 'many']),
 });
 export type RoleValues = z.infer<typeof roleSchema>;
 export const roleDefaults = (role?: Role): RoleValues => ({
   name: role?.name ?? '',
   description: role?.description ?? '',
   permission_codes: role?.permissions ?? [],
+  farm_scope: role?.farm_scope ?? 'many',
 });
 export const toRoleRequest = (
   values: RoleValues,

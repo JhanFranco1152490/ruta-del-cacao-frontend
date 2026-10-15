@@ -66,6 +66,7 @@ export function ActivityDetailDialog({
     state,
     activity.activity_type,
     user,
+    activity.assignee.id,
     awaitingSync,
   );
   // La labor ya se hizo: lo que convenía hacer con el atraso dejó de importar.

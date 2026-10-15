@@ -24,6 +24,9 @@ import {
 type Schemas = components['schemas'];
 export type AgriculturalActivity = Schemas['AgriculturalActivity'];
 export type Assignee = Schemas['Assignee'];
+// Una cuenta de la lista de responsables: con la finca en la que trabaja (nula en el Productor,
+// que vale para todas) y si quien pregunta puede asignarle una labor.
+export type AssigneeOption = Schemas['AssigneeOption'];
 export type UsedInput = Schemas['UsedInputOutput'];
 export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
 export type ActivityUpdateRequest = Schemas['PatchedActivityUpdateRequest'];
@@ -196,7 +199,7 @@ export const useActivity = (userId: string | undefined, id: string) =>
 export async function fetchActivityAssignees(
   { producer }: { producer: string | null },
   signal?: AbortSignal,
-): Promise<Assignee[]> {
+): Promise<AssigneeOption[]> {
   const suffix = producer ? `?${new URLSearchParams({ producer })}` : '';
   const { results } = await apiFetch<Schemas['AssigneeList']>(
     `/api/agricultural-activities/assignees${suffix}`,

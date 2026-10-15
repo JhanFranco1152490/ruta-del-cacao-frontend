@@ -6,6 +6,7 @@ import { useSession } from '@/hooks/use-session';
 import { useFarmOptions } from '@/lib/api/farm-options';
 
 import type { AgriculturalInput, ExistingInput } from '../api';
+import { CatalogEntryDialog } from './catalog-entry-dialog';
 import { InputDeleteDialog } from './input-delete-dialog';
 import type { FarmChoice } from './input-farm-select';
 import { InputFormDialog } from './input-form-dialog';
@@ -14,8 +15,10 @@ import type { InputActionKind } from './input-row-actions';
 import { InputStatusDialog } from './input-status-dialog';
 
 export type PendingAction = {
-  kind: InputActionKind | 'create';
+  kind: InputActionKind | 'create' | 'catalog-entry';
   input?: AgriculturalInput;
+  // La búsqueda con la que abre la entrada de un insumo del catálogo.
+  search?: string;
 };
 
 // Las fincas entre las que elige el diálogo de una entrada o un conteo. Quien tiene un productor
@@ -72,6 +75,7 @@ export function InputDialogs({
   catalog,
   producer,
   chooseProducer,
+  employee = false,
   farms,
   farm,
   onClose,
@@ -82,6 +86,8 @@ export function InputDialogs({
   catalog: readonly AgriculturalInput[];
   producer: string | null;
   chooseProducer: boolean;
+  // Un empleado: limitado a sus fincas, sin cambiar la unidad de un insumo.
+  employee?: boolean;
   farms: readonly FarmChoice[];
   farm: string | null;
   onClose: () => void;
@@ -93,6 +99,7 @@ export function InputDialogs({
       <InputFormDialog
         catalog={catalog}
         chooseProducer={chooseProducer}
+        employeeFarms={employee ? farms : undefined}
         input={pending.input}
         onClose={onClose}
         onSaved={onSaved}
@@ -120,6 +127,17 @@ export function InputDialogs({
         input={pending.input}
         kind={pending.kind}
         listFarms={farms}
+        onClose={onClose}
+        onSaved={onSaved}
+      />
+    );
+  }
+  if (pending?.kind === 'catalog-entry') {
+    return (
+      <CatalogEntryDialog
+        farm={farm}
+        farms={farms}
+        initialSearch={pending.search}
         onClose={onClose}
         onSaved={onSaved}
       />

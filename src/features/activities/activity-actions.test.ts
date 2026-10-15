@@ -7,6 +7,7 @@ import { activityActions, canScheduleOn } from './activity-actions';
 const ALL = {
   permissions: [
     PERMISSIONS.ACTIVITIES_VIEW,
+    PERMISSIONS.ACTIVITIES_ADD,
     PERMISSIONS.ACTIVITIES_CHANGE,
     PERMISSIONS.ACTIVITIES_COMPLETE,
     PERMISSIONS.ACTIVITIES_DELETE,
@@ -57,7 +58,11 @@ describe('activityActions', () => {
       activityActions(
         'scheduled',
         'pruning',
-        only(PERMISSIONS.ACTIVITIES_COMPLETE),
+        {
+          ...only(PERMISSIONS.ACTIVITIES_COMPLETE),
+          id: 'u1',
+        },
+        'u1',
       ),
     ).toMatchObject({ edit: false, complete: true, remove: false });
     expect(
@@ -103,12 +108,60 @@ describe('activityActions', () => {
   });
 
   it('offers nothing while the completion waits in the device: the labor was done', () => {
-    expect(activityActions('scheduled', 'pruning', ALL, true)).toEqual({
+    expect(
+      activityActions('scheduled', 'pruning', ALL, undefined, true),
+    ).toEqual({
       edit: false,
       complete: false,
       remove: false,
       awaitsHealthModule: false,
     });
+  });
+});
+
+describe('who records the completion', () => {
+  const operator = {
+    id: 'u1',
+    permissions: [PERMISSIONS.ACTIVITIES_VIEW, PERMISSIONS.ACTIVITIES_COMPLETE],
+    all_farms: false,
+  };
+
+  it('lets a worker record only the activities assigned to it', () => {
+    expect(
+      activityActions('scheduled', 'pruning', operator, 'u1').complete,
+    ).toBe(true);
+    expect(
+      activityActions('scheduled', 'pruning', operator, 'u2').complete,
+    ).toBe(false);
+  });
+
+  it('lets whoever schedules record the activities of others', () => {
+    const foreman = {
+      ...operator,
+      permissions: [...operator.permissions, PERMISSIONS.ACTIVITIES_ADD],
+    };
+
+    expect(
+      activityActions('scheduled', 'pruning', foreman, 'u2').complete,
+    ).toBe(true);
+  });
+
+  it('lets the producer record the activities of others', () => {
+    expect(
+      activityActions(
+        'scheduled',
+        'pruning',
+        { ...operator, all_farms: true },
+        'u2',
+      ).complete,
+    ).toBe(true);
+  });
+
+  it('does not tell a worker about the health module of an activity of others', () => {
+    expect(
+      activityActions('scheduled', 'phytosanitary_monitoring', operator, 'u2')
+        .awaitsHealthModule,
+    ).toBe(false);
   });
 });
 

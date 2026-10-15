@@ -14,6 +14,7 @@ import { producerLabelOf } from '@/lib/format/producer';
 import type { ActivityOfDay } from '../activity-days';
 import { activityBadge } from '../activity-labels';
 import { OVERDUE_AFTER_DAYS } from '../activity-state';
+import { useAssigneeNote } from '../assignees';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -56,6 +57,7 @@ export function ActivityDetailFacts({
   const badge = activityBadge(item);
   const { assignee, completed_by: recorder } = activity;
   const done = state === 'done';
+  const note = useAssigneeNote(activity);
 
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-sm">
@@ -74,7 +76,7 @@ export function ActivityDetailFacts({
       <Fact label="Responsable">
         {assignee.full_name}
         {assignee.id === userId && <Aside>(tú)</Aside>}
-        {!assignee.is_active && <Aside>· Cuenta inactiva</Aside>}
+        {note && <Aside>· {note}</Aside>}
       </Fact>
       {showProducer && <ProducerFact producerId={activity.producer_id} />}
       {state === 'delayed' && item.completion !== 'pending' && (

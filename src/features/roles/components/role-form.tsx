@@ -21,6 +21,7 @@ import {
 } from '../schemas';
 import { notify } from '@/lib/notify';
 import { RolePermissionPicker } from './role-permission-picker';
+import { RoleScopeField } from './role-scope-field';
 
 export function RoleForm({
   role,
@@ -86,6 +87,7 @@ export function RoleForm({
           'name',
           'description',
           'permission_codes',
+          'farm_scope',
         ]);
         if (!result.applied || result.unmatched.length)
           setFailure(
@@ -136,6 +138,18 @@ export function RoleForm({
           maxLength={255}
           error={errors.description?.message}
           {...register('description')}
+        />
+        <Controller
+          name="farm_scope"
+          control={control}
+          render={({ field }) => (
+            <RoleScopeField
+              value={field.value}
+              onChange={field.onChange}
+              disabled={isSubmitting}
+              error={errors.farm_scope?.message}
+            />
+          )}
         />
         <Controller
           name="permission_codes"

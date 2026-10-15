@@ -127,6 +127,23 @@ export interface paths {
         patch: operations["agricultural_inputs_partial_update"];
         trace?: never;
     };
+    "/api/agricultural-inputs/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Busca por nombre en todo el catálogo activo del productor, para registrar la entrada de un insumo que todavía no está en la finca de quien pregunta. Hasta 20 resultados, con `search` de 2 caracteres o más. Solo los datos del insumo: nunca las existencias de otras fincas. */
+        get: operations["agricultural_inputs_catalog_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/activation/confirm": {
         parameters: {
             query?: never;
@@ -707,6 +724,9 @@ export interface components {
             readonly identity_document: string;
             readonly phone: string | null;
             readonly producer: components["schemas"]["AccountProducer"] | null;
+            readonly farms: components["schemas"]["AccountFarm"][];
+            readonly needs_farm: boolean;
+            readonly all_farms: boolean;
             readonly roles: components["schemas"]["AccountRole"][];
             readonly status: string;
             readonly activation_pending: boolean;
@@ -725,6 +745,8 @@ export interface components {
             role_ids: string[];
             /** Format: uuid */
             producer_id?: string;
+            farm_ids?: string[];
+            all_farms?: boolean;
         };
         AccountCreated: {
             /** Format: uuid */
@@ -739,6 +761,9 @@ export interface components {
             readonly identity_document: string;
             readonly phone: string | null;
             readonly producer: components["schemas"]["AccountProducer"] | null;
+            readonly farms: components["schemas"]["AccountFarm"][];
+            readonly needs_farm: boolean;
+            readonly all_farms: boolean;
             readonly roles: components["schemas"]["AccountRole"][];
             readonly status: string;
             readonly activation_pending: boolean;
@@ -746,6 +771,12 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
             readonly activation_email_sent: boolean;
+        };
+        AccountFarm: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_active: boolean;
         };
         AccountProducer: {
             /** Format: uuid */
@@ -761,9 +792,12 @@ export interface components {
             id: string;
             code: string | null;
             name: string;
+            readonly farm_scope: string | null;
         };
         AccountRoleIdsRequest: {
             role_ids: string[];
+            farm_ids?: string[];
+            all_farms?: boolean;
         };
         /**
          * @description * `created` - Caracterización registrada
@@ -897,6 +931,8 @@ export interface components {
             package_size?: string | null;
             /** Format: uuid */
             producer_id?: string;
+            /** Format: uuid */
+            farm_id?: string;
         };
         AgriculturalInputList: {
             results: components["schemas"]["AgriculturalInput"][];
@@ -915,7 +951,16 @@ export interface components {
             is_active: boolean;
         };
         AssigneeList: {
-            results: components["schemas"]["Assignee"][];
+            results: components["schemas"]["AssigneeOption"][];
+        };
+        AssigneeOption: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+            farm_ids: string[];
+            all_farms: boolean;
+            assignable: boolean;
         };
         CacaoVariety: {
             /** Format: uuid */
@@ -932,6 +977,19 @@ export interface components {
         };
         CacaoVarietyList: {
             results: components["schemas"]["CacaoVariety"][];
+        };
+        CatalogInput: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly input_type: components["schemas"]["InputTypeEnum"];
+            readonly unit: components["schemas"]["UnitEnum"];
+            readonly package_type: (components["schemas"]["PackageTypeEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: decimal */
+            readonly package_size: string | null;
+        };
+        CatalogInputList: {
+            results: components["schemas"]["CatalogInput"][];
         };
         CompletionRequest: {
             /** Format: date */
@@ -1035,6 +1093,13 @@ export interface components {
             first_name: string;
             last_name: string;
         };
+        /**
+         * @description * `all` - Siempre todas las fincas
+         *     * `one` - Una sola finca
+         *     * `many` - Una o varias fincas
+         * @enum {string}
+         */
+        FarmScopeEnum: "all" | "one" | "many";
         InputMovement: {
             /** Format: uuid */
             readonly id: string;
@@ -1341,6 +1406,8 @@ export interface components {
             status?: components["schemas"]["StatusEnum"];
         };
         PatchedAccountUpdateRequest: {
+            farm_ids?: string[];
+            all_farms?: boolean;
             /** Format: email */
             email?: string;
             document_type?: components["schemas"]["DocumentTypeEnum"];
@@ -1418,6 +1485,7 @@ export interface components {
             name?: string;
             description?: string;
             permission_codes?: string[];
+            farm_scope?: components["schemas"]["FarmScopeEnum"];
         };
         Permission: {
             code: string;
@@ -1619,6 +1687,7 @@ export interface components {
             readonly identity_document: string;
             readonly phone: string | null;
             readonly producer: components["schemas"]["ProfileProducer"] | null;
+            readonly farms: components["schemas"]["AccountFarm"][];
         };
         ProfileProducer: {
             /** Format: uuid */
@@ -1645,6 +1714,7 @@ export interface components {
             readonly kind: components["schemas"]["RoleKindEnum"];
             readonly name: string;
             readonly description: string;
+            readonly farm_scope: (components["schemas"]["FarmScopeEnum"] | components["schemas"]["NullEnum"]) | null;
             /** Format: uuid */
             readonly producer_id: string | null;
             readonly producer: components["schemas"]["RoleProducer"] | null;
@@ -1658,6 +1728,8 @@ export interface components {
             permission_codes?: string[];
             /** Format: uuid */
             producer_id?: string;
+            /** @default many */
+            farm_scope: components["schemas"]["FarmScopeEnum"];
         };
         /**
          * @description * `fixed` - Fijo
@@ -1694,6 +1766,8 @@ export interface components {
             /** Format: uuid */
             readonly producer_id: string | null;
             readonly is_superuser: boolean;
+            readonly farms: components["schemas"]["AccountFarm"][];
+            readonly all_farms: boolean;
         };
         /**
          * @description * `none` - A plena exposición
@@ -2296,6 +2370,8 @@ export interface operations {
     agricultural_inputs_list: {
         parameters: {
             query?: {
+                /** @description Solo los insumos que están en esta finca. */
+                farm?: string;
                 /** @description Solo la cuenta técnica: el productor cuyo catálogo se quiere ver. */
                 producer?: string;
             };
@@ -2574,6 +2650,51 @@ export interface operations {
                 };
             };
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_inputs_catalog_retrieve: {
+        parameters: {
+            query: {
+                search: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogInputList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4934,6 +5055,7 @@ export interface operations {
         parameters: {
             query?: {
                 activation_pending?: boolean;
+                farm?: string;
                 municipality?: string;
                 /** @description Qué campo usar para ordenar los resultados. */
                 ordering?: string;
@@ -4950,6 +5072,7 @@ export interface operations {
                  *     * `inactive` - Inactivo
                  */
                 status?: "active" | "inactive";
+                without_farm?: boolean;
             };
             header?: never;
             path?: never;

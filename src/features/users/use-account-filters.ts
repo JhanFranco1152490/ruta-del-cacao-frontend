@@ -10,6 +10,9 @@ import { isUuid } from '@/lib/validation/is-uuid';
 import type { AccountQuery } from '@/lib/api/accounts';
 import { LIST_VIEWS, type ListView } from '@/lib/list-view';
 
+// El valor del filtro de finca para los empleados de campo a los que les falta.
+export const WITHOUT_FARM = 'sin-finca';
+
 const parsers = {
   search: parseAsString.withDefault(''),
   status: parseAsStringLiteral(['active', 'inactive'] as const),
@@ -17,6 +20,8 @@ const parsers = {
   role: parseAsString,
   producer: parseAsString,
   municipality: parseAsString,
+  // Una finca, o `sin-finca` para los empleados de campo a los que les falta.
+  farm: parseAsString,
   view: parseAsStringLiteral(LIST_VIEWS).withDefault('lista'),
   page: parseAsInteger.withDefault(1),
 };
@@ -29,6 +34,7 @@ export function useAccountFilters(association: boolean, superuser: boolean) {
       role: 'rol',
       producer: 'productor',
       municipality: 'municipio',
+      farm: 'finca',
       view: 'vista',
       page: 'pagina',
     },
@@ -43,6 +49,13 @@ export function useAccountFilters(association: boolean, superuser: boolean) {
   const municipality =
     association && params.municipality ? params.municipality : undefined;
   const role = params.role && isUuid(params.role) ? params.role : undefined;
+  // Las fincas son las del productor: solo en su espacio.
+  const farm =
+    !association &&
+    params.farm &&
+    (params.farm === WITHOUT_FARM || isUuid(params.farm))
+      ? params.farm
+      : undefined;
   const page = Math.max(1, params.page);
   // Agrupar por productor es de la cuenta técnica: el Administrador de la asociación solo ve las
   // cuentas de administrador y de productor, una por productor, y no hay qué agrupar.
@@ -57,6 +70,8 @@ export function useAccountFilters(association: boolean, superuser: boolean) {
     role,
     producer,
     municipality,
+    farm: farm && farm !== WITHOUT_FARM ? farm : undefined,
+    without_farm: farm === WITHOUT_FARM || undefined,
     // Agrupadas, el servidor las ordena por productor para que un grupo no se parta entre páginas.
     ordering: view === 'agrupada' ? 'producer,last_name' : undefined,
     page,
@@ -67,6 +82,7 @@ export function useAccountFilters(association: boolean, superuser: boolean) {
     page,
     producer,
     municipality,
+    farm,
     role,
     view,
     status: params.status,
@@ -78,6 +94,7 @@ export function useAccountFilters(association: boolean, superuser: boolean) {
     setRole: (role: string | null) => setParams({ role, page: 1 }),
     setMunicipality: (municipality: string | null) =>
       setParams({ municipality, page: 1 }),
+    setFarm: (farm: string | null) => setParams({ farm, page: 1 }),
     setView: (view: ListView) => setParams({ view, page: 1 }),
     setProducer: (producer: string | null) => setParams({ producer, page: 1 }),
     clearProducer: () => setParams({ producer: null, page: 1 }),

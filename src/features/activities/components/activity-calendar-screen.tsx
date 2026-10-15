@@ -12,6 +12,7 @@ import { useHasConnection } from '@/hooks/use-has-connection';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useSession } from '@/hooks/use-session';
 import { formatMonthYear } from '@/lib/format/dates';
+import { onlyFarmOf } from '@/lib/farm-scope';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import {
@@ -24,6 +25,7 @@ import {
 import { summarizeActivities } from '../activity-summary';
 import { isPeriodView } from '../activity-view';
 import { useActivityAssignees } from '../api';
+import { AssigneesContext } from '../assignees';
 import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';
 import { useActivityMonth } from '../use-activity-month';
@@ -149,6 +151,7 @@ export function ActivityCalendarScreen() {
       onPlot={filterState.setPlot}
       onProducer={superuser ? filterState.setProducer : undefined}
       onToggleAssignedToMe={filterState.toggleAssignedToMe}
+      onlyFarm={onlyFarmOf(user)}
       plotOptions={plotOptionsOf(activities)}
       producer={producer}
     />
@@ -161,155 +164,159 @@ export function ActivityCalendarScreen() {
   const swipeEnabled = isPeriodView(view) && !(view === 'parcela' && isDesktop);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-8 sm:pb-5">
-      <PageHeader compact title="Actividades" />
-      <div className="mt-3 space-y-2 empty:hidden">
-        {offline && loaded && (
-          <p className={STATUS_NOTE_CLASS} role="status">
-            <CloudOff aria-hidden="true" className="size-4 shrink-0" />
-            Sin conexión: estás viendo la última copia de las actividades.
-          </p>
-        )}
-        {data.missingMonths.length > 0 && (
-          <p className={STATUS_NOTE_CLASS} role="status">
-            <CloudOff aria-hidden="true" className="size-4 shrink-0" />
-            Necesitas conexión para ver las actividades de{' '}
-            {data.missingMonths.map(formatMonthYear).join(' y ')}.
-          </p>
-        )}
-      </div>
-      <div className="mt-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <ActivityViewSwitch onChange={viewState.setView} value={view} />
-          {canSchedule && isDesktop && (
-            <ScheduleActivityButton
-              offline={offline}
-              onClick={openScheduleForm}
-            />
+    <AssigneesContext value={assignees.data?.data}>
+      <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-8 sm:pb-5">
+        <PageHeader compact title="Actividades" />
+        <div className="mt-3 space-y-2 empty:hidden">
+          {offline && loaded && (
+            <p className={STATUS_NOTE_CLASS} role="status">
+              <CloudOff aria-hidden="true" className="size-4 shrink-0" />
+              Sin conexión: estás viendo la última copia de las actividades.
+            </p>
+          )}
+          {data.missingMonths.length > 0 && (
+            <p className={STATUS_NOTE_CLASS} role="status">
+              <CloudOff aria-hidden="true" className="size-4 shrink-0" />
+              Necesitas conexión para ver las actividades de{' '}
+              {data.missingMonths.map(formatMonthYear).join(' y ')}.
+            </p>
           )}
         </div>
-        {showFilters &&
-          (isDesktop ? (
-            filtersBar
-          ) : (
-            <ActivityFiltersToggle activeCount={barFiltersSet}>
-              {filtersBar}
-            </ActivityFiltersToggle>
-          ))}
-        {/* Los recuentos y el periodo van juntos y pegados al calendario. */}
-        {view !== 'pendientes' && (
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-            {loaded && isPeriodView(view) && data.items.length > 0 && (
-              <ActivityStatePills
-                counts={summary.byState}
-                onState={filterState.setState}
-                state={filters.state}
-                total={summary.total}
+        <div className="mt-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <ActivityViewSwitch onChange={viewState.setView} value={view} />
+            {canSchedule && isDesktop && (
+              <ScheduleActivityButton
+                offline={offline}
+                onClick={openScheduleForm}
               />
             )}
-            <div className="lg:ml-auto">
-              <ActivityPeriodControl
-                period={period}
-                view={view}
-                viewState={viewState}
-              />
-            </div>
           </div>
-        )}
-        <ActivityPeriodSlider
-          enabled={swipeEnabled}
-          onNext={view === 'semana' ? viewState.goNextWeek : period.goNext}
-          onPrevious={
-            view === 'semana' ? viewState.goPreviousWeek : period.goPrevious
-          }
-          periodKey={view === 'semana' ? week : month}
-          ready={loaded}
-          scope={view}
-        >
-          {data.isPending && (
-            <div aria-label="Cargando actividades" role="status">
-              <Skeleton className="h-64" />
+          {showFilters &&
+            (isDesktop ? (
+              filtersBar
+            ) : (
+              <ActivityFiltersToggle activeCount={barFiltersSet}>
+                {filtersBar}
+              </ActivityFiltersToggle>
+            ))}
+          {/* Los recuentos y el periodo van juntos y pegados al calendario. */}
+          {view !== 'pendientes' && (
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+              {loaded && isPeriodView(view) && data.items.length > 0 && (
+                <ActivityStatePills
+                  counts={summary.byState}
+                  onState={filterState.setState}
+                  state={filters.state}
+                  total={summary.total}
+                />
+              )}
+              <div className="lg:ml-auto">
+                <ActivityPeriodControl
+                  period={period}
+                  view={view}
+                  viewState={viewState}
+                />
+              </div>
             </div>
           )}
-          {data.neverLoaded && (
-            <EmptyState
-              action={
-                inMonthView && !isCurrentMonth ? (
-                  <Button
-                    onClick={period.goToday}
-                    size="office"
-                    variant="outline"
-                  >
-                    Ir a hoy
-                  </Button>
-                ) : view === 'semana' && !viewState.isCurrentWeek ? (
-                  <Button
-                    onClick={viewState.goThisWeek}
-                    size="office"
-                    variant="outline"
-                  >
-                    Ir a hoy
-                  </Button>
-                ) : undefined
-              }
-              description="Cuando tengas conexión, abre esta vista una vez y quedará guardada para consultarla sin conexión."
-              title={NEEDS_CONNECTION[view]}
-            />
-          )}
-          {data.error !== null && !data.isPending && (
-            <ErrorState
-              message="No fue posible cargar las actividades."
-              onRetry={data.refetch}
-            />
-          )}
-          {loaded && (
-            <ActivityCalendarBody
-              canSchedule={canSchedule}
-              hasFilters={filtersSet}
-              isDesktop={isDesktop}
-              items={filtered}
-              keyboard={keyboard}
-              month={month}
-              offline={offline}
-              onClear={filterState.clear}
-              onOpenDay={(date, plotId) => open({ kind: 'day', date, plotId })}
-              onSchedule={() => open({ kind: 'schedule' })}
-              onScheduleDay={scheduleOnDay}
-              onSelect={({ activity }) =>
-                open({ kind: 'detail', id: activity.id })
-              }
-              onPendingDays={viewState.setPendingDays}
-              onSelectDay={selectedDay.setDay}
-              pendingDays={viewState.pendingDays}
-              selectedDay={selectedDay.day}
-              today={today}
-              unfilteredCount={data.items.length}
-              view={view}
-              week={week}
-            />
-          )}
-        </ActivityPeriodSlider>
-        {loaded && (
-          <>
-            {isPeriodView(view) && (
-              <ActivityTypeBreakdown rows={summary.byType} />
+          <ActivityPeriodSlider
+            enabled={swipeEnabled}
+            onNext={view === 'semana' ? viewState.goNextWeek : period.goNext}
+            onPrevious={
+              view === 'semana' ? viewState.goPreviousWeek : period.goPrevious
+            }
+            periodKey={view === 'semana' ? week : month}
+            ready={loaded}
+            scope={view}
+          >
+            {data.isPending && (
+              <div aria-label="Cargando actividades" role="status">
+                <Skeleton className="h-64" />
+              </div>
             )}
-            <ActivityLegend />
-          </>
+            {data.neverLoaded && (
+              <EmptyState
+                action={
+                  inMonthView && !isCurrentMonth ? (
+                    <Button
+                      onClick={period.goToday}
+                      size="office"
+                      variant="outline"
+                    >
+                      Ir a hoy
+                    </Button>
+                  ) : view === 'semana' && !viewState.isCurrentWeek ? (
+                    <Button
+                      onClick={viewState.goThisWeek}
+                      size="office"
+                      variant="outline"
+                    >
+                      Ir a hoy
+                    </Button>
+                  ) : undefined
+                }
+                description="Cuando tengas conexión, abre esta vista una vez y quedará guardada para consultarla sin conexión."
+                title={NEEDS_CONNECTION[view]}
+              />
+            )}
+            {data.error !== null && !data.isPending && (
+              <ErrorState
+                message="No fue posible cargar las actividades."
+                onRetry={data.refetch}
+              />
+            )}
+            {loaded && (
+              <ActivityCalendarBody
+                canSchedule={canSchedule}
+                hasFilters={filtersSet}
+                isDesktop={isDesktop}
+                items={filtered}
+                keyboard={keyboard}
+                month={month}
+                offline={offline}
+                onClear={filterState.clear}
+                onOpenDay={(date, plotId) =>
+                  open({ kind: 'day', date, plotId })
+                }
+                onSchedule={() => open({ kind: 'schedule' })}
+                onScheduleDay={scheduleOnDay}
+                onSelect={({ activity }) =>
+                  open({ kind: 'detail', id: activity.id })
+                }
+                onPendingDays={viewState.setPendingDays}
+                onSelectDay={selectedDay.setDay}
+                pendingDays={viewState.pendingDays}
+                selectedDay={selectedDay.day}
+                today={today}
+                unfilteredCount={data.items.length}
+                view={view}
+                week={week}
+              />
+            )}
+          </ActivityPeriodSlider>
+          {loaded && (
+            <>
+              {isPeriodView(view) && (
+                <ActivityTypeBreakdown rows={summary.byType} />
+              )}
+              <ActivityLegend />
+            </>
+          )}
+        </div>
+        {canSchedule && !isDesktop && (
+          <ActivityScheduleFab offline={offline} onClick={openScheduleForm} />
         )}
+        <ActivityDialogs
+          items={filtered}
+          offline={offline}
+          currentMonth={month}
+          onGoToMonth={inMonthView ? goToMonth : undefined}
+          onPending={setPending}
+          pending={pending}
+          today={today}
+        />
       </div>
-      {canSchedule && !isDesktop && (
-        <ActivityScheduleFab offline={offline} onClick={openScheduleForm} />
-      )}
-      <ActivityDialogs
-        items={filtered}
-        offline={offline}
-        currentMonth={month}
-        onGoToMonth={inMonthView ? goToMonth : undefined}
-        onPending={setPending}
-        pending={pending}
-        today={today}
-      />
-    </div>
+    </AssigneesContext>
   );
 }

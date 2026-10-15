@@ -7,6 +7,7 @@ import { SegmentedControl } from '@/components/segmented-control';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { useSession } from '@/hooks/use-session';
+import { onlyFarmOf } from '@/lib/farm-scope';
 import { useFarmDetail } from '@/lib/api/farm-detail';
 import { useProducerSummary } from '@/lib/api/producer-options';
 
@@ -55,19 +56,22 @@ export function PlotOverviewFiltersBar({
         />
       }
     >
-      <FarmFilter
-        className="w-full sm:w-56"
-        farm={filters.farm ?? undefined}
-        hideLabel
-        label="Filtrar por finca"
-        onClear={() => void filters.setFarm(null)}
-        onSelect={(option) =>
-          void filters.setFarm(option.id, option.producer.id)
-        }
-        producer={filters.producer ?? undefined}
-        selectedLabel={filters.farm ? farm.data?.data.name : undefined}
-        showProducer={pickProducer}
-      />
+      {/* Quien trabaja en una sola finca no tiene otra que buscar. */}
+      {!onlyFarmOf(user) && (
+        <FarmFilter
+          className="w-full sm:w-56"
+          farm={filters.farm ?? undefined}
+          hideLabel
+          label="Filtrar por finca"
+          onClear={() => void filters.setFarm(null)}
+          onSelect={(option) =>
+            void filters.setFarm(option.id, option.producer.id)
+          }
+          producer={filters.producer ?? undefined}
+          selectedLabel={filters.farm ? farm.data?.data.name : undefined}
+          showProducer={pickProducer}
+        />
+      )}
       {pickProducer && (
         <ProducerFilter
           className="w-full sm:w-64"

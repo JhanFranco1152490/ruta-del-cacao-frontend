@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Pencil, ShieldCheck } from 'lucide-react';
+import { Pencil, ShieldCheck, TriangleAlert } from 'lucide-react';
 import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -48,13 +48,29 @@ export function AccountDetail({
     );
   const data = account.data;
   const back = () => setMode('view');
+  // La finca de un empleado la asigna quien alcanza todas: el Productor o la cuenta técnica.
+  const farmsOf =
+    user.all_farms && data.producer && !hasFixedRole(data)
+      ? {
+          userId: user.id,
+          producer: user.producer_id ? undefined : data.producer.id,
+        }
+      : undefined;
   if (mode === 'edit')
-    return <AccountEditForm account={data} onDone={back} onBusy={onBusy} />;
+    return (
+      <AccountEditForm
+        account={data}
+        farmsOf={farmsOf}
+        onDone={back}
+        onBusy={onBusy}
+      />
+    );
   if (mode === 'roles')
     return (
       <AccountRolesPanel
         account={data}
         user={user}
+        farmsOf={farmsOf}
         onDone={back}
         onBusy={onBusy}
       />
@@ -164,7 +180,36 @@ function AccountSummary({ account }: { account: Account }) {
             {account.roles.map((role) => role.name).join(', ') || 'Sin roles'}
           </dd>
         </div>
+        {(account.farms.length > 0 ||
+          account.needs_farm ||
+          (account.all_farms && !hasFixedRole(account))) && (
+          <div>
+            <dt className="font-bold">Fincas en las que trabaja</dt>
+            <dd>
+              {account.all_farms
+                ? 'Todas las fincas'
+                : account.farms.length
+                  ? account.farms
+                      .map(
+                        (farm) =>
+                          `${farm.name}${farm.is_active ? '' : ' (inactiva)'}`,
+                      )
+                      .join(', ')
+                  : 'Sin asignar'}
+            </dd>
+          </div>
+        )}
       </dl>
+      {account.needs_farm && (
+        <p role="status" className="flex items-start gap-2 text-warn">
+          <TriangleAlert
+            aria-hidden="true"
+            className="mt-0.5 size-4 shrink-0"
+          />
+          Sin fincas asignadas esta persona no ve ni registra nada de campo.
+          Asígnale las fincas, o todas, con «Editar datos».
+        </p>
+      )}
       {account.producer?.status === 'inactive' && (
         <p>El acceso está bloqueado porque el productor está inactivo.</p>
       )}
