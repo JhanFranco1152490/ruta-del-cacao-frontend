@@ -30,6 +30,9 @@ export const buildSessionUser = (
   producer_id: 'p1',
   permissions: [],
   is_superuser: false,
+  // El Productor alcanza todas sus fincas; un empleado, solo las suyas (`farms`).
+  farms: [],
+  all_farms: true,
   ...overrides,
 });
 
@@ -55,6 +58,7 @@ export const buildProfile = (
     first_name: 'Ana',
     last_name: 'Ejemplo',
   },
+  farms: [],
   ...overrides,
 });
 
@@ -297,12 +301,16 @@ export const buildInputMovement = (
   ...overrides,
 });
 
+// Una cuenta de la lista de responsables. Sin finca (como el Productor) y asignable: vale para
+// cualquier parcela. También sirve como el responsable de una actividad, que lleva menos datos.
 export const buildAssignee = (
-  overrides: Partial<Schemas['Assignee']> = {},
-): Schemas['Assignee'] => ({
+  overrides: Partial<Schemas['AssigneeOption']> = {},
+): Schemas['AssigneeOption'] => ({
   id: 'u1',
   full_name: 'Cuenta de prueba',
   is_active: true,
+  farm_ids: [],
+  assignable: true,
   ...overrides,
 });
 

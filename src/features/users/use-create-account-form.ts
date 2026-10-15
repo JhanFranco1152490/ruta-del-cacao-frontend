@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateAccount, type AccountCreated } from '@/lib/api/accounts';
 import {
+  FARM_REQUIRED,
   accountSchema,
   emptyAccount,
   toAccountRequest,
@@ -14,12 +15,15 @@ export function useCreateAccountForm({
   producer,
   administratorRole,
   allowedRoleIds,
+  needsFarm,
   onCreated,
   onBusy,
 }: {
   producer?: string;
   administratorRole?: string;
   allowedRoleIds: string[];
+  // Si los roles elegidos exigen una finca: la cuenta no se crea sin ella.
+  needsFarm: (roleIds: string[]) => boolean;
   onCreated: (account: AccountCreated) => void;
   onBusy: (value: boolean) => void;
 }) {
@@ -46,6 +50,10 @@ export function useCreateAccountForm({
       form.setError('role_ids', {
         message: 'Alguno de los roles seleccionados ya no está disponible.',
       });
+      return;
+    }
+    if (needsFarm(values.role_ids) && !values.farm_ids.length) {
+      form.setError('farm_ids', { message: FARM_REQUIRED });
       return;
     }
     await run(async () => {

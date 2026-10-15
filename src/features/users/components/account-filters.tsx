@@ -5,13 +5,14 @@ import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
 import { useRoleOptions } from '@/lib/api/role-options';
 import type { Municipality } from '@/lib/api/municipalities';
-import type { useAccountFilters } from '../use-account-filters';
+import { WITHOUT_FARM, type useAccountFilters } from '../use-account-filters';
 
 export function AccountFilters({
   filters,
   canReadRoles,
   municipalities,
   producerFilter,
+  farms,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   canReadRoles: boolean;
@@ -20,6 +21,8 @@ export function AccountFilters({
   // De qué productor mira la asociación: lo arma quien usa este componente (conoce el
   // productor elegido y sus datos), aquí solo se ubica junto a rol y municipio.
   producerFilter?: ReactNode;
+  // Las fincas del productor, para filtrar quién trabaja en cada una; solo en su espacio.
+  farms?: { id: string; name: string }[];
 }) {
   const roles = useRoleOptions(canReadRoles);
   return (
@@ -62,7 +65,7 @@ export function AccountFilters({
           <option value="activada">Activada</option>
         </SelectField>
       </div>
-      {(canReadRoles || municipalities || producerFilter) && (
+      {(canReadRoles || municipalities || producerFilter || farms) && (
         <div className="flex flex-wrap gap-4">
           {producerFilter}
           {canReadRoles && (
@@ -83,6 +86,24 @@ export function AccountFilters({
               {roles.data?.map((role) => (
                 <option key={role.id} value={role.id}>
                   {role.name}
+                </option>
+              ))}
+            </SelectField>
+          )}
+          {farms && (
+            <SelectField
+              label="Finca"
+              value={filters.farm ?? ''}
+              onChange={(event) => {
+                void filters.setFarm(event.target.value || null);
+              }}
+              wrapperClassName="min-w-40 flex-1"
+            >
+              <option value="">Todas las fincas</option>
+              <option value={WITHOUT_FARM}>Sin finca asignada</option>
+              {farms.map((farm) => (
+                <option key={farm.id} value={farm.id}>
+                  {farm.name}
                 </option>
               ))}
             </SelectField>

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { apiError, buildPage, buildSession } from '@/test/factories';
-import { apiUrl } from '@/test/handlers';
+import { apiUrl, farmsHandler } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -22,6 +22,7 @@ const account = {
   identity_document: '1234567890',
   phone: null,
   producer: { id: producerId, member_code: 'PROD-000001', status: 'active' },
+  farms: [],
   roles: [{ id: foremanId, code: 'foreman', name: 'Capataz' }],
   status: 'active',
   activation_pending: false,
@@ -29,6 +30,7 @@ const account = {
 };
 const producerAccount = {
   ...account,
+  farms: [],
   roles: [{ id: 'role-producer', code: 'producer', name: 'Productor' }],
 };
 const role = (roleId: string, name: string) => ({
@@ -96,6 +98,8 @@ beforeEach(() => {
         buildPage([role(foremanId, 'Capataz'), role(harvesterId, 'Cosechero')]),
       ),
     ),
+    // Quien alcanza todas las fincas puede asignar la de un empleado: el formulario las pide.
+    farmsHandler(),
   );
   mockAccount(account);
 });

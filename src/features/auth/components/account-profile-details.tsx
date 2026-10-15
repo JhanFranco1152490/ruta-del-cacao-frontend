@@ -39,7 +39,8 @@ export function AccountProfileDetails() {
     );
   }
 
-  const { document_type, identity_document, phone, producer } = profile.data;
+  const { document_type, identity_document, phone, producer, farms } =
+    profile.data;
   return (
     <dl className="space-y-4">
       <div>
@@ -57,6 +58,16 @@ export function AccountProfileDetails() {
           <dt className="text-sm text-muted-foreground">Productor</dt>
           <dd className="font-bold">
             {fullName(producer)} · {producer.member_code}
+          </dd>
+        </div>
+      )}
+      {farms.length > 0 && (
+        <div>
+          <dt className="text-sm text-muted-foreground">
+            {farms.length === 1 ? 'Finca' : 'Fincas'} en las que trabajas
+          </dt>
+          <dd className="font-bold">
+            {farms.map((farm) => farm.name).join(', ')}
           </dd>
         </div>
       )}

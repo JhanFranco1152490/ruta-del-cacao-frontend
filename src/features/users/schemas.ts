@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 import { isEmail } from '@/lib/validation/is-email';
 import { optionalPhoneSchema } from '@/lib/validation/phone';
+import { isFieldPermission } from '@/lib/permissions';
 import type { Role } from '@/lib/api/roles';
 import type { Account, AccountCreate, AccountUpdate } from '@/lib/api/accounts';
 
@@ -24,11 +25,19 @@ export const accountDataSchema = z.object({
 export const roleIdsSchema = z
   .array(z.string())
   .min(1, 'Selecciona al menos un rol.');
+// Las fincas en las que trabaja un empleado; vacía es "sin finca".
+const farmIdsSchema = z.array(z.string());
+export const FARM_REQUIRED = 'Marca al menos una finca en la que trabaje.';
 export const accountSchema = accountDataSchema.extend({
   role_ids: roleIdsSchema,
+  farm_ids: farmIdsSchema,
+});
+export const accountEditSchema = accountDataSchema.extend({
+  farm_ids: farmIdsSchema,
 });
 export type AccountDataValues = z.infer<typeof accountDataSchema>;
 export type AccountValues = z.infer<typeof accountSchema>;
+export type AccountEditValues = z.infer<typeof accountEditSchema>;
 export const emptyAccount: AccountValues = {
   email: '',
   document_type: 'CC',
@@ -37,16 +46,27 @@ export const emptyAccount: AccountValues = {
   last_name: '',
   phone: '',
   role_ids: [],
+  farm_ids: [],
 };
 export const toAccountRequest = (
-  values: AccountValues,
+  { farm_ids, ...values }: AccountValues,
   producer?: string,
 ): AccountCreate => ({
   ...values,
   email: values.email.toLowerCase(),
   phone: values.phone || null,
+  ...(farm_ids.length ? { farm_ids } : {}),
   ...(producer ? { producer_id: producer } : {}),
 });
+// Un rol con algún permiso de campo solo sirve con una finca: sin ella no alcanza nada.
+export const rolesNeedFarm = (
+  roleIds: readonly string[],
+  roles: Pick<Role, 'id' | 'permissions'>[],
+) =>
+  roles.some(
+    (role) =>
+      roleIds.includes(role.id) && role.permissions.some(isFieldPermission),
+  );
 export function assignableRoles(
   roles: Role[],
   permissions: readonly string[],
@@ -71,15 +91,26 @@ export const toAccountDataValues = (account: Account): AccountDataValues => ({
   last_name: account.last_name,
   phone: account.phone ?? '',
 });
-// En la cuenta Productor, documento y nombres los gobierna el expediente: no se envían.
+export const toAccountEditValues = (account: Account): AccountEditValues => ({
+  ...toAccountDataValues(account),
+  farm_ids: account.farms.map((farm) => farm.id),
+});
+// En la cuenta Productor, documento y nombres los gobierna el expediente: no se envían. Las
+// fincas solo viajan si quien edita las asigna y cambiaron (`withFarms`); vacías, las quitan.
 export const toAccountUpdate = (
-  values: AccountDataValues,
+  { farm_ids, ...values }: AccountEditValues,
   identityLocked: boolean,
+  withFarms = false,
 ): AccountUpdate => {
   const email = values.email.toLowerCase();
   const phone = values.phone || null;
   if (identityLocked) return { email, phone };
-  return { ...values, email, phone };
+  return {
+    ...values,
+    email,
+    phone,
+    ...(withFarms ? { farm_ids } : {}),
+  };
 };
 const hasRole = (account: Account, code: string) =>
   account.roles.some((role) => role.code === code);
@@ -88,3 +119,7 @@ export const isProducerAccount = (account: Account) =>
 // Las cuentas Productor y Administrador no cambian de rol.
 export const hasFixedRole = (account: Account) =>
   isProducerAccount(account) || hasRole(account, 'administrator');
+
+// Si dos listas de fincas son las mismas, sin importar el orden en que se marcaron.
+export const sameFarms = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((id) => b.includes(id));

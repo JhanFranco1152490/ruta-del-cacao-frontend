@@ -1,10 +1,12 @@
 'use client';
-import { Controller } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import type { Role } from '@/lib/api/roles';
 import type { AccountCreated } from '../api';
+import { rolesNeedFarm } from '../schemas';
 import { useCreateAccountForm } from '../use-create-account-form';
+import { AccountFarmsField } from './account-farm-field';
 import { AccountFields } from './account-fields';
 import { RoleCheckboxes } from './role-checkboxes';
 
@@ -12,6 +14,7 @@ export function AccountForm({
   roles,
   administrator,
   producer,
+  farmsOf,
   onCreated,
   onBusy,
   onCancel,
@@ -19,14 +22,19 @@ export function AccountForm({
   roles: Role[];
   administrator: boolean;
   producer?: string;
+  // De quién son las fincas que se ofrecen; ausente si esta cuenta no lleva finca.
+  farmsOf?: { userId: string; producer?: string };
   onCreated: (account: AccountCreated) => void;
   onBusy: (value: boolean) => void;
   onCancel: () => void;
 }) {
+  const needsFarm = (roleIds: string[]) =>
+    Boolean(farmsOf) && rolesNeedFarm(roleIds, roles);
   const { form, submit, failure } = useCreateAccountForm({
     producer,
     administratorRole: administrator ? roles[0]?.id : undefined,
     allowedRoleIds: roles.map((role) => role.id),
+    needsFarm,
     onCreated,
     onBusy,
   });
@@ -35,6 +43,7 @@ export function AccountForm({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = form;
+  const roleIds = useWatch({ control, name: 'role_ids' });
   return (
     <form
       className="space-y-5"
@@ -64,6 +73,23 @@ export function AccountForm({
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.role_ids?.message}
+                disabled={isSubmitting}
+              />
+            )}
+          />
+        )}
+        {farmsOf && (
+          <Controller
+            name="farm_ids"
+            control={control}
+            render={({ field }) => (
+              <AccountFarmsField
+                userId={farmsOf.userId}
+                producer={farmsOf.producer}
+                required={needsFarm(roleIds)}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.farm_ids?.message}
                 disabled={isSubmitting}
               />
             )}

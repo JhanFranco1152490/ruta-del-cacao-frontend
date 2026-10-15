@@ -10,11 +10,13 @@ import { AccountRolesForm } from './account-roles-form';
 export function AccountRolesPanel({
   account,
   user,
+  farmsOf,
   onDone,
   onBusy,
 }: {
   account: Account;
   user: components['schemas']['SessionUser'];
+  farmsOf?: { userId: string; producer?: string };
   onDone: () => void;
   onBusy: (value: boolean) => void;
 }) {
@@ -40,6 +42,7 @@ export function AccountRolesPanel({
     <AccountRolesForm
       account={account}
       roles={roles}
+      farmsOf={farmsOf}
       onDone={onDone}
       onBusy={onBusy}
     />

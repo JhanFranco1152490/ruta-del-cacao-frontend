@@ -25,6 +25,7 @@ const account = {
     status: 'active',
     municipality_code: '54001',
   },
+  farms: [],
   roles: [{ id: 'role-foreman', code: 'foreman', name: 'Capataz' }],
   status: 'active',
   activation_pending: false,
@@ -35,6 +36,7 @@ const administrator = {
   id: '22222222-2222-4222-8222-222222222222',
   first_name: 'Luis',
   producer: null,
+  farms: [],
   roles: [{ id: 'role-admin', code: 'administrator', name: 'Administrador' }],
 };
 

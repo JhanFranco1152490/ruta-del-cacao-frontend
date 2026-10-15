@@ -3,12 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  buildFarm,
   buildPage,
   buildProducer,
   buildSession,
   apiError,
 } from '@/test/factories';
-import { apiUrl } from '@/test/handlers';
+import { apiUrl, farmsHandler } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -28,6 +29,7 @@ const account = {
   identity_document: '1234567890',
   phone: null,
   producer: { id, member_code: 'PROD-000001', status: 'active' },
+  farms: [],
   roles: [{ id: roleId, code: 'foreman', name: 'Capataz' }],
   status: 'active',
   activation_pending: true,
@@ -53,11 +55,19 @@ beforeEach(() =>
     http.get(apiUrl('/api/auth/me'), () =>
       HttpResponse.json(buildSession({ producer_id: id, permissions })),
     ),
-    http.get(apiUrl('/api/users'), () =>
-      HttpResponse.json(buildPage([account])),
+    http.get(apiUrl('/api/users'), ({ request }) =>
+      HttpResponse.json(
+        // Nadie sin finca: el aviso no aparece salvo en la prueba que lo pide.
+        buildPage(
+          new URL(request.url).searchParams.has('without_farm')
+            ? []
+            : [account],
+        ),
+      ),
     ),
     http.get(apiUrl(`/api/users/${id}`), () => HttpResponse.json(account)),
     http.get(apiUrl('/api/roles'), () => HttpResponse.json(buildPage([role]))),
+    farmsHandler(),
   ),
 );
 async function fillForm(selectRole = true) {
@@ -252,10 +262,13 @@ describe('AccountListScreen', () => {
   it('retries a failed list', async () => {
     let calls = 0;
     server.use(
-      http.get(apiUrl('/api/users'), () =>
-        ++calls === 1
-          ? apiError(500, 'internal_error')
-          : HttpResponse.json(buildPage([account])),
+      http.get(apiUrl('/api/users'), ({ request }) =>
+        // El aviso de empleados sin finca hace su propia consulta: no es la lista que falla.
+        new URL(request.url).searchParams.has('without_farm')
+          ? HttpResponse.json(buildPage([]))
+          : ++calls === 1
+            ? apiError(500, 'internal_error')
+            : HttpResponse.json(buildPage([account])),
       ),
     );
     renderWithProviders(<AccountListScreen />);
@@ -587,5 +600,88 @@ describe('AccountListScreen', () => {
     expect(requests.at(-1)?.searchParams.get('activation_pending')).toBe(
       'true',
     );
+  });
+});
+
+describe('las fincas en la lista de usuarios', () => {
+  it('avisa al productor cuántos empleados no tienen finca y los filtra', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(
+      http.get(apiUrl('/api/users'), ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        requests.push(params);
+        return HttpResponse.json(
+          buildPage<object>(
+            params.has('without_farm')
+              ? [{ ...account, farms: [], needs_farm: true }]
+              : [account],
+          ),
+        );
+      }),
+    );
+    renderWithProviders(<AccountListScreen />);
+
+    expect(
+      await screen.findByText(/1 empleado no tiene finca asignada/),
+    ).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Ver cuáles' }));
+
+    await waitFor(() =>
+      expect(
+        requests.filter((params) => params.has('without_farm')).length,
+      ).toBeGreaterThan(1),
+    );
+    expect(screen.getByLabelText('Finca')).toHaveValue('sin-finca');
+  });
+
+  it('filtra por finca y muestra en cuáles trabaja cada quien', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(
+      farmsHandler([
+        buildFarm({
+          id: '55555555-5555-4555-8555-555555555555',
+          name: 'La Esperanza',
+        }),
+      ]),
+      http.get(apiUrl('/api/users'), ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        requests.push(params);
+        return HttpResponse.json(
+          buildPage<object>(
+            params.has('without_farm')
+              ? []
+              : [
+                  {
+                    ...account,
+                    farms: [
+                      {
+                        id: '55555555-5555-4555-8555-555555555555',
+                        name: 'La Esperanza',
+                        is_active: true,
+                      },
+                    ],
+                  },
+                ],
+          ),
+        );
+      }),
+    );
+    renderWithProviders(<AccountListScreen />);
+    const farm = await screen.findByLabelText('Finca');
+    await within(farm).findByText('La Esperanza');
+
+    await userEvent.selectOptions(farm, 'La Esperanza');
+
+    // La última consulta de la lista, no la del aviso de empleados sin finca.
+    const listed = () =>
+      requests.filter((params) => !params.has('without_farm'));
+    await waitFor(() =>
+      expect(listed().at(-1)?.get('farm')).toBe(
+        '55555555-5555-4555-8555-555555555555',
+      ),
+    );
+    expect(
+      within(screen.getByRole('table')).getByText('La Esperanza'),
+    ).toBeVisible();
   });
 });
