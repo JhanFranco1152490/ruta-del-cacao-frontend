@@ -4,7 +4,12 @@ import { useMemo } from 'react';
 
 import { useSession } from '@/hooks/use-session';
 import { isApiError } from '@/lib/api/errors';
-import { useAgriculturalInputs, useInputStocks } from '@/lib/api/input-catalog';
+import { isFarmEmployee } from '@/lib/farm-scope';
+import {
+  useAgriculturalInputs,
+  useFarmInputs,
+  useInputStocks,
+} from '@/lib/api/input-catalog';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import type { AgriculturalActivity } from '../api';
@@ -38,12 +43,19 @@ export function useCompletionSources(activityId: string): CompletionSources {
   const activity = useActivity(user?.id, activityId);
   const queued = useQueuedCompletion(activityId);
   const found = activity.data?.data;
-  // La cuenta técnica lee el catálogo del productor de la actividad; las demás, el suyo.
-  const catalog = useAgriculturalInputs(
+  // La cuenta técnica lee el catálogo del productor de la actividad, y el Productor el suyo
+  // completo. Un empleado, solo los insumos que hay en la finca de la actividad: aunque trabaje en
+  // varias fincas, lo que gasta sale de esa.
+  const employee = isFarmEmployee(user);
+  const productCatalog = useAgriculturalInputs(
     user?.id,
     user?.is_superuser === true ? (found?.producer_id ?? null) : null,
-    { enabled: !!found },
+    { enabled: !!found && !employee },
   );
+  const farmCatalog = useFarmInputs(user?.id, found?.plot.farm.id ?? null, {
+    enabled: !!found && employee,
+  });
+  const catalog = employee ? farmCatalog : productCatalog;
   const stocks = useInputStocks(user?.id, found?.plot.farm.id ?? null);
 
   const active = useMemo(

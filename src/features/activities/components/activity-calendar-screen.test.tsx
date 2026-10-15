@@ -160,6 +160,31 @@ describe('ActivityCalendarScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('marks an assignee who no longer works on the farm of the plot', async () => {
+    server.use(
+      agriculturalActivitiesHandler([
+        buildAgriculturalActivity({
+          assignee: buildAssignee({ id: 'moved', full_name: 'Luis Rincón' }),
+        }),
+      ]),
+      activityAssigneesHandler([
+        buildAssignee({
+          id: 'moved',
+          full_name: 'Luis Rincón',
+          farm_ids: ['f2'],
+        }),
+      ]),
+    );
+
+    renderScreen();
+
+    expect(
+      await within(await dayOf('martes 20 de octubre')).findByText(
+        'Luis Rincón (responsable fuera de la finca)',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('moves to the next and the previous month, in the address', async () => {
     const requests: URLSearchParams[] = [];
     server.use(agriculturalActivitiesHandler([], requests));

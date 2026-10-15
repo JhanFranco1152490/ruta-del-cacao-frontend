@@ -3,6 +3,7 @@ import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 
 import type { ActivityOfDay } from '../activity-days';
 import { activityBadge, activityTitle } from '../activity-labels';
+import { useAssigneeNote } from '../assignees';
 
 // El borde repite el tono del estado, que ya dicen el ícono y el texto de la etiqueta.
 const BORDER_BY_TONE = {
@@ -23,6 +24,7 @@ export function ActivityCard({
   const { activity } = item;
   const { tone, text } = activityBadge(item);
   const { plot, assignee } = activity;
+  const note = useAssigneeNote(activity);
 
   return (
     <button
@@ -42,7 +44,7 @@ export function ActivityCard({
           <span aria-hidden="true">·</span>
           <span>
             {assignee.full_name}
-            {!assignee.is_active && ' (cuenta inactiva)'}
+            {note && ` (${note.toLowerCase()})`}
           </span>
         </span>
       </span>

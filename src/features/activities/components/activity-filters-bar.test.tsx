@@ -81,6 +81,14 @@ describe('ActivityFiltersBar', () => {
     expect(screen.queryByLabelText('Estado')).not.toBeInTheDocument();
   });
 
+  it('keeps the farm fixed for someone who works on a single one', () => {
+    setup({ onlyFarm: { id: 'f1', name: 'La Esperanza' } });
+
+    const farm = screen.getByRole('combobox', { name: 'Finca' });
+    expect(farm).toBeDisabled();
+    expect(farm).toHaveValue('La Esperanza');
+  });
+
   it('offers the farms of the period', async () => {
     setup();
 

@@ -12,6 +12,7 @@ import {
   SCHEDULABLE_ACTIVITY_TYPE_OPTIONS,
 } from '../activity-labels';
 import { type AgriculturalActivity, useActivityAssignees } from '../api';
+import { assignableIn, assigneeNote } from '../assignees';
 import {
   type ChoiceList,
   type FormChoice,
@@ -27,9 +28,10 @@ const ALL_TYPES = toChoices(ACTIVITY_TYPE_OPTIONS);
 
 // Lo que ofrece el formulario de una actividad: fincas y parcelas activas (hasta el tope de una
 // página, y acotadas por la finca o el productor que se haya elegido), tipos que se pueden
-// programar y cuentas activas. Al editar (`activity`) no se elige parcela, y lo que la actividad
-// ya tiene se conserva aunque hoy no se ofrecería: su responsable, si la cuenta se desactivó, y
-// su tipo, si es un control fitosanitario. Las listas se arman una vez por lectura, porque cada
+// programar y, como responsables, la gente de la finca de la parcela. Al editar (`activity`) no
+// se elige parcela, y lo que la actividad ya tiene se conserva aunque hoy no se ofrecería: su
+// responsable (la cuenta se desactivó o ya no trabaja en esa finca) y su tipo, si es un control
+// fitosanitario. Las listas se arman una vez por lectura, porque cada
 // campo vuelve a poner su valor cuando la suya cambia.
 export function useActivityFormChoices(
   // La finca con la que se acotan las parcelas: la que se eligió en su campo, no la que dedujo
@@ -105,19 +107,30 @@ export function useActivityFormChoices(
     [offeredPlots, showProducer],
   );
   const current = activity?.assignee;
+  // La finca de la parcela: los responsables son la gente que trabaja en ella. Sin parcela
+  // elegida todavía, la del filtro de finca.
+  const plotFarmId =
+    activity?.plot.farm.id ??
+    offeredPlots.find((plot) => plot.id === plotId)?.farm.id ??
+    farmFilter;
   const assigneeChoices = useMemo(() => {
-    const active = (assignees.data?.data ?? [])
-      .filter((account) => account.is_active)
-      .map(({ id, full_name }) => ({
+    const accounts = assignees.data?.data ?? [];
+    const offered = assignableIn(accounts, plotFarmId).map(
+      ({ id, full_name }) => ({
         id,
         label: id === userId ? `${full_name} (tú)` : full_name,
-      }));
-    if (!current || active.some(({ id }) => id === current.id)) return active;
+      }),
+    );
+    if (!current || offered.some(({ id }) => id === current.id)) return offered;
+    const note = assigneeNote(current, plotFarmId, assignees.data?.data);
     return [
-      { id: current.id, label: `${current.full_name} · Cuenta inactiva` },
-      ...active,
+      {
+        id: current.id,
+        label: note ? `${current.full_name} · ${note}` : current.full_name,
+      },
+      ...offered,
     ];
-  }, [assignees.data, userId, current]);
+  }, [assignees.data, userId, current, plotFarmId]);
 
   return {
     farms: {

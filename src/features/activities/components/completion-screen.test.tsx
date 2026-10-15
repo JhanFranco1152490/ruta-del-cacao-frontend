@@ -91,7 +91,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function renderScreen() {
+function renderScreen(user: Parameters<typeof buildSession>[0] = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
@@ -101,6 +101,7 @@ function renderScreen() {
         PERMISSIONS.ACTIVITIES_VIEW,
         PERMISSIONS.ACTIVITIES_COMPLETE,
       ],
+      ...user,
     }),
   );
   renderWithProviders(<CompletionScreen activityId="a1" />, { queryClient });
@@ -141,6 +142,27 @@ const queuedPayload = async () =>
     CompletionPayload | undefined;
 
 describe('CompletionScreen', () => {
+  it('offers an employee of several farms only the inputs of the farm of the activity', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(agriculturalInputsHandler([urea], requests));
+    renderScreen({
+      all_farms: false,
+      farms: [
+        { id: 'f1', name: 'Finca de prueba', is_active: true },
+        { id: 'f2', name: 'Catalina', is_active: true },
+      ],
+    });
+    await form();
+    await addInput();
+
+    const options = await offered(1);
+
+    expect(options).toHaveLength(1);
+    expect(options[0]).toContain('Urea 46 %');
+    // Pide los de la finca de la parcela, aunque trabaje en dos.
+    expect(requests.at(-1)?.get('farm')).toBe('f1');
+  });
+
   it('shows the activity that is going to be recorded', async () => {
     renderScreen();
 
