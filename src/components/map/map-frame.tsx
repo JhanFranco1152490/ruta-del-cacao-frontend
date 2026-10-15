@@ -1,11 +1,13 @@
 'use client';
 
 import { cn } from 'cn';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { BaseLayerToggle } from './base-layer-toggle';
 import type { BaseLayerKind } from './base-layers';
 import { MapFocusControls, type MapFocusProps } from './map-focus-controls';
+import { MapExpandButton } from './map-expand-button';
 import { MapVisibilityButton } from './map-visibility-button';
 
 // El recuadro del mapa con sus controles encima, arriba a la derecha: así no hace falta una fila
@@ -21,6 +23,7 @@ export function MapFrame({
   focus,
   legend,
   onHide,
+  expandable = false,
 }: {
   className?: string;
   children: ReactNode;
@@ -34,14 +37,40 @@ export function MapFrame({
   // Abajo a la izquierda, donde no tapa los controles ni la atribución.
   legend?: ReactNode;
   onHide: () => void;
+  // Ofrece ver el mapa a pantalla completa: solo donde el mapa es lo único que se trabaja (los
+  // editores tienen sus botones fuera del recuadro y quedarían tapados).
+  expandable?: boolean;
 }) {
-  return (
+  const [expanded, setExpanded] = useState(false);
+
+  // Leaflet mide su contenedor al crearse y al cambiar el tamaño de la ventana: avisarle así de que
+  // el recuadro cambió de tamaño evita que dependa del proveedor del mapa. Con el mapa a pantalla
+  // completa la página no se desplaza y Esc lo cierra.
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'));
+    if (!expanded) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setExpanded(false);
+    };
+    document.addEventListener('keydown', onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [expanded]);
+
+  const frame = (
     <div
       className={cn(
-        'relative isolate overflow-hidden rounded-[var(--radius-card)] border border-border bg-muted',
-        className,
+        'relative isolate overflow-hidden bg-muted',
+        expanded
+          ? 'fixed inset-0 z-[2000] h-dvh w-screen'
+          : 'h-full rounded-[var(--radius-card)] border border-border',
       )}
       data-slot="map-frame"
+      data-expanded={expanded || undefined}
     >
       {children}
       {/* `pointer-events-none` en el contenedor: los huecos entre botones dejan pasar el toque al
@@ -58,7 +87,13 @@ export function MapFrame({
               value={baseLayer.value}
             />
           )}
-          <MapVisibilityButton onToggle={onHide} visible />
+          {expandable && (
+            <MapExpandButton
+              expanded={expanded}
+              onToggle={() => setExpanded((value) => !value)}
+            />
+          )}
+          {!expanded && <MapVisibilityButton onToggle={onHide} visible />}
         </div>
         {focus && <MapFocusControls {...focus} />}
       </div>
@@ -67,6 +102,15 @@ export function MapFrame({
           {legend}
         </div>
       )}
+    </div>
+  );
+
+  // A pantalla completa el recuadro sale a `body`: dentro de la página un contenedor fijo (sticky)
+  // encierra sus capas en su propio orden de apilado y la cabecera quedaría por encima.
+  // El contenedor de afuera guarda el lugar del recuadro mientras tanto.
+  return (
+    <div className={className}>
+      {expanded ? createPortal(frame, document.body) : frame}
     </div>
   );
 }

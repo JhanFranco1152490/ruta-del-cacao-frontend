@@ -68,6 +68,7 @@ export function PointsMapPanel({
         <>
           {visible ? (
             <MapFrame
+              expandable
               baseLayer={{ value: baseLayer, onChange: setBaseLayer }}
               className={heightClassName}
               onHide={() => setVisible(false)}

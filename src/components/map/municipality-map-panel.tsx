@@ -119,6 +119,7 @@ export function MunicipalityMapPanel({
         <div className="space-y-3">
           {visible ? (
             <MapFrame
+              expandable
               baseLayer={
                 hasBaseLayer
                   ? {

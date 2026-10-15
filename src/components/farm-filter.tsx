@@ -20,6 +20,7 @@ export function FarmFilter({
   onClear,
   label = 'Finca',
   compact = false,
+  hideLabel = false,
   className,
 }: {
   farm: string | undefined;
@@ -33,6 +34,8 @@ export function FarmFilter({
   label?: string;
   // Para una fila de filtros compactos, como en `ProducerFilter`.
   compact?: boolean;
+  // Solo la etiqueta para lectores de pantalla: el texto de ayuda dice qué se busca.
+  hideLabel?: boolean;
   className?: string;
 }) {
   const [search, setSearch] = useState('');
@@ -63,6 +66,7 @@ export function FarmFilter({
       className={className}
       compact={compact}
       emptyMessage={emptyMessage}
+      hideLabel={hideLabel}
       label={label}
       onChange={(option) => {
         const chosen = results.find(({ id }) => id === option?.id);
