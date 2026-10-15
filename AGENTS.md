@@ -340,8 +340,14 @@ referencia en `docs/ui/ref/*.html`.
 - **Dos densidades.** Pantallas de oficina: controles de 44 px, bordes de 1 px, sombra suave.
   Pantallas de captura en campo: controles de 60 px o más (la acción principal 64–76 px, ancho
   completo), bordes de 2.5 px en `--ink`, sin sombras.
-- **Espacio en las listas.** Una tarjeta de lista lleva una acción principal visible y un botón de
-  icono por cada atajo frecuente; lo demás va en `ActionsMenu` (el «⋯»). Cada dominio arma su
+- **Espacio en las listas.** Una tarjeta o fila de lista lleva su acción principal visible y un botón
+  de icono por cada atajo frecuente; lo demás va en `ActionsMenu` (el «⋯»), pero solo desde la tercera
+  acción: con dos acciones, los dos botones (el menú no ahorra nada). Los botones sobre tarjetas usan
+  la variante `action` (borde y texto `--selva` sobre blanco), que se distingue del fondo. La fila de
+  filtros es `FilterRow` (buscador siempre visible, el resto detrás de «Filtros» en celular) y una
+  tabla pasa a tarjetas compactas en celular con `COMPACT_TABLE_CLASS` (sin «etiqueta: valor» por
+  línea; el botón de ver cubre la tarjeta con `ROW_LINK_CLASS`). Los mapas de solo consulta ofrecen
+  pantalla completa (`MapFrame expandable`); los editores no, porque sus botones quedarían tapados. Cada dominio arma su
   menú; los diálogos de confirmación que se abren desde él se montan fuera del menú y se controlan
   con `ConfirmControl` (`useConfirmAction(..., control)`). Los filtros van en una fila, sin
   etiquetas visibles (`hideLabel`), y en el celular detrás de «Filtros». Los mapas que acompañan

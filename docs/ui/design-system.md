@@ -218,9 +218,24 @@ poscosecha cobre, calidad azul). Nunca emojis.
 - **Lista:** PageHeader + buscador + chips de filtro + tabla + paginación + fila de contexto al pie.
 - **Tarjeta de lista compacta:** nombre y estado en una fila, los datos en una o dos líneas, y al
   pie la acción principal (ancho completo, p. ej. «Ver detalle»), un botón de icono por cada atajo
-  frecuente (ver en el mapa, programar) y el «⋯» con el resto. Lo que necesita atención (corregir
+  frecuente (ver en el mapa, programar) y el «⋯» con el resto, pero solo si el resto son al menos
+  dos acciones: con dos acciones en total van las dos como botones. Lo que necesita atención (corregir
   un registro que no llegó al servidor) queda a la vista, no en el menú. Con ancho, 2 o 3 columnas.
-- **Filtros de lista:** una sola fila con la búsqueda y los selects, sin etiquetas visibles (el
+- **Tabla en celular:** cada fila se vuelve una tarjeta compacta de dos o tres líneas (nombre y estado
+  arriba, los datos debajo sin etiquetas, y toda la tarjeta abre el registro con una flecha). La
+  versión «etiqueta: valor» por línea hacía la lista cuatro veces más larga.
+- **Botones de acción:** variante `action` (borde y texto `--selva` sobre blanco) para los botones de
+  tarjetas y cabeceras, que el `outline` beige no distinguía de la tarjeta.
+- **Mapa a pantalla completa:** los mapas de consulta lo ofrecen con un botón junto a «ocultar». Es una
+  capa fija sobre la página (no la API nativa, que no funciona en iPhone) que se cierra con el botón o
+  con Esc; los editores no la tienen porque sus botones están fuera del recuadro.
+- **Tarjeta de parcela:** código, área y estado a la izquierda y, a la derecha, un botón de icono por
+  cada atajo (ver en el mapa, programar una actividad) y el «⋯». La caracterización va en su franja,
+  con «Editar» y el historial dentro: lo de la ficha vive con la ficha.
+- **Detalle de un registro en hoja:** al costado en pantallas anchas y desde abajo en celular, con una
+  franja `--selva` arriba (nombre, tipo y recuentos) y el contenido agrupado en secciones plegables
+  (los permisos de un rol, por área).
+- **Filtros de lista:** una sola fila con la búsqueda y los selects (los poco usados, tras «Más filtros»), sin etiquetas visibles (el
   placeholder dice qué se filtra; la etiqueta sigue ahí para los lectores de pantalla). En el
   celular, la búsqueda y un botón «Filtros» con el número de filtros activos que despliega el resto.
 - **Mapa junto a una lista:** el mapa y su resumen se ocultan juntos («Mapa y resumen ocultos»); en
