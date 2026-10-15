@@ -37,6 +37,9 @@ const FIELDS = [
   'package_size',
 ] as const;
 
+export const SHARED_INPUT_MESSAGE =
+  'Este insumo también está en otra finca: solo el productor lo edita, desactiva o elimina.';
+
 const SAVE_FAILED_MESSAGE =
   'No fue posible guardar el insumo. Revisa tu conexión e inténtalo nuevamente.';
 
@@ -47,6 +50,8 @@ export function useInputSubmit({
   input,
   form,
   producerId,
+  farmId,
+  unitReadOnly = false,
   create,
   update,
   onSaved,
@@ -55,6 +60,10 @@ export function useInputSubmit({
   form: UseFormReturn<InputFormInput, unknown, InputFormValues>;
   // Solo para la cuenta técnica al registrar.
   producerId: string | null;
+  // La finca en la que queda el insumo nuevo, si quien lo registra trabaja en varias.
+  farmId?: string | null;
+  // Un empleado nunca cambia la unidad: solo el Productor.
+  unitReadOnly?: boolean;
   create: ReturnType<typeof useCreateAgriculturalInput>;
   update: ReturnType<typeof useUpdateAgriculturalInput>;
   onSaved: (message: string) => void;
@@ -62,7 +71,9 @@ export function useInputSubmit({
   const [summary, setSummary] = useState<string>();
   const [existing, setExisting] = useState<ExistingInput>();
   const [version, setVersion] = useState(input?.version);
-  const [unitLocked, setUnitLocked] = useState(!!input?.has_records);
+  const [unitLocked, setUnitLocked] = useState(
+    !!input?.has_records || (!!input && unitReadOnly),
+  );
 
   const showError = (error: unknown) => {
     const duplicate = duplicateInputOf(error);
@@ -80,6 +91,10 @@ export function useInputSubmit({
       setUnitLocked(current.has_records);
       form.reset(formValuesOf(current));
       setSummary(STALE_INPUT_MESSAGE);
+      return;
+    }
+    if (isApiError(error) && error.code === INPUT_ERROR.shared) {
+      setSummary(SHARED_INPUT_MESSAGE);
       return;
     }
     if (isApiError(error) && error.code === INPUT_ERROR.unitLocked && input) {
@@ -108,9 +123,11 @@ export function useInputSubmit({
         });
         onSaved(INPUT_UPDATED_MESSAGE);
       } else {
-        await create.mutateAsync(
-          producerId ? { ...values, producer_id: producerId } : values,
-        );
+        await create.mutateAsync({
+          ...values,
+          ...(producerId ? { producer_id: producerId } : {}),
+          ...(farmId ? { farm_id: farmId } : {}),
+        });
         onSaved(INPUT_SAVED_MESSAGE);
       }
     } catch (error) {

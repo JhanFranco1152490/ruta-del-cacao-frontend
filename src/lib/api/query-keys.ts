@@ -37,6 +37,11 @@ export const queryKeys = {
     // cuenta técnica elige el productor; las demás cuentas ven el suyo y pasan `null`.
     list: (producer: string | null) =>
       ['agricultural-inputs', 'list', producer] as const,
+    // Los que están en una finca: lo que se ofrece a un empleado al registrar una labor en ella.
+    farm: (farmId: string) => ['agricultural-inputs', 'farm', farmId] as const,
+    // La búsqueda en todo el catálogo, para traer a la finca un insumo que usa otra.
+    catalog: (search: string) =>
+      ['agricultural-inputs', 'catalog', search] as const,
   },
   inputStocks: {
     // Lo que invalida una entrada o un conteo, y la salida de una actividad que llega del

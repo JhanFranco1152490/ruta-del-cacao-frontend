@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -34,6 +35,35 @@ export type AgriculturalInputCreateRequest =
 export type AgriculturalInputUpdateRequest =
   Schemas['PatchedAgriculturalInputUpdateRequest'];
 export type ExistingInput = Schemas['ExistingInput'];
+// Un insumo del catálogo tal como lo encuentra quien busca traerlo a su finca: sin existencias.
+export type CatalogInput = Schemas['CatalogInput'];
+// Lo que necesita una entrada o un conteo de un insumo: su nombre, su unidad y su presentación.
+export type MovementInput = Pick<
+  AgriculturalInput,
+  'id' | 'name' | 'unit' | 'package_type' | 'package_size'
+>;
+export const CATALOG_SEARCH_MIN_LENGTH = 2;
+
+export async function fetchCatalogSearch(
+  search: string,
+  signal?: AbortSignal,
+): Promise<CatalogInput[]> {
+  const { results } = await apiFetch<Schemas['CatalogInputList']>(
+    `/api/agricultural-inputs/catalog?${new URLSearchParams({ search })}`,
+    { signal },
+  );
+  return results;
+}
+
+// Busca por nombre en todo el catálogo activo del productor. Solo con conexión: es para
+// registrar una entrada, que también la necesita.
+export const useCatalogSearch = (search: string) =>
+  useQuery({
+    queryKey: queryKeys.agriculturalInputs.catalog(search),
+    queryFn: ({ signal }) => fetchCatalogSearch(search, signal),
+    enabled: search.length >= CATALOG_SEARCH_MIN_LENGTH,
+    placeholderData: keepPreviousData,
+  });
 export type InputMovement = Schemas['InputMovement'];
 export type InputMovementCreateRequest = Schemas['InputMovementCreateRequest'];
 export type InputMovementResult = Schemas['InputMovementResult'];
@@ -44,6 +74,7 @@ export const INPUT_ERROR = {
   duplicate: 'duplicate_input',
   hasRecords: 'input_has_records',
   unitLocked: 'input_unit_locked',
+  shared: 'input_shared',
   inputInactive: 'input_inactive',
   farmInactive: 'farm_inactive',
   producerInactive: 'producer_inactive',
