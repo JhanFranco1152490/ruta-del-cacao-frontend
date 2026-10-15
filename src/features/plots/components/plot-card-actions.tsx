@@ -33,9 +33,10 @@ export function PlotCardActions({
 }: {
   plot: KnownPlot;
   farm: ActionsFarm;
-  // La tarjeta es angosta: aquí no hay más botón que el «⋯», y lo que iría a la vista (corregir, ver
-  // en el mapa y lo que sume otro dominio) pasa a su menú.
+  // La tarjeta es angosta: aquí no hay más botón que el «⋯», y lo que iría a la vista (corregir y
+  // lo que sume otro dominio) pasa a su menú.
   compact?: boolean;
+  // Ver la parcela en el mapa: siempre en el menú, además del botón a la vista de la tarjeta ancha.
   onShowOnMap?: () => void;
   // Opciones de otro dominio (programar una actividad), solo para la tarjeta angosta.
   extraItems?: ReactNode;
@@ -68,8 +69,8 @@ export function PlotCardActions({
       : null;
   const canDeactivate = serverPlot && canChange && farm.isActive;
   const canDelete = serverPlot && canDeletePlot && farm.isActive;
-  const compactItems = compact && (onShowOnMap || extraItems);
-  if (!showEdit && !isError && !canDeactivate && !canDelete && !compactItems) {
+  const leadingItems = onShowOnMap || (compact && extraItems);
+  if (!showEdit && !isError && !canDeactivate && !canDelete && !leadingItems) {
     return null;
   }
 
@@ -80,7 +81,7 @@ export function PlotCardActions({
 
   const menu = (
     <ActionsMenu className="size-10 px-0" label={menuLabel}>
-      {compact && onShowOnMap && (
+      {onShowOnMap && (
         <MenuItem onClick={onShowOnMap}>
           <MapPinned aria-hidden="true" className="size-4" />
           Ver en el mapa
@@ -129,7 +130,7 @@ export function PlotCardActions({
   );
   // Sin nada que ofrecer en el menú no se dibuja: solo queda el enlace a la vista.
   const hasMenuItems =
-    compactItems ||
+    leadingItems ||
     (showEdit && !visibleEdit) ||
     isError ||
     canDeactivate ||

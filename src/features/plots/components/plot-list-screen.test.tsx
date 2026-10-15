@@ -294,6 +294,33 @@ describe('PlotListScreen', () => {
     expect(other).not.toHaveAttribute('data-highlighted');
   });
 
+  it('offers to show on the map, from the menu, only the plots that have a polygon', async () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    server.use(
+      plotsHandler([
+        buildPlot({ id: 'pl1', code: 'P1', boundary: BOUNDARY }),
+        buildPlot({ id: 'pl2', code: 'P2' }),
+      ]),
+    );
+    const { user } = renderScreen();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Más acciones de P2' }),
+    );
+    expect(
+      screen.queryByRole('menuitem', { name: 'Ver en el mapa' }),
+    ).not.toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await user.click(
+      screen.getByRole('button', { name: 'Más acciones de P1' }),
+    );
+    await user.click(
+      await screen.findByRole('menuitem', { name: 'Ver en el mapa' }),
+    );
+
+    expect(await screen.findByText('Enfocado: pl1')).toBeInTheDocument();
+  });
+
   it('gives each card what another domain adds, with the ids of the page', async () => {
     server.use(
       plotsHandler([

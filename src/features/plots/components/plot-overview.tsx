@@ -160,8 +160,13 @@ export function PlotOverview({
                     label={labelOf(sections, groupPlots)}
                     onShowOnMap={showOnMap}
                     plots={groupPlots}
-                    renderActions={(plot) => (
-                      <PlotCardActions farm={plot.farm} plot={plot} />
+                    renderActions={(plot, card) => (
+                      <PlotCardActions
+                        compact={card.compact}
+                        farm={plot.farm}
+                        onShowOnMap={card.showOnMap}
+                        plot={plot}
+                      />
                     )}
                     renderDetails={(plot) => (
                       <>
