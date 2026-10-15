@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 
@@ -15,6 +16,7 @@ import type { QueueView } from '@/components/sync-tray/queue-view';
 import { SyncTray } from '@/components/sync-tray/sync-tray';
 import { NAV_ITEMS, visibleNavItems } from '@/config/navigation';
 import { HOME_PATH, SIGN_IN_PATH } from '@/config/routes';
+import { queryKeys } from '@/lib/api/query-keys';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useNotifyAfterSync } from '@/hooks/use-notify-after-sync';
 import { useNotifyRejected } from '@/hooks/use-notify-rejected';
@@ -27,6 +29,7 @@ import { saveSessionSnapshot } from '@/lib/offline/session-snapshot';
 
 import { useLogout, useSession, useSessionConfirmed } from '../api';
 import { AccountDialog } from './account-dialog';
+import { NoFarmNotice } from './no-farm-notice';
 
 // Conecta el marco con la sesión: menú según los permisos, cuenta, bandeja del dispositivo y la
 // comprobación de permiso y conexión de cada sección.
@@ -39,6 +42,7 @@ export function SessionShell({
   queueViews?: readonly QueueView[];
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: user } = useSession();
   const confirmed = useSessionConfirmed();
   const logout = useLogout();
@@ -58,12 +62,19 @@ export function SessionShell({
   // la sesión (no solo cuando se escribe la contraseña): la sesión se renueva sola en segundo
   // plano, así que exigir un inicio de sesión explícito para seguir contando la ventana offline
   // purgaría el trabajo de alguien que sigue activo a diario. Con la copia del dispositivo no:
-  // la copia no puede renovarse a sí misma.
+  // la copia no puede renovarse a sí misma. Si cambiaron las fincas de la cuenta, lo que se
+  // leyó de las anteriores se vuelve a pedir: el servidor ya no lo devuelve igual.
   useEffect(() => {
     if (!user || !confirmed) return;
     void recordLogin(user.id);
-    void saveSessionSnapshot(user);
-  }, [user, confirmed]);
+    void saveSessionSnapshot(user).then((farmsChanged) => {
+      if (!farmsChanged) return;
+      const [session] = queryKeys.session();
+      void queryClient.invalidateQueries({
+        predicate: ({ queryKey }) => queryKey[0] !== session,
+      });
+    });
+  }, [user, confirmed, queryClient]);
 
   // Arranca el motor offline con la sesión activa: purga lo huérfano, procesa lo pendiente y
   // vuelve a intentar cuando regresa la conexión o el Service Worker avisa que corrió una
@@ -135,6 +146,7 @@ export function SessionShell({
       sidebar={<NavList items={items} />}
       sidebarHidden={sidebar.hidden}
     >
+      {user && <NoFarmNotice user={user} />}
       <SectionGate items={NAV_ITEMS}>{children}</SectionGate>
       {user && (
         <AccountDialog

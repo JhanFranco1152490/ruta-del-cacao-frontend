@@ -7,6 +7,7 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { useSession } from '@/hooks/use-session';
 import { useFarmDetail } from '@/lib/api/farm-detail';
+import { onlyFarmOf } from '@/lib/farm-scope';
 import { useProducerSummary } from '@/lib/api/producer-options';
 
 import type {
@@ -54,18 +55,21 @@ export function PlotOverviewFiltersBar({
           value={filters.searchInput}
           wrapperClassName="w-full max-w-md"
         />
-        <FarmFilter
-          className="w-full sm:w-80"
-          farm={filters.farm ?? undefined}
-          label="Filtrar por finca"
-          onClear={() => void filters.setFarm(null)}
-          onSelect={(option) =>
-            void filters.setFarm(option.id, option.producer.id)
-          }
-          producer={filters.producer ?? undefined}
-          selectedLabel={filters.farm ? farm.data?.data.name : undefined}
-          showProducer={pickProducer}
-        />
+        {/* Quien trabaja en una sola finca no tiene otra que buscar. */}
+        {!onlyFarmOf(user) && (
+          <FarmFilter
+            className="w-full sm:w-80"
+            farm={filters.farm ?? undefined}
+            label="Filtrar por finca"
+            onClear={() => void filters.setFarm(null)}
+            onSelect={(option) =>
+              void filters.setFarm(option.id, option.producer.id)
+            }
+            producer={filters.producer ?? undefined}
+            selectedLabel={filters.farm ? farm.data?.data.name : undefined}
+            showProducer={pickProducer}
+          />
+        )}
         {pickProducer && (
           <ProducerFilter
             className="w-full sm:w-80"
