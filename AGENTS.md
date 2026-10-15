@@ -157,6 +157,34 @@ src/
     la lista (`activity-form-dialog.tsx` guarda la finca elegida aparte, `farmFilter`). La cuenta técnica
     puede acotar por productor (`activity-producer-field.tsx`), pero es opcional: el productor de los
     responsables sale de la parcela o la finca elegida. No viaja en la petición.
+  - **Responsables por finca** (`assignees.ts`): se ofrecen las cuentas activas `assignable` que
+    trabajan en la finca de la parcela (`farm_ids`), y el Productor, que vale para todas. Las tarjetas y
+    el detalle marcan **Responsable fuera de la finca** con la lista que el calendario comparte por
+    `AssigneesContext`. Al registrar la realización, un empleado elige entre los insumos de la finca de
+    la actividad (`useFarmInputs`); el Productor, del catálogo completo.
+
+- **Empleados y fincas.** Un empleado trabaja en una o varias fincas de su productor y solo alcanza lo
+  de ellas; el servidor ya filtra todo. La sesión trae `farms` y `all_farms` (verdadero para el
+  Productor y la cuenta técnica): la interfaz los usa para decidir qué ofrecer, nunca para autorizar.
+  Quién es empleado lo dice `isFarmEmployee` (`lib/farm-scope.ts`): tiene productor y no alcanza todas;
+  el Administrador de la asociación no lo es.
+  - **Usuarios:** el Productor marca las fincas de un empleado en casillas (`account-farm-field.tsx`),
+    obligatorias si sus roles traen permisos de campo (`isFieldPermission`). Las fincas solo viajan al
+    editar si cambiaron, y quitarle una avisa antes de guardar qué pasa con sus labores y su cola. La
+    lista filtra por finca (`?finca=`, o `sin-finca`) y avisa cuántos empleados no tienen ninguna
+    (`missing-farms-notice.tsx`).
+  - **Personalizar permisos** (`customize-role-dialog.tsx`, `use-role-customization.ts`): desde el
+    formulario de la cuenta, parte de un rol predefinido, quita permisos y lo guarda como rol propio,
+    que queda elegido en lugar del original. Solo con `accounts.roles_manage`.
+  - **Insumos:** un empleado trae a su finca un insumo de otra con «Entrada de otro insumo»
+    (`catalog-entry-dialog.tsx`, búsqueda en el catálogo sin cantidades), dice en qué finca queda uno
+    nuevo si trabaja en varias y no cambia la unidad.
+  - **Selectores de finca:** quien trabaja en una sola (`onlyFarmOf`) los ve fijos en ella, sin «Todas
+    las fincas» (insumos, filtro del calendario); en parcelas no se muestra el buscador de finca.
+  - **Sin conexión:** si las fincas de la sesión cambiaron desde la copia del dispositivo,
+    `saveSessionSnapshot` borra las lecturas guardadas (la cola se conserva) y el marco vuelve a pedir
+    todo.
+  - Un empleado de campo sin fincas ve un aviso arriba de todas las pantallas (`no-farm-notice.tsx`).
   - **Mes y Por parcela tienen forma de escritorio y de celular** (`useIsDesktop`): cuadrícula grande y
     tabla donde caben; en celular, una cuadrícula compacta con la agenda del día elegido (`?dia=`) y
     tarjetas por parcela. La cuadrícula es `role="grid"` con una sola parada de

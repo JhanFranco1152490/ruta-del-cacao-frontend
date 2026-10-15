@@ -11,6 +11,8 @@ import { useAccountSubmit } from '@/hooks/use-account-submit';
 import { notify } from '@/lib/notify';
 import { AccountFarmsField } from './account-farm-field';
 import { RoleCheckboxes } from './role-checkboxes';
+import { useRoleCustomization } from '../use-role-customization';
+import { CustomizeRoleDialog } from './customize-role-dialog';
 
 const rolesSchema = z.object({
   role_ids: roleIdsSchema,
@@ -22,6 +24,8 @@ export function AccountRolesForm({
   account,
   roles,
   farmsOf,
+  canCustomizeRoles = false,
+  producer,
   onDone,
   onBusy,
 }: {
@@ -29,11 +33,17 @@ export function AccountRolesForm({
   roles: Role[];
   // De quién son las fincas que se ofrecen; ausente si quien edita no asigna la finca.
   farmsOf?: { userId: string; producer?: string };
+  // Si quien edita puede crear roles: entonces ofrece "Personalizar permisos".
+  canCustomizeRoles?: boolean;
+  // Solo la cuenta técnica: el productor del rol que se personaliza.
+  producer?: string;
   onDone: () => void;
   onBusy: (value: boolean) => void;
 }) {
   const mutation = useSetAccountRoles(account.id);
-  const assignable = new Set(roles.map((role) => role.id));
+  const customization = useRoleCustomization(roles, canCustomizeRoles);
+  const offered = customization.roles;
+  const assignable = new Set(offered.map((role) => role.id));
   const locked = account.roles.filter((role) => !assignable.has(role.id));
   const form = useForm<RolesValues>({
     resolver: zodResolver(rolesSchema),
@@ -49,7 +59,9 @@ export function AccountRolesForm({
   const roleIds = useWatch({ control, name: 'role_ids' });
   // Al ganar permisos de campo, una cuenta sin finca las recibe en la misma operación.
   const asksFarm =
-    Boolean(farmsOf) && !account.farms.length && rolesNeedFarm(roleIds, roles);
+    Boolean(farmsOf) &&
+    !account.farms.length &&
+    rolesNeedFarm(roleIds, offered);
   const { run, failure } = useAccountSubmit({
     setError: form.setError,
     fields: ['role_ids', 'farm_ids'],
@@ -74,60 +86,85 @@ export function AccountRolesForm({
     });
   };
   return (
-    <form
-      className="space-y-5"
-      onSubmit={(event) => {
-        void form.handleSubmit(submit)(event);
-      }}
-    >
-      <Controller
-        name="role_ids"
-        control={control}
-        render={({ field }) => (
-          <RoleCheckboxes
-            legend="Roles de la cuenta"
-            roles={roles}
-            locked={locked}
-            value={field.value}
-            onChange={field.onChange}
-            error={errors.role_ids?.message}
-            disabled={isSubmitting}
-          />
-        )}
-      />
-      {asksFarm && farmsOf && (
+    <>
+      <form
+        className="space-y-5"
+        onSubmit={(event) => {
+          void form.handleSubmit(submit)(event);
+        }}
+      >
         <Controller
-          name="farm_ids"
+          name="role_ids"
           control={control}
           render={({ field }) => (
-            <AccountFarmsField
-              userId={farmsOf.userId}
-              producer={farmsOf.producer}
-              required
+            <RoleCheckboxes
+              legend="Roles de la cuenta"
+              roles={offered}
+              canCustomize={(option) => {
+                const role = offered.find(({ id }) => id === option.id);
+                return !!role && customization.canCustomize(role);
+              }}
+              onCustomize={(option) => {
+                const role = offered.find(({ id }) => id === option.id);
+                if (role) customization.start(role);
+              }}
+
+              locked={locked}
               value={field.value}
               onChange={field.onChange}
+              error={errors.role_ids?.message}
               disabled={isSubmitting}
-              error={errors.farm_ids?.message}
             />
           )}
         />
+        {asksFarm && farmsOf && (
+          <Controller
+            name="farm_ids"
+            control={control}
+            render={({ field }) => (
+              <AccountFarmsField
+                userId={farmsOf.userId}
+                producer={farmsOf.producer}
+                required
+                value={field.value}
+                onChange={field.onChange}
+                disabled={isSubmitting}
+                error={errors.farm_ids?.message}
+              />
+            )}
+          />
+        )}
+        {failure && (
+          <p role="alert" className="text-err">
+            {failure}
+          </p>
+        )}
+        <SubmitButton pending={isSubmitting} pendingLabel="Guardando…">
+          Guardar roles
+        </SubmitButton>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isSubmitting}
+          onClick={onDone}
+        >
+          Cancelar
+        </Button>
+      </form>
+      {customization.customizing && (
+        <CustomizeRoleDialog
+          base={customization.customizing}
+          producer={producer}
+          onClose={customization.close}
+          onCreated={(role) =>
+            form.setValue(
+              'role_ids',
+              customization.finish(role, form.getValues('role_ids')),
+              { shouldValidate: true },
+            )
+          }
+        />
       )}
-      {failure && (
-        <p role="alert" className="text-err">
-          {failure}
-        </p>
-      )}
-      <SubmitButton pending={isSubmitting} pendingLabel="Guardando…">
-        Guardar roles
-      </SubmitButton>
-      <Button
-        type="button"
-        variant="outline"
-        disabled={isSubmitting}
-        onClick={onDone}
-      >
-        Cancelar
-      </Button>
-    </form>
+    </>
   );
 }

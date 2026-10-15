@@ -55,6 +55,7 @@ export function AccountCreatePanel({
       roles={roles}
       administrator={administrator}
       producer={association ? producer : undefined}
+      canCustomizeRoles={hasPermission(user, PERMISSIONS.ROLES_MANAGE)}
       // La finca la asigna quien alcanza todas (el Productor o la cuenta técnica) y solo a un
       // empleado: las cuentas de la asociación y la del Productor no la llevan.
       farmsOf={

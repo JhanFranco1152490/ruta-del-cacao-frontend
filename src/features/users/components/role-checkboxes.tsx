@@ -1,5 +1,7 @@
 'use client';
+import { SlidersHorizontal } from 'lucide-react';
 import { CheckboxField } from '@/components/checkbox-field';
+import { Button } from '@/components/ui/button';
 
 type RoleOption = { id: string; name: string; description?: string };
 
@@ -14,6 +16,8 @@ export function RoleCheckboxes({
   onChange,
   error,
   disabled,
+  canCustomize,
+  onCustomize,
 }: {
   legend: string;
   roles: RoleOption[];
@@ -22,6 +26,9 @@ export function RoleCheckboxes({
   onChange: (value: string[]) => void;
   error?: string;
   disabled: boolean;
+  // "Personalizar permisos": parte de este rol para crear uno propio con menos permisos.
+  canCustomize?: (role: RoleOption) => boolean;
+  onCustomize?: (role: RoleOption) => void;
 }) {
   return (
     <>
@@ -40,20 +47,35 @@ export function RoleCheckboxes({
           />
         ))}
         {roles.map((role) => (
-          <CheckboxField
-            key={role.id}
-            label={role.name}
-            hint={role.description || undefined}
-            checked={value.includes(role.id)}
-            disabled={disabled}
-            onCheckedChange={(checked) =>
-              onChange(
-                checked
-                  ? [...value, role.id]
-                  : value.filter((id) => id !== role.id),
-              )
-            }
-          />
+          <div key={role.id}>
+            <CheckboxField
+              label={role.name}
+              hint={role.description || undefined}
+              checked={value.includes(role.id)}
+              disabled={disabled}
+              onCheckedChange={(checked) =>
+                onChange(
+                  checked
+                    ? [...value, role.id]
+                    : value.filter((id) => id !== role.id),
+                )
+              }
+            />
+            {onCustomize && canCustomize?.(role) && (
+              <Button
+                aria-label={`Personalizar permisos de ${role.name}`}
+                className="ml-8"
+                disabled={disabled}
+                onClick={() => onCustomize(role)}
+                size="sm"
+                type="button"
+                variant="link"
+              >
+                <SlidersHorizontal aria-hidden="true" className="size-4" />
+                Personalizar permisos
+              </Button>
+            )}
+          </div>
         ))}
       </fieldset>
       {error && (
