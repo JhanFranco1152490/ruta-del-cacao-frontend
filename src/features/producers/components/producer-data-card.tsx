@@ -33,7 +33,7 @@ export function ProducerDataCard({
         </div>
         <ProducerStatusBadge status={producer.status} />
       </div>
-      <dl className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <dl className="mt-6 grid gap-5 sm:grid-cols-2">
         <DataItem label="Documento">
           <MaskedValue
             prefix={producer.document_type}

@@ -1,7 +1,10 @@
 'use client';
 
+import { Info } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { CacaoPlant } from '@/components/brand/cacao-plant';
+import { PageHeader } from '@/components/page-header';
 import { FarmGateFromQuery } from '@/features/farms/components/farm-gate-from-query';
 import { FarmPicker } from '@/features/farms/components/farm-picker';
 import { NewPlotScreen } from '@/features/plots/components/new-plot-screen';
@@ -18,16 +21,31 @@ export function NewPlotWithFarm() {
   return (
     <FarmGateFromQuery
       missing={
-        <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-8 sm:px-8">
-          <h1 className="text-3xl text-selva">Registrar parcela</h1>
-          <p className="text-muted-foreground">
-            ¿En qué finca? Busca la finca por su nombre.
-          </p>
-          <FarmPicker
-            onPick={(id) =>
-              router.push(withOrigin(plotNewPath(id), origin ?? ''))
-            }
+        <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-8">
+          <PageHeader
+            compact
+            description="¿En qué finca? Busca la finca por su nombre."
+            eyebrow="Parcelas"
+            title="Registrar parcela"
           />
+          <div className="mt-6 flex items-center gap-8 rounded-[var(--radius-card)] bg-card p-5 shadow-card sm:p-8">
+            <div className="min-w-0 flex-1 space-y-4">
+              <FarmPicker
+                onPick={(id) =>
+                  router.push(withOrigin(plotNewPath(id), origin ?? ''))
+                }
+              />
+              <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                En el siguiente paso pones el código, el área y, si quieres, el
+                polígono. Puedes hacerlo sin conexión.
+              </p>
+            </div>
+            <CacaoPlant
+              aria-hidden="true"
+              className="hidden h-44 w-48 shrink-0 md:block"
+            />
+          </div>
         </div>
       }
     >

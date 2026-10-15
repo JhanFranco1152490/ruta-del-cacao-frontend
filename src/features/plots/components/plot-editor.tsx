@@ -141,7 +141,7 @@ export function PlotEditor({
   const saveBlocked = !!blockedMessage || editor.hasBlockers;
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
       <Breadcrumb
         items={[
           { label: 'Fincas', href: '/fincas' },
@@ -150,14 +150,15 @@ export function PlotEditor({
         ]}
       />
       <PageHeader
+        compact
         eyebrow={`Finca ${farm.name}`}
         title={title}
         description={description}
       />
-      {banner && <div className="mt-6">{banner}</div>}
+      {banner && <div className="mt-4">{banner}</div>}
       {notice}
       <form
-        className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+        className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
         noValidate
         onSubmit={handleSubmit((values) =>
           onSubmit({
@@ -169,7 +170,7 @@ export function PlotEditor({
       >
         {/* Pegado al desplazarse: con muchos vértices la lista de la derecha es larga y el mapa
             sigue a la vista mientras se recorre. */}
-        <div className="space-y-4 lg:sticky lg:top-20">
+        <div className="space-y-3 lg:sticky lg:top-20">
           <PolygonEditorMapPanel
             disabled={isSaving}
             drawing={draft.drawing}
@@ -206,7 +207,7 @@ export function PlotEditor({
           />
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <FormSection title="Datos de la parcela">
             <div className="grid gap-5">
               <TextField

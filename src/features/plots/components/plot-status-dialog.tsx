@@ -6,7 +6,10 @@ import {
   type StatusChangeAction,
   StatusChangeDialog,
 } from '@/components/status-change-dialog';
-import { useConfirmAction } from '@/hooks/use-confirm-action';
+import {
+  type ConfirmControl,
+  useConfirmAction,
+} from '@/hooks/use-confirm-action';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import { notify } from '@/lib/notify';
 
@@ -65,9 +68,12 @@ export function statusErrorMessage(error: unknown, isReactivating: boolean) {
 export function PlotStatusDialog({
   plot,
   farmId,
+  control,
 }: {
   plot: KnownPlot & { version: number };
   farmId: string;
+  // Abierto desde un menú de acciones: sin botón propio.
+  control?: ConfirmControl;
 }) {
   const changeStatus = useChangePlotStatus();
   const target = plot.isActive ? 'inactive' : 'active';
@@ -85,7 +91,14 @@ export function PlotStatusDialog({
       );
     },
     (error) => statusErrorMessage(error, target === 'active'),
+    control,
   );
 
-  return <StatusChangeDialog trigger={action} action={action} {...dialog} />;
+  return (
+    <StatusChangeDialog
+      trigger={control ? undefined : action}
+      action={action}
+      {...dialog}
+    />
+  );
 }

@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { onlineManager } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { recordLogin } from '@/lib/offline/session-clock';
@@ -29,6 +30,8 @@ import { server } from '@/test/server';
 
 import { enqueueFarmCreate, enqueueFarmUpdate } from '../farm-queue';
 import type { FarmFormValues } from '../schemas';
+vi.mock('@/hooks/use-is-desktop', () => ({ useIsDesktop: vi.fn() }));
+
 import { FarmListScreen } from './farm-list-screen';
 
 const farm: FarmFormValues = {
@@ -45,6 +48,7 @@ let userId: string;
 
 beforeEach(async () => {
   userId = `farm-list-${crypto.randomUUID()}`;
+  vi.mocked(useIsDesktop).mockReturnValue(true);
   // La app lo registra cada vez que el servidor confirma la sesión.
   await recordLogin(userId);
   server.use(
@@ -73,6 +77,17 @@ const farmCards = async () =>
   within(await screen.findByRole('list', { name: 'Fincas' })).getAllByRole(
     'article',
   );
+
+type User = ReturnType<typeof userEvent.setup>;
+
+// Las acciones que no se hacen a diario van en el menú «⋯» de la tarjeta.
+const openMenu = (user: User, card: HTMLElement) =>
+  user.click(within(card).getByRole('button', { name: /^Más acciones de/ }));
+
+async function chooseFromMenu(user: User, card: HTMLElement, name: string) {
+  await openMenu(user, card);
+  await user.click(await screen.findByRole('menuitem', { name }));
+}
 
 describe('FarmListScreen', () => {
   it('invites to register the first farm when there are none', async () => {
@@ -166,7 +181,7 @@ describe('FarmListScreen', () => {
       within(card).getByRole('link', { name: 'Corregir La Esperanza' }),
     ).toHaveAttribute('href', '/fincas/editar?id=f1');
     expect(
-      within(card).queryByRole('button', { name: 'Descartar' }),
+      within(card).queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();
   });
 
@@ -177,11 +192,11 @@ describe('FarmListScreen', () => {
     renderScreen();
 
     const [card] = await farmCards();
-    await user.click(within(card).getByRole('button', { name: 'Descartar' }));
+    await chooseFromMenu(user, card, 'Descartar');
     await user.click(screen.getByRole('button', { name: 'Cancelar' }));
     expect(await getOfflineDb(userId).queue.get('f1')).toBeDefined();
 
-    await user.click(within(card).getByRole('button', { name: 'Descartar' }));
+    await chooseFromMenu(user, card, 'Descartar');
     expect(
       screen.getByRole('heading', {
         name: '¿Descartar la finca La Esperanza?',
@@ -265,12 +280,16 @@ describe('FarmListScreen', () => {
     expect(
       within(card).getByRole('link', { name: 'Ver detalle de El Porvenir' }),
     ).toHaveAttribute('href', '/fincas/detalle?id=s1');
-    // Editar está en la tarjeta y también en el detalle.
+    // Lo que no se hace a diario va en el menú de la tarjeta, no a la vista.
     expect(
-      within(card).getByRole('link', { name: 'Editar El Porvenir' }),
+      within(card).queryByRole('link', { name: /Editar/ }),
+    ).not.toBeInTheDocument();
+    await openMenu(userEvent.setup(), card);
+    expect(
+      await screen.findByRole('menuitem', { name: 'Editar' }),
     ).toHaveAttribute('href', '/fincas/editar?id=s1');
     expect(
-      within(card).getByRole('button', { name: 'Activar' }),
+      screen.getByRole('menuitem', { name: 'Activar' }),
     ).toBeInTheDocument();
   });
 
@@ -304,7 +323,7 @@ describe('FarmListScreen', () => {
     });
 
     const [card] = await farmCards();
-    await user.click(within(card).getByRole('button', { name: 'Desactivar' }));
+    await chooseFromMenu(user, card, 'Desactivar');
     await user.click(screen.getByRole('button', { name: 'Desactivar finca' }));
 
     await waitFor(() =>
@@ -325,7 +344,7 @@ describe('FarmListScreen', () => {
     });
 
     const [card] = await farmCards();
-    await user.click(within(card).getByRole('button', { name: 'Desactivar' }));
+    await chooseFromMenu(user, card, 'Desactivar');
     await user.click(screen.getByRole('button', { name: 'Desactivar finca' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -395,6 +414,73 @@ describe('FarmListScreen', () => {
 });
 
 describe('FarmListScreen map', () => {
+  it('starts with the map hidden on a phone so the list comes first, and shows it on demand', async () => {
+    vi.mocked(useIsDesktop).mockReturnValue(false);
+    const user = userEvent.setup();
+    server.use(
+      farmMapCountsHandler([
+        { municipality_id: '54001', farm_count: 1 },
+        { municipality_id: '54518', farm_count: 1 },
+      ]),
+    );
+    renderScreen({ searchParams: '?vista=municipios' });
+
+    await screen.findByText('Mapa y resumen ocultos');
+    expect(
+      screen.queryByRole('list', { name: 'Municipios del mapa' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar mapa' }));
+
+    expect(
+      await screen.findByRole('list', { name: 'Municipios del mapa' }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides the summary together with the map, and brings both back', async () => {
+    const user = userEvent.setup();
+    server.use(
+      farmMapCountsHandler([
+        { municipality_id: '54001', farm_count: 1 },
+        { municipality_id: '54518', farm_count: 1 },
+      ]),
+    );
+    renderScreen({ searchParams: '?vista=municipios' });
+    expect(
+      await screen.findByRole('complementary', { name: 'Resumen de fincas' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
+
+    expect(screen.getByText('Mapa y resumen ocultos')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('complementary', { name: 'Resumen de fincas' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar mapa' }));
+
+    expect(
+      await screen.findByRole('complementary', { name: 'Resumen de fincas' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the map from the start on a wide screen', async () => {
+    server.use(
+      farmMapCountsHandler([
+        { municipality_id: '54001', farm_count: 1 },
+        { municipality_id: '54518', farm_count: 1 },
+      ]),
+    );
+    renderScreen({ searchParams: '?vista=municipios' });
+
+    expect(
+      await screen.findByRole('list', { name: 'Municipios del mapa' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Mapa y resumen ocultos'),
+    ).not.toBeInTheDocument();
+  });
+
   it('applies the search box to the map too', async () => {
     const countRequests: URLSearchParams[] = [];
     server.use(farmMapCountsHandler([], countRequests));
@@ -633,7 +719,7 @@ describe('FarmListScreen for the association', () => {
     const combobox = await screen.findByLabelText('Filtrar por productor');
     expect(combobox).toHaveAttribute(
       'placeholder',
-      'Nombre, documento o código',
+      'Productor: nombre, documento o código',
     );
     await waitFor(() => expect(farmRequests.length).toBeGreaterThan(0));
     expect(farmRequests.at(-1)?.has('producer')).toBe(false);
@@ -679,7 +765,7 @@ describe('FarmListScreen for the association', () => {
       screen.getByRole('link', { name: 'Ver detalle de El Porvenir' }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: /Desactivar|Activar|Eliminar/ }),
+      screen.queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();
   });
 

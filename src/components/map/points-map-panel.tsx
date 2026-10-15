@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 
 import type { BaseLayerKind } from './base-layers';
 import { MapFrame, MapHiddenBar } from './map-frame';
@@ -21,6 +22,8 @@ export function PointsMapPanel({
   emptyMessage,
   toolbar,
   loadProvider,
+  heightClassName = 'h-64 md:h-80',
+  hiddenOnMobile = false,
 }: {
   label: string;
   points: readonly MapPoint[];
@@ -33,10 +36,21 @@ export function PointsMapPanel({
   toolbar?: ReactNode;
   // Referencia estable (una constante de módulo): cambiarla vuelve a cargar el mapa.
   loadProvider: LoadPointsMapProvider;
+  heightClassName?: string;
+  // En el celular el mapa empieza oculto y la lista queda más arriba; pedir una forma (`focus`) lo
+  // vuelve a mostrar.
+  hiddenOnMobile?: boolean;
 }) {
   const map = useMapProvider(loadProvider);
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
-  const [visible, setVisible] = useState(true);
+  const isDesktop = useIsDesktop();
+  const [chosenVisible, setVisible] = useState<boolean>();
+  const visible = chosenVisible ?? (hiddenOnMobile ? isDesktop : true);
+  const [shownFocus, setShownFocus] = useState(focus);
+  if (focus !== shownFocus) {
+    setShownFocus(focus);
+    if (focus) setVisible(true);
+  }
 
   const { Provider } = map;
 
@@ -44,7 +58,7 @@ export function PointsMapPanel({
     <section aria-label={label} className="space-y-2">
       {toolbar && <div>{toolbar}</div>}
       {map.isLoading ? (
-        <MapSkeleton className="h-64 md:h-80" />
+        <MapSkeleton className={heightClassName} />
       ) : !Provider ? (
         <ErrorState
           message="No fue posible cargar el mapa. La lista de abajo sigue disponible."
@@ -54,8 +68,9 @@ export function PointsMapPanel({
         <>
           {visible ? (
             <MapFrame
+              expandable
               baseLayer={{ value: baseLayer, onChange: setBaseLayer }}
-              className="h-64 md:h-80"
+              className={heightClassName}
               onHide={() => setVisible(false)}
             >
               <Provider

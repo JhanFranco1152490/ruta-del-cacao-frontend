@@ -9,11 +9,21 @@ import {
 
 import type { FarmListItem } from '../farm-list-item';
 import { queueErrorMessage } from '../queue-error-message';
-import { useConfirmAction } from '@/hooks/use-confirm-action';
+import {
+  type ConfirmControl,
+  useConfirmAction,
+} from '@/hooks/use-confirm-action';
 import { notify } from '@/lib/notify';
 import { useFarmDiscard } from '../use-farm-queue';
 
-export function FarmDiscardDialog({ farm }: { farm: FarmListItem }) {
+export function FarmDiscardDialog({
+  farm,
+  control,
+}: {
+  farm: FarmListItem;
+  // Abierto desde un menú de acciones: sin botón propio.
+  control?: ConfirmControl;
+}) {
   const discard = useFarmDiscard();
   const dialog = useConfirmAction(
     async () => {
@@ -25,6 +35,7 @@ export function FarmDiscardDialog({ farm }: { farm: FarmListItem }) {
         error,
         'No fue posible descartar la finca. Inténtalo nuevamente.',
       ),
+    control,
   );
   const action: StatusChangeAction = {
     trigger: 'Descartar',
@@ -37,5 +48,11 @@ export function FarmDiscardDialog({ farm }: { farm: FarmListItem }) {
     variant: 'destructive',
   };
 
-  return <StatusChangeDialog trigger={action} action={action} {...dialog} />;
+  return (
+    <StatusChangeDialog
+      trigger={control ? undefined : action}
+      action={action}
+      {...dialog}
+    />
+  );
 }

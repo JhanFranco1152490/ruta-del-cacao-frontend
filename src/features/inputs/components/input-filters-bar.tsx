@@ -1,5 +1,6 @@
 'use client';
 
+import { FilterRow } from '@/components/filter-row';
 import { ProducerFilter } from '@/components/producer-filter';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
@@ -35,41 +36,47 @@ export function InputFiltersBar({
   const hasFilters =
     !!filters.search || !!filters.type || filters.status !== 'active';
 
-  // Una sola rejilla: el productor (solo la cuenta técnica) va con los demás filtros y no deja una
-  // fila a medias. En pantallas medianas son dos columnas; en anchas, una por filtro.
+  // Una sola fila sin etiquetas visibles; en celular, el buscador y «Filtros». El productor (solo la
+  // cuenta técnica) va con los demás.
   return (
-    <div className="space-y-4">
-      <div
-        className={
-          onProducer
-            ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1fr]'
-            : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]'
+    <div className="space-y-3">
+      <FilterRow
+        activeCount={
+          (producer ? 1 : 0) +
+          (filters.type ? 1 : 0) +
+          (filters.status !== 'active' ? 1 : 0)
+        }
+        search={
+          <TextField
+            hideLabel
+            label="Buscar por nombre"
+            onChange={(event) => onSearch(event.target.value)}
+            placeholder="Buscar por nombre"
+            type="search"
+            value={filters.search}
+            wrapperClassName="min-w-0 flex-1 sm:min-w-64"
+          />
         }
       >
         {onProducer && (
           <ProducerFilter
+            className="w-full sm:w-80"
+            hideLabel
             onClear={() => onProducer(null)}
             onSelect={onProducer}
+            placeholder="Productor: nombre, documento o código"
             producer={producer ?? undefined}
             selected={selectedProducer}
           />
         )}
-        <TextField
-          label="Buscar por nombre"
-          onChange={(event) => onSearch(event.target.value)}
-          placeholder="Por ejemplo, urea"
-          type="search"
-          value={filters.search}
-          wrapperClassName={
-            onProducer ? undefined : 'sm:col-span-2 lg:col-span-1'
-          }
-        />
         <SelectField
+          hideLabel
           label="Filtrar por tipo"
           onChange={(event) => onType(event.target.value as InputType | '')}
           value={filters.type}
+          wrapperClassName="w-full sm:w-44"
         >
-          <option value="">Todos</option>
+          <option value="">Todos los tipos</option>
           {INPUT_TYPE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -77,17 +84,19 @@ export function InputFiltersBar({
           ))}
         </SelectField>
         <SelectField
+          hideLabel
           label="Estado"
           onChange={(event) =>
             onStatus(event.target.value as InputStatusFilter)
           }
           value={filters.status}
+          wrapperClassName="w-full sm:w-40"
         >
           <option value="active">Activos</option>
           <option value="inactive">Inactivos</option>
           <option value="all">Todos</option>
         </SelectField>
-      </div>
+      </FilterRow>
       {hasFilters && (
         <Button onClick={onClear} size="office" variant="outline">
           Limpiar filtros

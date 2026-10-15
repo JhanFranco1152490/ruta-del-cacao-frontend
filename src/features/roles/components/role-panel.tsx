@@ -1,5 +1,6 @@
 'use client';
-import { useRef, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import {
   Sheet,
   SheetContent,
@@ -34,6 +35,8 @@ export function RolePanel(props: Props) {
     lock.current = value;
     setBusy(value);
   }
+  const isDesktop = useIsDesktop();
+  const isNew = props.selected === 'nuevo';
   return (
     <Sheet
       open
@@ -41,25 +44,38 @@ export function RolePanel(props: Props) {
         if (!value && !lock.current) props.close();
       }}
     >
-      <SheetContent side="right" showCloseButton={!busy}>
-        <SheetHeader>
-          <SheetTitle>
-            {props.selected === 'nuevo' ? 'Crear rol' : 'Detalle del rol'}
+      {/* Panel al costado en pantallas anchas y hoja desde abajo en celular. Sin relleno propio: el
+          detalle trae su franja de color hasta los bordes. */}
+      <SheetContent
+        className="gap-0 p-0 sm:max-w-lg has-[[data-role-band]]:[&_[data-slot=sheet-close]]:text-white has-[[data-role-band]]:[&_[data-slot=sheet-close]]:hover:bg-white/15 has-[[data-role-band]]:[&_[data-slot=sheet-close]]:hover:text-white"
+        showCloseButton={!busy}
+        side={isDesktop ? 'right' : 'bottom'}
+      >
+        <SheetHeader
+          className={isNew ? 'bg-selva px-5 py-4 text-white' : 'sr-only'}
+          data-role-band={isNew || undefined}
+        >
+          <SheetTitle className={isNew ? 'text-white' : undefined}>
+            {isNew ? 'Crear rol' : 'Detalle del rol'}
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className={isNew ? 'text-white/80' : undefined}>
             Consulta los permisos y administra los roles propios.
           </SheetDescription>
         </SheetHeader>
         {props.selected === 'nuevo' ? (
-          props.canCreate ? (
-            <NewRole {...props} onBusy={onBusy} />
-          ) : (
-            <ErrorState message="No puedes crear un rol sin permiso y un productor válido." />
-          )
+          <div className="px-5 py-4">
+            {props.canCreate ? (
+              <NewRole {...props} onBusy={onBusy} />
+            ) : (
+              <ErrorState message="No puedes crear un rol sin permiso y un productor válido." />
+            )}
+          </div>
         ) : isRoleId(props.selected) ? (
           <ExistingRole {...props} onBusy={onBusy} />
         ) : (
-          <ErrorState message="Rol no disponible" />
+          <div className="px-5 py-4">
+            <ErrorState message="Rol no disponible" />
+          </div>
         )}
       </SheetContent>
     </Sheet>
@@ -126,8 +142,12 @@ function ExistingRole({
 }: Props & { onBusy: (value: boolean) => void }) {
   const role = useRole(selected);
   const catalog = usePermissionCatalog();
+  // El detalle trae su propio relleno (la franja de arriba va hasta los bordes); lo demás, no.
+  const padded = (content: ReactNode) => (
+    <div className="px-5 py-4">{content}</div>
+  );
   if (role.isError)
-    return (
+    return padded(
       <ErrorState
         message={
           isApiError(role.error) && [403, 404].includes(role.error.status)
@@ -137,19 +157,19 @@ function ExistingRole({
         onRetry={() => {
           void role.refetch();
         }}
-      />
+      />,
     );
   if (catalog.isError)
-    return (
+    return padded(
       <ErrorState
         message="No fue posible cargar los permisos."
         onRetry={() => {
           void catalog.refetch();
         }}
-      />
+      />,
     );
   if (role.isPending || catalog.isPending)
-    return <p role="status">Cargando rol…</p>;
+    return padded(<p role="status">Cargando rol…</p>);
   return (
     <RoleDetail
       role={role.data}

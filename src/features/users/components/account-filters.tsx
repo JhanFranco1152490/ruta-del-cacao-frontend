@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { FilterRow } from '@/components/filter-row';
 import { MunicipalityFilter } from '@/components/municipality-filter';
 import { TextField } from '@/components/text-field';
 import { SelectField } from '@/components/select-field';
@@ -22,17 +23,52 @@ export function AccountFilters({
   producerFilter?: ReactNode;
 }) {
   const roles = useRoleOptions(canReadRoles);
+  const active =
+    (filters.status ? 1 : 0) +
+    (filters.activation ? 1 : 0) +
+    (filters.role ? 1 : 0) +
+    (filters.municipality ? 1 : 0) +
+    (filters.producer ? 1 : 0);
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-4">
-        <TextField
-          label="Buscar usuarios"
-          placeholder="Nombre, correo o documento"
-          value={filters.searchInput}
-          onChange={(event) => filters.setSearchInput(event.target.value)}
-          wrapperClassName="min-w-56 flex-[2_1_16rem]"
-        />
+    <div className="space-y-3">
+      <FilterRow
+        activeCount={active}
+        more={
+          (producerFilter || municipalities) && (
+            <>
+              {producerFilter}
+              {municipalities && (
+                <MunicipalityFilter
+                  className="w-full sm:w-56"
+                  hideLabel
+                  label="Municipio"
+                  municipalities={municipalities}
+                  onChange={(code) => {
+                    void filters.setMunicipality(code);
+                  }}
+                  value={filters.municipality}
+                />
+              )}
+            </>
+          )
+        }
+        moreActiveCount={
+          (filters.municipality ? 1 : 0) + (filters.producer ? 1 : 0)
+        }
+        search={
+          <TextField
+            hideLabel
+            label="Buscar usuarios"
+            onChange={(event) => filters.setSearchInput(event.target.value)}
+            placeholder="Nombre, correo o documento"
+            type="search"
+            value={filters.searchInput}
+            wrapperClassName="min-w-0 flex-1 sm:min-w-64"
+          />
+        }
+      >
         <SelectField
+          hideLabel
           label="Estado"
           value={filters.status ?? ''}
           onChange={(event) => {
@@ -41,13 +77,14 @@ export function AccountFilters({
                 'active' | 'inactive' | undefined,
             );
           }}
-          wrapperClassName="min-w-40 flex-1"
+          wrapperClassName="w-full sm:w-44"
         >
           <option value="">Todos los estados</option>
           <option value="active">Activa</option>
           <option value="inactive">Inactiva</option>
         </SelectField>
         <SelectField
+          hideLabel
           label="Activación"
           value={filters.activation ?? ''}
           onChange={(event) => {
@@ -55,51 +92,36 @@ export function AccountFilters({
               (event.target.value || null) as 'pendiente' | 'activada' | null,
             );
           }}
-          wrapperClassName="min-w-40 flex-1"
+          wrapperClassName="w-full sm:w-48"
         >
           <option value="">Todas las cuentas</option>
           <option value="pendiente">Pendiente de activación</option>
           <option value="activada">Activada</option>
         </SelectField>
-      </div>
-      {(canReadRoles || municipalities || producerFilter) && (
-        <div className="flex flex-wrap gap-4">
-          {producerFilter}
-          {canReadRoles && (
-            <SelectField
-              label="Filtrar por rol"
-              value={filters.role ?? ''}
-              disabled={roles.isPending || roles.isError}
-              onChange={(event) => {
-                void filters.setRole(event.target.value || null);
-              }}
-              wrapperClassName="min-w-40 flex-1"
-            >
-              <option value="">Todos los roles</option>
-              {filters.role &&
-                !roles.data?.some((role) => role.id === filters.role) && (
-                  <option value={filters.role}>Rol seleccionado</option>
-                )}
-              {roles.data?.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </SelectField>
-          )}
-          {municipalities && (
-            <MunicipalityFilter
-              className="min-w-40 flex-1"
-              label="Municipio"
-              municipalities={municipalities}
-              onChange={(code) => {
-                void filters.setMunicipality(code);
-              }}
-              value={filters.municipality}
-            />
-          )}
-        </div>
-      )}
+        {canReadRoles && (
+          <SelectField
+            hideLabel
+            label="Filtrar por rol"
+            value={filters.role ?? ''}
+            disabled={roles.isPending || roles.isError}
+            onChange={(event) => {
+              void filters.setRole(event.target.value || null);
+            }}
+            wrapperClassName="w-full sm:w-48"
+          >
+            <option value="">Todos los roles</option>
+            {filters.role &&
+              !roles.data?.some((role) => role.id === filters.role) && (
+                <option value={filters.role}>Rol seleccionado</option>
+              )}
+            {roles.data?.map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.name}
+              </option>
+            ))}
+          </SelectField>
+        )}
+      </FilterRow>
       {canReadRoles && roles.isError && (
         <div role="alert">
           <p>No fue posible cargar el filtro de roles.</p>

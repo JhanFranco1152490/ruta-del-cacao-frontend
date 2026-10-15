@@ -9,11 +9,14 @@ import type { OverviewFarm } from '../plot-overview';
 export function PlotFarmLine({
   farm,
   farmHref,
+  showFarm = true,
   showProducer = false,
   canOpenProducer = false,
 }: {
   farm: OverviewFarm;
   farmHref?: (farmId: string) => string;
+  // Con el grupo de su finca como encabezado, la tarjeta no repite de qué finca es (ni de quién).
+  showFarm?: boolean;
   showProducer?: boolean;
   canOpenProducer?: boolean;
 }) {
@@ -21,20 +24,22 @@ export function PlotFarmLine({
   const name = farm.name ?? 'Finca pendiente de sincronizar';
   return (
     <>
-      <p className="text-sm text-muted-foreground">
-        Finca:{' '}
-        {farmHref ? (
-          <Link
-            className="font-bold text-foreground underline underline-offset-4"
-            href={farmHref(farm.id)}
-          >
-            {name}
-          </Link>
-        ) : (
-          <strong className="text-foreground">{name}</strong>
-        )}
-        {!farm.isActive && ' (inactiva)'}
-      </p>
+      {showFarm && (
+        <p className="text-sm text-muted-foreground">
+          Finca:{' '}
+          {farmHref ? (
+            <Link
+              className="font-bold text-foreground underline underline-offset-4"
+              href={farmHref(farm.id)}
+            >
+              {name}
+            </Link>
+          ) : (
+            <strong className="text-foreground">{name}</strong>
+          )}
+          {!farm.isActive && ' (inactiva)'}
+        </p>
+      )}
       {showProducer && farm.producer && (
         <ProducerLine linkable={canOpenProducer} producer={farm.producer} />
       )}

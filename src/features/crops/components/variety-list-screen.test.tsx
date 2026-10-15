@@ -97,6 +97,29 @@ describe('VarietyListScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('pages the catalog by 20 and goes back to the first page when searching', async () => {
+    const user = userEvent.setup();
+    catalog = Array.from({ length: 25 }, (_, index) =>
+      buildCacaoVariety({
+        id: `v${index}`,
+        name: `VAR-${String(index + 1).padStart(2, '0')}`,
+      }),
+    );
+    renderWithProviders(<VarietyListScreen />);
+
+    const list = await screen.findByRole('list', { name: 'Variedades' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(20);
+    expect(screen.getByText('Página 1 de 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }));
+    expect(within(list).getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getByText('VAR-25')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Buscar variedades'), 'var-0');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(9);
+    expect(screen.queryByText(/Página/)).not.toBeInTheDocument();
+  });
+
   it('finds a variety however its name is written, and by its origin', async () => {
     const user = await renderScreen();
     const search = screen.getByLabelText('Buscar variedades');

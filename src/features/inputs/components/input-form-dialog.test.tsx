@@ -39,7 +39,10 @@ async function openRegister() {
 
 async function openEdit(name = 'Urea 46 %') {
   await userEvent.click(
-    await screen.findByRole('button', { name: `Editar ${name}` }),
+    await screen.findByRole('button', { name: `Más acciones de ${name}` }),
+  );
+  await userEvent.click(
+    await screen.findByRole('menuitem', { name: 'Editar' }),
   );
   return dialog();
 }
