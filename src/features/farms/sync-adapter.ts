@@ -17,8 +17,13 @@ export const FARM_DELETED_MESSAGE =
 export const farmSyncAdapter: SyncAdapter = {
   resource: FARM_RESOURCE,
 
-  // Una finca nueva o editada cambia la lista, el mapa y su detalle.
-  refreshAfterSync: () => [queryKeys.farms.all()],
+  // Una finca nueva o editada cambia la lista, el mapa y su detalle. Una nueva cambia además la
+  // sesión de un empleado: el servidor lo asigna a la finca que registra, y sus selectores de
+  // finca salen de esa lista.
+  refreshAfterSync: (item) =>
+    item.operation === 'create'
+      ? [queryKeys.farms.all(), queryKeys.session()]
+      : [queryKeys.farms.all()],
 
   async send(item) {
     if (item.operation === 'create') {

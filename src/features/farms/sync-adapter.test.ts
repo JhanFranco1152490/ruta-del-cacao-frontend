@@ -244,9 +244,16 @@ describe('a create edited after its response was lost', () => {
 });
 
 describe('farmSyncAdapter.refreshAfterSync', () => {
-  it('refreshes every farm read: lists, map and detail', () => {
+  it('refreshes every farm read and the session after a new farm, which assigns an employee to it', () => {
     expect(farmSyncAdapter.refreshAfterSync?.(queueItem({}))).toEqual([
       queryKeys.farms.all(),
+      queryKeys.session(),
     ]);
+  });
+
+  it('refreshes only the farm reads after an edit', () => {
+    expect(
+      farmSyncAdapter.refreshAfterSync?.(queueItem({ operation: 'update' })),
+    ).toEqual([queryKeys.farms.all()]);
   });
 });
