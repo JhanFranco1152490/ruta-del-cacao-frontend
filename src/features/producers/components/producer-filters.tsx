@@ -3,6 +3,7 @@
 import { cn } from 'cn';
 import { Search } from 'lucide-react';
 
+import { FilterRow } from '@/components/filter-row';
 import { MunicipalityFilter } from '@/components/municipality-filter';
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 import { Input } from '@/components/ui/input';
@@ -21,31 +22,35 @@ export function ProducerFilters({
   municipalities,
 }: ProducerFiltersProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_190px_240px]">
-      <div>
-        <label className="sr-only" htmlFor="producer-search">
-          Buscar productores
-        </label>
-        <div className="relative">
-          <Search
-            aria-hidden="true"
-            className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            className={cn(
-              'h-11 border-input bg-card pl-10',
-              FOCUS_OUTLINE_CLASS,
-            )}
-            id="producer-search"
-            onChange={(event) => filters.setSearchInput(event.target.value)}
-            placeholder="Buscar por documento, nombre o código"
-            value={filters.searchInput}
-          />
+    <FilterRow
+      activeCount={(filters.status ? 1 : 0) + (filters.municipality ? 1 : 0)}
+      search={
+        <div className="min-w-0 flex-1 sm:min-w-72">
+          <label className="sr-only" htmlFor="producer-search">
+            Buscar productores
+          </label>
+          <div className="relative">
+            <Search
+              aria-hidden="true"
+              className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              className={cn(
+                'h-11 border-input bg-card pl-10',
+                FOCUS_OUTLINE_CLASS,
+              )}
+              id="producer-search"
+              onChange={(event) => filters.setSearchInput(event.target.value)}
+              placeholder="Buscar por documento, nombre o código"
+              value={filters.searchInput}
+            />
+          </div>
         </div>
-      </div>
+      }
+    >
       <NativeSelect
         aria-label="Filtrar por estado"
-        className="text-sm"
+        className="w-full text-sm sm:w-48"
         onChange={(event) =>
           filters.setStatus(
             (event.target.value || null) as ProducerStatus | null,
@@ -58,12 +63,13 @@ export function ProducerFilters({
         <option value="inactive">Inactivos</option>
       </NativeSelect>
       <MunicipalityFilter
+        className="w-full sm:w-60"
         hideLabel
         inputClassName="text-sm"
         municipalities={municipalities}
         onChange={filters.setMunicipality}
         value={filters.municipality}
       />
-    </div>
+    </FilterRow>
   );
 }

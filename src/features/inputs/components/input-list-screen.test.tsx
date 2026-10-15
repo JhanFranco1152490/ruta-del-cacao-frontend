@@ -258,23 +258,18 @@ describe('InputListScreen', () => {
 
     renderScreen({ searchParams: '?finca=f1' });
 
-    expect(
-      await screen.findByRole('button', { name: 'Editar Urea 46 %' }),
-    ).toBeEnabled();
     expect(await menuItemsOf('Urea 46 %')).toEqual([
       'Registrar entrada',
       'Registrar conteo',
       'Ver movimientos',
+      'Editar',
       'Desactivar',
       'Eliminar',
     ]);
-    // Entrada y movimientos, además, a la vista en la fila.
+    // Solo la entrada, además, a la vista en la fila.
     expect(
       screen.getByRole('button', { name: 'Registrar entrada de Urea 46 %' }),
     ).toBeEnabled();
-    expect(
-      screen.getByRole('link', { name: 'Ver movimientos de Urea 46 %' }),
-    ).toHaveAttribute('href', '/insumos/movimientos?id=urea&finca=f1');
     expect(
       screen.getByRole('menuitem', { name: 'Ver movimientos' }),
     ).toHaveAttribute('href', '/insumos/movimientos?id=urea&finca=f1');
@@ -288,6 +283,7 @@ describe('InputListScreen', () => {
     expect(await menuItemsOf('Azufre')).toEqual([
       'Registrar conteo',
       'Ver movimientos',
+      'Editar',
       'Activar',
     ]);
   });
@@ -303,9 +299,6 @@ describe('InputListScreen', () => {
     await rowOf('Urea 46 %');
     expect(
       screen.queryByRole('button', { name: 'Registrar insumo' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Editar Urea 46 %' }),
     ).not.toBeInTheDocument();
     expect(await menuItemsOf('Urea 46 %')).toEqual(['Ver movimientos']);
   });
@@ -338,9 +331,12 @@ describe('InputListScreen', () => {
     expect(
       screen.getByRole('button', { name: 'Registrar insumo' }),
     ).toBeDisabled();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Más acciones de Urea 46 %' }),
+    );
     expect(
-      screen.getByRole('button', { name: 'Editar Urea 46 %' }),
-    ).toBeDisabled();
+      await screen.findByRole('menuitem', { name: 'Editar' }),
+    ).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('says the stocks of a farm were never loaded without a connection', async () => {

@@ -1,4 +1,6 @@
-import { STACKED_TABLE_CLASS } from '@/components/stacked-table-class';
+import { cn } from 'cn';
+
+import { COMPACT_TABLE_CLASS } from '@/components/compact-table-class';
 import { StatusBadge } from '@/components/status-badge';
 import {
   Table,
@@ -40,7 +42,7 @@ function StockValue({ row, state }: { row: InputRow; state: StockState }) {
   }
   const { input, quantity } = row;
   return (
-    <span className="flex flex-col items-end gap-1 md:items-start">
+    <span className="flex flex-col items-start gap-1">
       <span>{formatStock(quantity, input.unit, inputPackageOf(input))}</span>
       {isNegativeStock(quantity) && (
         <StatusBadge tone="warn">Faltan entradas por registrar</StatusBadge>
@@ -71,7 +73,7 @@ export function InputTable({
   onAction: (kind: InputActionKind, input: AgriculturalInput) => void;
 }) {
   return (
-    <Table aria-label="Insumos" className={STACKED_TABLE_CLASS}>
+    <Table aria-label="Insumos" className={COMPACT_TABLE_CLASS}>
       <TableHeader>
         <TableRow>
           <TableHead>Nombre</TableHead>
@@ -93,22 +95,29 @@ export function InputTable({
           return (
             <TableRow key={input.id}>
               <TableCell
-                className={
+                className={cn(
+                  'max-w-64 min-w-0 font-bold break-words whitespace-normal max-md:order-1 max-md:col-span-1! max-md:text-base!',
                   input.is_active
-                    ? 'max-w-64 font-bold break-words whitespace-normal'
-                    : 'max-w-64 font-bold break-words whitespace-normal text-muted-foreground'
-                }
-                data-label="Nombre"
+                    ? 'max-md:text-foreground'
+                    : 'text-muted-foreground',
+                )}
               >
                 {input.name}
               </TableCell>
-              <TableCell data-label="Tipo">
+              <TableCell className="max-md:order-3 max-md:text-muted-foreground">
                 {inputTypeLabel(input.input_type)}
+                {/* En celular tipo, unidad y presentación van en una sola línea bajo el nombre. */}
+                <span aria-hidden="true" className="md:hidden">
+                  {' · '}
+                  {inputUnitLabel(input.unit)}
+                  {inputPackage &&
+                    ` · ${formatPackage(inputPackage.package_type, inputPackage.package_size, input.unit)}`}
+                </span>
               </TableCell>
-              <TableCell data-label="Unidad">
+              <TableCell className="max-md:hidden">
                 {inputUnitLabel(input.unit)}
               </TableCell>
-              <TableCell data-label="Presentación">
+              <TableCell className="max-md:hidden">
                 {inputPackage
                   ? formatPackage(
                       inputPackage.package_type,
@@ -117,23 +126,20 @@ export function InputTable({
                     )
                   : '—'}
               </TableCell>
-              <TableCell className="whitespace-normal" data-label="Existencias">
+              <TableCell className="whitespace-normal max-md:order-4 max-md:font-bold">
                 <StockValue row={row} state={stockState} />
               </TableCell>
               {showProducer && (
-                <TableCell
-                  className="max-w-64 break-words whitespace-normal"
-                  data-label="Productor"
-                >
+                <TableCell className="max-w-64 break-words whitespace-normal max-md:order-5 max-md:text-muted-foreground">
                   {producerLabel(input)}
                 </TableCell>
               )}
-              <TableCell data-label="Estado">
+              <TableCell className="max-md:order-2 max-md:col-span-1! max-md:justify-self-end">
                 <StatusBadge tone={input.is_active ? 'ok' : 'warn'}>
                   {input.is_active ? 'Activo' : 'Inactivo'}
                 </StatusBadge>
               </TableCell>
-              <TableCell>
+              <TableCell className="max-md:order-6">
                 <InputRowActions
                   disabled={actionsDisabled}
                   farm={farm}
