@@ -49,11 +49,20 @@ export function AccountCreatePanel({
     return (
       <ErrorState message="No hay roles disponibles para crear esta cuenta." />
     );
+  const administrator = association && !producer;
   return (
     <AccountForm
       roles={roles}
-      administrator={association && !producer}
+      administrator={administrator}
       producer={association ? producer : undefined}
+      canCustomizeRoles={hasPermission(user, PERMISSIONS.ROLES_MANAGE)}
+      // El alcance lo lleva todo empleado y no las cuentas de la asociación ni la del Productor.
+      // Quien crea ofrece lo que él alcanza: «todas» solo si él las alcanza todas.
+      farmsOf={
+        administrator
+          ? undefined
+          : { userId: user.id, producer: association ? producer : undefined }
+      }
       onCreated={onCreated}
       onBusy={onBusy}
       onCancel={close}

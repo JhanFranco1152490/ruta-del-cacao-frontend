@@ -18,7 +18,7 @@ const user = buildSessionUser({
   first_name: 'Luis',
   last_name: 'Pérez',
   producer_id: 'p1',
-  roles: [{ id: 'r1', code: 'producer', name: 'Productor' }],
+  roles: [{ id: 'r1', code: 'producer', name: 'Productor', farm_scope: null }],
 });
 
 // La sesión ya cargada: el diálogo pregunta de dónde salió para saber si hay conexión, y las

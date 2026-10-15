@@ -25,7 +25,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/offline/bootstrap', () => ({ runOfflineBootstrap: vi.fn() }));
 vi.mock('@/lib/offline/session-clock', () => ({ recordLogin: vi.fn() }));
 vi.mock('@/lib/offline/session-snapshot', () => ({
-  saveSessionSnapshot: vi.fn(),
+  saveSessionSnapshot: vi.fn(async () => false),
   clearSessionSnapshot: vi.fn(),
   forgetLastSession: vi.fn(),
   readSessionSnapshot: vi.fn().mockResolvedValue(null),
@@ -64,6 +64,24 @@ describe('SessionShell', () => {
     await waitFor(() => expect(recordLogin).toHaveBeenCalled());
     expect(saveSessionSnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ email: 'ana@example.com' }),
+    );
+  });
+
+  it('asks again for what it read when the farms of the account changed', async () => {
+    vi.mocked(saveSessionSnapshot).mockResolvedValueOnce(true);
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(['plots', 'list'], ['de la finca anterior']);
+    renderWithProviders(<SessionShell>contenido</SessionShell>, {
+      queryClient,
+    });
+
+    await waitFor(() =>
+      expect(queryClient.getQueryState(['plots', 'list'])?.isInvalidated).toBe(
+        true,
+      ),
+    );
+    expect(queryClient.getQueryState(queryKeys.session())?.isInvalidated).toBe(
+      false,
     );
   });
 

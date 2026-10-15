@@ -26,12 +26,15 @@ export function InputFormFields({
   errors,
   disabled,
   unitLocked,
+  unitLockedHint = UNIT_LOCKED_HINT,
   extra,
 }: {
   form: UseFormReturn<InputFormInput, unknown, InputFormValues>;
   errors: FieldErrors<InputFormInput>;
   disabled: boolean;
   unitLocked: boolean;
+  // Por qué no se puede cambiar: tiene registros, o quien edita no es el Productor.
+  unitLockedHint?: string;
   // Lo que el diálogo agrega junto al nombre (el aviso de un nombre repetido).
   extra?: ReactNode;
 }) {
@@ -70,7 +73,7 @@ export function InputFormFields({
         // unidad que se envía es la que ya tiene el insumo.
         <SelectField
           disabled
-          hint={UNIT_LOCKED_HINT}
+          hint={unitLockedHint}
           label="Unidad de medida"
           value={unit}
         >

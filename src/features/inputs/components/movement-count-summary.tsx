@@ -2,7 +2,7 @@
 
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { AgriculturalInput } from '../api';
+import type { MovementInput } from '../api';
 import { amountInUnit, type MovementFormInput } from '../movement-schemas';
 import {
   formatCountDifference,
@@ -19,7 +19,7 @@ export function MovementCountSummary<TValues>({
   isLoading,
 }: {
   form: UseFormReturn<MovementFormInput, unknown, TValues>;
-  input: AgriculturalInput;
+  input: MovementInput;
   // Las existencias en la finca elegida; `null` si nunca tuvo movimientos en ella.
   quantity: string | null;
   isLoading: boolean;

@@ -15,12 +15,14 @@ export function AccountList({
   open,
   municipalityName,
   showProducer,
+  showFarms,
   canGroup,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   open: (id: string) => void;
   municipalityName?: (code: string) => string;
   showProducer?: boolean;
+  showFarms?: boolean;
   canGroup?: boolean;
 }) {
   const list = useAccounts(filters.query);
@@ -62,6 +64,7 @@ export function AccountList({
           open={open}
           municipalityName={municipalityName}
           showProducer={showProducer}
+          showFarms={showFarms}
         />
       ) : (
         <EmptyState

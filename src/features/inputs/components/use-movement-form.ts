@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 
 import { todayInBogota } from '@/lib/format/dates';
 
-import { type AgriculturalInput, useCreateInputMovement } from '../api';
+import { type MovementInput, useCreateInputMovement } from '../api';
 import { movementErrorOf, type MovementField } from '../movement-errors';
 import {
   buildMovementRequest,
@@ -54,7 +54,7 @@ export function useMovementForm({
   onSaved,
 }: {
   kind: MovementKind;
-  input: AgriculturalInput;
+  input: MovementInput;
   farms: readonly FarmChoice[];
   farm: string | null;
   onSaved: (message: string) => void;

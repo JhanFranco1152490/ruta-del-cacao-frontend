@@ -6,13 +6,14 @@ import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
 import { useRoleOptions } from '@/lib/api/role-options';
 import type { Municipality } from '@/lib/api/municipalities';
-import type { useAccountFilters } from '../use-account-filters';
+import { WITHOUT_FARM, type useAccountFilters } from '../use-account-filters';
 
 export function AccountFilters({
   filters,
   canReadRoles,
   municipalities,
   producerFilter,
+  farms,
 }: {
   filters: ReturnType<typeof useAccountFilters>;
   canReadRoles: boolean;
@@ -21,6 +22,8 @@ export function AccountFilters({
   // De qué productor mira la asociación: lo arma quien usa este componente (conoce el
   // productor elegido y sus datos), aquí solo se ubica junto a rol y municipio.
   producerFilter?: ReactNode;
+  // Las fincas del productor, para filtrar quién trabaja en cada una; solo en su espacio.
+  farms?: { id: string; name: string }[];
 }) {
   const roles = useRoleOptions(canReadRoles);
   const active =
@@ -28,7 +31,8 @@ export function AccountFilters({
     (filters.activation ? 1 : 0) +
     (filters.role ? 1 : 0) +
     (filters.municipality ? 1 : 0) +
-    (filters.producer ? 1 : 0);
+    (filters.producer ? 1 : 0) +
+    (filters.farm ? 1 : 0);
   return (
     <div className="space-y-3">
       <FilterRow
@@ -117,6 +121,25 @@ export function AccountFilters({
             {roles.data?.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name}
+              </option>
+            ))}
+          </SelectField>
+        )}
+        {farms && (
+          <SelectField
+            hideLabel
+            label="Finca"
+            value={filters.farm ?? ''}
+            onChange={(event) => {
+              void filters.setFarm(event.target.value || null);
+            }}
+            wrapperClassName="w-full sm:w-52"
+          >
+            <option value="">Todas las fincas</option>
+            <option value={WITHOUT_FARM}>Sin alcance asignado</option>
+            {farms.map((farm) => (
+              <option key={farm.id} value={farm.id}>
+                {farm.name}
               </option>
             ))}
           </SelectField>

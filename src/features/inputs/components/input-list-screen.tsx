@@ -1,6 +1,6 @@
 'use client';
 
-import { CloudOff, Plus } from 'lucide-react';
+import { CloudOff, PackageSearch, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { isNetworkFailure } from '@/lib/api/errors';
+import { isFarmEmployee, onlyFarmOf } from '@/lib/farm-scope';
 import { notify } from '@/lib/notify';
 import { formatTimestamp } from '@/lib/format/dates';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
@@ -45,20 +46,26 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   const hasConnection = useHasConnection();
   const filters = useInputFilters();
   const superuser = user?.is_superuser === true;
+  // Un empleado ve los insumos de sus fincas y trae a ellas los de otras con una entrada.
+  const employee = isFarmEmployee(user);
   const producer = superuser ? filters.producer : null;
   // Las fincas se eligen dentro de un productor: la cuenta técnica sin uno elegido ve el total de
   // todos los catálogos y no puede escoger una finca.
   const needsProducer = superuser && !producer;
   const catalog = useAgriculturalInputs(user?.id, producer);
   const choices = needsProducer ? undefined : farms.choices;
+  // Quien trabaja en una sola finca ve siempre sus existencias: no hay un total que elegir.
+  const onlyFarm = onlyFarmOf(user);
   // Una finca de la URL que no está entre las del productor (de otro, o eliminada) no se usa.
-  const farm = needsProducer
-    ? null
-    : choices
-      ? choices.some((choice) => choice.id === filters.farm)
-        ? filters.farm
-        : null
-      : filters.farm;
+  const farm = onlyFarm
+    ? onlyFarm.id
+    : needsProducer
+      ? null
+      : choices
+        ? choices.some((choice) => choice.id === filters.farm)
+          ? filters.farm
+          : null
+        : filters.farm;
   // Con una finca, sus existencias; sin ella, el total de todas las del alcance.
   const farmStocks = useInputStocks(user?.id, farm);
   const totalStocks = useInputStockTotals(user?.id, producer, {
@@ -101,10 +108,29 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
     </Button>
   );
 
+  const catalogEntryButton = employee && permissions.canManageStock && (
+    <Button
+      disabled={offline}
+      onClick={() => setPending({ kind: 'catalog-entry' })}
+      size="office"
+      variant="outline"
+    >
+      <PackageSearch aria-hidden="true" className="size-5" /> Entrada de otro
+      insumo
+    </Button>
+  );
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
       <PageHeader
-        actions={catalog.isSuccess ? registerButton : undefined}
+        actions={
+          catalog.isSuccess ? (
+            <>
+              {catalogEntryButton}
+              {registerButton}
+            </>
+          ) : undefined
+        }
         description="Los insumos que usas en tus fincas y cuánto queda de cada uno en la bodega de cada finca."
         eyebrow="Inventario"
         title="Insumos"
@@ -132,6 +158,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         ) : (
           choices && (
             <InputFarmSelect
+              fixed={!!onlyFarm}
               farm={farm}
               farms={choices}
               onChange={filters.setFarm}
@@ -195,6 +222,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
       <InputDialogs
         catalog={catalogInputs}
         chooseProducer={superuser}
+        employee={employee}
         farm={farm}
         farms={choices ?? []}
         onClose={() => setPending(undefined)}
@@ -203,6 +231,15 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
           notify.success(message);
         }}
         onShowExisting={(existing) => {
+          // Un empleado no lo ve en su lista si está en otra finca: se le ofrece traerlo con una
+          // entrada.
+          if (
+            employee &&
+            !catalogInputs.some((input) => input.id === existing.id)
+          ) {
+            setPending({ kind: 'catalog-entry', search: existing.name });
+            return;
+          }
           setPending(undefined);
           filters.showInput(existing);
         }}

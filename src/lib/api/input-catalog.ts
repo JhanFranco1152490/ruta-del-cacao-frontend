@@ -16,10 +16,13 @@ export type InputStock = Schemas['InputStock'];
 // El catálogo no se pagina: búsqueda y filtros corren en el dispositivo, también sin conexión.
 // `producer` solo lo envía la cuenta técnica; las demás cuentas leen el catálogo de su productor.
 export async function fetchAgriculturalInputs(
-  { producer }: { producer: string | null },
+  { producer, farm }: { producer: string | null; farm?: string },
   signal?: AbortSignal,
 ): Promise<AgriculturalInput[]> {
-  const suffix = producer ? `?${new URLSearchParams({ producer })}` : '';
+  const params = new URLSearchParams();
+  if (producer) params.set('producer', producer);
+  if (farm) params.set('farm', farm);
+  const suffix = params.size ? `?${params}` : '';
   const { results } = await apiFetch<Schemas['AgriculturalInputList']>(
     `/api/agricultural-inputs${suffix}`,
     { signal },
@@ -44,6 +47,23 @@ export const useAgriculturalInputs = (
         () => fetchAgriculturalInputs({ producer }, signal),
       ),
     enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
+  });
+
+// Los insumos que están en una finca, con copia en el dispositivo. Un empleado que trabaja en
+// varias fincas registra una labor con lo que hay en la finca de la parcela, no con lo de todas.
+export const useFarmInputs = (
+  userId: string | undefined,
+  farmId: string | null,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.agriculturalInputs.farm(farmId ?? ''),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, `agricultural-inputs:farm:${farmId}`, () =>
+        fetchAgriculturalInputs({ producer: null, farm: farmId! }, signal),
+      ),
+    enabled: enabled && !!userId && !!farmId,
     networkMode: 'offlineFirst',
   });
 

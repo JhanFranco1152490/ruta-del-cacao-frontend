@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { buildSessionUser } from '@/test/factories';
 
+import { getOfflineDb } from './db';
 import { recordLogin } from './session-clock';
 import {
   clearSessionSnapshot,
@@ -35,6 +36,29 @@ describe('session snapshot', () => {
 
   it('returns nothing when no account was confirmed on this device', async () => {
     expect(await readSessionSnapshot()).toBeNull();
+  });
+
+  it('clears what the device kept when the farms of the account change', async () => {
+    const user = buildSessionUser({
+      id: `snapshot-${crypto.randomUUID()}`,
+      all_farms: false,
+      farms: [{ id: 'farm-a', name: 'La Esperanza', is_active: true }],
+    });
+    const cache = getOfflineDb(user.id).cache;
+    const keep = { key: 'plots', value: [], fetchedAt: 1 };
+
+    expect(await saveSessionSnapshot(user)).toBe(false);
+    await cache.put(keep);
+    // La misma cuenta confirmada otra vez, sin cambios: lo guardado se queda.
+    expect(await saveSessionSnapshot({ ...user })).toBe(false);
+    expect(await cache.get('plots')).toEqual(keep);
+
+    const moved = {
+      ...user,
+      farms: [{ id: 'farm-b', name: 'El Recreo', is_active: true }],
+    };
+    expect(await saveSessionSnapshot(moved)).toBe(true);
+    expect(await cache.get('plots')).toBeUndefined();
   });
 
   it('forgets the account on logout', async () => {

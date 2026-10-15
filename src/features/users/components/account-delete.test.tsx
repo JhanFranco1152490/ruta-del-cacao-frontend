@@ -20,6 +20,7 @@ const account = {
   identity_document: '1234567890',
   phone: null,
   producer: { id: producerId, member_code: 'PROD-000001', status: 'active' },
+  farms: [],
   roles: [
     {
       id: '22222222-2222-4222-8222-222222222222',

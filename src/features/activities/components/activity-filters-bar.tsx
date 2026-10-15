@@ -45,6 +45,7 @@ export function ActivityFiltersBar({
   onClear,
   producer,
   onProducer,
+  onlyFarm = null,
 }: {
   filters: ActivityFilters;
   farmOptions: readonly FarmOption[];
@@ -60,6 +61,8 @@ export function ActivityFiltersBar({
   // Solo para la cuenta técnica, que ve las actividades de todos los productores.
   producer?: string | null;
   onProducer?: (producer: string | null) => void;
+  // La finca de quien trabaja en una sola: el filtro queda fijo en ella.
+  onlyFarm?: { id: string; name: string } | null;
 }) {
   const selectedProducer = useProducerSummary(producer ?? undefined);
   // Con una finca elegida, la lista de parcelas es la de esa finca.
@@ -87,19 +90,31 @@ export function ActivityFiltersBar({
           selected={selectedProducer}
         />
       )}
-      <SearchSelect
-        allLabel="Todas las fincas"
-        className={FILTER_WIDTH}
-        compact
-        label="Finca"
-        onChange={(option) => onFarm(option?.id ?? null)}
-        options={farmOptions.map(({ id, name }) => ({ id, label: name }))}
-        value={selected(
-          filters.farm,
-          farmOptions.map(({ id, name }) => ({ id, label: name })),
-          'Finca sin actividades en este periodo',
-        )}
-      />
+      {onlyFarm ? (
+        <SearchSelect
+          className={FILTER_WIDTH}
+          compact
+          disabled
+          label="Finca"
+          onChange={() => undefined}
+          options={[{ id: onlyFarm.id, label: onlyFarm.name }]}
+          value={{ id: onlyFarm.id, label: onlyFarm.name }}
+        />
+      ) : (
+        <SearchSelect
+          allLabel="Todas las fincas"
+          className={FILTER_WIDTH}
+          compact
+          label="Finca"
+          onChange={(option) => onFarm(option?.id ?? null)}
+          options={farmOptions.map(({ id, name }) => ({ id, label: name }))}
+          value={selected(
+            filters.farm,
+            farmOptions.map(({ id, name }) => ({ id, label: name })),
+            'Finca sin actividades en este periodo',
+          )}
+        />
+      )}
       <SearchSelect
         allLabel="Todas las parcelas"
         className={FILTER_WIDTH}

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { type FieldErrors, useForm } from 'react-hook-form';
 
 import { ProducerFilter } from '@/components/producer-filter';
+import { SelectField } from '@/components/select-field';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +37,7 @@ import {
   type InputFormValues,
 } from '../schemas';
 import { InputDuplicateNotice } from './input-duplicate-notice';
+import type { FarmChoice } from './input-farm-select';
 import { InputFormFields } from './input-form-fields';
 import { useInputSubmit } from './use-input-submit';
 
@@ -47,6 +49,7 @@ export function InputFormDialog({
   catalog,
   producer,
   chooseProducer,
+  employeeFarms,
   onClose,
   onSaved,
   onShowExisting,
@@ -57,6 +60,9 @@ export function InputFormDialog({
   producer: string | null;
   // Solo la cuenta técnica elige de qué productor es el insumo nuevo.
   chooseProducer: boolean;
+  // Las fincas de un empleado: el insumo que registra queda en una de ellas, y si son varias
+  // elige cuál. Un empleado tampoco cambia la unidad. Ausente para el Productor.
+  employeeFarms?: readonly FarmChoice[];
   onClose: () => void;
   onSaved: (message: string) => void;
   onShowExisting: (existing: ExistingInput) => void;
@@ -67,6 +73,9 @@ export function InputFormDialog({
   const askProducer = chooseProducer && !input;
   const [producerId, setProducerId] = useState(producer);
   const [producerError, setProducerError] = useState<string>();
+  const askFarm = !input && (employeeFarms?.length ?? 0) > 1;
+  const [farmId, setFarmId] = useState<string | null>(null);
+  const [farmError, setFarmError] = useState<string>();
   const selectedProducer = useProducerSummary(
     askProducer ? (producerId ?? undefined) : undefined,
   );
@@ -100,23 +109,30 @@ export function InputFormDialog({
     input,
     form,
     producerId: askProducer ? producerId : null,
+    farmId: askFarm ? farmId : null,
+    unitReadOnly: !!employeeFarms,
     create,
     update,
     onSaved,
   });
 
   const missingProducer = askProducer && !producerId;
+  const missingFarm = askFarm && !farmId;
   const reportInvalid = (fieldErrors: FieldErrors<InputFormInput>) => {
     if (missingProducer) setProducerError(REQUIRED_FIELD_MESSAGE);
+    if (missingFarm) setFarmError(REQUIRED_FIELD_MESSAGE);
     const missing =
       missingProducer ||
+      missingFarm ||
       Object.values(fieldErrors).some(
         (error) => error?.message === REQUIRED_FIELD_MESSAGE,
       );
     submission.setSummary(missing ? MISSING_FIELDS_MESSAGE : undefined);
   };
   const submitValid = (values: InputFormValues) =>
-    missingProducer ? reportInvalid({}) : submission.submit(values);
+    missingProducer || missingFarm
+      ? reportInvalid({})
+      : submission.submit(values);
 
   // El existente lo dice el servidor; si el aviso salió antes de enviar, se busca en la lista.
   const existing: ExistingInput | undefined =
@@ -182,6 +198,28 @@ export function InputFormDialog({
               )}
             </div>
           )}
+          {askFarm && (
+            <SelectField
+              disabled={isSaving}
+              error={farmError}
+              hint="El insumo queda en esta finca; a las otras lo traes con una entrada."
+              label="Finca"
+              onChange={(event) => {
+                setFarmId(event.target.value || null);
+                setFarmError(undefined);
+              }}
+              value={farmId ?? ''}
+            >
+              <option value="">Elige una finca</option>
+              {employeeFarms
+                ?.filter((choice) => choice.is_active)
+                .map((choice) => (
+                  <option key={choice.id} value={choice.id}>
+                    {choice.name}
+                  </option>
+                ))}
+            </SelectField>
+          )}
           <InputFormFields
             disabled={isSaving}
             errors={errors}
@@ -197,6 +235,11 @@ export function InputFormDialog({
             }
             form={form}
             unitLocked={submission.unitLocked}
+            unitLockedHint={
+              employeeFarms && input && !input.has_records
+                ? 'Solo el productor cambia la unidad de un insumo.'
+                : undefined
+            }
           />
           <DialogFooter>
             <DialogClose

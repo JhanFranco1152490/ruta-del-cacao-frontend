@@ -21,6 +21,7 @@ const account = (overrides: Partial<Account> = {}): Account =>
       status: 'active',
       municipality_code: '54001',
     },
+    farms: [],
     roles: [{ id: 'r1', code: 'foreman', name: 'Capataz' }],
     status: 'active',
     activation_pending: false,

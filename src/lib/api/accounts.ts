@@ -15,6 +15,10 @@ export type AccountQuery = {
   role?: string;
   producer?: string;
   municipality?: string;
+  // Las cuentas que trabajan en esa finca.
+  farm?: string;
+  // Los empleados de campo a los que les falta finca.
+  without_farm?: boolean;
   ordering?: string;
   page?: number;
 };
@@ -30,11 +34,13 @@ export const fetchAccounts = (query: AccountQuery, signal?: AbortSignal) => {
     'role',
     'producer',
     'municipality',
+    'farm',
     'ordering',
   ] as const)
     if (query[key]) params.set(key, query[key]);
   if (query.activation_pending !== undefined)
     params.set('activation_pending', String(query.activation_pending));
+  if (query.without_farm) params.set('without_farm', 'true');
   return apiFetch<Schemas['PaginatedAccountList']>(`/api/users?${params}`, {
     signal,
   });
@@ -84,10 +90,11 @@ export const useUpdateAccount = (id: string) =>
     }),
   );
 export const useSetAccountRoles = (id: string) =>
-  useAccountMutation((roleIds: string[]) =>
+  // `farm_id` va cuando la cuenta gana permisos de campo y todavía no tiene finca.
+  useAccountMutation((body: Schemas['AccountRoleIdsRequest']) =>
     apiFetch<Account>(`/api/users/${encodeURIComponent(id)}/roles`, {
       method: 'PUT',
-      body: { role_ids: roleIds },
+      body,
     }),
   );
 export const useSetAccountStatus = (id: string) =>

@@ -32,6 +32,13 @@ export const PERMISSIONS = {
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
+// Las áreas de lo que cuelga de una finca. Un empleado con algún permiso de estas necesita una
+// finca asignada: sin ella no alcanza nada. El catálogo de variedades es de la asociación.
+const FIELD_AREAS = ['farms.', 'plots.', 'crops.', 'inputs.', 'activities.'];
+export const isFieldPermission = (code: string) =>
+  code !== PERMISSIONS.CROPS_MANAGE_VARIETIES &&
+  FIELD_AREAS.some((area) => code.startsWith(area));
+
 // Solo decide qué mostrar: el servidor autoriza cada acción. Acepta el usuario ausente porque
 // la sesión puede no haber cargado todavía.
 export function hasPermission(

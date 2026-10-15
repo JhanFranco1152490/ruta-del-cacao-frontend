@@ -16,7 +16,7 @@ import {
 import { useSession } from '@/hooks/use-session';
 import { todayInBogota } from '@/lib/format/dates';
 
-import { type AgriculturalInput, useInputStocks } from '../api';
+import { type MovementInput, useInputStocks } from '../api';
 import { NOTE_MAX_LENGTH } from '../movement-schemas';
 import { inputPackageOf } from '@/lib/format/input-quantity';
 import type { FarmChoice } from './input-farm-select';
@@ -39,7 +39,7 @@ export function InputMovementDialog({
   onSaved,
 }: {
   kind: MovementKind;
-  input: AgriculturalInput;
+  input: MovementInput;
   farms: readonly FarmChoice[];
   // La finca elegida en la lista; se puede cambiar aquí.
   farm: string | null;

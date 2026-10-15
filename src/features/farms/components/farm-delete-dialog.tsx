@@ -14,6 +14,20 @@ import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { notify } from '@/lib/notify';
 
 const HAS_RECORDS = 'farm_has_records';
+const HAS_ACCOUNTS = 'farm_has_accounts';
+
+// Cuántos empleados trabajan en la finca: no se desasignan solos, porque quedarían sin acceso
+// sin que nadie lo decidiera.
+function hasAccountsMessage(accounts: unknown) {
+  const count = typeof accounts === 'number' ? accounts : 0;
+  const who =
+    count === 1
+      ? '1 empleado asignado'
+      : count > 1
+        ? `${count} empleados asignados`
+        : 'empleados asignados';
+  return `Esta finca tiene ${who} y no se puede eliminar. Quítasela en Usuarios a cada uno y vuelve a intentarlo.`;
+}
 
 function deleteErrorMessage(error: unknown, isActive: boolean) {
   if (isApiError(error)) {
@@ -21,6 +35,9 @@ function deleteErrorMessage(error: unknown, isActive: boolean) {
       return isActive
         ? 'Esta finca tiene registros asociados (por ejemplo, una parcela que ya se usa) y no se puede eliminar. Puedes desactivarla: deja de figurar como activa sin perder sus datos.'
         : 'Esta finca tiene registros asociados (por ejemplo, una parcela que ya se usa) y no se puede eliminar. Ya está inactiva.';
+    }
+    if (error.code === HAS_ACCOUNTS) {
+      return hasAccountsMessage(error.body.accounts);
     }
     if (error.code === 'stale_version') {
       return 'Alguien cambió esta finca mientras tanto. Vuelve a abrirla para ver sus datos actuales.';

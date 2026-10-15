@@ -133,10 +133,17 @@ export function startInputsBackend(
   return backend;
 }
 
+const ONE_FARM = [{ id: 'f1', name: 'La Esperanza', is_active: true }];
+
 export function renderInputsScreen({
   user = {},
   searchParams = '',
-}: { user?: Partial<SessionUser>; searchParams?: string } = {}) {
+  farms = ONE_FARM,
+}: {
+  user?: Partial<SessionUser>;
+  searchParams?: string;
+  farms?: { id: string; name: string; is_active: boolean }[];
+} = {}) {
   const urls: string[] = [];
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -148,12 +155,7 @@ export function renderInputsScreen({
     }),
   );
   renderWithProviders(
-    <InputListScreen
-      farms={{
-        choices: [{ id: 'f1', name: 'La Esperanza', is_active: true }],
-        isLoading: false,
-      }}
-    />,
+    <InputListScreen farms={{ choices: farms, isLoading: false }} />,
     {
       queryClient,
       searchParams,

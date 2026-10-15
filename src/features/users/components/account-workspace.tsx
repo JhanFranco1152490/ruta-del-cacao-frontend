@@ -4,17 +4,19 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { useProducerSummary } from '@/lib/api/producer-options';
+import { useFarmOptions } from '@/lib/api/farm-options';
 import {
   useMunicipalities,
   useMunicipalityName,
 } from '@/lib/api/municipalities';
 import type { components } from '@/lib/api/schema';
-import { useAccountFilters } from '../use-account-filters';
+import { WITHOUT_FARM, useAccountFilters } from '../use-account-filters';
 import { useAccountPanel } from '../use-account-panel';
 import type { AccountCreated } from '../api';
 import { AccountFilters } from './account-filters';
 import { AccountList } from './account-list';
 import { AccountPanel } from './account-panel';
+import { MissingFarmsNotice } from './missing-farms-notice';
 import { ProducerFilter } from '@/components/producer-filter';
 
 export function AccountWorkspace({
@@ -32,6 +34,12 @@ export function AccountWorkspace({
   const selectedProducer = useProducerSummary(
     canPickProducer ? filters.producer : undefined,
   );
+  // En el espacio del productor se filtra y se muestra en qué fincas trabaja cada quien.
+  const farms = useFarmOptions(user.id, undefined, { enabled: !association });
+  const farmChoices = farms.data?.data.options.map(({ id, name }) => ({
+    id,
+    name,
+  }));
   const panel = useAccountPanel();
   const [receipt, setReceipt] = useState<{ id: string; sent: boolean }>();
   function onCreated(account: AccountCreated) {
@@ -57,11 +65,19 @@ export function AccountWorkspace({
           ) : undefined
         }
       />
+      {!association && user.all_farms && (
+        <MissingFarmsNotice
+          onShow={() => {
+            void filters.setFarm(WITHOUT_FARM);
+          }}
+        />
+      )}
       <section className="mt-8 space-y-5 rounded-lg bg-card p-5 shadow-card">
         <AccountFilters
           filters={filters}
           canReadRoles={hasPermission(user, PERMISSIONS.ROLES_VIEW)}
           municipalities={association ? (municipalities.data ?? []) : undefined}
+          farms={association ? undefined : farmChoices}
           producerFilter={
             canPickProducer && (
               <ProducerFilter
@@ -85,6 +101,7 @@ export function AccountWorkspace({
           open={panel.open}
           municipalityName={association ? municipalityName : undefined}
           showProducer={association}
+          showFarms={!association}
           canGroup={superuser}
         />
       </section>

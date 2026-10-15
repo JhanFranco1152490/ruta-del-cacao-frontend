@@ -9,17 +9,40 @@ type SessionUser = components['schemas']['SessionUser'];
 const LAST_USER_KEY = 'cacao-last-user';
 const SNAPSHOT_KEY = 'session';
 
+// Qué fincas alcanza la cuenta. Una copia anterior a las fincas no trae los campos: cuenta como
+// distinta, porque entonces alcanzaba todas las del productor.
+const farmScopeOf = (user: Partial<SessionUser>) =>
+  user.all_farms
+    ? '*'
+    : (user.farms ?? [])
+        .map(({ id }) => id)
+        .sort()
+        .join(',');
+
 // Copia de la cuenta que el servidor confirmó por última vez. Deja entrar sin conexión dentro de
 // la ventana; no reemplaza la autenticación: el servidor revalida al volver la red.
+//
+// Si las fincas de la cuenta cambiaron desde la copia anterior, borra lo que el dispositivo
+// guardaba de ellas (las lecturas; la cola se conserva, como al cerrar sesión) y responde `true`
+// para que quien llama descarte también lo que tiene en memoria.
 export async function saveSessionSnapshot(user: SessionUser) {
   try {
-    await getOfflineDb(user.id).meta.put({
+    const db = getOfflineDb(user.id);
+    const previous = await db.meta.get(SNAPSHOT_KEY);
+    const farmsChanged =
+      !!previous &&
+      farmScopeOf(JSON.parse(previous.value) as Partial<SessionUser>) !==
+        farmScopeOf(user);
+    if (farmsChanged) await db.cache.clear();
+    await db.meta.put({
       key: SNAPSHOT_KEY,
       value: JSON.stringify(user),
     });
     window.localStorage.setItem(LAST_USER_KEY, user.id);
+    return farmsChanged;
   } catch {
     // Solo se pierde la entrada sin conexión.
+    return false;
   }
 }
 

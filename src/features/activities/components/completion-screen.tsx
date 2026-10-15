@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { PageNotice } from '@/components/page-notice';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
+import { useSession } from '@/hooks/use-session';
 import { todayInBogota } from '@/lib/format/dates';
 
+import { mayRecordFor } from '../activity-actions';
 import { ACTIVITIES_PATH } from '../activity-paths';
 import { activityState, canComplete } from '../activity-state';
 import { CompletionCapture } from './completion-capture';
@@ -23,6 +26,18 @@ export function CompletionScreen({ activityId }: { activityId: string }) {
   // Entre guardar y que la navegación llegue, la lectura de lo guardado ya cambió: sin esto se vería
   // un instante el aviso de «ya está guardada».
   const [saved, setSaved] = useState(false);
+  const router = useRouter();
+  const { data: user } = useSession();
+  // Quien llega escribiendo la dirección de una actividad que no le toca registrar vuelve a la
+  // pantalla de antes sin aviso: el botón ya no se le ofrece, y lo que guardara aquí el servidor
+  // lo rechazaría.
+  const notYours =
+    sources.status === 'ready' &&
+    !!user &&
+    !mayRecordFor(user, sources.activity.assignee.id);
+  useEffect(() => {
+    if (notYours) router.replace(returnPath);
+  }, [notYours, router, returnPath]);
 
   if (sources.status === 'missing') {
     return <PageNotice title="Esta actividad ya no existe." />;
@@ -48,6 +63,7 @@ export function CompletionScreen({ activityId }: { activityId: string }) {
     );
   }
 
+  if (notYours) return null;
   const { activity, queued } = sources;
   // Ya quedó guardada en el dispositivo (en otra visita) y no hay nada que corregir: si el
   // servidor la rechaza, el aviso y la bandeja ofrecen corregirla.

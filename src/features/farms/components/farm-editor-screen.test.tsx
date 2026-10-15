@@ -527,6 +527,40 @@ describe('FarmEditorScreen', () => {
       expect(patches).toEqual([{ is_active: false, expected_version: 5 }]);
     });
 
+    it('says how many employees have to be reassigned first', async () => {
+      const user = userEvent.setup();
+      server.use(serverFarm({ version: 5 }));
+      deleteHandler(() =>
+        HttpResponse.json(
+          {
+            accounts: 2,
+            detail: 'La finca tiene empleados asignados.',
+            code: 'farm_has_accounts',
+            fields: {},
+          },
+          { status: 409 },
+        ),
+      );
+      renderEditor('s1', canDelete());
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Eliminar finca' }),
+      );
+      const dialog = screen.getByRole('dialog');
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Eliminar finca' }),
+      );
+
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Esta finca tiene 2 empleados asignados y no se puede eliminar.',
+      );
+      // No ofrece desactivarla: desactivar no cambia las asignaciones.
+      expect(
+        within(dialog).queryByRole('button', { name: 'Desactivar finca' }),
+      ).not.toBeInTheDocument();
+      expect(router.push).not.toHaveBeenCalled();
+    });
+
     it('asks to reopen when someone changed the farm in the meantime', async () => {
       const user = userEvent.setup();
       server.use(serverFarm({ version: 5 }));
