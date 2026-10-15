@@ -11,13 +11,34 @@ const NOTES = {
   },
 } as const;
 
-export function ProducerAccessNote({ status }: { status: ProducerStatus }) {
+export function ProducerAccessNote({
+  status,
+  tile = false,
+}: {
+  status: ProducerStatus;
+  // Como un cuadro más de la fila de resumen: más chico, sin el título grande.
+  tile?: boolean;
+}) {
   const note = NOTES[status];
   return (
-    <aside className="rounded-[var(--radius-card)] bg-card p-5 shadow-card">
+    <aside
+      className={`rounded-[var(--radius-card)] bg-card shadow-card ${tile ? 'p-4' : 'p-5'}`}
+    >
       <p className="section-label">Estado de acceso</p>
-      <h2 className="mt-2 text-2xl text-selva">{note.title}</h2>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+      <h2
+        className={
+          tile ? 'mt-1 text-xl text-selva' : 'mt-2 text-2xl text-selva'
+        }
+      >
+        {note.title}
+      </h2>
+      <p
+        className={
+          tile
+            ? 'mt-1 text-sm text-muted-foreground'
+            : 'mt-3 text-sm leading-6 text-muted-foreground'
+        }
+      >
         {note.body}
       </p>
     </aside>

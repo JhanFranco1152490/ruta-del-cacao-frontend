@@ -1,4 +1,4 @@
-import { ProducerDetailScreen } from '@/features/producers/components/producer-detail-screen';
+import { ProducerDetailWithFarms } from './producer-detail-with-farms';
 
 export default async function ProducerPage({
   params,
@@ -6,5 +6,5 @@ export default async function ProducerPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <ProducerDetailScreen id={id} />;
+  return <ProducerDetailWithFarms id={id} />;
 }

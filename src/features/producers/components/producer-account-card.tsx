@@ -57,7 +57,7 @@ export function ProducerAccountCard({ producer }: { producer: Producer }) {
   return (
     <section
       aria-labelledby={titleId}
-      className="space-y-4 rounded-[var(--radius-card)] bg-card p-5 shadow-card"
+      className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[var(--radius-card)] bg-card p-5 shadow-card"
     >
       <h2 id={titleId} className="text-2xl text-selva">
         Cuenta de acceso
