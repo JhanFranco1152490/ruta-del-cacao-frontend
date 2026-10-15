@@ -85,21 +85,24 @@ export function ProducerDetailScreen({
               }
             />
             {farms ? (
-              // Con las fincas: una fila de resumen (totales y estado del productor), la tabla de
-              // fincas con los datos al lado y, abajo, la cuenta de acceso.
+              // Con las fincas: una fila de resumen (totales y estado del productor) y, debajo, a la
+              // izquierda las fincas con la cuenta de acceso y a la derecha los datos, para que las dos
+              // columnas queden de alto parecido.
               <div className="mt-5 space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {farms.stats}
                   <ProducerAccessNote status={producer.status} tile />
                 </div>
                 <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-                  {farms.list}
+                  <div className="space-y-5">
+                    {farms.list}
+                    <ProducerAccountCard producer={producer} />
+                  </div>
                   <ProducerDataCard
                     producer={producer}
                     municipalityName={municipalityName}
                   />
                 </div>
-                <ProducerAccountCard producer={producer} />
               </div>
             ) : (
               <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
