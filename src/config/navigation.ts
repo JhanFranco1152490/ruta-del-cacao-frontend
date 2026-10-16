@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Sprout,
   Users,
+  Wheat,
 } from 'lucide-react';
 
 import { PERMISSIONS } from '@/lib/permissions';
@@ -57,6 +58,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Actividades',
     icon: CalendarDays,
     permission: PERMISSIONS.ACTIVITIES_VIEW,
+  },
+  // Cosechas y lotes van juntas, después de las labores: es el orden del cacao.
+  {
+    href: '/cosechas',
+    label: 'Cosechas',
+    icon: Wheat,
+    permission: PERMISSIONS.HARVESTS_VIEW,
   },
   {
     href: '/roles',

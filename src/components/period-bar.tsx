@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // El periodo que se ve (un mes o una semana), con sus flechas y la vuelta a hoy.
-export function ActivityPeriodBar({
+export function PeriodBar({
   title,
   previousLabel,
   nextLabel,

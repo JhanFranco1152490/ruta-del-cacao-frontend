@@ -28,7 +28,7 @@ import { useActivityAssignees } from '../api';
 import { AssigneesContext } from '../assignees';
 import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';
-import { useActivityMonth } from '../use-activity-month';
+import { useMonthParam } from '@/hooks/use-month-param';
 import { useActivityView } from '../use-activity-view';
 import { useCalendarData } from '../use-calendar-data';
 import { ActivityCalendarBody } from './activity-calendar-body';
@@ -59,7 +59,7 @@ export function ActivityCalendarScreen() {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
   const isDesktop = useIsDesktop();
-  const period = useActivityMonth();
+  const period = useMonthParam();
   const { month, today, isCurrentMonth, goToMonth } = period;
   const viewState = useActivityView(period);
   const selectedDay = useActivityDay(month, today);

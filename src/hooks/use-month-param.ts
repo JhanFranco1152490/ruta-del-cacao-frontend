@@ -10,9 +10,9 @@ const parseAsMonth = createParser({
   serialize: (value: string) => value,
 });
 
-// El mes que se ve vive en la URL (`?mes=2026-10`): se puede compartir y el botón atrás lo
-// respeta. Sin parámetro es el mes actual, que no se escribe en la dirección.
-export function useActivityMonth() {
+// El mes que se ve en una lista por meses (actividades, cosechas) vive en la URL (`?mes=2026-10`):
+// se puede compartir y el botón atrás lo respeta. Sin parámetro es el mes actual, que no se escribe en la dirección.
+export function useMonthParam() {
   const [selected, setSelected] = useQueryState('mes', parseAsMonth);
   const today = todayInBogota();
   const currentMonth = today.slice(0, 7);
