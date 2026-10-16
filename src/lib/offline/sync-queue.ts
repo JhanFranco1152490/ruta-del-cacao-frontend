@@ -11,7 +11,12 @@ export function clearAdapters() {
   adapters.clear();
 }
 
-type SyncedListener = (item: QueueItem, adapter: SyncAdapter) => void;
+// `response` es lo que respondió el servidor; solo llega a quien escucha los envíos.
+type SyncedListener = (
+  item: QueueItem,
+  adapter: SyncAdapter,
+  response?: unknown,
+) => void;
 
 const syncedListeners = new Set<SyncedListener>();
 
@@ -38,22 +43,25 @@ export function onItemRejected(listener: SyncedListener) {
 }
 
 // El registro ya salió de la cola: un fallo de quien escucha no debe frenar el resto del envío.
-function notifySynced(item: QueueItem, adapter: SyncAdapter) {
-  emit(syncedListeners, item, adapter);
+function notifySynced(
+  item: QueueItem,
+  adapter: SyncAdapter,
+  response: unknown,
+) {
+  emit(syncedListeners, [item, adapter, response]);
 }
 
 function notifyRejected(item: QueueItem, adapter: SyncAdapter) {
-  emit(rejectedListeners, item, adapter);
+  emit(rejectedListeners, [item, adapter]);
 }
 
 function emit(
   listeners: Set<SyncedListener>,
-  item: QueueItem,
-  adapter: SyncAdapter,
+  args: Parameters<SyncedListener>,
 ) {
   for (const listener of listeners) {
     try {
-      listener(item, adapter);
+      listener(...args);
     } catch {
       // Solo se pierde el aviso; los datos se vuelven a pedir al vencer su tiempo de vida.
     }
@@ -249,13 +257,13 @@ async function runQueue(userId: string) {
       progressed = true;
 
       try {
-        await adapter.send(claimed);
+        const response = await adapter.send(claimed);
         // Se retira de la cola en vez de conservarse como `synced`: ya cumplió su función
         // (encolar, reintentar, permitir que sus hijos lo esperen) y no hay razón para
         // guardar para siempre un envío que ya terminó bien.
         await db.queue.delete(item.id);
         byId.delete(item.id);
-        notifySynced(claimed, adapter);
+        notifySynced(claimed, adapter, response);
       } catch (error) {
         const recovery = recovered.has(item.id)
           ? null
