@@ -32,6 +32,10 @@ export const formatTimestamp = (milliseconds: number) =>
 export const formatLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM 'de' yyyy", { locale: es });
 
+// El día y el mes de una fecha sin hora (yyyy-MM-dd), sin el año: "19 de octubre".
+export const formatDayMonth = (isoDate: string) =>
+  format(parseISO(isoDate), "d 'de' MMMM", { locale: es });
+
 // Un mes y un año (yyyy-MM), sin día: la fecha de una siembra.
 export const formatMonthYear = (isoMonth: string) =>
   format(parseISO(`${isoMonth}-01`), "MMMM 'de' yyyy", { locale: es });

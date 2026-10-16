@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   dateInBogota,
   daysBetween,
+  formatDayMonth,
   formatLongDate,
   formatMonthYear,
   formatTimestamp,
@@ -108,6 +109,13 @@ describe('shiftMonth', () => {
     expect(shiftMonth('2026-12', 1)).toBe('2027-01');
     expect(shiftMonth('2026-01', -1)).toBe('2025-12');
     expect(shiftMonth('2026-10', 0)).toBe('2026-10');
+  });
+});
+
+describe('formatDayMonth', () => {
+  it('writes the day and the month without the year or shifting the day', () => {
+    expect(formatDayMonth('2026-10-19')).toBe('19 de octubre');
+    expect(formatDayMonth('2026-11-01')).toBe('1 de noviembre');
   });
 });
 

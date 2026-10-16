@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 import type { components } from '@/lib/api/schema';
-import { dateInBogota, formatLongDate, isIsoDate } from '@/lib/format/dates';
+import { doneDateIssue } from '@/lib/activity-dates';
+import { dateInBogota, formatLongDate } from '@/lib/format/dates';
 import {
   normalizeQuantity,
   type QuantityInput,
@@ -15,8 +16,6 @@ import { activityTitle } from './activity-labels';
 import type { AgriculturalActivity } from './api';
 
 type Schemas = components['schemas'];
-
-export const FUTURE_DATE_MESSAGE = 'La fecha no puede ser futura';
 
 export type CompletionFormInput = {
   done_date: string;
@@ -48,17 +47,11 @@ export const createCompletionSchema = ({
         context.addIssue({ code: 'custom', path, message });
 
       if (done_date) {
-        const plannedOn = dateInBogota(activity.created_at);
-        if (!isIsoDate(done_date)) {
-          issue(['done_date'], 'Escribe una fecha válida.');
-        } else if (done_date > today) {
-          issue(['done_date'], FUTURE_DATE_MESSAGE);
-        } else if (done_date < plannedOn) {
-          issue(
-            ['done_date'],
-            `La fecha no puede ser anterior a la programación de la actividad (${formatLongDate(plannedOn)})`,
-          );
-        }
+        const error = doneDateIssue(done_date, today, {
+          date: dateInBogota(activity.created_at),
+          reason: 'la programación de la actividad',
+        });
+        if (error) issue(['done_date'], error);
       }
 
       // El inventario es el recordatorio de contar la bodega: el conteo se registra en Insumos, y
