@@ -1,23 +1,8 @@
-import { normalizeCatalogName } from '@/lib/format/search';
-
 import { activityTitle } from './activity-labels';
 import type { AgriculturalActivity } from './api';
 import type { QueuedCompletion } from './completion-queue';
 import type { CompletionFormInput } from './completion-rules';
 import { COMPLETION_INPUT_INACTIVE_CODE } from './sync-adapter';
-
-// Lo que la realización necesita saber de un insumo del catálogo.
-export type CatalogInput = {
-  id: string;
-  name: string;
-  unit: string;
-  package_type: string | null;
-  package_size: string | null;
-  is_active: boolean;
-};
-
-export const UNAVAILABLE_INPUT_MESSAGE =
-  'Este insumo ya no está disponible. Elige otro del catálogo.';
 
 // Cómo se nombra la labor fuera de su pantalla (en la bandeja): "Fertilización · P-03".
 export const completionLabel = (
@@ -59,34 +44,4 @@ export function queuedToFormInput(
     values: { done_date: queued.request.done_date, inputs },
     unavailableRows,
   };
-}
-
-export type InputChoice = { id: string; label: string; disabled: boolean };
-
-// Los insumos que ofrece una fila: los activos que calzan con lo buscado (sin tildes, mayúsculas
-// ni espacios, como en el catálogo), más el que la fila ya tiene elegido aunque no calce. Los que
-// ya están en otra fila se ven, pero no se pueden elegir dos veces.
-export function inputChoices(
-  catalog: readonly CatalogInput[],
-  {
-    search,
-    selectedId,
-    takenIds,
-  }: { search: string; selectedId: string; takenIds: ReadonlySet<string> },
-): InputChoice[] {
-  const wanted = normalizeCatalogName(search);
-  return catalog
-    .filter(
-      (input) =>
-        input.id === selectedId ||
-        (input.is_active && normalizeCatalogName(input.name).includes(wanted)),
-    )
-    .map((input) => {
-      const taken = input.id !== selectedId && takenIds.has(input.id);
-      return {
-        id: input.id,
-        label: taken ? `${input.name} · Ya en la lista` : input.name,
-        disabled: taken,
-      };
-    });
 }

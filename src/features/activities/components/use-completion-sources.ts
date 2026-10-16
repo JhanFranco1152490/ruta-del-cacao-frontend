@@ -6,6 +6,7 @@ import { useSession } from '@/hooks/use-session';
 import { useActivity } from '@/lib/api/activity-read';
 import { isApiError } from '@/lib/api/errors';
 import { isFarmEmployee } from '@/lib/farm-scope';
+import type { CatalogInput } from '@/lib/input-usage';
 import {
   useAgriculturalInputs,
   useFarmInputs,
@@ -15,7 +16,6 @@ import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import type { AgriculturalActivity } from '../api';
 import type { QueuedCompletion } from '../completion-queue';
-import type { CatalogInput } from '../completion-values';
 import { useQueuedCompletion } from '../use-completion-queue';
 
 export type CompletionSources =

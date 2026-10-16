@@ -3,11 +3,12 @@ import { z } from 'zod';
 import type { components } from '@/lib/api/schema';
 import { dateInBogota, formatLongDate, isIsoDate } from '@/lib/format/dates';
 import {
-  formatQuantity,
-  formatStock,
-  inputPackageOf,
-} from '@/lib/format/input-quantity';
-import { decimalPattern, isDecimal } from '@/lib/validation/decimal';
+  normalizeQuantity,
+  type QuantityInput,
+  type UsedInputRow,
+  usedInputIssues,
+  usedInputPhrase,
+} from '@/lib/input-usage';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
 import { activityTitle } from './activity-labels';
@@ -15,33 +16,12 @@ import type { AgriculturalActivity } from './api';
 
 type Schemas = components['schemas'];
 
-// Lo máximo que guarda el servidor por insumo usado (10 dígitos con 3 decimales).
-const MAX_QUANTITY = 9_999_999.999;
-const QUANTITY_DECIMALS = 3;
-
 export const FUTURE_DATE_MESSAGE = 'La fecha no puede ser futura';
-export const MISSING_QUANTITY_MESSAGE = 'Indique la cantidad del insumo';
-export const REPEATED_INPUT_MESSAGE = 'Este insumo ya está en la lista';
 
 export type CompletionFormInput = {
   done_date: string;
-  inputs: { input_id: string; quantity: string }[];
+  inputs: UsedInputRow[];
 };
-
-// El teclado en español suele escribir la coma decimal; la API espera el punto.
-const normalizeQuantity = (quantity: string) =>
-  quantity.trim().replace(',', '.');
-
-function quantityError(quantity: string): string | null {
-  if (!quantity) return MISSING_QUANTITY_MESSAGE;
-  if (!isDecimal(quantity)) return 'Escribe una cantidad válida';
-  const amount = Number(quantity);
-  if (amount <= 0) return 'La cantidad debe ser mayor que cero';
-  if (!decimalPattern(QUANTITY_DECIMALS).test(quantity)) {
-    return `Usa máximo ${QUANTITY_DECIMALS} decimales`;
-  }
-  return amount > MAX_QUANTITY ? 'La cantidad es demasiado grande' : null;
-}
 
 // Una realización no se corrige después, así que se valida antes de guardar todo lo que el
 // servidor va a comprobar. `today` es la fecha de Bogotá. La fecha puede ser anterior a la
@@ -87,17 +67,9 @@ export const createCompletionSchema = ({
         issue(['inputs'], 'Una actividad de inventario no lleva insumos');
         return;
       }
-      const seen = new Set<string>();
-      inputs.forEach(({ input_id, quantity }, index) => {
-        if (!input_id) {
-          issue(['inputs', index, 'input_id'], 'Elige un insumo del catálogo');
-        } else if (seen.has(input_id)) {
-          issue(['inputs', index, 'input_id'], REPEATED_INPUT_MESSAGE);
-        }
-        seen.add(input_id);
-        const error = quantityError(quantity);
-        if (error) issue(['inputs', index, 'quantity'], error);
-      });
+      for (const { index, field, message } of usedInputIssues(inputs)) {
+        issue(['inputs', index, field], message);
+      }
     });
 
 export type CompletionFormValues = z.output<
@@ -114,46 +86,6 @@ export const toCompletionRequest = (
   inputs: values.inputs,
   captured_at: capturedAt,
 });
-
-// Lo que hace falta de un insumo para escribir una cantidad suya.
-type QuantityInput = {
-  name: string;
-  unit: string;
-  package_type: string | null;
-  package_size: string | null;
-};
-
-// La cantidad que se está escribiendo, con su unidad y lo que equivale en empaques ("100 kg · 2
-// bultos"). `null` mientras no sea un número mayor que cero.
-export function usedQuantityText(
-  quantity: string,
-  input: QuantityInput,
-): string | null {
-  const value = normalizeQuantity(quantity);
-  if (!isDecimal(value) || Number(value) <= 0) return null;
-  return formatStock(value, input.unit, inputPackageOf(input));
-}
-
-// Las existencias de la finca según la copia del dispositivo. Son solo una referencia: no limitan
-// la cantidad, porque la labor ya se hizo.
-export const stockReferenceText = (
-  stock: string | null,
-  input: QuantityInput,
-) =>
-  stock === null
-    ? 'Sin movimientos en esta finca'
-    : `Hay ${formatStock(stock, input.unit, inputPackageOf(input))}`;
-
-function usedInputPhrase(quantity: string, input: QuantityInput) {
-  const value = normalizeQuantity(quantity);
-  const [, packages] = formatStock(
-    value,
-    input.unit,
-    inputPackageOf(input),
-  ).split(' · ');
-  const amount = `${formatQuantity(value, input.unit)} de ${input.name}`;
-  return packages ? `${amount} (${packages})` : amount;
-}
 
 const joinList = (items: string[]) =>
   items.length <= 1

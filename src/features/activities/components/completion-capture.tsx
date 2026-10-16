@@ -9,6 +9,7 @@ import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import type { CatalogInput } from '@/lib/input-usage';
 import { QueueItemExistsError } from '@/lib/offline/sync-queue';
 
 import type { ActivityOfDay } from '../activity-days';
@@ -20,7 +21,6 @@ import {
   toCompletionRequest,
 } from '../completion-rules';
 import {
-  type CatalogInput,
   completionLabel,
   emptyCompletionForm,
   queuedToFormInput,
