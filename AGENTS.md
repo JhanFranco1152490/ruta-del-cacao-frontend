@@ -382,7 +382,10 @@ referencia en `docs/ui/ref/*.html`.
   filtros es `FilterRow` (buscador siempre visible, el resto detrás de «Filtros» en celular) y una
   tabla pasa a tarjetas compactas en celular con `COMPACT_TABLE_CLASS` (sin «etiqueta: valor» por
   línea; el botón de ver cubre la tarjeta con `ROW_LINK_CLASS`). Los mapas de solo consulta ofrecen
-  pantalla completa (`MapFrame expandable`); los editores no, porque sus botones quedarían tapados. Cada dominio arma su
+  pantalla completa (`MapFrame expandable`); los editores no, porque sus botones quedarían tapados.
+  Una tarjeta con menos de 400 px de contenido (`useNarrowContainer`, mide la tarjeta y no la
+  pantalla) deja solo el «⋯» con todo adentro; lo que sume otro dominio entra al menú por
+  `renderPlotMenuItems` y se abre con `requestSchedule`/`onScheduleRequest`. Cada dominio arma su
   menú; los diálogos de confirmación que se abren desde él se montan fuera del menú y se controlan
   con `ConfirmControl` (`useConfirmAction(..., control)`). Los filtros van en una fila, sin
   etiquetas visibles (`hideLabel`), y en el celular detrás de «Filtros». Los mapas que acompañan

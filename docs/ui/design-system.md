@@ -231,7 +231,16 @@ poscosecha cobre, calidad azul). Nunca emojis.
   con Esc; los editores no la tienen porque sus botones están fuera del recuadro.
 - **Tarjeta de parcela:** código, área y estado a la izquierda y, a la derecha, un botón de icono por
   cada atajo (ver en el mapa, programar una actividad) y el «⋯». La caracterización va en su franja,
-  con «Editar» y el historial dentro: lo de la ficha vive con la ficha.
+  con «Editar» y el historial dentro: lo de la ficha vive con la ficha. «Ver en el mapa» está
+  siempre también en el «⋯».
+- **Tarjeta angosta:** lo que cabe depende del ancho de la tarjeta y no del de la pantalla (con un
+  mapa al lado, la misma pantalla da tarjetas anchas y angostas). Con menos de 400 px de contenido
+  (`useNarrowContainer`) la tarjeta deja solo el «⋯», sin la etiqueta «Área:», y los atajos pasan a su
+  menú. Un atajo de otro dominio (programar una actividad) entra al menú por `renderPlotMenuItems`
+  y se pide con `requestSchedule`, para que el diálogo viva en su dominio.
+- **Detalle de una cuenta:** franja `--selva` con nombre, correo, estado y tipo de cuenta, y debajo
+  tarjetas por sección (datos, roles con su alcance, fincas en las que trabaja). El alcance es un
+  campo en tarjeta, con opciones separadas y seleccionables en toda su superficie.
 - **Detalle de un registro en hoja:** al costado en pantallas anchas y desde abajo en celular, con una
   franja `--selva` arriba (nombre, tipo y recuentos) y el contenido agrupado en secciones plegables
   (los permisos de un rol, por área).
