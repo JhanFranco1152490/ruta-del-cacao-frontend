@@ -81,12 +81,13 @@ src/
                        /restablecer-contrasena, /activar-cuenta
     (app)/             con sesión (lo garantiza SessionGuard en su layout): / (puerta de
                        entrada: lleva a la primera sección permitida), /productores,
-                       /fincas, /actividades, /usuarios, /roles y sus pantallas hijas. El
+                       /fincas, /actividades, /cosechas, /lotes, /usuarios, /roles y sus
+                       pantallas hijas. El
                        permiso y la conexión de cada sección se comprueban en el shell a
                        partir de config/navigation.ts: una sección nueva solo se suma ahí
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       users y roles): api.ts, schemas.ts, hooks propios
+                       harvests, lots, users y roles): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
   hooks/               hooks de React compartidos entre dominios (sin JSX; si el hook es de
@@ -122,7 +123,16 @@ src/
   las fincas, las parcelas y el catálogo de insumos con sus existencias para elegirlos en un
   formulario de otro dominio (`lib/api/farm-options.ts`, `plot-options.ts`, `input-catalog.ts`); y
   cómo se escribe la cantidad de un insumo con su unidad y su equivalente en empaques
-  (`lib/format/input-quantity.ts`, `input-units.ts`). El dominio dueño los usa desde ahí.
+  (`lib/format/input-quantity.ts`, `input-units.ts`). También: cómo se nombra una finca o una
+  parcela, `F02 · La Esperanza` y `P05 · Lote del río` (`lib/format/place-label.ts`, el código lo
+  asigna el servidor y una parcela sin nombre que espera en la cola es «Parcela nueva»); el aviso
+  con el código que el servidor dio a lo creado en el dispositivo (`assigned-code-notice.ts`,
+  `hooks/use-notify-assigned-codes.ts`, que escucha `assignedCode` de cada adapter); quién puede
+  ser responsable o recolector en una finca (`lib/assignable-accounts.ts`); las fichas de varias
+  parcelas (`lib/api/plot-characterizations.ts`) y el catálogo de variedades
+  (`lib/api/cacao-varieties.ts`); los estados del lote y cómo se lee su código
+  (`lib/lot-status.ts`, `lib/format/lot-code.ts`); y los ids de la cola que otro dominio necesita
+  como padre (`lib/offline/queue-ids.ts`). El dominio dueño los usa desde ahí.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
   en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
@@ -162,6 +172,22 @@ src/
     el detalle marcan **Responsable fuera de la finca** con la lista que el calendario comparte por
     `AssigneesContext`. Al registrar la realización, un empleado elige entre los insumos de la finca de
     la actividad (`useFarmInputs`); el Productor, del catálogo completo.
+- **Cosechas (`features/harvests/`).** Registrar pasa siempre por la cola, con la ficha de la
+  parcela como padre (`characterizationQueueId`): una cosecha no sale antes que la parcela y la ficha
+  que espera. Corregir y eliminar son en línea, con `expected_version`, y solo mientras la cosecha no
+  forme un lote. La lista se lee por mes, sin paginar, con copia del mes actual y el anterior
+  (`harvest-cache.ts`); filtros y totales corren en el dispositivo (`harvest-filters.ts`, en décimas
+  para no arrastrar errores de coma flotante) y lo que espera en la cola sale en su fecha como
+  «Pendiente de enviar» (`harvest-rows.ts`). El formulario solo ofrece parcelas con siembras y sus
+  variedades (`harvest-rules.ts`, con el tope de `MAX_KG_PER_HECTARE`, igual que el servidor); lo que
+  se envía y lo que se corrige sale de `harvest-requests.ts`. Conformar el lote es de `lots`: las
+  pantallas reciben `renderFormLot` con un `HarvestLotSource`, y `app/(app)/cosechas/form-lot.tsx` los
+  une.
+- **Lotes (`features/lots/`).** Todo en línea, sin copia ni cola: el código lo asigna el servidor y
+  nunca hay uno provisional. Conformar (`form-lot-dialog.tsx`) genera el `id` una vez por diálogo, así
+  que reintentar devuelve el mismo lote; si otra persona lo conformó primero, abre ese. La lista es
+  paginada, y sus tarjetas de estado (`lot-status-cards.tsx`) cuentan lotes y kilos con
+  `GET /api/lots/summary`, que sigue a los demás filtros pero no al estado.
 
 - **Empleados y fincas.** Un empleado trabaja en una o varias fincas de su productor, o en todas
   (`all_farms`, que incluye las que se registren después), y solo alcanza lo de ellas; el servidor ya
