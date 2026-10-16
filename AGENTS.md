@@ -129,9 +129,10 @@ src/
   finca (`activity-assignees.ts`, `lib/assignable-accounts.ts`), los insumos que se ofrecen según
   quién registra (`lib/api/usable-inputs.ts`) y las filas de insumos utilizados
   (`lib/input-usage.ts`), quién registra una actividad (`lib/activity-recorders.ts`), las fechas de
-  una labor (`lib/activity-dates.ts`), la preparación de una foto (`lib/images/prepare-photo.ts`), la
-  fecha en la URL (`lib/navigation/iso-date-parser.ts`) y la cola por padre
-  (`lib/offline/queued-by-parent.ts`). El dominio dueño los usa desde ahí.
+  una labor (`lib/activity-dates.ts`), si una cuenta es de un empleado (`lib/employee.ts`, por sus
+  roles y no por `all_farms`, que también tiene el empleado de todas las fincas), la preparación de
+  una foto (`lib/images/prepare-photo.ts`), la fecha en la URL (`lib/navigation/iso-date-parser.ts`)
+  y la cola por padre (`lib/offline/queued-by-parent.ts`). El dominio dueño los usa desde ahí.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
   en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
@@ -341,6 +342,10 @@ src/
   como referencia: si crece, se parte.
 - **No duplicar.** La segunda vez que aparece algo se extrae: a `components/` si es
   visual y no depende de un dominio, a `lib/` si es lógica.
+- **Leer la cola y seguirla: `useLiveRead`** (`hooks/use-live-read.ts`), con una clave que nombra a
+  la persona y lo que se pide: mientras llega una lectura nueva no devuelve la de otra persona que
+  usó el equipo. No se escribe otra suscripción con `liveQuery` a mano (las de actividades,
+  caracterización, parcelas y fincas son anteriores y pasan a él cuando se toquen).
 - **Páginas delgadas.** Un `page.tsx` monta una pantalla de `features/`; no lleva lógica.
 - **Capas en una sola dirección**: `app` → `features` → `components` → `lib`. Un dominio
   nunca importa de la carpeta de otro; si dos lo necesitan, sube a `components/` o `lib/`.

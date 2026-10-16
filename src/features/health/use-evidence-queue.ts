@@ -1,8 +1,6 @@
 'use client';
 
-import { liveQuery } from 'dexie';
-import { useEffect, useState } from 'react';
-
+import { useLiveRead } from '@/hooks/use-live-read';
 import { useQueueMutation } from '@/hooks/use-queue-mutation';
 import { discard, sendWhenOnline } from '@/lib/offline/sync-queue';
 
@@ -28,26 +26,16 @@ export const useDiscardEvidence = () =>
 
 type QueuedPhoto = Awaited<ReturnType<typeof listQueuedEvidence>>[number];
 
+const NONE: readonly QueuedPhoto[] = [];
+
 // Las fotos de una actividad que esperan en este dispositivo, para mostrarlas con "Pendiente de
 // enviar" junto a las del servidor. Se actualiza sola cuando la cola cambia.
-export function useQueuedEvidence(
+export const useQueuedEvidence = (
   userId: string | undefined,
   activityId: string,
-): readonly QueuedPhoto[] {
-  const [state, setState] = useState<{ key?: string; photos: QueuedPhoto[] }>({
-    photos: [],
-  });
-  const key = userId && `${userId}:${activityId}`;
-  useEffect(() => {
-    if (!userId || !key) return;
-    const subscription = liveQuery(() =>
-      listQueuedEvidence(userId, activityId),
-    ).subscribe({
-      next: (photos) => setState({ key, photos }),
-      error: () => setState({ key, photos: [] }),
-    });
-    return () => subscription.unsubscribe();
-  }, [userId, activityId, key]);
-  // Mientras llega la lectura de esta actividad no se muestra la de otra.
-  return state.key === key ? state.photos : [];
-}
+): readonly QueuedPhoto[] =>
+  useLiveRead(
+    userId && `${userId}:${activityId}`,
+    () => listQueuedEvidence(userId!, activityId),
+    NONE,
+  ) ?? NONE;
