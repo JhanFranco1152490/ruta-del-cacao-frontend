@@ -6,23 +6,30 @@ import {
 } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
+import {
+  type CacaoVariety,
+  fetchCacaoVarieties,
+} from '@/lib/api/cacao-varieties';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { components, operations } from '@/lib/api/schema';
+import type { components } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
 
 import type { VarietyOption } from './variety-choices';
 
 type Schemas = components['schemas'];
-export type CacaoVariety = Schemas['CacaoVariety'];
 export type CacaoVarietyCreateRequest = Schemas['CacaoVarietyCreateRequest'];
 export type CacaoVarietyUpdateRequest =
   Schemas['PatchedCacaoVarietyUpdateRequest'];
 export type PlotCharacterization = Schemas['PlotCharacterization'];
 export type PlotCharacterizationWriteRequest =
   Schemas['PlotCharacterizationWriteRequest'];
-type CacaoVarietyQuery = NonNullable<
-  operations['cacao_varieties_list']['parameters']['query']
->;
+
+// Siguen exportados desde aquí para lo que ya los importaba del dominio.
+export {
+  type CacaoVariety,
+  fetchCacaoVarieties,
+  useCacaoVarietyCatalog,
+} from '@/lib/api/cacao-varieties';
 
 export const DUPLICATE_VARIETY_CODE = 'duplicate_variety_name';
 
@@ -32,23 +39,6 @@ export const toVarietyOption = (variety: CacaoVariety): VarietyOption => ({
   isActive: variety.is_active,
   commonNames: variety.common_names,
 });
-
-// El catálogo no se pagina: tiene decenas de filas y quien lo usa las necesita todas.
-export async function fetchCacaoVarieties(
-  query: CacaoVarietyQuery = {},
-  signal?: AbortSignal,
-): Promise<CacaoVariety[]> {
-  const params = new URLSearchParams();
-  if (query.is_active !== undefined)
-    params.set('is_active', String(query.is_active));
-  if (query.search) params.set('search', query.search);
-  const suffix = params.size ? `?${params}` : '';
-  const { results } = await apiFetch<Schemas['CacaoVarietyList']>(
-    `/api/cacao-varieties${suffix}`,
-    { signal },
-  );
-  return results;
-}
 
 // Las variedades que ofrece la ficha de una parcela. Se guardan en el dispositivo para llenar la
 // ficha sin conexión; la copia es por persona y se borra al cerrar sesión.
@@ -61,14 +51,6 @@ export const useActiveCacaoVarieties = (userId: string | undefined) =>
       ),
     enabled: !!userId,
     networkMode: 'offlineFirst',
-  });
-
-// El catálogo completo para administrarlo. Es una pantalla de oficina: sin copia en el
-// dispositivo. Búsqueda y filtros se aplican en la pantalla, porque la lista es corta.
-export const useCacaoVarietyCatalog = () =>
-  useQuery({
-    queryKey: queryKeys.cacaoVarieties.list(),
-    queryFn: ({ signal }) => fetchCacaoVarieties({}, signal),
   });
 
 export const postCacaoVariety = (body: CacaoVarietyCreateRequest) =>

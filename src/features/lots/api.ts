@@ -1,12 +1,25 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { components } from '@/lib/api/schema';
+import type { components, operations } from '@/lib/api/schema';
 
 type Schemas = components['schemas'];
 export type Lot = Schemas['Lot'];
+export type LotPage = Schemas['PaginatedLotList'];
+export type LotQuery = Omit<
+  NonNullable<operations['lots_list']['parameters']['query']>,
+  'page_size'
+>;
+type LotDeleteQuery = operations['lots_destroy']['parameters']['query'];
+
+export const LOT_PAGE_SIZE = 20;
 
 export const LOT_ERROR = {
   harvestAlreadyInLot: 'harvest_already_in_lot',
@@ -36,6 +49,63 @@ export function useCreateLot() {
   return useMutation({
     networkMode: 'always',
     mutationFn: (body: Schemas['LotCreateRequest']) => postLot(body),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.harvests.all() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.lots.all() }),
+      ]),
+  });
+}
+
+function listPath(query: LotQuery) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== '') params.set(key, String(value));
+  }
+  params.set('page_size', String(LOT_PAGE_SIZE));
+  return `/api/lots?${params}`;
+}
+
+export const fetchLots = (query: LotQuery, signal?: AbortSignal) =>
+  apiFetch<LotPage>(listPath(query), { signal });
+
+// Los lotes son de oficina: solo con conexión y sin copia en el dispositivo. Al cambiar de página
+// o de filtro se sigue viendo la anterior mientras llega la nueva.
+export const useLots = (query: LotQuery) =>
+  useQuery({
+    queryKey: queryKeys.lots.list(query),
+    queryFn: ({ signal }) => fetchLots(query, signal),
+    placeholderData: keepPreviousData,
+  });
+
+export const useLot = (id: string) =>
+  useQuery({
+    queryKey: queryKeys.lots.detail(id),
+    queryFn: ({ signal }) => apiFetch<Lot>(`/api/lots/${id}`, { signal }),
+    enabled: !!id,
+  });
+
+// La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP.
+export const deleteLot = (id: string, expectedVersion: number) => {
+  const query: LotDeleteQuery = { expected_version: expectedVersion };
+  const params = new URLSearchParams({
+    expected_version: String(query.expected_version),
+  });
+  return apiFetch<void>(`/api/lots/${id}?${params}`, { method: 'DELETE' });
+};
+
+// Eliminar un lote deja su cosecha sin lote: también se vuelven a leer las cosechas.
+export function useDeleteLot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({
+      id,
+      expectedVersion,
+    }: {
+      id: string;
+      expectedVersion: number;
+    }) => deleteLot(id, expectedVersion),
     onSettled: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.harvests.all() }),

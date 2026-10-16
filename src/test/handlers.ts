@@ -143,6 +143,16 @@ export const harvestCollectorsHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde una página de lotes y guarda las búsquedas recibidas.
+export const lotsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/lots'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(buildPage(results));
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

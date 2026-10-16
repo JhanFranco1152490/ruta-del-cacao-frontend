@@ -4,6 +4,7 @@ import {
   LandPlot,
   Leaf,
   MapPinned,
+  Package,
   ShieldCheck,
   Sprout,
   Users,
@@ -65,6 +66,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Cosechas',
     icon: Wheat,
     permission: PERMISSIONS.HARVESTS_VIEW,
+  },
+  {
+    href: '/lotes',
+    label: 'Lotes',
+    icon: Package,
+    permission: PERMISSIONS.LOTS_VIEW,
+    needsConnection: true,
   },
   {
     href: '/roles',
