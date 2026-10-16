@@ -194,7 +194,7 @@ describe('ActivityCalendarBody', () => {
       canScheduleDay: true,
     });
 
-    const row = screen.getByRole('row', { name: /P-03/ });
+    const row = screen.getByRole('row', { name: /P03/ });
     await userEvent.click(within(row).getAllByRole('cell')[27]);
 
     expect(onScheduleDay).toHaveBeenCalledWith('2026-10-28', 'f1', 'pl1');
@@ -218,7 +218,7 @@ describe('ActivityCalendarBody', () => {
     setup({ view: 'parcela', isDesktop: false });
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByRole('article', { name: /P-03/ })).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: /P03/ })).toBeInTheDocument();
   });
 
   it('shows what is pending by urgency', () => {

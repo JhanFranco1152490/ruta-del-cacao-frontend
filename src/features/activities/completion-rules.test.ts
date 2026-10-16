@@ -223,7 +223,7 @@ describe('completionSummary', () => {
         { input: urea, quantity: '100' },
       ]),
     ).toBe(
-      'Vas a registrar la labor Fertilización de P-03 como realizada el 19 de octubre de 2026, con 100 kg de Urea 46 % (2 bultos), que se descuentan del inventario de la finca. Después no se podrá modificar.',
+      'Vas a registrar la labor Fertilización de P03 como realizada el 19 de octubre de 2026, con 100 kg de Urea 46 % (2 bultos), que se descuentan del inventario de la finca. Después no se podrá modificar.',
     );
   });
 
@@ -241,7 +241,7 @@ describe('completionSummary', () => {
 
   it('says that a labor used no inputs', () => {
     expect(completionSummary(fertilization, '2026-10-19', [])).toBe(
-      'Vas a registrar la labor Fertilización de P-03 como realizada el 19 de octubre de 2026, sin insumos. Después no se podrá modificar.',
+      'Vas a registrar la labor Fertilización de P03 como realizada el 19 de octubre de 2026, sin insumos. Después no se podrá modificar.',
     );
   });
 
@@ -255,6 +255,6 @@ describe('completionSummary', () => {
         '2026-10-19',
         [],
       ),
-    ).toContain('la labor Resiembra de P-03');
+    ).toContain('la labor Resiembra de P03');
   });
 });

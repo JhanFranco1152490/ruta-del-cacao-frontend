@@ -19,7 +19,7 @@ const payload: CompletionPayload = {
     inputs: [{ input_id: 'in1', quantity: '100' }],
     captured_at: '2026-10-19T21:42:00.000Z',
   },
-  label: 'Fertilización · P-03',
+  label: 'Fertilización · P03',
 };
 
 let userId: string;
@@ -67,7 +67,7 @@ describe('enqueueCompletion', () => {
         label,
       ]),
     ).toEqual([
-      ['a1', 'Fertilización · P-03'],
+      ['a1', 'Fertilización · P03'],
       ['a2', 'Poda · P-01'],
     ]);
   });
@@ -86,7 +86,7 @@ describe('getQueuedCompletion', () => {
     expect(await getQueuedCompletion(userId, 'a1')).toEqual({
       activityId: 'a1',
       request: payload.request,
-      label: 'Fertilización · P-03',
+      label: 'Fertilización · P03',
       status: 'error',
       errorCode: 'input_inactive',
       errorMessage: 'Este insumo ya no está disponible.',

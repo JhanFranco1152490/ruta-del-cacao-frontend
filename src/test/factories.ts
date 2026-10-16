@@ -113,6 +113,7 @@ export const buildFarm = (
   overrides: Partial<Schemas['Farm']> = {},
 ): Schemas['Farm'] => ({
   id: 'f1',
+  code: 'F01',
   name: 'La Esperanza',
   producer: {
     id: 'p1',
@@ -239,6 +240,7 @@ export const buildPlot = (
   id: 'pl1',
   farm: {
     id: 'f1',
+    code: 'F01',
     name: 'La Esperanza',
     is_active: true,
     producer: {
@@ -248,7 +250,8 @@ export const buildPlot = (
       last_name: 'Prueba',
     },
   },
-  code: 'P1',
+  code: 'P01',
+  name: null,
   area_hectares: '2.40',
   measured_area_hectares: null,
   boundary: null,
@@ -328,9 +331,10 @@ export const buildAgriculturalActivity = (
   id: 'a1',
   plot: {
     id: 'pl1',
-    code: 'P-03',
+    code: 'P03',
+    name: null,
     is_active: true,
-    farm: { id: 'f1', name: 'Finca de prueba', is_active: true },
+    farm: { id: 'f1', code: 'F01', name: 'Finca de prueba', is_active: true },
   },
   producer_id: 'p1',
   activity_type: 'fertilization',

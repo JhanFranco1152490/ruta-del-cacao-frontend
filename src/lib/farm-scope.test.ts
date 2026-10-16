@@ -11,8 +11,18 @@ import {
   scopeProblem,
 } from './farm-scope';
 
-const esperanza = { id: 'farm-a', name: 'La Esperanza', is_active: true };
-const recreo = { id: 'farm-b', name: 'El Recreo', is_active: true };
+const esperanza = {
+  id: 'farm-a',
+  code: 'F01',
+  name: 'La Esperanza',
+  is_active: true,
+};
+const recreo = {
+  id: 'farm-b',
+  code: 'F01',
+  name: 'El Recreo',
+  is_active: true,
+};
 
 describe('onlyFarmOf', () => {
   it('es la finca de quien trabaja en una sola', () => {

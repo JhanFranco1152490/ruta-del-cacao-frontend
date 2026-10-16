@@ -20,11 +20,11 @@ import {
 
 const EMPLOYEE = {
   all_farms: false,
-  farms: [{ id: 'f1', name: 'La Esperanza', is_active: true }],
+  farms: [{ id: 'f1', code: 'F01', name: 'La Esperanza', is_active: true }],
 };
 const TWO_FARMS = [
-  { id: 'f1', name: 'La Esperanza', is_active: true },
-  { id: 'f2', name: 'Catalina', is_active: true },
+  { id: 'f1', code: 'F01', name: 'La Esperanza', is_active: true },
+  { id: 'f2', code: 'F01', name: 'Catalina', is_active: true },
 ];
 
 const urea = buildAgriculturalInput({ id: 'urea', name: 'Urea', version: 1 });

@@ -74,3 +74,48 @@ describe('agricultural activity query keys', () => {
     expect(queued('u-1', 'a-1')).not.toEqual(queued('u-1', 'a-2'));
   });
 });
+
+describe('harvest query keys', () => {
+  it('hangs every read from the key that writes invalidate', () => {
+    const all = queryKeys.harvests.all();
+    const { month, detail, collectors, queued } = queryKeys.harvests;
+    expect(startsWith(month(null, '2026-10'), all)).toBe(true);
+    expect(startsWith(detail('h-1'), all)).toBe(true);
+    expect(startsWith(collectors(null), all)).toBe(true);
+    expect(startsWith(queued('u-1', 'h-1'), all)).toBe(true);
+  });
+
+  it('keeps each month of each producer apart', () => {
+    const { month } = queryKeys.harvests;
+    expect(month(null, '2026-10')).not.toEqual(month(null, '2026-11'));
+    expect(month('p-1', '2026-10')).not.toEqual(month('p-2', '2026-10'));
+    expect(month(null, '2026-10')).not.toEqual(month('p-1', '2026-10'));
+  });
+
+  it('keeps the collectors of each producer apart', () => {
+    const { collectors } = queryKeys.harvests;
+    expect(collectors(null)).not.toEqual(collectors('p-1'));
+  });
+
+  it('keeps the harvest waiting in each device user apart', () => {
+    const { queued } = queryKeys.harvests;
+    expect(queued('u-1', 'h-1')).not.toEqual(queued('u-2', 'h-1'));
+    expect(queued('u-1', 'h-1')).not.toEqual(queued('u-1', 'h-2'));
+  });
+});
+
+describe('lot query keys', () => {
+  it('hangs every read from the key that writes invalidate', () => {
+    const all = queryKeys.lots.all();
+    expect(startsWith(queryKeys.lots.list({ page: 1 }), all)).toBe(true);
+    expect(startsWith(queryKeys.lots.detail('l-1'), all)).toBe(true);
+  });
+
+  it('keeps each filtered page apart', () => {
+    const { list } = queryKeys.lots;
+    expect(list({ page: 1 })).not.toEqual(list({ page: 2 }));
+    expect(list({ status: 'generated' })).not.toEqual(
+      list({ status: 'dried' }),
+    );
+  });
+});

@@ -408,6 +408,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/harvests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las cosechas recogidas en el periodo, `from` y `to` incluidos, de hasta 92 días, de la más reciente a la más antigua. Sin paginar: los filtros de variedad, recolector y lote, y los totales, los aplica el dispositivo, para que funcionen igual sin conexión. `farm` y `plot` acotan al detalle de una finca o de una parcela. */
+        get: operations["harvests_list"];
+        put?: never;
+        /** @description Registra una cosecha en una parcela con ficha y siembras. `id` lo genera el dispositivo: reenviar el mismo `id` con los mismos datos responde 200 con la cosecha ya creada; con otros datos, 409 `harvest_id_conflict`. La parcela sin siembras es 422 `plot_not_characterized`; una variedad que no está en la ficha, 422 `variety_not_in_plot`; un recolector que no cumple, 422 `collector_not_available`. Una parcela o finca inactivas no impiden registrar. */
+        post: operations["harvests_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/harvests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["harvests_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina una cosecha registrada por error. Requiere `expected_version` en la URL. Una cosecha en un lote no se elimina (409 `harvest_in_lot`). El historial se conserva. */
+        delete: operations["harvests_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Corrige la fecha, el peso, la variedad o el recolector de una cosecha que no forma un lote; la parcela no cambia. Requiere `expected_version`. La variedad y el recolector se validan solo si cambian. 409 `stale_version` trae la cosecha vigente en `current`; una cosecha en un lote responde 409 `harvest_in_lot`. */
+        patch: operations["harvests_partial_update"];
+        trace?: never;
+    };
+    "/api/harvests/collectors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las cuentas del productor que pueden ser recolectoras, activas e inactivas, con las fincas en las que trabajan y si quien pregunta puede nombrarlas. La cuenta técnica envía `producer`. */
+        get: operations["harvests_collectors_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/input-movements": {
         parameters: {
             query?: never;
@@ -438,6 +491,41 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los lotes de las fincas que la cuenta alcanza, paginados, del de cosecha más reciente al más antiguo. `search` busca una parte del código (`261014`, `F02-P05`), sin distinguir mayúsculas; `from` y `to` son la fecha de la cosecha. */
+        get: operations["lots_list"];
+        put?: never;
+        /** @description Conforma el lote de una cosecha y le asigna su código. Solo en línea: el código lo asigna el servidor. `id` lo genera el dispositivo: reenviar el mismo `id` para la misma cosecha responde 200 con el lote ya creado. Una cosecha que ya forma un lote es 409 `harvest_already_in_lot`, con ese lote en `current`. */
+        post: operations["lots_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lots/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lots_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina un lote conformado por error. Requiere `expected_version` en la URL. Solo un lote Generado: en otro estado responde 409 `lot_invalid_status` con el estado actual. La cosecha queda sin lote y el código no se vuelve a usar. */
+        delete: operations["lots_destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -775,6 +863,7 @@ export interface components {
         AccountFarm: {
             /** Format: uuid */
             id: string;
+            code: string;
             name: string;
             is_active: boolean;
         };
@@ -837,6 +926,7 @@ export interface components {
         ActivityFarm: {
             /** Format: uuid */
             id: string;
+            code: string;
             name: string;
             is_active: boolean;
         };
@@ -847,6 +937,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             code: string;
+            name: string | null;
             is_active: boolean;
             farm: components["schemas"]["ActivityFarm"];
         };
@@ -991,6 +1082,18 @@ export interface components {
         CatalogInputList: {
             results: components["schemas"]["CatalogInput"][];
         };
+        CollectorList: {
+            results: components["schemas"]["CollectorOption"][];
+        };
+        CollectorOption: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+            farm_ids: string[];
+            all_farms: boolean;
+            assignable: boolean;
+        };
         CompletionRequest: {
             /** Format: date */
             done_date: string;
@@ -1026,6 +1129,7 @@ export interface components {
         Farm: {
             /** Format: uuid */
             readonly id: string;
+            readonly code: string;
             readonly name: string;
             readonly producer: components["schemas"]["FarmProducer"];
             readonly department: components["schemas"]["TerritoryReference"];
@@ -1100,6 +1204,116 @@ export interface components {
          * @enum {string}
          */
         FarmScopeEnum: "all" | "one" | "many";
+        Harvest: {
+            /** Format: uuid */
+            id: string;
+            plot: components["schemas"]["HarvestPlot"];
+            /** Format: uuid */
+            producer_id: string;
+            /** Format: date */
+            harvest_date: string;
+            /** Format: decimal */
+            green_weight_kg: string;
+            variety: components["schemas"]["HarvestVariety"];
+            readonly collector: components["schemas"]["HarvestCollector"];
+            characterization_version: number;
+            readonly registered_by: components["schemas"]["HarvestRecorder"] | null;
+            /** Format: date-time */
+            captured_at: string | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            readonly lot: components["schemas"]["HarvestLot"] | null;
+        };
+        HarvestCollector: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+        };
+        HarvestConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["Harvest"];
+        };
+        HarvestCreateRequest: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            plot_id: string;
+            /** Format: date */
+            harvest_date: string;
+            /** Format: decimal */
+            green_weight_kg: string;
+            /** Format: uuid */
+            variety_id: string;
+            /** Format: uuid */
+            collector_id: string;
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
+        HarvestFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            is_active: boolean;
+        };
+        HarvestList: {
+            results: components["schemas"]["Harvest"][];
+        };
+        HarvestLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: string;
+        };
+        HarvestPlot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string | null;
+            is_active: boolean;
+            farm: components["schemas"]["HarvestFarm"];
+        };
+        HarvestRecorder: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+        };
+        HarvestRepresentation: {
+            /** Format: uuid */
+            id: string;
+            plot: components["schemas"]["HarvestPlot"];
+            /** Format: uuid */
+            producer_id: string;
+            /** Format: date */
+            harvest_date: string;
+            /** Format: decimal */
+            green_weight_kg: string;
+            variety: components["schemas"]["HarvestVariety"];
+            readonly collector: components["schemas"]["HarvestCollector"];
+            characterization_version: number;
+            readonly registered_by: components["schemas"]["HarvestRecorder"] | null;
+            /** Format: date-time */
+            captured_at: string | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        HarvestVariety: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_active: boolean;
+        };
         InputMovement: {
             /** Format: uuid */
             readonly id: string;
@@ -1200,6 +1414,51 @@ export interface components {
             identity_document?: string;
             password: string;
         };
+        Lot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+            harvest: components["schemas"]["HarvestRepresentation"];
+            readonly producer: components["schemas"]["LotProducer"];
+            /** Format: decimal */
+            green_weight_kg: string;
+            readonly created_by: components["schemas"]["HarvestRecorder"] | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        LotConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["Lot"];
+            current_status?: string;
+        };
+        LotCreateRequest: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            harvest_id: string;
+        };
+        LotProducer: {
+            /** Format: uuid */
+            id: string;
+            member_code: string;
+        };
+        /**
+         * @description * `generated` - Generado
+         *     * `fermenting` - En fermentación
+         *     * `fermented` - Fermentado
+         *     * `drying` - En secado
+         *     * `dried` - Seco
+         * @enum {string}
+         */
+        LotStatusEnum: "generated" | "fermenting" | "fermented" | "drying" | "dried";
         /**
          * @description * `conventional` - Convencional
          *     * `organic` - Orgánico
@@ -1313,6 +1572,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["FarmMunicipalityCount"][];
         };
+        PaginatedHarvestListList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["HarvestList"][];
+        };
         PaginatedInputMovementList: {
             /** @example 123 */
             count: number;
@@ -1327,6 +1601,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["InputMovement"][];
+        };
+        PaginatedLotList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Lot"][];
         };
         PaginatedPlotCharacterizationEventList: {
             /** @example 123 */
@@ -1456,8 +1745,19 @@ export interface components {
             is_active?: boolean;
             expected_version: number;
         };
+        PatchedHarvestUpdateRequest: {
+            /** Format: date */
+            harvest_date?: string;
+            /** Format: decimal */
+            green_weight_kg?: string;
+            /** Format: uuid */
+            variety_id?: string;
+            /** Format: uuid */
+            collector_id?: string;
+            expected_version?: number;
+        };
         PatchedPlotUpdateRequest: {
-            code?: string;
+            name?: string | null;
             /** Format: decimal */
             area_hectares?: string;
             boundary?: components["schemas"]["VertexInputRequest"][] | null;
@@ -1520,6 +1820,7 @@ export interface components {
             readonly id: string;
             farm: components["schemas"]["PlotFarm"];
             readonly code: string;
+            readonly name: string | null;
             /** Format: decimal */
             readonly area_hectares: string;
             /** Format: decimal */
@@ -1583,7 +1884,7 @@ export interface components {
             current?: components["schemas"]["Plot"];
         };
         PlotCreateRequest: {
-            code: string;
+            name?: string | null;
             /** Format: decimal */
             area_hectares: string;
             boundary?: components["schemas"]["VertexInputRequest"][] | null;
@@ -1593,10 +1894,12 @@ export interface components {
             farm_id: string;
             /** Format: date-time */
             captured_at?: string | null;
+            code?: string;
         };
         PlotFarm: {
             /** Format: uuid */
             id: string;
+            code: string;
             name: string;
             is_active: boolean;
             producer: components["schemas"]["FarmProducer"];
@@ -3640,6 +3943,370 @@ export interface operations {
             };
         };
     };
+    harvests_list: {
+        parameters: {
+            query: {
+                /** @description Solo las cosechas de esta finca. */
+                farm?: string;
+                /** @description Fecha inicial (incluida). */
+                from: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo las cosechas de esta parcela. */
+                plot?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /** @description Fecha final (incluida). */
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedHarvestListList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    harvests_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HarvestCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Harvest"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Harvest"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HarvestConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    harvests_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Harvest"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    harvests_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` de la cosecha que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HarvestConflictError"];
+                };
+            };
+        };
+    };
+    harvests_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedHarvestUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Harvest"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HarvestConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    harvests_collectors_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectorList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     input_movements_list: {
         parameters: {
             query: {
@@ -3819,6 +4486,257 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    lots_list: {
+        parameters: {
+            query?: {
+                farm?: string;
+                from?: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                plot?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+                /**
+                 * @description * `generated` - Generado
+                 *     * `fermenting` - En fermentación
+                 *     * `fermented` - Fermentado
+                 *     * `drying` - En secado
+                 *     * `dried` - Seco
+                 */
+                status?: "generated" | "fermenting" | "fermented" | "drying" | "dried";
+                to?: string;
+                variety?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedLotList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    lots_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Lot"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Lot"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotConflictError"];
+                };
+            };
+        };
+    };
+    lots_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Lot"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    lots_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` del lote que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotConflictError"];
                 };
             };
         };
@@ -4091,7 +5009,7 @@ export interface operations {
                 farm?: string;
                 /** @description Solo activas o solo inactivas. */
                 is_active?: boolean;
-                /** @description `code` (por defecto) o `producer,farm,code`: por nombre del productor, nombre de la finca y código, para agrupar. Cada nivel desempata por su id. */
+                /** @description `code` (por defecto): por finca y, dentro de ella, por código. `producer,farm,code`: por nombre del productor, nombre de la finca y código, para agrupar. Cada nivel desempata por su id. */
                 ordering?: "code" | "producer,farm,code";
                 /** @description Un número de página dentro del conjunto de resultados paginado. */
                 page?: number;
@@ -4099,7 +5017,7 @@ export interface operations {
                 page_size?: number;
                 /** @description Solo las parcelas de las fincas de este productor. */
                 producer?: string;
-                /** @description Busca en el código, sin tildes. */
+                /** @description Busca por código (`P05`) o por nombre, sin tildes. */
                 search?: string;
             };
             header?: never;

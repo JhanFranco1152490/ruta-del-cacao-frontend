@@ -91,7 +91,7 @@ describe('ActivityDetailDialog', () => {
     expect(
       within(detail).getByRole('heading', { name: 'Poda' }),
     ).toBeInTheDocument();
-    expect(within(detail).getByText('P-03')).toBeInTheDocument();
+    expect(within(detail).getByText('P03')).toBeInTheDocument();
     expect(within(detail).getByText('Finca de prueba')).toBeInTheDocument();
     expect(within(detail).getByText('Programada')).toBeInTheDocument();
     expect(detail).toHaveTextContent('jueves 22 de octubre de 2026 · hoy');

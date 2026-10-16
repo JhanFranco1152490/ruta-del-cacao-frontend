@@ -16,7 +16,7 @@ import { completionQueueView } from './queue-view';
 
 const payload: CompletionPayload = {
   request: { done_date: '2026-10-19', inputs: [] },
-  label: 'Fertilización · P-03',
+  label: 'Fertilización · P03',
 };
 
 const queued = (overrides: Partial<QueueItem> = {}): QueueItem => ({
@@ -54,14 +54,14 @@ function renderActions(item: QueueItem) {
 describe('completionQueueView', () => {
   it('names the record by its labor and its plot', () => {
     expect(completionQueueView.kind).toBe('Realización');
-    expect(completionQueueView.title(queued())).toBe('Fertilización · P-03');
+    expect(completionQueueView.title(queued())).toBe('Fertilización · P03');
   });
 
   it('offers to correct what can be fixed, and to discard it', async () => {
     renderActions(queued());
 
     const correct = screen.getByRole('link', {
-      name: 'Corregir Fertilización · P-03',
+      name: 'Corregir Fertilización · P03',
     });
     expect(correct).toHaveAttribute('href', '/actividades/realizar?id=a1');
     expect(
@@ -100,7 +100,7 @@ describe('completionQueueView', () => {
     const dialog = await screen.findByRole('dialog');
     expect(
       within(dialog).getByRole('heading', {
-        name: '¿Descartar la realización de Fertilización · P-03?',
+        name: '¿Descartar la realización de Fertilización · P03?',
       }),
     ).toBeInTheDocument();
     await userEvent.click(

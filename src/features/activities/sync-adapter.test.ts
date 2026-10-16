@@ -20,7 +20,7 @@ const payload: CompletionPayload = {
     inputs: [{ input_id: 'in1', quantity: '100' }],
     captured_at: '2026-10-19T21:42:00.000Z',
   },
-  label: 'Fertilización · P-03',
+  label: 'Fertilización · P03',
 };
 
 const item: QueueItem = {
