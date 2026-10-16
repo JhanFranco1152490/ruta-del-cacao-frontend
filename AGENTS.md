@@ -81,12 +81,13 @@ src/
                        /restablecer-contrasena, /activar-cuenta
     (app)/             con sesión (lo garantiza SessionGuard en su layout): / (puerta de
                        entrada: lleva a la primera sección permitida), /productores,
-                       /fincas, /actividades, /usuarios, /roles y sus pantallas hijas. El
+                       /fincas, /actividades, /sanidad, /plagas-enfermedades, /usuarios,
+                       /roles y sus pantallas hijas. El
                        permiso y la conexión de cada sección se comprueban en el shell a
                        partir de config/navigation.ts: una sección nueva solo se suma ahí
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       users y roles): api.ts, schemas.ts, hooks propios
+                       health, users y roles): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
   hooks/               hooks de React compartidos entre dominios (sin JSX; si el hook es de
@@ -108,9 +109,10 @@ src/
   nuevas desde `next.config.ts`.
 - Componentes en **tres niveles**: (1) `components/ui/`, primitivas de shadcn/ui con las
   variantes del sistema de diseño, sin conocer el dominio; (2) `components/`, piezas
-  compartidas con el aspecto de la app (`TextField`, `SelectField`, `PasswordField`,
+  compartidas con el aspecto de la app (`TextField`, `TextAreaField`, `SelectField`, `PasswordField`,
   `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `Pagination`, `EmptyState`, `ErrorState`,
-  `MaskedValue`...) que solo reciben props y no conocen la API; (3)
+  `MaskedValue`, la sección de insumos utilizados de `input-usage/`, el descarte de la bandeja
+  `sync-tray/queue-discard-dialog.tsx`...) que solo reciben props y no conocen la API; (3)
   `features/<dominio>/components/`, pantallas (`*-screen.tsx`) y piezas de un dominio: la
   pantalla compone y obtiene los datos de los hooks de `features/<dominio>/api.ts`.
 - **Un dominio no importa de la carpeta de otro.** Cuando una pantalla junta dos (el detalle de
@@ -122,7 +124,14 @@ src/
   las fincas, las parcelas y el catálogo de insumos con sus existencias para elegirlos en un
   formulario de otro dominio (`lib/api/farm-options.ts`, `plot-options.ts`, `input-catalog.ts`); y
   cómo se escribe la cantidad de un insumo con su unidad y su equivalente en empaques
-  (`lib/format/input-quantity.ts`, `input-units.ts`). El dominio dueño los usa desde ahí.
+  (`lib/format/input-quantity.ts`, `input-units.ts`). Desde sanidad también: leer una actividad o una
+  parcela suelta con su copia (`lib/api/activity-read.ts`, `plot-read.ts`), los responsables de una
+  finca (`activity-assignees.ts`, `lib/assignable-accounts.ts`), los insumos que se ofrecen según
+  quién registra (`lib/api/usable-inputs.ts`) y las filas de insumos utilizados
+  (`lib/input-usage.ts`), quién registra una actividad (`lib/activity-recorders.ts`), las fechas de
+  una labor (`lib/activity-dates.ts`), la preparación de una foto (`lib/images/prepare-photo.ts`), la
+  fecha en la URL (`lib/navigation/iso-date-parser.ts`) y la cola por padre
+  (`lib/offline/queued-by-parent.ts`). El dominio dueño los usa desde ahí.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
   en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
@@ -162,6 +171,32 @@ src/
     el detalle marcan **Responsable fuera de la finca** con la lista que el calendario comparte por
     `AssigneesContext`. Al registrar la realización, un empleado elige entre los insumos de la finca de
     la actividad (`useFarmInputs`); el Productor, del catálogo completo.
+
+- **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
+  sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
+  actividades de sanidad. La página de `/actividades` (`calendar-with-health.tsx`) es la que los une y
+  le entrega al calendario, como props: dónde se registra un monitoreo (`monitoringHref`), qué agrega
+  al detalle (`renderActivityDetails`), el aviso de detecciones que esperan un control
+  (`renderNotice`), el recurso de la cola que cierra un monitoreo (`closingResources`) y los
+  controles programados que esperan en el dispositivo (`queuedActivities`, marcados `queued`). Lo
+  mismo hacen las páginas de parcelas con el enlace al historial, junto a la ficha.
+  - **La planilla** (`/sanidad/monitoreo?id=`) pasa siempre por la cola (`monitoring-results`, con la
+    actividad como padre). Cada detección y cada control llevan el `id` que genera el dispositivo;
+    el control de una detección tiene cuatro modos (ninguno, hecho en el momento, para después y, para
+    quien no programa, pedido a quien programa). Un monitoreo registrado no se corrige: antes de
+    guardar se muestra el resumen. Rechazado por una plaga o un insumo inactivos, **Corregir** lo
+    reabre con esa elección vacía.
+  - **El control desde una detección** es un diálogo y pasa por la cola (`phytosanitary-controls`,
+    con la detección como padre). Rechazado, solo se descarta y se vuelve a crear desde la detección.
+    **No requiere control** es en línea.
+  - **Las fotos** (`evidence`) esperan en la cola a lo que respaldan: su padre es el resultado del
+    monitoreo o el control, si siguen en ella. Se preparan en el teléfono antes de guardarlas
+    (`prepare-photo.ts`: solo JPG o PNG, 1600 px, hasta 5 MB y siempre como JPEG, para que pierdan sus
+    metadatos, entre ellos la ubicación). El archivo se pide a la API (`apiFetchBlob`), nunca con
+    `<img src>`, y el teléfono guarda su copia (`evidence-file:{id}`).
+  - Los catálogos de la asociación (`/plagas-enfermedades`) se gestionan como **Variedades de cacao**,
+    pero con la búsqueda y el estado en la URL; el buscador de la planilla muestra la descripción de
+    cada plaga y **Otra** siempre al final (`SearchSelect` con `description` y `pinned`).
 
 - **Empleados y fincas.** Un empleado trabaja en una o varias fincas de su productor, o en todas
   (`all_farms`, que incluye las que se registren después), y solo alcanza lo de ellas; el servidor ya
@@ -210,6 +245,10 @@ src/
   tal como sale del generador. Las peticiones y respuestas se tipan con alias de
   `components['schemas'][...]`. Si cambia la API, se regenera y se corrigen los errores de
   TypeScript que aparezcan.
+- **Archivos.** Con un `FormData` en el cuerpo, `apiFetch` no lo convierte a JSON ni pone
+  `Content-Type` (el navegador pone el suyo, con el separador de las partes): así se sube una foto,
+  la única petición de la API que no es JSON. `apiFetchBlob(path)` devuelve un archivo con la misma
+  sesión, renovación y errores.
 - **Errores.** Todo error de la API tiene la forma `{ detail, code, fields }` y llega como
   `ApiError` (`status`, `code`, `fields`, y `detail` como mensaje). Una respuesta sin esa
   forma se convierte en `ApiError` con el código `unexpected_response`. La lógica decide
@@ -315,6 +354,11 @@ src/
   en modo interactivo y `pnpm test:coverage` con cobertura (excluye `components/ui`, `app`,
   `test/` y `schema.d.ts`). Cada test vive junto al archivo que prueba (`x.test.ts(x)`).
   Se escribe primero el test que falla (TDD).
+- **Lo que manda o guarda archivos se prueba en el entorno `node`** (`// @vitest-environment node`
+  al inicio del archivo): el `Blob` y el `FormData` de jsdom no los entiende el `fetch` de las pruebas
+  y no sobreviven a IndexedDB. Por eso la lectura de un archivo vive en una función sin React
+  (`readEvidenceFile`) que se prueba ahí. jsdom tampoco tiene lienzo ni `URL.createObjectURL`: las
+  pantallas con fotos simulan `preparePhoto` (que tiene sus pruebas) y esas direcciones.
 - MSW simula la API (`src/test/server.ts`, levantado en `vitest.setup.ts`): una petición sin
   handler hace fallar el test, así que ninguno toca la red. Los handlers propios de cada
   test se declaran con `server.use(...)`.
