@@ -20,6 +20,15 @@ export type Harvest = Schemas['Harvest'];
 // puede nombrarla.
 export type CollectorOption = Schemas['CollectorOption'];
 
+export const HARVEST_ERROR = {
+  plotNotCharacterized: 'plot_not_characterized',
+  varietyNotInPlot: 'variety_not_in_plot',
+  collectorNotAvailable: 'collector_not_available',
+  inLot: 'harvest_in_lot',
+  idConflict: 'harvest_id_conflict',
+  staleVersion: 'stale_version',
+} as const;
+
 // La consulta pide un periodo y no se pagina: los filtros y los totales corren en el dispositivo,
 // también sin conexión. `producer` solo lo envía la cuenta técnica.
 export async function fetchHarvests(
@@ -153,3 +162,7 @@ export const useHarvestCollectors = (
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
   });
+
+// El alta llega siempre desde la cola del dispositivo.
+export const postHarvest = (body: Schemas['HarvestCreateRequest']) =>
+  apiFetch<Harvest>('/api/harvests', { method: 'POST', body });
