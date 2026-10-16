@@ -1,31 +1,25 @@
 'use client';
 
-import { cn } from 'cn';
-import { Pencil } from 'lucide-react';
-import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
+import { DetailFooter } from '@/components/detail-footer';
 import { EditorLink } from '@/components/editor-link';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
-import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { isApiError } from '@/lib/api/errors';
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatDateTime, formatLongDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { readOrigin } from '@/lib/navigation/origin';
 
 import { type Harvest, useHarvest } from '../api';
-import {
-  type HarvestLotSource,
-  lotSourceOfHarvest,
-} from '../harvest-lot-source';
-import { harvestCorrectionPath, HARVESTS_PATH } from '../harvest-paths';
-import { HarvestDeleteDialog } from './harvest-delete-dialog';
+import type { HarvestLotSource } from '../harvest-lot-source';
+import { HARVESTS_PATH } from '../harvest-paths';
+import { HarvestDetailActions } from './harvest-detail-actions';
 import { HarvestFacts } from './harvest-facts';
 
 // Lo registrado de una recolección. La consulta no modifica: corregir y eliminar son acciones
@@ -44,8 +38,9 @@ export function HarvestDetailScreen({
   historyHref?: (harvest: Harvest) => string;
 }) {
   const { data: user } = useSession();
-  const hasConnection = useHasConnection();
   const read = useHarvest(user?.id, harvestId);
+  // Volver lleva a la pantalla desde la que se abrió, con sus filtros, o a la lista.
+  const backHref = readOrigin(useSearchParams()) ?? HARVESTS_PATH;
 
   if (read.isError) {
     return isApiError(read.error) && read.error.status === 404 ? (
@@ -71,11 +66,6 @@ export function HarvestDetailScreen({
   }
 
   const { data: harvest, savedAt } = read.data;
-  const editable = !harvest.lot;
-  const canCorrect =
-    editable && hasPermission(user, PERMISSIONS.HARVESTS_CHANGE);
-  const canDelete =
-    editable && hasPermission(user, PERMISSIONS.HARVESTS_DELETE);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8">
@@ -107,12 +97,12 @@ export function HarvestDetailScreen({
         >
           Esta cosecha forma el lote{' '}
           {lotHref ? (
-            <Link
+            <EditorLink
               className="font-mono underline"
               href={lotHref(harvest.lot.id)}
             >
               {harvest.lot.code}
-            </Link>
+            </EditorLink>
           ) : (
             <span className="font-mono">{harvest.lot.code}</span>
           )}
@@ -120,36 +110,14 @@ export function HarvestDetailScreen({
         </p>
       )}
       <HarvestFacts harvest={harvest} historyHref={historyHref} />
-      {editable && (
-        <div className="flex flex-wrap gap-3">
-          {renderFormLot?.(lotSourceOfHarvest(harvest))}
-          {canCorrect &&
-            (hasConnection ? (
-              <EditorLink
-                className={cn(
-                  buttonVariants({ size: 'office', variant: 'outline' }),
-                  'h-11',
-                )}
-                href={harvestCorrectionPath(harvest.id)}
-              >
-                <Pencil aria-hidden="true" className="size-4" /> Corregir
-                cosecha
-              </EditorLink>
-            ) : (
-              <Button className="h-11" disabled size="office" variant="outline">
-                Corregir (necesita conexión)
-              </Button>
-            ))}
-          {canDelete &&
-            (hasConnection ? (
-              <HarvestDeleteDialog harvest={harvest} />
-            ) : (
-              <Button className="h-11" disabled size="office" variant="outline">
-                Eliminar (necesita conexión)
-              </Button>
-            ))}
-        </div>
-      )}
+      <DetailFooter backHref={backHref}>
+        {!harvest.lot && (
+          <HarvestDetailActions
+            harvest={harvest}
+            renderFormLot={renderFormLot}
+          />
+        )}
+      </DetailFooter>
     </div>
   );
 }

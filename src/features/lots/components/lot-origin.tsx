@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import type { ReactNode } from 'react';
+
+import { EditorLink } from '@/components/editor-link';
 
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatLongDate } from '@/lib/format/dates';
@@ -18,9 +19,9 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 
 const linkOrText = (href: string | undefined, text: string) =>
   href ? (
-    <Link className="underline" href={href}>
+    <EditorLink className="underline" href={href}>
       {text}
-    </Link>
+    </EditorLink>
   ) : (
     text
   );

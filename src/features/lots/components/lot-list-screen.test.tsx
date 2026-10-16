@@ -82,7 +82,10 @@ describe('LotListScreen', () => {
     expect(rows[1]).toHaveTextContent('En fermentación');
     expect(
       screen.getByRole('link', { name: 'Ver el lote 000123-F02-P05-261014-1' }),
-    ).toHaveAttribute('href', '/lotes/detalle?id=l1');
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/lotes\/detalle\?id=l1&origen=/),
+    );
     expect(requests[0].get('page_size')).toBe('20');
   });
 

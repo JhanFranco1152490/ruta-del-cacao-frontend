@@ -8,7 +8,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { apiError, buildHarvest, buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
-import { resetLocation, router } from '@/test/router';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 vi.mock(
@@ -101,6 +101,28 @@ describe('HarvestDetailScreen', () => {
     });
   });
 
+  it('goes back to the screen it was opened from, or to the list', async () => {
+    mockLocation.search = new URLSearchParams({
+      id: 'h1',
+      origen: '/cosechas?mes=2026-09&lote=sin',
+    }).toString();
+    renderScreen();
+
+    expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute(
+      'href',
+      '/cosechas?mes=2026-09&lote=sin',
+    );
+  });
+
+  it('goes back to the list when it was opened directly', async () => {
+    renderScreen();
+
+    expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute(
+      'href',
+      '/cosechas',
+    );
+  });
+
   it('only reads without permission to change', async () => {
     renderScreen([PERMISSIONS.HARVESTS_VIEW]);
 
@@ -124,7 +146,10 @@ describe('HarvestDetailScreen', () => {
     const notice = await screen.findByText(/Esta cosecha forma el lote/);
     expect(
       within(notice).getByRole('link', { name: '000123-F02-P05-261014-1' }),
-    ).toHaveAttribute('href', '/lotes/detalle?id=l1');
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/lotes\/detalle\?id=l1&origen=/),
+    );
     expect(screen.queryByRole('link', { name: /Corregir/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Eliminar/ })).toBeNull();
     expect(formLot).not.toHaveBeenCalled();

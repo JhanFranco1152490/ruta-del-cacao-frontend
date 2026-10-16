@@ -1,11 +1,11 @@
 import { cn } from 'cn';
 import { ChevronRight, Eye } from 'lucide-react';
-import Link from 'next/link';
 
 import {
   COMPACT_TABLE_CLASS,
   ROW_LINK_CLASS,
 } from '@/components/compact-table-class';
+import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Table,
@@ -66,7 +66,7 @@ export function LotTable({ lots }: { lots: readonly Lot[] }) {
               <LotStatusBadge status={lot.status} />
             </TableCell>
             <TableCell className="max-md:order-7">
-              <Link
+              <EditorLink
                 aria-label={`Ver el lote ${lot.code}`}
                 className={cn(
                   buttonVariants({ size: 'office', variant: 'action' }),
@@ -77,7 +77,7 @@ export function LotTable({ lots }: { lots: readonly Lot[] }) {
                 <Eye aria-hidden="true" className="size-4 max-md:hidden" />
                 <span className="max-md:sr-only">Ver</span>
                 <ChevronRight aria-hidden="true" className="md:hidden" />
-              </Link>
+              </EditorLink>
             </TableCell>
           </TableRow>
         ))}

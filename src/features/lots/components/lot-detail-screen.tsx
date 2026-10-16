@@ -3,8 +3,8 @@
 import { Copy } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-import { BackLink } from '@/components/back-link';
 import { Breadcrumb } from '@/components/breadcrumb';
+import { DetailFooter } from '@/components/detail-footer';
 import { ErrorState } from '@/components/error-state';
 import { PageNotice } from '@/components/page-notice';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import { useSession } from '@/hooks/use-session';
 import { isApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format/dates';
 import { readLotCode } from '@/lib/format/lot-code';
-import { NAV_ITEMS, navItemForPath } from '@/config/navigation';
 import { readOrigin } from '@/lib/navigation/origin';
 import { notify } from '@/lib/notify';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -23,12 +22,6 @@ import { LOTS_PATH } from '../lot-paths';
 import { LotDeleteDialog } from './lot-delete-dialog';
 import { LotOrigin } from './lot-origin';
 import { LotStatusBadge } from './lot-status-badge';
-
-// «Volver a Cosechas»: la sección del menú a la que pertenece la pantalla de origen.
-function backLabel(origin: string) {
-  const section = navItemForPath(NAV_ITEMS, origin.split('?')[0]);
-  return section ? `Volver a ${section.label}` : 'Volver';
-}
 
 async function copyCode(code: string) {
   try {
@@ -53,7 +46,8 @@ export function LotDetailScreen({
 }) {
   const { data: user } = useSession();
   const read = useLot(lotId);
-  // Recién conformado, el lote recuerda la pantalla de Cosechas desde la que se conformó.
+  // Volver lleva a la pantalla desde la que se abrió (la de Cosechas si se acaba de conformar),
+  // con sus filtros, o a la lista de lotes.
   const origin = readOrigin(useSearchParams());
 
   if (read.isError) {
@@ -90,7 +84,6 @@ export function LotDetailScreen({
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8">
-      {origin && <BackLink href={origin}>{backLabel(origin)}</BackLink>}
       <Breadcrumb
         items={[{ label: 'Lotes', href: LOTS_PATH }, { label: lot.code }]}
       />
@@ -126,7 +119,9 @@ export function LotDetailScreen({
         historyHref={historyHref?.(lot)}
         lot={lot}
       />
-      {canDelete && <LotDeleteDialog lot={lot} />}
+      <DetailFooter backHref={origin ?? LOTS_PATH}>
+        {canDelete && <LotDeleteDialog lot={lot} />}
+      </DetailFooter>
     </div>
   );
 }

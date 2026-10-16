@@ -101,7 +101,10 @@ describe('HarvestListScreen', () => {
     expect(totals).toHaveTextContent('1 cosecha · 80,3 kg');
     expect(
       screen.getAllByRole('link', { name: /Ver la cosecha de P05/ })[0],
-    ).toHaveAttribute('href', '/cosechas/detalle?id=h2');
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/cosechas\/detalle\?id=h2&origen=/),
+    );
   });
 
   it('goes to another month and writes it in the address', async () => {

@@ -288,7 +288,7 @@ src/
   siempre. Una pantalla nueva con editor usa `EditorLink` en lugar de `Link` para abrirlo.
 - **Excepción: registrar una cosecha.** Las altas de la cola avisan y vuelven, sin pantalla
   intermedia, salvo la cosecha (`HarvestSaved`): al guardar se queda en la pantalla con «Registrar
-  otra cosecha» (conserva la parcela, el recolector y la fecha), «Conformar lote con esta cosecha»
+  otra cosecha» (conserva la parcela, el recolector y la fecha), «Conformar lote»
   (solo con conexión y ya enviada) y «Listo», que vuelve al origen. En campo se registran varias
   recolecciones seguidas y volver a elegir todo cada vez estorba. Corregir una cosecha sí avisa y
   vuelve, como las demás.
@@ -399,6 +399,12 @@ referencia en `docs/ui/ref/*.html`.
   etiquetas visibles (`hideLabel`), y en el celular detrás de «Filtros». Los mapas que acompañan
   una lista (`MunicipalityMapPanel`, `PointsMapPanel`) aceptan `hiddenOnMobile`; el resumen se
   oculta junto con el mapa. Detalle y razones en `docs/ui/design-system.md` §7.
+- **Toda ficha termina con «Volver» abajo a la izquierda y sus acciones a la derecha**
+  (`DetailFooter`), con **Eliminar** al final, lejos de Volver. Volver lleva a la pantalla desde la
+  que se abrió la ficha, con sus filtros (`readOrigin`; los enlaces que abren una ficha usan
+  `EditorLink`), o a la lista de la sección si se entró directo. La ruta de arriba no basta para
+  quien usa poco la web: un botón «Volver» sí se entiende. Hoy lo tienen las fichas de cosecha y de
+  lote; las demás lo reciben en la pasada de estética.
 - **Estados.** Siempre color + ícono + texto, nunca color solo. Variantes tintadas en oficina y
   sólidas en campo o para avisos críticos.
 - **Contraste.** Texto mínimo 4.5:1 (3:1 desde 24 px). Prohibido gris claro para datos

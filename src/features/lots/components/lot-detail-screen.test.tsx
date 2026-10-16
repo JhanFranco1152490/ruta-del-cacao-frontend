@@ -75,10 +75,16 @@ describe('LotDetailScreen', () => {
     expect(origin).toHaveTextContent('PROD-000123');
     expect(
       within(origin).getByRole('link', { name: '14 de octubre de 2026' }),
-    ).toHaveAttribute('href', '/cosechas/detalle?id=h1');
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/cosechas\/detalle\?id=h1&origen=/),
+    );
     expect(
       within(origin).getByRole('link', { name: 'Versión 1' }),
-    ).toHaveAttribute('href', '/ficha/historial?id=pl1');
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/ficha\/historial\?id=pl1/),
+    );
   });
 
   it('offers to go back to where the lot was formed', async () => {
@@ -88,16 +94,19 @@ describe('LotDetailScreen', () => {
     }).toString();
     renderScreen();
 
-    expect(
-      await screen.findByRole('link', { name: 'Volver a Cosechas' }),
-    ).toHaveAttribute('href', '/cosechas?lote=sin');
+    expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute(
+      'href',
+      '/cosechas?lote=sin',
+    );
   });
 
-  it('has no way back when opened from the list of lots', async () => {
+  it('goes back to the list of lots when it was opened directly', async () => {
     renderScreen();
 
-    await screen.findByRole('button', { name: 'Copiar código' });
-    expect(screen.queryByRole('link', { name: /Volver/ })).toBeNull();
+    expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute(
+      'href',
+      '/lotes',
+    );
   });
 
   it('copies the code', async () => {

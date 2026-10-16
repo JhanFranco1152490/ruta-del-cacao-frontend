@@ -1,12 +1,12 @@
 import { cn } from 'cn';
 import { ChevronRight, Eye } from 'lucide-react';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import {
   COMPACT_TABLE_CLASS,
   ROW_LINK_CLASS,
 } from '@/components/compact-table-class';
+import { EditorLink } from '@/components/editor-link';
 import { StatusBadge } from '@/components/status-badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -93,7 +93,7 @@ export function HarvestTable({
               <div className="flex items-center justify-end gap-2">
                 {row.lotSource && renderFormLot?.(row.lotSource)}
                 {!row.queue && (
-                  <Link
+                  <EditorLink
                     aria-label={`Ver la cosecha de ${row.plot} del ${formatWeekdayDate(row.date)}`}
                     className={cn(
                       buttonVariants({ size: 'office', variant: 'action' }),
@@ -104,7 +104,7 @@ export function HarvestTable({
                     <Eye aria-hidden="true" className="size-4 max-md:hidden" />
                     <span className="max-md:sr-only">Ver</span>
                     <ChevronRight aria-hidden="true" className="md:hidden" />
-                  </Link>
+                  </EditorLink>
                 )}
               </div>
             </TableCell>
