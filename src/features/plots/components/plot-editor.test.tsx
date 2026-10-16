@@ -27,11 +27,12 @@ const FARM: PlotEditorFarm = {
   editPath: '/fincas/editar?id=f1',
 };
 
-const EMPTY: PlotFormValues = { code: '', area_hectares: '', vertices: [] };
+const EMPTY: PlotFormValues = { name: '', area_hectares: '', vertices: [] };
 
 const known = (over: Partial<KnownPlot> = {}): KnownPlot => ({
   id: 'p2',
   code: 'P2',
+  name: null,
   areaHectares: '1.00',
   isActive: true,
   vertices: [],
@@ -82,7 +83,7 @@ const fill = async (
   code: string,
   area: string,
 ) => {
-  const codeField = screen.getByLabelText('Código de la parcela');
+  const codeField = screen.getByLabelText('Nombre de la parcela (opcional)');
   const areaField = screen.getByLabelText('Área declarada (hectáreas)');
   await user.clear(codeField);
   await user.type(codeField, code);
@@ -93,28 +94,28 @@ const fill = async (
 afterEach(() => restoreGeolocation());
 
 describe('PlotEditor', () => {
-  it('saves a plot without polygon with just its code and area', async () => {
+  it('saves a plot without polygon with just its name and area', async () => {
     const { onSubmit, user } = renderEditor();
 
-    await fill(user, 'P1 · El Mango', '2,4');
+    await fill(user, 'El Mango', '2,4');
     await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 
     expect(onSubmit).toHaveBeenCalledWith({
-      code: 'P1 · El Mango',
+      name: 'El Mango',
       area_hectares: '2.4',
       vertices: [],
     });
   });
 
-  it('asks for the code and the area before saving', async () => {
+  it('asks for the area before saving, but not for a name', async () => {
     const { onSubmit, user } = renderEditor();
 
     await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 
     expect(
-      await screen.findByText('Ingresa el código de la parcela.'),
+      await screen.findByText('El área debe ser mayor a 0'),
     ).toBeInTheDocument();
-    expect(screen.getByText('El área debe ser mayor a 0')).toBeInTheDocument();
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -285,17 +286,17 @@ describe('PlotEditor', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('rejects a code that another plot of the farm already has', async () => {
+  it('rejects a name that another plot of the farm already has', async () => {
     const { onSubmit, user } = renderEditor({
-      knownPlots: [known({ code: 'P2' })],
+      knownPlots: [known({ code: 'P02', name: 'La loma' })],
     });
 
-    await fill(user, ' p2 ', '1');
+    await fill(user, ' la loma ', '1');
     await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 
     expect(
       await screen.findByText(
-        'Ya existe una parcela con este código en la finca',
+        'Ya existe una parcela con este nombre en la finca',
       ),
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -517,7 +518,7 @@ describe('PlotEditor', () => {
     it('does not take the area of a plot that is being edited from the polygon', async () => {
       renderEditor({
         defaultValues: {
-          code: 'P1',
+          name: 'P1',
           area_hectares: '3.00',
           vertices: [
             {

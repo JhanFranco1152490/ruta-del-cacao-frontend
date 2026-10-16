@@ -2,13 +2,15 @@ import type { ProducerRef } from '@/lib/format/producer';
 import { matchesSearch } from '@/lib/format/search';
 
 import type { Plot } from './api';
-import { fromServer, type KnownPlot, toQueue } from './known-plots';
+import { byCode, fromServer, type KnownPlot, toQueue } from './known-plots';
 import type { QueuedPlot } from './plot-queue';
 
 // La finca de una parcela tal como la conoce la pantalla general. De una parcela que solo está en
 // el dispositivo puede no saberse el nombre (su finca también puede estar pendiente).
 export type OverviewFarm = {
   id: string;
+  // Solo las del servidor: el código lo asigna él al recibir la finca.
+  code?: string;
   name?: string;
   isActive: boolean;
   producer?: ProducerRef;
@@ -30,6 +32,7 @@ export type KnownFarms = ReadonlyMap<string, Omit<OverviewFarm, 'id'>>;
 
 const farmOf = (plot: Plot): OverviewFarm => ({
   id: plot.farm.id,
+  code: plot.farm.code,
   name: plot.farm.name,
   isActive: plot.farm.is_active,
   producer: plot.farm.producer,
@@ -38,10 +41,7 @@ const farmOf = (plot: Plot): OverviewFarm => ({
 const matchesServerFilters = (plot: Plot, filters: OverviewFilters) =>
   (!filters.farm || plot.farm.id === filters.farm) &&
   (!filters.producer || plot.farm.producer.id === filters.producer) &&
-  matchesSearch([plot.code], filters.search ?? '');
-
-const byCode = (a: KnownPlot, b: KnownPlot) =>
-  a.code.localeCompare(b.code, 'es', { sensitivity: 'base' });
+  matchesSearch([plot.code, plot.name ?? ''], filters.search ?? '');
 
 // Lo del dispositivo va primero (necesita atención o aún no llega) y reemplaza a su copia del
 // servidor, como en la lista de fincas: una edición pendiente muestra los datos nuevos. La página
@@ -63,7 +63,10 @@ export function mergeOverviewPlots(
         (!filters.producer ||
           serverById.has(plot.id) ||
           knownFarms.has(plot.farmId)) &&
-        matchesSearch([plot.values.code], filters.search ?? ''),
+        matchesSearch(
+          [serverById.get(plot.id)?.code ?? '', plot.values.name],
+          filters.search ?? '',
+        ),
     )
     .map((plot): OverviewPlot => {
       const copy = serverById.get(plot.id);
@@ -71,7 +74,7 @@ export function mergeOverviewPlots(
         // Una parcela nueva nace activa; de una edición se conservan estado y versión.
         ...(copy ? fromServer(copy) : { isActive: true }),
         id: plot.id,
-        code: plot.values.code,
+        name: plot.values.name || null,
         areaHectares: plot.values.area_hectares,
         vertices: plot.values.vertices,
         queue: toQueue(plot),
