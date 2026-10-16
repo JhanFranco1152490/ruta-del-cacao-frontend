@@ -2,7 +2,7 @@
 
 import { cn } from 'cn';
 import { Plus } from 'lucide-react';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
@@ -25,6 +25,7 @@ import { filterHarvests, harvestTotals } from '../harvest-filters';
 import { HARVEST_REGISTER_PATH } from '../harvest-paths';
 import { HARVEST_RESOURCE, queuedHarvestOf } from '../harvest-queue';
 import { harvestFilterOptions, harvestRows } from '../harvest-rows';
+import type { HarvestLotSource } from '../harvest-lot-source';
 import { useHarvestFilters } from '../use-harvest-filters';
 import { HarvestFiltersBar } from './harvest-filters-bar';
 import { HarvestTable } from './harvest-table';
@@ -32,7 +33,12 @@ import { HarvestTotals } from './harvest-totals';
 
 // Las recolecciones de un mes, con sus totales y sus filtros. Sin conexión muestra la última copia
 // del mes guardada en el dispositivo, y lo que espera en el teléfono aparece en su fecha.
-export function HarvestListScreen() {
+export function HarvestListScreen({
+  renderFormLot,
+}: {
+  // Conformar el lote de una cosecha desde su fila; lo da quien monta la pantalla.
+  renderFormLot?: (source: HarvestLotSource) => ReactNode;
+} = {}) {
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;
   const period = useMonthParam();
@@ -128,7 +134,7 @@ export function HarvestListScreen() {
           />
           <HarvestFiltersBar options={options} state={filterState} />
           {rows.length > 0 ? (
-            <HarvestTable rows={rows} />
+            <HarvestTable renderFormLot={renderFormLot} rows={rows} />
           ) : filterState.activeCount > 0 ? (
             <EmptyState
               action={

@@ -351,6 +351,26 @@ export const buildHarvest = (
   ...overrides,
 });
 
+export const buildLot = (
+  overrides: Partial<Schemas['Lot']> = {},
+): Schemas['Lot'] => {
+  // El lote trae su cosecha sin el campo `lot`; el de más no estorba en una prueba.
+  const harvest: Schemas['HarvestRepresentation'] = buildHarvest();
+  return {
+    id: 'l1',
+    code: '000123-F02-P05-261014-1',
+    status: 'generated',
+    harvest,
+    producer: { id: 'p1', member_code: 'PROD-000123' },
+    green_weight_kg: harvest.green_weight_kg,
+    created_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+    version: 1,
+    created_at: '2026-10-14T16:00:00Z',
+    updated_at: '2026-10-14T16:00:00Z',
+    ...overrides,
+  };
+};
+
 export const buildCollector = (
   overrides: Partial<Schemas['CollectorOption']> = {},
 ): Schemas['CollectorOption'] => ({

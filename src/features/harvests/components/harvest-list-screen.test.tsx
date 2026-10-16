@@ -59,13 +59,20 @@ afterEach(() => {
 function renderScreen({
   searchParams = '',
   permissions = [PERMISSIONS.HARVESTS_VIEW, PERMISSIONS.HARVESTS_ADD],
-}: { searchParams?: string; permissions?: string[] } = {}) {
+  renderFormLot,
+}: {
+  searchParams?: string;
+  permissions?: string[];
+  renderFormLot?: NonNullable<
+    Parameters<typeof HarvestListScreen>[0]
+  >['renderFormLot'];
+} = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: userId, permissions }),
   );
-  renderWithProviders(<HarvestListScreen />, {
+  renderWithProviders(<HarvestListScreen renderFormLot={renderFormLot} />, {
     queryClient,
     searchParams,
     onUrlUpdate: ({ queryString }) => urls.push(queryString),
@@ -173,6 +180,32 @@ describe('HarvestListScreen', () => {
     expect(
       screen.getByRole('region', { name: 'Totales del mes' }),
     ).toHaveTextContent('Y 1 más espera en este teléfono.');
+  });
+
+  it('offers to form a lot only on the rows from the server without one', async () => {
+    await enqueueHarvest(userId, {
+      request: {
+        id: 'q1',
+        plot_id: 'pl1',
+        harvest_date: '2026-10-22',
+        green_weight_kg: '88',
+        variety_id: 'v1',
+        collector_id: 'u1',
+      },
+      label: 'P05 · Lote del río · 22 oct.',
+    });
+    renderScreen({
+      renderFormLot: ({ harvestId }) => (
+        <button type="button">{`Conformar lote ${harvestId}`}</button>
+      ),
+    });
+
+    await waitFor(async () => expect(await rowTexts()).toHaveLength(3));
+    expect(
+      screen
+        .getAllByRole('button', { name: /Conformar lote/ })
+        .map((button) => button.textContent),
+    ).toEqual(['Conformar lote h2']);
   });
 
   it('shows the saved copy of the month without a network', async () => {

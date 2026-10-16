@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { parseLotCode, readLotCode } from './lot-code';
 
 describe('parseLotCode', () => {
-  it('separa el código en sus partes', () => {
+  it('splits the code into its parts', () => {
     expect(parseLotCode('000123-F02-P05-261014-1')).toEqual({
       producer: 'PROD-000123',
       farmCode: 'F02',
@@ -13,7 +13,7 @@ describe('parseLotCode', () => {
     });
   });
 
-  it('acepta finca o parcela de tres cifras y consecutivo de dos', () => {
+  it('accepts a three-digit farm or plot and a two-digit sequence', () => {
     expect(parseLotCode('000123-F100-P120-261014-10')).toMatchObject({
       farmCode: 'F100',
       plotCode: 'P120',
@@ -21,14 +21,14 @@ describe('parseLotCode', () => {
     });
   });
 
-  it('un texto que no es un código no se interpreta', () => {
+  it('does not read a text that is not a lot code', () => {
     expect(parseLotCode('RC-26-0143')).toBeNull();
     expect(parseLotCode('000123-F2-P05-261014-1')).toBeNull();
   });
 });
 
 describe('readLotCode', () => {
-  it('explica cada parte con los nombres de la finca y la parcela', () => {
+  it('explains each part with the farm and plot names', () => {
     expect(
       readLotCode('000123-F02-P05-261014-1', {
         farmName: 'La Esperanza',
@@ -39,7 +39,7 @@ describe('readLotCode', () => {
     );
   });
 
-  it('sin nombre de parcela queda solo su código', () => {
+  it('keeps only the plot code when it has no name', () => {
     expect(
       readLotCode('000123-F02-P05-261014-2', { farmName: 'La Esperanza' }),
     ).toBe(
@@ -47,7 +47,7 @@ describe('readLotCode', () => {
     );
   });
 
-  it('desde el undécimo lote del día usa el número', () => {
+  it('uses the number from the eleventh lot of the day', () => {
     expect(readLotCode('000123-F100-P120-261014-11')).toBe(
       'Productor PROD-000123 · Finca F100 · Parcela P120 · Cosecha del 14 de octubre de 2026 · Lote 11 de ese día',
     );

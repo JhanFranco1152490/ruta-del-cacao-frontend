@@ -20,6 +20,10 @@ import { farmLabel, plotLabel } from '@/lib/format/place-label';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Harvest, useHarvest } from '../api';
+import {
+  type HarvestLotSource,
+  lotSourceOfHarvest,
+} from '../harvest-lot-source';
 import { harvestCorrectionPath, HARVESTS_PATH } from '../harvest-paths';
 import { HarvestDeleteDialog } from './harvest-delete-dialog';
 import { HarvestFacts } from './harvest-facts';
@@ -35,7 +39,7 @@ export function HarvestDetailScreen({
   historyHref,
 }: {
   harvestId: string;
-  renderFormLot?: (harvest: Harvest) => ReactNode;
+  renderFormLot?: (source: HarvestLotSource) => ReactNode;
   lotHref?: (lotId: string) => string;
   historyHref?: (harvest: Harvest) => string;
 }) {
@@ -118,7 +122,7 @@ export function HarvestDetailScreen({
       <HarvestFacts harvest={harvest} historyHref={historyHref} />
       {editable && (
         <div className="flex flex-wrap gap-3">
-          {renderFormLot?.(harvest)}
+          {renderFormLot?.(lotSourceOfHarvest(harvest))}
           {canCorrect &&
             (hasConnection ? (
               <EditorLink

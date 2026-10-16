@@ -62,7 +62,7 @@ function renderScreen(
 }
 
 describe('HarvestDetailScreen', () => {
-  it('muestra lo registrado y las acciones según los permisos', async () => {
+  it('shows what was recorded and the actions the permissions allow', async () => {
     renderScreen(ALL, { historyHref: () => '/ficha/historial?id=pl1' });
 
     expect(
@@ -84,7 +84,24 @@ describe('HarvestDetailScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('sin permisos de cambio solo consulta', async () => {
+  it('hands the harvest to whoever forms its lot, only while it has none', async () => {
+    const formLot = vi.fn(() => <button type="button">Conformar lote</button>);
+    renderScreen(ALL, { renderFormLot: formLot });
+
+    expect(
+      await screen.findByRole('button', { name: 'Conformar lote' }),
+    ).toBeInTheDocument();
+    expect(formLot).toHaveBeenCalledWith({
+      harvestId: 'h1',
+      plot: 'P05 · Lote del río',
+      farm: 'F02 · La Esperanza',
+      harvestDate: '2026-10-14',
+      greenWeightKg: '120.5',
+      variety: 'CCN-51',
+    });
+  });
+
+  it('only reads without permission to change', async () => {
     renderScreen([PERMISSIONS.HARVESTS_VIEW]);
 
     await screen.findByRole('heading', { name: '120,5 kg en verde' });
@@ -92,13 +109,17 @@ describe('HarvestDetailScreen', () => {
     expect(screen.queryByRole('button', { name: /Eliminar/ })).toBeNull();
   });
 
-  it('una cosecha en un lote ya no se modifica', async () => {
+  it('does not change a harvest that forms a lot', async () => {
     serve(
       buildHarvest({
         lot: { id: 'l1', code: '000123-F02-P05-261014-1', status: 'generated' },
       }),
     );
-    renderScreen(ALL, { lotHref: (id) => `/lotes/detalle?id=${id}` });
+    const formLot = vi.fn(() => null);
+    renderScreen(ALL, {
+      lotHref: (id) => `/lotes/detalle?id=${id}`,
+      renderFormLot: formLot,
+    });
 
     const notice = await screen.findByText(/Esta cosecha forma el lote/);
     expect(
@@ -106,9 +127,10 @@ describe('HarvestDetailScreen', () => {
     ).toHaveAttribute('href', '/lotes/detalle?id=l1');
     expect(screen.queryByRole('link', { name: /Corregir/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Eliminar/ })).toBeNull();
+    expect(formLot).not.toHaveBeenCalled();
   });
 
-  it('sin conexión corregir y eliminar quedan deshabilitados', async () => {
+  it('disables correcting and deleting without a connection', async () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     renderScreen();
 
@@ -122,7 +144,7 @@ describe('HarvestDetailScreen', () => {
     ).toBeDisabled();
   });
 
-  it('avisa si la cosecha ya no existe', async () => {
+  it('says when the harvest no longer exists', async () => {
     server.use(
       http.get(apiUrl('/api/harvests/h1'), () => apiError(404, 'not_found')),
     );
@@ -133,7 +155,7 @@ describe('HarvestDetailScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('elimina con la versión leída y vuelve a la lista', async () => {
+  it('deletes with the version read and goes back to the list', async () => {
     server.use(
       http.delete(apiUrl('/api/harvests/h1'), ({ request }) => {
         deletes.push(new URL(request.url).search);
@@ -157,7 +179,7 @@ describe('HarvestDetailScreen', () => {
     expect(deletes).toEqual(['?expected_version=1']);
   });
 
-  it('si ya forma un lote no la elimina y lo explica', async () => {
+  it('explains, without deleting, a harvest that already forms a lot', async () => {
     server.use(
       http.delete(apiUrl('/api/harvests/h1'), () =>
         apiError(409, 'harvest_in_lot'),

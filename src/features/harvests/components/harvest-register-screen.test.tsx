@@ -183,6 +183,33 @@ describe('HarvestRegisterScreen', () => {
     });
   });
 
+  it('offers to form the lot once the harvest reached the server', async () => {
+    const formLot = vi.fn(() => <button type="button">Conformar lote</button>);
+    renderScreen({ renderFormLot: formLot });
+
+    await choosePlot(/P05 · Lote del río/);
+    await waitFor(() => expect(field('Recolector')).toHaveValue(userId));
+    await userEvent.type(field('Peso en verde (kg)'), '117');
+    await save();
+    await screen.findByRole('heading', { name: 'Cosecha registrada' });
+    expect(screen.queryByRole('button', { name: 'Conformar lote' })).toBeNull();
+
+    // La cola la envió: ya no está en el teléfono.
+    await getOfflineDb(userId).queue.clear();
+
+    expect(
+      await screen.findByRole('button', { name: 'Conformar lote' }),
+    ).toBeInTheDocument();
+    expect(formLot).toHaveBeenLastCalledWith({
+      harvestId: expect.any(String),
+      plot: 'P05 · Lote del río',
+      farm: 'F01 · La Esperanza',
+      harvestDate: '2026-10-22',
+      greenWeightKg: '117',
+      variety: 'CCN-51',
+    });
+  });
+
   it('starts another harvest keeping the plot, the collector and the date', async () => {
     renderScreen();
     await choosePlot(/P05 · Lote del río/);

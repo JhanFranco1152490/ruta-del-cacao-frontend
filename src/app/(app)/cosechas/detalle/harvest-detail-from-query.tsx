@@ -7,6 +7,9 @@ import { characterizationHistoryPath } from '@/features/crops/characterization-p
 import { HarvestDetailScreen } from '@/features/harvests/components/harvest-detail-screen';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { lotDetailPath } from '@/features/lots/lot-paths';
+
+import { renderFormLot } from '../form-lot';
 
 export function HarvestDetailFromQuery() {
   const harvestId = useSearchParams().get('id');
@@ -26,6 +29,8 @@ export function HarvestDetailFromQuery() {
           : undefined
       }
       key={harvestId}
+      lotHref={lotDetailPath}
+      renderFormLot={renderFormLot}
     />
   );
 }

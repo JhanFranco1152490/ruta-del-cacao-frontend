@@ -8,6 +8,8 @@ import { HarvestRegisterScreen } from '@/features/harvests/components/harvest-re
 import { PermissionGate } from '@/components/permission-gate';
 import { PERMISSIONS } from '@/lib/permissions';
 
+import { renderFormLot } from '../form-lot';
+
 export function HarvestRegisterFromQuery() {
   const params = useSearchParams();
   const plotId = params.get('parcela') ?? undefined;
@@ -31,6 +33,7 @@ export function HarvestRegisterFromQuery() {
         key={`${plotId ?? ''}:${pendingId ?? ''}`}
         pendingId={pendingId}
         plotId={plotId}
+        renderFormLot={renderFormLot}
       />
     </PermissionGate>
   );

@@ -9,6 +9,7 @@ import { useQueueItems } from '@/hooks/use-queue-items';
 import { useSession } from '@/hooks/use-session';
 
 import { useHarvestCollectors } from '../api';
+import type { HarvestLotSource } from '../harvest-lot-source';
 import type { HarvestPlotChoice } from '../harvest-plots';
 import { harvestQueueId, type QueuedHarvest } from '../harvest-queue';
 import { toHarvestRequest } from '../harvest-rules';
@@ -28,7 +29,11 @@ import { HarvestSaved } from './harvest-saved';
 const SAVE_FAILED =
   'No fue posible guardar la cosecha en el dispositivo. Inténtalo nuevamente.';
 
-type Saved = { id: string; summary: string; onDevice: boolean };
+type Saved = {
+  summary: string;
+  onDevice: boolean;
+  lotSource: HarvestLotSource;
+};
 
 // Un formulario nuevo, con lo que se conserva y, si su parcela tiene una sola variedad, ya elegida.
 function startForm(
@@ -78,7 +83,7 @@ export function HarvestCapture({
   onCorrected: () => void;
   // Conformar el lote de una cosecha que ya llegó al servidor; lo da quien monta la pantalla,
   // porque los lotes son de otro dominio.
-  renderFormLot?: (harvestId: string) => ReactNode;
+  renderFormLot?: (source: HarvestLotSource) => ReactNode;
 }) {
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;
@@ -106,10 +111,11 @@ export function HarvestCapture({
   const submit = (values: HarvestFormInput) => {
     const chosen = plots.find(({ id }) => id === values.plot_id)!;
     const variety = chosen.varieties.find(({ id }) => id === values.variety_id);
+    const request = toHarvestRequest(values, form.id);
     save.mutate(
       {
         payload: {
-          request: toHarvestRequest(values, form.id),
+          request,
           label: harvestQueueLabel(chosen.label, values.harvest_date),
         },
         correcting: !!rejected,
@@ -124,9 +130,16 @@ export function HarvestCapture({
             harvest_date: values.harvest_date,
           });
           setSaved({
-            id: form.id,
             summary: harvestSummary(values, variety?.name ?? '', chosen),
             onDevice: !isOnline,
+            lotSource: {
+              harvestId: form.id,
+              plot: chosen.label,
+              farm: chosen.farm,
+              harvestDate: values.harvest_date,
+              greenWeightKg: request.green_weight_kg,
+              variety: variety?.name ?? '',
+            },
           });
         },
       },
@@ -137,11 +150,11 @@ export function HarvestCapture({
     const reachedServer =
       isOnline &&
       !!queue &&
-      !queue.some(({ id }) => id === harvestQueueId(saved.id));
+      !queue.some(({ id }) => id === harvestQueueId(saved.lotSource.harvestId));
     return (
       <HarvestSaved
         doneHref={doneHref}
-        formLot={reachedServer ? renderFormLot?.(saved.id) : undefined}
+        formLot={reachedServer ? renderFormLot?.(saved.lotSource) : undefined}
         onAnother={() => {
           setForm({
             id: crypto.randomUUID(),

@@ -3,6 +3,10 @@ import type { QueueStatus } from '@/lib/offline/db';
 
 import type { Harvest } from './api';
 import { filterHarvests, type HarvestFilters } from './harvest-filters';
+import {
+  type HarvestLotSource,
+  lotSourceOfHarvest,
+} from './harvest-lot-source';
 import type { QueuedHarvest } from './harvest-queue';
 
 // Una fila de la lista del mes: una cosecha del servidor o una que espera en el teléfono. La que
@@ -16,6 +20,8 @@ export type HarvestRow = {
   collector: string | null;
   weightKg: string;
   lotCode: string | null;
+  // Una del servidor que todavía no forma un lote: con qué conformarlo.
+  lotSource?: HarvestLotSource;
   // Solo las del teléfono: esperando conexión o rechazada por el servidor.
   queue?: Exclude<QueueStatus, 'synced'>;
 };
@@ -29,6 +35,7 @@ const serverRow = (harvest: Harvest): HarvestRow => ({
   collector: harvest.collector.full_name,
   weightKg: harvest.green_weight_kg,
   lotCode: harvest.lot?.code ?? null,
+  lotSource: harvest.lot ? undefined : lotSourceOfHarvest(harvest),
 });
 
 // La etiqueta de la cola dice parcela y fecha ("P05 · Lote del río · 22 oct."): la parcela es lo

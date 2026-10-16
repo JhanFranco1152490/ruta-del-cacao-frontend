@@ -14,6 +14,7 @@ import { useSession } from '@/hooks/use-session';
 import { todayInBogota } from '@/lib/format/dates';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
+import type { HarvestLotSource } from '../harvest-lot-source';
 import { HARVESTS_PATH } from '../harvest-paths';
 import type { HarvestPlotChoice } from '../harvest-plots';
 import { readLastPlot } from '../last-plot';
@@ -32,7 +33,7 @@ export function HarvestRegisterScreen({
 }: {
   plotId?: string;
   pendingId?: string;
-  renderFormLot?: (harvestId: string) => ReactNode;
+  renderFormLot?: (source: HarvestLotSource) => ReactNode;
   // Dónde se completa la ficha de una parcela; lo da quien monta la pantalla (otro dominio).
   characterizationHref?: (plot: HarvestPlotChoice) => string;
 }) {

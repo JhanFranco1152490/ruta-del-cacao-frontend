@@ -21,6 +21,8 @@ export type HarvestPlotChoice = {
   disabled: boolean;
   areaHectares: string;
   farmId: string;
+  // "F02 · La Esperanza", sin el productor que el grupo agrega para la cuenta técnica.
+  farm: string;
   producerId: string;
   varieties: VarietyChoice[];
   // Su ficha tiene una edición esperando en la cola: las variedades son las de la última copia.
@@ -59,6 +61,7 @@ export function harvestPlotChoices({
       disabled,
       areaHectares: plot.areaHectares,
       farmId: plot.farm.id,
+      farm,
       producerId: plot.farm.producer.id,
       varieties,
       characterizationPending: pendingCharacterizations.has(plot.id),

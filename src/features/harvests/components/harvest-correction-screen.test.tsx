@@ -102,7 +102,7 @@ const changeWeight = async (value: string) => {
 };
 
 describe('HarvestCorrectionScreen', () => {
-  it('envía solo lo que cambió con la versión leída y vuelve al detalle', async () => {
+  it('sends only what changed with the version read and goes back to the detail', async () => {
     server.use(
       http.patch(apiUrl('/api/harvests/h1'), async ({ request }) => {
         patches.push(await request.json());
@@ -120,7 +120,7 @@ describe('HarvestCorrectionScreen', () => {
     expect(patches).toEqual([{ green_weight_kg: '118', expected_version: 1 }]);
   });
 
-  it('si otra persona la cambió, muestra la versión vigente', async () => {
+  it('shows the current version when someone else changed it', async () => {
     server.use(
       http.patch(apiUrl('/api/harvests/h1'), () =>
         HttpResponse.json(
@@ -147,7 +147,7 @@ describe('HarvestCorrectionScreen', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  it('si ya forma un lote no la corrige', async () => {
+  it('does not correct a harvest that already forms a lot', async () => {
     server.use(
       http.patch(apiUrl('/api/harvests/h1'), () =>
         apiError(409, 'harvest_in_lot'),
@@ -164,7 +164,7 @@ describe('HarvestCorrectionScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('una cosecha en un lote no abre el formulario', async () => {
+  it('does not open the form for a harvest in a lot', async () => {
     server.use(
       http.get(apiUrl('/api/harvests/h1'), () =>
         HttpResponse.json(
@@ -188,7 +188,7 @@ describe('HarvestCorrectionScreen', () => {
     expect(screen.queryByLabelText('Peso en verde (kg)')).toBeNull();
   });
 
-  it('sin conexión no se corrige', () => {
+  it('does not correct without a connection', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     renderScreen();
 

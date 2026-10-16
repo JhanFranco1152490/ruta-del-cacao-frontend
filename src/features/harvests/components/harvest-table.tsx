@@ -1,6 +1,7 @@
 import { cn } from 'cn';
 import { ChevronRight, Eye } from 'lucide-react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import {
   COMPACT_TABLE_CLASS,
@@ -19,6 +20,7 @@ import {
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatWeekdayDate } from '@/lib/format/dates';
 
+import type { HarvestLotSource } from '../harvest-lot-source';
 import { harvestDetailPath } from '../harvest-paths';
 import type { HarvestRow } from '../harvest-rows';
 
@@ -39,7 +41,13 @@ function LotCell({ row }: { row: HarvestRow }) {
 
 // Las cosechas del mes: una tabla en escritorio y tarjetas compactas en celular. Una del servidor
 // abre su detalle; una del teléfono todavía no tiene detalle (se corrige desde la bandeja).
-export function HarvestTable({ rows }: { rows: readonly HarvestRow[] }) {
+export function HarvestTable({
+  rows,
+  renderFormLot,
+}: {
+  rows: readonly HarvestRow[];
+  renderFormLot?: (source: HarvestLotSource) => ReactNode;
+}) {
   return (
     <Table aria-label="Cosechas del mes" className={COMPACT_TABLE_CLASS}>
       <TableHeader>
@@ -82,20 +90,23 @@ export function HarvestTable({ rows }: { rows: readonly HarvestRow[] }) {
               <LotCell row={row} />
             </TableCell>
             <TableCell className="max-md:order-7">
-              {!row.queue && (
-                <Link
-                  aria-label={`Ver la cosecha de ${row.plot} del ${formatWeekdayDate(row.date)}`}
-                  className={cn(
-                    buttonVariants({ size: 'office', variant: 'action' }),
-                    ROW_LINK_CLASS,
-                  )}
-                  href={harvestDetailPath(row.id)}
-                >
-                  <Eye aria-hidden="true" className="size-4 max-md:hidden" />
-                  <span className="max-md:sr-only">Ver</span>
-                  <ChevronRight aria-hidden="true" className="md:hidden" />
-                </Link>
-              )}
+              <div className="flex items-center justify-end gap-2">
+                {row.lotSource && renderFormLot?.(row.lotSource)}
+                {!row.queue && (
+                  <Link
+                    aria-label={`Ver la cosecha de ${row.plot} del ${formatWeekdayDate(row.date)}`}
+                    className={cn(
+                      buttonVariants({ size: 'office', variant: 'action' }),
+                      ROW_LINK_CLASS,
+                    )}
+                    href={harvestDetailPath(row.id)}
+                  >
+                    <Eye aria-hidden="true" className="size-4 max-md:hidden" />
+                    <span className="max-md:sr-only">Ver</span>
+                    <ChevronRight aria-hidden="true" className="md:hidden" />
+                  </Link>
+                )}
+              </div>
             </TableCell>
           </TableRow>
         ))}

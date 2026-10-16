@@ -23,6 +23,8 @@ export type StatusChangeAction = {
   pending: string;
   Icon: LucideIcon;
   variant: 'default' | 'destructive';
+  // El botón que cierra sin hacer nada; por omisión, Cancelar.
+  cancel?: string;
 };
 
 type StatusChangeDialogProps = {
@@ -77,7 +79,7 @@ export function StatusChangeDialog({
             disabled={isPending}
             render={<Button variant="outline" />}
           >
-            Cancelar
+            {action.cancel ?? 'Cancelar'}
           </DialogClose>
           <Button
             disabled={isPending}
