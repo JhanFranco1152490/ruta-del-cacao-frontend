@@ -9,7 +9,7 @@ import type { ReactNode } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 
-type Tone = 'ok' | 'warn' | 'err' | 'info';
+export type Tone = 'ok' | 'warn' | 'err' | 'info';
 
 const SOLID_VARIANTS = {
   ok: 'ok-solid',
