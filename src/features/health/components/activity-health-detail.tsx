@@ -16,7 +16,12 @@ export function ActivityHealthDetail({
   onOpenActivity?: (activityId: string) => void;
 }) {
   if (activity.monitoring) {
-    return <MonitoringResultSection monitoring={activity.monitoring} />;
+    return (
+      <MonitoringResultSection
+        activity={activity}
+        monitoring={activity.monitoring}
+      />
+    );
   }
   const { control_of: controlOf } = activity;
   if (controlOf) {

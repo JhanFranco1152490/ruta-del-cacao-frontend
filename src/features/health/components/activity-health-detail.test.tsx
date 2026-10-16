@@ -1,9 +1,28 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { http, HttpResponse } from 'msw';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
-import { buildAgriculturalActivity } from '@/test/factories';
+import { getOfflineDb } from '@/lib/offline/db';
+import { PERMISSIONS } from '@/lib/permissions';
+import {
+  buildAgriculturalActivity,
+  buildAgriculturalInput,
+  buildAssignee,
+  buildSession,
+} from '@/test/factories';
+import {
+  activityAssigneesHandler,
+  agriculturalInputsHandler,
+  apiUrl,
+  inputStocksHandler,
+} from '@/test/handlers';
+import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { server } from '@/test/server';
+
+import { controlQueueId } from '../control-queue';
 
 import { ActivityHealthDetail } from './activity-health-detail';
 
@@ -61,17 +80,68 @@ const monitoring = (
   ...overrides,
 });
 
+// Jueves 22 de octubre de 2026, a mediodía en Bogotá.
+const NOW = new Date('2026-10-22T17:00:00Z');
+let userId: string;
+
+beforeEach(() => {
+  userId = `health-detail-${crypto.randomUUID()}`;
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(NOW);
+  server.use(
+    agriculturalInputsHandler([
+      buildAgriculturalInput({ id: 'copper', name: 'Óxido de cobre' }),
+    ]),
+    inputStocksHandler([]),
+    activityAssigneesHandler([
+      buildAssignee({
+        id: 'u-foreman',
+        full_name: 'Carlos Rincón',
+        all_farms: false,
+        farm_ids: ['f1'],
+      }),
+    ]),
+  );
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+const SCHEDULER = [
+  PERMISSIONS.ACTIVITIES_VIEW,
+  PERMISSIONS.ACTIVITIES_ADD,
+  PERMISSIONS.ACTIVITIES_COMPLETE,
+];
+
+function renderDetail(
+  activity: components['schemas']['AgriculturalActivity'],
+  permissions: string[] = SCHEDULER,
+) {
+  const queryClient = createTestQueryClient();
+  queryClient.setQueryData(
+    queryKeys.session(),
+    buildSession({ id: userId, permissions }),
+  );
+  return renderWithProviders(<ActivityHealthDetail activity={activity} />, {
+    queryClient,
+  });
+}
+
+const doneMonitoring = (
+  overrides: Partial<components['schemas']['ActivityMonitoring']> = {},
+) =>
+  buildAgriculturalActivity({
+    id: 'm1',
+    activity_type: 'phytosanitary_monitoring',
+    status: 'done',
+    done_date: '2026-10-19',
+    monitoring: monitoring(overrides),
+  });
+
 describe('ActivityHealthDetail', () => {
   it('shows what was evaluated, each detection with its controls and what is missing', () => {
-    render(
-      <ActivityHealthDetail
-        activity={buildAgriculturalActivity({
-          activity_type: 'phytosanitary_monitoring',
-          status: 'done',
-          monitoring: monitoring(),
-        })}
-      />,
-    );
+    renderDetail(doneMonitoring());
 
     const result = screen.getByRole('region', {
       name: 'Resultado del monitoreo',
@@ -96,19 +166,13 @@ describe('ActivityHealthDetail', () => {
   });
 
   it('says that nothing was found in a monitoring without presence', () => {
-    render(
-      <ActivityHealthDetail
-        activity={buildAgriculturalActivity({
-          activity_type: 'phytosanitary_monitoring',
-          status: 'done',
-          monitoring: monitoring({
-            no_presence: true,
-            detections: [],
-            notes: null,
-            detections_without_control: 0,
-          }),
-        })}
-      />,
+    renderDetail(
+      doneMonitoring({
+        no_presence: true,
+        detections: [],
+        notes: null,
+        detections_without_control: 0,
+      }),
     );
 
     expect(
@@ -171,5 +235,157 @@ describe('ActivityHealthDetail', () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('the actions of a detection', () => {
+  const detectionItem = (name: RegExp) =>
+    screen
+      .getAllByRole('listitem')
+      .find((item) => name.test(item.textContent ?? '')) as HTMLElement;
+
+  it('offers who schedules to schedule or record a control, and to dismiss a requested one', () => {
+    renderDetail(doneMonitoring());
+
+    const requested = detectionItem(/^Otra \(Hormigas/);
+    expect(
+      within(requested).getByRole('button', { name: 'Programar control' }),
+    ).toBeVisible();
+    expect(
+      within(requested).getByRole('button', {
+        name: 'Registrar control realizado',
+      }),
+    ).toBeVisible();
+    expect(
+      within(requested).getByRole('button', { name: 'No requiere control' }),
+    ).toBeVisible();
+    // Monilia ya tiene su control y nadie pidió nada: no se ofrece descartarla.
+    expect(
+      within(detectionItem(/^Monilia/)).queryByRole('button', {
+        name: 'No requiere control',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('offers nothing to who cannot schedule', () => {
+    renderDetail(doneMonitoring(), [
+      PERMISSIONS.ACTIVITIES_VIEW,
+      PERMISSIONS.ACTIVITIES_COMPLETE,
+    ]);
+
+    expect(
+      screen.queryByRole('button', { name: 'Programar control' }),
+    ).toBeNull();
+  });
+
+  it('schedules a control from a detection through the device queue', async () => {
+    renderDetail(doneMonitoring());
+
+    await userEvent.click(
+      within(detectionItem(/^Otra \(Hormigas/)).getByRole('button', {
+        name: 'Programar control',
+      }),
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Programar control',
+    });
+    expect(dialog).toHaveTextContent(
+      'Atiende: Otra (Hormigas en hojas) 6 % · P-03',
+    );
+    await userEvent.type(
+      within(dialog).getByLabelText('Fecha programada'),
+      '2026-10-25',
+    );
+    await userEvent.click(
+      within(dialog).getByRole('combobox', { name: 'Responsable' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('option', { name: 'Carlos Rincón' }),
+    );
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Programar control' }),
+    );
+
+    expect(
+      await screen.findByText('Control fitosanitario programado'),
+    ).toBeVisible();
+    const [queued] = await getOfflineDb(userId)
+      .queue.where('resource')
+      .equals('phytosanitary-controls')
+      .toArray();
+    expect(queued).toMatchObject({
+      parentId: 'd2',
+      payload: {
+        label: 'Otra (Hormigas en hojas) · P-03',
+        request: {
+          mode: 'scheduled',
+          scheduled_date: '2026-10-25',
+          assignee_id: 'u-foreman',
+        },
+      },
+    });
+    expect(queued.id).toBe(
+      controlQueueId(
+        (queued.payload as { request: { id: string } }).request.id,
+      ),
+    );
+  });
+
+  it('records a done control, not before the monitoring, saying what was done', async () => {
+    renderDetail(doneMonitoring());
+
+    await userEvent.click(
+      within(detectionItem(/^Otra \(Hormigas/)).getByRole('button', {
+        name: 'Registrar control realizado',
+      }),
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Registrar control realizado',
+    });
+    const date = within(dialog).getByLabelText('Fecha de aplicación');
+    expect(date).toHaveValue('2026-10-22');
+    await userEvent.clear(date);
+    await userEvent.type(date, '2026-10-18');
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Registrar control' }),
+    );
+
+    expect(
+      await within(dialog).findByText(
+        'La fecha no puede ser anterior a la fecha del monitoreo (19 de octubre de 2026)',
+      ),
+    ).toBeVisible();
+    expect(within(dialog).getByText('Indica qué hiciste')).toBeVisible();
+    expect(within(dialog).getByText('Elige el responsable')).toBeVisible();
+  });
+
+  it('decides that a requested detection needs no control, after confirming', async () => {
+    const decided: string[] = [];
+    server.use(
+      http.post(
+        apiUrl('/api/phytosanitary-detections/:id/no-control-needed'),
+        ({ params }) => {
+          decided.push(String(params.id));
+          return new HttpResponse(null, { status: 204 });
+        },
+      ),
+    );
+    renderDetail(doneMonitoring());
+
+    await userEvent.click(
+      within(detectionItem(/^Otra \(Hormigas/)).getByRole('button', {
+        name: 'No requiere control',
+      }),
+    );
+    await userEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', {
+        name: 'Confirmar',
+      }),
+    );
+
+    await waitFor(() => expect(decided).toEqual(['d2']));
+    expect(
+      await screen.findByText('Detección marcada: no requiere control'),
+    ).toBeVisible();
   });
 });

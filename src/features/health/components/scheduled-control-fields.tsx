@@ -1,41 +1,36 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Controller, useFormContext, useWatch } from 'react-hook-form';
+import { Controller, get, useFormContext, useWatch } from 'react-hook-form';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
 import { SearchSelect } from '@/components/search-select';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 
-import type { MonitoringFormInput } from '../monitoring-form';
+import { METHOD_DESCRIPTION_MAX_LENGTH } from '../control-rules';
 import { CONTROL_METHOD_OPTIONS } from '../monitoring-rules';
-import {
-  METHOD_DESCRIPTION_MAX_LENGTH,
-  type MonitoringFormValues,
-} from '../monitoring-schema';
+import { ControlAssigneeField } from './control-assignee-field';
 import { useControlChoices } from './control-choices';
 
 // Un control para después: cuándo y quién, y si ya se sabe, qué se va a hacer y con qué insumo. El
-// insumo previsto es solo una referencia para quien lo aplique: no descuenta nada.
+// insumo previsto es solo una referencia para quien lo aplique: no descuenta nada. `base` es dónde
+// está el control en el formulario que lo usa.
 export function ScheduledControlFields({
-  index,
+  base,
   disabled,
 }: {
-  index: number;
+  base: string;
   disabled: boolean;
 }) {
-  const { control, register, formState } = useFormContext<
-    MonitoringFormInput,
-    unknown,
-    MonitoringFormValues
-  >();
-  const { assignees, catalog, today } = useControlChoices();
-  const method = useWatch({
-    control,
-    name: `detections.${index}.control.method`,
-  });
-  const errors = formState.errors.detections?.[index]?.control;
+  const { control, register, formState } = useFormContext();
+  const { catalog, today } = useControlChoices();
+  const method = useWatch({ control, name: `${base}method` }) as string;
+  const errorOf = (field: string) =>
+    (
+      get(formState.errors, `${base}${field}`) as
+        { message?: string } | undefined
+    )?.message;
   const inputOptions = useMemo(
     () => (catalog ?? []).map(({ id, name }) => ({ id, label: name })),
     [catalog],
@@ -46,34 +41,18 @@ export function ScheduledControlFields({
       <TextField
         className={CAPTURE_FIELD_CLASS}
         disabled={disabled}
-        error={errors?.scheduled_date?.message}
+        error={errorOf('scheduled_date')}
         label="Fecha programada"
         min={today}
         type="date"
-        {...register(`detections.${index}.control.scheduled_date`)}
+        {...register(`${base}scheduled_date`)}
       />
-      <Controller
-        control={control}
-        name={`detections.${index}.control.assignee_id`}
-        render={({ field }) => (
-          <SearchSelect
-            disabled={disabled}
-            error={errors?.assignee_id?.message}
-            inputClassName={CAPTURE_FIELD_CLASS}
-            label="Responsable"
-            onBlur={field.onBlur}
-            onChange={(option) => field.onChange(option?.id ?? '')}
-            options={assignees}
-            placeholder="Elige quién lo hará"
-            value={assignees.find(({ id }) => id === field.value) ?? null}
-          />
-        )}
-      />
+      <ControlAssigneeField disabled={disabled} name={`${base}assignee_id`} />
       <SelectField
         className={CAPTURE_FIELD_CLASS}
         disabled={disabled}
         label="¿Qué se va a hacer? (opcional)"
-        {...register(`detections.${index}.control.method`)}
+        {...register(`${base}method`)}
       >
         <option value="">Se decide después</option>
         {CONTROL_METHOD_OPTIONS.map(({ value, label }) => (
@@ -86,15 +65,15 @@ export function ScheduledControlFields({
         <TextField
           className={CAPTURE_FIELD_CLASS}
           disabled={disabled}
-          error={errors?.method_description?.message}
+          error={errorOf('method_description')}
           label="Escribe qué se va a hacer"
           maxLength={METHOD_DESCRIPTION_MAX_LENGTH}
-          {...register(`detections.${index}.control.method_description`)}
+          {...register(`${base}method_description`)}
         />
       )}
       <Controller
         control={control}
-        name={`detections.${index}.control.planned_input_id`}
+        name={`${base}planned_input_id`}
         render={({ field }) => (
           <SearchSelect
             disabled={disabled}

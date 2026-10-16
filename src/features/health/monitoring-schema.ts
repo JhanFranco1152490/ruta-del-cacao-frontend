@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
-import { doneDateIssue, scheduledDateIssue } from '@/lib/activity-dates';
+import { doneDateIssue } from '@/lib/activity-dates';
 import { dateInBogota } from '@/lib/format/dates';
-import { normalizeQuantity, usedInputIssues } from '@/lib/input-usage';
+import { normalizeQuantity } from '@/lib/input-usage';
 
+import { controlWorkIssues, scheduleIssues } from './control-rules';
 import {
   CONTROL_METHOD_OPTIONS,
   type ControlMethod,
@@ -15,7 +16,7 @@ import {
 } from './monitoring-rules';
 
 export const OTHER_DESCRIPTION_MAX_LENGTH = 100;
-export const METHOD_DESCRIPTION_MAX_LENGTH = 80;
+export { METHOD_DESCRIPTION_MAX_LENGTH } from './control-rules';
 export const NOTES_MAX_LENGTH = 500;
 export const REPEATED_DETECTION_MESSAGE =
   'Esta plaga o enfermedad ya está en la lista. Modifica la detección existente';
@@ -44,49 +45,21 @@ export type ControlValues = z.output<typeof controlShape>;
 type Issue = (path: (string | number)[], message: string) => void;
 
 // Lo que el servidor rechazaría del control de una detección, dicho antes de guardar. `at` es la
-// ruta del control en el formulario.
+// ruta del control en el formulario. Uno hecho en el momento toma la fecha del monitoreo y queda a
+// nombre de quien registra, así que no pide ni fecha ni responsable.
 function checkControl(
   control: ControlValues,
   today: string,
   at: (string | number)[],
   issue: Issue,
 ) {
-  const { mode, method } = control;
+  const { mode } = control;
   if (mode === 'none' || mode === 'requested') return;
-  if (mode === 'done' && !method)
-    issue([...at, 'method'], 'Indica qué hiciste');
-  if (method === 'other') {
-    if (!control.method_description) {
-      issue(
-        [...at, 'method_description'],
-        mode === 'done' ? 'Escribe qué hiciste' : 'Escribe qué se va a hacer',
-      );
-    } else if (
-      control.method_description.length > METHOD_DESCRIPTION_MAX_LENGTH
-    ) {
-      issue(
-        [...at, 'method_description'],
-        maxLength(METHOD_DESCRIPTION_MAX_LENGTH),
-      );
-    }
-  }
-  if (mode === 'done') {
-    if (method === 'product_application' && control.inputs.length === 0) {
-      issue([...at, 'inputs'], 'Agrega el producto que aplicaste');
-    }
-    for (const { index, field, message } of usedInputIssues(control.inputs)) {
-      issue([...at, 'inputs', index, field], message);
-    }
-    return;
-  }
-  if (!control.scheduled_date) {
-    issue([...at, 'scheduled_date'], 'Indica la fecha');
-  } else {
-    const error = scheduledDateIssue(control.scheduled_date, today);
-    if (error) issue([...at, 'scheduled_date'], error);
-  }
-  if (!control.assignee_id)
-    issue([...at, 'assignee_id'], 'Elige el responsable');
+  const issues = [
+    ...controlWorkIssues({ ...control, mode }),
+    ...(mode === 'scheduled' ? scheduleIssues(control, today) : []),
+  ];
+  for (const { path, message } of issues) issue([...at, ...path], message);
 }
 
 // Un monitoreo registrado no se corrige, así que se valida antes de guardar todo lo que el

@@ -1,6 +1,7 @@
 import { apiFetch } from '@/lib/api/client';
 import type { components } from '@/lib/api/schema';
 
+import type { DetectionControlRequest } from './control-schema';
 import type { MonitoringResultRequest } from './monitoring-request';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
@@ -21,4 +22,23 @@ export const postMonitoringResult = (
   apiFetch<AgriculturalActivity>(
     `/api/agricultural-activities/${activityId}/monitoring`,
     { method: 'POST', body },
+  );
+
+// Un control desde una detección. Reenviar el mismo `id` con el mismo contenido responde bien sin
+// crear otro, así que la cola puede reintentar.
+export const postDetectionControl = (
+  detectionId: string,
+  body: DetectionControlRequest,
+) =>
+  apiFetch<AgriculturalActivity>(
+    `/api/phytosanitary-detections/${detectionId}/controls`,
+    { method: 'POST', body },
+  );
+
+// Quien programa decide que una detección no necesita control. Repetirlo no cambia quién lo
+// decidió primero.
+export const postNoControlNeeded = (detectionId: string) =>
+  apiFetch<void>(
+    `/api/phytosanitary-detections/${detectionId}/no-control-needed`,
+    { method: 'POST' },
   );

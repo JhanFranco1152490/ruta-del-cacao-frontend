@@ -77,10 +77,10 @@ export function DetectionControl({
         ))}
       </div>
       {current.mode === 'done' && (
-        <DoneControlFields disabled={disabled} index={index} />
+        <DoneControlFields base={`${path}.`} disabled={disabled} />
       )}
       {current.mode === 'scheduled' && (
-        <ScheduledControlFields disabled={disabled} index={index} />
+        <ScheduledControlFields base={`${path}.`} disabled={disabled} />
       )}
       {current.mode === 'requested' && (
         <p className="text-sm font-bold text-muted-foreground" role="status">
