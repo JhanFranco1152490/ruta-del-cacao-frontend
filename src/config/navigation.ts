@@ -1,4 +1,5 @@
 import {
+  Bug,
   CalendarDays,
   FlaskConical,
   LandPlot,
@@ -44,6 +45,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Variedades de cacao',
     icon: Leaf,
     permission: PERMISSIONS.CROPS_MANAGE_VARIETIES,
+    needsConnection: true,
+  },
+  {
+    href: '/plagas-enfermedades',
+    label: 'Plagas y enfermedades',
+    icon: Bug,
+    permission: PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE,
     needsConnection: true,
   },
   {
