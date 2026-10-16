@@ -76,8 +76,9 @@ const plotOf = (
 ) => ({
   id,
   code,
+  name: null,
   is_active: true,
-  farm: { id: farm, name: farmName, is_active: true },
+  farm: { id: farm, code: 'F01', name: farmName, is_active: true },
 });
 
 const activity = (
@@ -576,7 +577,7 @@ describe('the filters of the calendar', () => {
     await screen.findByRole('region', { name: 'sábado 10 de octubre' });
 
     await openFilters();
-    await pick('Finca', 'El Paraíso');
+    await pick('Finca', 'F01 · El Paraíso');
 
     await waitFor(() =>
       expect(

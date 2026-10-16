@@ -5,6 +5,7 @@ import {
 } from './activity-days';
 import type { ActivityState } from './activity-state';
 import type { AgriculturalActivity, Assignee } from './api';
+import { farmLabel, plotLabel } from '@/lib/format/place-label';
 
 export type ActivityFilters = {
   // Finca, parcela y responsable son el id de lo elegido; vacío es "todos".
@@ -55,7 +56,7 @@ export const applyFiltersToDays = (
     }))
     .filter((day) => day.activities.length > 0);
 
-export type FarmOption = { id: string; name: string };
+export type FarmOption = { id: string; code: string; name: string };
 
 // Las fincas que aparecen en las actividades, por nombre.
 export function farmOptionsOf(
@@ -63,7 +64,11 @@ export function farmOptionsOf(
 ): FarmOption[] {
   const farms = new Map<string, FarmOption>();
   for (const { plot } of activities) {
-    farms.set(plot.farm.id, { id: plot.farm.id, name: plot.farm.name });
+    farms.set(plot.farm.id, {
+      id: plot.farm.id,
+      code: plot.farm.code,
+      name: plot.farm.name,
+    });
   }
   return [...farms.values()].toSorted((a, b) => a.name.localeCompare(b.name));
 }
@@ -85,13 +90,13 @@ export function plotOptionsOf(
   for (const { plot } of activities) {
     const farm = farms.get(plot.farm.id) ?? {
       farmId: plot.farm.id,
-      farmName: plot.farm.name,
+      farmName: farmLabel(plot.farm),
       plots: [],
     };
     if (!farm.plots.some(({ id }) => id === plot.id)) {
       farm.plots.push({
         id: plot.id,
-        code: plot.code,
+        code: plotLabel(plot),
         isActive: plot.is_active,
       });
     }
@@ -100,7 +105,9 @@ export function plotOptionsOf(
   return [...farms.values()]
     .map((farm) => ({
       ...farm,
-      plots: farm.plots.toSorted((a, b) => a.code.localeCompare(b.code)),
+      plots: farm.plots.toSorted((a, b) =>
+        a.code.localeCompare(b.code, 'es', { numeric: true }),
+      ),
     }))
     .toSorted((a, b) => a.farmName.localeCompare(b.farmName));
 }

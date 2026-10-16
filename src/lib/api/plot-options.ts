@@ -13,10 +13,12 @@ type Schemas = components['schemas'];
 export type PlotOption = {
   id: string;
   code: string;
+  name: string | null;
   areaHectares: string;
   isActive: boolean;
   farm: {
     id: string;
+    code: string;
     name: string;
     isActive: boolean;
     producer: ProducerRef;
@@ -48,10 +50,12 @@ export async function fetchPlotOptions(
     options: page.results.map((plot) => ({
       id: plot.id,
       code: plot.code,
+      name: plot.name ?? null,
       areaHectares: plot.area_hectares,
       isActive: plot.is_active,
       farm: {
         id: plot.farm.id,
+        code: plot.farm.code,
         name: plot.farm.name,
         isActive: plot.farm.is_active,
         producer: plot.farm.producer,

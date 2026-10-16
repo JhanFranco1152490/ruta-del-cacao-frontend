@@ -2,6 +2,7 @@ import { producerLabelOf } from '@/lib/format/producer';
 
 import type { OverviewFarm, OverviewPlot } from './plot-overview';
 import type { Grouping } from './use-plot-filters';
+import { farmLabel } from '@/lib/format/place-label';
 
 export type SectionHeader = {
   level: 'device' | 'producer' | 'farm';
@@ -80,7 +81,7 @@ export function sectionPlots(
     if (newFarm) {
       headers.push({
         level: 'farm',
-        label: plot.farm.name ?? PENDING_FARM_LABEL,
+        label: plot.farm.name ? farmLabel(plot.farm) : PENDING_FARM_LABEL,
         farmId: plot.farm.name ? plot.farm.id : undefined,
         continues: first && !!before && before.farm.id === plot.farm.id,
       });

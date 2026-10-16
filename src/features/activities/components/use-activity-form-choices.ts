@@ -18,6 +18,7 @@ import {
   type FormChoice,
   plotLabel,
 } from './activity-choices';
+import { farmLabel } from '@/lib/format/place-label';
 
 const toChoices = (
   types: readonly { value: string; label: string }[],
@@ -88,9 +89,11 @@ export function useActivityFormChoices(
 
   const farmChoices = useMemo(
     () =>
-      activeFarms.map(({ id, name, producer }) => ({
-        id,
-        label: showProducer ? `${name} · ${producerLabelOf(producer)}` : name,
+      activeFarms.map((farm) => ({
+        id: farm.id,
+        label: showProducer
+          ? `${farmLabel(farm)} · ${producerLabelOf(farm.producer)}`
+          : farmLabel(farm),
       })),
     [activeFarms, showProducer],
   );
@@ -100,8 +103,8 @@ export function useActivityFormChoices(
         id: plot.id,
         label: plotLabel(plot),
         group: showProducer
-          ? `${plot.farm.name} · ${producerLabelOf(plot.farm.producer)}`
-          : plot.farm.name,
+          ? `${farmLabel(plot.farm)} · ${producerLabelOf(plot.farm.producer)}`
+          : farmLabel(plot.farm),
         farmId: plot.farm.id,
       })),
     [offeredPlots, showProducer],
