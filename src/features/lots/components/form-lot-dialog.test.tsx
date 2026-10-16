@@ -50,16 +50,19 @@ const answerWith = (...responses: (() => Response)[]) =>
 
 function renderDialog({
   permissions = [PERMISSIONS.HARVESTS_VIEW, PERMISSIONS.LOTS_ADD],
-  inRow = false,
-}: { permissions?: string[]; inRow?: boolean } = {}) {
+  unavailable,
+}: { permissions?: string[]; unavailable?: string } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: 'u1', permissions }),
   );
-  renderWithProviders(<FormLotDialog inRow={inRow} source={SOURCE} />, {
-    queryClient,
-  });
+  renderWithProviders(
+    <FormLotDialog source={SOURCE} unavailable={unavailable} />,
+    {
+      queryClient,
+    },
+  );
 }
 
 const openAndConfirm = async () => {
@@ -202,14 +205,23 @@ describe('FormLotDialog', () => {
     ).toBeDisabled();
   });
 
-  it('is left out of a row without a connection', () => {
+  it('shows what a row puts in its place without a connection', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    renderDialog({ inRow: true });
+    renderDialog({ unavailable: 'Sin lote' });
     expect(screen.queryByRole('button', { name: /Conformar lote/ })).toBeNull();
+    expect(screen.getByText('Sin lote')).toBeInTheDocument();
   });
 
   it('does not appear without permission to form lots', () => {
     renderDialog({ permissions: [PERMISSIONS.HARVESTS_VIEW] });
     expect(screen.queryByRole('button', { name: /Conformar lote/ })).toBeNull();
+  });
+
+  it('shows what a row puts in its place without permission', () => {
+    renderDialog({
+      permissions: [PERMISSIONS.HARVESTS_VIEW],
+      unavailable: 'Sin lote',
+    });
+    expect(screen.getByText('Sin lote')).toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@
 
 import { Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { StatusChangeDialog } from '@/components/status-change-dialog';
 import { Button } from '@/components/ui/button';
@@ -28,15 +28,15 @@ const createErrorMessage = (error: unknown) =>
     : getErrorMessage(error, CREATE_FAILED);
 
 // Conformar el lote de una cosecha: un resumen, la confirmación y la ficha del lote. Solo en línea;
-// sin conexión el botón se deshabilita, o no aparece en una fila (`inRow`), donde la lista ya avisa
-// que conformar necesita conexión.
+// sin conexión el botón se deshabilita. En una fila de lista va `unavailable` en su lugar (el «Sin
+// lote» de la columna) cuando no se puede conformar: la lista ya avisa que necesita conexión.
 export function FormLotDialog({
   source,
-  inRow = false,
+  unavailable,
   returnTo,
 }: {
   source: LotSource;
-  inRow?: boolean;
+  unavailable?: ReactNode;
   // A dónde ofrece volver la ficha del lote; por omisión, la pantalla actual. Una pantalla que
   // solo existe tras guardar (la de «Cosecha registrada») da la lista a la que iba a volver.
   returnTo?: string;
@@ -69,9 +69,11 @@ export function FormLotDialog({
     }
   }, createErrorMessage);
 
-  if (!hasPermission(user, PERMISSIONS.LOTS_ADD)) return null;
+  if (!hasPermission(user, PERMISSIONS.LOTS_ADD)) return unavailable ?? null;
   if (!hasConnection) {
-    return inRow ? null : (
+    return unavailable !== undefined ? (
+      unavailable
+    ) : (
       <Button
         className="h-11"
         disabled

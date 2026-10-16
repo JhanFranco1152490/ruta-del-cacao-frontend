@@ -24,18 +24,37 @@ import type { HarvestLotSource } from '../harvest-lot-source';
 import { harvestDetailPath } from '../harvest-paths';
 import type { HarvestRow } from '../harvest-rows';
 
-// En la columna del lote: su código, o si todavía no forma uno. Lo del teléfono dice que espera.
-function LotCell({ row }: { row: HarvestRow }) {
+type RenderFormLot = (
+  source: HarvestLotSource,
+  unavailable: ReactNode,
+) => ReactNode;
+
+// En la columna del lote: su código, o conformarlo si todavía no forma uno («Sin lote» si no se
+// puede). Lo del teléfono dice que espera. En celular el botón queda encima del enlace que cubre
+// la tarjeta.
+function LotCell({
+  row,
+  renderFormLot,
+}: {
+  row: HarvestRow;
+  renderFormLot?: RenderFormLot;
+}) {
   if (row.queue === 'error') {
     return <StatusBadge tone="err">No se pudo enviar</StatusBadge>;
   }
   if (row.queue) {
     return <StatusBadge tone="warn">Pendiente de enviar</StatusBadge>;
   }
-  return row.lotCode ? (
-    <span className="font-mono text-sm">{row.lotCode}</span>
+  if (row.lotCode) {
+    return <span className="font-mono text-sm">{row.lotCode}</span>;
+  }
+  const withoutLot = <span className="text-muted-foreground">Sin lote</span>;
+  return row.lotSource && renderFormLot ? (
+    <span className="relative z-10 inline-flex">
+      {renderFormLot(row.lotSource, withoutLot)}
+    </span>
   ) : (
-    <span className="text-muted-foreground">Sin lote</span>
+    withoutLot
   );
 }
 
@@ -46,7 +65,7 @@ export function HarvestTable({
   renderFormLot,
 }: {
   rows: readonly HarvestRow[];
-  renderFormLot?: (source: HarvestLotSource) => ReactNode;
+  renderFormLot?: RenderFormLot;
 }) {
   return (
     <Table aria-label="Cosechas del mes" className={COMPACT_TABLE_CLASS}>
@@ -87,26 +106,23 @@ export function HarvestTable({
               {row.collector ?? '—'}
             </TableCell>
             <TableCell className="max-md:order-6">
-              <LotCell row={row} />
+              <LotCell renderFormLot={renderFormLot} row={row} />
             </TableCell>
             <TableCell className="max-md:order-7">
-              <div className="flex items-center justify-end gap-2">
-                {row.lotSource && renderFormLot?.(row.lotSource)}
-                {!row.queue && (
-                  <EditorLink
-                    aria-label={`Ver la cosecha de ${row.plot} del ${formatWeekdayDate(row.date)}`}
-                    className={cn(
-                      buttonVariants({ size: 'office', variant: 'action' }),
-                      ROW_LINK_CLASS,
-                    )}
-                    href={harvestDetailPath(row.id)}
-                  >
-                    <Eye aria-hidden="true" className="size-4 max-md:hidden" />
-                    <span className="max-md:sr-only">Ver</span>
-                    <ChevronRight aria-hidden="true" className="md:hidden" />
-                  </EditorLink>
-                )}
-              </div>
+              {!row.queue && (
+                <EditorLink
+                  aria-label={`Ver la cosecha de ${row.plot} del ${formatWeekdayDate(row.date)}`}
+                  className={cn(
+                    buttonVariants({ size: 'office', variant: 'action' }),
+                    ROW_LINK_CLASS,
+                  )}
+                  href={harvestDetailPath(row.id)}
+                >
+                  <Eye aria-hidden="true" className="size-4 max-md:hidden" />
+                  <span className="max-md:sr-only">Ver</span>
+                  <ChevronRight aria-hidden="true" className="md:hidden" />
+                </EditorLink>
+              )}
             </TableCell>
           </TableRow>
         ))}

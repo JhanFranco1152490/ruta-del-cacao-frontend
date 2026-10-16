@@ -37,7 +37,10 @@ export function HarvestListScreen({
   renderFormLot,
 }: {
   // Conformar el lote de una cosecha desde su fila; lo da quien monta la pantalla.
-  renderFormLot?: (source: HarvestLotSource) => ReactNode;
+  renderFormLot?: (
+    source: HarvestLotSource,
+    unavailable: ReactNode,
+  ) => ReactNode;
 } = {}) {
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;

@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import type { HarvestLotSource } from '@/features/harvests/harvest-lot-source';
 import { FormLotDialog } from '@/features/lots/components/form-lot-dialog';
 
@@ -14,6 +16,7 @@ export function renderFormLotReturningTo(returnTo: string) {
   };
 }
 
-export const renderFormLotInRow = (source: HarvestLotSource) => (
-  <FormLotDialog inRow source={source} />
-);
+export const renderFormLotInRow = (
+  source: HarvestLotSource,
+  unavailable: ReactNode,
+) => <FormLotDialog source={source} unavailable={unavailable} />;
