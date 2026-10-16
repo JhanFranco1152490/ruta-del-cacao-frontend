@@ -25,7 +25,7 @@ import { toMonitoringRequest } from '../monitoring-request';
 import type { MonitoringFormValues } from '../monitoring-schema';
 import { monitoringSummary } from '../monitoring-summary';
 import type { PestDisease } from '../pest-api';
-import { type SelectedPhoto } from '../photo-selection';
+import { awaitingSend, type SelectedPhoto } from '../photo-selection';
 import { useQueuedEvidence, useSaveEvidence } from '../use-evidence-queue';
 import { useSaveMonitoring } from '../use-monitoring-queue';
 import type { ControlChoices } from './control-choices';
@@ -71,8 +71,10 @@ export function MonitoringCapture({
   const saveEvidence = useSaveEvidence();
   const [photos, setPhotos] = useState<SelectedPhoto[]>([]);
   // Las fotos de este monitoreo que ya esperan en el dispositivo (de una corrección) cuentan para
-  // el máximo.
-  const alreadyQueued = useQueuedEvidence(user?.id, activity.id).length;
+  // el máximo; las que el servidor rechazó no van a llegar, así que no.
+  const alreadyQueued = awaitingSend(
+    useQueuedEvidence(user?.id, activity.id),
+  ).length;
   const sync = useCaptureSyncStatus('monitoreos');
   const [confirming, setConfirming] = useState<MonitoringFormValues>();
   // Se fija al abrir: la planilla parte de lo que había en ese momento.

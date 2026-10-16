@@ -1,4 +1,5 @@
 import { preparePhoto } from '@/lib/images/prepare-photo';
+import type { QueueStatus } from '@/lib/offline/db';
 
 export const MAX_PHOTOS = 5;
 export const LIMIT_REACHED_MESSAGE = 'Ya tiene 5 fotos, el máximo';
@@ -11,6 +12,12 @@ export type SelectedPhoto = {
   fileName: string;
   capturedAt: string;
 };
+
+// Las fotos que esperan en el dispositivo y van a llegar: las que el servidor rechazó solo se
+// descartan, así que no cuentan para el máximo.
+export const awaitingSend = <Photo extends { status: QueueStatus }>(
+  queued: readonly Photo[],
+) => queued.filter(({ status }) => status !== 'error');
 
 // Las fotos que se agregan de las elegidas: se preparan una por una, hasta completar las cinco
 // contando las que ya hay (`already`). Lo que no se pudo agregar se dice una vez por motivo.

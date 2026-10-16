@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PreparedPhoto } from '@/lib/images/prepare-photo';
 
 import {
+  awaitingSend,
   LIMIT_REACHED_MESSAGE,
   MAX_PHOTOS,
   selectPhotos,
@@ -81,5 +82,17 @@ describe('selectPhotos', () => {
     expect(photos).toEqual([]);
     expect(errors).toEqual([LIMIT_REACHED_MESSAGE]);
     expect(prepareAll).not.toHaveBeenCalled();
+  });
+});
+
+describe('awaitingSend', () => {
+  it('leaves out the photos the server rejected', () => {
+    expect(
+      awaitingSend([
+        { id: 'e1', status: 'pending' as const },
+        { id: 'e2', status: 'syncing' as const },
+        { id: 'e3', status: 'error' as const },
+      ]).map(({ id }) => id),
+    ).toEqual(['e1', 'e2']);
   });
 });
