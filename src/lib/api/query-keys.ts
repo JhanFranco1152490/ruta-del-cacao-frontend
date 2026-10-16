@@ -31,6 +31,14 @@ export const queryKeys = {
     // Las activas, que ofrece la ficha de una parcela; con copia en el dispositivo.
     active: () => ['cacao-varieties', 'active'] as const,
   },
+  pestsDiseases: {
+    all: () => ['pests-diseases'] as const,
+    // La pantalla del catálogo (activas e inactivas), con su búsqueda y su filtro de estado.
+    list: (query: object) => ['pests-diseases', 'list', query] as const,
+    // Las activas, que ofrece el buscador de la planilla del monitoreo; con copia en el
+    // dispositivo.
+    active: () => ['pests-diseases', 'active'] as const,
+  },
   agriculturalInputs: {
     all: () => ['agricultural-inputs'] as const,
     // El catálogo completo de un productor (activos e inactivos), con copia en el dispositivo. La
@@ -77,6 +85,26 @@ export const queryKeys = {
     // La realización de una actividad que sigue en la cola del dispositivo de esta persona.
     queued: (userId: string, id: string) =>
       ['agricultural-activities', 'queued', userId, id] as const,
+  },
+  health: {
+    // Lo que invalida registrar un monitoreo, crear un control, decidir que una detección no lo
+    // requiere o adjuntar una foto.
+    all: () => ['health'] as const,
+    // El historial fitosanitario de una parcela, con sus filtros; con copia en el dispositivo.
+    plotHistory: (plotId: string) => ['health', 'history', plotId] as const,
+    history: (plotId: string, query: object) =>
+      ['health', 'history', plotId, query] as const,
+    // Las detecciones en que alguien pidió un control y nadie lo ha atendido; con copia en el
+    // dispositivo. La cuenta técnica elige el productor; las demás cuentas pasan `null`.
+    withoutControl: (producer: string | null) =>
+      ['health', 'without-control', producer ?? ''] as const,
+    // Las fotos de un monitoreo o de un control, y el archivo de cada una.
+    evidence: (activityId: string) =>
+      ['health', 'evidence', activityId] as const,
+    evidenceFile: (id: string) => ['health', 'evidence-file', id] as const,
+    // El resultado de un monitoreo que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, activityId: string) =>
+      ['health', 'queued', userId, activityId] as const,
   },
   characterizations: {
     // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la

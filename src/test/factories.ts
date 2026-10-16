@@ -347,5 +347,7 @@ export const buildAgriculturalActivity = (
   version: 1,
   created_at: '2026-10-08T09:00:00-05:00',
   updated_at: '2026-10-08T09:00:00-05:00',
+  monitoring: null,
+  control_of: null,
   ...overrides,
 });
