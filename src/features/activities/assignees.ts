@@ -2,22 +2,6 @@ import { createContext, useContext } from 'react';
 
 import type { AgriculturalActivity, Assignee, AssigneeOption } from './api';
 
-// A quién se le puede asignar una labor en una parcela de la finca `farmId`: cuentas activas a
-// las que quien pregunta puede asignarles (`assignable`) y que trabajan en esa finca (entre
-// otras, si atienden varias). El Productor y quien trabaja en todas valen para cualquier finca. Sin
-// finca elegida todavía no se ofrece nadie que esté limitado a una. El servidor aplica la misma
-// regla al guardar.
-export const assignableIn = (
-  accounts: readonly AssigneeOption[],
-  farmId: string,
-) =>
-  accounts.filter(
-    (account) =>
-      account.is_active &&
-      account.assignable &&
-      (account.all_farms || account.farm_ids.includes(farmId)),
-  );
-
 export const OUTSIDE_FARM = 'Responsable fuera de la finca';
 
 // Qué advertir del responsable que una actividad de la finca `farmId` ya tiene, para escribirlo
