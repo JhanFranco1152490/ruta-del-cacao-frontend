@@ -153,6 +153,16 @@ export const lotsHandler = (
     return HttpResponse.json(buildPage(results));
   });
 
+// Responde el recuento de lotes por estado y guarda las búsquedas recibidas.
+export const lotSummaryHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/lots/summary'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

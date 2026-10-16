@@ -10,6 +10,7 @@ import {
   apiUrl,
   cacaoVarietiesHandler,
   farmsHandler,
+  lotSummaryHandler,
   lotsHandler,
   plotsHandler,
 } from '@/test/handlers';
@@ -34,14 +35,25 @@ const fermenting = buildLot({
 let userId: string;
 let urls: string[];
 let requests: URLSearchParams[];
+let summaryRequests: URLSearchParams[];
+
+const SUMMARY = [
+  { status: 'generated', count: 3, green_weight_kg: '420.5' },
+  { status: 'fermenting', count: 1, green_weight_kg: '120.0' },
+  { status: 'fermented', count: 0, green_weight_kg: '0.0' },
+  { status: 'drying', count: 0, green_weight_kg: '0.0' },
+  { status: 'dried', count: 0, green_weight_kg: '0.0' },
+];
 
 beforeEach(() => {
   userId = `lot-list-${crypto.randomUUID()}`;
   urls = [];
   requests = [];
+  summaryRequests = [];
   resetLocation();
   server.use(
     lotsHandler([generated, fermenting], requests),
+    lotSummaryHandler(SUMMARY, summaryRequests),
     farmsHandler(),
     plotsHandler(),
     cacaoVarietiesHandler(),
@@ -96,7 +108,7 @@ describe('LotListScreen', () => {
     await userEvent.click(
       within(screen.getByRole('group', { name: 'Estado' })).getByRole(
         'button',
-        { name: 'En fermentación' },
+        { name: /^En fermentación/ },
       ),
     );
 
@@ -104,6 +116,45 @@ describe('LotListScreen', () => {
     await waitFor(() =>
       expect(requests.at(-1)?.get('status')).toBe('fermenting'),
     );
+  });
+
+  it('shows how many lots and kilos each status has, with the other filters', async () => {
+    renderScreen({ searchParams: '?estado=fermenting&finca=f1&pagina=2' });
+
+    const statuses = screen.getByRole('group', { name: 'Estado' });
+    expect(
+      await within(statuses).findByRole('button', {
+        name: 'Todos 4 lotes · 540,5 kg',
+      }),
+    ).toHaveAttribute('aria-pressed', 'false');
+    expect(
+      within(statuses).getByRole('button', {
+        name: 'Generado 3 lotes · 420,5 kg',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(statuses).getByRole('button', {
+        name: 'En fermentación 1 lote · 120 kg',
+      }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    const sent = summaryRequests[0];
+    expect(sent.get('farm')).toBe('f1');
+    expect(sent.has('status')).toBe(false);
+    expect(sent.has('page')).toBe(false);
+  });
+
+  it('still filters by status when the summary fails', async () => {
+    server.use(
+      http.get(apiUrl('/api/lots/summary'), () =>
+        apiError(500, 'server_error'),
+      ),
+    );
+    renderScreen();
+    await table();
+
+    await userEvent.click(screen.getByRole('button', { name: /^Seco/ }));
+
+    await waitFor(() => expect(urls.at(-1)).toContain('estado=dried'));
   });
 
   it('sends what the address says to the server, ignoring a malformed date', async () => {

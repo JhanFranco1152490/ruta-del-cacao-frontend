@@ -109,6 +109,7 @@ describe('lot query keys', () => {
     const all = queryKeys.lots.all();
     expect(startsWith(queryKeys.lots.list({ page: 1 }), all)).toBe(true);
     expect(startsWith(queryKeys.lots.detail('l-1'), all)).toBe(true);
+    expect(startsWith(queryKeys.lots.summary({}), all)).toBe(true);
   });
 
   it('keeps each filtered page apart', () => {

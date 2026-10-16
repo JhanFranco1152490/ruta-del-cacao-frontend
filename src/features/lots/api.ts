@@ -57,11 +57,17 @@ export function useCreateLot() {
   });
 }
 
-function listPath(query: LotQuery) {
+// Los filtros como parámetros de la dirección, sin los vacíos.
+function searchParamsOf(query: object) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== '') params.set(key, String(value));
   }
+  return params;
+}
+
+function listPath(query: LotQuery) {
+  const params = searchParamsOf(query);
   params.set('page_size', String(LOT_PAGE_SIZE));
   return `/api/lots?${params}`;
 }
@@ -75,6 +81,26 @@ export const useLots = (query: LotQuery) =>
   useQuery({
     queryKey: queryKeys.lots.list(query),
     queryFn: ({ signal }) => fetchLots(query, signal),
+    placeholderData: keepPreviousData,
+  });
+
+export type LotStatusTotal = Schemas['LotStatusTotal'];
+// El recuento sigue a los filtros de la lista menos el estado (lo que se elige con él) y la página.
+export type LotSummaryQuery = Omit<LotQuery, 'status' | 'page'>;
+
+// Cuántos lotes y kilos hay en cada estado. Como la lista, solo con conexión.
+export const useLotSummary = (query: LotSummaryQuery) =>
+  useQuery({
+    queryKey: queryKeys.lots.summary(query),
+    queryFn: async ({ signal }) => {
+      const params = searchParamsOf(query);
+      const suffix = params.size ? `?${params}` : '';
+      const { results } = await apiFetch<Schemas['LotSummary']>(
+        `/api/lots/summary${suffix}`,
+        { signal },
+      );
+      return results;
+    },
     placeholderData: keepPreviousData,
   });
 

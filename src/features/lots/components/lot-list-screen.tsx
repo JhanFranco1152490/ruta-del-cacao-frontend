@@ -9,31 +9,17 @@ import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { ProducerFilter } from '@/components/producer-filter';
-import { SegmentedControl } from '@/components/segmented-control';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
 import { useProducerSummary } from '@/lib/api/producer-options';
-import {
-  LOT_STATUS_ORDER,
-  LOT_STATUSES,
-  type LotStatus,
-} from '@/lib/lot-status';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { LOT_PAGE_SIZE, useLots } from '../api';
+import { LOT_PAGE_SIZE, useLots, useLotSummary } from '../api';
 import { useLotFilters } from '../use-lot-filters';
 import { LotFiltersBar } from './lot-filters-bar';
+import { LotStatusCards } from './lot-status-cards';
 import { LotTable } from './lot-table';
-
-const ALL = 'all';
-const STATUS_OPTIONS = [
-  { value: ALL, label: 'Todos' },
-  ...LOT_STATUS_ORDER.map((status) => ({
-    value: status,
-    label: LOT_STATUSES[status].label,
-  })),
-];
 
 // Los lotes de las fincas que la cuenta alcanza, del más reciente al más antiguo. Solo con
 // conexión. Un lote se conforma desde su cosecha: `formLotHref` lleva a las que todavía no tienen
@@ -43,6 +29,7 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
   const superuser = user?.is_superuser === true;
   const filters = useLotFilters();
   const list = useLots(filters.query);
+  const summary = useLotSummary(filters.summaryQuery);
   const selectedProducer = useProducerSummary(
     superuser ? filters.query.producer : undefined,
   );
@@ -127,17 +114,11 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
           selected={selectedProducer}
         />
       )}
-      <div className="overflow-x-auto">
-        <SegmentedControl
-          compact
-          label="Estado"
-          onChange={(value) =>
-            void filters.setStatus(value === ALL ? null : (value as LotStatus))
-          }
-          options={STATUS_OPTIONS}
-          value={filters.query.status ?? ALL}
-        />
-      </div>
+      <LotStatusCards
+        onChange={(status) => void filters.setStatus(status)}
+        totals={summary.data}
+        value={filters.query.status}
+      />
       <LotFiltersBar state={filters} />
       {content()}
     </div>

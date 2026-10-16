@@ -531,6 +531,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lots/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cuántos lotes y cuántos kilos en verde hay en cada estado, con los mismos filtros de la lista menos `status`: el recuento sirve para elegirlo. Trae todos los estados de la cadena, en orden, también los que tienen cero. */
+        get: operations["lots_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/permissions": {
         parameters: {
             query?: never;
@@ -1459,6 +1476,15 @@ export interface components {
          * @enum {string}
          */
         LotStatusEnum: "generated" | "fermenting" | "fermented" | "drying" | "dried";
+        LotStatusTotal: {
+            status: components["schemas"]["LotStatusEnum"];
+            count: number;
+            /** Format: decimal */
+            green_weight_kg: string;
+        };
+        LotSummary: {
+            results: components["schemas"]["LotStatusTotal"][];
+        };
         /**
          * @description * `conventional` - Convencional
          *     * `organic` - Orgánico
@@ -1571,21 +1597,6 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["FarmMunicipalityCount"][];
-        };
-        PaginatedHarvestListList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["HarvestList"][];
         };
         PaginatedInputMovementList: {
             /** @example 123 */
@@ -3950,10 +3961,6 @@ export interface operations {
                 farm?: string;
                 /** @description Fecha inicial (incluida). */
                 from: string;
-                /** @description Un número de página dentro del conjunto de resultados paginado. */
-                page?: number;
-                /** @description Número de resultados a devolver por página. */
-                page_size?: number;
                 /** @description Solo las cosechas de esta parcela. */
                 plot?: string;
                 /** @description Solo para la cuenta técnica. */
@@ -3972,7 +3979,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedHarvestListList"];
+                    "application/json": components["schemas"]["HarvestList"];
                 };
             };
             400: {
@@ -4737,6 +4744,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LotConflictError"];
+                };
+            };
+        };
+    };
+    lots_summary_retrieve: {
+        parameters: {
+            query?: {
+                farm?: string;
+                from?: string;
+                plot?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+                to?: string;
+                variety?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

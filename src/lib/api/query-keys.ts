@@ -99,6 +99,8 @@ export const queryKeys = {
     all: () => ['lots'] as const,
     // Una página de la lista con sus filtros: solo con conexión, sin copia local.
     list: (query: object) => ['lots', 'list', query] as const,
+    // Cuántos lotes y kilos hay en cada estado, con los filtros de la lista menos el estado.
+    summary: (query: object) => ['lots', 'summary', query] as const,
     detail: (id: string) => ['lots', 'detail', id] as const,
   },
   characterizations: {

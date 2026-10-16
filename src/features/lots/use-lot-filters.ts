@@ -11,7 +11,7 @@ import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import { isIsoDate } from '@/lib/format/dates';
 import { LOT_STATUS_ORDER, type LotStatus } from '@/lib/lot-status';
 
-import type { LotQuery } from './api';
+import type { LotQuery, LotSummaryQuery } from './api';
 
 // Los filtros viven en la URL, con los nombres en español como las rutas. Un valor malformado
 // (?estado=zzz, ?desde=ayer) cuenta como "sin filtro".
@@ -46,15 +46,19 @@ export function useLotFilters() {
   const [params, setParams] = useQueryStates(parsers, { urlKeys });
   const search = usePaginatedSearch(params.search, setParams);
   const page = Math.max(1, params.page);
-  const query: LotQuery = {
+  // El recuento por estado usa los demás filtros: el estado es lo que se elige con él.
+  const summaryQuery: LotSummaryQuery = {
     search: params.search.trim() || undefined,
-    status: params.status ?? undefined,
     farm: params.farm || undefined,
     plot: params.plot || undefined,
     variety: params.variety || undefined,
     from: dateOrUndefined(params.from),
     to: dateOrUndefined(params.to),
     producer: params.producer || undefined,
+  };
+  const query: LotQuery = {
+    ...summaryQuery,
+    status: params.status ?? undefined,
     page,
   };
   // El buscador y el estado se ven siempre; esto cuenta los demás, para el botón de celular.
@@ -68,6 +72,7 @@ export function useLotFilters() {
 
   return {
     query,
+    summaryQuery,
     page,
     activeCount,
     hasFilters: activeCount > 0 || !!query.search || !!query.status,
