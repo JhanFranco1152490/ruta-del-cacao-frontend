@@ -25,7 +25,7 @@ import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
-import { discard } from '@/lib/offline/sync-queue';
+import { discard, enqueue } from '@/lib/offline/sync-queue';
 
 import { completionQueueId, enqueueCompletion } from '../completion-queue';
 import { ActivityCalendarScreen } from './activity-calendar-screen';
@@ -51,6 +51,7 @@ afterEach(() => {
 function renderScreen({
   searchParams = '',
   permissions = [PERMISSIONS.ACTIVITIES_VIEW] as string[],
+  closingResources = undefined as readonly string[] | undefined,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -60,11 +61,14 @@ function renderScreen({
       permissions,
     }),
   );
-  return renderWithProviders(<ActivityCalendarScreen />, {
-    queryClient,
-    searchParams,
-    onUrlUpdate: ({ queryString }) => urls.push(queryString),
-  });
+  return renderWithProviders(
+    <ActivityCalendarScreen closingResources={closingResources} />,
+    {
+      queryClient,
+      searchParams,
+      onUrlUpdate: ({ queryString }) => urls.push(queryString),
+    },
+  );
 }
 
 const dayOf = (name: string) => screen.findByRole('region', { name });
@@ -92,6 +96,11 @@ describe('ActivityCalendarScreen', () => {
         ],
         requests,
       ),
+      // El responsable está en la lista: sin ella, al llegar se marcaría "fuera de la finca" junto
+      // a su nombre, y lo que se ve dependería de si la lista llegó antes o después de mirar.
+      activityAssigneesHandler([
+        buildAssignee({ full_name: 'Otra cuenta de prueba' }),
+      ]),
     );
 
     renderScreen();
@@ -693,6 +702,42 @@ describe('ActivityCalendarScreen', () => {
       expect(
         await screen.findByRole('button', { name: 'Eliminar' }),
       ).toBeDisabled();
+    });
+  });
+
+  describe('records of other domains that close an activity', () => {
+    const monitoring = buildAgriculturalActivity({
+      activity_type: 'phytosanitary_monitoring',
+      scheduled_date: '2026-10-20',
+    });
+    const waitingResult = () =>
+      enqueue(userId, {
+        id: 'monitoring-result:a1',
+        resource: 'monitoring-results',
+        operation: 'update',
+        parentId: 'a1',
+        payload: {},
+      });
+
+    it('shows the activity as done and pending to send when the page names the resource', async () => {
+      await waitingResult();
+      server.use(agriculturalActivitiesHandler([monitoring]));
+      renderScreen({ closingResources: ['monitoring-results'] });
+
+      const card = await screen.findByRole('button', { name: /Monitoreo/ });
+      await waitFor(() =>
+        expect(card).toHaveTextContent('Realizada · pendiente de enviar'),
+      );
+    });
+
+    it('ignores a resource that the page does not name', async () => {
+      await waitingResult();
+      server.use(agriculturalActivitiesHandler([monitoring]));
+      renderScreen();
+
+      const card = await screen.findByRole('button', { name: /Monitoreo/ });
+      expect(card).toHaveTextContent('Retrasada · 2 días');
+      expect(card).not.toHaveTextContent('pendiente de enviar');
     });
   });
 

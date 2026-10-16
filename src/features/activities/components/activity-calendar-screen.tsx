@@ -55,7 +55,13 @@ const NEEDS_CONNECTION = {
 const STATUS_NOTE_CLASS =
   'flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-bold';
 
-export function ActivityCalendarScreen() {
+export function ActivityCalendarScreen({
+  closingResources,
+}: {
+  // Los recursos de otros dominios que, en la cola, cierran una actividad (el resultado de un
+  // monitoreo): mientras esperan conexión, la actividad se ve realizada.
+  closingResources?: readonly string[];
+} = {}) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
   const isDesktop = useIsDesktop();
@@ -77,6 +83,7 @@ export function ActivityCalendarScreen() {
     week,
     today,
     producer,
+    closingResources,
   });
   // Sin productor elegido la cuenta técnica no tiene una lista de responsables: sale de las
   // actividades que se ven.

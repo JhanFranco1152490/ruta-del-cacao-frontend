@@ -20,6 +20,9 @@ export type CalendarScope = {
   today: string;
   // Solo la cuenta técnica elige productor; las demás pasan `null`.
   producer: string | null;
+  // Los recursos de la cola, además de la realización, que cierran una actividad mientras esperan
+  // conexión (los entrega la página que une los dominios).
+  closingResources?: readonly string[];
 };
 
 // Las actividades que pide la vista que está abierta, con el estado que tienen hoy: el mes en
@@ -32,6 +35,7 @@ export function useCalendarData({
   week,
   today,
   producer,
+  closingResources,
 }: CalendarScope) {
   const isPendingView = view === 'pendientes';
   const weekEnd = shiftDays(week, 6);
@@ -44,7 +48,7 @@ export function useCalendarData({
   const pending = usePendingActivities(userId, today, producer, {
     enabled: isPendingView,
   });
-  const completions = useQueuedCompletionStatuses(userId);
+  const completions = useQueuedCompletionStatuses(userId, closingResources);
 
   const pendingNeverLoaded =
     isPausedWithoutData(pending) ||
