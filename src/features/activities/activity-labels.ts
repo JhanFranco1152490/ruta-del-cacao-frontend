@@ -65,6 +65,7 @@ export function activityStateText(state: ActivityState, daysLate: number) {
 }
 
 export const PENDING_COMPLETION_LABEL = 'Realizada · pendiente de enviar';
+export const PENDING_SCHEDULE_LABEL = 'Programada · pendiente de enviar';
 
 // "1 detección sin control", "2 detecciones sin control": las de un monitoreo realizado a las que
 // nadie les ha dado un control ni ha decidido que no lo requieren.
@@ -79,17 +80,22 @@ export function activityBadge({
   state,
   daysLate,
   completion,
+  queued,
   activity,
 }: {
   state: ActivityState;
   daysLate: number;
   completion?: 'pending' | 'error';
+  queued?: 'pending' | 'error';
   activity?: {
     monitoring?: { detections_without_control: number } | null;
   };
 }): { tone: 'ok' | 'warn' | 'err' | 'info'; text: string } {
   if (completion === 'pending') {
     return { tone: 'info', text: PENDING_COMPLETION_LABEL };
+  }
+  if (queued === 'pending') {
+    return { tone: 'info', text: PENDING_SCHEDULE_LABEL };
   }
   const withoutControl = activity?.monitoring?.detections_without_control ?? 0;
   if (state === 'done' && withoutControl > 0) {

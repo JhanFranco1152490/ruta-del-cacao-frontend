@@ -25,6 +25,7 @@ import {
 } from '../activity-filters';
 import { summarizeActivities } from '../activity-summary';
 import { isPeriodView } from '../activity-view';
+import type { AgriculturalActivity } from '../api';
 import { AssigneesContext } from '../assignees';
 import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';
@@ -59,6 +60,7 @@ export function ActivityCalendarScreen({
   closingResources,
   monitoringHref,
   renderActivityDetails,
+  queuedActivities,
 }: {
   // Los recursos de otros dominios que, en la cola, cierran una actividad (el resultado de un
   // monitoreo): mientras esperan conexión, la actividad se ve realizada.
@@ -69,6 +71,8 @@ export function ActivityCalendarScreen({
   renderActivityDetails?: ComponentProps<
     typeof ActivityDialogs
   >['renderDetails'];
+  // Las actividades de otro dominio creadas en este dispositivo que esperan conexión.
+  queuedActivities?: readonly AgriculturalActivity[];
 } = {}) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
@@ -92,6 +96,7 @@ export function ActivityCalendarScreen({
     today,
     producer,
     closingResources,
+    queuedActivities,
   });
   // Sin productor elegido la cuenta técnica no tiene una lista de responsables: sale de las
   // actividades que se ven.

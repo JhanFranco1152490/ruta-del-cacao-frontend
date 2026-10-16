@@ -1,7 +1,10 @@
+import type { components } from '@/lib/api/schema';
 import type { QueueItem } from '@/lib/offline/db';
 import { enqueue } from '@/lib/offline/sync-queue';
 
 import type { DetectionControlRequest } from './control-schema';
+
+type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
 export const CONTROL_RESOURCE = 'phytosanitary-controls';
 
@@ -11,9 +14,16 @@ export const controlQueueId = (controlId: string) =>
   `phytosanitary-control:${controlId}`;
 
 // `request` se envía tal cual. `label` nombra el control en la bandeja ("Monilia · P-03").
+// `context` es lo que el calendario necesita para mostrar un control programado mientras espera
+// conexión: la parcela, el productor y el nombre del responsable.
 export type ControlPayload = {
   request: DetectionControlRequest;
   label: string;
+  context?: {
+    plot: AgriculturalActivity['plot'];
+    producerId: string;
+    assigneeName: string;
+  };
 };
 
 export const controlPayloadOf = (item: QueueItem) =>

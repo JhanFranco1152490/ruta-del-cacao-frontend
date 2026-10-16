@@ -17,7 +17,7 @@ import { useSession } from '@/hooks/use-session';
 
 import { activityActions } from '../activity-actions';
 import type { AgriculturalActivity } from '../api';
-import type { ActivityOfDay } from '../activity-days';
+import { type ActivityOfDay, isAwaitingSync } from '../activity-days';
 import { activityStateText, activityTitle } from '../activity-labels';
 import { ActivityDetailFacts } from './activity-detail-facts';
 
@@ -69,7 +69,7 @@ export function ActivityDetailDialog({
   const { data: user } = useSession();
   const { activity, state } = item;
   const { plot } = activity;
-  const awaitingSync = item.completion === 'pending';
+  const awaitingSync = isAwaitingSync(item);
   const actions = activityActions(
     state,
     activity.activity_type,

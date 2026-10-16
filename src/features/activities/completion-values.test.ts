@@ -48,6 +48,27 @@ describe('emptyCompletionForm', () => {
       inputs: [],
     });
   });
+
+  it('suggests the planned input of a control as its first row, to be changed or removed', () => {
+    expect(
+      emptyCompletionForm('2026-10-22', {
+        id: 'copper',
+        is_active: true,
+      }),
+    ).toEqual({
+      done_date: '2026-10-22',
+      inputs: [{ input_id: 'copper', quantity: '' }],
+    });
+  });
+
+  it('suggests nothing when the planned input is no longer active', () => {
+    expect(
+      emptyCompletionForm('2026-10-22', {
+        id: 'copper',
+        is_active: false,
+      }).inputs,
+    ).toEqual([]);
+  });
 });
 
 describe('queuedToFormInput', () => {

@@ -93,6 +93,11 @@ export function ControlFormDialog({
         payload: {
           request: toDetectionControlRequest(values, new Date().toISOString()),
           label: `${name} · ${monitoring.plot.code}`,
+          context: {
+            plot: monitoring.plot,
+            producerId: monitoring.producer_id,
+            assigneeName: choices.assigneeNames.get(values.assignee_id) ?? '',
+          },
         },
       },
       {

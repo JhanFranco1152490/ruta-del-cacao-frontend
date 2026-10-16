@@ -33,17 +33,21 @@ export function useControlChoicesSource({
     superuser ? producerId : null,
     { enabled: canSchedule && enabled && (!superuser || !!producerId) },
   );
+  const offered = useMemo(
+    () => (farmId ? assignableIn(accounts.data?.data ?? [], farmId) : []),
+    [accounts.data, farmId],
+  );
   const assignees = useMemo(
     () =>
-      farmId
-        ? assignableIn(accounts.data?.data ?? [], farmId).map(
-            ({ id, full_name }) => ({
-              id,
-              label: id === user?.id ? `${full_name} (tú)` : full_name,
-            }),
-          )
-        : [],
-    [accounts.data, farmId, user?.id],
+      offered.map(({ id, full_name }) => ({
+        id,
+        label: id === user?.id ? `${full_name} (tú)` : full_name,
+      })),
+    [offered, user?.id],
+  );
+  const assigneeNames = useMemo(
+    () => new Map(offered.map(({ id, full_name }) => [id, full_name])),
+    [offered],
   );
   const choices = useMemo(
     () => ({
@@ -51,8 +55,9 @@ export function useControlChoicesSource({
       catalog: inputs.catalog,
       stocks: inputs.stocks,
       assignees,
+      assigneeNames,
     }),
-    [canSchedule, inputs.catalog, inputs.stocks, assignees],
+    [canSchedule, inputs.catalog, inputs.stocks, assignees, assigneeNames],
   );
   return { choices, isPending: inputs.isPending };
 }

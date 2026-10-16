@@ -120,6 +120,12 @@ describe('activityBadge', () => {
     });
   });
 
+  it('says that an activity created in the device has not reached the server', () => {
+    expect(
+      activityBadge({ state: 'scheduled', daysLate: 0, queued: 'pending' }),
+    ).toEqual({ tone: 'info', text: 'Programada · pendiente de enviar' });
+  });
+
   it('keeps the state of the activity when the server rejected the completion', () => {
     expect(
       activityBadge({ state: 'delayed', daysLate: 2, completion: 'error' }),

@@ -12,10 +12,17 @@ export const completionLabel = (
   >,
 ) => `${activityTitle(activity)} · ${activity.plot.code}`;
 
-// Una realización nueva: la fecha de hoy y ningún insumo, porque no toda labor los usa.
-export const emptyCompletionForm = (today: string): CompletionFormInput => ({
+// Una realización nueva: la fecha de hoy y ningún insumo, porque no toda labor los usa. Un control
+// fitosanitario trae su insumo previsto como primera fila sugerida, sin cantidad, para cambiarla o
+// quitarla: lo que se descuenta es lo que se registra, no lo previsto.
+export const emptyCompletionForm = (
+  today: string,
+  plannedInput?: { id: string; is_active: boolean } | null,
+): CompletionFormInput => ({
   done_date: today,
-  inputs: [],
+  inputs: plannedInput?.is_active
+    ? [{ input_id: plannedInput.id, quantity: '' }]
+    : [],
 });
 
 const inactiveInputIds = (queued: QueuedCompletion): readonly string[] => {

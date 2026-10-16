@@ -13,6 +13,8 @@ export type ControlChoices = {
   catalog: readonly CatalogInput[] | undefined;
   stocks: ReadonlyMap<string, string> | undefined;
   assignees: readonly SearchSelectOption[];
+  // El nombre de cada responsable ofrecido, sin la marca "(tú)" de la lista.
+  assigneeNames: ReadonlyMap<string, string>;
   today: string;
 };
 
@@ -21,6 +23,7 @@ export const ControlChoicesContext = createContext<ControlChoices>({
   catalog: undefined,
   stocks: undefined,
   assignees: [],
+  assigneeNames: new Map(),
   today: '',
 });
 

@@ -66,7 +66,13 @@ export function CompletionCapture({
   const [{ values: defaultValues, unavailableRows }] = useState(() =>
     rejected
       ? queuedToFormInput(rejected, new Set(catalog?.map(({ id }) => id)))
-      : { values: emptyCompletionForm(today), unavailableRows: [] },
+      : {
+          values: emptyCompletionForm(
+            today,
+            activity.control_of?.planned_input,
+          ),
+          unavailableRows: [],
+        },
   );
   // Lo capturado tiene insumos, pero sin catálogo no se pueden mostrar ni volver a elegir (pasa
   // tras cerrar sesión, que borra las copias y conserva la cola): guardar así los perdería.

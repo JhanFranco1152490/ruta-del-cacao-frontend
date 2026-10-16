@@ -80,8 +80,7 @@ export function MonitoringCapture({
     : 'Guardar en el teléfono';
   const pestName = (id: string) =>
     pests?.find((pest) => pest.id === id)?.name ?? 'Plaga o enfermedad';
-  const assigneeName = (id: string) =>
-    choices.assignees.find((option) => option.id === id)?.label ?? '';
+  const assigneeName = (id: string) => choices.assigneeNames.get(id) ?? '';
 
   const confirm = (values: MonitoringFormValues) =>
     save.mutate(
