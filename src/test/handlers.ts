@@ -16,6 +16,15 @@ export const csrfHandler = http.get(apiUrl('/api/auth/csrf'), () =>
 );
 
 // Responde el catálogo de variedades y guarda las búsquedas recibidas.
+export const pestsDiseasesHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/pests-diseases'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const cacaoVarietiesHandler = (
   results: unknown[] = [],
   requests: URLSearchParams[] = [],

@@ -33,8 +33,8 @@ export const queryKeys = {
   },
   pestsDiseases: {
     all: () => ['pests-diseases'] as const,
-    // La pantalla del catálogo (activas e inactivas), con su búsqueda y su filtro de estado.
-    list: (query: object) => ['pests-diseases', 'list', query] as const,
+    // El catálogo completo de su pantalla (activas e inactivas); se filtra en la pantalla.
+    list: () => ['pests-diseases', 'list'] as const,
     // Las activas, que ofrece el buscador de la planilla del monitoreo; con copia en el
     // dispositivo.
     active: () => ['pests-diseases', 'active'] as const,

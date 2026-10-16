@@ -78,9 +78,9 @@ describe('agricultural activity query keys', () => {
 describe('pest and disease query keys', () => {
   it('hangs the screen list and the active catalog from the key that writes invalidate', () => {
     const all = queryKeys.pestsDiseases.all();
-    expect(startsWith(queryKeys.pestsDiseases.list({}), all)).toBe(true);
+    expect(startsWith(queryKeys.pestsDiseases.list(), all)).toBe(true);
     expect(startsWith(queryKeys.pestsDiseases.active(), all)).toBe(true);
-    expect(queryKeys.pestsDiseases.list({})).not.toEqual(
+    expect(queryKeys.pestsDiseases.list()).not.toEqual(
       queryKeys.pestsDiseases.active(),
     );
   });

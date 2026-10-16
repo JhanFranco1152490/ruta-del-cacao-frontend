@@ -175,6 +175,18 @@ export const buildCacaoVariety = (
   ...overrides,
 });
 
+export const buildPestDisease = (
+  overrides: Partial<Schemas['PestDisease']> = {},
+): Schemas['PestDisease'] => ({
+  id: 'pd-monilia',
+  name: 'Monilia',
+  kind: 'disease',
+  scientific_name: 'Moniliophthora roreri',
+  description: 'Solo ataca la mazorca. Empieza con manchas cafés.',
+  is_active: true,
+  ...overrides,
+});
+
 export const buildCharacterization = (
   overrides: Partial<Schemas['PlotCharacterization']> = {},
 ): Schemas['PlotCharacterization'] => ({
