@@ -46,6 +46,7 @@ function renderDetail(
     permissions = ALL_PERMISSIONS,
     withHandlers = true,
     completion = undefined as 'pending' | 'error' | undefined,
+    monitoringHref = undefined as string | undefined,
   } = {},
 ) {
   const activity = buildAgriculturalActivity(overrides);
@@ -64,7 +65,11 @@ function renderDetail(
       item={{ activity, ...activityState(activity, TODAY), completion }}
       today={TODAY}
       {...(withHandlers
-        ? { ...handlers, completeHref: '/actividades/realizar?id=a1' }
+        ? {
+            ...handlers,
+            completeHref: '/actividades/realizar?id=a1',
+            monitoringHref,
+          }
         : { onClose: handlers.onClose })}
     />,
     { queryClient },
@@ -223,17 +228,32 @@ describe('ActivityDetailDialog', () => {
     expect(await buttonNames()).toEqual(['Cerrar']);
   });
 
-  it('says that a monitoring waits for the health module instead of offering its completion', async () => {
+  it('offers to record the result of a monitoring in its own screen', async () => {
+    renderDetail(
+      {
+        activity_type: 'phytosanitary_monitoring',
+        scheduled_date: '2026-10-30',
+      },
+      { monitoringHref: '/sanidad/monitoreo?id=a1' },
+    );
+
+    const record = within(await dialog()).getByRole('link', {
+      name: 'Registrar monitoreo',
+    });
+    expect(record.getAttribute('href')).toMatch(/^\/sanidad\/monitoreo\?id=a1/);
+    expect(await buttonNames()).toEqual([
+      'Eliminar',
+      'Editar',
+      'Registrar monitoreo',
+    ]);
+  });
+
+  it('offers nothing to record a monitoring when nobody gives its screen', async () => {
     renderDetail({
       activity_type: 'phytosanitary_monitoring',
       scheduled_date: '2026-10-30',
     });
 
-    expect(
-      within(await dialog()).getByText(
-        'El registro del monitoreo se habilita con el módulo de sanidad',
-      ),
-    ).toBeInTheDocument();
     expect(await buttonNames()).toEqual(['Eliminar', 'Editar', 'Cerrar']);
   });
 

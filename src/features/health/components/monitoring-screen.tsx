@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { PageNotice } from '@/components/page-notice';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,7 +19,10 @@ import { useMonitoringSources } from './use-monitoring-sources';
 export function MonitoringScreen({ activityId }: { activityId: string }) {
   const today = todayInBogota();
   const sources = useMonitoringSources(activityId);
-  const { returnPath } = useFinishSave(ACTIVITIES_PATH);
+  const { returnPath, finish } = useFinishSave(ACTIVITIES_PATH);
+  // Entre guardar y que la navegación llegue, la lectura de lo guardado ya cambió: sin esto se vería
+  // un instante el aviso de «ya está guardado».
+  const [saved, setSaved] = useState(false);
   const router = useRouter();
   const { data: user } = useSession();
   // Quien llega escribiendo la dirección de un monitoreo que no le toca registrar vuelve a la
@@ -56,7 +59,7 @@ export function MonitoringScreen({ activityId }: { activityId: string }) {
     );
   }
 
-  if (notYours) return null;
+  if (notYours || saved) return null;
   const { activity, queued, pests, choices } = sources;
   if (activity.activity_type !== 'phytosanitary_monitoring') {
     return <PageNotice title="Esta actividad no es un monitoreo." />;
@@ -85,6 +88,10 @@ export function MonitoringScreen({ activityId }: { activityId: string }) {
       activity={activity}
       cancelHref={returnPath}
       choices={choices}
+      onSaved={() => {
+        setSaved(true);
+        finish('Monitoreo registrado');
+      }}
       pests={pests}
       rejected={queued}
       today={today}

@@ -85,7 +85,7 @@ export function CompletionScreen({ activityId }: { activityId: string }) {
         description={
           done
             ? 'Una actividad realizada no se modifica.'
-            : 'El registro del monitoreo se habilita con el módulo de sanidad.'
+            : 'Un monitoreo se registra con su resultado: ábrelo en Actividades y elige Registrar monitoreo.'
         }
         title={
           done

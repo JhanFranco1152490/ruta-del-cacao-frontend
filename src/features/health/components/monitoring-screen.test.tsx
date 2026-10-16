@@ -26,7 +26,15 @@ import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
-import { enqueueMonitoring } from '../monitoring-queue';
+import { getOfflineDb } from '@/lib/offline/db';
+import { clearAdapters, registerAdapter } from '@/lib/offline/sync-queue';
+
+import {
+  enqueueMonitoring,
+  getQueuedMonitoring,
+  monitoringQueueId,
+} from '../monitoring-queue';
+import { monitoringSyncAdapter } from '../monitoring-sync-adapter';
 vi.mock(
   'next/navigation',
   async () => (await import('@/test/router')).navigation,
@@ -107,7 +115,9 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  clearAdapters();
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 function renderScreen(user: Parameters<typeof buildSession>[0] = {}) {
@@ -436,6 +446,207 @@ describe('MonitoringScreen', () => {
       expect(
         within(controlOf(2)).getByText('Elige el responsable'),
       ).toBeVisible();
+    });
+  });
+
+  describe('saving', () => {
+    // Llena una planilla con Monilia en 12 de 50 árboles, quitada en el momento.
+    async function fillMonilia() {
+      await sheet();
+      await userEvent.type(screen.getByLabelText('Unidades evaluadas'), '50');
+      await choosePest(1, 'moni', /^Monilia/);
+      await userEvent.type(
+        within(detection(1)).getByLabelText('Árboles afectados'),
+        '12',
+      );
+      await userEvent.click(
+        within(detection(1)).getByRole('radio', {
+          name: 'Lo hice en este momento',
+        }),
+      );
+      await userEvent.selectOptions(
+        within(detection(1)).getByLabelText('¿Qué hiciste?'),
+        'fruit_removal',
+      );
+    }
+    const confirmDialog = () =>
+      screen.findByRole('dialog', { name: '¿Registrar este monitoreo?' });
+
+    it('says what is going to be registered before saving it', async () => {
+      renderScreen();
+      await fillMonilia();
+
+      await userEvent.click(await sheet());
+
+      const dialog = await confirmDialog();
+      expect(dialog).toHaveTextContent(
+        'P-03 · 22 de octubre · 50 árboles evaluados',
+      );
+      expect(dialog).toHaveTextContent('Monilia: 12 árboles · 24 %');
+      expect(dialog).toHaveTextContent(
+        'Control: remoción de frutos enfermos (hecho)',
+      );
+      expect(dialog).toHaveTextContent('Después no se podrá modificar.');
+      expect(await getQueuedMonitoring(userId, 'a1')).toBeNull();
+    });
+
+    it('goes back from the summary keeping what was written', async () => {
+      renderScreen();
+      await fillMonilia();
+      await userEvent.click(await sheet());
+
+      await userEvent.click(
+        within(await confirmDialog()).getByRole('button', { name: 'Volver' }),
+      );
+
+      expect(screen.getByLabelText('Unidades evaluadas')).toHaveValue('50');
+      expect(await getQueuedMonitoring(userId, 'a1')).toBeNull();
+    });
+
+    it('saves the result in the device, goes back and says so', async () => {
+      renderScreen();
+      await fillMonilia();
+      await userEvent.click(await sheet());
+
+      await userEvent.click(
+        within(await confirmDialog()).getByRole('button', {
+          name: 'Guardar monitoreo',
+        }),
+      );
+
+      expect(await screen.findByText('Monitoreo registrado')).toBeVisible();
+      expect(router.replace).toHaveBeenCalledWith('/actividades');
+      const queued = await getQueuedMonitoring(userId, 'a1');
+      expect(queued?.label).toBe('P-03 · 22 de octubre');
+      expect(queued?.request).toMatchObject({
+        done_date: '2026-10-22',
+        sampling_unit: 'trees',
+        evaluated_units: 50,
+        no_presence: false,
+        detections: [
+          {
+            pest_disease_id: 'monilia',
+            affected_units: 12,
+            control: { mode: 'done', method: 'fruit_removal', inputs: [] },
+            control_requested: false,
+          },
+        ],
+        captured_at: NOW.toISOString(),
+      });
+    });
+
+    it('sends it to the server when there is a connection', async () => {
+      const received: unknown[] = [];
+      server.use(
+        http.post(
+          apiUrl('/api/agricultural-activities/a1/monitoring'),
+          async ({ request }) => {
+            received.push(await request.json());
+            return HttpResponse.json(
+              buildAgriculturalActivity({ status: 'done' }),
+              { status: 201 },
+            );
+          },
+        ),
+      );
+      registerAdapter(monitoringSyncAdapter);
+      renderScreen();
+      await sheet();
+      await userEvent.type(screen.getByLabelText('Unidades evaluadas'), '30');
+      await userEvent.click(
+        screen.getByRole('checkbox', {
+          name: 'Sin presencia de plagas ni enfermedades',
+        }),
+      );
+      await userEvent.click(await sheet());
+      await userEvent.click(
+        within(await confirmDialog()).getByRole('button', {
+          name: 'Guardar monitoreo',
+        }),
+      );
+
+      await waitFor(() => expect(received).toHaveLength(1));
+      expect(received[0]).toMatchObject({
+        evaluated_units: 30,
+        no_presence: true,
+        detections: [],
+      });
+      await waitFor(async () =>
+        expect(await getQueuedMonitoring(userId, 'a1')).toBeNull(),
+      );
+    });
+
+    it('says that the record stays in the phone without a connection', async () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      renderScreen();
+
+      expect(
+        await screen.findByRole('button', { name: 'Guardar en el teléfono' }),
+      ).toBeEnabled();
+    });
+
+    it('opens what the server rejected, asks to choose again the pest that is gone and sends the correction', async () => {
+      await enqueueMonitoring(userId, 'a1', {
+        request: {
+          done_date: '2026-10-21',
+          sampling_unit: 'trees',
+          evaluated_units: 50,
+          no_presence: false,
+          detections: [
+            {
+              id: 'd1',
+              pest_disease_id: 'gone',
+              other_description: null,
+              affected_units: 12,
+              control: null,
+              control_requested: false,
+            },
+          ],
+        },
+        label: 'P-03 · 21 de octubre',
+      });
+      await getOfflineDb(userId).queue.update(monitoringQueueId('a1'), {
+        status: 'error',
+        errorCode: 'pest_disease_inactive',
+        errorMessage: 'Una plaga o enfermedad ya no está activa.',
+        errorData: { pest_disease_ids: ['gone'] },
+      });
+      renderScreen();
+
+      expect(
+        await screen.findByRole('heading', { name: 'Corregir monitoreo' }),
+      ).toBeVisible();
+      expect(screen.getAllByRole('alert')[0]).toHaveTextContent(
+        'No se pudo sincronizar: Una plaga o enfermedad ya no está activa.',
+      );
+      const pest = within(detection(1)).getByRole('combobox', {
+        name: 'Plaga o enfermedad',
+      });
+      await waitFor(() =>
+        expect(pest).toHaveAccessibleDescription(
+          'Esta plaga o enfermedad ya no está activa. Elige otra.',
+        ),
+      );
+      expect(
+        within(detection(1)).getByLabelText('Árboles afectados'),
+      ).toHaveValue('12');
+
+      await choosePest(1, 'trips', /^Trips/);
+      await userEvent.click(await sheet());
+      await userEvent.click(
+        within(await confirmDialog()).getByRole('button', {
+          name: 'Guardar monitoreo',
+        }),
+      );
+
+      await waitFor(async () =>
+        expect(await getQueuedMonitoring(userId, 'a1')).toMatchObject({
+          status: 'pending',
+          request: {
+            detections: [{ id: 'd1', pest_disease_id: 'trips' }],
+          },
+        }),
+      );
     });
   });
 

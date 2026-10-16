@@ -111,6 +111,22 @@ describe('monitoringSyncAdapter.parseConflict', () => {
     });
   });
 
+  it('keeps the inputs that are no longer active, to choose others when correcting', () => {
+    expect(
+      conflict(
+        apiError(422, {
+          code: 'input_inactive',
+          detail: 'Este insumo ya no está disponible.',
+          input_ids: ['copper'],
+        }),
+      ),
+    ).toEqual({
+      code: 'input_inactive',
+      message: 'Este insumo ya no está disponible.',
+      data: { input_ids: ['copper'] },
+    });
+  });
+
   it('keeps the fields that the server did not accept', () => {
     expect(
       conflict(
@@ -146,6 +162,7 @@ describe('isCorrectableMonitoringError', () => {
   it('is what the person can fix by opening what was captured', () => {
     expect(isCorrectableMonitoringError('pest_disease_inactive')).toBe(true);
     expect(isCorrectableMonitoringError('validation_error')).toBe(true);
+    expect(isCorrectableMonitoringError('input_inactive')).toBe(true);
   });
 
   it('is not what only can be discarded', () => {

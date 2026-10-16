@@ -57,10 +57,13 @@ const STATUS_NOTE_CLASS =
 
 export function ActivityCalendarScreen({
   closingResources,
+  monitoringHref,
 }: {
   // Los recursos de otros dominios que, en la cola, cierran una actividad (el resultado de un
   // monitoreo): mientras esperan conexión, la actividad se ve realizada.
   closingResources?: readonly string[];
+  // La pantalla donde se registra el resultado de un monitoreo, que es de otro dominio.
+  monitoringHref?: (activityId: string) => string;
 } = {}) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
@@ -318,6 +321,7 @@ export function ActivityCalendarScreen({
           items={filtered}
           offline={offline}
           currentMonth={month}
+          monitoringHref={monitoringHref}
           onGoToMonth={inMonthView ? goToMonth : undefined}
           onPending={setPending}
           pending={pending}

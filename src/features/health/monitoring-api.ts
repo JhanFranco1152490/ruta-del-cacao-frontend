@@ -8,6 +8,7 @@ type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 export const HEALTH_ERROR = {
   alreadyDone: 'activity_already_done',
   pestDiseaseInactive: 'pest_disease_inactive',
+  inputInactive: 'input_inactive',
   notAMonitoring: 'not_a_monitoring',
 } as const;
 

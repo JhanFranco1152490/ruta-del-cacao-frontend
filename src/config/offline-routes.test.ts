@@ -37,6 +37,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
+  it('saves the screen that records the result of a monitoring in the field', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/sanidad/monitoreo');
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });

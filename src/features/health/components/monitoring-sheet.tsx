@@ -1,8 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ReactNode, useMemo } from 'react';
-import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import { type ReactNode, useEffect, useMemo } from 'react';
+import {
+  type FieldPath,
+  FormProvider,
+  useForm,
+  useWatch,
+} from 'react-hook-form';
 
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FormSection } from '@/components/form-section';
@@ -35,6 +40,7 @@ export function MonitoringSheet({
   onSubmit,
   secondaryAction,
   choices,
+  initialErrors = [],
 }: {
   // Cuándo se programó el monitoreo: la fecha de realización no puede ser anterior.
   scheduledAt: string;
@@ -48,6 +54,11 @@ export function MonitoringSheet({
   secondaryAction?: ReactNode;
   // Lo que ofrece el control de cada detección, salvo la fecha de hoy, que ya llega aparte.
   choices: Omit<ControlChoices, 'today'>;
+  // Lo que hay que volver a elegir al abrir una corrección (una plaga que ya no está activa).
+  initialErrors?: readonly {
+    name: FieldPath<MonitoringFormInput>;
+    message: string;
+  }[];
 }) {
   const schema = useMemo(
     () => createMonitoringSchema({ today, scheduledAt }),
@@ -68,6 +79,13 @@ export function MonitoringSheet({
     [choices, today],
   );
   const noPresence = useWatch({ control, name: 'no_presence' });
+  // Solo al abrir: después cada campo se valida con su regla.
+  useEffect(() => {
+    for (const { name, message } of initialErrors) {
+      form.setError(name, { type: 'manual', message });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <FormProvider {...form}>

@@ -13,8 +13,9 @@ export type ActivityActions = {
   edit: boolean;
   complete: boolean;
   remove: boolean;
-  // Un monitoreo sin registrar: quien podría registrarlo ve por qué no tiene el botón.
-  awaitsHealthModule: boolean;
+  // Un monitoreo sin registrar se cierra con su resultado, en su propia pantalla, y no con la
+  // realización.
+  recordMonitoring: boolean;
 };
 
 // Lo que esta persona puede hacer con una actividad: lo que permite su estado y, de eso, lo que
@@ -32,7 +33,7 @@ export function activityActions(
       edit: false,
       complete: false,
       remove: false,
-      awaitsHealthModule: false,
+      recordMonitoring: false,
     };
   }
   const mayComplete =
@@ -43,7 +44,7 @@ export function activityActions(
     complete: canComplete(state, type) && mayComplete,
     remove:
       canDelete(state) && hasPermission(user, PERMISSIONS.ACTIVITIES_DELETE),
-    awaitsHealthModule:
+    recordMonitoring:
       type === 'phytosanitary_monitoring' && state !== 'done' && mayComplete,
   };
 }

@@ -15,10 +15,12 @@ export const MONITORING_DELETED_MESSAGE = 'Este monitoreo ya no existe.';
 export const MONITORING_ALREADY_DONE_MESSAGE =
   'Este monitoreo ya fue registrado por otra persona.';
 
-// Lo que la persona puede arreglar reabriendo lo capturado: una plaga que dejó de estar activa o
-// un dato que el servidor no aceptó. Lo demás no mejora corrigiendo: solo se descarta.
+// Lo que la persona puede arreglar reabriendo lo capturado: una plaga o un insumo que dejó de estar
+// activo, o un dato que el servidor no aceptó. Lo demás no mejora corrigiendo: solo se descarta.
 export const isCorrectableMonitoringError = (code: string | undefined) =>
-  code === HEALTH_ERROR.pestDiseaseInactive || code === VALIDATION_ERROR_CODE;
+  code === HEALTH_ERROR.pestDiseaseInactive ||
+  code === HEALTH_ERROR.inputInactive ||
+  code === VALIDATION_ERROR_CODE;
 
 export const monitoringSyncAdapter: SyncAdapter = {
   resource: MONITORING_RESOURCE,
@@ -61,6 +63,14 @@ export const monitoringSyncAdapter: SyncAdapter = {
         code: error.code,
         message: error.message,
         data: { pest_disease_ids: error.body.pest_disease_ids ?? [] },
+      };
+    }
+    // Un insumo de un control hecho en el momento, o el previsto de uno programado.
+    if (error.code === HEALTH_ERROR.inputInactive) {
+      return {
+        code: error.code,
+        message: error.message,
+        data: { input_ids: error.body.input_ids ?? [] },
       };
     }
     return {

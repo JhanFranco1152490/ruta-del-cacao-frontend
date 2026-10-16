@@ -30,6 +30,7 @@ export function ActivityDialogs({
   currentMonth,
   onGoToMonth,
   onPending,
+  monitoringHref,
 }: {
   pending: PendingDialog | undefined;
   // Las actividades que se ven, con su estado de hoy.
@@ -42,6 +43,8 @@ export function ActivityDialogs({
   // Solo en la vista de mes; en las demás no hay a dónde ir.
   onGoToMonth?: (month: string) => void;
   onPending: (pending: PendingDialog | undefined) => void;
+  // La pantalla donde se registra el resultado de un monitoreo, si la página la entrega.
+  monitoringHref?: (activityId: string) => string;
 }) {
   const close = () => onPending(undefined);
   const saved = (message: string, isoDate: string) => {
@@ -136,6 +139,7 @@ export function ActivityDialogs({
     <ActivityDetailDialog
       completeHref={activityCompletionPath(id)}
       item={item}
+      monitoringHref={monitoringHref?.(id)}
       offline={offline}
       onClose={close}
       onDelete={() => onPending({ kind: 'delete', id })}

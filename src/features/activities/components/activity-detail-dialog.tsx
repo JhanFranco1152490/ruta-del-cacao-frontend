@@ -46,6 +46,7 @@ export function ActivityDetailDialog({
   onClose,
   onEdit,
   completeHref,
+  monitoringHref,
   onDelete,
 }: {
   item: ActivityOfDay;
@@ -56,6 +57,8 @@ export function ActivityDetailDialog({
   onEdit?: () => void;
   // La pantalla donde se registra la realización: es otra página, que abre también sin conexión.
   completeHref?: string;
+  // La pantalla donde se registra el resultado de un monitoreo: la entrega quien une los dominios.
+  monitoringHref?: string;
   onDelete?: () => void;
 }) {
   const { data: user } = useSession();
@@ -133,12 +136,6 @@ export function ActivityDetailDialog({
             Una actividad realizada no se modifica.
           </p>
         )}
-        {actions.awaitsHealthModule && (
-          <p className="flex items-center gap-2 text-sm font-bold text-foreground">
-            <Info aria-hidden="true" className="size-4 shrink-0" />
-            El registro del monitoreo se habilita con el módulo de sanidad
-          </p>
-        )}
         {onlineOnly && (
           <p
             className="flex items-center gap-2 text-sm text-muted-foreground"
@@ -177,6 +174,10 @@ export function ActivityDetailDialog({
           {actions.complete && completeHref ? (
             <EditorLink className={buttonVariants()} href={completeHref}>
               <Check aria-hidden="true" /> Registrar realización
+            </EditorLink>
+          ) : actions.recordMonitoring && monitoringHref ? (
+            <EditorLink className={buttonVariants()} href={monitoringHref}>
+              <Check aria-hidden="true" /> Registrar monitoreo
             </EditorLink>
           ) : (
             <Button onClick={onClose} variant="outline">
