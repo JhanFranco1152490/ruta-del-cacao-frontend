@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReactNode, useMemo } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FormSection } from '@/components/form-section';
@@ -17,6 +17,7 @@ import {
   NOTES_MAX_LENGTH,
 } from '../monitoring-schema';
 import type { PestDisease } from '../pest-api';
+import { type ControlChoices, ControlChoicesContext } from './control-choices';
 import { DetectionsSection } from './detections-section';
 import { SamplingFields } from './sampling-fields';
 
@@ -33,6 +34,7 @@ export function MonitoringSheet({
   blockedMessage,
   onSubmit,
   secondaryAction,
+  choices,
 }: {
   // Cuándo se programó el monitoreo: la fecha de realización no puede ser anterior.
   scheduledAt: string;
@@ -44,83 +46,94 @@ export function MonitoringSheet({
   blockedMessage?: string | null;
   onSubmit: (values: MonitoringFormValues) => void;
   secondaryAction?: ReactNode;
+  // Lo que ofrece el control de cada detección, salvo la fecha de hoy, que ya llega aparte.
+  choices: Omit<ControlChoices, 'today'>;
 }) {
   const schema = useMemo(
     () => createMonitoringSchema({ today, scheduledAt }),
     [today, scheduledAt],
   );
+  const form = useForm<MonitoringFormInput, unknown, MonitoringFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues,
+  });
   const {
     control,
     register,
     handleSubmit,
     formState: { errors, submitCount, isValid },
-  } = useForm<MonitoringFormInput, unknown, MonitoringFormValues>({
-    resolver: zodResolver(schema),
-    defaultValues,
-  });
+  } = form;
+  const controlChoices = useMemo(
+    () => ({ ...choices, today }),
+    [choices, today],
+  );
   const noPresence = useWatch({ control, name: 'no_presence' });
 
   return (
-    <form
-      className="space-y-6"
-      noValidate
-      onSubmit={(event) => void handleSubmit(onSubmit)(event)}
-    >
-      {submitCount > 0 && !isValid && (
-        <p
-          className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-          role="alert"
+    <FormProvider {...form}>
+      <ControlChoicesContext value={controlChoices}>
+        <form
+          className="space-y-6"
+          noValidate
+          onSubmit={(event) => void handleSubmit(onSubmit)(event)}
         >
-          Revisa los datos marcados antes de guardar.
-        </p>
-      )}
-      <SamplingFields
-        control={control}
-        disabled={isSaving}
-        errors={errors}
-        register={register}
-        today={today}
-      />
-      {!noPresence && (
-        <DetectionsSection
-          control={control}
-          disabled={isSaving}
-          errors={errors}
-          pests={pests}
-          register={register}
-        />
-      )}
-      <FormSection title="Observaciones">
-        <TextAreaField
-          disabled={isSaving}
-          error={errors.notes?.message}
-          hint="Lo que no cabe en números. Por ejemplo, un foco de infección en la zona baja."
-          label="Observaciones (opcional)"
-          maxLength={NOTES_MAX_LENGTH}
-          {...register('notes')}
-        />
-      </FormSection>
-      <div className="space-y-4">
-        {blockedMessage && (
-          <p className="font-bold text-warn" id="monitoring-save-blocked">
-            {blockedMessage}
-          </p>
-        )}
-        <MobileActionBar>
-          <Button
-            aria-describedby={
-              blockedMessage ? 'monitoring-save-blocked' : undefined
-            }
-            className={CAPTURE_BUTTON_CLASS}
-            disabled={isSaving || !!blockedMessage}
-            size="office"
-            type="submit"
-          >
-            {isSaving ? 'Guardando…' : submitLabel}
-          </Button>
-          {secondaryAction}
-        </MobileActionBar>
-      </div>
-    </form>
+          {submitCount > 0 && !isValid && (
+            <p
+              className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
+              role="alert"
+            >
+              Revisa los datos marcados antes de guardar.
+            </p>
+          )}
+          <SamplingFields
+            control={control}
+            disabled={isSaving}
+            errors={errors}
+            register={register}
+            today={today}
+          />
+          {!noPresence && (
+            <DetectionsSection
+              control={control}
+              disabled={isSaving}
+              errors={errors}
+              pests={pests}
+              register={register}
+            />
+          )}
+          <FormSection title="Observaciones">
+            <TextAreaField
+              disabled={isSaving}
+              error={errors.notes?.message}
+              hint="Lo que no cabe en números. Por ejemplo, un foco de infección en la zona baja."
+              label="Observaciones (opcional)"
+              maxLength={NOTES_MAX_LENGTH}
+              {...register('notes')}
+            />
+          </FormSection>
+          <div className="space-y-4">
+            {blockedMessage && (
+              <p className="font-bold text-warn" id="monitoring-save-blocked">
+                {blockedMessage}
+              </p>
+            )}
+            <MobileActionBar>
+              <Button
+                aria-describedby={
+                  blockedMessage ? 'monitoring-save-blocked' : undefined
+                }
+                className={CAPTURE_BUTTON_CLASS}
+                disabled={isSaving || !!blockedMessage}
+                size="office"
+                type="submit"
+              >
+                {isSaving ? 'Guardando…' : submitLabel}
+              </Button>
+              {secondaryAction}
+            </MobileActionBar>
+          </div>
+        </form>
+      </ControlChoicesContext>
+    </FormProvider>
   );
 }

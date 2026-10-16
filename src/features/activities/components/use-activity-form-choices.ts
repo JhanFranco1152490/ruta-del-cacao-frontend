@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 
 import { useSession } from '@/hooks/use-session';
+import { useActivityAssignees } from '@/lib/api/activity-assignees';
 import { FARM_OPTIONS_SIZE, useFarmOptions } from '@/lib/api/farm-options';
 import { assignableIn } from '@/lib/assignable-accounts';
 import { PLOT_OPTIONS_SIZE, usePlotOptions } from '@/lib/api/plot-options';
@@ -12,7 +13,7 @@ import {
   ACTIVITY_TYPE_OPTIONS,
   SCHEDULABLE_ACTIVITY_TYPE_OPTIONS,
 } from '../activity-labels';
-import { type AgriculturalActivity, useActivityAssignees } from '../api';
+import type { AgriculturalActivity } from '../api';
 import { assigneeNote } from '../assignees';
 import {
   type ChoiceList,

@@ -16,6 +16,7 @@ import { emptyMonitoringForm } from '../monitoring-form';
 import type { QueuedMonitoring } from '../monitoring-queue';
 import type { MonitoringFormValues } from '../monitoring-schema';
 import type { PestDisease } from '../pest-api';
+import type { ControlChoices } from './control-choices';
 import { MonitoringActivityCard } from './monitoring-activity-card';
 import { MonitoringSheet } from './monitoring-sheet';
 
@@ -29,6 +30,7 @@ export function MonitoringCapture({
   rejected,
   pests,
   cancelHref,
+  choices,
   onSubmit = () => undefined,
 }: {
   activity: AgriculturalActivity;
@@ -37,6 +39,7 @@ export function MonitoringCapture({
   pests: readonly PestDisease[] | undefined;
   // A dónde lleva Cancelar: la pantalla desde la que se abrió la captura.
   cancelHref: string;
+  choices: Omit<ControlChoices, 'today'>;
   onSubmit?: (values: MonitoringFormValues) => void;
 }) {
   const sync = useCaptureSyncStatus('monitoreos');
@@ -82,6 +85,7 @@ export function MonitoringCapture({
         <MonitoringActivityCard activity={activity} />
         <MonitoringSheet
           blockedMessage={sync.blockedMessage}
+          choices={choices}
           defaultValues={defaultValues}
           isSaving={false}
           onSubmit={onSubmit}

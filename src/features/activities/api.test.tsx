@@ -6,13 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
 import { getOfflineDb } from '@/lib/offline/db';
+import { apiError, buildAgriculturalActivity } from '@/test/factories';
 import {
-  apiError,
-  buildAgriculturalActivity,
-  buildAssignee,
-} from '@/test/factories';
-import {
-  activityAssigneesHandler,
   agriculturalActivitiesHandler,
   apiUrl,
   pendingActivitiesHandler,
@@ -20,11 +15,7 @@ import {
 import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
 
-import {
-  useActivitiesOfMonth,
-  useActivityAssignees,
-  usePendingActivities,
-} from './api';
+import { useActivitiesOfMonth, usePendingActivities } from './api';
 
 function wrapperFor(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -265,51 +256,6 @@ describe('useActivitiesOfMonth', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiError);
-  });
-});
-
-describe('useActivityAssignees', () => {
-  it('reads the accounts of the own producer and keeps a copy', async () => {
-    const userId = newUser();
-    const requests: URLSearchParams[] = [];
-    server.use(activityAssigneesHandler([buildAssignee()], requests));
-
-    const { result } = render(() => useActivityAssignees(userId, null));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(requests[0].toString()).toBe('');
-    expect(result.current.data?.data).toEqual([buildAssignee()]);
-    expect(
-      await getOfflineDb(userId).cache.get('agricultural-activity-assignees'),
-    ).toBeDefined();
-  });
-
-  it('asks for the chosen producer and keeps its copy apart', async () => {
-    const userId = newUser();
-    const requests: URLSearchParams[] = [];
-    server.use(activityAssigneesHandler([], requests));
-
-    const { result } = render(() => useActivityAssignees(userId, 'p2'));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(requests[0].get('producer')).toBe('p2');
-    expect(
-      await getOfflineDb(userId).cache.get(
-        'agricultural-activity-assignees:producer:p2',
-      ),
-    ).toBeDefined();
-  });
-
-  it('asks for nothing while it is turned off', () => {
-    const requests: URLSearchParams[] = [];
-    server.use(activityAssigneesHandler([], requests));
-
-    const { result } = render(() =>
-      useActivityAssignees(newUser(), null, { enabled: false }),
-    );
-
-    expect(result.current.fetchStatus).toBe('idle');
-    expect(requests).toHaveLength(0);
   });
 });
 

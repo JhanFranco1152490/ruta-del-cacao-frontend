@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useSession } from '@/hooks/use-session';
+import { useActivityAssignees } from '@/lib/api/activity-assignees';
 import { formatMonthYear } from '@/lib/format/dates';
 import { onlyFarmOf } from '@/lib/farm-scope';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -24,7 +25,6 @@ import {
 } from '../activity-filters';
 import { summarizeActivities } from '../activity-summary';
 import { isPeriodView } from '../activity-view';
-import { useActivityAssignees } from '../api';
 import { AssigneesContext } from '../assignees';
 import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';

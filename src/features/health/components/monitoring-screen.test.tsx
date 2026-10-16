@@ -10,11 +10,18 @@ import { PERMISSIONS } from '@/lib/permissions';
 import {
   apiError,
   buildAgriculturalActivity,
+  buildAgriculturalInput,
   buildAssignee,
   buildPestDisease,
   buildSession,
 } from '@/test/factories';
-import { apiUrl, pestsDiseasesHandler } from '@/test/handlers';
+import {
+  activityAssigneesHandler,
+  agriculturalInputsHandler,
+  apiUrl,
+  inputStocksHandler,
+  pestsDiseasesHandler,
+} from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
@@ -44,6 +51,14 @@ const trips = buildPestDisease({
   description: 'Raspan el envés de las hojas.',
 });
 
+const copper = buildAgriculturalInput({
+  id: 'copper',
+  name: 'Óxido de cobre',
+  unit: 'kg',
+  package_type: null,
+  package_size: null,
+});
+
 let userId: string;
 
 const activityHandler = (overrides: Partial<AgriculturalActivity> = {}) =>
@@ -69,7 +84,26 @@ beforeEach(async () => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
   await recordLogin(userId);
-  server.use(activityHandler(), pestsDiseasesHandler([monilia, trips]));
+  server.use(
+    activityHandler(),
+    pestsDiseasesHandler([monilia, trips]),
+    agriculturalInputsHandler([copper]),
+    inputStocksHandler([]),
+    activityAssigneesHandler([
+      buildAssignee({
+        id: 'u-foreman',
+        full_name: 'Carlos Rincón',
+        all_farms: false,
+        farm_ids: ['f1'],
+      }),
+      buildAssignee({
+        id: 'u-elsewhere',
+        full_name: 'Cuenta de otra finca',
+        all_farms: false,
+        farm_ids: ['f2'],
+      }),
+    ]),
+  );
 });
 
 afterEach(() => {
@@ -276,6 +310,133 @@ describe('MonitoringScreen', () => {
     expect(
       screen.getByText(/Necesitas conexión una vez para cargar las plagas/),
     ).toBeInTheDocument();
+  });
+
+  describe('the control of each detection', () => {
+    const controlOf = (number: number) =>
+      within(detection(number)).getByRole('group', { name: 'Control' });
+    const chooseControl = (number: number, name: string) =>
+      userEvent.click(within(controlOf(number)).getByRole('radio', { name }));
+
+    it('starts with no control for now', async () => {
+      renderScreen();
+      await sheet();
+
+      expect(
+        within(controlOf(1)).getByRole('radio', { name: 'Ninguno por ahora' }),
+      ).toBeChecked();
+      expect(within(controlOf(1)).queryByLabelText('¿Qué hiciste?')).toBeNull();
+    });
+
+    it('asks what was done in the moment and the inputs used', async () => {
+      renderScreen();
+      await sheet();
+
+      await chooseControl(1, 'Lo hice en este momento');
+
+      const control = controlOf(1);
+      expect(within(control).getByLabelText('¿Qué hiciste?')).toBeVisible();
+      expect(
+        within(control).getByRole('button', { name: 'Agregar insumo' }),
+      ).toBeEnabled();
+      await userEvent.selectOptions(
+        within(control).getByLabelText('¿Qué hiciste?'),
+        'other',
+      );
+      expect(
+        within(control).getByLabelText('Escribe qué hiciste'),
+      ).toBeVisible();
+    });
+
+    it('asks the date, the assignee of the farm and the optional plan for later', async () => {
+      renderScreen();
+      await sheet();
+
+      await chooseControl(1, 'Programarlo para después');
+
+      const control = controlOf(1);
+      expect(within(control).getByLabelText('Fecha programada')).toBeVisible();
+      expect(
+        within(control).getByLabelText('¿Qué se va a hacer? (opcional)'),
+      ).toBeVisible();
+      await userEvent.click(
+        within(control).getByRole('combobox', { name: 'Responsable' }),
+      );
+      // Solo quien trabaja en la finca de la parcela.
+      expect(
+        (await screen.findAllByRole('option')).map((o) => o.textContent),
+      ).toEqual(['Carlos Rincón']);
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(
+        within(control).getByRole('combobox', {
+          name: 'Insumo previsto (opcional)',
+        }),
+      );
+      expect(
+        await screen.findByRole('option', { name: 'Óxido de cobre' }),
+      ).toBeVisible();
+    });
+
+    it('lets who cannot schedule only ask for it to be scheduled', async () => {
+      renderScreen({
+        id: 'u-foreman',
+        permissions: [
+          PERMISSIONS.ACTIVITIES_VIEW,
+          PERMISSIONS.ACTIVITIES_COMPLETE,
+        ],
+        all_farms: false,
+        farms: [{ id: 'f1', name: 'Finca de prueba', is_active: true }],
+      });
+      await sheet();
+
+      await chooseControl(1, 'Programarlo para después');
+
+      const control = controlOf(1);
+      expect(control).toHaveTextContent(
+        'El Productor o el Capataz de la finca lo van a programar.',
+      );
+      expect(within(control).queryByLabelText('Fecha programada')).toBeNull();
+      expect(
+        within(control).queryByRole('combobox', { name: 'Responsable' }),
+      ).toBeNull();
+    });
+
+    it('starts clean when changing the option', async () => {
+      renderScreen();
+      await sheet();
+
+      await chooseControl(1, 'Lo hice en este momento');
+      await userEvent.selectOptions(
+        within(controlOf(1)).getByLabelText('¿Qué hiciste?'),
+        'fruit_removal',
+      );
+      await chooseControl(1, 'Programarlo para después');
+      await chooseControl(1, 'Lo hice en este momento');
+
+      expect(within(controlOf(1)).getByLabelText('¿Qué hiciste?')).toHaveValue(
+        '',
+      );
+    });
+
+    it('marks what each option is missing', async () => {
+      renderScreen();
+      await sheet();
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Agregar detección' }),
+      );
+
+      await chooseControl(1, 'Lo hice en este momento');
+      await chooseControl(2, 'Programarlo para después');
+      await userEvent.click(await sheet());
+
+      expect(
+        await within(controlOf(1)).findByText('Indica qué hiciste'),
+      ).toBeVisible();
+      expect(within(controlOf(2)).getByText('Indica la fecha')).toBeVisible();
+      expect(
+        within(controlOf(2)).getByText('Elige el responsable'),
+      ).toBeVisible();
+    });
   });
 
   describe('what cannot be recorded here', () => {

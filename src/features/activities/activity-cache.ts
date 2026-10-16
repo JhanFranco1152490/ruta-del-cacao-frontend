@@ -20,11 +20,6 @@ export const pendingCacheKey = (producer: string | null) =>
     ? `${MONTH_KEY_PREFIX}producer:${producer}:pending`
     : `${MONTH_KEY_PREFIX}pending`;
 
-export const assigneesCacheKey = (producer: string | null) =>
-  producer
-    ? `agricultural-activity-assignees:producer:${producer}`
-    : 'agricultural-activity-assignees';
-
 // Los meses que se guardan siempre para trabajar en campo sin conexión: desde el anterior al actual
 // hasta dos después. Así quien sale sin señal lleva las labores que va a cerrar, sin haber abierto
 // antes cada mes en el calendario. `today` es la fecha de Bogotá (yyyy-MM-dd).

@@ -25,6 +25,7 @@ import {
   type MonitoringFormValues,
 } from '../monitoring-schema';
 import type { PestDisease } from '../pest-api';
+import { DetectionControl } from './detection-control';
 import { PestPicker } from './pest-picker';
 
 // Una detección: qué se encontró y en cuántas unidades, con la incidencia mientras se escribe. El
@@ -114,6 +115,7 @@ export function DetectionCard({
       <p aria-live="polite" className="text-base font-bold text-selva">
         {incidence ? `Incidencia: ${incidence}` : ''}
       </p>
+      <DetectionControl disabled={disabled} index={index} />
     </li>
   );
 }

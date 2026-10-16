@@ -15,7 +15,6 @@ import { readThroughCache } from '@/lib/offline/cached-read';
 import { PENDING_FETCH_DAYS } from './activity-pending';
 import {
   activityMonthCacheKey,
-  assigneesCacheKey,
   offlineWindowMonths,
   pendingCacheKey,
 } from './activity-cache';
@@ -23,9 +22,6 @@ import {
 type Schemas = components['schemas'];
 export type AgriculturalActivity = Schemas['AgriculturalActivity'];
 export type Assignee = Schemas['Assignee'];
-// Una cuenta de la lista de responsables: con la finca en la que trabaja (nula en el Productor,
-// que vale para todas) y si quien pregunta puede asignarle una labor.
-export type AssigneeOption = Schemas['AssigneeOption'];
 export type UsedInput = Schemas['UsedInputOutput'];
 export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
 export type ActivityUpdateRequest = Schemas['PatchedActivityUpdateRequest'];
@@ -159,35 +155,6 @@ export const usePendingActivities = (
           { through: pendingLimit(today), producer },
           signal,
         ),
-      ),
-    enabled: enabled && !!userId,
-    networkMode: 'offlineFirst',
-  });
-
-export async function fetchActivityAssignees(
-  { producer }: { producer: string | null },
-  signal?: AbortSignal,
-): Promise<AssigneeOption[]> {
-  const suffix = producer ? `?${new URLSearchParams({ producer })}` : '';
-  const { results } = await apiFetch<Schemas['AssigneeList']>(
-    `/api/agricultural-activities/assignees${suffix}`,
-    { signal },
-  );
-  return results;
-}
-
-// Las cuentas del productor, activas e inactivas: las inactivas siguen apareciendo en sus
-// actividades, pero el formulario solo ofrece las activas. Con copia en el dispositivo.
-export const useActivityAssignees = (
-  userId: string | undefined,
-  producer: string | null,
-  { enabled = true } = {},
-) =>
-  useQuery({
-    queryKey: queryKeys.agriculturalActivities.assignees(producer),
-    queryFn: ({ signal }) =>
-      readThroughCache(userId!, assigneesCacheKey(producer), () =>
-        fetchActivityAssignees({ producer }, signal),
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',

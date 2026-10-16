@@ -57,7 +57,7 @@ export function MonitoringScreen({ activityId }: { activityId: string }) {
   }
 
   if (notYours) return null;
-  const { activity, queued, pests } = sources;
+  const { activity, queued, pests, choices } = sources;
   if (activity.activity_type !== 'phytosanitary_monitoring') {
     return <PageNotice title="Esta actividad no es un monitoreo." />;
   }
@@ -84,6 +84,7 @@ export function MonitoringScreen({ activityId }: { activityId: string }) {
     <MonitoringCapture
       activity={activity}
       cancelHref={returnPath}
+      choices={choices}
       pests={pests}
       rejected={queued}
       today={today}
