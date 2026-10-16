@@ -41,6 +41,12 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/sanidad/monitoreo');
   });
 
+  it('saves the history of a plot, read from the device copy, and the health section, that must open to say it needs a connection', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toEqual(
+      expect.arrayContaining(['/parcelas/historial-fitosanitario', '/sanidad']),
+    );
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });
