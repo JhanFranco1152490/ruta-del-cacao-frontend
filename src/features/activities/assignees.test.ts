@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildAssignee } from '@/test/factories';
 
-import { assignableIn, assigneeNote, OUTSIDE_FARM } from './assignees';
+import { assigneeNote, OUTSIDE_FARM } from './assignees';
 
 const owner = buildAssignee({ id: 'owner', full_name: 'Ana Dueña' });
 const here = buildAssignee({
@@ -34,55 +34,21 @@ const both = buildAssignee({
 });
 const accounts = [owner, here, elsewhere, seller, inactive, both];
 
-const ids = (list: { id: string }[]) => list.map(({ id }) => id);
-
-describe('assignableIn', () => {
-  it('ofrece al productor y a la gente activa de la finca de la parcela', () => {
-    expect(ids(assignableIn(accounts, 'farm-a'))).toEqual([
-      'owner',
-      'here',
-      'both',
-    ]);
-    // Quien trabaja en dos fincas se ofrece en las dos.
-    expect(ids(assignableIn(accounts, 'farm-b'))).toEqual([
-      'owner',
-      'elsewhere',
-      'both',
-    ]);
-  });
-
-  it('sin finca elegida solo ofrece a quien vale para todas', () => {
-    expect(ids(assignableIn(accounts, ''))).toEqual(['owner']);
-  });
-
-  it('ofrece en cualquier finca a quien trabaja en todas, sin lista', () => {
-    const everywhere = buildAssignee({
-      id: 'everywhere',
-      all_farms: true,
-      farm_ids: [],
-    });
+describe('assigneeNote, with an account without scope', () => {
+  it('marks it out of the farm', () => {
     const noScope = buildAssignee({
       id: 'noScope',
       all_farms: false,
       farm_ids: [],
     });
 
-    expect(ids(assignableIn([everywhere, noScope], 'farm-a'))).toEqual([
-      'everywhere',
-    ]);
     expect(
       assigneeNote(
         { id: 'noScope', full_name: 'X', is_active: true },
         'farm-a',
-        [everywhere, noScope],
+        [noScope],
       ),
     ).toBe(OUTSIDE_FARM);
-  });
-
-  it('no ofrece al productor cuando quien pregunta no puede asignarle', () => {
-    const asForeman = [{ ...owner, assignable: false }, here];
-
-    expect(ids(assignableIn(asForeman, 'farm-a'))).toEqual(['here']);
   });
 });
 

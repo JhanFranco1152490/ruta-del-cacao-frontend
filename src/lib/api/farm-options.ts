@@ -12,6 +12,7 @@ type Schemas = components['schemas'];
 // Una finca para elegirla en un filtro o nombrarla en una lista de otro dominio.
 export type FarmOption = {
   id: string;
+  code: string;
   name: string;
   isActive: boolean;
   municipality: string;
@@ -31,6 +32,7 @@ export const FARM_SEARCH_SIZE = 20;
 
 const toOption = (farm: Schemas['Farm']): FarmOption => ({
   id: farm.id,
+  code: farm.code,
   name: farm.name,
   isActive: farm.is_active,
   municipality: farm.municipality.name,

@@ -78,6 +78,31 @@ export const queryKeys = {
     queued: (userId: string, id: string) =>
       ['agricultural-activities', 'queued', userId, id] as const,
   },
+  harvests: {
+    // Lo que invalida registrar, corregir o eliminar una cosecha, y conformar o eliminar un lote,
+    // que cambia el lote que muestra cada cosecha.
+    all: () => ['harvests'] as const,
+    // Las cosechas de un mes (yyyy-MM), con copia en el dispositivo. La cuenta técnica elige el
+    // productor; las demás cuentas ven el suyo y pasan `null`.
+    month: (producer: string | null, month: string) =>
+      ['harvests', 'month', producer ?? '', month] as const,
+    detail: (id: string) => ['harvests', 'detail', id] as const,
+    // Las cuentas que pueden ser recolectoras, con copia en el dispositivo.
+    collectors: (producer: string | null) =>
+      ['harvests', 'collectors', producer ?? ''] as const,
+    // Una cosecha que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, id: string) =>
+      ['harvests', 'queued', userId, id] as const,
+  },
+  lots: {
+    // Lo que invalida conformar o eliminar un lote.
+    all: () => ['lots'] as const,
+    // Una página de la lista con sus filtros: solo con conexión, sin copia local.
+    list: (query: object) => ['lots', 'list', query] as const,
+    // Cuántos lotes y kilos hay en cada estado, con los filtros de la lista menos el estado.
+    summary: (query: object) => ['lots', 'summary', query] as const,
+    detail: (id: string) => ['lots', 'detail', id] as const,
+  },
   characterizations: {
     // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la
     // parcela).
@@ -108,6 +133,9 @@ export const queryKeys = {
     // dominio.
     options: (farmId: string, producerId: string) =>
       ['plots', 'options', farmId, producerId] as const,
+    // Las mismas, con copia en el dispositivo, para un formulario que se usa en campo.
+    savedOptions: (farmId: string, producerId: string) =>
+      ['plots', 'options', farmId, producerId, 'saved'] as const,
     // Una parcela leída sola, por su id.
     detail: (id: string) => ['plots', 'detail', id] as const,
   },

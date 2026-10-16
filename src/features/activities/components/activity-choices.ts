@@ -1,4 +1,5 @@
 import { formatHectares } from '@/lib/format/hectares';
+import { plotLabel as placeLabel } from '@/lib/format/place-label';
 
 // Una opción de un campo del formulario. `group` agrupa las que se muestran bajo un mismo
 // encabezado (las parcelas de una finca) y `farmId` dice a qué finca pertenece la opción elegida.
@@ -33,5 +34,8 @@ export function listHint(
   return list.truncated ? truncated : undefined;
 }
 
-export const plotLabel = (plot: { code: string; areaHectares: string }) =>
-  `${plot.code} · ${formatHectares(plot.areaHectares)}`;
+export const plotLabel = (plot: {
+  code: string;
+  name?: string | null;
+  areaHectares: string;
+}) => `${placeLabel(plot)} · ${formatHectares(plot.areaHectares)}`;

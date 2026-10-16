@@ -87,7 +87,7 @@ describe('deactivating and reactivating a plot', () => {
     const { user } = renderSection();
 
     await user.click(
-      await screen.findByRole('button', { name: 'Más acciones de P1' }),
+      await screen.findByRole('button', { name: 'Más acciones de P01' }),
     );
     expect(
       await screen.findByRole('menuitem', { name: 'Activar' }),
@@ -142,14 +142,14 @@ describe('deactivating and reactivating a plot', () => {
       PERMISSIONS.FARMS_VIEW,
       PERMISSIONS.PLOTS_VIEW,
     ]);
-    await screen.findByText('P1');
+    await screen.findByText('P01');
     expect(
       screen.queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();
     first.unmount();
 
     renderSection(ALL, { ...FARM, isActive: false });
-    await screen.findByText('P1');
+    await screen.findByText('P01');
     expect(
       screen.queryByRole('button', { name: /^Más acciones de/ }),
     ).not.toBeInTheDocument();

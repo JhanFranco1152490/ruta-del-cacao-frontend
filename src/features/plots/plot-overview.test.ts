@@ -13,7 +13,7 @@ const queued = (
   farmId: 'f1',
   operation: 'create',
   status: 'pending',
-  values: { code, area_hectares: '1.00', vertices: [] },
+  values: { name: code, area_hectares: '1.00', vertices: [] },
   ...over,
 });
 
@@ -24,14 +24,14 @@ describe('mergeOverviewPlots', () => {
     const [plot] = mergeOverviewPlots([buildPlot()], [], {}, noFarms);
 
     expect(plot).toMatchObject({
-      code: 'P1',
+      code: 'P01',
       isActive: true,
-      farm: { id: 'f1', name: 'La Esperanza', isActive: true },
+      farm: { id: 'f1', code: 'F01', name: 'La Esperanza', isActive: true },
     });
     expect(plot.farm.producer?.member_code).toBe('PROD-000007');
   });
 
-  it('puts what waits on the device first, in code order', () => {
+  it('puts what waits on the device first, by name while it has no code', () => {
     const plots = mergeOverviewPlots(
       [buildPlot({ id: 's1', code: 'A1' })],
       [queued({ id: 'q2' }, 'Z9'), queued()],
@@ -39,7 +39,9 @@ describe('mergeOverviewPlots', () => {
       noFarms,
     );
 
-    expect(plots.map((plot) => [plot.code, plot.queue?.status])).toEqual([
+    expect(
+      plots.map((plot) => [plot.code ?? plot.name, plot.queue?.status]),
+    ).toEqual([
       ['P-nueva', 'pending'],
       ['Z9', 'pending'],
       ['A1', undefined],
@@ -66,7 +68,8 @@ describe('mergeOverviewPlots', () => {
 
     expect(plots).toHaveLength(1);
     expect(plots[0]).toMatchObject({
-      code: 'Nuevo',
+      code: 'Viejo',
+      name: 'Nuevo',
       isActive: false,
       version: 1,
       queue: { status: 'error', errorMessage: 'Se superpone con P2.' },

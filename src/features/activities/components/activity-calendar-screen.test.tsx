@@ -98,7 +98,7 @@ describe('ActivityCalendarScreen', () => {
 
     const monday = await dayOf('lunes 19 de octubre');
     expect(within(monday).getByText('Control de malezas')).toBeInTheDocument();
-    expect(within(monday).getByText('P-03')).toBeInTheDocument();
+    expect(within(monday).getByText('P03')).toBeInTheDocument();
     expect(within(monday).getByText('Finca de prueba')).toBeInTheDocument();
     const today = await dayOf('jueves 22 de octubre');
     expect(within(today).getByText('Hoy')).toBeInTheDocument();
@@ -704,7 +704,7 @@ describe('ActivityCalendarScreen', () => {
     const waiting = () =>
       enqueueCompletion(userId, 'a1', {
         request: { done_date: '2026-10-22', inputs: [] },
-        label: 'Poda · P-03',
+        label: 'Poda · P03',
       });
 
     it('shows the activity as done and pending to send, without actions', async () => {

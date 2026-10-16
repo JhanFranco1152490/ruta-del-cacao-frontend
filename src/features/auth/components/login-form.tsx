@@ -93,7 +93,7 @@ export function LoginForm() {
         {isDocument && (
           <SelectField
             label="Documento"
-            className="pr-1 pl-2"
+            className="pr-8 pl-2"
             {...register('documentType')}
           >
             {DOCUMENT_TYPES.map((type) => (

@@ -9,6 +9,7 @@ import { formatHectares } from '@/lib/format/hectares';
 import type { KnownPlot } from '../known-plots';
 import { plotStatus } from '../plot-status';
 import { PlotStatusBadge } from './plot-status-badge';
+import { plotLabel } from '@/lib/format/place-label';
 
 // Con menos ancho que este (en px, del contenido de la tarjeta) los botones de icono no caben junto
 // al código, el área y el estado: pasan al menú «⋯».
@@ -87,7 +88,7 @@ function PlotCard<T extends KnownPlot>({
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h3 id={`plot-${plot.id}-code`} className="text-lg text-selva">
-          {plot.code}
+          {plotLabel(plot)}
         </h3>
         <p className="text-sm text-muted-foreground">
           {/* En una tarjeta angosta solo el valor: la etiqueta ocupa lo que le falta al «⋯». */}
@@ -103,7 +104,7 @@ function PlotCard<T extends KnownPlot>({
           <div className="ml-auto flex items-center gap-1.5">
             {showOnMap && !compact && (
               <Button
-                aria-label={`Ver ${plot.code} en el mapa`}
+                aria-label={`Ver ${plotLabel(plot)} en el mapa`}
                 className="size-10 px-0"
                 onClick={showOnMap}
                 size="office"

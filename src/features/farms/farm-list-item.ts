@@ -11,6 +11,8 @@ export type FarmProducer = Farm['producer'];
 // las tarjetas no dependen de la forma de la respuesta de la API.
 export type FarmListItem = {
   id: string;
+  // Solo las del servidor: el código lo asigna el servidor al recibir la finca.
+  code?: string;
   name: string;
   municipalityCode: string;
   details: string;
@@ -47,6 +49,7 @@ export function queuedFarmToListItem(item: QueueItem): FarmListItem {
 
 export const serverFarmToListItem = (farm: Farm): FarmListItem => ({
   id: farm.id,
+  code: farm.code,
   name: farm.name,
   municipalityCode: farm.municipality.id,
   details: farm.details,

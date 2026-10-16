@@ -72,7 +72,7 @@ describe('ActivityDeleteDialog', () => {
       }),
     ).toBeInTheDocument();
     expect(dialog).toHaveTextContent(
-      'Poda en P-03, programada para el jueves 22 de octubre. Se quitará del calendario. Esta acción no se puede deshacer.',
+      'Poda en P03, programada para el jueves 22 de octubre. Se quitará del calendario. Esta acción no se puede deshacer.',
     );
     expect(dialog).toHaveTextContent(
       'Si solo cambió la fecha o el responsable, mejor edítala.',
@@ -94,7 +94,7 @@ describe('ActivityDeleteDialog', () => {
     renderDelete({ activity_type: 'other', other_description: 'Resiembra' });
 
     expect(await screen.findByRole('dialog')).toHaveTextContent(
-      'Resiembra en P-03',
+      'Resiembra en P03',
     );
   });
 

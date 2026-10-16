@@ -150,7 +150,7 @@ describe('ActivityFormDialog for the technical account', () => {
     await userEvent.click(field('Finca'));
     expect(
       await screen.findByRole('option', {
-        name: 'La Esperanza · Ana Prueba · PROD-000007',
+        name: 'F01 · La Esperanza · Ana Prueba · PROD-000007',
       }),
     ).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
@@ -158,7 +158,7 @@ describe('ActivityFormDialog for the technical account', () => {
     await userEvent.click(field('Parcela'));
     expect(
       await screen.findByRole('group', {
-        name: 'La Esperanza · Ana Prueba · PROD-000007',
+        name: 'F01 · La Esperanza · Ana Prueba · PROD-000007',
       }),
     ).toBeInTheDocument();
     expect(farmRequests[0].has('producer')).toBe(false);
@@ -203,7 +203,7 @@ describe('ActivityFormDialog for the technical account', () => {
       expect(assigneeRequests.at(-1)?.get('producer')).toBe('p1'),
     );
     expect(field('Finca')).toHaveValue(
-      'La Esperanza · Ana Prueba · PROD-000007',
+      'F01 · La Esperanza · Ana Prueba · PROD-000007',
     );
   });
 
@@ -229,7 +229,7 @@ describe('ActivityFormDialog for the technical account', () => {
   it('forgets the farm, the plot and the responsible when the producer is cleared', async () => {
     renderDialog();
     await pickProducer();
-    await pick('Finca', 'La Esperanza · Ana Prueba · PROD-000007');
+    await pick('Finca', 'F01 · La Esperanza · Ana Prueba · PROD-000007');
 
     await userEvent.click(
       document.querySelector<HTMLElement>('[data-slot="combobox-clear"]')!,

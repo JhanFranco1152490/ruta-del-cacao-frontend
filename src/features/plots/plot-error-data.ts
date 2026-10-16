@@ -25,6 +25,7 @@ export const overlappedNeighbours = (data: PlotErrorData): KnownPlot[] =>
   (data.overlaps ?? []).map((overlap) => ({
     id: overlap.plot_id,
     code: overlap.code,
+    name: null,
     areaHectares: '0.00',
     isActive: true,
     vertices: fromApiBoundary(overlap.boundary),

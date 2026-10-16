@@ -14,12 +14,21 @@ export interface SyncRecovery {
   payload: unknown;
 }
 
+// El código que el servidor le dio a un registro creado en el dispositivo (una finca o una
+// parcela), para avisarle a la persona cuál quedó.
+export interface AssignedCode {
+  kind: 'farm' | 'plot';
+  code: string;
+  name?: string | null;
+}
+
 // Cada dominio (fincas, parcelas...) implementa uno y lo registra con `registerAdapter`.
 // `payload` llega tal como lo guardó `enqueue`: cada adapter conoce y valida la forma que le
 // corresponde a su propio recurso.
 export interface SyncAdapter {
   resource: string;
-  send(item: QueueItem): Promise<void>;
+  // Devuelve lo que respondió el servidor, para quien escucha los envíos (`onItemSynced`).
+  send(item: QueueItem): Promise<unknown>;
   // El conflicto que va a la bandeja de error, o null si conviene reintentar (error de red
   // o del servidor).
   parseConflict(error: unknown): SyncConflict | null;
@@ -29,6 +38,9 @@ export interface SyncAdapter {
   // Las consultas que cambian cuando el registro llega al servidor: se vuelven a pedir aunque
   // la pantalla que lo guardó ya no esté abierta.
   refreshAfterSync?(item: QueueItem): readonly (readonly unknown[])[];
+  // Opcional: el código que el servidor asignó al registro, si es de los que lo reciben al
+  // llegar. Lee `response`, lo que devolvió `send`.
+  assignedCode?(item: QueueItem, response: unknown): AssignedCode | null;
 }
 
 // Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se

@@ -146,7 +146,9 @@ describe('CompletionScreen', () => {
   it('sends back, without a notice, a worker who opens an activity of someone else', async () => {
     renderScreen({
       all_farms: false,
-      farms: [{ id: 'f1', name: 'Finca de prueba', is_active: true }],
+      farms: [
+        { id: 'f1', code: 'F01', name: 'Finca de prueba', is_active: true },
+      ],
     });
 
     await waitFor(() => expect(router.replace).toHaveBeenCalled());
@@ -162,7 +164,9 @@ describe('CompletionScreen', () => {
     );
     renderScreen({
       all_farms: false,
-      farms: [{ id: 'f1', name: 'Finca de prueba', is_active: true }],
+      farms: [
+        { id: 'f1', code: 'F01', name: 'Finca de prueba', is_active: true },
+      ],
     });
 
     expect(await form()).toBeTruthy();
@@ -180,8 +184,8 @@ describe('CompletionScreen', () => {
         PERMISSIONS.ACTIVITIES_COMPLETE,
       ],
       farms: [
-        { id: 'f1', name: 'Finca de prueba', is_active: true },
-        { id: 'f2', name: 'Catalina', is_active: true },
+        { id: 'f1', code: 'F01', name: 'Finca de prueba', is_active: true },
+        { id: 'f2', code: 'F01', name: 'Catalina', is_active: true },
       ],
     });
     await form();
@@ -200,7 +204,7 @@ describe('CompletionScreen', () => {
 
     const card = await screen.findByRole('region', { name: 'Actividad' });
     expect(
-      within(card).getByRole('heading', { name: 'Fertilización · P-03' }),
+      within(card).getByRole('heading', { name: 'Fertilización · P03' }),
     ).toBeInTheDocument();
     expect(card).toHaveTextContent('martes 20 de octubre de 2026');
     expect(card).toHaveTextContent('Cuenta de prueba');
@@ -216,7 +220,7 @@ describe('CompletionScreen', () => {
 
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent(
-      'Vas a registrar la labor Fertilización de P-03 como realizada el 22 de octubre de 2026, sin insumos. Después no se podrá modificar.',
+      'Vas a registrar la labor Fertilización de P03 como realizada el 22 de octubre de 2026, sin insumos. Después no se podrá modificar.',
     );
     expect(await queuedPayload()).toBeUndefined();
 
@@ -232,7 +236,7 @@ describe('CompletionScreen', () => {
         inputs: [],
         captured_at: NOW.toISOString(),
       },
-      label: 'Fertilización · P-03',
+      label: 'Fertilización · P03',
     });
   });
 
@@ -569,7 +573,7 @@ describe('CompletionScreen', () => {
         ],
         captured_at: '2026-10-21T20:00:00.000Z',
       },
-      label: 'Fertilización · P-03',
+      label: 'Fertilización · P03',
     };
 
     it('says that it is still waiting instead of offering to record it again', async () => {

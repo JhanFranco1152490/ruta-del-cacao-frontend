@@ -115,7 +115,7 @@ describe('ActivityFormDialog, editing', () => {
     await waitFor(() => expect(field('Responsable')).toHaveValue('u1'));
     // La actividad mantiene su parcela: se muestra, no se elige.
     expect(within(form).getByText('Finca de prueba')).toBeInTheDocument();
-    expect(within(form).getByText('P-03')).toBeInTheDocument();
+    expect(within(form).getByText('P03')).toBeInTheDocument();
     expect(screen.queryByLabelText('Finca')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Parcela')).not.toBeInTheDocument();
   });

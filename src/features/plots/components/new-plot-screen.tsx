@@ -11,7 +11,6 @@ import { readOrigin, withOrigin } from '@/lib/navigation/origin';
 
 import { plotNewPath } from '../plot-paths';
 import type { PlotFormValues } from '../plot-queue';
-import { suggestPlotCode } from '../suggest-code';
 import { useKnownPlots } from '../use-known-plots';
 import { usePlotCreate } from '../use-plot-queue';
 import { PlotContextBanner } from './plot-context-banner';
@@ -37,10 +36,9 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
 
   if (known.isLoading) return <PlotEditorSkeleton />;
 
-  // Se propone el código siguiente de la finca: la persona puede cambiarlo, pero casi nunca hace
-  // falta pensar uno.
+  // El código lo asigna el servidor al recibir la parcela; aquí solo se le puede dar un nombre.
   const defaultValues: PlotFormValues = {
-    code: suggestPlotCode((known.plots ?? []).map((plot) => plot.code)),
+    name: '',
     area_hectares: '',
     vertices: [],
   };

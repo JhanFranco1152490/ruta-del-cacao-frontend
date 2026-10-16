@@ -34,6 +34,7 @@ import { PlotGeometrySummary } from './plot-geometry-summary';
 import { PlotMapControls } from './plot-map-controls';
 import { PlotNotices } from './plot-notices';
 import { PlotVertexList } from './plot-vertex-list';
+import { PLOT_NAME_MAX_LENGTH } from '../schemas';
 
 export type PlotEditorFarm = {
   id: string;
@@ -162,7 +163,7 @@ export function PlotEditor({
         noValidate
         onSubmit={handleSubmit((values) =>
           onSubmit({
-            code: values.code,
+            name: values.name,
             area_hectares: values.area_hectares,
             vertices: draft.vertices,
           }),
@@ -212,10 +213,11 @@ export function PlotEditor({
             <div className="grid gap-5">
               <TextField
                 className={CAPTURE_FIELD_CLASS}
-                error={errors.code?.message}
-                label="Código de la parcela"
-                maxLength={50}
-                {...register('code')}
+                error={errors.name?.message}
+                hint="El código (P01, P02…) lo asigna el sistema al guardar."
+                label="Nombre de la parcela (opcional)"
+                maxLength={PLOT_NAME_MAX_LENGTH}
+                {...register('name')}
               />
               <TextField
                 className={CAPTURE_FIELD_CLASS}

@@ -24,8 +24,8 @@ const plotOptions = [
   },
 ];
 const farmOptions = [
-  { id: 'f2', name: 'El Paraíso' },
-  { id: 'f1', name: 'La Esperanza' },
+  { id: 'f2', code: 'F02', name: 'El Paraíso' },
+  { id: 'f1', code: 'F01', name: 'La Esperanza' },
 ];
 const assigneeOptions = [
   { id: 'u1', label: 'Ana Gómez' },
@@ -94,8 +94,8 @@ describe('ActivityFiltersBar', () => {
 
     expect(await listedOptions('Finca')).toEqual([
       'Todas las fincas',
-      'El Paraíso',
-      'La Esperanza',
+      'F02 · El Paraíso',
+      'F01 · La Esperanza',
     ]);
   });
 
@@ -129,7 +129,7 @@ describe('ActivityFiltersBar', () => {
   it('reports each filter that changes', async () => {
     const handlers = setup();
 
-    await pick('Finca', 'El Paraíso');
+    await pick('Finca', 'F02 · El Paraíso');
     await userEvent.click(screen.getByRole('combobox', { name: 'Parcela' }));
     // «P-01» se repite en dos fincas: se elige la de la finca que se quiere.
     await userEvent.click(
@@ -159,7 +159,7 @@ describe('ActivityFiltersBar', () => {
       hasFilters: true,
     });
 
-    expect(screen.getByLabelText('Finca')).toHaveValue('El Paraíso');
+    expect(screen.getByLabelText('Finca')).toHaveValue('F02 · El Paraíso');
     expect(screen.getByLabelText('Parcela')).toHaveValue('P-01');
     expect(screen.getByLabelText('Responsable')).toHaveValue('Ana Gómez');
   });

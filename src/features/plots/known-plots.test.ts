@@ -10,7 +10,7 @@ const queued = (over: Partial<QueuedPlot> = {}): QueuedPlot => ({
   farmId: 'f1',
   operation: 'create',
   status: 'pending',
-  values: { code: 'P-nueva', area_hectares: '1.00', vertices: [] },
+  values: { name: 'La loma', area_hectares: '1.00', vertices: [] },
   ...over,
 });
 
@@ -35,34 +35,54 @@ describe('mergeKnownPlots', () => {
     expect(plot.vertices).toHaveLength(3);
   });
 
-  it('adds the plots that only exist on the device, as active', () => {
+  it('adds the plots that only exist on the device, as active and still without a code', () => {
     const plots = mergeKnownPlots(
-      [buildPlot({ id: 's1', code: 'P1' })],
+      [buildPlot({ id: 's1', code: 'P01' })],
       [queued()],
     );
 
-    expect(plots.map((plot) => [plot.code, plot.queue?.status])).toEqual([
-      ['P-nueva', 'pending'],
-      ['P1', undefined],
+    expect(
+      plots.map((plot) => [plot.code, plot.name, plot.queue?.status]),
+    ).toEqual([
+      ['P01', null, undefined],
+      [undefined, 'La loma', 'pending'],
     ]);
-    expect(plots[0].isActive).toBe(true);
+    expect(plots[1].isActive).toBe(true);
+  });
+
+  it('orders by code as numbers, and leaves the ones without a code last', () => {
+    const plots = mergeKnownPlots(
+      [
+        buildPlot({ id: 'a', code: 'P10' }),
+        buildPlot({ id: 'b', code: 'P02' }),
+      ],
+      [
+        queued({
+          id: 'c',
+          values: { name: '', area_hectares: '1', vertices: [] },
+        }),
+      ],
+    );
+
+    expect(plots.map((plot) => plot.id)).toEqual(['b', 'a', 'c']);
   });
 
   it('lets a pending edit replace the server copy but keeps its server status', () => {
     const [plot] = mergeKnownPlots(
-      [buildPlot({ id: 's1', code: 'P1', is_active: false })],
+      [buildPlot({ id: 's1', code: 'P01', is_active: false })],
       [
         queued({
           id: 's1',
           operation: 'update',
-          values: { code: 'P1 editada', area_hectares: '3.00', vertices: [] },
+          values: { name: 'Lote editado', area_hectares: '3.00', vertices: [] },
         }),
       ],
     );
 
     expect(plot).toMatchObject({
       id: 's1',
-      code: 'P1 editada',
+      code: 'P01',
+      name: 'Lote editado',
       areaHectares: '3.00',
       isActive: false,
       version: 1,

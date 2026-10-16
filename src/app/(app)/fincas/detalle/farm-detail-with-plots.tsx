@@ -7,6 +7,8 @@ import {
 import { PlotCharacterizationSummary } from '@/features/crops/components/plot-characterization-summary';
 import { FarmDetailFromQuery } from '@/features/farms/components/farm-detail-from-query';
 import { FarmPlotsSection } from '@/features/plots/components/farm-plots-section';
+import { plotLabel } from '@/lib/format/place-label';
+import { RegisterHarvestMenuItem } from '@/features/harvests/components/register-harvest-menu-item';
 
 // Aquí se juntan los dominios: la finca no conoce las parcelas, las parcelas no importan de
 // fincas y ninguno de los dos conoce las fichas agronómicas ni las actividades. Es de cliente
@@ -22,19 +24,35 @@ export function FarmDetailWithPlots() {
             <PlotCharacterizationSummary
               farmId={farm.id}
               farmIsActive={farm.isActive}
-              plot={{ id: plot.id, code: plot.code, isActive: plot.isActive }}
+              plot={{
+                id: plot.id,
+                code: plotLabel(plot),
+                isActive: plot.isActive,
+              }}
             />
           )}
           renderPlotMenuItems={(plot) => (
-            <SchedulePlotMenuItem
-              farm={{ id: farm.id, isActive: farm.isActive }}
-              plot={{
-                id: plot.id,
-                code: plot.code,
-                isActive: plot.isActive,
-                isSynced: !plot.queue,
-              }}
-            />
+            <>
+              <SchedulePlotMenuItem
+                farm={{ id: farm.id, isActive: farm.isActive }}
+                plot={{
+                  id: plot.id,
+                  code: plotLabel(plot),
+                  isActive: plot.isActive,
+                  isSynced: !plot.queue,
+                }}
+              />
+              <RegisterHarvestMenuItem
+                farm={{ isActive: farm.isActive }}
+                plot={{
+                  id: plot.id,
+                  code: plotLabel(plot),
+                  isActive: plot.isActive,
+                  // Una edición pendiente no impide cosechar: la parcela ya existe en el servidor.
+                  isSynced: plot.queue?.operation !== 'create',
+                }}
+              />
+            </>
           )}
           renderPlotShortcuts={(plot, card) => (
             <SchedulePlotActivity
@@ -42,7 +60,7 @@ export function FarmDetailWithPlots() {
               farm={{ id: farm.id, isActive: farm.isActive }}
               plot={{
                 id: plot.id,
-                code: plot.code,
+                code: plotLabel(plot),
                 isActive: plot.isActive,
                 // Una parcela que sigue en la cola todavía no existe en el servidor.
                 isSynced: !plot.queue,

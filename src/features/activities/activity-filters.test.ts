@@ -18,8 +18,9 @@ const TODAY = '2026-10-22';
 const plotOf = (id: string, code: string, farm = 'f1', isActive = true) => ({
   id,
   code,
+  name: null,
   is_active: isActive,
-  farm: { id: farm, name: `Finca ${farm}`, is_active: true },
+  farm: { id: farm, code: 'F01', name: `Finca ${farm}`, is_active: true },
 });
 
 const item = (
@@ -206,12 +207,12 @@ describe('farmOptionsOf', () => {
         }),
         buildAgriculturalActivity({
           id: 'c',
-          plot: plotOf('p3', 'P-03', 'fa'),
+          plot: plotOf('p3', 'P03', 'fa'),
         }),
       ]),
     ).toEqual([
-      { id: 'fa', name: 'Finca fa' },
-      { id: 'fb', name: 'Finca fb' },
+      { id: 'fa', code: 'F01', name: 'Finca fa' },
+      { id: 'fb', code: 'F01', name: 'Finca fb' },
     ]);
   });
 
@@ -230,8 +231,8 @@ describe('plotOptionsOf', () => {
     ]);
 
     expect(groups.map(({ farmName }) => farmName)).toEqual([
-      'Finca fa',
-      'Finca fb',
+      'F01 · Finca fa',
+      'F01 · Finca fb',
     ]);
     expect(groups[0].plots.map(({ code }) => code)).toEqual(['P-01', 'P-02']);
     expect(groups[1].plots.map(({ id }) => id)).toEqual(['p3']);

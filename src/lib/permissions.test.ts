@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PERMISSIONS, hasPermission } from './permissions';
+import { PERMISSIONS, hasPermission, isFieldPermission } from './permissions';
 
 describe('hasPermission', () => {
   it('is true when the user has the permission', () => {
@@ -22,5 +22,19 @@ describe('hasPermission', () => {
 
   it('is false when the session carries no permission list', () => {
     expect(hasPermission({}, PERMISSIONS.PRODUCERS_VIEW)).toBe(false);
+  });
+});
+
+describe('isFieldPermission', () => {
+  it('counts what hangs from a farm, harvests and lots included', () => {
+    expect(isFieldPermission(PERMISSIONS.FARMS_VIEW)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.ACTIVITIES_COMPLETE)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.HARVESTS_ADD)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.LOTS_VIEW)).toBe(true);
+  });
+
+  it('leaves out the variety catalog and the accounts', () => {
+    expect(isFieldPermission(PERMISSIONS.CROPS_MANAGE_VARIETIES)).toBe(false);
+    expect(isFieldPermission(PERMISSIONS.USERS_VIEW)).toBe(false);
   });
 });

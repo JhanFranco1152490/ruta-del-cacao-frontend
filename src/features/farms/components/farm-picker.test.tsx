@@ -37,6 +37,7 @@ describe('FarmPicker', () => {
             buildFarm({ id: 'f1', name: 'La Esperanza' }),
             buildFarm({
               id: 'f2',
+              code: 'F02',
               name: 'El Porvenir',
               producer: {
                 id: 'p2',
@@ -55,7 +56,7 @@ describe('FarmPicker', () => {
     await userEvent.click(screen.getByLabelText('Finca'));
     await userEvent.click(
       await screen.findByRole('option', {
-        name: 'El Porvenir · Cúcuta · Luis Gómez · PROD-000008',
+        name: 'F02 · El Porvenir · Cúcuta · Luis Gómez · PROD-000008',
       }),
     );
 

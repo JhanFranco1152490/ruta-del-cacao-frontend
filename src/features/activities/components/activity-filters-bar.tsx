@@ -13,6 +13,7 @@ import type {
   FarmOption,
   FarmPlotOptions,
 } from '../activity-filters';
+import { farmLabel } from '@/lib/format/place-label';
 
 // El ancho de cada filtro de la fila: crece para llenarla y cabe en el celular.
 const FILTER_WIDTH = 'min-w-40 flex-1 basis-44';
@@ -107,10 +108,16 @@ export function ActivityFiltersBar({
           compact
           label="Finca"
           onChange={(option) => onFarm(option?.id ?? null)}
-          options={farmOptions.map(({ id, name }) => ({ id, label: name }))}
+          options={farmOptions.map((farm) => ({
+            id: farm.id,
+            label: farmLabel(farm),
+          }))}
           value={selected(
             filters.farm,
-            farmOptions.map(({ id, name }) => ({ id, label: name })),
+            farmOptions.map((farm) => ({
+              id: farm.id,
+              label: farmLabel(farm),
+            })),
             'Finca sin actividades en este periodo',
           )}
         />
