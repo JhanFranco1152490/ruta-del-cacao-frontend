@@ -21,6 +21,10 @@ export type SearchSelectOption = {
   label: string;
   // Las opciones con el mismo `group` se muestran bajo un mismo encabezado, que también se busca.
   group?: string;
+  // Una segunda línea más pequeña bajo la opción (el área y las variedades de una parcela).
+  detail?: string;
+  // Se ve en la lista pero no se puede elegir; `detail` dice por qué.
+  disabled?: boolean;
 };
 
 type Group = { value: string; items: SearchSelectOption[] };
@@ -135,8 +139,15 @@ export function SearchSelect({
   }, [rows, grouped]);
 
   const renderItem = (row: SearchSelectOption) => (
-    <ComboboxItem key={row.id} value={row}>
-      {row.label}
+    <ComboboxItem disabled={row.disabled} key={row.id} value={row}>
+      {row.detail ? (
+        <span className="flex flex-col">
+          <span>{row.label}</span>
+          <span className="text-xs text-muted-foreground">{row.detail}</span>
+        </span>
+      ) : (
+        row.label
+      )}
     </ComboboxItem>
   );
 

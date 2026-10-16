@@ -131,6 +131,9 @@ export const queryKeys = {
     // dominio.
     options: (farmId: string, producerId: string) =>
       ['plots', 'options', farmId, producerId] as const,
+    // Las mismas, con copia en el dispositivo, para un formulario que se usa en campo.
+    savedOptions: (farmId: string, producerId: string) =>
+      ['plots', 'options', farmId, producerId, 'saved'] as const,
     // Una parcela leída sola, por su id.
     detail: (id: string) => ['plots', 'detail', id] as const,
   },

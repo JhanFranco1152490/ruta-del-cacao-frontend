@@ -286,6 +286,12 @@ src/
   como función (`FarmForm` recibe `nextStep`). El valor lo puede escribir cualquiera, así que solo se acepta una ruta de
   la app (`isInternalPath` en `lib/navigation/origin.ts`); si no es válida o no hay, va al destino de
   siempre. Una pantalla nueva con editor usa `EditorLink` en lugar de `Link` para abrirlo.
+- **Excepción: registrar una cosecha.** Las altas de la cola avisan y vuelven, sin pantalla
+  intermedia, salvo la cosecha (`HarvestSaved`): al guardar se queda en la pantalla con «Registrar
+  otra cosecha» (conserva la parcela, el recolector y la fecha), «Conformar lote con esta cosecha»
+  (solo con conexión y ya enviada) y «Listo», que vuelve al origen. En campo se registran varias
+  recolecciones seguidas y volver a elegir todo cada vez estorba. Corregir una cosecha sí avisa y
+  vuelve, como las demás.
 - En pruebas, el aviso es un `role="dialog"` no modal: para afirmar que **no hay diálogo abierto** usa
   `queryDialog()` (`test/dialog.ts`) y no `queryByRole('dialog')`. Los componentes que leen la ruta
   usan el mock `navigation` de `test/router.ts` (`vi.mock('next/navigation', async () =>
@@ -296,7 +302,9 @@ src/
 - **Elegir de una lista: `SearchSelect` o el select nativo.** Más de unas 10 opciones o una lista que
   crece (fincas, parcelas, municipios, productores): `SearchSelect`, que se abre con la lista completa y
   se acota al escribir, con una entrada fija «Todas…» si el campo es un filtro, grupos y modo servidor
-  (`onSearch`). `ProducerFilter` y `FarmFilter` se arman con él. Lista corta y fija (tipo, etapa, mes,
+  (`onSearch`). Una opción puede llevar `detail` (una segunda línea, como el área y las variedades de
+  una parcela) y `disabled` (se ve pero no se elige; el `detail` dice por qué). `ProducerFilter` y
+  `FarmFilter` se arman con él. Lista corta y fija (tipo, etapa, mes,
   estados): el select nativo con `placeholder` si es obligatorio, sin una opción vacía de relleno.
 - **Una responsabilidad por archivo**, un componente por archivo (kebab-case), ~150 líneas
   como referencia: si crece, se parte.

@@ -1,0 +1,198 @@
+'use client';
+
+import Link from 'next/link';
+import { type ReactNode, useState } from 'react';
+
+import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
+import { buttonVariants } from '@/components/ui/button';
+import { useQueueItems } from '@/hooks/use-queue-items';
+import { useSession } from '@/hooks/use-session';
+
+import { useHarvestCollectors } from '../api';
+import type { HarvestPlotChoice } from '../harvest-plots';
+import { harvestQueueId, type QueuedHarvest } from '../harvest-queue';
+import { toHarvestRequest } from '../harvest-rules';
+import {
+  emptyHarvestForm,
+  type HarvestFormInput,
+  harvestQueueLabel,
+  harvestSummary,
+  type KeptHarvestFields,
+  onlyVariety,
+} from '../harvest-values';
+import { rememberLastPlot } from '../last-plot';
+import { useSaveHarvest } from '../use-harvest-queue';
+import { HarvestForm } from './harvest-form';
+import { HarvestSaved } from './harvest-saved';
+
+const SAVE_FAILED =
+  'No fue posible guardar la cosecha en el dispositivo. Inténtalo nuevamente.';
+
+type Saved = { id: string; summary: string; onDevice: boolean };
+
+// Un formulario nuevo, con lo que se conserva y, si su parcela tiene una sola variedad, ya elegida.
+function startForm(
+  today: string,
+  plots: readonly HarvestPlotChoice[],
+  kept: Partial<KeptHarvestFields> = {},
+): HarvestFormInput {
+  const values = emptyHarvestForm(today, kept);
+  const plot = plots.find(({ id }) => id === values.plot_id);
+  return { ...values, variety_id: plot ? onlyVariety(plot.varieties) : '' };
+}
+
+const formOfRequest = (
+  request: QueuedHarvest['request'],
+): HarvestFormInput => ({
+  plot_id: request.plot_id,
+  harvest_date: request.harvest_date,
+  green_weight_kg: request.green_weight_kg,
+  variety_id: request.variety_id,
+  collector_id: request.collector_id,
+});
+
+// El formulario de una cosecha y, al guardarla, lo que sigue. `rejected` es lo que el servidor no
+// aceptó: con él se corrige lo capturado en vez de registrar otra.
+export function HarvestCapture({
+  plots,
+  truncated,
+  today,
+  initialPlotId,
+  rejected,
+  isOnline,
+  submitLabel,
+  blockedMessage,
+  doneHref,
+  onCorrected,
+  renderFormLot,
+}: {
+  plots: readonly HarvestPlotChoice[];
+  truncated: boolean;
+  today: string;
+  initialPlotId: string;
+  rejected?: QueuedHarvest;
+  isOnline: boolean;
+  submitLabel: string;
+  blockedMessage?: string | null;
+  doneHref: string;
+  onCorrected: () => void;
+  // Conformar el lote de una cosecha que ya llegó al servidor; lo da quien monta la pantalla,
+  // porque los lotes son de otro dominio.
+  renderFormLot?: (harvestId: string) => ReactNode;
+}) {
+  const { data: user } = useSession();
+  const superuser = user?.is_superuser === true;
+  const save = useSaveHarvest();
+  const queue = useQueueItems(user?.id);
+  const [form, setForm] = useState(() => ({
+    id: rejected?.id ?? crypto.randomUUID(),
+    values: rejected
+      ? formOfRequest(rejected.request)
+      : startForm(today, plots, { plot_id: initialPlotId }),
+  }));
+  const [saved, setSaved] = useState<Saved>();
+  const [kept, setKept] = useState<KeptHarvestFields>();
+  const [plot, setPlot] = useState(() =>
+    plots.find(({ id }) => id === form.values.plot_id),
+  );
+  // La cuenta técnica ve parcelas de varios productores: los recolectores son los del productor de
+  // la parcela elegida.
+  const collectors = useHarvestCollectors(
+    user?.id,
+    superuser ? (plot?.producerId ?? null) : null,
+    { enabled: !superuser || !!plot },
+  );
+
+  const submit = (values: HarvestFormInput) => {
+    const chosen = plots.find(({ id }) => id === values.plot_id)!;
+    const variety = chosen.varieties.find(({ id }) => id === values.variety_id);
+    save.mutate(
+      {
+        payload: {
+          request: toHarvestRequest(values, form.id),
+          label: harvestQueueLabel(chosen.label, values.harvest_date),
+        },
+        correcting: !!rejected,
+      },
+      {
+        onSuccess: () => {
+          if (user) rememberLastPlot(user.id, values.plot_id);
+          if (rejected) return onCorrected();
+          setKept({
+            plot_id: values.plot_id,
+            collector_id: values.collector_id,
+            harvest_date: values.harvest_date,
+          });
+          setSaved({
+            id: form.id,
+            summary: harvestSummary(values, variety?.name ?? '', chosen),
+            onDevice: !isOnline,
+          });
+        },
+      },
+    );
+  };
+
+  if (saved) {
+    const reachedServer =
+      isOnline &&
+      !!queue &&
+      !queue.some(({ id }) => id === harvestQueueId(saved.id));
+    return (
+      <HarvestSaved
+        doneHref={doneHref}
+        formLot={reachedServer ? renderFormLot?.(saved.id) : undefined}
+        onAnother={() => {
+          setForm({
+            id: crypto.randomUUID(),
+            values: startForm(today, plots, kept),
+          });
+          setSaved(undefined);
+          save.reset();
+        }}
+        onDevice={saved.onDevice}
+        summary={saved.summary}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {save.isError && (
+        <p
+          className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
+          role="alert"
+        >
+          {SAVE_FAILED}
+        </p>
+      )}
+      <HarvestForm
+        blockedMessage={blockedMessage}
+        collectors={collectors.data?.data}
+        defaultValues={form.values}
+        isSaving={save.isPending}
+        key={form.id}
+        onPlotChange={setPlot}
+        onSubmit={submit}
+        plotLocked={!!rejected}
+        plots={plots}
+        preferredCollectorId={user?.id}
+        secondaryAction={
+          <Link
+            className={buttonVariants({
+              size: 'office',
+              variant: 'outline',
+              className: CAPTURE_BUTTON_CLASS,
+            })}
+            href={doneHref}
+          >
+            Cancelar
+          </Link>
+        }
+        submitLabel={submitLabel}
+        today={today}
+        truncated={truncated}
+      />
+    </div>
+  );
+}

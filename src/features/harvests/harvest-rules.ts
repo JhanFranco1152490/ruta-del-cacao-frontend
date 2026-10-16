@@ -90,7 +90,8 @@ function weightError(weight: string, areaHectares: string): string | null {
 }
 
 // Todo lo que el servidor va a comprobar, para decirlo junto al campo antes de guardar (también
-// sin conexión). `today` es la fecha de Bogotá y `varieties`, las de las siembras de la parcela.
+// sin conexión). `today` es la fecha de Bogotá; `areaHectares` y `varieties` son los de la
+// parcela elegida (sin parcela, el campo de parcela ya dice que falta).
 export const createHarvestSchema = ({
   today,
   areaHectares,
@@ -102,6 +103,7 @@ export const createHarvestSchema = ({
 }) =>
   z
     .object({
+      plot_id: z.string().min(1, REQUIRED_FIELD_MESSAGE),
       harvest_date: z.string().trim().min(1, REQUIRED_FIELD_MESSAGE),
       green_weight_kg: z
         .string()
@@ -146,10 +148,10 @@ export type HarvestFormValues = z.output<
 
 export const toHarvestRequest = (
   values: HarvestFormValues,
-  { id, plotId }: { id: string; plotId: string },
-): HarvestCreateRequest => ({
+  id: string,
+): HarvestCreateRequest & { id: string } => ({
   id,
-  plot_id: plotId,
+  plot_id: values.plot_id,
   harvest_date: values.harvest_date,
   green_weight_kg: values.green_weight_kg,
   variety_id: values.variety_id,

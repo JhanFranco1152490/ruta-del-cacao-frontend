@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { ProducerRef } from '@/lib/format/producer';
 
+import { readThroughCache } from '@/lib/offline/cached-read';
+
 import { apiFetch } from './client';
 import { queryKeys } from './query-keys';
 import type { components } from './schema';
@@ -76,4 +78,26 @@ export const usePlotOptions = (
     queryKey: queryKeys.plots.options(filter.farm ?? '', filter.producer ?? ''),
     queryFn: ({ signal }) => fetchPlotOptions(filter, signal),
     enabled,
+  });
+
+// Las mismas parcelas, con copia en el dispositivo: las pide un formulario que se usa en campo, sin
+// conexión (registrar una cosecha). Sin red se ofrecen las de la última vez que se cargaron.
+export const useSavedPlotOptions = (
+  userId: string | undefined,
+  filter: PlotOptionsFilter,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.plots.savedOptions(
+      filter.farm ?? '',
+      filter.producer ?? '',
+    ),
+    queryFn: ({ signal }) =>
+      readThroughCache(
+        userId!,
+        `plot-options:${filter.farm ?? ''}:${filter.producer ?? ''}`,
+        () => fetchPlotOptions(filter, signal),
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
   });

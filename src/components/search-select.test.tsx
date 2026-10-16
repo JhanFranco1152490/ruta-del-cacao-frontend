@@ -214,6 +214,41 @@ describe('SearchSelect', () => {
     });
   });
 
+  describe('with options that cannot be chosen', () => {
+    const PLOTS: SearchSelectOption[] = [
+      { id: 'p1', label: 'P01', detail: '2,4 ha · CCN-51' },
+      {
+        id: 'p2',
+        label: 'P02',
+        detail: 'Sin siembras en su ficha',
+        disabled: true,
+      },
+    ];
+
+    it('shows them with the reason under the label, and does not give them', async () => {
+      const onChange = vi.fn();
+      render(<Harness label="Parcela" onChange={onChange} options={PLOTS} />);
+
+      await userEvent.click(screen.getByRole('combobox', { name: 'Parcela' }));
+      const blocked = screen.getByRole('option', { name: /P02/ });
+      expect(blocked).toHaveTextContent('Sin siembras en su ficha');
+      expect(blocked).toHaveAttribute('aria-disabled', 'true');
+      await userEvent.click(blocked);
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('still gives the ones that can be chosen', async () => {
+      const onChange = vi.fn();
+      render(<Harness label="Parcela" onChange={onChange} options={PLOTS} />);
+
+      await userEvent.click(screen.getByRole('combobox', { name: 'Parcela' }));
+      await userEvent.click(screen.getByRole('option', { name: /P01/ }));
+
+      expect(onChange).toHaveBeenCalledWith(PLOTS[0]);
+    });
+  });
+
   describe('with a list that comes from the server', () => {
     it('reports what was typed once the person stops, and does not filter again', async () => {
       const onSearch = vi.fn();

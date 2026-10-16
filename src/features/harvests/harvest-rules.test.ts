@@ -108,6 +108,7 @@ describe('createHarvestSchema', () => {
     varieties,
   });
   const valid = {
+    plot_id: 'pl1',
     harvest_date: '2026-10-14',
     green_weight_kg: '120,5',
     variety_id: 'ccn-51',
@@ -125,12 +126,14 @@ describe('createHarvestSchema', () => {
   it('marks each missing field', () => {
     expect(
       messagesOf({
+        plot_id: '',
         harvest_date: '',
         green_weight_kg: '',
         variety_id: '',
         collector_id: '',
       }),
     ).toEqual([
+      ['plot_id', 'Campo obligatorio'],
       ['harvest_date', 'Campo obligatorio'],
       ['green_weight_kg', 'Campo obligatorio'],
       ['variety_id', 'Campo obligatorio'],
@@ -195,12 +198,13 @@ describe('toHarvestRequest', () => {
     expect(
       toHarvestRequest(
         {
+          plot_id: 'p1',
           harvest_date: '2026-10-14',
           green_weight_kg: '120.5',
           variety_id: 'v1',
           collector_id: 'c1',
         },
-        { id: 'h1', plotId: 'p1' },
+        'h1',
       ),
     ).toEqual({
       id: 'h1',
