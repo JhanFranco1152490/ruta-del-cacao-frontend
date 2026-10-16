@@ -214,6 +214,69 @@ describe('SearchSelect', () => {
     });
   });
 
+  describe('with descriptions and a pinned option', () => {
+    const PESTS: SearchSelectOption[] = [
+      {
+        id: 'monilia',
+        label: 'Monilia',
+        description: 'Manchas cafés que se cubren de un polvo blanco crema.',
+      },
+      {
+        id: 'trips',
+        label: 'Trips',
+        description: 'Raspan el envés de las hojas.',
+      },
+      {
+        id: 'other',
+        label: 'Otra',
+        description: 'Lo que no está en la lista.',
+        pinned: true,
+      },
+    ];
+    const pest = () => screen.getByRole('combobox', { name: 'Plaga' });
+
+    it('shows the description under the name of each option', async () => {
+      render(<Harness label="Plaga" options={PESTS} />);
+
+      await userEvent.click(pest());
+
+      const monilia = screen.getByRole('option', { name: /^Monilia/ });
+      expect(
+        within(monilia).getByText(
+          'Manchas cafés que se cubren de un polvo blanco crema.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('also finds an option by its description', async () => {
+      render(<Harness label="Plaga" options={PESTS} />);
+
+      await userEvent.type(pest(), 'polvo blanco');
+
+      // La que calza y la fija del final.
+      expect(screen.getAllByRole('option')).toHaveLength(2);
+      expect(screen.getByRole('option', { name: /^Monilia/ })).toBeVisible();
+    });
+
+    it('keeps the pinned option at the end whatever is typed', async () => {
+      render(<Harness label="Plaga" options={PESTS} />);
+
+      await userEvent.type(pest(), 'zzz');
+
+      expect(screen.getAllByRole('option')).toHaveLength(1);
+      expect(screen.getByRole('option', { name: /^Otra/ })).toBeVisible();
+    });
+
+    it('shows only the name in the field once chosen', async () => {
+      render(<Harness label="Plaga" options={PESTS} />);
+
+      await userEvent.click(pest());
+      await userEvent.click(screen.getByRole('option', { name: /^Trips/ }));
+
+      expect(pest()).toHaveValue('Trips');
+    });
+  });
+
   describe('with a list that comes from the server', () => {
     it('reports what was typed once the person stops, and does not filter again', async () => {
       const onSearch = vi.fn();
