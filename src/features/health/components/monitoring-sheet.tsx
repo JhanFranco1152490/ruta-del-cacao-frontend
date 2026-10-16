@@ -41,6 +41,7 @@ export function MonitoringSheet({
   secondaryAction,
   choices,
   initialErrors = [],
+  photosField,
 }: {
   // Cuándo se programó el monitoreo: la fecha de realización no puede ser anterior.
   scheduledAt: string;
@@ -59,6 +60,8 @@ export function MonitoringSheet({
     name: FieldPath<MonitoringFormInput>;
     message: string;
   }[];
+  // Las fotos: no son parte del formulario (son archivos), las lleva quien guarda.
+  photosField?: ReactNode;
 }) {
   const schema = useMemo(
     () => createMonitoringSchema({ today, scheduledAt }),
@@ -129,6 +132,7 @@ export function MonitoringSheet({
               {...register('notes')}
             />
           </FormSection>
+          {photosField}
           <div className="space-y-4">
             {blockedMessage && (
               <p className="font-bold text-warn" id="monitoring-save-blocked">

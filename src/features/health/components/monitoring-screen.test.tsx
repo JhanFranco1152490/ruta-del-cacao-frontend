@@ -34,11 +34,20 @@ import {
   getQueuedMonitoring,
   monitoringQueueId,
 } from '../monitoring-queue';
+import { EVIDENCE_RESOURCE, type EvidencePayload } from '../evidence-queue';
 import { monitoringSyncAdapter } from '../monitoring-sync-adapter';
 vi.mock(
   'next/navigation',
   async () => (await import('@/test/router')).navigation,
 );
+// jsdom no tiene lienzo para reducir fotos: la preparación tiene sus propias pruebas.
+vi.mock('@/lib/images/prepare-photo', () => ({
+  preparePhoto: vi.fn(async (file: File) => ({
+    ok: true,
+    blob: new Blob(['foto']),
+    name: file.name,
+  })),
+}));
 
 import { MonitoringScreen } from './monitoring-screen';
 
@@ -574,6 +583,44 @@ describe('MonitoringScreen', () => {
       await waitFor(async () =>
         expect(await getQueuedMonitoring(userId, 'a1')).toBeNull(),
       );
+    });
+
+    it('sends the chosen photos after the monitoring, and says how many go', async () => {
+      vi.stubGlobal(
+        'URL',
+        Object.assign(URL, {
+          createObjectURL: () => 'blob:foto',
+          revokeObjectURL: () => {},
+        }),
+      );
+      renderScreen();
+      await fillMonilia();
+      await userEvent.upload(screen.getByLabelText('Fotos de la galería'), [
+        new File(['x'], 'mazorca.jpg', { type: 'image/jpeg' }),
+      ]);
+      expect(
+        await screen.findByRole('button', { name: 'Quitar Foto 1' }),
+      ).toBeVisible();
+
+      await userEvent.click(await sheet());
+      const dialog = await confirmDialog();
+      expect(dialog).toHaveTextContent('1 foto adjunta');
+      await userEvent.click(
+        within(dialog).getByRole('button', { name: 'Guardar monitoreo' }),
+      );
+
+      expect(await screen.findByText('Monitoreo registrado')).toBeVisible();
+      const [photo] = await getOfflineDb(userId)
+        .queue.where('resource')
+        .equals(EVIDENCE_RESOURCE)
+        .toArray();
+      expect(photo.parentId).toBe(monitoringQueueId('a1'));
+      expect(photo.payload as EvidencePayload).toMatchObject({
+        activityId: 'a1',
+        kind: 'monitoring',
+        fileName: 'mazorca.jpg',
+        label: 'P-03 · 22 de octubre',
+      });
     });
 
     it('says that the record stays in the phone without a connection', async () => {

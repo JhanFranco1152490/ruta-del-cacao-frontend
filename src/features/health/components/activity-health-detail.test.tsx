@@ -93,6 +93,10 @@ beforeEach(() => {
       buildAgriculturalInput({ id: 'copper', name: 'Óxido de cobre' }),
     ]),
     inputStocksHandler([]),
+    // El detalle de un monitoreo realizado también pide sus fotos.
+    http.get(apiUrl('/api/agricultural-activities/:id/evidence'), () =>
+      HttpResponse.json({ results: [] }),
+    ),
     activityAssigneesHandler([
       buildAssignee({
         id: 'u-foreman',
@@ -235,6 +239,41 @@ describe('ActivityHealthDetail', () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('the evidence', () => {
+  it('shows its section in a done monitoring', async () => {
+    renderDetail(doneMonitoring());
+    expect(
+      await screen.findByRole('region', { name: 'Evidencia' }),
+    ).toBeInTheDocument();
+  });
+
+  it('has no section in a control still scheduled', () => {
+    renderDetail(
+      buildAgriculturalActivity({
+        activity_type: 'phytosanitary_control',
+        status: 'scheduled',
+        control_of: {
+          detection_id: 'd1',
+          monitoring_id: 'm1',
+          pest_disease: null,
+          other_description: 'Hormigas en hojas',
+          incidence: '6.00',
+          sampling_unit: 'trees',
+          monitoring_done_date: '2026-10-19',
+          method: null,
+          method_description: null,
+          planned_input: null,
+          evidence_count: 0,
+        },
+      }),
+    );
+
+    expect(
+      screen.queryByRole('region', { name: 'Evidencia' }),
+    ).not.toBeInTheDocument();
   });
 });
 

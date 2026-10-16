@@ -9,7 +9,9 @@ import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import { useSession } from '@/hooks/use-session';
 import type { components } from '@/lib/api/schema';
+import { notify } from '@/lib/notify';
 import { QueueItemExistsError } from '@/lib/offline/sync-queue';
 import { ACTIVITIES_PATH } from '@/lib/paths/activities';
 
@@ -23,10 +25,13 @@ import { toMonitoringRequest } from '../monitoring-request';
 import type { MonitoringFormValues } from '../monitoring-schema';
 import { monitoringSummary } from '../monitoring-summary';
 import type { PestDisease } from '../pest-api';
+import { type SelectedPhoto } from '../photo-selection';
+import { useQueuedEvidence, useSaveEvidence } from '../use-evidence-queue';
 import { useSaveMonitoring } from '../use-monitoring-queue';
 import type { ControlChoices } from './control-choices';
 import { MonitoringActivityCard } from './monitoring-activity-card';
 import { MonitoringConfirmDialog } from './monitoring-confirm-dialog';
+import { MonitoringPhotosField } from './monitoring-photos-field';
 import { MonitoringSheet } from './monitoring-sheet';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
@@ -61,7 +66,13 @@ export function MonitoringCapture({
   choices: Omit<ControlChoices, 'today'>;
   onSaved: () => void;
 }) {
+  const { data: user } = useSession();
   const save = useSaveMonitoring();
+  const saveEvidence = useSaveEvidence();
+  const [photos, setPhotos] = useState<SelectedPhoto[]>([]);
+  // Las fotos de este monitoreo que ya esperan en el dispositivo (de una corrección) cuentan para
+  // el máximo.
+  const alreadyQueued = useQueuedEvidence(user?.id, activity.id).length;
   const sync = useCaptureSyncStatus('monitoreos');
   const [confirming, setConfirming] = useState<MonitoringFormValues>();
   // Se fija al abrir: la planilla parte de lo que había en ese momento.
@@ -82,18 +93,42 @@ export function MonitoringCapture({
     pests?.find((pest) => pest.id === id)?.name ?? 'Plaga o enfermedad';
   const assigneeName = (id: string) => choices.assigneeNames.get(id) ?? '';
 
-  const confirm = (values: MonitoringFormValues) =>
+  // El resultado va primero; las fotos quedan detrás, esperando a que llegue. Si las fotos no se
+  // pudieran guardar, el monitoreo ya está guardado: se avisa y se adjuntan después desde su detalle.
+  const confirm = (values: MonitoringFormValues) => {
+    const label = monitoringLabel(activity.plot.code, values.done_date);
     save.mutate(
       {
         activityId: activity.id,
         payload: {
           request: toMonitoringRequest(values, new Date().toISOString()),
-          label: monitoringLabel(activity.plot.code, values.done_date),
+          label,
         },
         correcting: !!rejected,
       },
-      { onSuccess: onSaved },
+      {
+        onSuccess: () => {
+          if (photos.length === 0) return onSaved();
+          saveEvidence.mutate(
+            photos.map((photo) => ({
+              ...photo,
+              activityId: activity.id,
+              kind: 'monitoring' as const,
+              label,
+            })),
+            {
+              onError: () =>
+                notify.error(
+                  'Las fotos no se guardaron. Adjúntalas desde el detalle del monitoreo.',
+                ),
+              onSettled: onSaved,
+            },
+          );
+        },
+      },
     );
+  };
+  const isSaving = save.isPending || saveEvidence.isPending;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-8">
@@ -134,8 +169,16 @@ export function MonitoringCapture({
             name: `detections.${index}.pest_disease_id` as const,
             message: UNAVAILABLE_PEST_MESSAGE,
           }))}
-          isSaving={save.isPending}
+          isSaving={isSaving}
           onSubmit={setConfirming}
+          photosField={
+            <MonitoringPhotosField
+              already={alreadyQueued}
+              disabled={isSaving}
+              onChange={setPhotos}
+              photos={photos}
+            />
+          }
           pests={pests}
           scheduledAt={activity.created_at}
           secondaryAction={
@@ -164,7 +207,7 @@ export function MonitoringCapture({
                 ? ALREADY_WAITING
                 : SAVE_FAILED
           }
-          isSaving={save.isPending}
+          isSaving={isSaving}
           onBack={() => {
             save.reset();
             setConfirming(undefined);
@@ -174,7 +217,7 @@ export function MonitoringCapture({
             plotCode: activity.plot.code,
             pestName,
             assigneeName,
-            photoCount: 0,
+            photoCount: photos.length,
           })}
         />
       )}
