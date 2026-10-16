@@ -9,7 +9,7 @@ import type { components } from '@/lib/api/schema';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Detection, detectionStatus } from '../detection-status';
-import { ControlFormDialog } from './control-form-dialog';
+import { ControlFormDialog, originOf } from './control-form-dialog';
 import { NoControlNeededDialog } from './no-control-needed-dialog';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
@@ -56,7 +56,7 @@ export function DetectionActions({
         <ControlFormDialog
           detection={detection}
           mode={open}
-          monitoring={monitoring}
+          origin={originOf(monitoring)}
           onClose={() => setOpen(undefined)}
         />
       )}

@@ -2,6 +2,7 @@
 
 import { ActivityCalendarScreen } from '@/features/activities/components/activity-calendar-screen';
 import { ActivityHealthDetail } from '@/features/health/components/activity-health-detail';
+import { WaitingControlsNotice } from '@/features/health/components/waiting-controls-notice';
 import { monitoringPath } from '@/features/health/health-paths';
 import { MONITORING_RESOURCE } from '@/features/health/monitoring-queue';
 import { useQueuedControlActivities } from '@/features/health/use-queued-controls';
@@ -9,7 +10,8 @@ import { useSession } from '@/hooks/use-session';
 
 // El resultado de un monitoreo es de sanidad: aquí se le dice al calendario dónde se registra, que
 // mientras espera en la cola el monitoreo ya se ve realizado, qué mostrar en su detalle y los
-// controles programados que todavía esperan en el dispositivo. Es de cliente porque entrega una
+// controles programados que todavía esperan en el dispositivo, y el aviso de las detecciones que
+// esperan un control. Es de cliente porque entrega una
 // función, que no puede pasar de un componente de servidor a uno de cliente.
 const CLOSING_RESOURCES = [MONITORING_RESOURCE];
 
@@ -21,6 +23,12 @@ export function CalendarWithHealth() {
       closingResources={CLOSING_RESOURCES}
       monitoringHref={monitoringPath}
       queuedActivities={queuedControls}
+      renderNotice={({ producer, openActivity }) => (
+        <WaitingControlsNotice
+          openActivity={openActivity}
+          producer={producer}
+        />
+      )}
       renderActivityDetails={(activity, { openActivity }) => (
         <ActivityHealthDetail
           activity={activity}

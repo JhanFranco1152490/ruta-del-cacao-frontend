@@ -38,6 +38,20 @@ import { useControlChoicesSource } from './use-control-choices-source';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
+// De dónde sale el control: la parcela del monitoreo, su productor (la cuenta técnica lo necesita
+// para ofrecer responsables) y la fecha del monitoreo, antes de la cual no puede haberse hecho.
+export type ControlOrigin = {
+  plot: AgriculturalActivity['plot'];
+  producerId: string | null;
+  monitoringDate: string;
+};
+
+export const originOf = (monitoring: AgriculturalActivity): ControlOrigin => ({
+  plot: monitoring.plot,
+  producerId: monitoring.producer_id,
+  monitoringDate: monitoring.done_date ?? monitoring.scheduled_date,
+});
+
 const SAVED = {
   scheduled: 'Control fitosanitario programado',
   done: 'Control registrado como realizado',
@@ -48,29 +62,27 @@ const SAVED = {
 export function ControlFormDialog({
   mode,
   detection,
-  monitoring,
+  origin,
   onClose,
 }: {
   mode: ControlFormInput['mode'];
-  detection: Detection;
-  // El monitoreo realizado en que se encontró la detección.
-  monitoring: AgriculturalActivity;
+  detection: Pick<
+    Detection,
+    'id' | 'pest_disease' | 'other_description' | 'incidence'
+  >;
+  origin: ControlOrigin;
   onClose: () => void;
 }) {
   const today = todayInBogota();
   const save = useSaveControl();
   const { choices } = useControlChoicesSource({
-    farmId: monitoring.plot.farm.id,
-    producerId: monitoring.producer_id,
+    farmId: origin.plot.farm.id,
+    producerId: origin.producerId,
     enabled: true,
   });
   const schema = useMemo(
-    () =>
-      createControlSchema({
-        today,
-        monitoringDate: monitoring.done_date ?? today,
-      }),
-    [today, monitoring.done_date],
+    () => createControlSchema({ today, monitoringDate: origin.monitoringDate }),
+    [today, origin.monitoringDate],
   );
   // El id se fija al abrir: guardar dos veces no crea dos controles.
   const [defaultValues] = useState(() =>
@@ -92,10 +104,10 @@ export function ControlFormDialog({
         detectionId: detection.id,
         payload: {
           request: toDetectionControlRequest(values, new Date().toISOString()),
-          label: `${name} · ${monitoring.plot.code}`,
+          label: `${name} · ${origin.plot.code}`,
           context: {
-            plot: monitoring.plot,
-            producerId: monitoring.producer_id,
+            plot: origin.plot,
+            producerId: origin.producerId ?? '',
             assigneeName: choices.assigneeNames.get(values.assignee_id) ?? '',
           },
         },
@@ -131,7 +143,7 @@ export function ControlFormDialog({
                 </DialogTitle>
                 <DialogDescription>
                   Atiende: {name} {formatDecimal(detection.incidence, 2)} % ·{' '}
-                  {monitoring.plot.code}
+                  {origin.plot.code}
                 </DialogDescription>
               </DialogHeader>
               {mode === 'done' ? (

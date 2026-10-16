@@ -1,7 +1,7 @@
 'use client';
 
 import { CloudOff } from 'lucide-react';
-import { type ComponentProps, useState } from 'react';
+import { type ComponentProps, type ReactNode, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
@@ -56,11 +56,19 @@ const NEEDS_CONNECTION = {
 const STATUS_NOTE_CLASS =
   'flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-bold';
 
+// Un aviso de otro dominio arriba de las vistas. Recibe el productor que se ve y cómo abrir el
+// detalle de una actividad.
+export type CalendarNoticeRenderer = (context: {
+  producer: string | null;
+  openActivity: (activityId: string) => void;
+}) => ReactNode;
+
 export function ActivityCalendarScreen({
   closingResources,
   monitoringHref,
   renderActivityDetails,
   queuedActivities,
+  renderNotice,
 }: {
   // Los recursos de otros dominios que, en la cola, cierran una actividad (el resultado de un
   // monitoreo): mientras esperan conexión, la actividad se ve realizada.
@@ -73,6 +81,8 @@ export function ActivityCalendarScreen({
   >['renderDetails'];
   // Las actividades de otro dominio creadas en este dispositivo que esperan conexión.
   queuedActivities?: readonly AgriculturalActivity[];
+  // Un aviso de otro dominio arriba de las vistas (las detecciones que esperan un control).
+  renderNotice?: CalendarNoticeRenderer;
 } = {}) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
@@ -203,6 +213,10 @@ export function ActivityCalendarScreen({
           )}
         </div>
         <div className="mt-4 space-y-3">
+          {renderNotice?.({
+            producer,
+            openActivity: (id) => open({ kind: 'detail', id }),
+          })}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <ActivityViewSwitch onChange={viewState.setView} value={view} />
             {canSchedule && isDesktop && (

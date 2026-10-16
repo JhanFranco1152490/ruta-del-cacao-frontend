@@ -29,7 +29,10 @@ import { discard, enqueue } from '@/lib/offline/sync-queue';
 
 import { completionQueueId, enqueueCompletion } from '../completion-queue';
 import type { AgriculturalActivity } from '../api';
-import { ActivityCalendarScreen } from './activity-calendar-screen';
+import {
+  ActivityCalendarScreen,
+  type CalendarNoticeRenderer,
+} from './activity-calendar-screen';
 
 // Jueves 22 de octubre de 2026, a mediodía en Bogotá.
 const NOW = new Date('2026-10-22T17:00:00Z');
@@ -54,6 +57,7 @@ function renderScreen({
   permissions = [PERMISSIONS.ACTIVITIES_VIEW] as string[],
   closingResources = undefined as readonly string[] | undefined,
   queuedActivities = undefined as readonly AgriculturalActivity[] | undefined,
+  renderNotice = undefined as CalendarNoticeRenderer | undefined,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -67,6 +71,7 @@ function renderScreen({
     <ActivityCalendarScreen
       closingResources={closingResources}
       queuedActivities={queuedActivities}
+      renderNotice={renderNotice}
     />,
     {
       queryClient,
@@ -735,6 +740,29 @@ describe('ActivityCalendarScreen', () => {
 
     const card = await screen.findByRole('button', { name: /Monitoreo/ });
     expect(card).toHaveTextContent('Realizada · 1 detección sin control');
+  });
+
+  it('shows the notice of another domain above the views, able to open an activity', async () => {
+    server.use(
+      agriculturalActivitiesHandler([
+        buildAgriculturalActivity({ id: 'a1', activity_type: 'pruning' }),
+      ]),
+    );
+    renderScreen({
+      renderNotice: ({ producer, openActivity }) => (
+        <button onClick={() => openActivity('a1')} type="button">
+          Aviso de {producer ?? 'mi productor'}
+        </button>
+      ),
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Aviso de mi productor' }),
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: /Poda/ }),
+    ).toBeInTheDocument();
   });
 
   describe('activities of other domains created in the device', () => {

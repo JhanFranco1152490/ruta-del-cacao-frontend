@@ -15,7 +15,11 @@ import { useNoControlNeeded } from '../use-control-actions';
 
 // Quien programa decide que una detección que alguien pidió atender no necesita control. Sale del
 // aviso de detecciones que esperan un control y queda registrado quién lo decidió.
-export function NoControlNeededDialog({ detection }: { detection: Detection }) {
+export function NoControlNeededDialog({
+  detection,
+}: {
+  detection: Pick<Detection, 'id' | 'pest_disease' | 'other_description'>;
+}) {
   const decide = useNoControlNeeded();
   const action: StatusChangeAction = {
     trigger: 'No requiere control',

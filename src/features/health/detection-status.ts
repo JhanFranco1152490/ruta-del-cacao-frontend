@@ -8,8 +8,9 @@ export type Detection = Schemas['DetectionOutput'];
 export type DetectionControlRow = Schemas['DetectionControlRow'];
 
 // Cómo se nombra una detección: la plaga del catálogo, o lo que se escribió en Otra.
-export const detectionName = (detection: Detection) =>
-  detection.pest_disease?.name ?? `Otra (${detection.other_description})`;
+export const detectionName = (
+  detection: Pick<Detection, 'pest_disease' | 'other_description'>,
+) => detection.pest_disease?.name ?? `Otra (${detection.other_description})`;
 
 export type DetectionStatus = {
   // `none`: nadie pidió nada; `requested`: alguien pidió que se lo programen; `dismissed`: quien
