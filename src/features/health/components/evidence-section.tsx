@@ -4,13 +4,14 @@ import { useState } from 'react';
 
 import { useSession } from '@/hooks/use-session';
 import { mayRecordFor } from '@/lib/activity-recorders';
+import { isEmployee } from '@/lib/employee';
 import type { components } from '@/lib/api/schema';
 import { notify } from '@/lib/notify';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useEvidence } from '../evidence-api';
 import { monitoringLabel } from '../monitoring-correction';
-import { selectPhotos } from '../photo-selection';
+import { awaitingSend, selectPhotos } from '../photo-selection';
 import { useQueuedEvidence, useSaveEvidence } from '../use-evidence-queue';
 import { QueuedPhoto, ServerPhoto } from './evidence-photos';
 import { PhotoPicker } from './photo-picker';
@@ -20,7 +21,7 @@ type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
 // Las fotos que respaldan un monitoreo o un control realizados. Las adjunta quien puede registrar
 // ese monitoreo o control, también días después y sin conexión; las elimina quien la subió, quien
-// programa en la finca o el Productor.
+// programa en la finca, el Productor o la cuenta técnica.
 export function EvidenceSection({
   activity,
 }: {
@@ -34,12 +35,12 @@ export function EvidenceSection({
   const [viewing, setViewing] = useState<{ url: string; label: string }>();
   const canComplete = hasPermission(user, PERMISSIONS.ACTIVITIES_COMPLETE);
   const canAttach = canComplete && mayRecordFor(user, activity.assignee.id);
+  // Un empleado que trabaja en todas las fincas pero no programa labores solo elimina las suyas.
   const canDeleteAny =
     canComplete &&
-    (user?.all_farms === true ||
-      hasPermission(user, PERMISSIONS.ACTIVITIES_ADD));
+    (!isEmployee(user) || hasPermission(user, PERMISSIONS.ACTIVITIES_ADD));
   const saved = evidence.data?.data ?? [];
-  const pending = queued.filter(({ status }) => status !== 'error');
+  const pending = awaitingSend(queued);
   const count = saved.length + pending.length;
   const kind = activity.monitoring ? 'monitoring' : 'control';
   const label =

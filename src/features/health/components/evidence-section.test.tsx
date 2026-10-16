@@ -97,6 +97,11 @@ beforeEach(() => {
   );
 });
 
+// Un rol propio de un empleado que solo registra lo suyo.
+const WORKER_ROLES = [
+  { id: 'role-worker', code: null, name: 'Recolector', farm_scope: 'one' },
+];
+
 const FOREMAN = [
   PERMISSIONS.ACTIVITIES_VIEW,
   PERMISSIONS.ACTIVITIES_COMPLETE,
@@ -211,6 +216,7 @@ describe('EvidenceSection', () => {
   it('lets a worker attach to its own monitoring but not delete the photos of others', async () => {
     renderSection({
       id: 'u-foreman',
+      roles: WORKER_ROLES,
       permissions: [
         PERMISSIONS.ACTIVITIES_VIEW,
         PERMISSIONS.ACTIVITIES_COMPLETE,
@@ -224,9 +230,27 @@ describe('EvidenceSection', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('does not let a worker who reaches every farm delete the photos of others', async () => {
+    saved = [photo('e1'), photo('e2', 'u-worker')];
+    renderSection({
+      id: 'u-worker',
+      roles: WORKER_ROLES,
+      all_farms: true,
+      permissions: [
+        PERMISSIONS.ACTIVITIES_VIEW,
+        PERMISSIONS.ACTIVITIES_COMPLETE,
+      ],
+    });
+    await screen.findByRole('button', { name: 'Ver Foto 2' });
+
+    // Solo la suya.
+    expect(screen.getAllByRole('button', { name: 'Eliminar' })).toHaveLength(1);
+  });
+
   it('does not offer to attach to who cannot record that monitoring', async () => {
     renderSection({
       id: 'u-worker',
+      roles: WORKER_ROLES,
       permissions: [
         PERMISSIONS.ACTIVITIES_VIEW,
         PERMISSIONS.ACTIVITIES_COMPLETE,
