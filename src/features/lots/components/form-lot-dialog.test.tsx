@@ -8,7 +8,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { apiError, buildLot, buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
-import { resetLocation, router } from '@/test/router';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 vi.mock(
@@ -92,15 +92,43 @@ describe('FormLotDialog', () => {
     answerWith(() =>
       HttpResponse.json(buildLot({ id: 'l9' }), { status: 201 }),
     );
+    mockLocation.path = '/cosechas/detalle';
+    mockLocation.search = 'id=h1';
     renderDialog();
 
     await openAndConfirm();
 
     await waitFor(() =>
-      expect(router.push).toHaveBeenCalledWith('/lotes/detalle?id=l9'),
+      expect(router.push).toHaveBeenCalledWith(
+        '/lotes/detalle?id=l9&origen=%2Fcosechas%2Fdetalle%3Fid%3Dh1',
+      ),
     );
     expect(await screen.findByText('Lote conformado')).toBeInTheDocument();
     expect(bodies).toEqual([{ id: expect.any(String), harvest_id: 'h1' }]);
+  });
+
+  it('goes back to the list it was told when the current screen is a passing one', async () => {
+    answerWith(() =>
+      HttpResponse.json(buildLot({ id: 'l9' }), { status: 201 }),
+    );
+    mockLocation.path = '/cosechas/registrar';
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      queryKeys.session(),
+      buildSession({ id: 'u1', permissions: [PERMISSIONS.LOTS_ADD] }),
+    );
+    renderWithProviders(
+      <FormLotDialog returnTo="/cosechas?mes=2026-10" source={SOURCE} />,
+      { queryClient },
+    );
+
+    await openAndConfirm();
+
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith(
+        '/lotes/detalle?id=l9&origen=%2Fcosechas%3Fmes%3D2026-10',
+      ),
+    );
   });
 
   it('retries with the same id after a failure', async () => {
@@ -119,7 +147,9 @@ describe('FormLotDialog', () => {
     );
 
     await waitFor(() =>
-      expect(router.push).toHaveBeenCalledWith('/lotes/detalle?id=l1'),
+      expect(router.push).toHaveBeenCalledWith(
+        expect.stringMatching(/^\/lotes\/detalle\?id=l1&/),
+      ),
     );
     expect(bodies[1].id).toBe(bodies[0].id);
   });
@@ -141,7 +171,9 @@ describe('FormLotDialog', () => {
     await openAndConfirm();
 
     await waitFor(() =>
-      expect(router.push).toHaveBeenCalledWith('/lotes/detalle?id=l7'),
+      expect(router.push).toHaveBeenCalledWith(
+        expect.stringMatching(/^\/lotes\/detalle\?id=l7&/),
+      ),
     );
     expect(
       await screen.findByText(

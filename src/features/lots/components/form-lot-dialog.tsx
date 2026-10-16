@@ -7,9 +7,11 @@ import { useState } from 'react';
 import { StatusChangeDialog } from '@/components/status-change-dialog';
 import { Button } from '@/components/ui/button';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
+import { useCurrentPath } from '@/hooks/use-current-path';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { withOrigin } from '@/lib/navigation/origin';
 import { notify } from '@/lib/notify';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -31,14 +33,23 @@ const createErrorMessage = (error: unknown) =>
 export function FormLotDialog({
   source,
   inRow = false,
+  returnTo,
 }: {
   source: LotSource;
   inRow?: boolean;
+  // A dónde ofrece volver la ficha del lote; por omisión, la pantalla actual. Una pantalla que
+  // solo existe tras guardar (la de «Cosecha registrada») da la lista a la que iba a volver.
+  returnTo?: string;
 }) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
   const router = useRouter();
   const create = useCreateLot();
+  // La ficha del lote ofrece volver aquí: se conforma desde Cosechas y la ruta de arriba lleva a
+  // Lotes.
+  const current = useCurrentPath();
+  const openLot = (id: string) =>
+    router.push(withOrigin(lotDetailPath(id), returnTo ?? current));
   // Uno por diálogo: si la respuesta se pierde, reintentar devuelve el mismo lote.
   const [lotId] = useState(() => crypto.randomUUID());
   const dialog = useConfirmAction(async () => {
@@ -48,13 +59,13 @@ export function FormLotDialog({
         harvest_id: source.harvestId,
       });
       notify.success('Lote conformado');
-      router.push(lotDetailPath(lot.id));
+      openLot(lot.id);
     } catch (error) {
       // Otra persona lo conformó primero: se muestra ese lote en vez de un error.
       const existing = existingLotOf(error);
       if (!existing) throw error;
       notify.info(`Esta cosecha ya forma el lote ${existing.code}`);
-      router.push(lotDetailPath(existing.id));
+      openLot(existing.id);
     }
   }, createErrorMessage);
 
@@ -83,5 +94,12 @@ export function FormLotDialog({
     Icon: Package,
     variant: 'default' as const,
   };
-  return <StatusChangeDialog action={action} trigger={action} {...dialog} />;
+  return (
+    <StatusChangeDialog
+      action={action}
+      trigger={action}
+      triggerSize="office"
+      {...dialog}
+    />
+  );
 }

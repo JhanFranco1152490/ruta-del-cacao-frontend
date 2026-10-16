@@ -59,6 +59,7 @@ export function LotFiltersBar({
 
   return (
     <FilterRow
+      compact
       activeCount={state.activeCount - periodCount}
       more={
         <>
@@ -84,6 +85,7 @@ export function LotFiltersBar({
       moreActiveCount={periodCount}
       search={
         <TextField
+          className="h-10 text-sm"
           hideLabel
           label="Buscar por código"
           onChange={(event) => state.setSearchInput(event.target.value)}

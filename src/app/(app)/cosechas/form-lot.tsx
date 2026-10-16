@@ -8,6 +8,12 @@ export const renderFormLot = (source: HarvestLotSource) => (
   <FormLotDialog source={source} />
 );
 
+export function renderFormLotReturningTo(returnTo: string) {
+  return function renderFormLotThere(source: HarvestLotSource) {
+    return <FormLotDialog returnTo={returnTo} source={source} />;
+  };
+}
+
 export const renderFormLotInRow = (source: HarvestLotSource) => (
   <FormLotDialog inRow source={source} />
 );

@@ -4,7 +4,6 @@ import { CheckCircle2, CloudOff } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { Button, buttonVariants } from '@/components/ui/button';
 
 // Lo que sigue a guardar una cosecha. A diferencia de las demás altas de la app, que avisan y
@@ -52,9 +51,11 @@ export function HarvestSaved({
           )}
         </div>
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      {/* Columnas iguales: los tres botones miden lo mismo, el ancho del texto más largo. En
+          celular, uno debajo del otro a todo el ancho. */}
+      <div className="grid gap-3 sm:inline-grid sm:auto-cols-fr sm:grid-flow-col">
         <Button
-          className={CAPTURE_BUTTON_CLASS}
+          className="h-11"
           onClick={onAnother}
           size="office"
           type="button"
@@ -66,7 +67,7 @@ export function HarvestSaved({
           className={buttonVariants({
             size: 'office',
             variant: 'outline',
-            className: CAPTURE_BUTTON_CLASS,
+            className: 'h-11',
           })}
           href={doneHref}
         >

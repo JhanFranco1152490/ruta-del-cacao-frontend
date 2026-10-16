@@ -52,5 +52,12 @@ export function HarvestDeleteDialog({ harvest }: { harvest: Harvest }) {
     variant: 'destructive' as const,
   };
 
-  return <StatusChangeDialog action={action} trigger={action} {...dialog} />;
+  return (
+    <StatusChangeDialog
+      action={action}
+      trigger={action}
+      triggerSize="office"
+      {...dialog}
+    />
+  );
 }

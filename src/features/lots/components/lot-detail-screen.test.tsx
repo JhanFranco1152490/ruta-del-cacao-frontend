@@ -8,7 +8,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { apiError, buildLot, buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
-import { resetLocation, router } from '@/test/router';
+import { mockLocation, resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 vi.mock(
@@ -79,6 +79,25 @@ describe('LotDetailScreen', () => {
     expect(
       within(origin).getByRole('link', { name: 'Versión 1' }),
     ).toHaveAttribute('href', '/ficha/historial?id=pl1');
+  });
+
+  it('offers to go back to where the lot was formed', async () => {
+    mockLocation.search = new URLSearchParams({
+      id: 'l1',
+      origen: '/cosechas?lote=sin',
+    }).toString();
+    renderScreen();
+
+    expect(
+      await screen.findByRole('link', { name: 'Volver a Cosechas' }),
+    ).toHaveAttribute('href', '/cosechas?lote=sin');
+  });
+
+  it('has no way back when opened from the list of lots', async () => {
+    renderScreen();
+
+    await screen.findByRole('button', { name: 'Copiar código' });
+    expect(screen.queryByRole('link', { name: /Volver/ })).toBeNull();
   });
 
   it('copies the code', async () => {
