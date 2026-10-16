@@ -10,13 +10,12 @@ import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { monthBounds, shiftDays, todayInBogota } from '@/lib/format/dates';
-import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
+import { readThroughCache } from '@/lib/offline/cached-read';
 
 import { PENDING_FETCH_DAYS } from './activity-pending';
 import {
   activityMonthCacheKey,
   assigneesCacheKey,
-  findSavedActivity,
   offlineWindowMonths,
   pendingCacheKey,
 } from './activity-cache';
@@ -162,37 +161,6 @@ export const usePendingActivities = (
         ),
       ),
     enabled: enabled && !!userId,
-    networkMode: 'offlineFirst',
-  });
-
-export const fetchActivity = (id: string, signal?: AbortSignal) =>
-  apiFetch<AgriculturalActivity>(`/api/agricultural-activities/${id}`, {
-    signal,
-  });
-
-// Sin respuesta del servidor (sin red) la actividad sale de los meses guardados, con la fecha de
-// esa copia. Un error de la API (ya no existe, sin permiso) se muestra como siempre.
-async function readActivity(
-  userId: string,
-  id: string,
-  signal?: AbortSignal,
-): Promise<CachedRead<AgriculturalActivity>> {
-  try {
-    return { data: await fetchActivity(id, signal) };
-  } catch (error) {
-    if (isApiError(error)) throw error;
-    const saved = await findSavedActivity(userId, id).catch(() => null);
-    if (!saved) throw error;
-    return saved;
-  }
-}
-
-// Una actividad sola: la que se va a registrar como realizada, también sin conexión.
-export const useActivity = (userId: string | undefined, id: string) =>
-  useQuery({
-    queryKey: queryKeys.agriculturalActivities.detail(id),
-    queryFn: ({ signal }) => readActivity(userId!, id, signal),
-    enabled: !!userId && !!id,
     networkMode: 'offlineFirst',
   });
 

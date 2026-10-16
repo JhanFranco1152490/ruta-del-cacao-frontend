@@ -7,9 +7,9 @@ import { PageNotice } from '@/components/page-notice';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
+import { mayRecordFor } from '@/lib/activity-recorders';
 import { todayInBogota } from '@/lib/format/dates';
 
-import { mayRecordFor } from '../activity-actions';
 import { ACTIVITIES_PATH } from '../activity-paths';
 import { activityState, canComplete } from '../activity-state';
 import { CompletionCapture } from './completion-capture';
