@@ -34,6 +34,7 @@ export function HarvestForm({
   truncated,
   collectors,
   preferredCollectorId,
+  keptCollector,
   today,
   defaultValues,
   plotLocked = false,
@@ -50,6 +51,10 @@ export function HarvestForm({
   collectors: readonly CollectorOption[] | undefined;
   // Quien registra: se propone como recolector en las parcelas donde puede serlo.
   preferredCollectorId?: string;
+  // Al corregir: el recolector que la cosecha ya tiene. Si dejó de poder recolectar (se desactivó
+  // o cambió de finca) se sigue ofreciendo, marcado, para no perderlo al corregir otra cosa: el
+  // servidor solo lo revisa si cambia.
+  keptCollector?: { id: string; label: string };
   today: string;
   defaultValues: HarvestFormInput;
   // Al corregir lo que el servidor rechazó, la parcela ya no se cambia.
@@ -82,8 +87,18 @@ export function HarvestForm({
   });
   const plot = plots.find(({ id }) => id === plotId);
   const variety = plot?.varieties.find(({ id }) => id === varietyId);
-  const people =
+  const offered =
     plot && collectors ? collectorChoices(collectors, plot.farmId) : [];
+  const people =
+    keptCollector && !offered.some(({ id }) => id === keptCollector.id)
+      ? [
+          ...offered,
+          {
+            id: keptCollector.id,
+            label: `${keptCollector.label} (ya no disponible)`,
+          },
+        ]
+      : offered;
   // La lista de recolectores puede llegar después de la parcela (abierta desde ella o recordada):
   // entonces se propone a quien registra, si puede serlo y nadie está elegido aún.
   const proposeCollector =

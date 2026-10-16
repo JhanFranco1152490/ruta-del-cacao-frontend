@@ -1,9 +1,14 @@
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { components } from '@/lib/api/schema';
+import type { components, operations } from '@/lib/api/schema';
 import { monthBounds, todayInBogota } from '@/lib/format/dates';
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
 
@@ -19,6 +24,8 @@ export type Harvest = Schemas['Harvest'];
 // Una cuenta que puede ser recolectora: con las fincas en las que trabaja y si quien pregunta
 // puede nombrarla.
 export type CollectorOption = Schemas['CollectorOption'];
+export type HarvestUpdateRequest = Schemas['PatchedHarvestUpdateRequest'];
+type HarvestDeleteQuery = operations['harvests_destroy']['parameters']['query'];
 
 export const HARVEST_ERROR = {
   plotNotCharacterized: 'plot_not_characterized',
@@ -166,3 +173,57 @@ export const useHarvestCollectors = (
 // El alta llega siempre desde la cola del dispositivo.
 export const postHarvest = (body: Schemas['HarvestCreateRequest']) =>
   apiFetch<Harvest>('/api/harvests', { method: 'POST', body });
+
+export const patchHarvest = (id: string, body: HarvestUpdateRequest) =>
+  apiFetch<Harvest>(`/api/harvests/${id}`, { method: 'PATCH', body });
+
+// La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP.
+export const deleteHarvest = (id: string, expectedVersion: number) => {
+  const query: HarvestDeleteQuery = { expected_version: expectedVersion };
+  const params = new URLSearchParams({
+    expected_version: String(query.expected_version),
+  });
+  return apiFetch<void>(`/api/harvests/${id}?${params}`, { method: 'DELETE' });
+};
+
+// La cosecha como está ahora en el servidor, cuando otra persona la cambió primero.
+export function currentHarvestOf(error: unknown): Harvest | null {
+  if (!isApiError(error) || error.code !== HARVEST_ERROR.staleVersion) {
+    return null;
+  }
+  return (error.body.current as Harvest | undefined) ?? null;
+}
+
+function useInvalidateHarvests() {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.harvests.all() });
+}
+
+// Corregir y eliminar son solo en línea: sin red deben fallar en el acto, no quedar en pausa para
+// ejecutarse solas al volver la red. También al fallar se vuelve a leer: con una versión obsoleta
+// o una cosecha que ya forma un lote, la lista y el detalle deben mostrar cómo quedó.
+export function useCorrectHarvest() {
+  const invalidate = useInvalidateHarvests();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({ id, body }: { id: string; body: HarvestUpdateRequest }) =>
+      patchHarvest(id, body),
+    onSettled: () => invalidate(),
+  });
+}
+
+export function useDeleteHarvest() {
+  const invalidate = useInvalidateHarvests();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({
+      id,
+      expectedVersion,
+    }: {
+      id: string;
+      expectedVersion: number;
+    }) => deleteHarvest(id, expectedVersion),
+    onSettled: () => invalidate(),
+  });
+}
