@@ -123,6 +123,26 @@ export const activityAssigneesHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde las cosechas de un periodo y guarda las búsquedas recibidas.
+export const harvestsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/harvests'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// Responde las cuentas que pueden recolectar y guarda las búsquedas recibidas.
+export const harvestCollectorsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/harvests/collectors'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

@@ -325,6 +325,44 @@ export const buildAssignee = (
   ...overrides,
 });
 
+export const buildHarvest = (
+  overrides: Partial<Schemas['Harvest']> = {},
+): Schemas['Harvest'] => ({
+  id: 'h1',
+  plot: {
+    id: 'pl1',
+    code: 'P05',
+    name: 'Lote del río',
+    is_active: true,
+    farm: { id: 'f1', code: 'F02', name: 'La Esperanza', is_active: true },
+  },
+  producer_id: 'p1',
+  harvest_date: '2026-10-14',
+  green_weight_kg: '120.5',
+  variety: { id: 'v1', name: 'CCN-51', is_active: true },
+  collector: { id: 'u1', full_name: 'Cuenta de prueba', is_active: true },
+  characterization_version: 1,
+  registered_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  captured_at: null,
+  version: 1,
+  created_at: '2026-10-14T15:00:00Z',
+  updated_at: '2026-10-14T15:00:00Z',
+  lot: null,
+  ...overrides,
+});
+
+export const buildCollector = (
+  overrides: Partial<Schemas['CollectorOption']> = {},
+): Schemas['CollectorOption'] => ({
+  id: 'u1',
+  full_name: 'Cuenta de prueba',
+  is_active: true,
+  farm_ids: [],
+  all_farms: true,
+  assignable: true,
+  ...overrides,
+});
+
 export const buildAgriculturalActivity = (
   overrides: Partial<Schemas['AgriculturalActivity']> = {},
 ): Schemas['AgriculturalActivity'] => ({
