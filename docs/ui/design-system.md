@@ -173,7 +173,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos, página no encontrada y de error |
 | `BotanicalVine` | Línea botánica en oro, solo sobre fondo oscuro | Inicio de sesión, barra lateral y menú móvil |
 | `StatusPage` | Pantalla completa con la mata, título y acciones | Página no encontrada y error inesperado |
-| `DetailFooter` | Pie de una ficha: «Volver» (44 px, con flecha) a la izquierda, a la pantalla de origen con sus filtros o a la lista, y las acciones a la derecha con la destructiva al final. En celular, las acciones arriba y Volver al final, a todo el ancho | Fichas de cosecha y de lote; las demás en la pasada de estética |
+| `DetailFooter` | Pie de una ficha: «Volver» (44 px, con flecha) a la izquierda, a la pantalla de origen con sus filtros o a la lista, y las acciones de la ficha, si tiene, a la derecha. En celular, las acciones arriba y Volver al final, a todo el ancho | Fichas de cosecha y de lote; las demás en la pasada de estética |
 
 ### Iconografía
 
@@ -253,10 +253,9 @@ poscosecha cobre, calidad azul). Nunca emojis.
   muestra. Con ancho, el mapa de una finca va al lado de sus parcelas y se queda a la vista
   mientras se recorre la lista.
 - **Ficha:** dos columnas (2/3 contenido, 1/3 relaciones e historial de cambios). Termina con
-  `DetailFooter`: **Volver** abajo a la izquierda y las acciones abajo a la derecha, con
-  **Eliminar** al final. La ruta de arriba no se lee como un botón para quien usa poco la web; en
-  campo, con una tablet, se busca un «Volver» donde termina lo que se estaba leyendo. Separado de
-  Eliminar, nadie borra queriendo salir.
+  `DetailFooter`: **Volver** abajo a la izquierda, y las acciones de la ficha, si tiene, a su
+  derecha. La ruta de arriba no se lee como un botón para quien usa poco la web; en campo, con una
+  tablet, se busca un «Volver» donde termina lo que se estaba leyendo.
 - **Formulario de oficina:** columna de 520 px con cards por sección; el mapa o la vista previa
   ocupa el resto.
 - **Captura de campo:** cabecera verde con paso actual, aviso de conexión, contenido de un solo

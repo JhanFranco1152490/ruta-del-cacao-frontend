@@ -425,12 +425,12 @@ referencia en `docs/ui/ref/*.html`.
   etiquetas visibles (`hideLabel`), y en el celular detrás de «Filtros». Los mapas que acompañan
   una lista (`MunicipalityMapPanel`, `PointsMapPanel`) aceptan `hiddenOnMobile`; el resumen se
   oculta junto con el mapa. Detalle y razones en `docs/ui/design-system.md` §7.
-- **Toda ficha termina con «Volver» abajo a la izquierda y sus acciones a la derecha**
-  (`DetailFooter`), con **Eliminar** al final, lejos de Volver. Volver lleva a la pantalla desde la
-  que se abrió la ficha, con sus filtros (`readOrigin`; los enlaces que abren una ficha usan
-  `EditorLink`), o a la lista de la sección si se entró directo. La ruta de arriba no basta para
-  quien usa poco la web: un botón «Volver» sí se entiende. Hoy lo tienen las fichas de cosecha y de
-  lote; las demás lo reciben en la pasada de estética.
+- **Toda ficha termina con «Volver» abajo a la izquierda** (`DetailFooter`; las acciones de la
+  ficha, si tiene, van a su derecha). Volver lleva a la pantalla desde la que se abrió la ficha, con
+  sus filtros (`readOrigin`; los enlaces que abren una ficha usan `EditorLink`), o a la lista de la
+  sección si se entró directo. La ruta de arriba no basta para quien usa poco la web: un botón
+  «Volver» sí se entiende. Hoy lo tienen las fichas de cosecha y de lote; las demás lo reciben en la
+  pasada de estética.
 - **Estados.** Siempre color + ícono + texto, nunca color solo. Variantes tintadas en oficina y
   sólidas en campo o para avisos críticos.
 - **Contraste.** Texto mínimo 4.5:1 (3:1 desde 24 px). Prohibido gris claro para datos

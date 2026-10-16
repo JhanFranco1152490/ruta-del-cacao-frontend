@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 
 import { buttonVariants } from '@/components/ui/button';
 
-// El pie de una ficha: «Volver» a la izquierda y las acciones a la derecha, con la destructiva al
-// final, lejos de Volver. La ruta de arriba no se lee como un botón para quien usa poco la web;
+// El pie de una ficha: «Volver» a la izquierda y las acciones de la ficha, si tiene, a la derecha,
+// en el orden en que llegan. La ruta de arriba no se lee como un botón para quien usa poco la web;
 // Volver sí, y está donde termina lo que se estaba leyendo. En celular las acciones van primero y
 // Volver al final, a todo el ancho.
 export function DetailFooter({
