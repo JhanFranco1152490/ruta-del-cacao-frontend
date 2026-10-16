@@ -10,6 +10,7 @@ import { server } from '@/test/server';
 
 import type { HarvestPayload } from './harvest-queue';
 import {
+  HARVEST_ALREADY_SENT_MESSAGE,
   HARVEST_PLOT_GONE_CODE,
   HARVEST_PLOT_GONE_MESSAGE,
   harvestSyncAdapter,
@@ -51,7 +52,7 @@ const apiError = (status: number, body: Record<string, unknown>) =>
 const conflict = (error: unknown) => harvestSyncAdapter.parseConflict(error);
 
 describe('harvestSyncAdapter.send', () => {
-  it('posts only the request, with the id of the device, and returns what the server answered', async () => {
+  it('posts the request with the id and the time of the device, and returns what the server answered', async () => {
     let received: unknown;
     server.use(
       http.post(apiUrl('/api/harvests'), async ({ request }) => {
@@ -62,8 +63,28 @@ describe('harvestSyncAdapter.send', () => {
 
     const response = await harvestSyncAdapter.send(item);
 
-    expect(received).toEqual(payload.request);
+    expect(received).toEqual({
+      ...payload.request,
+      captured_at: '1970-01-01T00:00:00.000Z',
+    });
     expect(response).toMatchObject({ id: 'h1' });
+  });
+
+  it('takes the time from when it was saved on the device, not from when it is sent', async () => {
+    let received: { captured_at?: string } = {};
+    server.use(
+      http.post(apiUrl('/api/harvests'), async ({ request }) => {
+        received = (await request.json()) as typeof received;
+        return HttpResponse.json(buildHarvest(), { status: 201 });
+      }),
+    );
+
+    await harvestSyncAdapter.send({
+      ...item,
+      createdAt: Date.UTC(2026, 9, 14, 14, 12),
+    });
+
+    expect(received.captured_at).toBe('2026-10-14T14:12:00.000Z');
   });
 });
 
@@ -85,6 +106,13 @@ describe('harvestSyncAdapter.parseConflict', () => {
     expect(conflict(apiError(422, { code: 'variety_not_in_plot' }))).toEqual({
       code: 'variety_not_in_plot',
       message: VARIETY_NOT_IN_PLOT_MESSAGE,
+    });
+  });
+
+  it('explains that a harvest that already reached the server with other data is only discarded', () => {
+    expect(conflict(apiError(409, { code: 'harvest_id_conflict' }))).toEqual({
+      code: 'harvest_id_conflict',
+      message: HARVEST_ALREADY_SENT_MESSAGE,
     });
   });
 
