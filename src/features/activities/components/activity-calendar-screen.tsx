@@ -1,7 +1,7 @@
 'use client';
 
 import { CloudOff } from 'lucide-react';
-import { useState } from 'react';
+import { type ComponentProps, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
@@ -58,12 +58,17 @@ const STATUS_NOTE_CLASS =
 export function ActivityCalendarScreen({
   closingResources,
   monitoringHref,
+  renderActivityDetails,
 }: {
   // Los recursos de otros dominios que, en la cola, cierran una actividad (el resultado de un
   // monitoreo): mientras esperan conexión, la actividad se ve realizada.
   closingResources?: readonly string[];
   // La pantalla donde se registra el resultado de un monitoreo, que es de otro dominio.
   monitoringHref?: (activityId: string) => string;
+  // Lo que otro dominio agrega al detalle de una actividad.
+  renderActivityDetails?: ComponentProps<
+    typeof ActivityDialogs
+  >['renderDetails'];
 } = {}) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
@@ -322,6 +327,7 @@ export function ActivityCalendarScreen({
           offline={offline}
           currentMonth={month}
           monitoringHref={monitoringHref}
+          renderDetails={renderActivityDetails}
           onGoToMonth={inMonthView ? goToMonth : undefined}
           onPending={setPending}
           pending={pending}

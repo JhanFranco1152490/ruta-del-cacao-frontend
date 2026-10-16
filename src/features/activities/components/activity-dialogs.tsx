@@ -1,8 +1,11 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { notify } from '@/lib/notify';
 
 import type { ActivityOfDay } from '../activity-days';
+import type { AgriculturalActivity } from '../api';
 import { activityCompletionPath } from '../activity-paths';
 import { ActivityDayDialog } from './activity-day-dialog';
 import { ActivityDeleteDialog } from './activity-delete-dialog';
@@ -31,6 +34,7 @@ export function ActivityDialogs({
   onGoToMonth,
   onPending,
   monitoringHref,
+  renderDetails,
 }: {
   pending: PendingDialog | undefined;
   // Las actividades que se ven, con su estado de hoy.
@@ -45,6 +49,12 @@ export function ActivityDialogs({
   onPending: (pending: PendingDialog | undefined) => void;
   // La pantalla donde se registra el resultado de un monitoreo, si la página la entrega.
   monitoringHref?: (activityId: string) => string;
+  // Lo que otro dominio agrega al detalle. `openActivity` abre el detalle de otra actividad de la
+  // lista (el monitoreo que atiende un control).
+  renderDetails?: (
+    activity: AgriculturalActivity,
+    context: { openActivity: (activityId: string) => void },
+  ) => ReactNode;
 }) {
   const close = () => onPending(undefined);
   const saved = (message: string, isoDate: string) => {
@@ -140,6 +150,13 @@ export function ActivityDialogs({
       completeHref={activityCompletionPath(id)}
       item={item}
       monitoringHref={monitoringHref?.(id)}
+      renderDetails={
+        renderDetails &&
+        ((activity) =>
+          renderDetails(activity, {
+            openActivity: (other) => onPending({ kind: 'detail', id: other }),
+          }))
+      }
       offline={offline}
       onClose={close}
       onDelete={() => onPending({ kind: 'delete', id })}

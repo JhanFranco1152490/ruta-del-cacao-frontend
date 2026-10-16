@@ -705,6 +705,33 @@ describe('ActivityCalendarScreen', () => {
     });
   });
 
+  it('says that a done monitoring has detections without a control', async () => {
+    server.use(
+      agriculturalActivitiesHandler([
+        buildAgriculturalActivity({
+          activity_type: 'phytosanitary_monitoring',
+          scheduled_date: '2026-10-20',
+          status: 'done',
+          done_date: '2026-10-20',
+          monitoring: {
+            sampling_unit: 'trees',
+            evaluated_units: 50,
+            sampling_method: null,
+            notes: null,
+            no_presence: false,
+            detections: [],
+            detections_without_control: 1,
+            evidence_count: 0,
+          },
+        }),
+      ]),
+    );
+    renderScreen();
+
+    const card = await screen.findByRole('button', { name: /Monitoreo/ });
+    expect(card).toHaveTextContent('Realizada · 1 detección sin control');
+  });
+
   describe('records of other domains that close an activity', () => {
     const monitoring = buildAgriculturalActivity({
       activity_type: 'phytosanitary_monitoring',

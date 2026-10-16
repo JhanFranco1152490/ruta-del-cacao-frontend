@@ -101,6 +101,25 @@ describe('activityBadge', () => {
     ).toEqual({ tone: 'info', text: 'Realizada · pendiente de enviar' });
   });
 
+  it('says how many detections of a done monitoring have no control', () => {
+    const withoutControl = (count: number) => ({
+      state: 'done' as const,
+      daysLate: 0,
+      activity: { monitoring: { detections_without_control: count } },
+    });
+    expect(activityBadge(withoutControl(1))).toEqual({
+      tone: 'warn',
+      text: 'Realizada · 1 detección sin control',
+    });
+    expect(activityBadge(withoutControl(2)).text).toBe(
+      'Realizada · 2 detecciones sin control',
+    );
+    expect(activityBadge(withoutControl(0))).toEqual({
+      tone: 'ok',
+      text: 'Realizada',
+    });
+  });
+
   it('keeps the state of the activity when the server rejected the completion', () => {
     expect(
       activityBadge({ state: 'delayed', daysLate: 2, completion: 'error' }),

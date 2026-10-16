@@ -36,6 +36,13 @@ export const formatLongDate = (isoDate: string) =>
 export const formatDayMonth = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM", { locale: es });
 
+// El día y el mes abreviado de un momento exacto (ISO con zona), con la hora de Bogotá: "19 oct".
+export const formatShortDayMonth = (isoDateTime: string) =>
+  format(parseISO(isoDateTime), 'd MMM', { locale: es, in: BOGOTA }).replace(
+    '.',
+    '',
+  );
+
 // Un mes y un año (yyyy-MM), sin día: la fecha de una siembra.
 export const formatMonthYear = (isoMonth: string) =>
   format(parseISO(`${isoMonth}-01`), "MMMM 'de' yyyy", { locale: es });

@@ -66,19 +66,37 @@ export function activityStateText(state: ActivityState, daysLate: number) {
 
 export const PENDING_COMPLETION_LABEL = 'Realizada · pendiente de enviar';
 
+// "1 detección sin control", "2 detecciones sin control": las de un monitoreo realizado a las que
+// nadie les ha dado un control ni ha decidido que no lo requieren.
+const withoutControlText = (count: number) =>
+  `${count} ${count === 1 ? 'detección' : 'detecciones'} sin control`;
+
 // Lo que se muestra como estado de una actividad. Una cuya realización espera en el dispositivo
-// ya se hizo, aunque el servidor todavía no lo sepa: se dice así, y no con el estado que tenía.
+// ya se hizo, aunque el servidor todavía no lo sepa: se dice así, y no con el estado que tenía. Un
+// monitoreo realizado con detecciones sin control lo dice junto al estado, porque falta decidir qué
+// hacer con ellas.
 export function activityBadge({
   state,
   daysLate,
   completion,
+  activity,
 }: {
   state: ActivityState;
   daysLate: number;
   completion?: 'pending' | 'error';
+  activity?: {
+    monitoring?: { detections_without_control: number } | null;
+  };
 }): { tone: 'ok' | 'warn' | 'err' | 'info'; text: string } {
   if (completion === 'pending') {
     return { tone: 'info', text: PENDING_COMPLETION_LABEL };
+  }
+  const withoutControl = activity?.monitoring?.detections_without_control ?? 0;
+  if (state === 'done' && withoutControl > 0) {
+    return {
+      tone: 'warn',
+      text: `${activityStateText(state, daysLate)} · ${withoutControlText(withoutControl)}`,
+    };
   }
   return {
     tone: ACTIVITY_STATE_DISPLAY[state].tone,

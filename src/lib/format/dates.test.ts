@@ -4,6 +4,7 @@ import {
   dateInBogota,
   daysBetween,
   formatDayMonth,
+  formatShortDayMonth,
   formatLongDate,
   formatMonthYear,
   formatTimestamp,
@@ -116,6 +117,14 @@ describe('formatDayMonth', () => {
   it('writes the day and the month without the year or shifting the day', () => {
     expect(formatDayMonth('2026-10-19')).toBe('19 de octubre');
     expect(formatDayMonth('2026-11-01')).toBe('1 de noviembre');
+  });
+});
+
+describe('formatShortDayMonth', () => {
+  it('writes the day and the short month of a moment, in Bogotá', () => {
+    expect(formatShortDayMonth('2026-10-19T15:20:00Z')).toBe('19 oct');
+    // A las 2 de la mañana del 20 en UTC todavía es el 19 en Bogotá.
+    expect(formatShortDayMonth('2026-10-20T02:00:00Z')).toBe('19 oct');
   });
 });
 

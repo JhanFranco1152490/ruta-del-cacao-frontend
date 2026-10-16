@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Info, Pencil, Trash2 } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { EditorLink } from '@/components/editor-link';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import {
 import { useSession } from '@/hooks/use-session';
 
 import { activityActions } from '../activity-actions';
+import type { AgriculturalActivity } from '../api';
 import type { ActivityOfDay } from '../activity-days';
 import { activityStateText, activityTitle } from '../activity-labels';
 import { ActivityDetailFacts } from './activity-detail-facts';
@@ -47,6 +49,7 @@ export function ActivityDetailDialog({
   onEdit,
   completeHref,
   monitoringHref,
+  renderDetails,
   onDelete,
 }: {
   item: ActivityOfDay;
@@ -59,6 +62,8 @@ export function ActivityDetailDialog({
   completeHref?: string;
   // La pantalla donde se registra el resultado de un monitoreo: la entrega quien une los dominios.
   monitoringHref?: string;
+  // Lo que otro dominio agrega debajo de los datos de la actividad (el resultado de un monitoreo).
+  renderDetails?: (activity: AgriculturalActivity) => ReactNode;
   onDelete?: () => void;
 }) {
   const { data: user } = useSession();
@@ -130,6 +135,7 @@ export function ActivityDetailDialog({
           today={today}
           userId={user?.id}
         />
+        {renderDetails?.(activity)}
         {state === 'done' && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Info aria-hidden="true" className="size-4 shrink-0" />

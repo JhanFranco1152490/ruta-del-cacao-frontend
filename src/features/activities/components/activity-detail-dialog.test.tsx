@@ -47,6 +47,8 @@ function renderDetail(
     withHandlers = true,
     completion = undefined as 'pending' | 'error' | undefined,
     monitoringHref = undefined as string | undefined,
+    renderDetails = undefined as
+      ((activity: AgriculturalActivity) => React.ReactNode) | undefined,
   } = {},
 ) {
   const activity = buildAgriculturalActivity(overrides);
@@ -63,6 +65,7 @@ function renderDetail(
   renderWithProviders(
     <ActivityDetailDialog
       item={{ activity, ...activityState(activity, TODAY), completion }}
+      renderDetails={renderDetails}
       today={TODAY}
       {...(withHandlers
         ? {
@@ -246,6 +249,21 @@ describe('ActivityDetailDialog', () => {
       'Editar',
       'Registrar monitoreo',
     ]);
+  });
+
+  it('shows what another domain adds under the data of the activity', async () => {
+    renderDetail(
+      { activity_type: 'phytosanitary_monitoring', status: 'done' },
+      {
+        renderDetails: (activity) => (
+          <p>Resultado de {activity.activity_type}</p>
+        ),
+      },
+    );
+
+    expect(
+      within(await dialog()).getByText('Resultado de phytosanitary_monitoring'),
+    ).toBeInTheDocument();
   });
 
   it('offers nothing to record a monitoring when nobody gives its screen', async () => {
