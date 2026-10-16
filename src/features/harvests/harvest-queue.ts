@@ -6,7 +6,7 @@ import {
 import { characterizationQueueId } from '@/lib/offline/queue-ids';
 import { enqueue, resubmit } from '@/lib/offline/sync-queue';
 
-import type { HarvestCreateRequest } from './harvest-rules';
+import type { HarvestCreateRequest } from './harvest-requests';
 
 export const HARVEST_RESOURCE = 'harvests';
 

@@ -12,14 +12,14 @@ import { useHarvestCollectors } from '../api';
 import type { HarvestLotSource } from '../harvest-lot-source';
 import type { HarvestPlotChoice } from '../harvest-plots';
 import { harvestQueueId, type QueuedHarvest } from '../harvest-queue';
-import { toHarvestRequest } from '../harvest-rules';
+import { toHarvestRequest } from '../harvest-requests';
 import {
-  emptyHarvestForm,
+  formOfRequest,
   type HarvestFormInput,
   harvestQueueLabel,
   harvestSummary,
   type KeptHarvestFields,
-  onlyVariety,
+  startForm,
 } from '../harvest-values';
 import { rememberLastPlot } from '../last-plot';
 import { useSaveHarvest } from '../use-harvest-queue';
@@ -34,27 +34,6 @@ type Saved = {
   onDevice: boolean;
   lotSource: HarvestLotSource;
 };
-
-// Un formulario nuevo, con lo que se conserva y, si su parcela tiene una sola variedad, ya elegida.
-function startForm(
-  today: string,
-  plots: readonly HarvestPlotChoice[],
-  kept: Partial<KeptHarvestFields> = {},
-): HarvestFormInput {
-  const values = emptyHarvestForm(today, kept);
-  const plot = plots.find(({ id }) => id === values.plot_id);
-  return { ...values, variety_id: plot ? onlyVariety(plot.varieties) : '' };
-}
-
-const formOfRequest = (
-  request: QueuedHarvest['request'],
-): HarvestFormInput => ({
-  plot_id: request.plot_id,
-  harvest_date: request.harvest_date,
-  green_weight_kg: request.green_weight_kg,
-  variety_id: request.variety_id,
-  collector_id: request.collector_id,
-});
 
 // El formulario de una cosecha y, al guardarla, lo que sigue. `rejected` es lo que el servidor no
 // aceptó: con él se corrige lo capturado en vez de registrar otra.

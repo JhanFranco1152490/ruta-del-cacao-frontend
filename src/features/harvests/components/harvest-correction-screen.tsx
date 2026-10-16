@@ -24,7 +24,7 @@ import {
   useHarvestCollectors,
 } from '../api';
 import { harvestDetailPath, HARVESTS_PATH } from '../harvest-paths';
-import { harvestToFormValues, toHarvestUpdate } from '../harvest-rules';
+import { harvestToFormValues, toHarvestUpdate } from '../harvest-requests';
 import { useHarvestSources } from '../use-harvest-sources';
 import { HarvestForm } from './harvest-form';
 
