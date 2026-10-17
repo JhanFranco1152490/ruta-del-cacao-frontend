@@ -35,7 +35,8 @@ export const useDiscardControl = () =>
   );
 
 // Decidir que una detección no requiere control es solo en línea: sin red falla en el acto. La
-// detección cambia en el detalle del monitoreo, en el calendario y en el aviso.
+// detección cambia en el detalle del monitoreo, en el calendario, en el aviso y en la bandeja de
+// notificaciones (su control pendiente se ve atenuado).
 export function useNoControlNeeded() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -47,6 +48,9 @@ export function useNoControlNeeded() {
           queryKey: queryKeys.agriculturalActivities.all(),
         }),
         queryClient.invalidateQueries({ queryKey: queryKeys.health.all() }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.notifications.all(),
+        }),
       ]),
   });
 }

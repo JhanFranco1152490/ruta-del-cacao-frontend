@@ -166,12 +166,19 @@ export const postActivity = (body: ActivityCreateRequest) =>
     body,
   });
 
+// La bandeja de notificaciones muestra cada actividad como está hoy: realizada, reprogramada o ya
+// sin ella. Se vuelve a pedir junto con las actividades.
 function useInvalidateActivities() {
   const queryClient = useQueryClient();
   return () =>
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.agriculturalActivities.all(),
-    });
+    Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.agriculturalActivities.all(),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.notifications.all(),
+      }),
+    ]);
 }
 
 // Programar es solo en línea: sin red debe fallar en el acto con un aviso, y no quedar en pausa

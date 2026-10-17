@@ -11,11 +11,12 @@ export const controlSyncAdapter: SyncAdapter = {
   resource: CONTROL_RESOURCE,
 
   // Al llegar al servidor aparece en el calendario, uno hecho descuenta sus insumos de la finca, y
-  // la detección deja de estar sin control.
+  // la detección deja de estar sin control (su aviso de control pendiente se ve atenuado).
   refreshAfterSync: () => [
     queryKeys.agriculturalActivities.all(),
     queryKeys.inputStocks.all(),
     queryKeys.health.all(),
+    queryKeys.notifications.all(),
   ],
 
   // El padre del registro es la detección, y el control se crea en su dirección.

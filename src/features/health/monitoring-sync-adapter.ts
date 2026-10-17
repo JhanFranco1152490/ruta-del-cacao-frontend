@@ -25,13 +25,15 @@ export const isCorrectableMonitoringError = (code: string | undefined) =>
 export const monitoringSyncAdapter: SyncAdapter = {
   resource: MONITORING_RESOURCE,
 
-  // Al llegar al servidor el monitoreo queda realizado, sus controles hechos descuentan insumos de
-  // la finca y cambian el historial y el aviso de detecciones. El registro encolado no sabe qué
+  // Al llegar al servidor el monitoreo queda realizado (también en la bandeja de notificaciones),
+  // sus controles hechos descuentan insumos de la finca y cambian el historial y el aviso de
+  // detecciones. El registro encolado no sabe qué
   // copias estaban abiertas, así que se refrescan todas.
   refreshAfterSync: () => [
     queryKeys.agriculturalActivities.all(),
     queryKeys.inputStocks.all(),
     queryKeys.health.all(),
+    queryKeys.notifications.all(),
   ],
 
   // El padre del registro es el monitoreo, y el resultado se registra en su dirección.

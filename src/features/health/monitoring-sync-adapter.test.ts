@@ -179,11 +179,12 @@ describe('isCorrectableMonitoringError', () => {
 });
 
 describe('monitoringSyncAdapter.refreshAfterSync', () => {
-  it('refreshes the activities, the stocks and what health shows', () => {
+  it('refreshes the activities, the stocks, what health shows and the notifications', () => {
     expect(monitoringSyncAdapter.refreshAfterSync?.(item)).toEqual([
       queryKeys.agriculturalActivities.all(),
       queryKeys.inputStocks.all(),
       queryKeys.health.all(),
+      queryKeys.notifications.all(),
     ]);
   });
 });
