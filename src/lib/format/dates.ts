@@ -43,6 +43,10 @@ export const formatShortDayMonth = (isoDateTime: string) =>
     '',
   );
 
+// El día y el mes abreviado de una fecha sin hora (yyyy-MM-dd), sin desplazarla por zona: "20 oct".
+export const formatShortDate = (isoDate: string) =>
+  format(parseISO(isoDate), 'd MMM', { locale: es }).replace('.', '');
+
 // Un mes y un año (yyyy-MM), sin día: la fecha de una siembra.
 export const formatMonthYear = (isoMonth: string) =>
   format(parseISO(`${isoMonth}-01`), "MMMM 'de' yyyy", { locale: es });
