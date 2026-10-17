@@ -15,9 +15,10 @@ import type { PestDisease } from '../pest-api';
 import { PestFormDialog } from './pest-form-dialog';
 import { PestStatusDialog } from './pest-status-dialog';
 
-// Las filas se alinean arriba: la descripción puede ocupar dos líneas y el resto no flota a media
-// altura. Sin flecha que cubra la tarjeta en celular, no hace falta su espacio a la derecha.
-const CELL = 'align-top py-3 md:whitespace-normal';
+// Cada fila con el mismo espacio arriba y abajo: el contenido se centra en la altura de la fila, que
+// la marcan los botones o la descripción (a lo sumo dos líneas). Sin flecha que cubra la tarjeta en
+// celular, no hace falta su espacio a la derecha.
+const CELL = 'py-3 align-middle md:whitespace-normal';
 
 // Un grupo del catálogo (las plagas o las enfermedades). Las columnas tienen ancho fijo para que
 // los dos grupos queden alineados uno debajo del otro.

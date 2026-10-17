@@ -126,57 +126,59 @@ export function VarietyListScreen() {
         {catalog.isSuccess &&
           (shown.length ? (
             <>
-              <div
-                aria-hidden="true"
-                className={`hidden gap-x-4 px-1 text-xs font-extrabold tracking-[0.1em] text-muted-foreground uppercase md:grid ${COLUMNS}`}
-              >
-                <span>Variedad</span>
-                <span>Nombres comunes</span>
-                <span>Procedencia</span>
-                <span className="pl-2">Estado</span>
-                <span />
-              </div>
-              <ul aria-label="Variedades" className="divide-y divide-border">
-                {pageItems.map((variety) => (
-                  <li
-                    className={`grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 py-3 md:items-start md:px-1 ${COLUMNS}`}
-                    key={variety.id}
-                  >
-                    <h2 className="text-lg font-bold text-selva max-md:order-1">
-                      {variety.name}
-                    </h2>
-                    <p className="text-sm max-md:order-3 max-md:col-span-2">
-                      {variety.common_names.length > 0 ? (
-                        <>
-                          <span className="text-muted-foreground md:hidden">
-                            Nombres comunes:{' '}
+              <div>
+                <div
+                  aria-hidden="true"
+                  className={`hidden h-10 items-center gap-x-4 bg-surface-alt px-2 text-sm font-bold text-selva md:grid ${COLUMNS}`}
+                >
+                  <span>Variedad</span>
+                  <span>Nombres comunes</span>
+                  <span>Procedencia</span>
+                  <span className="pl-2">Estado</span>
+                  <span />
+                </div>
+                <ul aria-label="Variedades" className="divide-y divide-border">
+                  {pageItems.map((variety) => (
+                    <li
+                      className={`grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 py-3 md:items-center md:px-2 ${COLUMNS}`}
+                      key={variety.id}
+                    >
+                      <h2 className="text-lg font-bold text-selva max-md:order-1">
+                        {variety.name}
+                      </h2>
+                      <p className="text-sm max-md:order-3 max-md:col-span-2">
+                        {variety.common_names.length > 0 ? (
+                          <>
+                            <span className="text-muted-foreground md:hidden">
+                              Nombres comunes:{' '}
+                            </span>
+                            {variety.common_names.join(', ')}
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground max-md:hidden">
+                            —
                           </span>
-                          {variety.common_names.join(', ')}
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground max-md:hidden">
-                          —
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-muted-foreground max-md:order-4 max-md:col-span-2">
-                      {variety.description}
-                    </p>
-                    <div className="self-start justify-self-end max-md:order-2 md:justify-self-start md:pl-2">
-                      <StatusBadge tone={variety.is_active ? 'ok' : 'warn'}>
-                        {variety.is_active ? 'Activa' : 'Inactiva'}
-                      </StatusBadge>
-                    </div>
-                    <div className="flex justify-end gap-3 max-md:order-5 max-md:col-span-2 max-md:mt-1">
-                      <VarietyFormDialog
-                        catalog={varieties}
-                        variety={variety}
-                      />
-                      <VarietyStatusDialog variety={variety} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                        )}
+                      </p>
+                      <p className="text-sm text-muted-foreground max-md:order-4 max-md:col-span-2">
+                        {variety.description}
+                      </p>
+                      <div className="justify-self-end max-md:order-2 max-md:self-start md:justify-self-start md:pl-2">
+                        <StatusBadge tone={variety.is_active ? 'ok' : 'warn'}>
+                          {variety.is_active ? 'Activa' : 'Inactiva'}
+                        </StatusBadge>
+                      </div>
+                      <div className="flex justify-end gap-3 max-md:order-5 max-md:col-span-2 max-md:mt-1">
+                        <VarietyFormDialog
+                          catalog={varieties}
+                          variety={variety}
+                        />
+                        <VarietyStatusDialog variety={variety} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <Pagination
                 label="variedades"
                 onPageChange={setPage}
