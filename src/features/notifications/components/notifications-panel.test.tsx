@@ -255,7 +255,7 @@ describe('NotificationsPanel', () => {
     const panel = await openPanel();
 
     expect(
-      await within(panel).findByText('No tienes notificaciones'),
+      await within(panel).findByRole('heading', { name: 'Estás al día' }),
     ).toBeInTheDocument();
   });
 });
@@ -316,7 +316,7 @@ describe('the actions of the panel', () => {
     renderCenter();
     const panel = await openPanel();
 
-    await within(panel).findByText('No tienes notificaciones');
+    await within(panel).findByRole('heading', { name: 'Estás al día' });
     expect(
       within(panel).queryAllByRole('button', { name: /Marcar|Eliminar/ }),
     ).toHaveLength(0);

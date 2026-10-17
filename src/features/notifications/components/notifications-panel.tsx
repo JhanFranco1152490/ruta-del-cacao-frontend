@@ -2,6 +2,7 @@
 
 import { CloudOff, Info } from 'lucide-react';
 
+import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PushNoticeCard } from '@/components/push/push-notice-card';
 import { Button } from '@/components/ui/button';
@@ -85,7 +86,10 @@ export function NotificationsPanel({ onClose }: { onClose: () => void }) {
         />
       )}
       {items?.length === 0 && (
-        <p className="text-muted-foreground">No tienes notificaciones</p>
+        <EmptyState
+          description="Cuando una actividad se acerque a su fecha o se pase, o un control quede pendiente, aparecerá aquí."
+          title="Estás al día"
+        />
       )}
       {!!items?.length && (
         <ul aria-label="Notificaciones" className="space-y-2">
