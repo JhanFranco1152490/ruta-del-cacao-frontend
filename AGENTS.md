@@ -66,6 +66,15 @@ vive en `AGENTS.md` del workspace, si lo tienes al lado)
   en este dispositivo" en vez de un fallo de validación. Un error del servidor sí deja la sesión
   abierta para reintentar. En `next dev` el Service Worker no se registra: lo sin conexión
   se prueba con `pnpm build && pnpm start` y la red cortada en las herramientas del navegador.
+- **Los avisos con la app cerrada (push)** también viven en el Service Worker: escucha `push` y
+  `notificationclick`, y lo que deciden (qué mostrar, a qué ruta de la app llevar, qué ventana
+  enfocar) son funciones de `lib/push/sw-messages.ts`, que se prueban sin un Service Worker. El enlace
+  de una push siempre es una ruta de la misma app. Como el Service Worker no se registra en `next
+  dev`, las push también se prueban con `pnpm build && pnpm start`, y el backend con sus llaves VAPID
+  (sin ellas `push-config` responde `public_key: null` y la app no ofrece activarlas). **Cerrar
+  sesión olvida la suscripción** del dispositivo antes de cerrar en el servidor
+  (`forgetPushSubscription`): primero el navegador, que no necesita red, y al servidor lo espera a
+  lo sumo 3 segundos.
 
 ### Stack y estructura
 
@@ -87,7 +96,7 @@ src/
                        partir de config/navigation.ts: una sección nueva solo se suma ahí
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       health, users y roles): api.ts, schemas.ts, hooks propios
+                       health, notifications, users y roles): api.ts, schemas.ts, hooks propios
                        y components/ (pantallas y piezas de ese dominio)
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
   hooks/               hooks de React compartidos entre dominios (sin JSX; si el hook es de
@@ -132,7 +141,12 @@ src/
   una labor (`lib/activity-dates.ts`), si una cuenta es de un empleado (`lib/employee.ts`, por sus
   roles y no por `all_farms`, que también tiene el empleado de todas las fincas), la preparación de
   una foto (`lib/images/prepare-photo.ts`), la fecha en la URL (`lib/navigation/iso-date-parser.ts`)
-  y la cola por padre (`lib/offline/queued-by-parent.ts`). El dominio dueño los usa desde ahí.
+  y la cola por padre (`lib/offline/queued-by-parent.ts`). Desde notificaciones: los nombres de los
+  tipos de actividad (`lib/activity-types.ts`), el estado calculado con la fecha de hoy
+  (`lib/activity-state.ts`; actividades los reexporta), quién recibe avisos
+  (`lib/notification-access.ts`), la suscripción a las push (`lib/push/`, `lib/api/push.ts`,
+  `hooks/use-push-notices.ts`) y la tarjeta para activarlas (`components/push/`), que usan el panel y
+  **Mi cuenta**. El dominio dueño los usa desde ahí.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
   en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
@@ -198,6 +212,29 @@ src/
   - Los catálogos de la asociación (`/plagas-enfermedades`) se gestionan como **Variedades de cacao**,
     pero con la búsqueda y el estado en la URL; el buscador de la planilla muestra la descripción de
     cada plaga y **Otra** siempre al final (`SearchSelect` con `description` y `pinned`).
+
+- **Notificaciones (`features/notifications/`).** La campana de la cabecera y su panel. La
+  cabecera la arma `SessionShell` (de `auth`): la página `app/(app)/layout.tsx` le entrega la campana
+  como `headerActions`, igual que las vistas de la bandeja (`queueViews`), y va entre la bandeja y la
+  cuenta. Solo la ven las cuentas de un productor que ven actividades (no la cuenta técnica ni la
+  asociación).
+  - **Lo que dice cada aviso** son funciones puras (`notification-text.ts` y sus partes): el
+    título cambia si quien lee es el responsable, los días de retraso son los **de hoy** (la copia
+    del dispositivo puede ser de ayer), y si la actividad ya no está en la condición del aviso
+    (realizada, reprogramada, el control ya programado) lo dice y se ve atenuado. Un tipo que esta
+    versión no conoce dice **Aviso** y no lleva enlace, en vez de fallar.
+  - **La bandeja** pide la lista solo con el panel abierto, de a 20 (`useInfiniteQuery`), y el número
+    cada 2 minutos. Las dos tienen copia en el dispositivo (solo la primera página). Sin conexión
+    se ven las guardadas, abrir una no la marca como leída, y marcar y eliminar quedan deshabilitados
+    con su motivo: no hay cola para eso.
+  - **Lo que cambia una actividad o una detección** (realizar, reprogramar, eliminar, programar un
+    control, **No requiere control**, también al llegar desde la cola) invalida
+    `queryKeys.notifications.all()`.
+  - **Los enlaces:** `?actividad=` es del calendario (`use-linked-activity.ts`): abre el detalle, pasa
+    al mes de la actividad si se reprogramó o avisa **La actividad ya no está disponible**. La
+    campana atiende en cualquier pantalla `?notificacion=` (la marca como leída; sin conexión espera)
+    y `?notificaciones=abiertas` (abre el panel). Atendidos, salen de la URL. La puerta de entrada
+    (`/`) conserva la consulta al redirigir, porque la push de resumen lleva ahí.
 
 - **Empleados y fincas.** Un empleado trabaja en una o varias fincas de su productor, o en todas
   (`all_farms`, que incluye las que se registren después), y solo alcanza lo de ellas; el servidor ya
@@ -364,6 +401,10 @@ src/
   y no sobreviven a IndexedDB. Por eso la lectura de un archivo vive en una función sin React
   (`readEvidenceFile`) que se prueba ahí. jsdom tampoco tiene lienzo ni `URL.createObjectURL`: las
   pantallas con fotos simulan `preparePhoto` (que tiene sus pruebas) y esas direcciones.
+- **jsdom no tiene Service Worker, push ni permiso de notificaciones.** Lo que se le pide al
+  navegador para las push entra como parámetro (`PushBrowser` en `lib/push/subscription.ts`) y se
+  prueba con uno simulado; las pantallas simulan ese módulo. Lo del Service Worker se prueba en las
+  funciones de `lib/push/sw-messages.ts`.
 - MSW simula la API (`src/test/server.ts`, levantado en `vitest.setup.ts`): una petición sin
   handler hace fallar el test, así que ninguno toca la red. Los handlers propios de cada
   test se declaran con `server.use(...)`.
