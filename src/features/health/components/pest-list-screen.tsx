@@ -5,17 +5,20 @@ import { ErrorState } from '@/components/error-state';
 import { FilterRow } from '@/components/filter-row';
 import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
-import { StatusBadge } from '@/components/status-badge';
 import { TextField } from '@/components/text-field';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { usePestDiseaseCatalog } from '../pest-api';
-import { matchesPestFilters, PEST_DISEASE_KIND_LABELS } from '../pest-filters';
+import { matchesPestFilters } from '../pest-filters';
 import { usePestFilters } from '../use-pest-filters';
 import { PestFormDialog } from './pest-form-dialog';
-import { PestStatusDialog } from './pest-status-dialog';
+import { PestTable } from './pest-table';
 
-const COLUMNS = 'md:grid-cols-[13rem_7rem_minmax(0,1fr)_minmax(0,1.6fr)_13rem]';
+// Primero las plagas y luego las enfermedades: el tipo lo dice el título de cada grupo.
+const PEST_GROUPS = [
+  { kind: 'pest', label: 'Plagas' },
+  { kind: 'disease', label: 'Enfermedades' },
+] as const;
 
 // Catálogo de la asociación: quien lo administra registra, edita, activa y desactiva. No se
 // eliminan aquí, porque los monitoreos las usan. Son pocas filas: se lee completo y se filtra en el
@@ -88,57 +91,20 @@ export function PestListScreen() {
         )}
         {catalog.isSuccess &&
           (shown.length ? (
-            <>
-              <div
-                aria-hidden="true"
-                className={`hidden gap-x-4 px-1 text-xs font-extrabold tracking-[0.1em] text-muted-foreground uppercase md:grid ${COLUMNS}`}
-              >
-                <span>Nombre</span>
-                <span>Tipo</span>
-                <span>Nombre científico</span>
-                <span>Descripción</span>
-                <span />
-              </div>
-              <ul
-                aria-label="Plagas y enfermedades"
-                className="divide-y divide-border"
-              >
-                {shown.map((item) => (
-                  <li
-                    className={`grid gap-x-4 gap-y-1 py-3 md:items-center md:px-1 md:py-2 ${COLUMNS}`}
-                    key={item.id}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-bold text-selva">
-                        {item.name}
-                      </h2>
-                      <StatusBadge tone={item.is_active ? 'ok' : 'warn'}>
-                        {item.is_active ? 'Activa' : 'Inactiva'}
-                      </StatusBadge>
-                    </div>
-                    <p className="text-sm font-semibold">
-                      {PEST_DISEASE_KIND_LABELS[item.kind]}
-                    </p>
-                    <p className="text-sm">
-                      {item.scientific_name ? (
-                        <i>{item.scientific_name}</i>
-                      ) : (
-                        <span className="text-muted-foreground max-md:hidden">
-                          —
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.description}
-                    </p>
-                    <div className="flex gap-2 max-md:mt-1 max-md:justify-end md:justify-end">
-                      <PestFormDialog catalog={items} item={item} />
-                      <PestStatusDialog item={item} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
+            <div className="space-y-6">
+              {PEST_GROUPS.map(({ kind, label }) => {
+                const group = shown.filter((item) => item.kind === kind);
+                if (group.length === 0) return null;
+                return (
+                  <section className="space-y-2" key={kind}>
+                    <h2 className="section-label">
+                      {label} · {group.length}
+                    </h2>
+                    <PestTable catalog={items} items={group} label={label} />
+                  </section>
+                );
+              })}
+            </div>
           ) : (
             <EmptyState
               description={

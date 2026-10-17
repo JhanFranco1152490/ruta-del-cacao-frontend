@@ -83,13 +83,20 @@ async function renderScreen(searchParams = '') {
   return userEvent.setup();
 }
 
-const shownNames = () =>
-  within(screen.getByRole('list', { name: 'Plagas y enfermedades' }))
-    .getAllByRole('heading')
-    .map((heading) => heading.textContent);
+// El encabezado de cada fila lleva el nombre y, debajo, el nombre científico.
+const nameCells = (group?: 'Plagas' | 'Enfermedades') =>
+  (group
+    ? within(screen.getByRole('table', { name: group }))
+    : screen
+  ).getAllByRole('rowheader');
+
+const shownNames = (group?: 'Plagas' | 'Enfermedades') =>
+  nameCells(group).map((cell) => cell.firstElementChild?.textContent);
 
 const rowOf = (name: string) =>
-  screen.getByRole('heading', { name }).closest('li') as HTMLElement;
+  nameCells()
+    .find((cell) => cell.firstElementChild?.textContent === name)!
+    .closest('tr') as HTMLElement;
 
 const openRegister = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(
@@ -99,16 +106,18 @@ const openRegister = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe('PestListScreen', () => {
-  it('lists the catalog with the kind, scientific name, description and state of each', async () => {
+  it('lists the pests first and then the diseases, with the scientific name, description and state of each', async () => {
     await renderScreen();
 
-    expect(shownNames()).toEqual(['Monilia', 'Trips', 'Hormiga arriera']);
+    expect(shownNames()).toEqual(['Trips', 'Hormiga arriera', 'Monilia']);
+    expect(shownNames('Plagas')).toEqual(['Trips', 'Hormiga arriera']);
+    expect(shownNames('Enfermedades')).toEqual(['Monilia']);
+    expect(screen.getByText('Plagas · 2')).toBeInTheDocument();
+    expect(screen.getByText('Enfermedades · 1')).toBeInTheDocument();
     const monilia = within(rowOf('Monilia'));
-    expect(monilia.getByText('Enfermedad')).toBeInTheDocument();
     expect(monilia.getByText('Moniliophthora roreri')).toBeInTheDocument();
     expect(monilia.getByText('Solo ataca la mazorca.')).toBeInTheDocument();
     expect(monilia.getByText('Activa')).toBeInTheDocument();
-    expect(within(rowOf('Trips')).getByText('Plaga')).toBeInTheDocument();
     expect(
       within(rowOf('Hormiga arriera')).getByText('Inactiva'),
     ).toBeInTheDocument();
@@ -144,7 +153,7 @@ describe('PestListScreen', () => {
       'activas',
     );
 
-    expect(shownNames()).toEqual(['Monilia', 'Trips']);
+    expect(shownNames()).toEqual(['Trips', 'Monilia']);
     await waitFor(() => expect(urls.at(-1)).toBe('?estado=activas'));
   });
 
@@ -181,7 +190,7 @@ describe('PestListScreen', () => {
       },
     ]);
     expect(
-      await screen.findByRole('heading', { name: 'Escoba de bruja' }),
+      await screen.findByRole('rowheader', { name: 'Escoba de bruja' }),
     ).toBeInTheDocument();
     expect(
       await screen.findByText('Plaga o enfermedad registrada'),
@@ -331,7 +340,7 @@ describe('PestListScreen', () => {
     await user.click(screen.getByRole('button', { name: /reintentar/i }));
 
     expect(
-      await screen.findByRole('heading', { name: 'Monilia' }),
+      await screen.findByRole('rowheader', { name: /^Monilia/ }),
     ).toBeInTheDocument();
   });
 });
