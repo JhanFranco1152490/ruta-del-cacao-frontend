@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { FilterRow } from '@/components/filter-row';
 import { PageHeader } from '@/components/page-header';
-import { PageStepper, Pagination } from '@/components/pagination';
+import { Pagination } from '@/components/pagination';
 import { SelectField } from '@/components/select-field';
 import { StatusBadge } from '@/components/status-badge';
 import { TextField } from '@/components/text-field';
@@ -91,18 +91,9 @@ export function VarietyListScreen() {
           }
           trailing={
             catalog.isSuccess && (
-              <div className="flex items-center gap-4 self-center sm:ml-auto">
-                <p className="text-sm font-bold text-muted-foreground">
-                  {shown.length} variedades
-                </p>
-                <PageStepper
-                  label="variedades"
-                  onPageChange={setPage}
-                  page={currentPage}
-                  pageSize={PAGE_SIZE}
-                  total={shown.length}
-                />
-              </div>
+              <p className="self-center text-sm font-bold text-muted-foreground sm:ml-auto">
+                {shown.length} variedades
+              </p>
             )
           }
         >
