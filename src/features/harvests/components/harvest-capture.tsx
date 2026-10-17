@@ -5,13 +5,12 @@ import { type ReactNode, useState } from 'react';
 
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { buttonVariants } from '@/components/ui/button';
-import { useQueueItems } from '@/hooks/use-queue-items';
 import { useSession } from '@/hooks/use-session';
 
 import { useHarvestCollectors } from '../api';
 import type { HarvestLotSource } from '../harvest-lot-source';
 import type { HarvestPlotChoice } from '../harvest-plots';
-import { harvestQueueId, type QueuedHarvest } from '../harvest-queue';
+import type { QueuedHarvest } from '../harvest-queue';
 import { toHarvestRequest } from '../harvest-requests';
 import {
   formOfRequest,
@@ -67,7 +66,6 @@ export function HarvestCapture({
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;
   const save = useSaveHarvest();
-  const queue = useQueueItems(user?.id);
   const [form, setForm] = useState(() => ({
     id: rejected?.id ?? crypto.randomUUID(),
     values: rejected
@@ -91,11 +89,20 @@ export function HarvestCapture({
     const chosen = plots.find(({ id }) => id === values.plot_id)!;
     const variety = chosen.varieties.find(({ id }) => id === values.variety_id);
     const request = toHarvestRequest(values, form.id);
+    const lotSource: HarvestLotSource = {
+      harvestId: form.id,
+      plot: chosen.label,
+      farm: chosen.farm,
+      harvestDate: values.harvest_date,
+      greenWeightKg: request.green_weight_kg,
+      variety: variety?.name ?? '',
+    };
     save.mutate(
       {
         payload: {
           request,
           label: harvestQueueLabel(chosen.label, values.harvest_date),
+          lotSource,
         },
         correcting: !!rejected,
       },
@@ -111,14 +118,7 @@ export function HarvestCapture({
           setSaved({
             summary: harvestSummary(values, variety?.name ?? '', chosen),
             onDevice: !isOnline,
-            lotSource: {
-              harvestId: form.id,
-              plot: chosen.label,
-              farm: chosen.farm,
-              harvestDate: values.harvest_date,
-              greenWeightKg: request.green_weight_kg,
-              variety: variety?.name ?? '',
-            },
+            lotSource,
           });
         },
       },
@@ -126,14 +126,10 @@ export function HarvestCapture({
   };
 
   if (saved) {
-    const reachedServer =
-      isOnline &&
-      !!queue &&
-      !queue.some(({ id }) => id === harvestQueueId(saved.lotSource.harvestId));
     return (
       <HarvestSaved
         doneHref={doneHref}
-        formLot={reachedServer ? renderFormLot?.(saved.lotSource) : undefined}
+        formLot={renderFormLot?.(saved.lotSource)}
         onAnother={() => {
           setForm({
             id: crypto.randomUUID(),

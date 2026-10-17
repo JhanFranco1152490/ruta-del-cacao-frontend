@@ -41,6 +41,10 @@ type StatusChangeDialogProps = {
   children?: ReactNode;
   // `office` cuando el botón va junto a otros botones de oficina y debe medir lo mismo.
   triggerSize?: 'default' | 'office';
+  // El alto del botón; por omisión, 44 px. Una fila de lista lo usa más bajo.
+  triggerClassName?: string;
+  // El estilo del botón, si no es el de la acción (un botón de fila, de contorno).
+  triggerVariant?: 'default' | 'outline' | 'destructive';
 };
 
 // Confirmación de activar o desactivar: mientras la petición está en curso no se puede cerrar
@@ -55,6 +59,8 @@ export function StatusChangeDialog({
   error,
   children,
   triggerSize = 'default',
+  triggerClassName = 'h-11',
+  triggerVariant,
 }: StatusChangeDialogProps) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -62,9 +68,9 @@ export function StatusChangeDialog({
         <DialogTrigger
           render={
             <Button
-              className="h-11"
+              className={triggerClassName}
               size={triggerSize}
-              variant={trigger.variant}
+              variant={triggerVariant ?? trigger.variant}
             />
           }
         >

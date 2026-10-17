@@ -107,8 +107,8 @@ export function HarvestListScreen({
           className="rounded-(--radius) bg-warn-bg px-4 py-3 font-bold text-warn"
           role="status"
         >
-          Sin conexión: estás viendo la última copia. Puedes registrar cosechas;
-          conformar un lote necesita conexión.
+          Sin conexión: estás viendo la última copia. Puedes registrar cosechas
+          y conformar lotes; se envían cuando vuelva la conexión.
         </p>
       )}
       {read.isPending ? (

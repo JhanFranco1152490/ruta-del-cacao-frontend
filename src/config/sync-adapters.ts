@@ -2,6 +2,7 @@ import { completionSyncAdapter } from '@/features/activities/sync-adapter';
 import { characterizationSyncAdapter } from '@/features/crops/sync-adapter';
 import { farmSyncAdapter } from '@/features/farms/sync-adapter';
 import { harvestSyncAdapter } from '@/features/harvests/sync-adapter';
+import { lotSyncAdapter } from '@/features/lots/sync-adapter';
 import { plotSyncAdapter } from '@/features/plots/sync-adapter';
 import type { SyncAdapter } from '@/lib/offline/adapters';
 
@@ -13,4 +14,5 @@ export const SYNC_ADAPTERS: readonly SyncAdapter[] = [
   characterizationSyncAdapter,
   completionSyncAdapter,
   harvestSyncAdapter,
+  lotSyncAdapter,
 ];

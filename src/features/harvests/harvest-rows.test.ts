@@ -82,6 +82,23 @@ describe('harvestRows', () => {
     ]);
   });
 
+  it('lets the lot of a harvest that waits on the phone be formed, unless it was rejected', () => {
+    const lotSource = {
+      harvestId: 'q1',
+      plot: 'P05 · Lote del río',
+      farm: 'F01 · La Esperanza',
+      harvestDate: '2026-10-22',
+      greenWeightKg: '88',
+      variety: 'CCN-51',
+    };
+
+    expect(rowsOf({}, [queued({ lotSource })])[0].lotSource).toEqual(lotSource);
+    expect(
+      rowsOf({}, [queued({ lotSource, status: 'error' })])[0].lotSource,
+    ).toBeUndefined();
+    expect(rowsOf({}, [queued()])[0].lotSource).toBeUndefined();
+  });
+
   it('marks what the server rejected', () => {
     expect(rowsOf({}, [queued({ status: 'error' })])[0].queue).toBe('error');
   });

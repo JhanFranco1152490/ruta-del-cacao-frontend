@@ -20,7 +20,7 @@ export type HarvestRow = {
   collector: string | null;
   weightKg: string;
   lotCode: string | null;
-  // Una del servidor que todavía no forma un lote: con qué conformarlo.
+  // Una que todavía no forma un lote (del servidor, o del teléfono si lo trae): con qué conformarlo.
   lotSource?: HarvestLotSource;
   // Solo las del teléfono: esperando conexión o rechazada por el servidor.
   queue?: Exclude<QueueStatus, 'synced'>;
@@ -70,7 +70,7 @@ function queuedRows(
         (!filters.collector || request.collector_id === filters.collector)
       );
     })
-    .map(({ id, request, label, status }) => ({
+    .map(({ id, request, label, status, lotSource }) => ({
       id,
       date: request.harvest_date,
       plot: plotOfLabel(label),
@@ -79,6 +79,8 @@ function queuedRows(
       collector: null,
       weightKg: request.green_weight_kg,
       lotCode: null,
+      // Su lote se puede conformar ya, sin esperar a que la cosecha llegue.
+      lotSource: status === 'error' ? undefined : lotSource,
       queue: status === 'error' ? 'error' : 'pending',
     }));
 }

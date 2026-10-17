@@ -21,6 +21,23 @@ describe('assignedCodeNotice', () => {
     ).toBe('La finca La Esperanza quedó con el código F03');
   });
 
+  it('tells the code of a lot, which has no name', () => {
+    expect(
+      assignedCodeNotice('lot', [{ code: '000004-F03-P01-261016-1' }]),
+    ).toBe('El lote quedó con el código 000004-F03-P01-261016-1');
+  });
+
+  it('lists several lots by their codes', () => {
+    expect(
+      assignedCodeNotice('lot', [
+        { code: '000004-F03-P01-261016-1' },
+        { code: '000004-F03-P01-261016-2' },
+      ]),
+    ).toBe(
+      '2 lotes recibieron su código: 000004-F03-P01-261016-1 y 000004-F03-P01-261016-2',
+    );
+  });
+
   it('lists several in one notice', () => {
     expect(
       assignedCodeNotice('plot', [

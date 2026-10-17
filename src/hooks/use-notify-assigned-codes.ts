@@ -21,7 +21,7 @@ export function useNotifyAssignedCodes() {
       batch.push(assigned);
       clearTimeout(timer);
       timer = setTimeout(() => {
-        for (const kind of ['farm', 'plot'] as const) {
+        for (const kind of ['farm', 'plot', 'lot'] as const) {
           const ofKind = batch.filter((entry) => entry.kind === kind);
           if (ofKind.length) notify.success(assignedCodeNotice(kind, ofKind));
         }

@@ -19,4 +19,4 @@ export function renderFormLotReturningTo(returnTo: string) {
 export const renderFormLotInRow = (
   source: HarvestLotSource,
   unavailable: ReactNode,
-) => <FormLotDialog source={source} unavailable={unavailable} />;
+) => <FormLotDialog compact source={source} unavailable={unavailable} />;

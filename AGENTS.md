@@ -182,12 +182,19 @@ src/
   variedades (`harvest-rules.ts`, con el tope de `MAX_KG_PER_HECTARE`, igual que el servidor); lo que
   se envía y lo que se corrige sale de `harvest-requests.ts`. Conformar el lote es de `lots`: las
   pantallas reciben `renderFormLot` con un `HarvestLotSource`, y `app/(app)/cosechas/form-lot.tsx` los
-  une.
-- **Lotes (`features/lots/`).** Todo en línea, sin copia ni cola: el código lo asigna el servidor y
-  nunca hay uno provisional. Conformar (`form-lot-dialog.tsx`) genera el `id` una vez por diálogo, así
-  que reintentar devuelve el mismo lote; si otra persona lo conformó primero, abre ese. La lista es
-  paginada, y sus tarjetas de estado (`lot-status-cards.tsx`) cuentan lotes y kilos con
-  `GET /api/lots/summary`, que sigue a los demás filtros pero no al estado.
+  une. La cosecha de la cola guarda su `lotSource` (nombres de parcela, finca y variedad): con él se
+  puede conformar su lote sin conexión desde la lista, mientras la cosecha sigue en el teléfono.
+- **Lotes (`features/lots/`).** La lista y la ficha son en línea, sin copia. **Conformar** también
+  funciona sin conexión: el lote nace en el dispositivo con su `id` (`form-lot-dialog.tsx` lo genera
+  una vez por diálogo) y pasa por la cola (`lot-queue.ts`, `sync-adapter.ts`) con la cosecha como
+  padre (`harvestQueueId`, en `lib/offline/queue-ids.ts` porque un dominio no importa de otro). El
+  código lo asigna el servidor al recibirlo y un aviso dice cuál quedó (`assignedCode`, tipo `lot`);
+  mientras tanto no hay código, ni provisional: la cosecha muestra «Lote pendiente de enviar». Con
+  conexión y la cosecha ya en el servidor, el diálogo llama directo y abre la ficha del lote. Si otra
+  persona lo conformó primero, abre ese; en la cola, ese caso (`harvest_already_in_lot`) y una cosecha
+  eliminada (`404`) van a la bandeja solo con «Descartar». La lista es paginada, y sus tarjetas de
+  estado (`lot-status-cards.tsx`) cuentan lotes y kilos con `GET /api/lots/summary`, que sigue a los
+  demás filtros pero no al estado.
 
 - **Empleados y fincas.** Un empleado trabaja en una o varias fincas de su productor, o en todas
   (`all_farms`, que incluye las que se registren después), y solo alcanza lo de ellas; el servidor ya
@@ -315,7 +322,8 @@ src/
 - **Excepción: registrar una cosecha.** Las altas de la cola avisan y vuelven, sin pantalla
   intermedia, salvo la cosecha (`HarvestSaved`): al guardar se queda en la pantalla con «Registrar
   otra cosecha» (conserva la parcela, el recolector y la fecha), «Conformar lote»
-  (solo con conexión y ya enviada) y «Listo», que vuelve al origen. En campo se registran varias
+  (también sin conexión: el lote espera en el teléfono con su cosecha) y «Listo», que vuelve al
+  origen. En campo se registran varias
   recolecciones seguidas y volver a elegir todo cada vez estorba. Corregir una cosecha sí avisa y
   vuelve, como las demás.
 - En pruebas, el aviso es un `role="dialog"` no modal: para afirmar que **no hay diálogo abierto** usa

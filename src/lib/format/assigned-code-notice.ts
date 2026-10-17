@@ -7,6 +7,8 @@ type Assigned = Pick<AssignedCode, 'code' | 'name'>;
 const WORDS = {
   farm: { one: 'La finca', unnamed: 'La finca nueva', many: 'fincas' },
   plot: { one: 'La parcela', unnamed: 'La parcela nueva', many: 'parcelas' },
+  // Un lote se reconoce por su código: no tiene nombre.
+  lot: { one: 'El lote', unnamed: 'El lote', many: 'lotes' },
 } as const;
 
 const listOf = (items: readonly string[]) =>
@@ -14,7 +16,7 @@ const listOf = (items: readonly string[]) =>
     ? items[0]
     : `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`;
 
-// El aviso del código que el servidor dio a lo que se creó en el dispositivo. Sin él, el código
+// El aviso del código que el servidor dio a lo que se creó en el dispositivo (finca, parcela o lote). Sin él, el código
 // aparece en la lista sin que nadie lo note. Varios de una tanda van en un solo aviso.
 export function assignedCodeNotice(
   kind: AssignedCode['kind'],
@@ -28,6 +30,10 @@ export function assignedCodeNotice(
       : words.unnamed;
     return `${subject} quedó con el código ${code}`;
   }
-  const label = kind === 'farm' ? farmLabel : plotLabel;
+  const label = {
+    farm: farmLabel,
+    plot: plotLabel,
+    lot: ({ code }: Assigned) => code,
+  }[kind];
   return `${assigned.length} ${words.many} recibieron su código: ${listOf(assigned.map(label))}`;
 }

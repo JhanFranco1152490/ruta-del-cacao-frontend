@@ -10,3 +10,10 @@ export const characterizationQueueId = (plotId: string) =>
 // La parcela de la ficha que espera en la cola con ese id.
 export const plotIdOfCharacterizationQueueId = (queueId: string) =>
   queueId.slice(CHARACTERIZATION_QUEUE_PREFIX.length);
+
+// La cosecha lleva su propio prefijo, como la ficha: el lote que se conforma sin conexión la espera
+// en la cola, y un dominio no importa de otro.
+const HARVEST_QUEUE_PREFIX = 'harvest:';
+
+export const harvestQueueId = (harvestId: string) =>
+  `${HARVEST_QUEUE_PREFIX}${harvestId}`;

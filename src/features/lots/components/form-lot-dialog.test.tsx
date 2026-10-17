@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
+import { getOfflineDb } from '@/lib/offline/db';
 import { PERMISSIONS } from '@/lib/permissions';
 import { apiError, buildLot, buildSession } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
@@ -30,7 +31,8 @@ const SOURCE: LotSource = {
 
 let bodies: { id: string; harvest_id: string }[];
 
-beforeEach(() => {
+beforeEach(async () => {
+  await getOfflineDb('u1').queue.clear();
   bodies = [];
   vi.clearAllMocks();
   resetLocation();
@@ -64,6 +66,9 @@ function renderDialog({
     },
   );
 }
+
+const queuedLots = () =>
+  getOfflineDb('u1').queue.where('resource').equals('lots').toArray();
 
 const openAndConfirm = async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Conformar lote' }));
@@ -197,19 +202,103 @@ describe('FormLotDialog', () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
-  it('is disabled without a connection', () => {
-    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    renderDialog();
-    expect(
-      screen.getByRole('button', { name: /Conformar lote/ }),
-    ).toBeDisabled();
+  describe('without a connection', () => {
+    beforeEach(() => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    });
+
+    it('still offers to form the lot and says it is kept on the phone', async () => {
+      renderDialog();
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Conformar lote' }),
+      );
+      const dialog = await screen.findByRole('dialog');
+
+      expect(dialog).toHaveTextContent(
+        'Se guarda en este teléfono y recibe su código cuando llegue al servidor',
+      );
+      expect(dialog).not.toHaveTextContent('El código se asigna ahora');
+    });
+
+    it('queues the lot behind its harvest instead of calling the server', async () => {
+      answerWith(() => HttpResponse.json(buildLot(), { status: 201 }));
+      renderDialog();
+      await screen.findByRole('button', { name: 'Conformar lote' });
+
+      await openAndConfirm();
+
+      expect(
+        await screen.findByText('Lote guardado en el teléfono'),
+      ).toBeInTheDocument();
+      expect(bodies).toEqual([]);
+      expect(router.push).not.toHaveBeenCalled();
+      const [item] = await queuedLots();
+      expect(item).toMatchObject({
+        status: 'pending',
+        parentId: 'harvest:h1',
+        payload: {
+          request: { id: expect.any(String), harvest_id: 'h1' },
+          label: 'Lote de P05 · Lote del río · 14 oct.',
+        },
+      });
+    });
+
+    it('shows that the lot is waiting instead of offering to form it again', async () => {
+      renderDialog();
+      await screen.findByRole('button', { name: 'Conformar lote' });
+      await openAndConfirm();
+
+      expect(
+        await screen.findByText('Lote pendiente de enviar'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Conformar lote' }),
+      ).toBeNull();
+    });
+
+    it('shows when the server rejected the queued lot', async () => {
+      renderDialog();
+      await screen.findByRole('button', { name: 'Conformar lote' });
+      await openAndConfirm();
+      const [item] = await queuedLots();
+      await getOfflineDb('u1').queue.update(item.id, { status: 'error' });
+
+      expect(
+        await screen.findByText('No se pudo enviar el lote'),
+      ).toBeInTheDocument();
+    });
   });
 
-  it('shows what a row puts in its place without a connection', () => {
-    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    renderDialog({ unavailable: 'Sin lote' });
+  it('queues the lot even with a connection while its harvest still waits on the phone', async () => {
+    answerWith(() => HttpResponse.json(buildLot(), { status: 201 }));
+    await getOfflineDb('u1').queue.add({
+      id: 'harvest:h1',
+      resource: 'harvests',
+      operation: 'create',
+      payload: {},
+      status: 'pending',
+      createdAt: 0,
+      updatedAt: 0,
+    });
+    renderDialog();
+    await screen.findByRole('button', { name: 'Conformar lote' });
+
+    await openAndConfirm();
+
+    expect(
+      await screen.findByText('Lote guardado en el teléfono'),
+    ).toBeInTheDocument();
+    expect(bodies).toEqual([]);
+    expect(await queuedLots()).toHaveLength(1);
+  });
+
+  it('shows what a row puts in its place when the harvest has no lot to form', () => {
+    renderDialog({
+      permissions: [PERMISSIONS.HARVESTS_VIEW],
+      unavailable: 'Sin lote',
+    });
     expect(screen.queryByRole('button', { name: /Conformar lote/ })).toBeNull();
-    expect(screen.getByText('Sin lote')).toBeInTheDocument();
   });
 
   it('does not appear without permission to form lots', () => {

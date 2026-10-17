@@ -22,6 +22,7 @@ import { server } from '@/test/server';
 import {
   enqueueHarvest,
   getQueuedHarvest,
+  listQueuedHarvests,
   type HarvestPayload,
   harvestQueueId,
 } from '../harvest-queue';
@@ -183,7 +184,7 @@ describe('HarvestRegisterScreen', () => {
     });
   });
 
-  it('offers to form the lot once the harvest reached the server', async () => {
+  it('offers to form the lot as soon as the harvest is saved, even if it is still on the phone', async () => {
     const formLot = vi.fn(() => <button type="button">Conformar lote</button>);
     renderScreen({ renderFormLot: formLot });
 
@@ -192,14 +193,16 @@ describe('HarvestRegisterScreen', () => {
     await userEvent.type(field('Peso en verde (kg)'), '117');
     await save();
     await screen.findByRole('heading', { name: 'Cosecha registrada' });
-    expect(screen.queryByRole('button', { name: 'Conformar lote' })).toBeNull();
-
-    // La cola la envió: ya no está en el teléfono.
-    await getOfflineDb(userId).queue.clear();
 
     expect(
       await screen.findByRole('button', { name: 'Conformar lote' }),
     ).toBeInTheDocument();
+    // Lo que hace falta para conformar su lote sin conexión se guarda con la cosecha.
+    const [waiting] = await listQueuedHarvests(userId);
+    expect(waiting.lotSource).toMatchObject({
+      plot: 'P05 · Lote del río',
+      variety: 'CCN-51',
+    });
     expect(formLot).toHaveBeenLastCalledWith({
       harvestId: expect.any(String),
       plot: 'P05 · Lote del río',
@@ -341,6 +344,12 @@ describe('HarvestRegisterScreen', () => {
       ).toBeInTheDocument();
       expect(await plotField()).toBeDisabled();
       expect(field('Peso en verde (kg)')).toHaveValue('50');
+      // Los recolectores llegan aparte del formulario: se espera a que esté la opción.
+      await waitFor(() =>
+        expect(
+          field('Recolector').querySelector(`option[value="${userId}"]`),
+        ).not.toBeNull(),
+      );
       await userEvent.selectOptions(field('Recolector'), userId);
       await save();
 

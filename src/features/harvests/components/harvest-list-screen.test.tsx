@@ -211,6 +211,42 @@ describe('HarvestListScreen', () => {
     ).toEqual(['Conformar lote h2']);
   });
 
+  it('also offers to form the lot of a harvest that still waits on the phone, when it brings what is needed', async () => {
+    await enqueueHarvest(userId, {
+      request: {
+        id: 'q1',
+        plot_id: 'pl1',
+        harvest_date: '2026-10-22',
+        green_weight_kg: '88',
+        variety_id: 'v1',
+        collector_id: 'u1',
+      },
+      label: 'P05 · Lote del río · 22 oct.',
+      lotSource: {
+        harvestId: 'q1',
+        plot: 'P05 · Lote del río',
+        farm: 'F01 · La Esperanza',
+        harvestDate: '2026-10-22',
+        greenWeightKg: '88',
+        variety: 'CCN-51',
+      },
+    });
+    renderScreen({
+      renderFormLot: ({ harvestId }) => (
+        <button type="button">{`Conformar lote ${harvestId}`}</button>
+      ),
+    });
+
+    await waitFor(async () => expect(await rowTexts()).toHaveLength(3));
+    expect(
+      screen
+        .getAllByRole('button', { name: /Conformar lote/ })
+        .map((button) => button.textContent)
+        .toSorted(),
+    ).toEqual(['Conformar lote h2', 'Conformar lote q1']);
+    expect((await rowTexts())[0]).toContain('Pendiente de enviar');
+  });
+
   it('shows the saved copy of the month without a network', async () => {
     await getOfflineDb(userId).cache.put({
       key: 'harvests:2026-10',

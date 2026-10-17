@@ -14,10 +14,10 @@ export interface SyncRecovery {
   payload: unknown;
 }
 
-// El código que el servidor le dio a un registro creado en el dispositivo (una finca o una
-// parcela), para avisarle a la persona cuál quedó.
+// El código que el servidor le dio a un registro creado en el dispositivo (una finca, una parcela
+// o un lote), para avisarle a la persona cuál quedó.
 export interface AssignedCode {
-  kind: 'farm' | 'plot';
+  kind: 'farm' | 'plot' | 'lot';
   code: string;
   name?: string | null;
 }
