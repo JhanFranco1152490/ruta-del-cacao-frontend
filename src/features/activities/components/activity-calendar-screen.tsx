@@ -30,6 +30,7 @@ import { AssigneesContext } from '../assignees';
 import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';
 import { useActivityMonth } from '../use-activity-month';
+import { useLinkedActivity } from '../use-linked-activity';
 import { useActivityView } from '../use-activity-view';
 import { useCalendarData } from '../use-calendar-data';
 import { ActivityCalendarBody } from './activity-calendar-body';
@@ -155,6 +156,14 @@ export function ActivityCalendarScreen({
   };
   const [pending, setPending] = useState<PendingDialog>();
   const open = (dialog: PendingDialog) => setPending(dialog);
+  useLinkedActivity({
+    userId: user?.id,
+    items: filtered,
+    loaded: !data.isPending && data.error === null,
+    month,
+    goToMonth,
+    onOpen: (id) => open({ kind: 'detail', id }),
+  });
 
   const canSchedule = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD);
   const openScheduleForm = () => open({ kind: 'schedule' });
