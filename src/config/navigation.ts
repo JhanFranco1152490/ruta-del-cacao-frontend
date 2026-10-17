@@ -1,10 +1,12 @@
 import {
+  Bug,
   CalendarDays,
   FlaskConical,
   LandPlot,
   Leaf,
   MapPinned,
   ShieldCheck,
+  ShieldPlus,
   Sprout,
   Users,
 } from 'lucide-react';
@@ -47,6 +49,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     needsConnection: true,
   },
   {
+    href: '/plagas-enfermedades',
+    label: 'Plagas y enfermedades',
+    icon: Bug,
+    permission: PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE,
+    needsConnection: true,
+  },
+  {
     href: '/insumos',
     label: 'Insumos',
     icon: FlaskConical,
@@ -57,6 +66,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Actividades',
     icon: CalendarDays,
     permission: PERMISSIONS.ACTIVITIES_VIEW,
+  },
+  // El historial abre sin conexión desde la tarjeta de la parcela; aquí se elige de una lista que
+  // necesita al servidor.
+  {
+    href: '/sanidad',
+    label: 'Sanidad',
+    icon: ShieldPlus,
+    permission: PERMISSIONS.ACTIVITIES_VIEW,
+    needsConnection: true,
   },
   {
     href: '/roles',

@@ -25,10 +25,14 @@ import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { pick } from '@/test/search-select';
 import { server } from '@/test/server';
 
-import { discard } from '@/lib/offline/sync-queue';
+import { discard, enqueue } from '@/lib/offline/sync-queue';
 
 import { completionQueueId, enqueueCompletion } from '../completion-queue';
-import { ActivityCalendarScreen } from './activity-calendar-screen';
+import type { AgriculturalActivity } from '../api';
+import {
+  ActivityCalendarScreen,
+  type CalendarNoticeRenderer,
+} from './activity-calendar-screen';
 
 // Jueves 22 de octubre de 2026, a mediodía en Bogotá.
 const NOW = new Date('2026-10-22T17:00:00Z');
@@ -51,6 +55,9 @@ afterEach(() => {
 function renderScreen({
   searchParams = '',
   permissions = [PERMISSIONS.ACTIVITIES_VIEW] as string[],
+  closingResources = undefined as readonly string[] | undefined,
+  queuedActivities = undefined as readonly AgriculturalActivity[] | undefined,
+  renderNotice = undefined as CalendarNoticeRenderer | undefined,
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -60,11 +67,18 @@ function renderScreen({
       permissions,
     }),
   );
-  return renderWithProviders(<ActivityCalendarScreen />, {
-    queryClient,
-    searchParams,
-    onUrlUpdate: ({ queryString }) => urls.push(queryString),
-  });
+  return renderWithProviders(
+    <ActivityCalendarScreen
+      closingResources={closingResources}
+      queuedActivities={queuedActivities}
+      renderNotice={renderNotice}
+    />,
+    {
+      queryClient,
+      searchParams,
+      onUrlUpdate: ({ queryString }) => urls.push(queryString),
+    },
+  );
 }
 
 const dayOf = (name: string) => screen.findByRole('region', { name });
@@ -92,6 +106,11 @@ describe('ActivityCalendarScreen', () => {
         ],
         requests,
       ),
+      // El responsable está en la lista: sin ella, al llegar se marcaría "fuera de la finca" junto
+      // a su nombre, y lo que se ve dependería de si la lista llegó antes o después de mirar.
+      activityAssigneesHandler([
+        buildAssignee({ full_name: 'Otra cuenta de prueba' }),
+      ]),
     );
 
     renderScreen();
@@ -693,6 +712,142 @@ describe('ActivityCalendarScreen', () => {
       expect(
         await screen.findByRole('button', { name: 'Eliminar' }),
       ).toBeDisabled();
+    });
+  });
+
+  it('says that a done monitoring has detections without a control', async () => {
+    server.use(
+      agriculturalActivitiesHandler([
+        buildAgriculturalActivity({
+          activity_type: 'phytosanitary_monitoring',
+          scheduled_date: '2026-10-20',
+          status: 'done',
+          done_date: '2026-10-20',
+          monitoring: {
+            sampling_unit: 'trees',
+            evaluated_units: 50,
+            sampling_method: null,
+            notes: null,
+            no_presence: false,
+            detections: [],
+            detections_without_control: 1,
+            evidence_count: 0,
+          },
+        }),
+      ]),
+    );
+    renderScreen();
+
+    const card = await screen.findByRole('button', { name: /Monitoreo/ });
+    expect(card).toHaveTextContent('Realizada · 1 detección sin control');
+  });
+
+  it('shows the notice of another domain above the views, able to open an activity', async () => {
+    server.use(
+      agriculturalActivitiesHandler([
+        buildAgriculturalActivity({ id: 'a1', activity_type: 'pruning' }),
+      ]),
+    );
+    renderScreen({
+      renderNotice: ({ producer, openActivity }) => (
+        <button onClick={() => openActivity('a1')} type="button">
+          Aviso de {producer ?? 'mi productor'}
+        </button>
+      ),
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Aviso de mi productor' }),
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: /Poda/ }),
+    ).toBeInTheDocument();
+  });
+
+  describe('activities of other domains created in the device', () => {
+    const control = buildAgriculturalActivity({
+      id: 'c1',
+      activity_type: 'phytosanitary_control',
+      scheduled_date: '2026-10-25',
+    });
+
+    it('shows them on their day as pending to send, without actions', async () => {
+      server.use(agriculturalActivitiesHandler([]));
+      renderScreen({
+        permissions: [
+          PERMISSIONS.ACTIVITIES_VIEW,
+          PERMISSIONS.ACTIVITIES_CHANGE,
+          PERMISSIONS.ACTIVITIES_DELETE,
+        ],
+        queuedActivities: [control],
+      });
+
+      const card = await screen.findByRole('button', { name: /Control/ });
+      expect(card).toHaveTextContent('Programada · pendiente de enviar');
+      await userEvent.click(card);
+      const detail = await screen.findByRole('dialog');
+      expect(
+        within(detail).queryByRole('button', { name: 'Editar' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not repeat one that the server already returns', async () => {
+      server.use(agriculturalActivitiesHandler([control]));
+      renderScreen({ queuedActivities: [control] });
+
+      await screen.findByRole('button', { name: /Control/ });
+      expect(screen.getAllByRole('button', { name: /Control/ })).toHaveLength(
+        1,
+      );
+    });
+
+    it('leaves out the ones of another month', async () => {
+      server.use(agriculturalActivitiesHandler([]));
+      renderScreen({
+        queuedActivities: [{ ...control, scheduled_date: '2026-11-03' }],
+      });
+
+      await screen.findByRole('heading', { name: 'octubre de 2026' });
+      expect(
+        screen.queryByRole('button', { name: /Control/ }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('records of other domains that close an activity', () => {
+    const monitoring = buildAgriculturalActivity({
+      activity_type: 'phytosanitary_monitoring',
+      scheduled_date: '2026-10-20',
+    });
+    const waitingResult = () =>
+      enqueue(userId, {
+        id: 'monitoring-result:a1',
+        resource: 'monitoring-results',
+        operation: 'update',
+        parentId: 'a1',
+        payload: {},
+      });
+
+    it('shows the activity as done and pending to send when the page names the resource', async () => {
+      await waitingResult();
+      server.use(agriculturalActivitiesHandler([monitoring]));
+      renderScreen({ closingResources: ['monitoring-results'] });
+
+      const card = await screen.findByRole('button', { name: /Monitoreo/ });
+      await waitFor(() =>
+        expect(card).toHaveTextContent('Realizada · pendiente de enviar'),
+      );
+    });
+
+    it('ignores a resource that the page does not name', async () => {
+      await waitingResult();
+      server.use(agriculturalActivitiesHandler([monitoring]));
+      renderScreen();
+
+      const card = await screen.findByRole('button', { name: /Monitoreo/ });
+      expect(card).toHaveTextContent('Retrasada · 2 días');
+      expect(card).not.toHaveTextContent('pendiente de enviar');
     });
   });
 

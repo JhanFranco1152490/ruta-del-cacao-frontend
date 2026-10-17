@@ -120,6 +120,20 @@ describe('ActivityFormDialog, editing', () => {
     expect(screen.queryByLabelText('Parcela')).not.toBeInTheDocument();
   });
 
+  it('does not let a control become another labor', async () => {
+    renderEdit({ activity_type: 'phytosanitary_control' });
+
+    await screen.findByRole('dialog');
+    const type = field('Tipo de actividad');
+    expect(type).toHaveValue('phytosanitary_control');
+    expect(
+      within(type)
+        .getAllByRole('option')
+        .filter((option) => !(option as HTMLOptionElement).disabled)
+        .map((option) => option.textContent),
+    ).toEqual(['Control fitosanitario']);
+  });
+
   it('sends only what changed, with the version that was read', async () => {
     renderEdit();
     await choose('Responsable', 'Otra cuenta');

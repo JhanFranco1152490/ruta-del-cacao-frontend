@@ -112,6 +112,22 @@ describe('SessionShell', () => {
     expect(screen.getByText('Contenido de la página')).toBeInTheDocument();
   });
 
+  it('puts what other domains bring between the device records and the account', async () => {
+    renderWithProviders(
+      <SessionShell headerActions={<button type="button">Campana</button>}>
+        contenido
+      </SessionShell>,
+    );
+
+    const account = await screen.findByRole('button', {
+      name: 'Cuenta de ana@example.com',
+    });
+    const bell = screen.getByRole('button', { name: 'Campana' });
+    expect(
+      bell.compareDocumentPosition(account) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('lists the sections the permissions allow', async () => {
     renderWithProviders(<SessionShell>contenido</SessionShell>);
 

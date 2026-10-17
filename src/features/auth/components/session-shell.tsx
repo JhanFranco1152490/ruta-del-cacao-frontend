@@ -36,10 +36,13 @@ import { NoFarmNotice } from './no-farm-notice';
 export function SessionShell({
   children,
   queueViews = [],
+  headerActions,
 }: {
   children: ReactNode;
   // Cómo se ve cada recurso en la bandeja de registros del dispositivo.
   queueViews?: readonly QueueView[];
+  // Lo que otros dominios ponen en la cabecera (la campana), entre la bandeja y la cuenta.
+  headerActions?: ReactNode;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -114,6 +117,7 @@ export function SessionShell({
                 open={trayOpen}
                 views={queueViews}
               />
+              {headerActions}
               <AccountMenu
                 label={user && (fullName(user) || user.email)}
                 isLoggingOut={logout.isPending}

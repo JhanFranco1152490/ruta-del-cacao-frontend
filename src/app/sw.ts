@@ -12,6 +12,7 @@ import {
   OFFLINE_FALLBACK_ROUTE,
   OFFLINE_PRECACHE_ROUTES,
 } from '../config/offline-routes';
+import { noticeUrl, openFromNotice, pushNotice } from '../lib/push/sw-messages';
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -78,6 +79,36 @@ self.addEventListener('sync', (event) => {
     self.clients.matchAll().then((clients) => {
       for (const client of clients) client.postMessage({ type: 'cacao-sync' });
     }),
+  );
+});
+
+// Un aviso del servidor, también con la app cerrada. Un contenido que no se puede leer muestra un
+// aviso genérico: el navegador castiga a quien recibe una push y no muestra nada.
+self.addEventListener('push', (event) => {
+  let data: unknown = null;
+  try {
+    data = event.data?.json();
+  } catch {
+    // Sin contenido legible queda el aviso genérico.
+  }
+  const { title, options } = pushNotice(data);
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Tocar el aviso trae la app al frente en su enlace, o la abre.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windows) =>
+        openFromNotice({
+          windows,
+          openWindow: (url) => self.clients.openWindow(url),
+          origin: self.location.origin,
+          url: noticeUrl(event.notification.data),
+        }),
+      ),
   );
 });
 

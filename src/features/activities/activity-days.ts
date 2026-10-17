@@ -10,6 +10,9 @@ export type ActivityOfDay = {
   state: ActivityState;
   daysLate: number;
   completion?: QueuedCompletionStatus;
+  // La actividad misma se creó en este dispositivo y todavía no llega al servidor (un control
+  // fitosanitario programado sin conexión).
+  queued?: QueuedCompletionStatus;
 };
 
 export type ActivityDay = {
@@ -38,6 +41,11 @@ export function toActivityOfDay(
 // dispositivo ya se hizo, aunque el servidor todavía no lo sepa. Una rechazada conserva el suyo.
 export const effectiveState = ({ state, completion }: ActivityOfDay) =>
   completion === 'pending' ? 'done' : state;
+
+// Algo de la actividad espera en este dispositivo: su realización, o la actividad misma. Mientras
+// tanto no se ofrece nada que hacer con ella: lo que se hiciera chocaría con lo que va a llegar.
+export const isAwaitingSync = ({ completion, queued }: ActivityOfDay) =>
+  completion === 'pending' || queued === 'pending';
 
 // Las actividades bajo su día programado, del más antiguo al más reciente, y solo los días que
 // tienen alguna. Una realizada se queda en el día en que estaba planeada: la lista muestra la

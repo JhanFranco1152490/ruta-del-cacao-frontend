@@ -21,6 +21,11 @@ export type SearchSelectOption = {
   label: string;
   // Las opciones con el mismo `group` se muestran bajo un mismo encabezado, que también se busca.
   group?: string;
+  // Se lee debajo del nombre en la lista (no en el campo) y también se busca: ayuda a reconocer la
+  // opción aunque no se recuerde el nombre.
+  description?: string;
+  // Se ofrece siempre, escriba lo que se escriba ("Otra", al final de la lista).
+  pinned?: boolean;
 };
 
 type Group = { value: string; items: SearchSelectOption[] };
@@ -136,7 +141,16 @@ export function SearchSelect({
 
   const renderItem = (row: SearchSelectOption) => (
     <ComboboxItem key={row.id} value={row}>
-      {row.label}
+      {row.description ? (
+        <span className="flex flex-col gap-0.5 py-0.5">
+          <span>{row.label}</span>
+          <span className="text-sm text-muted-foreground">
+            {row.description}
+          </span>
+        </span>
+      ) : (
+        row.label
+      )}
     </ComboboxItem>
   );
 
@@ -159,9 +173,10 @@ export function SearchSelect({
               ? null
               : (row, query) =>
                   typed === null ||
-                  plain(`${row.label} ${row.group ?? ''}`).includes(
-                    plain(query.trim()),
-                  )
+                  row.pinned === true ||
+                  plain(
+                    `${row.label} ${row.group ?? ''} ${row.description ?? ''}`,
+                  ).includes(plain(query.trim()))
           }
           inputValue={typed ?? selected?.label ?? ''}
           isItemEqualToValue={(a, b) => a.id === b.id}

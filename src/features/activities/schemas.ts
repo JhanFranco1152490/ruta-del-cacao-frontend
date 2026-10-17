@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { INVALID_DATE_MESSAGE, PAST_DATE_MESSAGE } from '@/lib/activity-dates';
 import type { components } from '@/lib/api/schema';
 import { isIsoDate } from '@/lib/format/dates';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
@@ -10,7 +11,6 @@ import type { AgriculturalActivity } from './api';
 
 type Schemas = components['schemas'];
 
-export const PAST_DATE_MESSAGE = 'La fecha debe ser actual o futura';
 export const OTHER_DESCRIPTION_MIN_LENGTH = 2;
 export const OTHER_DESCRIPTION_MAX_LENGTH = 80;
 
@@ -88,7 +88,7 @@ export const createActivityFormSchema = ({
         }
         if (!scheduled_date) return;
         if (!isIsoDate(scheduled_date)) {
-          issue('scheduled_date', 'Escribe una fecha válida.');
+          issue('scheduled_date', INVALID_DATE_MESSAGE);
         } else if (
           scheduled_date !== original?.scheduled_date &&
           scheduled_date < today

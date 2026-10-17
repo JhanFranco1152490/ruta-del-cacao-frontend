@@ -3,7 +3,9 @@
 import { useMemo } from 'react';
 
 import { useSession } from '@/hooks/use-session';
+import { useActivityAssignees } from '@/lib/api/activity-assignees';
 import { FARM_OPTIONS_SIZE, useFarmOptions } from '@/lib/api/farm-options';
+import { assignableIn } from '@/lib/assignable-accounts';
 import { PLOT_OPTIONS_SIZE, usePlotOptions } from '@/lib/api/plot-options';
 import { producerLabelOf } from '@/lib/format/producer';
 
@@ -11,8 +13,8 @@ import {
   ACTIVITY_TYPE_OPTIONS,
   SCHEDULABLE_ACTIVITY_TYPE_OPTIONS,
 } from '../activity-labels';
-import { type AgriculturalActivity, useActivityAssignees } from '../api';
-import { assignableIn, assigneeNote } from '../assignees';
+import type { AgriculturalActivity } from '../api';
+import { assigneeNote } from '../assignees';
 import {
   type ChoiceList,
   type FormChoice,
@@ -24,7 +26,12 @@ const toChoices = (
 ): FormChoice[] => types.map(({ value, label }) => ({ id: value, label }));
 
 const SCHEDULABLE_TYPES = toChoices(SCHEDULABLE_ACTIVITY_TYPE_OPTIONS);
-const ALL_TYPES = toChoices(ACTIVITY_TYPE_OPTIONS);
+// Un control no cambia de tipo: quedaría unido a su detección sin atenderla.
+const CONTROL_TYPE = toChoices(
+  ACTIVITY_TYPE_OPTIONS.filter(
+    ({ value }) => value === 'phytosanitary_control',
+  ),
+);
 
 // Lo que ofrece el formulario de una actividad: fincas y parcelas activas (hasta el tope de una
 // página, y acotadas por la finca o el productor que se haya elegido), tipos que se pueden
@@ -147,7 +154,7 @@ export function useActivityFormChoices(
     },
     types:
       activity?.activity_type === 'phytosanitary_control'
-        ? ALL_TYPES
+        ? CONTROL_TYPE
         : SCHEDULABLE_TYPES,
     assignees: {
       choices: assigneeChoices,

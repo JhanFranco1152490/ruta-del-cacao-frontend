@@ -1,18 +1,14 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
+import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
+import { apiError, buildAgriculturalActivity } from '@/test/factories';
 import {
-  apiError,
-  buildAgriculturalActivity,
-  buildAssignee,
-} from '@/test/factories';
-import {
-  activityAssigneesHandler,
   agriculturalActivitiesHandler,
   apiUrl,
   pendingActivitiesHandler,
@@ -22,9 +18,10 @@ import { server } from '@/test/server';
 
 import {
   useActivitiesOfMonth,
-  useActivity,
-  useActivityAssignees,
+  useCreateActivity,
+  useDeleteActivity,
   usePendingActivities,
+  useUpdateActivity,
 } from './api';
 
 function wrapperFor(queryClient: QueryClient) {
@@ -269,123 +266,6 @@ describe('useActivitiesOfMonth', () => {
   });
 });
 
-describe('useActivity', () => {
-  it('reads one activity by its id', async () => {
-    server.use(
-      http.get(apiUrl('/api/agricultural-activities/a1'), () =>
-        HttpResponse.json(buildAgriculturalActivity({ version: 4 })),
-      ),
-    );
-
-    const { result } = render(() => useActivity(newUser(), 'a1'));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.data.version).toBe(4);
-    expect(result.current.data?.savedAt).toBeUndefined();
-  });
-
-  it('finds it in the newest saved month without a network', async () => {
-    const userId = newUser();
-    // Reprogramada de octubre a noviembre: la copia de octubre quedó vieja.
-    await saveMonth(userId, 'agricultural-activities:2026-10', [
-      buildAgriculturalActivity({ scheduled_date: '2026-10-20' }),
-    ]);
-    await saveMonth(
-      userId,
-      'agricultural-activities:2026-11',
-      [
-        buildAgriculturalActivity({ id: 'a2' }),
-        buildAgriculturalActivity({ scheduled_date: '2026-11-03' }),
-      ],
-      1_700_000_500_000,
-    );
-    // La copia de los responsables no es un mes: una cuenta con ese id no se confunde.
-    await saveMonth(
-      userId,
-      'agricultural-activity-assignees',
-      [buildAssignee({ id: 'a1' })],
-      1_700_000_900_000,
-    );
-    server.use(offline('/api/agricultural-activities/a1'));
-
-    const { result } = render(() => useActivity(userId, 'a1'));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.data.scheduled_date).toBe('2026-11-03');
-    expect(result.current.data?.savedAt).toBe(1_700_000_500_000);
-  });
-
-  it('fails without a network when no saved month has it', async () => {
-    server.use(offline('/api/agricultural-activities/a1'));
-
-    const { result } = render(() => useActivity(newUser(), 'a1'));
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-  });
-
-  it('says that the activity does not exist instead of using a copy', async () => {
-    const userId = newUser();
-    await saveMonth(userId, 'agricultural-activities:2026-10', [
-      buildAgriculturalActivity(),
-    ]);
-    server.use(
-      http.get(apiUrl('/api/agricultural-activities/a1'), () =>
-        apiError(404, 'not_found', 'La actividad no existe.'),
-      ),
-    );
-
-    const { result } = render(() => useActivity(userId, 'a1'));
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect((result.current.error as ApiError).status).toBe(404);
-  });
-});
-
-describe('useActivityAssignees', () => {
-  it('reads the accounts of the own producer and keeps a copy', async () => {
-    const userId = newUser();
-    const requests: URLSearchParams[] = [];
-    server.use(activityAssigneesHandler([buildAssignee()], requests));
-
-    const { result } = render(() => useActivityAssignees(userId, null));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(requests[0].toString()).toBe('');
-    expect(result.current.data?.data).toEqual([buildAssignee()]);
-    expect(
-      await getOfflineDb(userId).cache.get('agricultural-activity-assignees'),
-    ).toBeDefined();
-  });
-
-  it('asks for the chosen producer and keeps its copy apart', async () => {
-    const userId = newUser();
-    const requests: URLSearchParams[] = [];
-    server.use(activityAssigneesHandler([], requests));
-
-    const { result } = render(() => useActivityAssignees(userId, 'p2'));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(requests[0].get('producer')).toBe('p2');
-    expect(
-      await getOfflineDb(userId).cache.get(
-        'agricultural-activity-assignees:producer:p2',
-      ),
-    ).toBeDefined();
-  });
-
-  it('asks for nothing while it is turned off', () => {
-    const requests: URLSearchParams[] = [];
-    server.use(activityAssigneesHandler([], requests));
-
-    const { result } = render(() =>
-      useActivityAssignees(newUser(), null, { enabled: false }),
-    );
-
-    expect(result.current.fetchStatus).toBe('idle');
-    expect(requests).toHaveLength(0);
-  });
-});
-
 describe('usePendingActivities', () => {
   it('asks for what is open until 90 days from today and keeps a copy', async () => {
     const userId = newUser();
@@ -484,4 +364,77 @@ describe('usePendingActivities', () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiError);
   });
+});
+
+describe('the changes to an activity', () => {
+  const activity = buildAgriculturalActivity({ id: 'a1' });
+  const cases: {
+    name: string;
+    handler: Parameters<typeof server.use>[0];
+    useRun: () => () => Promise<unknown>;
+  }[] = [
+    {
+      name: 'scheduling',
+      handler: http.post(apiUrl('/api/agricultural-activities'), () =>
+        HttpResponse.json(activity, { status: 201 }),
+      ),
+      useRun: () => {
+        const mutation = useCreateActivity();
+        return () =>
+          mutation.mutateAsync({
+            plot_id: 'pl1',
+            activity_type: 'pruning',
+            scheduled_date: '2026-10-25',
+            assignee_id: 'u1',
+          });
+      },
+    },
+    {
+      name: 'rescheduling',
+      handler: http.patch(apiUrl('/api/agricultural-activities/a1'), () =>
+        HttpResponse.json(activity),
+      ),
+      useRun: () => {
+        const mutation = useUpdateActivity();
+        return () =>
+          mutation.mutateAsync({
+            id: 'a1',
+            body: { scheduled_date: '2026-10-25', expected_version: 1 },
+          });
+      },
+    },
+    {
+      name: 'deleting',
+      handler: http.delete(
+        apiUrl('/api/agricultural-activities/a1'),
+        () => new HttpResponse(null, { status: 204 }),
+      ),
+      useRun: () => {
+        const mutation = useDeleteActivity();
+        return () => mutation.mutateAsync({ id: 'a1', expectedVersion: 1 });
+      },
+    },
+  ];
+
+  // La bandeja muestra cómo está cada actividad hoy: realizada, reprogramada o ya sin ella.
+  it.each(cases)(
+    'refreshes the notifications after $name',
+    async ({ handler, useRun }) => {
+      server.use(handler);
+      const queryClient = createTestQueryClient();
+      queryClient.setQueryData(queryKeys.notifications.unreadCount(), {
+        data: { count: 1 },
+      });
+      const { result } = renderHook(useRun, {
+        wrapper: wrapperFor(queryClient),
+      });
+
+      await act(() => result.current());
+
+      expect(
+        queryClient.getQueryState(queryKeys.notifications.unreadCount())
+          ?.isInvalidated,
+      ).toBe(true);
+    },
+  );
 });

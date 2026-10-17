@@ -220,6 +220,17 @@ a {
 }
 
 @layer components {
+  /* La flecha de un select nativo: la del navegador queda pegada al borde y no respeta el relleno,
+     así que se dibuja una propia a 12 px del borde, del color del texto secundario. El espacio
+     para ella lo deja el `pr-10` del componente. */
+  [data-slot='native-select'] {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a4a40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+  }
+
   /* Etiqueta de sección: el sello del sistema */
   .section-label {
     font-size: 0.75rem;

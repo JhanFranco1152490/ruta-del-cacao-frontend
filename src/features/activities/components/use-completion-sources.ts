@@ -1,21 +1,14 @@
 'use client';
 
-import { useMemo } from 'react';
-
 import { useSession } from '@/hooks/use-session';
+import { useActivity } from '@/lib/api/activity-read';
 import { isApiError } from '@/lib/api/errors';
-import { isFarmEmployee } from '@/lib/farm-scope';
-import {
-  useAgriculturalInputs,
-  useFarmInputs,
-  useInputStocks,
-} from '@/lib/api/input-catalog';
+import type { CatalogInput } from '@/lib/input-usage';
+import { useUsableInputs } from '@/lib/api/usable-inputs';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import type { AgriculturalActivity } from '../api';
-import { useActivity } from '../api';
 import type { QueuedCompletion } from '../completion-queue';
-import type { CatalogInput } from '../completion-values';
 import { useQueuedCompletion } from '../use-completion-queue';
 
 export type CompletionSources =
@@ -43,50 +36,25 @@ export function useCompletionSources(activityId: string): CompletionSources {
   const activity = useActivity(user?.id, activityId);
   const queued = useQueuedCompletion(activityId);
   const found = activity.data?.data;
-  // La cuenta técnica lee el catálogo del productor de la actividad, y el Productor el suyo
-  // completo. Un empleado, solo los insumos que hay en la finca de la actividad: aunque trabaje en
-  // varias fincas, lo que gasta sale de esa.
-  const employee = isFarmEmployee(user);
-  const productCatalog = useAgriculturalInputs(
-    user?.id,
-    user?.is_superuser === true ? (found?.producer_id ?? null) : null,
-    { enabled: !!found && !employee },
-  );
-  const farmCatalog = useFarmInputs(user?.id, found?.plot.farm.id ?? null, {
-    enabled: !!found && employee,
+  const inputs = useUsableInputs(user, {
+    farmId: found?.plot.farm.id ?? null,
+    producerId: found?.producer_id ?? null,
+    enabled: !!found,
   });
-  const catalog = employee ? farmCatalog : productCatalog;
-  const stocks = useInputStocks(user?.id, found?.plot.farm.id ?? null);
-
-  const active = useMemo(
-    () => catalog.data?.data.filter((input) => input.is_active),
-    [catalog.data],
-  );
-  const stockByInput = useMemo(
-    () =>
-      stocks.data &&
-      new Map(
-        stocks.data.data.map((stock) => [stock.input_id, stock.quantity]),
-      ),
-    [stocks.data],
-  );
 
   if (isPausedWithoutData(activity) || activity.isError) {
     return isApiError(activity.error) && activity.error.status === 404
       ? { status: 'missing' }
       : { status: 'unreachable' };
   }
-  const waiting =
-    activity.isPending ||
-    queued.isPending ||
-    (catalog.isPending && !isPausedWithoutData(catalog));
+  const waiting = activity.isPending || queued.isPending || inputs.isPending;
   if (waiting || !found) return { status: 'loading' };
 
   return {
     status: 'ready',
     activity: found,
     queued: queued.data ?? undefined,
-    catalog: active,
-    stocks: stockByInput,
+    catalog: inputs.catalog,
+    stocks: inputs.stocks,
   };
 }

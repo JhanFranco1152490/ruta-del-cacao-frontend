@@ -89,8 +89,10 @@ describe('NAV_ITEMS', () => {
       '/fincas',
       '/parcelas',
       '/variedades',
+      '/plagas-enfermedades',
       '/insumos',
       '/actividades',
+      '/sanidad',
       '/roles',
       '/usuarios',
     ]);
@@ -105,8 +107,12 @@ describe('NAV_ITEMS', () => {
     expect(byHref['/variedades'].permission).toBe(
       PERMISSIONS.CROPS_MANAGE_VARIETIES,
     );
+    expect(byHref['/plagas-enfermedades'].permission).toBe(
+      PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE,
+    );
     expect(byHref['/insumos'].permission).toBe(PERMISSIONS.INPUTS_VIEW);
     expect(byHref['/actividades'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
+    expect(byHref['/sanidad'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
     expect(byHref['/usuarios'].permission).toBe(PERMISSIONS.USERS_VIEW);
   });
@@ -114,7 +120,14 @@ describe('NAV_ITEMS', () => {
   it('marks the office sections as needing a connection', () => {
     expect(
       NAV_ITEMS.filter((item) => item.needsConnection).map((item) => item.href),
-    ).toEqual(['/productores', '/variedades', '/roles', '/usuarios']);
+    ).toEqual([
+      '/productores',
+      '/variedades',
+      '/plagas-enfermedades',
+      '/sanidad',
+      '/roles',
+      '/usuarios',
+    ]);
   });
 });
 

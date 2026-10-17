@@ -32,6 +32,21 @@ export const formatTimestamp = (milliseconds: number) =>
 export const formatLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM 'de' yyyy", { locale: es });
 
+// El día y el mes de una fecha sin hora (yyyy-MM-dd), sin el año: "19 de octubre".
+export const formatDayMonth = (isoDate: string) =>
+  format(parseISO(isoDate), "d 'de' MMMM", { locale: es });
+
+// El día y el mes abreviado de un momento exacto (ISO con zona), con la hora de Bogotá: "19 oct".
+export const formatShortDayMonth = (isoDateTime: string) =>
+  format(parseISO(isoDateTime), 'd MMM', { locale: es, in: BOGOTA }).replace(
+    '.',
+    '',
+  );
+
+// El día y el mes abreviado de una fecha sin hora (yyyy-MM-dd), sin desplazarla por zona: "20 oct".
+export const formatShortDate = (isoDate: string) =>
+  format(parseISO(isoDate), 'd MMM', { locale: es }).replace('.', '');
+
 // Un mes y un año (yyyy-MM), sin día: la fecha de una siembra.
 export const formatMonthYear = (isoMonth: string) =>
   format(parseISO(`${isoMonth}-01`), "MMMM 'de' yyyy", { locale: es });
