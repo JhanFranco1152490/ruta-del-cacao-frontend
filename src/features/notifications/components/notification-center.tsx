@@ -6,7 +6,7 @@ import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { useSession } from '@/hooks/use-session';
 
 import { useUnreadCount } from '../api';
-import { receivesNotifications } from '../notification-access';
+import { receivesNotifications } from '@/lib/notification-access';
 import { useNotificationLink } from '../use-notification-link';
 import { NotificationBell } from './notification-bell';
 import { NotificationsPanel } from './notifications-panel';

@@ -3,6 +3,7 @@
 import { CloudOff, Info } from 'lucide-react';
 
 import { ErrorState } from '@/components/error-state';
+import { PushNoticeCard } from '@/components/push/push-notice-card';
 import { Button } from '@/components/ui/button';
 import {
   SheetContent,
@@ -50,6 +51,7 @@ export function NotificationsPanel({ onClose }: { onClose: () => void }) {
           Los avisos de tus actividades y de los controles pendientes.
         </SheetDescription>
       </SheetHeader>
+      <PushNoticeCard place="panel" />
       {(offline || saved) && (
         <p className="flex items-center gap-2 rounded-md bg-info-bg px-3 py-2 text-sm font-bold text-info">
           <CloudOff aria-hidden="true" className="size-4 shrink-0" />

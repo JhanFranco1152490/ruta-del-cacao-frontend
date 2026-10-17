@@ -1,5 +1,6 @@
 'use client';
 
+import { PushNoticeCard } from '@/components/push/push-notice-card';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,6 +12,7 @@ import {
 import { useHasConnection } from '@/hooks/use-has-connection';
 import type { SessionUser } from '@/hooks/use-session';
 import { fullName } from '@/lib/format/person-name';
+import { receivesNotifications } from '@/lib/notification-access';
 
 import { useRequestPasswordReset } from '../api';
 import { AccountProfileDetails } from './account-profile-details';
@@ -78,6 +80,7 @@ export function AccountDialog({
           </div>
         </dl>
         <AccountProfileDetails />
+        {receivesNotifications(user) && <PushNoticeCard place="account" />}
         <section className="space-y-2 border-t border-border pt-4">
           <h3 className="font-bold text-selva">Contraseña</h3>
           {reset.isSuccess ? (
