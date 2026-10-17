@@ -12,18 +12,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
 import { todayInBogota } from '@/lib/format/dates';
 
-import { useMarkNotificationRead, useNotifications } from '../api';
+import { useNotifications, useUnreadCount } from '../api';
 import { describeNotification } from '../notification-text';
 import { receivedText } from '../received-text';
-import { NotificationRow } from './notification-row';
+import { NotificationItem } from './notification-item';
+import { NotificationsActions } from './notifications-actions';
 
-// El contenido del panel de la campana. Solo pide la lista mientras está abierto. Abrir una
-// notificación la marca como leída, cierra el panel y lleva a su actividad.
+// El contenido del panel de la campana. Solo pide la lista mientras está abierto.
 export function NotificationsPanel({ onClose }: { onClose: () => void }) {
   const { data: user } = useSession();
   const notifications = useNotifications(user?.id);
-  const markRead = useMarkNotificationRead();
+  const unread = useUnreadCount(user?.id).data?.data.count ?? 0;
   const items = notifications.data?.pages.flatMap(({ results }) => results);
+  // Las leídas son las que hay menos las sin leer: la lista no las cuenta aparte.
+  const total = notifications.data?.pages[0]?.total ?? 0;
+  const read = Math.max(0, total - unread);
   const today = todayInBogota();
   const now = new Date();
 
@@ -37,6 +40,7 @@ export function NotificationsPanel({ onClose }: { onClose: () => void }) {
           Los avisos de tus actividades y de los controles pendientes.
         </SheetDescription>
       </SheetHeader>
+      <NotificationsActions read={read} unread={unread} />
       {notifications.isPending && (
         <div aria-label="Cargando notificaciones" role="status">
           <Skeleton className="h-48" />
@@ -55,14 +59,10 @@ export function NotificationsPanel({ onClose }: { onClose: () => void }) {
         <ul aria-label="Notificaciones" className="space-y-2">
           {items.map((notification) => (
             <li key={notification.id}>
-              <NotificationRow
-                critical={notification.severity === 'critical'}
-                onOpen={() => {
-                  if (!notification.read_at) markRead.mutate(notification.id);
-                  onClose();
-                }}
+              <NotificationItem
+                notification={notification}
+                onClose={onClose}
                 received={receivedText(notification.created_at, now)}
-                unread={!notification.read_at}
                 view={describeNotification(notification, {
                   userId: user?.id,
                   today,

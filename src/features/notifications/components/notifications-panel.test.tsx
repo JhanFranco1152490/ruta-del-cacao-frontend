@@ -27,8 +27,12 @@ type Notification = components['schemas']['Notification'];
 // Domingo 18 de octubre de 2026, a mediodía en Bogotá.
 const NOW = new Date('2026-10-18T17:00:00Z');
 
+const NOW_ISO = NOW.toISOString();
+
 let pages: Notification[][];
 let read: string[];
+let sent: string[];
+let dismissed: Map<string, Notification>;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -51,9 +55,13 @@ beforeEach(() => {
     ],
   ];
   read = [];
+  sent = [];
+  dismissed = new Map();
   server.use(
     http.get(apiUrl('/api/notifications/unread-count'), () =>
-      HttpResponse.json({ count: 1 }),
+      HttpResponse.json({
+        count: pages.flat().filter(({ read_at }) => !read_at).length,
+      }),
     ),
     http.get(apiUrl('/api/notifications'), ({ request }) => {
       const page = Number(new URL(request.url).searchParams.get('page'));
@@ -68,6 +76,38 @@ beforeEach(() => {
     }),
     http.post(apiUrl('/api/notifications/:id/read'), ({ params }) => {
       read.push(String(params.id));
+      return new HttpResponse(null, { status: 204 });
+    }),
+    // Un backend en memoria: lo que se marca o se elimina cambia la lista y el número.
+    http.post(apiUrl('/api/notifications/read-all'), () => {
+      sent.push('read-all');
+      pages = pages.map((page) =>
+        page.map((item) => ({ ...item, read_at: item.read_at ?? NOW_ISO })),
+      );
+      return HttpResponse.json({ updated: 1 });
+    }),
+    http.post(apiUrl('/api/notifications/dismiss-read'), () => {
+      sent.push('dismiss-read');
+      pages = pages.map((page) => page.filter(({ read_at }) => !read_at));
+      return HttpResponse.json({ dismissed: 1 });
+    }),
+    http.delete(apiUrl('/api/notifications/:id'), ({ params }) => {
+      sent.push(`dismiss ${params.id}`);
+      const id = String(params.id);
+      pages = pages.map((page) =>
+        page.filter((item) => {
+          if (item.id !== id) return true;
+          dismissed.set(id, item);
+          return false;
+        }),
+      );
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(apiUrl('/api/notifications/:id/restore'), ({ params }) => {
+      const id = String(params.id);
+      sent.push(`restore ${id}`);
+      const item = dismissed.get(id);
+      if (item) pages = [[item, ...pages[0]], ...pages.slice(1)];
       return new HttpResponse(null, { status: 204 });
     }),
   );
@@ -89,7 +129,7 @@ function renderCenter() {
 
 const openPanel = async () => {
   await userEvent.click(
-    await screen.findByRole('button', { name: 'Notificaciones, 1 sin leer' }),
+    await screen.findByRole('button', { name: /^Notificaciones/ }),
   );
   return screen.findByRole('dialog', { name: 'Notificaciones' });
 };
@@ -171,7 +211,11 @@ describe('NotificationsPanel', () => {
 
   it('shows the next twenty with Ver más', async () => {
     pages.push([
-      buildNotification({ id: 'n3', created_at: '2026-10-10T12:00:00Z' }),
+      buildNotification({
+        id: 'n3',
+        created_at: '2026-10-10T12:00:00Z',
+        read_at: '2026-10-11T12:00:00Z',
+      }),
     ]);
     renderCenter();
     const panel = await openPanel();
@@ -213,5 +257,87 @@ describe('NotificationsPanel', () => {
     expect(
       await within(panel).findByText('No tienes notificaciones'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('the actions of the panel', () => {
+  it('marks all as read and leaves the bell without a number', async () => {
+    renderCenter();
+    const panel = await openPanel();
+
+    await userEvent.click(
+      await within(panel).findByRole('button', {
+        name: 'Marcar todas como leídas',
+      }),
+    );
+
+    await waitFor(() => expect(sent).toEqual(['read-all']));
+    // Con el panel abierto, la cabecera queda fuera del alcance del lector de pantalla.
+    expect(
+      await screen.findByRole('button', {
+        name: 'Notificaciones',
+        hidden: true,
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        within(panel).queryByRole('button', {
+          name: 'Marcar todas como leídas',
+        }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it('dismisses the read ones after confirming how many', async () => {
+    renderCenter();
+    const panel = await openPanel();
+
+    await userEvent.click(
+      await within(panel).findByRole('button', {
+        name: 'Eliminar las leídas',
+      }),
+    );
+    const confirm = await screen.findByRole('dialog', {
+      name: '¿Eliminar 1 notificación leída?',
+    });
+    await userEvent.click(
+      within(confirm).getByRole('button', { name: 'Eliminar' }),
+    );
+
+    await waitFor(() => expect(sent).toEqual(['dismiss-read']));
+    await waitFor(() => expect(rows(panel)).toHaveLength(1));
+    expect(
+      within(panel).queryByRole('button', { name: 'Eliminar las leídas' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('offers neither action when there is nothing to mark or dismiss', async () => {
+    pages = [[]];
+    renderCenter();
+    const panel = await openPanel();
+
+    await within(panel).findByText('No tienes notificaciones');
+    expect(
+      within(panel).queryAllByRole('button', { name: /Marcar|Eliminar/ }),
+    ).toHaveLength(0);
+  });
+
+  it('dismisses one without asking, and brings it back with Deshacer', async () => {
+    renderCenter();
+    const panel = await openPanel();
+    await waitFor(() => expect(rows(panel)).toHaveLength(2));
+
+    await userEvent.click(
+      within(rows(panel)[1]).getByRole('button', {
+        name: 'Eliminar notificación',
+      }),
+    );
+
+    expect(await screen.findByText('Notificación eliminada')).toBeVisible();
+    await waitFor(() => expect(rows(panel)).toHaveLength(1));
+    await userEvent.click(screen.getByRole('button', { name: 'Deshacer' }));
+
+    await waitFor(() => expect(sent).toEqual(['dismiss n2', 'restore n2']));
+    await waitFor(() => expect(rows(panel)).toHaveLength(2));
   });
 });

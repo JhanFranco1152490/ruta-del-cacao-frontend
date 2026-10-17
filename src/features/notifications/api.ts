@@ -22,6 +22,8 @@ export const UNREAD_COUNT_CACHE_KEY = 'notifications:unread-count';
 // Una página de la bandeja. `savedAt` solo en la primera leída de la copia del dispositivo.
 export type NotificationPage = {
   results: Notification[];
+  // Cuántas hay en total en la bandeja, leídas y sin leer.
+  total: number;
   hasNext: boolean;
   savedAt?: number;
 };
@@ -36,8 +38,12 @@ const fetchPage = (page: number, signal?: AbortSignal) => {
   });
 };
 
-const toPage = ({ results, next }: NotificationList, savedAt?: number) => ({
+const toPage = (
+  { results, next, count }: NotificationList,
+  savedAt?: number,
+) => ({
   results,
+  total: count,
   hasNext: !!next,
   savedAt,
 });
