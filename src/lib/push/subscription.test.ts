@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { apiUrl } from '@/test/handlers';
@@ -220,6 +220,27 @@ describe('forgetPushSubscription', () => {
     const subscription = current()!;
 
     await expect(forgetPushSubscription(browser)).resolves.toBeUndefined();
+    expect(subscription.unsubscribe).toHaveBeenCalledOnce();
+  });
+
+  it('does not keep the logout waiting for a server that does not answer', async () => {
+    server.use(
+      http.post(
+        apiUrl('/api/notifications/push-subscriptions/remove'),
+        async () => {
+          await delay('infinite');
+          return new HttpResponse(null, { status: 204 });
+        },
+      ),
+    );
+    const { browser, current } = fakeBrowser({
+      permission: 'granted',
+      subscribed: true,
+    });
+    const subscription = current()!;
+
+    await forgetPushSubscription(browser, 20);
+
     expect(subscription.unsubscribe).toHaveBeenCalledOnce();
   });
 

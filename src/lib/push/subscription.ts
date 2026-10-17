@@ -91,19 +91,28 @@ export async function disablePush(
   return 'prompt';
 }
 
+// Cuánto se espera al servidor al cerrar sesión: con señal débil, el cierre no puede quedar colgado.
+const FORGET_TIMEOUT_MS = 3000;
+
 // Al cerrar sesión, antes de cerrarla en el servidor: un teléfono compartido no debe seguir
-// recibiendo los avisos de quien salió. Nunca impide cerrar sesión. Sin conexión basta con
-// desuscribir el navegador: el servidor borra la suscripción cuando el servicio de push le diga
-// que ya no existe.
+// recibiendo los avisos de quien salió. Primero se desuscribe el navegador, que es lo que corta los
+// avisos aunque no haya conexión; después se avisa al servidor, a lo sumo unos segundos. Si no
+// alcanza, el servidor la borra cuando el servicio de push le diga que ya no existe. Nunca impide
+// cerrar sesión.
 export async function forgetPushSubscription(
   browser: PushBrowser = browserPush,
+  timeoutMs = FORGET_TIMEOUT_MS,
 ) {
   try {
     if (pushSupport(browser.environment()) !== 'supported') return;
     const { subscription } = await currentSubscription(browser);
     if (!subscription) return;
-    await removePushSubscription(subscription.endpoint).catch(() => {});
+    const { endpoint } = subscription;
     await subscription.unsubscribe();
+    await Promise.race([
+      removePushSubscription(endpoint).catch(() => {}),
+      new Promise((resolve) => setTimeout(resolve, timeoutMs)),
+    ]);
   } catch {
     // Sin suscripción que se pueda leer o borrar no hay nada que olvidar.
   }
