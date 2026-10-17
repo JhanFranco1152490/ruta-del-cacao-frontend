@@ -106,6 +106,21 @@ export const queryKeys = {
     queued: (userId: string, activityId: string) =>
       ['health', 'queued', userId, activityId] as const,
   },
+  notifications: {
+    // Lo que invalida leer, eliminar o deshacer una notificación, y cambiar una actividad o una
+    // detección: la bandeja muestra cómo está cada una hoy.
+    all: () => ['notifications'] as const,
+    // La bandeja por páginas; la primera, con copia en el dispositivo.
+    list: () => ['notifications', 'list'] as const,
+    // El número de la campana; con copia en el dispositivo.
+    unreadCount: () => ['notifications', 'unread-count'] as const,
+  },
+  push: {
+    // La llave pública con la que el navegador se suscribe: sin ella, la push está apagada.
+    config: () => ['push', 'config'] as const,
+    // Si este navegador ya está suscrito y qué permiso tiene.
+    subscription: () => ['push', 'subscription'] as const,
+  },
   characterizations: {
     // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la
     // parcela).

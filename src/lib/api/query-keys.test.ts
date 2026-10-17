@@ -117,3 +117,18 @@ describe('plot health query keys', () => {
     expect(queued('u-1', 'a-1')).not.toEqual(queued('u-1', 'a-2'));
   });
 });
+
+describe('notification query keys', () => {
+  it('hangs the list and the count from the key that every change invalidates', () => {
+    const { all, list, unreadCount } = queryKeys.notifications;
+    expect(startsWith(list(), all())).toBe(true);
+    expect(startsWith(unreadCount(), all())).toBe(true);
+    expect(list()).not.toEqual(unreadCount());
+  });
+
+  it('keeps the push keys apart from the notifications', () => {
+    const { config, subscription } = queryKeys.push;
+    expect(startsWith(config(), queryKeys.notifications.all())).toBe(false);
+    expect(config()).not.toEqual(subscription());
+  });
+});

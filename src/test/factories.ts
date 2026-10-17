@@ -363,3 +363,18 @@ export const buildAgriculturalActivity = (
   control_of: null,
   ...overrides,
 });
+
+// Una notificación de la bandeja, con la actividad como la devuelve el calendario (inventada).
+export const buildNotification = (
+  overrides: Partial<Schemas['Notification']> = {},
+): Schemas['Notification'] => ({
+  id: 'n1',
+  kind: 'activity_upcoming',
+  severity: 'normal',
+  created_at: '2026-10-18T06:05:00-05:00',
+  read_at: null,
+  condition_date: '2026-10-20',
+  detection_id: null,
+  activity: buildAgriculturalActivity(),
+  ...overrides,
+});
