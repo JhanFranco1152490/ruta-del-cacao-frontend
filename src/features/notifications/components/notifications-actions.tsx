@@ -31,15 +31,21 @@ const dismissReadAction = (read: number): StatusChangeAction => ({
   variant: 'destructive',
 });
 
+// El motivo de que marcar y eliminar estén deshabilitados, que el panel muestra sin conexión.
+export const NEEDS_CONNECTION_ID = 'notifications-needs-connection';
+
 // Las acciones de toda la bandeja: cada una solo aparece si hay algo que marcar o eliminar.
 // Eliminar las leídas pide confirmar, porque son varias de una vez.
 export function NotificationsActions({
   unread,
   read,
+  offline,
 }: {
   unread: number;
   read: number;
+  offline: boolean;
 }) {
+  const needsConnection = offline ? NEEDS_CONNECTION_ID : undefined;
   const markAll = useMarkAllNotificationsRead();
   const dismissRead = useDismissReadNotifications();
   const [confirming, setConfirming] = useState(false);
@@ -55,7 +61,8 @@ export function NotificationsActions({
     <div className="flex flex-wrap gap-2">
       {unread > 0 && (
         <Button
-          disabled={markAll.isPending}
+          aria-describedby={needsConnection}
+          disabled={offline || markAll.isPending}
           onClick={() =>
             markAll.mutate(undefined, {
               onError: (error) =>
@@ -77,6 +84,8 @@ export function NotificationsActions({
       )}
       {read > 0 && (
         <Button
+          aria-describedby={needsConnection}
+          disabled={offline}
           onClick={() => setConfirming(true)}
           size="office"
           type="button"

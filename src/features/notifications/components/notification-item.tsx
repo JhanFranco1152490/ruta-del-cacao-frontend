@@ -13,19 +13,22 @@ import {
   useRestoreNotification,
 } from '../api';
 import type { NotificationView } from '../notification-text';
+import { NEEDS_CONNECTION_ID } from './notifications-actions';
 import { NotificationRow } from './notification-row';
 
-// Una notificación con lo que se hace con ella: abrirla la marca como leída; eliminarla no
-// pregunta, porque es una sola, y se deshace desde el aviso.
+// Una notificación con lo que se hace con ella: abrirla la marca como leída (sin conexión solo
+// lleva a la actividad); eliminarla no pregunta, porque es una sola, y se deshace desde el aviso.
 export function NotificationItem({
   notification,
   view,
   received,
+  offline,
   onClose,
 }: {
   notification: Notification;
   view: NotificationView;
   received: string;
+  offline: boolean;
   onClose: () => void;
 }) {
   const markRead = useMarkNotificationRead();
@@ -58,7 +61,7 @@ export function NotificationItem({
         <NotificationRow
           critical={notification.severity === 'critical'}
           onOpen={() => {
-            if (unread) markRead.mutate(notification.id);
+            if (unread && !offline) markRead.mutate(notification.id);
             onClose();
           }}
           received={received}
@@ -67,9 +70,10 @@ export function NotificationItem({
         />
       </div>
       <Button
+        aria-describedby={offline ? NEEDS_CONNECTION_ID : undefined}
         aria-label="Eliminar notificación"
         className="size-11 shrink-0 text-muted-foreground"
-        disabled={dismiss.isPending}
+        disabled={offline || dismiss.isPending}
         onClick={remove}
         size="icon"
         type="button"
