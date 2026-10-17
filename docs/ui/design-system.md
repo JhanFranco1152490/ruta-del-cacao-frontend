@@ -247,7 +247,9 @@ poscosecha cobre, calidad azul). Nunca emojis.
   (los permisos de un rol, por área).
 - **Filtros de lista:** una sola fila con la búsqueda y los selects (los poco usados, tras «Más filtros»), sin etiquetas visibles (el
   placeholder dice qué se filtra; la etiqueta sigue ahí para los lectores de pantalla). En el
-  celular, la búsqueda y un botón «Filtros» con el número de filtros activos que despliega el resto.
+  celular, la búsqueda y un botón «Filtros» con el número de filtros activos que despliega el resto. Los filtros llevan el ancho de
+  fila solo desde `sm` (`w-full sm:min-w-40 sm:flex-1 sm:basis-44`): en celular van en columna, y
+  `basis` en una columna es el alto, de modo que cada uno ocuparía 11 rem.
 - **Mapa junto a una lista:** el mapa y su resumen se ocultan juntos («Mapa y resumen ocultos»); en
   el celular empiezan ocultos para que la lista quede arriba, y pedir ver una forma en el mapa lo
   muestra. Con ancho, el mapa de una finca va al lado de sus parcelas y se queda a la vista

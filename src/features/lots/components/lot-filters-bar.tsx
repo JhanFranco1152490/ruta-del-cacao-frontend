@@ -15,7 +15,9 @@ import { farmLabel, plotLabel } from '@/lib/format/place-label';
 
 import type { useLotFilters } from '../use-lot-filters';
 
-const FILTER_WIDTH = 'min-w-40 flex-1 basis-44';
+// En celular los filtros van en columna bajo «Filtros», a todo el ancho: `basis` en una columna es
+// el alto, y daría a cada uno 11 rem de alto. De `sm` en adelante comparten la fila.
+const FILTER_WIDTH = 'w-full sm:min-w-40 sm:flex-1 sm:basis-44';
 
 // La opción de un filtro puesto aunque ya no esté entre las ofrecidas (una parcela inactiva).
 const chosen = (

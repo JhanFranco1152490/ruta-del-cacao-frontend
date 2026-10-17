@@ -24,7 +24,8 @@ import { lotDetailPath } from '../lot-paths';
 import { LotStatusBadge } from './lot-status-badge';
 
 // Los lotes de una página: una tabla en escritorio y tarjetas compactas en celular. El código va
-// completo, como se imprime en el costal.
+// completo, como se imprime en el costal. En celular, cuatro líneas con los datos alineados en dos
+// columnas: el código; el origen; la fecha y el peso; la variedad y el estado.
 export function LotTable({ lots }: { lots: readonly Lot[] }) {
   return (
     <Table aria-label="Lotes" className={COMPACT_TABLE_CLASS}>
@@ -56,13 +57,13 @@ export function LotTable({ lots }: { lots: readonly Lot[] }) {
                 {farmLabel(lot.harvest.plot.farm)}
               </span>
             </TableCell>
-            <TableCell className="max-md:order-4 max-md:col-span-1!">
+            <TableCell className="max-md:order-5 max-md:col-span-1! max-md:text-muted-foreground">
               {lot.harvest.variety.name}
             </TableCell>
-            <TableCell className="text-right font-bold tabular-nums max-md:order-5 max-md:col-span-1! max-md:justify-self-end">
+            <TableCell className="text-right font-bold tabular-nums max-md:order-4 max-md:col-span-1! max-md:justify-self-end">
               {formatDecimal(lot.green_weight_kg, 1)} kg
             </TableCell>
-            <TableCell className="max-md:order-6 max-md:col-span-1!">
+            <TableCell className="max-md:order-6 max-md:col-span-1! max-md:justify-self-end">
               <LotStatusBadge status={lot.status} />
             </TableCell>
             <TableCell className="max-md:order-7">
