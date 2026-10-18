@@ -33,6 +33,7 @@ import { useActivityMonth } from '../use-activity-month';
 import { useLinkedActivity } from '../use-linked-activity';
 import { useActivityView } from '../use-activity-view';
 import { useCalendarData } from '../use-calendar-data';
+import { type ScheduleLink, useScheduleLink } from '../use-schedule-link';
 import { ActivityCalendarBody } from './activity-calendar-body';
 import { ActivityDialogs, type PendingDialog } from './activity-dialogs';
 import { ActivityFiltersBar } from './activity-filters-bar';
@@ -44,6 +45,7 @@ import { ActivityScheduleFab } from './activity-schedule-fab';
 import { ActivityStatePills } from './activity-state-pills';
 import { ActivityTypeBreakdown } from './activity-type-breakdown';
 import { ActivityViewSwitch } from './activity-view-switch';
+import { LinkedScheduleDialog } from './linked-schedule-dialog';
 import { ScheduleActivityButton } from './schedule-activity-button';
 
 const NEEDS_CONNECTION = {
@@ -166,6 +168,17 @@ export function ActivityCalendarScreen({
   });
 
   const canSchedule = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD);
+  const [linkedSchedule, setLinkedSchedule] = useState<ScheduleLink | null>(
+    null,
+  );
+  useScheduleLink({
+    // Con la sesión y el mes cargados, como el enlace de una actividad: antes no se sabe si la
+    // cuenta puede programar ni hay dónde mostrar el aviso.
+    ready: !!user && !data.isPending,
+    canSchedule,
+    offline: !hasConnection,
+    onOpen: setLinkedSchedule,
+  });
   const openScheduleForm = () => open({ kind: 'schedule' });
   // Programar desde un día del calendario necesita permiso y conexión.
   const scheduleOnDay =
@@ -349,6 +362,14 @@ export function ActivityCalendarScreen({
         </div>
         {canSchedule && !isDesktop && (
           <ActivityScheduleFab offline={offline} onClick={openScheduleForm} />
+        )}
+        {linkedSchedule && (
+          <LinkedScheduleDialog
+            currentMonth={month}
+            link={linkedSchedule}
+            onClose={() => setLinkedSchedule(null)}
+            onGoToMonth={goToMonth}
+          />
         )}
         <ActivityDialogs
           items={filtered}

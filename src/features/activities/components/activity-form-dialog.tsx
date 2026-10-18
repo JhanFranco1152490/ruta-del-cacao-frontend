@@ -23,7 +23,7 @@ import {
   REQUIRED_FIELD_MESSAGE,
 } from '@/lib/validation/messages';
 
-import { activityState } from '../activity-state';
+import { type ActivityType, activityState } from '../activity-state';
 import {
   type AgriculturalActivity,
   useCreateActivity,
@@ -44,8 +44,8 @@ export const DELAYED_EDIT_NOTICE =
   'Esta actividad está retrasada: elige una fecha nueva o registra su realización.';
 
 // Programar una actividad, o editar `activity` si llega. `preset` trae lo que ya se sabe de
-// dónde se programa: la finca y la parcela (desde una parcela) o la fecha (desde un día del
-// calendario). Se monta al abrirse: parte de los valores de ese momento y
+// dónde se programa: la finca y la parcela (desde una parcela), la fecha (desde un día del
+// calendario) o el tipo (desde Sanidad, un monitoreo). Se monta al abrirse: parte de los valores de ese momento y
 // no adopta lecturas posteriores, porque guardar la versión nueva con valores viejos pisaría lo
 // que otra persona cambió; y el id de la actividad nueva nace aquí, así que reenviar este mismo
 // formulario no la programa dos veces.
@@ -57,7 +57,12 @@ export function ActivityFormDialog({
   onRejected,
 }: {
   activity?: AgriculturalActivity;
-  preset?: { farmId?: string; plotId?: string; date?: string };
+  preset?: {
+    farmId?: string;
+    plotId?: string;
+    date?: string;
+    activityType?: ActivityType;
+  };
   onClose: () => void;
   onSaved: (activity: AgriculturalActivity, message: string) => void;
   onRejected: (message: string) => void;
@@ -82,6 +87,7 @@ export function ActivityFormDialog({
           ...EMPTY_ACTIVITY_FORM,
           farm_id: preset?.farmId ?? '',
           plot_id: preset?.plotId ?? '',
+          activity_type: preset?.activityType ?? '',
           scheduled_date: preset?.date ?? '',
         },
   });

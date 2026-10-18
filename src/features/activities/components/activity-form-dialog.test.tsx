@@ -99,6 +99,7 @@ function renderDialog(preset?: {
   farmId?: string;
   plotId?: string;
   date?: string;
+  activityType?: AgriculturalActivity['activity_type'];
 }) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -152,6 +153,18 @@ describe('ActivityFormDialog', () => {
     renderDialog({ date: '2026-10-28' });
 
     expect(field('Fecha programada')).toHaveValue('2026-10-28');
+  });
+
+  it('starts with the type chosen when it is opened to schedule one in particular', () => {
+    renderDialog({ activityType: 'phytosanitary_monitoring' });
+
+    expect(field('Tipo de actividad')).toHaveValue('phytosanitary_monitoring');
+  });
+
+  it('starts with no type when none was asked for', () => {
+    renderDialog();
+
+    expect(field('Tipo de actividad')).toHaveValue('');
   });
 
   it('starts with the date empty when it does not come from a day', () => {
