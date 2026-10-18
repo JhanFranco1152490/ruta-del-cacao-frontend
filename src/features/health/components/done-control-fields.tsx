@@ -9,7 +9,9 @@ import { TextField } from '@/components/text-field';
 
 import { METHOD_DESCRIPTION_MAX_LENGTH } from '../control-rules';
 import { CONTROL_METHOD_OPTIONS } from '../monitoring-rules';
+import { methodHint, type Recommendation } from '../recommendations';
 import { useControlChoices } from './control-choices';
+import { useSuggestedMethod } from './use-suggested-method';
 
 // Lo que se hizo contra una detección: qué y, si se aplicó algo, con qué insumos, que se descuentan
 // del inventario de la finca. `base` es dónde está el control en el formulario que lo usa
@@ -17,13 +19,17 @@ import { useControlChoices } from './control-choices';
 export function DoneControlFields({
   base,
   disabled,
+  recommendation = null,
 }: {
   base: string;
   disabled: boolean;
+  // Lo que el catálogo recomienda para la plaga que se atiende.
+  recommendation?: Recommendation | null;
 }) {
   const { control, register, formState } = useFormContext();
   const { catalog, stocks } = useControlChoices();
   const method = useWatch({ control, name: `${base}method` }) as string;
+  useSuggestedMethod(base, recommendation?.method ?? null);
   const errorOf = (field: string) =>
     (
       get(formState.errors, `${base}${field}`) as
@@ -36,6 +42,7 @@ export function DoneControlFields({
         className={CAPTURE_FIELD_CLASS}
         disabled={disabled}
         error={errorOf('method')}
+        hint={methodHint(recommendation, method)}
         label="¿Qué hiciste?"
         placeholder="Elige qué hiciste"
         {...register(`${base}method`)}

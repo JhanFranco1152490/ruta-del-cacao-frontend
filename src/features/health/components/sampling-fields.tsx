@@ -35,6 +35,8 @@ export function SamplingFields({
   today,
   disabled,
   plotTrees = null,
+  unitHint,
+  onUnitPicked,
 }: {
   control: Control<MonitoringFormInput, unknown, MonitoringFormValues>;
   register: UseFormRegister<MonitoringFormInput>;
@@ -43,6 +45,10 @@ export function SamplingFields({
   disabled: boolean;
   // Los árboles que suma la ficha de la parcela, si se saben.
   plotTrees?: number | null;
+  // De dónde salió la unidad o qué plagas suelen medirse con la otra, si el catálogo lo sugiere.
+  unitHint?: string;
+  // La persona eligió la unidad: desde entonces el catálogo ya no la cambia.
+  onUnitPicked?: () => void;
 }) {
   const unit = useWatch({ control, name: 'sampling_unit' });
   return (
@@ -67,12 +73,23 @@ export function SamplingFields({
             render={({ field }) => (
               <SegmentedControl
                 label="¿Qué evaluaste?"
-                onChange={field.onChange}
+                onChange={(value) => {
+                  field.onChange(value);
+                  onUnitPicked?.();
+                }}
                 options={UNIT_OPTIONS}
                 value={field.value}
               />
             )}
           />
+          {unitHint && (
+            <p
+              aria-live="polite"
+              className="text-sm font-bold text-muted-foreground"
+            >
+              {unitHint}
+            </p>
+          )}
         </div>
         <TextField
           className={CAPTURE_FIELD_CLASS}

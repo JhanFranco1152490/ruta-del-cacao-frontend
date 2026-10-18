@@ -20,6 +20,8 @@ const values = (
   kind: 'disease',
   scientific_name: '',
   description: 'Solo ataca la mazorca.',
+  suggested_sampling_unit: '',
+  suggested_control_method: '',
   ...overrides,
 });
 
@@ -41,7 +43,26 @@ describe('the pest or disease form', () => {
       kind: 'disease',
       scientific_name: 'Moniliophthora roreri',
       description: 'Solo ataca la mazorca.',
+      suggested_sampling_unit: '',
+      suggested_control_method: '',
     });
+  });
+
+  it('accepts the suggestions of the catalog and nothing else', () => {
+    expect(
+      messageOf({
+        suggested_sampling_unit: 'pods',
+        suggested_control_method: 'fruit_removal',
+      }),
+    ).toBeUndefined();
+    expect(
+      messageOf({
+        suggested_sampling_unit: 'leaves' as 'pods',
+      }),
+    ).toBeDefined();
+    expect(
+      messageOf({ suggested_control_method: 'other' as 'fruit_removal' }),
+    ).toBeDefined();
   });
 
   it('wants a name of 2 to 60 characters', () => {
@@ -87,6 +108,24 @@ describe('toPestDiseaseRequest', () => {
       kind: 'disease',
       scientific_name: null,
       description: 'Solo ataca la mazorca.',
+      suggested_sampling_unit: null,
+      suggested_control_method: null,
+    });
+  });
+
+  it('sends the suggestions that were chosen', () => {
+    expect(
+      toPestDiseaseRequest(
+        schema.parse(
+          values({
+            suggested_sampling_unit: 'pods',
+            suggested_control_method: 'fruit_removal',
+          }),
+        ),
+      ),
+    ).toMatchObject({
+      suggested_sampling_unit: 'pods',
+      suggested_control_method: 'fruit_removal',
     });
   });
 });

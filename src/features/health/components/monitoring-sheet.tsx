@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ReactNode, useEffect, useMemo } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef } from 'react';
 import {
   type FieldPath,
   FormProvider,
@@ -22,6 +22,11 @@ import {
   NOTES_MAX_LENGTH,
 } from '../monitoring-schema';
 import type { PestDisease } from '../pest-api';
+import {
+  recommendationFor,
+  unitHint,
+  unitRecommendation,
+} from '../recommendations';
 import { type ControlChoices, ControlChoicesContext } from './control-choices';
 import { DetectionsSection } from './detections-section';
 import { SamplingFields } from './sampling-fields';
@@ -85,6 +90,30 @@ export function MonitoringSheet({
     [choices, today],
   );
   const noPresence = useWatch({ control, name: 'no_presence' });
+  const unit = useWatch({ control, name: 'sampling_unit' });
+  const detections = useWatch({ control, name: 'detections' });
+  // Lo que el catálogo sugiere para las plagas elegidas. Sin presencia no hay detecciones.
+  const recommendations = useMemo(
+    () =>
+      noPresence
+        ? []
+        : (detections ?? []).map((row) =>
+            recommendationFor(pests, row.pest_disease_id),
+          ),
+    [detections, pests, noPresence],
+  );
+  const recommendedUnit = unitRecommendation(recommendations);
+  // La unidad sigue a la plaga mientras la persona no la haya elegido. Al abrir (una corrección
+  // que vuelve con su unidad) no se cambia nada: solo cuenta lo que cambie después.
+  const unitPickedByHand = useRef(false);
+  const lastRecommendedUnit = useRef(recommendedUnit);
+  useEffect(() => {
+    if (lastRecommendedUnit.current === recommendedUnit) return;
+    lastRecommendedUnit.current = recommendedUnit;
+    if (recommendedUnit && !unitPickedByHand.current) {
+      form.setValue('sampling_unit', recommendedUnit, { shouldDirty: true });
+    }
+  }, [recommendedUnit, form]);
   // Solo al abrir: después cada campo se valida con su regla.
   useEffect(() => {
     for (const { name, message } of initialErrors) {
@@ -113,9 +142,13 @@ export function MonitoringSheet({
             control={control}
             disabled={isSaving}
             errors={errors}
+            onUnitPicked={() => {
+              unitPickedByHand.current = true;
+            }}
             plotTrees={plotTrees}
             register={register}
             today={today}
+            unitHint={unitHint(recommendations, unit)}
           />
           {!noPresence && (
             <DetectionsSection

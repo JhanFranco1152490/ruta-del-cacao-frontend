@@ -11,6 +11,7 @@ import {
   type MonitoringFormInput,
 } from '../monitoring-form';
 import type { MonitoringFormValues } from '../monitoring-schema';
+import type { Recommendation } from '../recommendations';
 import { useControlChoices } from './control-choices';
 import { DoneControlFields } from './done-control-fields';
 import { ScheduledControlFields } from './scheduled-control-fields';
@@ -23,9 +24,12 @@ export const REQUESTED_CONTROL_NOTE =
 export function DetectionControl({
   index,
   disabled,
+  recommendation = null,
 }: {
   index: number;
   disabled: boolean;
+  // Lo que el catálogo recomienda para la plaga de esta detección.
+  recommendation?: Recommendation | null;
 }) {
   const { control, setValue } = useFormContext<
     MonitoringFormInput,
@@ -77,10 +81,18 @@ export function DetectionControl({
         ))}
       </div>
       {current.mode === 'done' && (
-        <DoneControlFields base={`${path}.`} disabled={disabled} />
+        <DoneControlFields
+          base={`${path}.`}
+          disabled={disabled}
+          recommendation={recommendation}
+        />
       )}
       {current.mode === 'scheduled' && (
-        <ScheduledControlFields base={`${path}.`} disabled={disabled} />
+        <ScheduledControlFields
+          base={`${path}.`}
+          disabled={disabled}
+          recommendation={recommendation}
+        />
       )}
       {current.mode === 'requested' && (
         <p className="text-sm font-bold text-muted-foreground" role="status">

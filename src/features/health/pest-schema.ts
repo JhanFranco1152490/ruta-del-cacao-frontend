@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { normalizeCatalogName } from '@/lib/format/search';
 
+import { CONTROL_METHOD_OPTIONS, SAMPLING_UNITS } from './monitoring-rules';
 import type { PestDiseaseCreateRequest } from './pest-api';
 
 export const PEST_DISEASE_NAME_MIN_LENGTH = 2;
@@ -12,6 +13,14 @@ export const DUPLICATE_PEST_DISEASE_MESSAGE =
   'Ya existe una plaga o enfermedad con este nombre';
 
 const maxLength = (length: number) => `Usa máximo ${length} caracteres.`;
+
+// Vacío es "sin sugerencia". "Otro" no se ofrece como control recomendado: pide escribir qué se
+// hizo, y una recomendación no puede escribirlo.
+const SUGGESTED_UNITS = Object.keys(SAMPLING_UNITS) as ('trees' | 'pods')[];
+export const SUGGESTED_METHOD_OPTIONS = CONTROL_METHOD_OPTIONS.filter(
+  ({ value }) => value !== 'other',
+);
+const suggestedMethods = SUGGESTED_METHOD_OPTIONS.map(({ value }) => value);
 
 // `takenNames`: los nombres (ya normalizados) de las demás del catálogo. El servidor repite la
 // comprobación con todas. El tipo empieza vacío para que el formulario no elija por la persona.
@@ -52,6 +61,16 @@ export const createPestDiseaseFormSchema = (takenNames: ReadonlySet<string>) =>
         PEST_DISEASE_DESCRIPTION_MAX_LENGTH,
         maxLength(PEST_DISEASE_DESCRIPTION_MAX_LENGTH),
       ),
+    // Lo que la planilla del monitoreo propone al elegirla: qué se cuenta para medirla y qué
+    // control se suele aplicar. Es una ayuda: quien registra puede cambiarla.
+    suggested_sampling_unit: z.enum(['', ...SUGGESTED_UNITS] as [
+      '',
+      ...('trees' | 'pods')[],
+    ]),
+    suggested_control_method: z.enum(['', ...suggestedMethods] as [
+      '',
+      ...(typeof suggestedMethods)[number][],
+    ]),
   });
 
 export type PestDiseaseFormInput = z.input<
@@ -70,4 +89,6 @@ export const toPestDiseaseRequest = (
   kind: values.kind as PestDiseaseCreateRequest['kind'],
   scientific_name: values.scientific_name || null,
   description: values.description,
+  suggested_sampling_unit: values.suggested_sampling_unit || null,
+  suggested_control_method: values.suggested_control_method || null,
 });

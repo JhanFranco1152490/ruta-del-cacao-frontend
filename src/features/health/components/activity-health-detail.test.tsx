@@ -11,6 +11,7 @@ import {
   buildAgriculturalActivity,
   buildAgriculturalInput,
   buildAssignee,
+  buildPestDisease,
   buildSession,
 } from '@/test/factories';
 import {
@@ -18,6 +19,7 @@ import {
   agriculturalInputsHandler,
   apiUrl,
   inputStocksHandler,
+  pestsDiseasesHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
@@ -315,6 +317,55 @@ describe('the actions of a detection', () => {
     expect(
       screen.queryByRole('button', { name: 'Programar control' }),
     ).toBeNull();
+  });
+
+  it('proposes the control the catalog recommends for the pest of the detection', async () => {
+    server.use(
+      pestsDiseasesHandler([
+        buildPestDisease({
+          id: 'blackpod',
+          name: 'Mazorca negra',
+          suggested_sampling_unit: 'pods',
+          suggested_control_method: 'fruit_removal',
+        }),
+      ]),
+    );
+    renderDetail(
+      doneMonitoring({
+        detections: [
+          {
+            id: 'd3',
+            pest_disease: {
+              id: 'blackpod',
+              name: 'Mazorca negra',
+              kind: 'disease',
+              is_active: true,
+            },
+            other_description: null,
+            affected_units: 4,
+            incidence: '8.00',
+            controls: [],
+            control_request: null,
+          },
+        ],
+      }),
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Programar control' }),
+    );
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Programar control',
+    });
+    await waitFor(() =>
+      expect(
+        within(dialog).getByLabelText('¿Qué se va a hacer? (opcional)'),
+      ).toHaveValue('fruit_removal'),
+    );
+    expect(
+      within(dialog).getByLabelText('¿Qué se va a hacer? (opcional)'),
+    ).toHaveAccessibleDescription('Recomendado para Mazorca negra.');
   });
 
   it('schedules a control from a detection through the device queue', async () => {

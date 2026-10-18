@@ -201,6 +201,13 @@ src/
     quien no programa, pedido a quien programa). Un monitoreo registrado no se corrige: antes de
     guardar se muestra el resumen. Rechazado por una plaga o un insumo inactivos, **Corregir** lo
     reabre con esa elección vacía.
+  - **Lo que el catálogo sugiere** (`recommendations.ts`, funciones puras): al elegir una plaga la
+    unidad del monitoreo pasa a la que sugiere (`suggested_sampling_unit`) mientras la persona no la
+    haya elegido a mano, y al hacer o programar un control llega elegido el recomendado
+    (`suggested_control_method`, nunca `other`). Lo precarga `use-suggested-method.ts`, que solo toca
+    el campo si está vacío o con lo último que puso él. Son ayudas: nada se bloquea. Los árboles
+    evaluados sí tienen tope, los de la ficha de la parcela (`plotTrees`), que lee y entrega
+    `monitoring-from-query.tsx` porque la ficha es de `crops`.
   - **El control desde una detección** es un diálogo y pasa por la cola (`phytosanitary-controls`,
     con la detección como padre). Rechazado, solo se descarta y se vuelve a crear desde la detección.
     **No requiere control** es en línea.
@@ -208,7 +215,10 @@ src/
     monitoreo o el control, si siguen en ella. Se preparan en el teléfono antes de guardarlas
     (`prepare-photo.ts`: solo JPG o PNG, 1600 px, hasta 5 MB y siempre como JPEG, para que pierdan sus
     metadatos, entre ellos la ubicación). El archivo se pide a la API (`apiFetchBlob`), nunca con
-    `<img src>`, y el teléfono guarda su copia (`evidence-file:{id}`).
+    `<img src>`, y el teléfono guarda su copia (`evidence-file:{id}`). **Tomar foto** usa `capture`
+    en un celular o una tableta; en un computador, donde `capture` solo abre el selector de
+    archivos, abre la cámara del equipo (`webcam-dialog.tsx`, solo en https o localhost) y, si no
+    hay cámara o permiso, ofrece el selector.
   - Los catálogos de la asociación (`/plagas-enfermedades`) se gestionan como **Variedades de cacao**,
     pero con la búsqueda y el estado en la URL; el buscador de la planilla muestra la descripción de
     cada plaga y **Otra** siempre al final (`SearchSelect` con `description` y `pinned`).

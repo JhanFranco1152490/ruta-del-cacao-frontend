@@ -774,7 +774,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Las detecciones que no tienen ningún control, programado o realizado, del monitoreo más antiguo al más reciente, en las fincas que alcanza la cuenta. Sin fecha mínima ni paginar: son las que esperan que alguien decida su control. Pide el permiso de programar. La cuenta técnica puede acotar con `producer`. */
+        /** @description Las detecciones en que alguien pidió que le programen un control y nadie lo ha atendido (ni programado ni marcado como que no lo requiere), del monitoreo más antiguo al más reciente, en las fincas que alcanza la cuenta. Una detección con «Ninguno por ahora» no está: no se pidió nada. Sin fecha mínima ni paginar. Pide el permiso de programar. La cuenta técnica puede acotar con `producer`. */
         get: operations["phytosanitary_detections_without_control_list"];
         put?: never;
         post?: never;
@@ -2002,6 +2002,8 @@ export interface components {
             kind?: components["schemas"]["PestDiseaseKindEnum"];
             scientific_name?: string | null;
             description?: string;
+            suggested_sampling_unit?: (components["schemas"]["SamplingUnitEnum"] | components["schemas"]["NullEnum"]) | null;
+            suggested_control_method?: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
             is_active?: boolean;
         };
         PatchedPlotUpdateRequest: {
@@ -2059,12 +2061,16 @@ export interface components {
             readonly scientific_name: string | null;
             readonly description: string;
             readonly is_active: boolean;
+            readonly suggested_sampling_unit: (components["schemas"]["SamplingUnitEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly suggested_control_method: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         PestDiseaseCreateRequest: {
             name: string;
             kind: components["schemas"]["PestDiseaseKindEnum"];
             scientific_name?: string | null;
             description: string;
+            suggested_sampling_unit?: (components["schemas"]["SamplingUnitEnum"] | components["schemas"]["NullEnum"]) | null;
+            suggested_control_method?: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         /**
          * @description * `pest` - Plaga

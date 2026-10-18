@@ -187,6 +187,8 @@ describe('PestListScreen', () => {
         kind: 'disease',
         scientific_name: null,
         description: 'Los brotes se hinchan y echan muchas ramitas.',
+        suggested_sampling_unit: null,
+        suggested_control_method: null,
       },
     ]);
     expect(
@@ -195,6 +197,49 @@ describe('PestListScreen', () => {
     expect(
       await screen.findByText('Plaga o enfermedad registrada'),
     ).toBeInTheDocument();
+  });
+
+  it('registers one with what is usually measured and the control recommended', async () => {
+    const user = await renderScreen();
+
+    const dialog = await openRegister(user);
+    await user.type(within(dialog).getByLabelText('Nombre'), 'Escoba de bruja');
+    await user.selectOptions(within(dialog).getByLabelText('Tipo'), 'disease');
+    await user.type(
+      within(dialog).getByLabelText('Descripción'),
+      'Brotes en escoba.',
+    );
+    await user.selectOptions(
+      within(dialog).getByLabelText('Se suele evaluar en (opcional)'),
+      'trees',
+    );
+    await user.selectOptions(
+      within(dialog).getByLabelText('Control recomendado (opcional)'),
+      'sanitary_pruning',
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Registrar' }));
+
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
+    expect(posted).toMatchObject([
+      {
+        suggested_sampling_unit: 'trees',
+        suggested_control_method: 'sanitary_pruning',
+      },
+    ]);
+  });
+
+  it('does not offer "Otro" as the recommended control', async () => {
+    const user = await renderScreen();
+
+    const dialog = await openRegister(user);
+
+    const options = within(
+      within(dialog).getByLabelText('Control recomendado (opcional)'),
+    )
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+    expect(options).not.toContain('Otro');
+    expect(options).toContain('Remoción de frutos enfermos');
   });
 
   it('wants the kind and the description before sending', async () => {
@@ -280,6 +325,8 @@ describe('PestListScreen', () => {
             kind: 'pest',
             scientific_name: 'Selenothrips rubrocinctus',
             description: 'Insectos diminutos.',
+            suggested_sampling_unit: null,
+            suggested_control_method: null,
           },
         },
       ]),

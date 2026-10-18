@@ -184,6 +184,8 @@ export const buildPestDisease = (
   scientific_name: 'Moniliophthora roreri',
   description: 'Solo ataca la mazorca. Empieza con manchas cafés.',
   is_active: true,
+  suggested_sampling_unit: null,
+  suggested_control_method: null,
   ...overrides,
 });
 

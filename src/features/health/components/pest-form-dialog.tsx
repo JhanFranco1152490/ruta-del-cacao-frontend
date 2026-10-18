@@ -31,6 +31,7 @@ import {
   useCreatePestDisease,
   useUpdatePestDisease,
 } from '../pest-api';
+import { SAMPLING_UNITS } from '../monitoring-rules';
 import { PEST_DISEASE_KIND_LABELS } from '../pest-filters';
 import {
   createPestDiseaseFormSchema,
@@ -40,10 +41,18 @@ import {
   type PestDiseaseFormInput,
   type PestDiseaseFormValues,
   SCIENTIFIC_NAME_MAX_LENGTH,
+  SUGGESTED_METHOD_OPTIONS,
   toPestDiseaseRequest,
 } from '../pest-schema';
 
-const FIELDS = ['name', 'kind', 'scientific_name', 'description'] as const;
+const FIELDS = [
+  'name',
+  'kind',
+  'scientific_name',
+  'description',
+  'suggested_sampling_unit',
+  'suggested_control_method',
+] as const;
 
 // Registrar una plaga o enfermedad, o editar `item` si llega. `catalog` sirve para avisar de un
 // nombre repetido antes de enviar; el servidor decide con todo el catálogo.
@@ -76,6 +85,13 @@ export function PestFormDialog({
     kind: item?.kind ?? '',
     scientific_name: item?.scientific_name ?? '',
     description: item?.description ?? '',
+    suggested_sampling_unit: item?.suggested_sampling_unit ?? '',
+    // Una recomendación guardada como "Otro" (desde el admin) no se puede mostrar: queda vacía.
+    suggested_control_method:
+      item?.suggested_control_method &&
+      item.suggested_control_method !== 'other'
+        ? item.suggested_control_method
+        : '',
   });
   const form = useForm<PestDiseaseFormInput, unknown, PestDiseaseFormValues>({
     resolver: zodResolver(schema),
@@ -211,6 +227,34 @@ export function PestFormDialog({
             maxLength={PEST_DISEASE_DESCRIPTION_MAX_LENGTH}
             {...register('description')}
           />
+          <SelectField
+            disabled={isSaving}
+            error={errors.suggested_sampling_unit?.message}
+            hint="La planilla del monitoreo la propone al elegir esta plaga o enfermedad."
+            label="Se suele evaluar en (opcional)"
+            placeholder="Sin sugerencia"
+            {...register('suggested_sampling_unit')}
+          >
+            {Object.entries(SAMPLING_UNITS).map(([value, { option }]) => (
+              <option key={value} value={value}>
+                {option}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField
+            disabled={isSaving}
+            error={errors.suggested_control_method?.message}
+            hint="Se precarga al elegir hacer o programar un control para esta plaga o enfermedad."
+            label="Control recomendado (opcional)"
+            placeholder="Sin recomendación"
+            {...register('suggested_control_method')}
+          >
+            {SUGGESTED_METHOD_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </SelectField>
           {failure && (
             <p className="text-sm font-bold text-err" role="alert">
               {failure}

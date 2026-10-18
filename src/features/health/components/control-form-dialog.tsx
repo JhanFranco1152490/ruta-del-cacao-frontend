@@ -20,6 +20,7 @@ import type { components } from '@/lib/api/schema';
 import { todayInBogota } from '@/lib/format/dates';
 import { formatDecimal } from '@/lib/format/decimal';
 import { notify } from '@/lib/notify';
+import { useSession } from '@/hooks/use-session';
 
 import {
   type ControlFormInput,
@@ -29,6 +30,8 @@ import {
   toDetectionControlRequest,
 } from '../control-schema';
 import { type Detection, detectionName } from '../detection-status';
+import { useActivePestsDiseases } from '../pest-api';
+import { recommendationFor } from '../recommendations';
 import { useSaveControl } from '../use-control-actions';
 import { ControlAssigneeField } from './control-assignee-field';
 import { ControlChoicesContext } from './control-choices';
@@ -75,6 +78,13 @@ export function ControlFormDialog({
 }) {
   const today = todayInBogota();
   const save = useSaveControl();
+  const { data: user } = useSession();
+  const pests = useActivePestsDiseases(user?.id);
+  // Lo que el catálogo recomienda para la plaga que se va a atender.
+  const recommendation = recommendationFor(
+    pests.data?.data,
+    detection.pest_disease?.id,
+  );
   const { choices } = useControlChoicesSource({
     farmId: origin.plot.farm.id,
     producerId: origin.producerId,
@@ -161,10 +171,18 @@ export function ControlFormDialog({
                     disabled={save.isPending}
                     name="assignee_id"
                   />
-                  <DoneControlFields base="" disabled={save.isPending} />
+                  <DoneControlFields
+                    base=""
+                    disabled={save.isPending}
+                    recommendation={recommendation}
+                  />
                 </>
               ) : (
-                <ScheduledControlFields base="" disabled={save.isPending} />
+                <ScheduledControlFields
+                  base=""
+                  disabled={save.isPending}
+                  recommendation={recommendation}
+                />
               )}
               {save.isError && (
                 <p className="text-sm font-bold text-err" role="alert">

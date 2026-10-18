@@ -156,6 +156,10 @@ const sheet = () =>
   screen.findByRole('button', { name: /^Guardar/ }, { timeout: 5000 });
 const detection = (number: number) =>
   screen.getByRole('group', { name: `Detección ${number}` });
+const controlOf = (number: number) =>
+  within(detection(number)).getByRole('group', { name: 'Control' });
+const chooseControl = (number: number, name: string) =>
+  userEvent.click(within(controlOf(number)).getByRole('radio', { name }));
 const choosePest = async (number: number, typed: string, name: RegExp) => {
   const field = within(detection(number)).getByRole('combobox', {
     name: 'Plaga o enfermedad',
@@ -362,6 +366,128 @@ describe('MonitoringScreen', () => {
     ).toBeInTheDocument();
   });
 
+  describe('recommendations of the catalog', () => {
+    const blackPod = buildPestDisease({
+      id: 'blackpod',
+      name: 'Mazorca negra',
+      suggested_sampling_unit: 'pods',
+      suggested_control_method: 'fruit_removal',
+    });
+    const broom = buildPestDisease({
+      id: 'broom',
+      name: 'Escoba de bruja',
+      suggested_sampling_unit: 'trees',
+      suggested_control_method: 'sanitary_pruning',
+    });
+    beforeEach(() => {
+      server.use(pestsDiseasesHandler([blackPod, broom, monilia]));
+    });
+
+    it('proposes the unit of the chosen pest and says where it comes from', async () => {
+      renderScreen();
+      await sheet();
+
+      await choosePest(1, 'negra', /^Mazorca negra/);
+
+      expect(screen.getByRole('button', { name: 'Mazorcas' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(
+        within(detection(1)).getByLabelText('Mazorcas afectadas'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Sugerido por Mazorca negra: mazorcas.'),
+      ).toBeInTheDocument();
+    });
+
+    it('does not change a unit the person chose by hand', async () => {
+      renderScreen();
+      await sheet();
+      await userEvent.click(screen.getByRole('button', { name: 'Mazorcas' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Árboles' }));
+
+      await choosePest(1, 'negra', /^Mazorca negra/);
+
+      expect(screen.getByRole('button', { name: 'Árboles' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(
+        screen.getByText('Mazorca negra se suele evaluar en mazorcas.'),
+      ).toBeInTheDocument();
+    });
+
+    it('warns when another pest of the monitoring is measured in the other unit', async () => {
+      renderScreen();
+      await sheet();
+      await choosePest(1, 'negra', /^Mazorca negra/);
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Agregar detección' }),
+      );
+
+      await choosePest(2, 'escoba', /^Escoba de bruja/);
+
+      expect(screen.getByRole('button', { name: 'Mazorcas' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(
+        screen.getByText('Escoba de bruja se suele evaluar en árboles.'),
+      ).toBeInTheDocument();
+    });
+
+    it('preselects the recommended control when one is chosen', async () => {
+      renderScreen();
+      await sheet();
+      await choosePest(1, 'negra', /^Mazorca negra/);
+
+      await chooseControl(1, 'Lo hice en este momento');
+
+      const method = within(controlOf(1)).getByLabelText('¿Qué hiciste?');
+      expect(method).toHaveValue('fruit_removal');
+      expect(method).toHaveAccessibleDescription(
+        'Recomendado para Mazorca negra.',
+      );
+      await userEvent.selectOptions(method, 'product_application');
+      expect(method).toHaveAccessibleDescription(
+        'Para Mazorca negra se recomienda Remoción de frutos enfermos.',
+      );
+    });
+
+    it('recommends the control of a scheduled one too, and follows the pest if it is not touched', async () => {
+      renderScreen();
+      await sheet();
+      await choosePest(1, 'negra', /^Mazorca negra/);
+      await chooseControl(1, 'Programarlo para después');
+      const method = within(controlOf(1)).getByLabelText(
+        '¿Qué se va a hacer? (opcional)',
+      );
+      expect(method).toHaveValue('fruit_removal');
+
+      await userEvent.clear(
+        within(detection(1)).getByRole('combobox', {
+          name: 'Plaga o enfermedad',
+        }),
+      );
+      await choosePest(1, 'escoba', /^Escoba de bruja/);
+
+      expect(method).toHaveValue('sanitary_pruning');
+    });
+
+    it('does not preselect anything for "Ninguno por ahora" or a pest without recommendation', async () => {
+      renderScreen();
+      await sheet();
+      await choosePest(1, 'moni', /^Monilia/);
+
+      await chooseControl(1, 'Lo hice en este momento');
+
+      expect(within(controlOf(1)).getByLabelText('¿Qué hiciste?')).toHaveValue(
+        '',
+      );
+    });
+  });
+
   it('lets choose only Other while the catalog was never loaded in the device', async () => {
     server.use(
       http.get(apiUrl('/api/pests-diseases'), () => HttpResponse.error()),
@@ -375,11 +501,6 @@ describe('MonitoringScreen', () => {
   });
 
   describe('the control of each detection', () => {
-    const controlOf = (number: number) =>
-      within(detection(number)).getByRole('group', { name: 'Control' });
-    const chooseControl = (number: number, name: string) =>
-      userEvent.click(within(controlOf(number)).getByRole('radio', { name }));
-
     it('starts with no control for now', async () => {
       renderScreen();
       await sheet();
