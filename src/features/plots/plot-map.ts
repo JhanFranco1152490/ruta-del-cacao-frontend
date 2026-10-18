@@ -3,6 +3,7 @@ import { formatHectares } from '@/lib/format/hectares';
 
 import type { KnownPlot } from './known-plots';
 import { PLOT_STATUS_DISPLAY, plotStatus } from './plot-status';
+import { plotLabel } from '@/lib/format/place-label';
 
 // El contorno de cada parcela que lo tiene; las demás no se dibujan y la lista las marca con
 // "Sin polígono".
@@ -13,7 +14,7 @@ export const plotsToShapes = (plots: readonly KnownPlot[]): MapShape[] =>
     return [
       {
         id: plot.id,
-        label: plot.code,
+        label: plotLabel(plot),
         detail: `${formatHectares(plot.areaHectares)} · ${label}`,
         positions: plot.vertices.map(({ latitude, longitude }) => ({
           latitude,

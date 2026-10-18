@@ -14,10 +14,12 @@ export type KnownPlotQueue = {
 
 // Una parcela de la finca tal como la conoce el dispositivo: la del servidor, la de la caché o la
 // que sigue en la cola. Con esto se muestra la lista y se validan el área disponible, la
-// superposición y los códigos.
+// superposición y los nombres.
 export type KnownPlot = {
   id: string;
-  code: string;
+  // Solo las que ya llegaron al servidor: el código lo asigna él al recibirlas.
+  code?: string;
+  name: string | null;
   areaHectares: string;
   isActive: boolean;
   vertices: DraftVertex[];
@@ -37,6 +39,7 @@ export const toQueue = (plot: QueuedPlot): KnownPlotQueue => ({
 export const fromServer = (plot: Plot): KnownPlot => ({
   id: plot.id,
   code: plot.code,
+  name: plot.name ?? null,
   areaHectares: plot.area_hectares,
   isActive: plot.is_active,
   vertices: plotToFormValues(plot).vertices,
@@ -56,7 +59,7 @@ export function mergeKnownPlots(
     if (!pending) return fromServer(plot);
     return {
       ...fromServer(plot),
-      code: pending.values.code,
+      name: pending.values.name || null,
       areaHectares: pending.values.area_hectares,
       vertices: pending.values.vertices,
       queue: toQueue(pending),
@@ -67,13 +70,22 @@ export function mergeKnownPlots(
     .filter((plot) => !serverIds.has(plot.id))
     .map((plot): KnownPlot => ({
       id: plot.id,
-      code: plot.values.code,
+      name: plot.values.name || null,
       areaHectares: plot.values.area_hectares,
       isActive: true,
       vertices: plot.values.vertices,
       queue: toQueue(plot),
     }));
-  return [...merged, ...created].sort((a, b) =>
-    a.code.localeCompare(b.code, 'es', { sensitivity: 'base' }),
-  );
+  return [...merged, ...created].sort(byCode);
+}
+
+// Por código, que es el orden en que se registraron (`P2` antes que `P10`); las que aún esperan
+// su código, al final y por nombre.
+export function byCode(a: KnownPlot, b: KnownPlot) {
+  if (a.code && b.code)
+    return a.code.localeCompare(b.code, 'es', { numeric: true });
+  if (a.code || b.code) return a.code ? -1 : 1;
+  return (a.name ?? '').localeCompare(b.name ?? '', 'es', {
+    sensitivity: 'base',
+  });
 }

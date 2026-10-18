@@ -47,6 +47,7 @@ describe('fetchPlotOptions', () => {
           code: 'P-02',
           farm: {
             id: 'f2',
+            code: 'F02',
             name: 'El Retiro',
             is_active: false,
             producer: PRODUCER,
@@ -62,10 +63,12 @@ describe('fetchPlotOptions', () => {
       {
         id: 'pl1',
         code: 'P-01',
+        name: null,
         areaHectares: '2.40',
         isActive: true,
         farm: {
           id: 'f1',
+          code: 'F01',
           name: 'La Esperanza',
           isActive: true,
           producer: PRODUCER,
@@ -74,10 +77,12 @@ describe('fetchPlotOptions', () => {
       {
         id: 'pl2',
         code: 'P-02',
+        name: null,
         areaHectares: '2.40',
         isActive: true,
         farm: {
           id: 'f2',
+          code: 'F02',
           name: 'El Retiro',
           isActive: false,
           producer: PRODUCER,

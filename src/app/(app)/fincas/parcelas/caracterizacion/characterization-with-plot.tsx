@@ -6,6 +6,7 @@ import { ErrorState } from '@/components/error-state';
 import { CharacterizationScreen } from '@/features/crops/components/characterization-screen';
 import { FarmGateFromQuery } from '@/features/farms/components/farm-gate-from-query';
 import { PlotGate } from '@/features/plots/components/plot-gate';
+import { plotLabel } from '@/lib/format/place-label';
 
 // Aquí se juntan los tres dominios: la finca, la parcela y su ficha agronómica.
 export function CharacterizationWithPlot() {
@@ -27,7 +28,7 @@ export function CharacterizationWithPlot() {
               }}
               plot={{
                 id: plot.id,
-                code: plot.code,
+                code: plotLabel(plot),
                 areaHectares: plot.areaHectares,
                 isActive: plot.isActive,
               }}

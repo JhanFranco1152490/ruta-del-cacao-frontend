@@ -35,7 +35,12 @@ const waiting = (
   incidence: '24.00',
   sampling_unit: 'trees',
   monitoring: { id: 'm1', done_date: '2026-10-19' },
-  plot: { id: 'pl1', code: 'P-03', farm: { id: 'f1', name: 'La Esperanza' } },
+  plot: {
+    id: 'pl1',
+    code: 'P-03',
+    name: null,
+    farm: { id: 'f1', code: 'F01', name: 'La Esperanza' },
+  },
   control_requested_by: { id: 'u2', full_name: 'Luis Mora' },
   control_requested_at: '2026-10-19T15:20:00Z',
   ...overrides,

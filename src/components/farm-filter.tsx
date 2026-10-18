@@ -6,6 +6,7 @@ import { SearchSelect } from '@/components/search-select';
 import { getErrorMessage } from '@/lib/api/errors';
 import { type FarmOption, useFarmSearch } from '@/lib/api/farm-options';
 import { producerLabelOf } from '@/lib/format/producer';
+import { farmLabel } from '@/lib/format/place-label';
 
 // De qué finca ver los registros. Un solo campo busca y elige: se escribe parte del nombre y se
 // elige de lo que trae el servidor, así que sirve igual con tres fincas que con cien. Quien ve las
@@ -43,8 +44,8 @@ export function FarmFilter({
   const results = found.data?.options ?? [];
   const labelOf = (option: FarmOption) =>
     showProducer
-      ? `${option.name} · ${option.municipality} · ${producerLabelOf(option.producer)}`
-      : `${option.name} · ${option.municipality}`;
+      ? `${farmLabel(option)} · ${option.municipality} · ${producerLabelOf(option.producer)}`
+      : `${farmLabel(option)} · ${option.municipality}`;
   const options = results.map((option) => ({
     id: option.id,
     label: labelOf(option),

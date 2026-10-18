@@ -68,62 +68,50 @@ function renderScreen(
 
 const fillAndSave = async (
   user: ReturnType<typeof userEvent.setup>,
-  code: string,
+  name: string,
   area: string,
 ) => {
-  const codeField = await screen.findByLabelText('Código de la parcela');
-  await user.clear(codeField);
-  await user.type(codeField, code);
+  const nameField = await screen.findByLabelText(
+    'Nombre de la parcela (opcional)',
+  );
+  await user.clear(nameField);
+  await user.type(nameField, name);
   await user.type(screen.getByLabelText('Área declarada (hectáreas)'), area);
   await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 };
 
 describe('NewPlotScreen', () => {
-  it('proposes the next code of the farm so the person does not have to invent one', async () => {
-    server.use(
-      plotsHandler([
-        buildPlot({ code: 'P-01' }),
-        buildPlot({ id: 'b', code: 'P-02' }),
-      ]),
-    );
+  it('does not ask for a code: the server gives it, and the name is optional', async () => {
+    server.use(plotsHandler([buildPlot({ code: 'P01' })]));
     renderScreen();
 
-    expect(await screen.findByLabelText('Código de la parcela')).toHaveValue(
-      'P-03',
-    );
+    expect(
+      await screen.findByLabelText('Nombre de la parcela (opcional)'),
+    ).toHaveValue('');
+    expect(
+      screen.getByText(
+        'El código (P01, P02…) lo asigna el sistema al guardar.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/Código de la parcela/),
+    ).not.toBeInTheDocument();
   });
 
-  it('proposes P1 for the first plot of a farm and saves it as is', async () => {
+  it('saves a plot without a name', async () => {
     server.use(plotsHandler([]));
     const { user } = renderScreen();
 
-    expect(await screen.findByLabelText('Código de la parcela')).toHaveValue(
-      'P1',
+    await user.type(
+      await screen.findByLabelText('Área declarada (hectáreas)'),
+      '1',
     );
-    await user.type(screen.getByLabelText('Área declarada (hectáreas)'), '1');
     await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 
     await screen.findByText('Parcela guardada');
     const [item] = await getOfflineDb(userId).queue.toArray();
-    expect(item.payload).toMatchObject({ code: 'P1' });
-  });
-
-  it('proposes the following code for the next plot registered in a row', async () => {
-    server.use(plotsHandler([]));
-    const { user } = renderScreen();
-    await fillAndSave(user, 'P1', '1');
-    await screen.findByText('Parcela guardada');
-
-    await user.click(
-      screen.getByRole('button', { name: 'Registrar otra parcela' }),
-    );
-    expect(router.push).toHaveBeenCalledWith('/fincas/parcelas/nueva?finca=f1');
-    cleanup();
-    renderScreen();
-
-    expect(await screen.findByLabelText('Código de la parcela')).toHaveValue(
-      'P2',
-    );
+    expect(item.payload).toMatchObject({ name: null });
+    expect(item.payload).not.toHaveProperty('code');
   });
 
   it('saves the plot on the device under its farm and goes back to it', async () => {
@@ -142,7 +130,7 @@ describe('NewPlotScreen', () => {
     });
     expect(item.payload).toMatchObject({
       farm_id: 'f1',
-      code: 'P1',
+      name: 'P1',
       area_hectares: '2.4',
     });
   });
@@ -226,15 +214,17 @@ describe('NewPlotScreen', () => {
     first.unmount();
 
     const { user } = renderScreen();
-    const codeField = await screen.findByLabelText('Código de la parcela');
-    await user.clear(codeField);
-    await user.type(codeField, 'p1');
+    const nameField = await screen.findByLabelText(
+      'Nombre de la parcela (opcional)',
+    );
+    await user.clear(nameField);
+    await user.type(nameField, 'p1');
     await user.type(screen.getByLabelText('Área declarada (hectáreas)'), '2');
     await user.click(screen.getByRole('button', { name: 'Guardar parcela' }));
 
     expect(
       await screen.findByText(
-        'Ya existe una parcela con este código en la finca',
+        'Ya existe una parcela con este nombre en la finca',
       ),
     ).toBeInTheDocument();
     expect(screen.getByText(/supera el área disponible/)).toBeInTheDocument();
@@ -296,7 +286,7 @@ describe('NewPlotScreen and whose farm it is', () => {
     server.use(plotsHandler([]));
     renderScreen(OF_ANA);
 
-    await screen.findByLabelText('Código de la parcela');
+    await screen.findByLabelText('Nombre de la parcela (opcional)');
     expect(
       screen.queryByText(/Registras una parcela en la finca/),
     ).not.toBeInTheDocument();

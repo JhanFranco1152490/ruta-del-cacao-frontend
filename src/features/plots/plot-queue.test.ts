@@ -14,6 +14,8 @@ import {
   plotToFormValues,
   resubmitPlot,
   type PlotFormValues,
+  toFormValues,
+  withStoredName,
 } from './plot-queue';
 import type { DraftVertex } from './plot-vertices';
 
@@ -42,7 +44,7 @@ const vertices: DraftVertex[] = [
 ];
 
 const values: PlotFormValues = {
-  code: 'P1 · El Mango',
+  name: 'El Mango',
   area_hectares: '2.40',
   vertices,
 };
@@ -67,7 +69,7 @@ describe('enqueuePlotCreate', () => {
     expect(item?.payload).toMatchObject({
       id: 'pl1',
       farm_id: 'f1',
-      code: 'P1 · El Mango',
+      name: 'El Mango',
       area_hectares: '2.40',
     });
     expect((item?.payload as { boundary: unknown[] }).boundary).toHaveLength(3);
@@ -124,7 +126,7 @@ describe('enqueuePlotUpdate', () => {
     await enqueuePlotUpdate(userId, 'pl1', 'f1', values, 1);
 
     await expect(
-      enqueuePlotUpdate(userId, 'pl1', 'f1', { ...values, code: 'Otro' }, 1),
+      enqueuePlotUpdate(userId, 'pl1', 'f1', { ...values, name: 'Otro' }, 1),
     ).rejects.toThrow();
   });
 });
@@ -219,7 +221,8 @@ describe('resubmitPlot', () => {
 describe('plotToFormValues', () => {
   it('turns a server plot into the form values, with its vertices', () => {
     const plot = buildPlot({
-      code: 'P1',
+      code: 'P01',
+      name: 'El Mango',
       area_hectares: '2.40',
       boundary: [
         buildVertex('-72.5000000', '7.8000000'),
@@ -229,13 +232,48 @@ describe('plotToFormValues', () => {
     });
 
     expect(plotToFormValues(plot)).toMatchObject({
-      code: 'P1',
+      name: 'El Mango',
       area_hectares: '2.40',
     });
     expect(plotToFormValues(plot).vertices).toHaveLength(3);
   });
 
+  it('leaves the name empty for a plot that has none', () => {
+    expect(plotToFormValues(buildPlot({ name: null })).name).toBe('');
+  });
+
   it('the version a device-created plot is edited against is the creation one', () => {
     expect(CREATED_PLOT_VERSION).toBe(1);
+  });
+});
+
+describe('a plot saved by an earlier version of the app', () => {
+  it('reads its free code as the name', () => {
+    expect(
+      toFormValues({ code: 'Lote viejo', area_hectares: '1', boundary: null }),
+    ).toMatchObject({ name: 'Lote viejo' });
+  });
+
+  it('sends an edit with that text as the name and without the code', () => {
+    expect(
+      withStoredName({
+        code: 'Lote viejo',
+        area_hectares: '1',
+        boundary: null,
+        expected_version: 2,
+      } as Parameters<typeof withStoredName>[0]),
+    ).toEqual({
+      name: 'Lote viejo',
+      area_hectares: '1',
+      boundary: null,
+      expected_version: 2,
+    });
+  });
+
+  it('saves an empty name as no name', async () => {
+    await enqueuePlotCreate(userId, 'pl9', 'f1', { ...values, name: '  ' });
+
+    const item = await getOfflineDb(userId).queue.get('pl9');
+    expect(item?.payload).toMatchObject({ name: null });
   });
 });

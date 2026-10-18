@@ -42,7 +42,9 @@ describe('session snapshot', () => {
     const user = buildSessionUser({
       id: `snapshot-${crypto.randomUUID()}`,
       all_farms: false,
-      farms: [{ id: 'farm-a', name: 'La Esperanza', is_active: true }],
+      farms: [
+        { id: 'farm-a', code: 'F01', name: 'La Esperanza', is_active: true },
+      ],
     });
     const cache = getOfflineDb(user.id).cache;
     const keep = { key: 'plots', value: [], fetchedAt: 1 };
@@ -55,7 +57,9 @@ describe('session snapshot', () => {
 
     const moved = {
       ...user,
-      farms: [{ id: 'farm-b', name: 'El Recreo', is_active: true }],
+      farms: [
+        { id: 'farm-b', code: 'F01', name: 'El Recreo', is_active: true },
+      ],
     };
     expect(await saveSessionSnapshot(moved)).toBe(true);
     expect(await cache.get('plots')).toBeUndefined();

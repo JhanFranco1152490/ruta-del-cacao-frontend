@@ -92,7 +92,7 @@ describe('ActivityMonthGrid', () => {
     );
     const day = within(cell(/13 de octubre/));
 
-    expect(day.getAllByText('P-03')).toHaveLength(3);
+    expect(day.getAllByText('P03')).toHaveLength(3);
     await userEvent.click(day.getByRole('button', { name: '+2 más' }));
 
     expect(onOpenDay).toHaveBeenCalledWith('2026-10-13');

@@ -23,8 +23,9 @@ const activity = (overrides: Partial<Activity> = {}) =>
     plot: {
       id: 'pl1',
       code: 'P-03',
+      name: null,
       is_active: true,
-      farm: { id: 'f1', name: 'La Esperanza', is_active: true },
+      farm: { id: 'f1', code: 'F01', name: 'La Esperanza', is_active: true },
     },
     ...overrides,
   });

@@ -42,10 +42,16 @@ const ALL = [
   PERMISSIONS.PLOTS_CHANGE,
   PERMISSIONS.PLOTS_DELETE,
 ] as string[];
-const MANGO_FARM = { ...buildPlot().farm, id: 'f2', name: 'El Mango' };
+const MANGO_FARM = {
+  ...buildPlot().farm,
+  id: 'f2',
+  code: 'F02',
+  name: 'El Mango',
+};
 const LUIS_FARM = {
   ...buildPlot().farm,
   id: 'f3',
+  code: 'F03',
   name: 'El Porvenir',
   producer: {
     id: 'p2',
@@ -113,10 +119,13 @@ describe('PlotListScreen', () => {
     expect(
       await screen.findByRole('heading', { name: 'Mis parcelas' }),
     ).toBeInTheDocument();
-    expect(await groupHeadings()).toEqual(['La Esperanza', 'El Mango']);
+    expect(await groupHeadings()).toEqual([
+      'F01 · La Esperanza',
+      'F02 · El Mango',
+    ]);
     expect(
       within(
-        screen.getByRole('list', { name: 'Parcelas de La Esperanza' }),
+        screen.getByRole('list', { name: 'Parcelas de F01 · La Esperanza' }),
       ).getAllByRole('article'),
     ).toHaveLength(2);
     expect(requests.at(-1)?.get('ordering')).toBe('producer,farm,code');
@@ -130,7 +139,7 @@ describe('PlotListScreen', () => {
     renderScreen();
 
     expect(
-      await screen.findByRole('link', { name: 'La Esperanza' }),
+      await screen.findByRole('link', { name: 'F01 · La Esperanza' }),
     ).toHaveAttribute('href', '/fincas/detalle?id=f1');
   });
 
@@ -199,10 +208,10 @@ describe('PlotListScreen', () => {
   it('shows first what waits on the device, in its own group with its farm', async () => {
     server.use(
       plotsHandler([buildPlot({ id: 'pl1', code: 'A1' })]),
-      farmsHandler([buildFarm({ id: 'f2', name: 'El Mango' })]),
+      farmsHandler([buildFarm({ id: 'f2', code: 'F02', name: 'El Mango' })]),
     );
     await enqueuePlotCreate(userId, 'q1', 'f2', {
-      code: 'Z-nueva',
+      name: 'Z-nueva',
       area_hectares: '1.00',
       vertices: [],
     });
@@ -211,7 +220,7 @@ describe('PlotListScreen', () => {
     await waitFor(async () =>
       expect(await groupHeadings()).toEqual([
         'En este dispositivo',
-        'La Esperanza',
+        'F01 · La Esperanza',
       ]),
     );
     const pending = within(
@@ -257,12 +266,12 @@ describe('PlotListScreen', () => {
       ),
     );
     await enqueuePlotCreate(userId, 'pendiente', 'f1', {
-      code: 'A-pendiente',
+      name: 'A-pendiente',
       area_hectares: '1.00',
       vertices: [],
     });
     await enqueuePlotCreate(userId, 'fallida', 'f1', {
-      code: 'A-fallida',
+      name: 'A-fallida',
       area_hectares: '1.00',
       vertices: [],
     });
@@ -297,7 +306,7 @@ describe('PlotListScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Tocar P1' }));
 
     const [touched, other] = within(
-      screen.getByRole('list', { name: 'Parcelas de La Esperanza' }),
+      screen.getByRole('list', { name: 'Parcelas de F01 · La Esperanza' }),
     ).getAllByRole('article');
     expect(touched).toHaveAttribute('data-highlighted', 'true');
     expect(other).not.toHaveAttribute('data-highlighted');
@@ -352,7 +361,7 @@ describe('PlotListScreen', () => {
     server.use(plotsHandler([buildPlot({ id: 'pl1', code: 'P9' })]));
     renderScreen({ searchParams: '?pagina=2&agrupar=finca' });
 
-    expect(await groupHeadings()).toEqual(['La Esperanza(continúa)']);
+    expect(await groupHeadings()).toEqual(['F01 · La Esperanza(continúa)']);
   });
 
   describe('for the technical account', () => {
@@ -370,9 +379,9 @@ describe('PlotListScreen', () => {
       ).toBeInTheDocument();
       expect(await groupHeadings()).toEqual([
         'Ana Prueba · PROD-000007',
-        'La Esperanza',
+        'F01 · La Esperanza',
         'Luis Ejemplo · PROD-000002',
-        'El Porvenir',
+        'F03 · El Porvenir',
       ]);
       expect(
         screen.getByRole('button', { name: 'Por productor' }),
@@ -428,7 +437,7 @@ describe('PlotListScreen', () => {
 
     it('still shows the plots on the device when the server cannot be read', async () => {
       await enqueuePlotCreate(userId, 'q1', 'f1', {
-        code: 'P-campo',
+        name: 'P-campo',
         area_hectares: '1.00',
         vertices: [],
       });

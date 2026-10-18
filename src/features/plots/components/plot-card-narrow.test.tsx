@@ -76,11 +76,11 @@ describe('a narrow plot card', () => {
     renderSection(onExtra);
 
     await user.click(
-      await screen.findByRole('button', { name: 'Más acciones de P1' }),
+      await screen.findByRole('button', { name: 'Más acciones de P01' }),
     );
 
     expect(
-      screen.queryByRole('button', { name: 'Ver P1 en el mapa' }),
+      screen.queryByRole('button', { name: 'Ver P01 en el mapa' }),
     ).not.toBeInTheDocument();
     expect(
       await screen.findByRole('menuitem', { name: 'Ver en el mapa' }),
@@ -100,7 +100,7 @@ describe('a narrow plot card', () => {
     renderSection();
 
     await user.click(
-      await screen.findByRole('button', { name: 'Más acciones de P1' }),
+      await screen.findByRole('button', { name: 'Más acciones de P01' }),
     );
     await user.click(
       await screen.findByRole('menuitem', { name: 'Ver en el mapa' }),

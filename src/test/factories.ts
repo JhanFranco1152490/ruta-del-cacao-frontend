@@ -113,6 +113,7 @@ export const buildFarm = (
   overrides: Partial<Schemas['Farm']> = {},
 ): Schemas['Farm'] => ({
   id: 'f1',
+  code: 'F01',
   name: 'La Esperanza',
   producer: {
     id: 'p1',
@@ -253,6 +254,7 @@ export const buildPlot = (
   id: 'pl1',
   farm: {
     id: 'f1',
+    code: 'F01',
     name: 'La Esperanza',
     is_active: true,
     producer: {
@@ -262,7 +264,8 @@ export const buildPlot = (
       last_name: 'Prueba',
     },
   },
-  code: 'P1',
+  code: 'P01',
+  name: null,
   area_hectares: '2.40',
   measured_area_hectares: null,
   boundary: null,
@@ -336,15 +339,74 @@ export const buildAssignee = (
   ...overrides,
 });
 
+export const buildHarvest = (
+  overrides: Partial<Schemas['Harvest']> = {},
+): Schemas['Harvest'] => ({
+  id: 'h1',
+  plot: {
+    id: 'pl1',
+    code: 'P05',
+    name: 'Lote del río',
+    is_active: true,
+    farm: { id: 'f1', code: 'F02', name: 'La Esperanza', is_active: true },
+  },
+  producer_id: 'p1',
+  harvest_date: '2026-10-14',
+  green_weight_kg: '120.5',
+  variety: { id: 'v1', name: 'CCN-51', is_active: true },
+  collector: { id: 'u1', full_name: 'Cuenta de prueba', is_active: true },
+  characterization_version: 1,
+  registered_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  captured_at: null,
+  version: 1,
+  created_at: '2026-10-14T15:00:00Z',
+  updated_at: '2026-10-14T15:00:00Z',
+  lot: null,
+  ...overrides,
+});
+
+export const buildLot = (
+  overrides: Partial<Schemas['Lot']> = {},
+): Schemas['Lot'] => {
+  // El lote trae su cosecha sin el campo `lot`; el de más no estorba en una prueba.
+  const harvest: Schemas['HarvestRepresentation'] = buildHarvest();
+  return {
+    id: 'l1',
+    code: '000123-F02-P05-261014-1',
+    status: 'generated',
+    harvest,
+    producer: { id: 'p1', member_code: 'PROD-000123' },
+    green_weight_kg: harvest.green_weight_kg,
+    created_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+    version: 1,
+    created_at: '2026-10-14T16:00:00Z',
+    updated_at: '2026-10-14T16:00:00Z',
+    ...overrides,
+  };
+};
+
+export const buildCollector = (
+  overrides: Partial<Schemas['CollectorOption']> = {},
+): Schemas['CollectorOption'] => ({
+  id: 'u1',
+  full_name: 'Cuenta de prueba',
+  is_active: true,
+  farm_ids: [],
+  all_farms: true,
+  assignable: true,
+  ...overrides,
+});
+
 export const buildAgriculturalActivity = (
   overrides: Partial<Schemas['AgriculturalActivity']> = {},
 ): Schemas['AgriculturalActivity'] => ({
   id: 'a1',
   plot: {
     id: 'pl1',
-    code: 'P-03',
+    code: 'P03',
+    name: null,
     is_active: true,
-    farm: { id: 'f1', name: 'Finca de prueba', is_active: true },
+    farm: { id: 'f1', code: 'F01', name: 'Finca de prueba', is_active: true },
   },
   producer_id: 'p1',
   activity_type: 'fertilization',

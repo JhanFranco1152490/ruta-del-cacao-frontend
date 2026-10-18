@@ -13,9 +13,12 @@ import type {
   FarmOption,
   FarmPlotOptions,
 } from '../activity-filters';
+import { farmLabel } from '@/lib/format/place-label';
 
 // El ancho de cada filtro de la fila: crece para llenarla y cabe en el celular.
-const FILTER_WIDTH = 'min-w-40 flex-1 basis-44';
+// En celular los filtros van en columna bajo «Filtros», a todo el ancho: `basis` en una columna es
+// el alto, y daría a cada uno 11 rem de alto. De `sm` en adelante comparten la fila.
+const FILTER_WIDTH = 'w-full sm:min-w-40 sm:flex-1 sm:basis-44';
 
 // La opción que muestra un filtro puesto. Si ya no está entre las que se ofrecen (la finca o la
 // parcela no tiene actividades en este periodo), se muestra con un texto que lo dice.
@@ -107,10 +110,16 @@ export function ActivityFiltersBar({
           compact
           label="Finca"
           onChange={(option) => onFarm(option?.id ?? null)}
-          options={farmOptions.map(({ id, name }) => ({ id, label: name }))}
+          options={farmOptions.map((farm) => ({
+            id: farm.id,
+            label: farmLabel(farm),
+          }))}
           value={selected(
             filters.farm,
-            farmOptions.map(({ id, name }) => ({ id, label: name })),
+            farmOptions.map((farm) => ({
+              id: farm.id,
+              label: farmLabel(farm),
+            })),
             'Finca sin actividades en este periodo',
           )}
         />

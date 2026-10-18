@@ -132,6 +132,46 @@ export const activityAssigneesHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde las cosechas de un periodo y guarda las búsquedas recibidas.
+export const harvestsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/harvests'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// Responde las cuentas que pueden recolectar y guarda las búsquedas recibidas.
+export const harvestCollectorsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/harvests/collectors'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// Responde una página de lotes y guarda las búsquedas recibidas.
+export const lotsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/lots'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(buildPage(results));
+  });
+
+// Responde el recuento de lotes por estado y guarda las búsquedas recibidas.
+export const lotSummaryHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/lots/summary'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

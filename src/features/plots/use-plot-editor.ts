@@ -21,9 +21,10 @@ import {
 } from './polygon-draft';
 import {
   createPlotFormSchema,
-  normalizeCode,
+  normalizeName,
   type PlotFormFields,
 } from './schemas';
+import { plotLabel } from '@/lib/format/place-label';
 
 // Por debajo de media centésima el área, con dos decimales, sería 0,00: no se propone.
 const MIN_PROPOSED_AREA_HECTARES = 0.005;
@@ -56,16 +57,19 @@ export function usePlotEditor({
     () => knownPlots.filter((plot) => plot.id !== selfId),
     [knownPlots, selfId],
   );
-  const takenCodes = useMemo(
-    () => new Set(others.map((plot) => normalizeCode(plot.code))),
+  const takenNames = useMemo(
+    () =>
+      new Set(
+        others.flatMap((plot) => (plot.name ? [normalizeName(plot.name)] : [])),
+      ),
     [others],
   );
-  const schema = useMemo(() => createPlotFormSchema(takenCodes), [takenCodes]);
+  const schema = useMemo(() => createPlotFormSchema(takenNames), [takenNames]);
 
   const form = useForm<PlotFormFields>({
     resolver: zodResolver(schema),
     defaultValues: {
-      code: defaultValues.code,
+      name: defaultValues.name,
       area_hectares: defaultValues.area_hectares,
     },
     mode: 'onBlur',
@@ -95,7 +99,7 @@ export function usePlotEditor({
         .filter((plot) => plot.isActive && plot.vertices.length >= 3)
         .map((plot) => ({
           id: plot.id,
-          code: plot.code,
+          code: plotLabel(plot),
           points: toPoints(plot.vertices),
         }))
         .filter(({ points }) => polygonProblem(points) === null),

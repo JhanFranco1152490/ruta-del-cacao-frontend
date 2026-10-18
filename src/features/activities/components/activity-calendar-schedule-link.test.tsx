@@ -107,7 +107,7 @@ describe('a monitoring to schedule in the calendar URL', () => {
     );
     expect(
       await within(dialog).findByRole('combobox', { name: 'Finca' }),
-    ).toHaveValue('La Esperanza');
+    ).toHaveValue('F01 · La Esperanza');
     expect(
       await within(dialog).findByRole('combobox', { name: 'Parcela' }),
     ).toHaveValue('P-01 · 2,4 ha');

@@ -1,12 +1,13 @@
 import { isApiError } from '@/lib/api/errors';
 import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
 
-import { patchPlot, plotReadsOf, postPlot } from './api';
+import { patchPlot, type Plot, plotReadsOf, postPlot } from './api';
 import {
   createToUpdate,
   PLOT_RESOURCE,
   type PlotCreatePayload,
   type PlotUpdatePayload,
+  withStoredName,
 } from './plot-queue';
 
 export const PLOT_DELETED_CODE = 'plot_deleted';
@@ -38,14 +39,23 @@ export const plotSyncAdapter: SyncAdapter = {
 
   async send(item) {
     if (item.operation === 'create') {
-      await postPlot({
+      return postPlot({
         ...(item.payload as PlotCreatePayload),
         // La hora en que se guardó en el dispositivo; informativa para el servidor.
         captured_at: new Date(item.createdAt).toISOString(),
       });
-    } else {
-      await patchPlot(item.id, item.payload as PlotUpdatePayload);
     }
+    return patchPlot(
+      item.id,
+      withStoredName(item.payload as PlotUpdatePayload),
+    );
+  },
+
+  // El código lo asigna el servidor al recibir la parcela: solo una nueva lo estrena.
+  assignedCode: (item, response) => {
+    if (item.operation !== 'create') return null;
+    const plot = response as Plot;
+    return { kind: 'plot', code: plot.code, name: plot.name };
   },
 
   // El alta llegó al servidor pero se perdió la respuesta, y luego se editó en el dispositivo:

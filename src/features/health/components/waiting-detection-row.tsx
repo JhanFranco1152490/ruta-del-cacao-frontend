@@ -22,6 +22,7 @@ const originOfWaiting = (
   plot: {
     id: detection.plot.id,
     code: detection.plot.code,
+    name: detection.plot.name,
     is_active: true,
     farm: { ...detection.plot.farm, is_active: true },
   },
