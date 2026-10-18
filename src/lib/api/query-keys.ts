@@ -111,6 +111,15 @@ export const queryKeys = {
     summary: (query: object) => ['lots', 'summary', query] as const,
     detail: (id: string) => ['lots', 'detail', id] as const,
   },
+  facilities: {
+    // Lo que invalida registrar, editar, activar, desactivar o eliminar un cajón o una marquesina.
+    all: () => ['facilities'] as const,
+    // Todos los de un productor, sin paginar y con copia en el dispositivo: la finca, los filtros
+    // y el orden se aplican en el dispositivo. La cuenta técnica elige el productor; las demás
+    // cuentas ven el suyo y pasan `null`.
+    list: (producer: string | null) =>
+      ['facilities', 'list', producer ?? ''] as const,
+  },
   health: {
     // Lo que invalida registrar un monitoreo, crear un control, decidir que una detección no lo
     // requiere o adjuntar una foto.

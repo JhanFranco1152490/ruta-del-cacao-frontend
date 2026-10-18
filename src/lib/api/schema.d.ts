@@ -993,6 +993,42 @@ export interface paths {
         patch: operations["plots_partial_update"];
         trace?: never;
     };
+    "/api/postharvest-facilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los cajones de fermentación y las marquesinas de secado de las fincas que alcanza la sesión, activos e inactivos, sin paginar: la finca y los filtros se eligen en el dispositivo. Primero los cajones y después las marquesinas, cada uno por nombre. */
+        get: operations["postharvest_facilities_list"];
+        put?: never;
+        /** @description Registra un cajón o una marquesina en una finca que la sesión alcanza; queda Disponible. Si ya hay uno con el mismo nombre en la finca, sin importar el tipo, 409 `duplicate_facility_name` con el existente en `existing`. Una finca inactiva, 422 `farm_inactive`. */
+        post: operations["postharvest_facilities_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/postharvest-facilities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["postharvest_facilities_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina un elemento creado por error. Requiere `expected_version` en la URL. Si ya se usó en un proceso, 409 `facility_has_records` (se desactiva en su lugar). Su historial se conserva. */
+        delete: operations["postharvest_facilities_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Edición parcial, incluida la activación o desactivación con `is_active`. Requiere `expected_version`; si el elemento cambió, 409 `stale_version` con el vigente en `current`. La finca no se edita (`farm_id` es un 400). El tipo no cambia cuando el elemento ya se usó en un proceso (422 `facility_fields_locked`). */
+        patch: operations["postharvest_facilities_partial_update"];
+        trace?: never;
+    };
     "/api/producers": {
         parameters: {
             query?: never;
@@ -1626,6 +1662,13 @@ export interface components {
             /** Format: date-time */
             captured_at?: string | null;
         };
+        ExistingFacility: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            facility_type: components["schemas"]["FacilityTypeEnum"];
+            is_active: boolean;
+        };
         ExistingInput: {
             /** Format: uuid */
             id: string;
@@ -1633,6 +1676,18 @@ export interface components {
             input_type: components["schemas"]["InputTypeEnum"];
             is_active: boolean;
         };
+        FacilityFarm: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_active: boolean;
+        };
+        /**
+         * @description * `fermentation_box` - Cajón
+         *     * `solar_dryer` - Marquesina
+         * @enum {string}
+         */
+        FacilityTypeEnum: "fermentation_box" | "solar_dryer";
         Farm: {
             /** Format: uuid */
             readonly id: string;
@@ -2325,6 +2380,13 @@ export interface components {
             is_active?: boolean;
             expected_version: number;
         };
+        PatchedPostharvestFacilityUpdateRequest: {
+            facility_type?: components["schemas"]["FacilityTypeEnum"];
+            name?: string;
+            capacity_kg?: number;
+            is_active?: boolean;
+            expected_version?: number;
+        };
         PatchedProducerStatusRequest: {
             status: components["schemas"]["StatusEnum"];
             expected_version: number;
@@ -2544,6 +2606,49 @@ export interface components {
             /** Format: decimal */
             suggested_measured_area_hectares?: string | null;
         };
+        PostharvestFacility: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly farm: components["schemas"]["FacilityFarm"];
+            /** Format: uuid */
+            readonly producer_id: string;
+            readonly facility_type: components["schemas"]["FacilityTypeEnum"];
+            readonly name: string;
+            readonly capacity_kg: number;
+            readonly is_active: boolean;
+            readonly status: components["schemas"]["PostharvestFacilityStatusEnum"];
+            readonly has_records: boolean;
+            readonly version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        PostharvestFacilityConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["PostharvestFacility"];
+            existing?: components["schemas"]["ExistingFacility"];
+        };
+        PostharvestFacilityCreateRequest: {
+            /** Format: uuid */
+            farm_id: string;
+            facility_type: components["schemas"]["FacilityTypeEnum"];
+            name: string;
+            capacity_kg: number;
+        };
+        PostharvestFacilityList: {
+            results: components["schemas"]["PostharvestFacility"][];
+        };
+        /**
+         * @description * `available` - Disponible
+         *     * `inactive` - Inactivo
+         * @enum {string}
+         */
+        PostharvestFacilityStatusEnum: "available" | "inactive";
         ProducerAccount: {
             /** Format: uuid */
             id: string;
@@ -7209,6 +7314,304 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlotRuleError"];
+                };
+            };
+        };
+    };
+    postharvest_facilities_list: {
+        parameters: {
+            query?: {
+                /** @description Solo la cuenta técnica: el productor cuyos elementos se quiere ver. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestFacilityList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_facilities_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostharvestFacilityCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestFacility"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestFacilityConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_facilities_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestFacility"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_facilities_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` del elemento que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestFacilityConflictError"];
+                };
+            };
+        };
+    };
+    postharvest_facilities_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPostharvestFacilityUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestFacility"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestFacilityConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

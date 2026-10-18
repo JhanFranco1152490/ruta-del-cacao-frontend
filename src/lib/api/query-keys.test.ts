@@ -176,3 +176,17 @@ describe('lot query keys', () => {
     );
   });
 });
+
+describe('post-harvest facility query keys', () => {
+  it('hangs the list from the key that writes invalidate', () => {
+    const all = queryKeys.facilities.all();
+    expect(startsWith(queryKeys.facilities.list(null), all)).toBe(true);
+    expect(startsWith(queryKeys.facilities.list('p-1'), all)).toBe(true);
+  });
+
+  it('keeps the list of each producer apart', () => {
+    const { list } = queryKeys.facilities;
+    expect(list(null)).not.toEqual(list('p-1'));
+    expect(list('p-1')).not.toEqual(list('p-2'));
+  });
+});
