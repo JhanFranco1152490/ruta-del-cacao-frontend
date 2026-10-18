@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   HEALTH_PATH,
+  healthHistoryPath,
   PESTS_DISEASES_PATH,
   monitoringPath,
   plotHistoryPath,
@@ -17,9 +18,12 @@ describe('health paths', () => {
     expect(monitoringPath('a1')).toBe('/sanidad/monitoreo?id=a1');
   });
 
-  it('passes the plot as a parameter of a fixed route', () => {
-    expect(plotHistoryPath('pl1')).toBe(
-      '/parcelas/historial-fitosanitario?id=pl1',
-    );
+  it('opens the history of a plot in the health section', () => {
+    expect(plotHistoryPath('pl1')).toBe('/sanidad?parcela=pl1');
+  });
+
+  it('opens the history of a farm, or of everything', () => {
+    expect(healthHistoryPath({ farm: 'f1' })).toBe('/sanidad?finca=f1');
+    expect(healthHistoryPath({})).toBe('/sanidad');
   });
 });

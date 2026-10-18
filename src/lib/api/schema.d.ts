@@ -784,6 +784,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/phytosanitary-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los monitoreos realizados de todo lo que alcanza la cuenta, del más reciente al más antiguo, con la forma de la actividad y su `monitoring`. `farm` y `plot` los acotan: una finca o una parcela que la cuenta no alcanza es 404. `from` y `to` filtran por la fecha de realización; `pest_disease` u `other=true` dejan solo los monitoreos donde se detectó, con esa detección. Con `plot`, `summary` trae por plaga (y por cada texto de Otra) la última incidencia y la anterior del mismo tipo de muestreo, calculadas con todas las páginas; sin `plot` viene vacío, porque comparar parcelas distintas no dice si una plaga sube o baja. `producer` solo lo usa la cuenta técnica. */
+        get: operations["phytosanitary_history_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plot-characterizations": {
         parameters: {
             query?: never;
@@ -869,23 +886,6 @@ export interface paths {
         head?: never;
         /** @description Edición parcial, incluida la activación o desactivación con `is_active`. `boundary` reemplaza el contorno completo y `null` lo quita. Requiere `expected_version`; si la parcela cambió responde 409 `stale_version` con la versión del servidor en `current`. */
         patch: operations["plots_partial_update"];
-        trace?: never;
-    };
-    "/api/plots/{id}/phytosanitary-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Los monitoreos realizados de la parcela, del más reciente al más antiguo, con la forma de la actividad y su `monitoring`, y un resumen por plaga (y por cada texto de Otra) con la última incidencia y la anterior del mismo tipo de muestreo. Sin paginar: una parcela tiene pocos monitoreos al año. `from` y `to` filtran por la fecha de realización; `pest_disease` u `other=true` dejan solo los monitoreos donde se detectó, con esa detección. Una parcela de otra finca o de otro productor es 404. */
-        get: operations["plots_phytosanitary_history_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/producers": {
@@ -2100,6 +2100,11 @@ export interface components {
             latest_date: string;
         };
         PhytosanitaryHistory: {
+            count: number;
+            /** Format: uri */
+            next: string | null;
+            /** Format: uri */
+            previous: string | null;
             results: components["schemas"]["AgriculturalActivity"][];
             summary: components["schemas"]["PestSummary"][];
         };
@@ -5597,6 +5602,76 @@ export interface operations {
             };
         };
     };
+    phytosanitary_history_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Una finca. */
+                farm?: string;
+                /** @description Fecha inicial (incluida). */
+                from?: string;
+                /** @description Solo las detecciones de Otra. */
+                other?: boolean;
+                /** @description Página, desde 1. */
+                page?: number;
+                /** @description De 1 a 100; 20 por defecto. */
+                page_size?: number;
+                /** @description Una plaga o enfermedad. */
+                pest_disease?: string;
+                /** @description Una parcela. */
+                plot?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /** @description Fecha final (incluida). */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhytosanitaryHistory"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     plot_characterizations_list: {
         parameters: {
             query?: {
@@ -6153,68 +6228,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlotRuleError"];
-                };
-            };
-        };
-    };
-    plots_phytosanitary_history_retrieve: {
-        parameters: {
-            query?: {
-                /** @description Fecha inicial (incluida). */
-                from?: string;
-                /** @description Solo las detecciones de Otra. */
-                other?: boolean;
-                /** @description Una plaga o enfermedad. */
-                pest_disease?: string;
-                /** @description Fecha final (incluida). */
-                to?: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PhytosanitaryHistory"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

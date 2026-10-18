@@ -1,69 +1,151 @@
 'use client';
 
+import { FilterRow } from '@/components/filter-row';
+import { ProducerFilter } from '@/components/producer-filter';
+import {
+  SearchSelect,
+  type SearchSelectOption,
+} from '@/components/search-select';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
+import { useProducerSummary } from '@/lib/api/producer-options';
 
 import type { HistoryFilters } from '../history-filters';
 
-// El periodo (desde y hasta, incluidos) y la plaga o enfermedad del historial. Las plagas que se
-// ofrecen son las que aparecen en la parcela.
+const chosen = (
+  id: string | null,
+  options: readonly SearchSelectOption[],
+  name: (id: string) => string,
+): SearchSelectOption | null =>
+  id === null
+    ? null
+    : (options.find((option) => option.id === id) ?? { id, label: name(id) });
+
+// Los filtros del historial en una fila, como los de Insumos y Actividades: finca, parcela, plaga o
+// enfermedad y periodo. En celular quedan la finca y «Filtros». La cuenta técnica elige además el
+// productor.
 export function HistoryFiltersBar({
   filters,
+  farmOptions,
+  plotOptions,
   pestOptions,
+  farmName,
+  plotCode,
   periodError,
   hasFilters,
+  onFarm,
+  onPlot,
+  onPest,
   onFrom,
   onTo,
-  onPest,
   onClear,
+  onProducer,
 }: {
   filters: HistoryFilters;
+  farmOptions: readonly SearchSelectOption[];
+  plotOptions: readonly SearchSelectOption[];
   pestOptions: readonly { value: string; label: string }[];
+  farmName: (id: string) => string;
+  plotCode: (id: string) => string;
   periodError?: string;
   hasFilters: boolean;
+  onFarm: (farm: string | null) => void;
+  onPlot: (plot: string | null) => void;
+  onPest: (pest: string | null) => void;
   onFrom: (date: string) => void;
   onTo: (date: string) => void;
-  onPest: (pest: string | null) => void;
   onClear: () => void;
+  // Solo para la cuenta técnica, que ve el historial de todos los productores.
+  onProducer?: (producer: string | null) => void;
 }) {
+  const selectedProducer = useProducerSummary(filters.producer ?? undefined);
+  const activeCount = [
+    filters.producer,
+    filters.plot,
+    filters.pest,
+    filters.from,
+    filters.to,
+  ].filter(Boolean).length;
+
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <TextField
-        error={periodError}
-        label="Desde"
-        onChange={(event) => onFrom(event.target.value)}
-        type="date"
-        value={filters.from ?? ''}
-        wrapperClassName="w-full sm:w-44"
-      />
-      <TextField
-        label="Hasta"
-        onChange={(event) => onTo(event.target.value)}
-        type="date"
-        value={filters.to ?? ''}
-        wrapperClassName="w-full sm:w-44"
-      />
-      <SelectField
-        label="Plaga o enfermedad"
-        onChange={(event) => onPest(event.target.value || null)}
-        value={filters.pest ?? ''}
-        wrapperClassName="w-full sm:w-64"
+    <div className="space-y-3">
+      <FilterRow
+        activeCount={activeCount}
+        search={
+          <SearchSelect
+            allLabel="Todas las fincas"
+            className="min-w-40 flex-1 basis-44"
+            compact
+            label="Finca"
+            onChange={(option) => onFarm(option?.id ?? null)}
+            options={farmOptions}
+            value={chosen(filters.farm, farmOptions, farmName)}
+          />
+        }
       >
-        <option value="">Todas</option>
-        {pestOptions.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </SelectField>
-      {hasFilters && (
-        <Button
-          className="h-11"
-          onClick={onClear}
-          type="button"
-          variant="outline"
+        {onProducer && (
+          <ProducerFilter
+            className="w-full sm:w-64"
+            compact
+            onClear={() => onProducer(null)}
+            onSelect={onProducer}
+            placeholder="Buscar productor"
+            producer={filters.producer ?? undefined}
+            selected={selectedProducer}
+          />
+        )}
+        <SearchSelect
+          allLabel="Todas las parcelas"
+          className="min-w-40 flex-1 basis-44"
+          compact
+          label="Parcela"
+          onChange={(option) => onPlot(option?.id ?? null)}
+          options={plotOptions}
+          value={chosen(filters.plot, plotOptions, plotCode)}
+        />
+        <SelectField
+          hideLabel
+          label="Plaga o enfermedad"
+          onChange={(event) => onPest(event.target.value || null)}
+          value={filters.pest ?? ''}
+          wrapperClassName="w-full sm:w-52"
         >
+          <option value="">Todas las plagas</option>
+          {pestOptions.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </SelectField>
+        <div className="flex w-full items-start gap-2 sm:w-auto">
+          <span aria-hidden="true" className="pt-3 text-sm font-bold">
+            Periodo
+          </span>
+          <TextField
+            error={periodError}
+            hideLabel
+            label="Desde"
+            onChange={(event) => onFrom(event.target.value)}
+            type="date"
+            value={filters.from ?? ''}
+            wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+          />
+          <span aria-hidden="true" className="pt-3">
+            –
+          </span>
+          <TextField
+            hideLabel
+            label="Hasta"
+            onChange={(event) => onTo(event.target.value)}
+            type="date"
+            value={filters.to ?? ''}
+            wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+          />
+        </div>
+      </FilterRow>
+      {hasFilters && (
+        <Button onClick={onClear} size="office" type="button" variant="outline">
           Limpiar filtros
         </Button>
       )}

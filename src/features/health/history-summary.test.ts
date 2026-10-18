@@ -42,38 +42,39 @@ describe('summaryText', () => {
 });
 
 describe('pestFilterOptions', () => {
-  it('offers each pest of the catalog seen in the plot once, and Other when there is any', () => {
+  const catalog = [
+    { id: 'trips', name: 'Trips' },
+    { id: 'monilia', name: 'Monilia' },
+  ];
+
+  it('offers each pest of the catalog by name, and Other at the end', () => {
+    expect(pestFilterOptions(catalog, null)).toEqual([
+      { value: 'monilia', label: 'Monilia' },
+      { value: 'trips', label: 'Trips' },
+      { value: 'otra', label: 'Otra' },
+    ]);
+  });
+
+  it('still offers Other while the catalog has not arrived or was never loaded', () => {
+    expect(pestFilterOptions(undefined, null)).toEqual([
+      { value: 'otra', label: 'Otra' },
+    ]);
+  });
+
+  it('offers the chosen pest even if it is no longer in the active catalog', () => {
+    expect(pestFilterOptions(catalog, 'old')).toEqual([
+      { value: 'monilia', label: 'Monilia' },
+      { value: 'trips', label: 'Trips' },
+      { value: 'otra', label: 'Otra' },
+      { value: 'old', label: 'Plaga elegida' },
+    ]);
+  });
+
+  it('does not repeat the chosen one that is already offered', () => {
     expect(
-      pestFilterOptions([
-        row(),
-        row({ sampling_unit: 'pods' }),
-        row({
-          pest_disease: {
-            id: 'old',
-            name: 'Cochinilla',
-            kind: 'pest',
-            is_active: false,
-          },
-        }),
-        row({ pest_disease: null, other_description: 'Hormigas en hojas' }),
-      ]),
-    ).toEqual([
-      { value: 'old', label: 'Cochinilla' },
-      { value: 'monilia', label: 'Monilia' },
-      { value: 'otra', label: 'Otra' },
-    ]);
-  });
-
-  it('offers the chosen pest while the others have not arrived', () => {
-    expect(pestFilterOptions([], { value: 'monilia', rows: [row()] })).toEqual([
-      { value: 'monilia', label: 'Monilia' },
-    ]);
-    expect(pestFilterOptions([], { value: 'otra', rows: [] })).toEqual([
-      { value: 'otra', label: 'Otra' },
-    ]);
-  });
-
-  it('offers nothing in a plot without detections', () => {
-    expect(pestFilterOptions([])).toEqual([]);
+      pestFilterOptions(catalog, 'monilia').filter(
+        ({ value }) => value === 'monilia',
+      ),
+    ).toHaveLength(1);
   });
 });

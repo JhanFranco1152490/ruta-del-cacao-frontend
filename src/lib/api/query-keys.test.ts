@@ -91,18 +91,16 @@ describe('plot health query keys', () => {
     const all = queryKeys.health.all();
     const { history, withoutControl, evidence, evidenceFile } =
       queryKeys.health;
-    expect(startsWith(history('pl-1', {}), all)).toBe(true);
+    expect(startsWith(history({}), all)).toBe(true);
     expect(startsWith(withoutControl(null), all)).toBe(true);
     expect(startsWith(evidence('a-1'), all)).toBe(true);
     expect(startsWith(evidenceFile('e-1'), all)).toBe(true);
   });
 
-  it('hangs every history of a plot from the key of that plot', () => {
-    const { history, plotHistory } = queryKeys.health;
-    expect(
-      startsWith(history('pl-1', { from: '2026-10-01' }), plotHistory('pl-1')),
-    ).toBe(true);
-    expect(startsWith(history('pl-2', {}), plotHistory('pl-1'))).toBe(false);
+  it('keeps each history query apart under one key to invalidate them all', () => {
+    const { history, historyAll } = queryKeys.health;
+    expect(startsWith(history({ plot: 'pl-1' }), historyAll())).toBe(true);
+    expect(history({ plot: 'pl-1' })).not.toEqual(history({ plot: 'pl-2' }));
   });
 
   it('keeps the waiting detections of each producer apart', () => {

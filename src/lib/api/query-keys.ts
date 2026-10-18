@@ -90,10 +90,9 @@ export const queryKeys = {
     // Lo que invalida registrar un monitoreo, crear un control, decidir que una detección no lo
     // requiere o adjuntar una foto.
     all: () => ['health'] as const,
-    // El historial fitosanitario de una parcela, con sus filtros; con copia en el dispositivo.
-    plotHistory: (plotId: string) => ['health', 'history', plotId] as const,
-    history: (plotId: string, query: object) =>
-      ['health', 'history', plotId, query] as const,
+    // El historial fitosanitario, con sus filtros y su página; con copia en el dispositivo.
+    historyAll: () => ['health', 'history'] as const,
+    history: (query: object) => ['health', 'history', query] as const,
     // Las detecciones en que alguien pidió un control y nadie lo ha atendido; con copia en el
     // dispositivo. La cuenta técnica elige el productor; las demás cuentas pasan `null`.
     withoutControl: (producer: string | null) =>

@@ -6,16 +6,34 @@ import {
   PERIOD_INVERTED_MESSAGE,
 } from './history-filters';
 
-const none = { from: null, to: null, pest: null };
+const none = {
+  farm: null,
+  plot: null,
+  producer: null,
+  from: null,
+  to: null,
+  pest: null,
+};
 
 describe('historyQuery', () => {
   it('asks for everything without filters', () => {
     expect(historyQuery(none)).toEqual({ query: {} });
   });
 
+  it('asks for a farm, a plot and a producer', () => {
+    expect(
+      historyQuery({ ...none, farm: 'f1', plot: 'pl1', producer: 'pr1' }),
+    ).toEqual({ query: { farm: 'f1', plot: 'pl1', producer: 'pr1' } });
+  });
+
   it('asks for a period and a pest of the catalog', () => {
     expect(
-      historyQuery({ from: '2026-01-01', to: '2026-10-31', pest: 'monilia' }),
+      historyQuery({
+        ...none,
+        from: '2026-01-01',
+        to: '2026-10-31',
+        pest: 'monilia',
+      }),
     ).toEqual({
       query: { from: '2026-01-01', to: '2026-10-31', pest_disease: 'monilia' },
     });
@@ -25,6 +43,11 @@ describe('historyQuery', () => {
     expect(historyQuery({ ...none, pest: OTHER_PEST_FILTER })).toEqual({
       query: { other: true },
     });
+  });
+
+  it('asks for a page after the first', () => {
+    expect(historyQuery(none, 1)).toEqual({ query: {} });
+    expect(historyQuery(none, 3)).toEqual({ query: { page: 3 } });
   });
 
   it('accepts a period of one day', () => {

@@ -67,8 +67,9 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: CalendarDays,
     permission: PERMISSIONS.ACTIVITIES_VIEW,
   },
-  // El historial abre sin conexión desde la tarjeta de la parcela; aquí se elige de una lista que
-  // necesita al servidor.
+  // El historial de los monitoreos con sus filtros. Desde la tarjeta de una parcela se abre ya
+  // filtrado por ella y, con una copia guardada, también sin conexión; la entrada del menú pide
+  // conexión porque lo primero que muestra es la lista completa.
   {
     href: '/sanidad',
     label: 'Sanidad',

@@ -23,7 +23,6 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/actividades/realizar',
   '/sanidad',
   '/sanidad/monitoreo',
-  '/parcelas/historial-fitosanitario',
   '/usuarios',
   '/roles',
   '/sin-conexion',

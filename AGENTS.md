@@ -195,6 +195,17 @@ src/
   (`renderNotice`), el recurso de la cola que cierra un monitoreo (`closingResources`) y los
   controles programados que esperan en el dispositivo (`queuedActivities`, marcados `queued`). Lo
   mismo hacen las páginas de parcelas con el enlace al historial, junto a la ficha.
+  - **La pantalla de Sanidad** (`/sanidad`, `health-screen.tsx`) es el historial: los monitoreos de
+    todo lo que alcanza la cuenta, de a 20, con filtros de finca, parcela, plaga y periodo en la
+    URL (`finca`, `parcela`, `plaga`, `desde`, `hasta`, `pagina`, y `productor` para la cuenta
+    técnica; `use-history-filters.ts`). Desde la tarjeta de una parcela se abre ya filtrada
+    (`plotHistoryPath`). Con una parcela elegida muestra además el resumen por plaga; sin ella no,
+    porque comparar parcelas distintas no dice si una plaga sube o baja. Arriba van el aviso de
+    detecciones que esperan un control y **Programar monitoreo**, que no programa aquí: lleva al
+    calendario (`/actividades?programar=monitoreo&finca=&parcela=&origen=`), que abre su formulario
+    con el tipo y la parcela elegidos y vuelve a Sanidad al guardar o cancelar
+    (`use-schedule-link.ts`, `linked-schedule-dialog.tsx`). Cada monitoreo trae sus acciones y sus
+    fotos a pedido. Con copia en el dispositivo por filtros y página.
   - **La planilla** (`/sanidad/monitoreo?id=`) pasa siempre por la cola (`monitoring-results`, con la
     actividad como padre). Cada detección y cada control llevan el `id` que genera el dispositivo;
     el control de una detección tiene cuatro modos (ninguno, hecho en el momento, para después y, para

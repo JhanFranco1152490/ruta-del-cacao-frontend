@@ -18,41 +18,19 @@ export function summaryText(row: PestSummary) {
   return `${nameOf(row)}: ${latest} · ${before}`;
 }
 
-// Lo que ofrece el filtro de plaga: las del catálogo que aparecen en la parcela, activas o no, por
-// nombre y una vez cada una, y Otra al final si se escribió alguna. `chosen` es la plaga del filtro
-// activo: se ofrece aunque todavía no esté entre las demás (llegan de otra lectura), para que el
-// filtro no se vea como "Todas" mientras tanto. Su nombre sale de las filas ya filtradas.
+// Lo que ofrece el filtro de plaga: las del catálogo activo por nombre y Otra al final. `chosen` es
+// la plaga del filtro puesto: se ofrece aunque ya no esté en el catálogo activo (se desactivó, o
+// el catálogo no ha llegado), para que el filtro no se vea como "Todas".
 export function pestFilterOptions(
-  rows: readonly PestSummary[],
-  chosen?: { value: string; rows: readonly PestSummary[] },
+  catalog: readonly { id: string; name: string }[] | undefined,
+  chosen: string | null,
 ) {
-  const options = listedPests(rows);
-  if (!chosen || options.some(({ value }) => value === chosen.value)) {
-    return options;
+  const options = [...(catalog ?? [])]
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+    .map(({ id, name }) => ({ value: id, label: name }));
+  options.push({ value: OTHER_PEST_FILTER, label: 'Otra' });
+  if (chosen && !options.some(({ value }) => value === chosen)) {
+    options.push({ value: chosen, label: 'Plaga elegida' });
   }
-  const named = listedPests(chosen.rows).find(
-    ({ value }) => value === chosen.value,
-  );
-  return [
-    ...options,
-    named ?? {
-      value: chosen.value,
-      label: chosen.value === OTHER_PEST_FILTER ? 'Otra' : 'Plaga elegida',
-    },
-  ];
-}
-
-function listedPests(rows: readonly PestSummary[]) {
-  const pests = new Map<string, string>();
-  let hasOther = false;
-  for (const { pest_disease: pest } of rows) {
-    if (pest) pests.set(pest.id, pest.name);
-    else hasOther = true;
-  }
-  return [
-    ...[...pests]
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'es')),
-    ...(hasOther ? [{ value: OTHER_PEST_FILTER, label: 'Otra' }] : []),
-  ];
+  return options;
 }

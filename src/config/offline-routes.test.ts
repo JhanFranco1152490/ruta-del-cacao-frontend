@@ -41,9 +41,9 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/sanidad/monitoreo');
   });
 
-  it('saves the history of a plot, read from the device copy, and the health section, that must open to say it needs a connection', () => {
+  it('saves the health section and its field sheet: the history opens from the device copy', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toEqual(
-      expect.arrayContaining(['/parcelas/historial-fitosanitario', '/sanidad']),
+      expect.arrayContaining(['/sanidad', '/sanidad/monitoreo']),
     );
   });
 
