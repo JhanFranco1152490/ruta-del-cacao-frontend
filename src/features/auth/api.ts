@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { isNetworkFailure } from '@/lib/api/errors';
 import { postLogout } from '@/lib/api/logout';
+import { forgetPushSubscription } from '@/lib/push/subscription';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { clearOfflineCache } from '@/lib/offline/db';
@@ -72,6 +73,9 @@ export function useLogout() {
   // reintentar.
   return useMutation({
     mutationFn: async () => {
+      // Antes de cerrar la sesión, que el servidor todavía acepta: este dispositivo deja de
+      // recibir los avisos de la cuenta. No falla nunca ni espera más de unos segundos.
+      await forgetPushSubscription();
       try {
         await postLogout();
         return 'server' as const;

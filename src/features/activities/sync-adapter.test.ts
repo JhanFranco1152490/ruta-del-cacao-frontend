@@ -167,10 +167,11 @@ describe('isCorrectableCompletionError', () => {
 });
 
 describe('completionSyncAdapter.refreshAfterSync', () => {
-  it('refreshes the activities and the stocks of every farm', () => {
+  it('refreshes the activities, the stocks of every farm and the notifications', () => {
     expect(completionSyncAdapter.refreshAfterSync?.(item)).toEqual([
       queryKeys.agriculturalActivities.all(),
       queryKeys.inputStocks.all(),
+      queryKeys.notifications.all(),
     ]);
     // Las claves de un mes y de una finca cuelgan de las que se refrescan.
     expect(

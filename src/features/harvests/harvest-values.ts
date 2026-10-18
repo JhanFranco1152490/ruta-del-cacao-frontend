@@ -1,6 +1,6 @@
 import { assignableIn } from '@/lib/assignable-accounts';
 import { formatDecimal } from '@/lib/format/decimal';
-import { formatShortDate } from '@/lib/format/dates';
+import { formatAbbreviatedDate } from '@/lib/format/dates';
 
 import type { CollectorOption } from './api';
 import type { HarvestPlotChoice } from './harvest-plots';
@@ -43,7 +43,7 @@ export const onlyVariety = (varieties: readonly VarietyChoice[]) =>
 
 // Cómo se nombra la cosecha en la bandeja del dispositivo: "P05 · Lote del río · 14 oct.".
 export const harvestQueueLabel = (plotLabel: string, harvestDate: string) =>
-  `${plotLabel} · ${formatShortDate(harvestDate)}`;
+  `${plotLabel} · ${formatAbbreviatedDate(harvestDate)}`;
 
 // El resumen de lo guardado: "117 kg de CCN-51 · P02 · La loma · 22 oct.".
 export const harvestSummary = (

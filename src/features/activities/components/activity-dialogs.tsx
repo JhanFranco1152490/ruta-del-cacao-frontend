@@ -1,9 +1,13 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { notify } from '@/lib/notify';
 
 import type { ActivityOfDay } from '../activity-days';
+import type { AgriculturalActivity } from '../api';
 import { activityCompletionPath } from '../activity-paths';
+import type { ActivityType } from '../activity-state';
 import { ActivityDayDialog } from './activity-day-dialog';
 import { ActivityDeleteDialog } from './activity-delete-dialog';
 import { ActivityDetailDialog } from './activity-detail-dialog';
@@ -13,7 +17,14 @@ import { ActivityFormDialog } from './activity-form-dialog';
 // como está en la lista, también después de que una acción la cambie.
 export type PendingDialog =
   // Programar, con lo que ya se sabe cuando se hace desde un día o una parcela del calendario.
-  | { kind: 'schedule'; date?: string; farmId?: string; plotId?: string }
+  | {
+      kind: 'schedule';
+      date?: string;
+      farmId?: string;
+      plotId?: string;
+      // Un monitoreo se programa con su botón: el formulario lo trae elegido.
+      activityType?: ActivityType;
+    }
   // Todas las de un día (de una parcela, si viene `plotId`) cuando la celda no las muestra todas.
   | { kind: 'day'; date: string; plotId?: string }
   | { kind: 'detail'; id: string }
@@ -30,6 +41,8 @@ export function ActivityDialogs({
   currentMonth,
   onGoToMonth,
   onPending,
+  monitoringHref,
+  renderDetails,
 }: {
   pending: PendingDialog | undefined;
   // Las actividades que se ven, con su estado de hoy.
@@ -42,6 +55,14 @@ export function ActivityDialogs({
   // Solo en la vista de mes; en las demás no hay a dónde ir.
   onGoToMonth?: (month: string) => void;
   onPending: (pending: PendingDialog | undefined) => void;
+  // La pantalla donde se registra el resultado de un monitoreo, si la página la entrega.
+  monitoringHref?: (activityId: string) => string;
+  // Lo que otro dominio agrega al detalle. `openActivity` abre el detalle de otra actividad de la
+  // lista (el monitoreo que atiende un control).
+  renderDetails?: (
+    activity: AgriculturalActivity,
+    context: { openActivity: (activityId: string) => void },
+  ) => ReactNode;
 }) {
   const close = () => onPending(undefined);
   const saved = (message: string, isoDate: string) => {
@@ -75,6 +96,7 @@ export function ActivityDialogs({
           date: pending.date,
           farmId: pending.farmId,
           plotId: pending.plotId,
+          activityType: pending.activityType,
         }}
         onSaved={(activity, message) => saved(message, activity.scheduled_date)}
       />
@@ -136,6 +158,14 @@ export function ActivityDialogs({
     <ActivityDetailDialog
       completeHref={activityCompletionPath(id)}
       item={item}
+      monitoringHref={monitoringHref?.(id)}
+      renderDetails={
+        renderDetails &&
+        ((activity) =>
+          renderDetails(activity, {
+            openActivity: (other) => onPending({ kind: 'detail', id: other }),
+          }))
+      }
       offline={offline}
       onClose={close}
       onDelete={() => onPending({ kind: 'delete', id })}

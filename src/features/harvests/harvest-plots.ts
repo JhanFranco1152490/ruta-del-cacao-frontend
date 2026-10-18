@@ -17,7 +17,7 @@ export type HarvestPlotChoice = {
   id: string;
   label: string;
   group: string;
-  detail: string;
+  description: string;
   disabled: boolean;
   areaHectares: string;
   farmId: string;
@@ -55,7 +55,7 @@ export function harvestPlotChoices({
       group: showProducer
         ? `${farm} · ${producerLabelOf(plot.farm.producer)}`
         : farm,
-      detail: disabled
+      description: disabled
         ? NOT_CHARACTERIZED_DETAIL
         : `${formatHectares(plot.areaHectares)} · ${varieties.map(({ name }) => name).join(', ')}`,
       disabled,

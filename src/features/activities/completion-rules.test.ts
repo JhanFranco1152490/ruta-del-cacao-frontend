@@ -6,9 +6,7 @@ import { buildAgriculturalActivity } from '@/test/factories';
 import {
   completionSummary,
   createCompletionSchema,
-  stockReferenceText,
   toCompletionRequest,
-  usedQuantityText,
 } from './completion-rules';
 
 type Schemas = components['schemas'];
@@ -176,39 +174,6 @@ describe('toCompletionRequest', () => {
       inputs: [{ input_id: 'in1', quantity: '2' }],
       captured_at: '2026-10-19T16:42:00.000Z',
     });
-  });
-});
-
-describe('usedQuantityText', () => {
-  it('writes the quantity with its unit and its equivalent in packages', () => {
-    expect(usedQuantityText('100', urea)).toBe('100 kg · 2 bultos');
-    expect(usedQuantityText('25', bocashi)).toBe('25 kg');
-  });
-
-  it('says nothing while the quantity is not a number above zero', () => {
-    expect(usedQuantityText('', urea)).toBeNull();
-    expect(usedQuantityText('abc', urea)).toBeNull();
-    expect(usedQuantityText('0', urea)).toBeNull();
-  });
-
-  it('reads the decimal comma', () => {
-    expect(usedQuantityText('12,5', bocashi)).toBe('12,5 kg');
-  });
-});
-
-describe('stockReferenceText', () => {
-  it('says what the farm has, only as a reference', () => {
-    expect(stockReferenceText('170.000', urea)).toBe('Hay 170 kg · 3,4 bultos');
-  });
-
-  it('says that the farm has no movements of the input', () => {
-    expect(stockReferenceText(null, urea)).toBe(
-      'Sin movimientos en esta finca',
-    );
-  });
-
-  it('says that more was spent than what came in', () => {
-    expect(stockReferenceText('-20.000', urea)).toBe('Hay −20 kg');
   });
 });
 

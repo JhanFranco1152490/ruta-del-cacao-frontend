@@ -52,7 +52,7 @@ export function LotFiltersBar({
   const plotOptions = (plots.data?.options ?? []).map((plot) => ({
     id: plot.id,
     label: plotLabel(plot),
-    detail: query.farm ? undefined : farmLabel(plot.farm),
+    description: query.farm ? undefined : farmLabel(plot.farm),
   }));
   const varietyOptions = (varieties.data ?? []).map((variety) => ({
     id: variety.id,

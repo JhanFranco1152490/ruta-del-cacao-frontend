@@ -110,6 +110,8 @@ describe('VarietyListScreen', () => {
     const list = await screen.findByRole('list', { name: 'Variedades' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(20);
     expect(screen.getByText('Página 1 de 2')).toBeInTheDocument();
+    // Una sola paginación, abajo.
+    expect(screen.getAllByRole('navigation')).toHaveLength(1);
 
     await user.click(screen.getByRole('button', { name: 'Siguiente' }));
     expect(within(list).getAllByRole('listitem')).toHaveLength(5);

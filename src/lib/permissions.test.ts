@@ -29,12 +29,17 @@ describe('isFieldPermission', () => {
   it('counts what hangs from a farm, harvests and lots included', () => {
     expect(isFieldPermission(PERMISSIONS.FARMS_VIEW)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.ACTIVITIES_COMPLETE)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.CROPS_CHARACTERIZE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.HARVESTS_ADD)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.LOTS_VIEW)).toBe(true);
   });
 
-  it('leaves out the variety catalog and the accounts', () => {
+  // Los catálogos son de toda la asociación: quien los administra no necesita una finca.
+  it('leaves out the association catalogs and the accounts', () => {
     expect(isFieldPermission(PERMISSIONS.CROPS_MANAGE_VARIETIES)).toBe(false);
+    expect(isFieldPermission(PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE)).toBe(
+      false,
+    );
     expect(isFieldPermission(PERMISSIONS.USERS_VIEW)).toBe(false);
   });
 });

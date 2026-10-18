@@ -1,6 +1,8 @@
 import { createContext, useContext } from 'react';
 
-import type { AgriculturalActivity, Assignee, AssigneeOption } from './api';
+import type { AssigneeOption } from '@/lib/api/activity-assignees';
+
+import type { AgriculturalActivity, Assignee } from './api';
 
 export const OUTSIDE_FARM = 'Responsable fuera de la finca';
 

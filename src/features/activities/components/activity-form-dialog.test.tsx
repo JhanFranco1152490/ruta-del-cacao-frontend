@@ -105,6 +105,7 @@ function renderDialog(preset?: {
   farmId?: string;
   plotId?: string;
   date?: string;
+  activityType?: AgriculturalActivity['activity_type'];
 }) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -158,6 +159,38 @@ describe('ActivityFormDialog', () => {
     renderDialog({ date: '2026-10-28' });
 
     expect(field('Fecha programada')).toHaveValue('2026-10-28');
+  });
+
+  it('does not offer the monitoring among the labors: it is scheduled with its own button', async () => {
+    renderDialog();
+
+    await within(field('Responsable')).findByRole('option', {
+      name: 'Otra cuenta',
+    });
+
+    expect(optionsOf('Tipo de actividad')).not.toContain(
+      'Monitoreo fitosanitario',
+    );
+    expect(optionsOf('Tipo de actividad')).toContain('Poda');
+  });
+
+  it('offers only the monitoring when it is opened to schedule one', () => {
+    renderDialog({ activityType: 'phytosanitary_monitoring' });
+
+    expect(optionsOf('Tipo de actividad')).toEqual(['Monitoreo fitosanitario']);
+    expect(field('Tipo de actividad')).toHaveValue('phytosanitary_monitoring');
+  });
+
+  it('starts with the type chosen when it is opened to schedule one in particular', () => {
+    renderDialog({ activityType: 'phytosanitary_monitoring' });
+
+    expect(field('Tipo de actividad')).toHaveValue('phytosanitary_monitoring');
+  });
+
+  it('starts with no type when none was asked for', () => {
+    renderDialog();
+
+    expect(field('Tipo de actividad')).toHaveValue('');
   });
 
   it('starts with the date empty when it does not come from a day', () => {

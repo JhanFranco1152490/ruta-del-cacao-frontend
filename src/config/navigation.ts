@@ -1,4 +1,5 @@
 import {
+  Bug,
   CalendarDays,
   FlaskConical,
   LandPlot,
@@ -6,6 +7,7 @@ import {
   MapPinned,
   Package,
   ShieldCheck,
+  ShieldPlus,
   Sprout,
   Users,
   Wheat,
@@ -49,6 +51,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     needsConnection: true,
   },
   {
+    href: '/plagas-enfermedades',
+    label: 'Plagas y enfermedades',
+    icon: Bug,
+    permission: PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE,
+    needsConnection: true,
+  },
+  {
     href: '/insumos',
     label: 'Insumos',
     icon: FlaskConical,
@@ -59,6 +68,16 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Actividades',
     icon: CalendarDays,
     permission: PERMISSIONS.ACTIVITIES_VIEW,
+  },
+  // El historial de los monitoreos con sus filtros. Desde la tarjeta de una parcela se abre ya
+  // filtrado por ella y, con una copia guardada, también sin conexión; la entrada del menú pide
+  // conexión porque lo primero que muestra es la lista completa.
+  {
+    href: '/sanidad',
+    label: 'Sanidad',
+    icon: ShieldPlus,
+    permission: PERMISSIONS.ACTIVITIES_VIEW,
+    needsConnection: true,
   },
   // Cosechas y lotes van juntas, después de las labores: es el orden del cacao.
   {

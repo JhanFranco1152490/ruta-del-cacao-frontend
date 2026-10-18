@@ -37,6 +37,21 @@ describe('HomeRedirect', () => {
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/fincas'));
   });
 
+  it('keeps the query of the address in the section it goes to', async () => {
+    window.history.replaceState(null, '', '/?notificaciones=abiertas');
+    try {
+      renderHome([PERMISSIONS.FARMS_VIEW]);
+
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith(
+          '/fincas?notificaciones=abiertas',
+        ),
+      );
+    } finally {
+      window.history.replaceState(null, '', '/');
+    }
+  });
+
   it('takes the association to farms when the server does not answer', async () => {
     renderHome([PERMISSIONS.PRODUCERS_VIEW, PERMISSIONS.FARMS_VIEW], {
       fromDevice: true,

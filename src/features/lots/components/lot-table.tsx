@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDecimal } from '@/lib/format/decimal';
-import { formatShortDate } from '@/lib/format/dates';
+import { formatAbbreviatedDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
 
 import type { Lot } from '../api';
@@ -49,7 +49,7 @@ export function LotTable({ lots }: { lots: readonly Lot[] }) {
               {lot.code}
             </TableCell>
             <TableCell className="max-md:order-3 max-md:col-span-1! max-md:text-muted-foreground">
-              {formatShortDate(lot.harvest.harvest_date)}
+              {formatAbbreviatedDate(lot.harvest.harvest_date)}
             </TableCell>
             <TableCell className="max-w-64 break-words whitespace-normal max-md:order-2">
               {plotLabel(lot.harvest.plot)}

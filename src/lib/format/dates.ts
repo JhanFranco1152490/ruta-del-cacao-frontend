@@ -28,13 +28,29 @@ export const formatDateTime = (isoDateTime: string) =>
 export const formatTimestamp = (milliseconds: number) =>
   formatDateTime(new Date(milliseconds).toISOString());
 
-// El día y el mes abreviado ("14 oct."), para nombrar un registro en poco espacio.
-export const formatShortDate = (isoDate: string) =>
+// El día y el mes abreviado con punto ("14 oct."), para nombrar un registro en la bandeja o en una
+// lista, donde el punto cierra la abreviatura.
+export const formatAbbreviatedDate = (isoDate: string) =>
   `${format(parseISO(isoDate), 'd MMM', { locale: es })}.`;
 
 // Recibe una fecha sin hora (yyyy-MM-dd) y no la desplaza por zona horaria.
 export const formatLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM 'de' yyyy", { locale: es });
+
+// El día y el mes de una fecha sin hora (yyyy-MM-dd), sin el año: "19 de octubre".
+export const formatDayMonth = (isoDate: string) =>
+  format(parseISO(isoDate), "d 'de' MMMM", { locale: es });
+
+// El día y el mes abreviado de un momento exacto (ISO con zona), con la hora de Bogotá: "19 oct".
+export const formatShortDayMonth = (isoDateTime: string) =>
+  format(parseISO(isoDateTime), 'd MMM', { locale: es, in: BOGOTA }).replace(
+    '.',
+    '',
+  );
+
+// El día y el mes abreviado de una fecha sin hora (yyyy-MM-dd), sin desplazarla por zona: "20 oct".
+export const formatShortDate = (isoDate: string) =>
+  format(parseISO(isoDate), 'd MMM', { locale: es }).replace('.', '');
 
 // Un mes y un año (yyyy-MM), sin día: la fecha de una siembra.
 export const formatMonthYear = (isoMonth: string) =>
@@ -69,6 +85,13 @@ export const shiftDays = (isoDate: string, days: number) =>
 // Una fecha sin hora con su día de la semana y su año: "jueves 22 de octubre de 2026".
 export const formatWeekdayLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "EEEE d 'de' MMMM 'de' yyyy", { locale: es });
+
+// Lo mismo en una línea corta, para listas compactas: "jue 22 oct 2026".
+export const formatShortWeekdayDate = (isoDate: string) =>
+  format(parseISO(isoDate), 'EEE d MMM yyyy', { locale: es }).replace(
+    /\./g,
+    '',
+  );
 
 // Una fecha sin hora (yyyy-MM-dd) que existe en el calendario: el 30 de febrero no lo es.
 export const isIsoDate = (value: string) =>

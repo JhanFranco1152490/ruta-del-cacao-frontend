@@ -75,7 +75,7 @@ describe('harvestPlotChoices', () => {
       id: 'pl1',
       label: 'P05 · Lote del río',
       group: 'F02 · La Esperanza',
-      detail: '2,4 ha · CCN-51, ICS-95',
+      description: '2,4 ha · CCN-51, ICS-95',
       disabled: false,
       areaHectares: '2.40',
       farmId: 'f1',
@@ -91,7 +91,7 @@ describe('harvestPlotChoices', () => {
     expect(second).toMatchObject({
       label: 'P06',
       disabled: true,
-      detail: NOT_CHARACTERIZED_DETAIL,
+      description: NOT_CHARACTERIZED_DETAIL,
       varieties: [],
     });
   });

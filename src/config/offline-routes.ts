@@ -24,6 +24,8 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/cosechas',
   '/cosechas/registrar',
   '/cosechas/detalle',
+  '/sanidad',
+  '/sanidad/monitoreo',
   '/usuarios',
   '/roles',
   '/sin-conexion',

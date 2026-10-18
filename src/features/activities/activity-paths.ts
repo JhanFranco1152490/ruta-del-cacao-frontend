@@ -1,4 +1,6 @@
-export const ACTIVITIES_PATH = '/actividades';
+import { ACTIVITIES_PATH } from '@/lib/paths/activities';
+
+export { ACTIVITIES_PATH };
 
 // La lista de actividades, abierta en un mes (yyyy-MM) si se indica.
 export const activitiesPath = (month?: string) =>

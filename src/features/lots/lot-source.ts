@@ -1,5 +1,5 @@
 import { formatDecimal } from '@/lib/format/decimal';
-import { formatLongDate, formatShortDate } from '@/lib/format/dates';
+import { formatLongDate, formatAbbreviatedDate } from '@/lib/format/dates';
 
 // La cosecha con la que se conforma un lote, como la entrega quien abre el diálogo.
 export type LotSource = {
@@ -27,4 +27,4 @@ export const queuedLotSummary = (source: LotSource) =>
 // Cómo se nombra el lote en la bandeja, que no puede mostrar un código que todavía no existe.
 export const queuedLotLabel = (
   source: Pick<LotSource, 'plot' | 'harvestDate'>,
-) => `Lote de ${source.plot} · ${formatShortDate(source.harvestDate)}`;
+) => `Lote de ${source.plot} · ${formatAbbreviatedDate(source.harvestDate)}`;

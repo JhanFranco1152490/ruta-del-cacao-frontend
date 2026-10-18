@@ -2,7 +2,7 @@
 
 import { useQueryState } from 'nuqs';
 
-import { parseAsIsoDate } from './iso-date-parser';
+import { parseAsIsoDate } from '@/lib/navigation/iso-date-parser';
 
 // El día elegido en el mes de un celular vive en la URL (`?dia=2026-10-13`). Sin día, o con uno de
 // otro mes, es hoy si hoy está en el mes que se ve, y si no, el primero del mes; ese día "de

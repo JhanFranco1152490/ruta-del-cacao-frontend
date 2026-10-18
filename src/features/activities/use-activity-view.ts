@@ -11,8 +11,8 @@ import {
   type ActivityView,
   initialActivityView,
 } from './activity-view';
-import { parseAsIsoDate } from './iso-date-parser';
 import type { useMonthParam } from '@/hooks/use-month-param';
+import { parseAsIsoDate } from '@/lib/navigation/iso-date-parser';
 
 type ActivityPeriod = ReturnType<typeof useMonthParam>;
 

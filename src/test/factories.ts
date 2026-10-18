@@ -176,6 +176,20 @@ export const buildCacaoVariety = (
   ...overrides,
 });
 
+export const buildPestDisease = (
+  overrides: Partial<Schemas['PestDisease']> = {},
+): Schemas['PestDisease'] => ({
+  id: 'pd-monilia',
+  name: 'Monilia',
+  kind: 'disease',
+  scientific_name: 'Moniliophthora roreri',
+  description: 'Solo ataca la mazorca. Empieza con manchas cafés.',
+  is_active: true,
+  suggested_sampling_unit: null,
+  suggested_control_method: null,
+  ...overrides,
+});
+
 export const buildCharacterization = (
   overrides: Partial<Schemas['PlotCharacterization']> = {},
 ): Schemas['PlotCharacterization'] => ({
@@ -409,5 +423,22 @@ export const buildAgriculturalActivity = (
   version: 1,
   created_at: '2026-10-08T09:00:00-05:00',
   updated_at: '2026-10-08T09:00:00-05:00',
+  monitoring: null,
+  control_of: null,
+  ...overrides,
+});
+
+// Una notificación de la bandeja, con la actividad como la devuelve el calendario (inventada).
+export const buildNotification = (
+  overrides: Partial<Schemas['Notification']> = {},
+): Schemas['Notification'] => ({
+  id: 'n1',
+  kind: 'activity_upcoming',
+  severity: 'normal',
+  created_at: '2026-10-18T06:05:00-05:00',
+  read_at: null,
+  condition_date: '2026-10-20',
+  detection_id: null,
+  activity: buildAgriculturalActivity(),
   ...overrides,
 });

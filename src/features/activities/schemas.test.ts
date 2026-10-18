@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
+import { PAST_DATE_MESSAGE } from '@/lib/activity-dates';
 import type { components } from '@/lib/api/schema';
 import { buildAgriculturalActivity, buildAssignee } from '@/test/factories';
 
@@ -7,7 +8,6 @@ import {
   type ActivityFormInput,
   createActivityFormSchema,
   EMPTY_ACTIVITY_FORM,
-  PAST_DATE_MESSAGE,
   toCreateRequest,
   toFormValues,
   toUpdateRequest,

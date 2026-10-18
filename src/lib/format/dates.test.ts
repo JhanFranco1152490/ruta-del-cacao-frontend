@@ -3,10 +3,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   dateInBogota,
   daysBetween,
+  formatDayMonth,
+  formatAbbreviatedDate,
+  formatShortDate,
+  formatShortDayMonth,
   formatLongDate,
   formatMonthYear,
   formatTimestamp,
   formatWeekdayDate,
+  formatShortWeekdayDate,
   formatWeekdayLongDate,
   formatWeekRange,
   isIsoDate,
@@ -111,6 +116,35 @@ describe('shiftMonth', () => {
   });
 });
 
+describe('formatDayMonth', () => {
+  it('writes the day and the month without the year or shifting the day', () => {
+    expect(formatDayMonth('2026-10-19')).toBe('19 de octubre');
+    expect(formatDayMonth('2026-11-01')).toBe('1 de noviembre');
+  });
+});
+
+describe('formatShortDayMonth', () => {
+  it('writes the day and the short month of a moment, in Bogotá', () => {
+    expect(formatShortDayMonth('2026-10-19T15:20:00Z')).toBe('19 oct');
+    // A las 2 de la mañana del 20 en UTC todavía es el 19 en Bogotá.
+    expect(formatShortDayMonth('2026-10-20T02:00:00Z')).toBe('19 oct');
+  });
+});
+
+describe('formatAbbreviatedDate', () => {
+  it('writes the day and the short month with the period that closes the abbreviation', () => {
+    expect(formatAbbreviatedDate('2026-10-14')).toBe('14 oct.');
+    expect(formatAbbreviatedDate('2026-09-01')).toBe('1 sep.');
+  });
+});
+
+describe('formatShortDate', () => {
+  it('writes the day and the short month of a date without shifting it', () => {
+    expect(formatShortDate('2026-10-20')).toBe('20 oct');
+    expect(formatShortDate('2026-09-01')).toBe('1 sep');
+  });
+});
+
 describe('formatWeekdayDate', () => {
   it('names the weekday in Spanish without shifting the day', () => {
     expect(formatWeekdayDate('2026-10-19')).toBe('lunes 19 de octubre');
@@ -123,6 +157,13 @@ describe('shiftDays', () => {
     expect(shiftDays('2026-10-20', 3)).toBe('2026-10-23');
     expect(shiftDays('2026-10-30', 3)).toBe('2026-11-02');
     expect(shiftDays('2027-01-01', -1)).toBe('2026-12-31');
+  });
+});
+
+describe('formatShortWeekdayDate', () => {
+  it('writes the weekday, the day, the month and the year in a short line', () => {
+    expect(formatShortWeekdayDate('2026-10-22')).toBe('jue 22 oct 2026');
+    expect(formatShortWeekdayDate('2026-09-01')).toBe('mar 1 sep 2026');
   });
 });
 

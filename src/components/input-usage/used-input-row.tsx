@@ -5,22 +5,21 @@ import { useId } from 'react';
 import {
   type Control,
   Controller,
-  type UseFormRegister,
+  type FieldValues,
+  type Path,
 } from 'react-hook-form';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
 import { UNIT_SYMBOLS, type InputUnit } from '@/lib/format/input-units';
-
 import {
-  type CompletionFormInput,
-  type CompletionFormValues,
+  type CatalogInput,
   stockReferenceText,
   usedQuantityText,
-} from '../completion-rules';
-import type { CatalogInput } from '../completion-values';
-import { CompletionInputPicker } from './completion-input-picker';
+} from '@/lib/input-usage';
+
+import { UsedInputPicker } from './used-input-picker';
 
 const unitOf = (input: CatalogInput) =>
   UNIT_SYMBOLS[input.unit as InputUnit]?.plural ?? input.unit;
@@ -29,10 +28,10 @@ const unitOf = (input: CatalogInput) =>
 // en la unidad del insumo. Debajo se ve lo que equivale en empaques y lo que hay en la finca, que
 // es solo una referencia: no limita la cantidad, porque la labor ya se hizo. El número va una vez,
 // en el título de la fila, que nombra a sus campos para quien usa lector de pantalla.
-export function CompletionInputRow({
+export function UsedInputRow<TForm extends FieldValues>({
   index,
   control,
-  register,
+  rowPath,
   catalog,
   selectedId,
   quantity,
@@ -44,8 +43,9 @@ export function CompletionInputRow({
   onRemove,
 }: {
   index: number;
-  control: Control<CompletionFormInput, unknown, CompletionFormValues>;
-  register: UseFormRegister<CompletionFormInput>;
+  control: Control<TForm>;
+  // Dónde está esta fila dentro del formulario ("inputs.0").
+  rowPath: string;
   catalog: readonly CatalogInput[];
   selectedId: string;
   quantity: string;
@@ -90,26 +90,36 @@ export function CompletionInputRow({
       </div>
       <Controller
         control={control}
-        name={`inputs.${index}.input_id`}
+        name={`${rowPath}.input_id` as Path<TForm>}
         render={({ field }) => (
-          <CompletionInputPicker
+          <UsedInputPicker
             catalog={catalog}
             disabled={disabled}
             error={errors.input_id ?? (field.value ? undefined : notice)}
             onChange={field.onChange}
             takenIds={takenIds}
-            value={field.value}
+            value={field.value as string}
           />
         )}
       />
-      <TextField
-        className={CAPTURE_FIELD_CLASS}
-        disabled={disabled}
-        error={errors.quantity}
-        hint={equivalent ?? undefined}
-        inputMode="decimal"
-        label={selected ? `Cantidad (${unitOf(selected)})` : 'Cantidad'}
-        {...register(`inputs.${index}.quantity`)}
+      <Controller
+        control={control}
+        name={`${rowPath}.quantity` as Path<TForm>}
+        render={({ field }) => (
+          <TextField
+            className={CAPTURE_FIELD_CLASS}
+            disabled={disabled}
+            error={errors.quantity}
+            hint={equivalent ?? undefined}
+            inputMode="decimal"
+            label={selected ? `Cantidad (${unitOf(selected)})` : 'Cantidad'}
+            name={field.name}
+            onBlur={field.onBlur}
+            onChange={field.onChange}
+            ref={field.ref}
+            value={(field.value as string | undefined) ?? ''}
+          />
+        )}
       />
       {selected && stock !== undefined && (
         <p className="text-sm text-muted-foreground">
