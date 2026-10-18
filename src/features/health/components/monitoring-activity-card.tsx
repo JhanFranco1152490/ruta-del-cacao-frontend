@@ -1,5 +1,5 @@
 import type { components } from '@/lib/api/schema';
-import { formatWeekdayLongDate } from '@/lib/format/dates';
+import { formatShortWeekdayDate } from '@/lib/format/dates';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
@@ -13,22 +13,17 @@ export function MonitoringActivityCard({
   return (
     <section
       aria-label="Monitoreo"
-      className="space-y-3 rounded-[var(--radius-card)] bg-card p-5 shadow-card"
+      className="flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded-[var(--radius-card)] bg-card px-4 py-3 shadow-card"
     >
-      <div>
-        <p className="section-label">Monitoreo fitosanitario</p>
-        <h2 className="mt-1 text-2xl text-selva">
-          Parcela {plot.code} · {plot.farm.name}
-        </h2>
-      </div>
-      <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-        <div>
+      <h2 className="text-xl text-selva">
+        Parcela {plot.code} · {plot.farm.name}
+      </h2>
+      <dl className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <div className="flex gap-1.5">
           <dt className="font-bold text-muted-foreground">Programado</dt>
-          <dd className="first-letter:uppercase">
-            {formatWeekdayLongDate(activity.scheduled_date)}
-          </dd>
+          <dd>{formatShortWeekdayDate(activity.scheduled_date)}</dd>
         </div>
-        <div>
+        <div className="flex gap-1.5">
           <dt className="font-bold text-muted-foreground">Responsable</dt>
           <dd>{assignee.full_name}</dd>
         </div>

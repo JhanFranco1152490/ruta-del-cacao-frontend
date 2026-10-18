@@ -136,7 +136,7 @@ export function MonitoringCapture({
   const isSaving = save.isPending || saveEvidence.isPending;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-8">
       <Breadcrumb
         items={[
           { label: 'Actividades', href: ACTIVITIES_PATH },
@@ -144,8 +144,8 @@ export function MonitoringCapture({
         ]}
       />
       <PageHeader
+        compact
         description="Se guarda en este dispositivo y se envía cuando haya conexión. Después no se podrá modificar."
-        eyebrow="Sanidad de la parcela"
         title={
           rejected ? 'Corregir monitoreo' : 'Registrar monitoreo fitosanitario'
         }
@@ -164,7 +164,7 @@ export function MonitoringCapture({
           {rejected.errorMessage ? `: ${rejected.errorMessage}` : '.'}
         </p>
       )}
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 space-y-4">
         <MonitoringActivityCard activity={activity} />
         <MonitoringSheet
           blockedMessage={sync.blockedMessage}

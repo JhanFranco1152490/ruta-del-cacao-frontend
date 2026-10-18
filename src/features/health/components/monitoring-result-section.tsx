@@ -15,32 +15,54 @@ const methodLabel = (method: ActivityMonitoring['sampling_method']) =>
 export function MonitoringResultSection({
   activity,
   monitoring,
+  compact = false,
 }: {
   // El monitoreo realizado; `monitoring` es su resultado.
   activity: Schemas['AgriculturalActivity'];
   monitoring: ActivityMonitoring;
+  // En una lista: sin el título de la sección y con el resultado en menos líneas.
+  compact?: boolean;
 }) {
   const { sampling_unit, evaluated_units } = monitoring;
   const method = methodLabel(monitoring.sampling_method);
   return (
-    <section aria-label="Resultado del monitoreo" className="space-y-3">
-      <p className="section-label">Resultado</p>
+    <section
+      aria-label="Resultado del monitoreo"
+      className={compact ? 'space-y-2' : 'space-y-3'}
+    >
+      {!compact && <p className="section-label">Resultado</p>}
       <p className="text-sm">
         <span className="font-bold">Evaluado: </span>
         {evaluated_units} {unitName(sampling_unit, evaluated_units)}
         {method ? ` · ${method.toLowerCase()}` : ''}
+        {compact && monitoring.no_presence && (
+          <span className="font-bold text-ok">
+            {' '}
+            · Sin presencia de plagas ni enfermedades
+          </span>
+        )}
       </p>
       {monitoring.no_presence ? (
-        <p className="font-bold text-ok">
-          Sin presencia de plagas ni enfermedades
-        </p>
+        !compact && (
+          <p className="font-bold text-ok">
+            Sin presencia de plagas ni enfermedades
+          </p>
+        )
       ) : (
-        <ul aria-label="Detecciones" className="space-y-3">
+        <ul
+          aria-label="Detecciones"
+          className={compact ? 'space-y-2' : 'space-y-3'}
+        >
           {monitoring.detections.map((detection) => (
             <DetectionResult
               actions={
-                <DetectionActions detection={detection} monitoring={activity} />
+                <DetectionActions
+                  compact={compact}
+                  detection={detection}
+                  monitoring={activity}
+                />
               }
+              compact={compact}
               detection={detection}
               key={detection.id}
               samplingUnit={sampling_unit}

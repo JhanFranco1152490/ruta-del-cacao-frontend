@@ -69,7 +69,7 @@ export function HistoryFiltersBar({
   ].filter(Boolean).length;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <FilterRow
         activeCount={activeCount}
         search={
@@ -105,11 +105,12 @@ export function HistoryFiltersBar({
           value={chosen(filters.plot, plotOptions, plotCode)}
         />
         <SelectField
+          className="h-10 text-sm"
           hideLabel
           label="Plaga o enfermedad"
           onChange={(event) => onPest(event.target.value || null)}
           value={filters.pest ?? ''}
-          wrapperClassName="w-full sm:w-52"
+          wrapperClassName="w-full sm:w-48"
         >
           <option value="">Todas las plagas</option>
           {pestOptions.map(({ value, label }) => (
@@ -119,33 +120,40 @@ export function HistoryFiltersBar({
           ))}
         </SelectField>
         <div className="flex w-full items-start gap-2 sm:w-auto">
-          <span aria-hidden="true" className="pt-3 text-sm font-bold">
-            Periodo
-          </span>
           <TextField
+            className="h-10 text-sm"
             error={periodError}
             hideLabel
             label="Desde"
             onChange={(event) => onFrom(event.target.value)}
+            title="Desde"
             type="date"
             value={filters.from ?? ''}
-            wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+            wrapperClassName="min-w-0 flex-1 sm:w-36 sm:flex-none"
           />
-          <span aria-hidden="true" className="pt-3">
+          <span aria-hidden="true" className="pt-2">
             –
           </span>
           <TextField
+            className="h-10 text-sm"
             hideLabel
             label="Hasta"
             onChange={(event) => onTo(event.target.value)}
+            title="Hasta"
             type="date"
             value={filters.to ?? ''}
-            wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+            wrapperClassName="min-w-0 flex-1 sm:w-36 sm:flex-none"
           />
         </div>
       </FilterRow>
       {hasFilters && (
-        <Button onClick={onClear} size="office" type="button" variant="outline">
+        <Button
+          className="h-9"
+          onClick={onClear}
+          size="office"
+          type="button"
+          variant="ghost"
+        >
           Limpiar filtros
         </Button>
       )}

@@ -53,16 +53,15 @@ export function HealthScreen() {
   const results = data?.results ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
+    <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-8">
       <PageHeader
         actions={
           <ScheduleMonitoringLink farm={filters.farm} plot={filters.plot} />
         }
-        description="Los monitoreos de tus parcelas: qué se encontró, cómo evoluciona cada plaga y qué se hizo con ella."
-        eyebrow="Sanidad de las parcelas"
+        compact
         title="Sanidad"
       />
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 space-y-4">
         <WaitingControlsNotice producer={filters.producer} />
         <HistoryFiltersBar
           farmName={choices.farmName}
@@ -124,7 +123,7 @@ export function HealthScreen() {
           ) : (
             <>
               {filters.plot && <PestSummarySection summary={data.summary} />}
-              <ul aria-label="Monitoreos" className="space-y-4">
+              <ul aria-label="Monitoreos" className="space-y-3">
                 {results.map((activity) => (
                   <HistoryMonitoringItem
                     activity={activity}

@@ -81,6 +81,13 @@ export const shiftDays = (isoDate: string, days: number) =>
 export const formatWeekdayLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "EEEE d 'de' MMMM 'de' yyyy", { locale: es });
 
+// Lo mismo en una línea corta, para listas compactas: "jue 22 oct 2026".
+export const formatShortWeekdayDate = (isoDate: string) =>
+  format(parseISO(isoDate), 'EEE d MMM yyyy', { locale: es }).replace(
+    /\./g,
+    '',
+  );
+
 // Una fecha sin hora (yyyy-MM-dd) que existe en el calendario: el 30 de febrero no lo es.
 export const isIsoDate = (value: string) =>
   /^\d{4}-\d{2}-\d{2}$/.test(value) && isValid(parseISO(value));

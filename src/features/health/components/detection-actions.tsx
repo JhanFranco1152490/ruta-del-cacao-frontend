@@ -20,9 +20,12 @@ type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 export function DetectionActions({
   detection,
   monitoring,
+  compact = false,
 }: {
   detection: Detection;
   monitoring: AgriculturalActivity;
+  // En una lista: botones más bajos.
+  compact?: boolean;
 }) {
   const { data: user } = useSession();
   const [open, setOpen] = useState<'scheduled' | 'done'>();
@@ -30,10 +33,11 @@ export function DetectionActions({
   const canComplete = hasPermission(user, PERMISSIONS.ACTIVITIES_COMPLETE);
   const requested = detectionStatus(detection)?.kind === 'requested';
 
+  const height = compact ? 'h-9 text-sm' : 'h-11';
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
       <Button
-        className="h-11"
+        className={height}
         onClick={() => setOpen('scheduled')}
         type="button"
         variant="action"
@@ -42,7 +46,7 @@ export function DetectionActions({
       </Button>
       {canComplete && (
         <Button
-          className="h-11"
+          className={height}
           onClick={() => setOpen('done')}
           type="button"
           variant="action"

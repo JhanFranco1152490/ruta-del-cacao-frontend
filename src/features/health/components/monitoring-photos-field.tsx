@@ -79,7 +79,7 @@ export function MonitoringPhotosField({
   };
 
   return (
-    <FormSection title={`Fotos (opcional · hasta ${MAX_PHOTOS})`}>
+    <FormSection compact title={`Fotos (opcional · hasta ${MAX_PHOTOS})`}>
       <div className="space-y-3">
         {photos.length > 0 && (
           <ul aria-label="Fotos elegidas" className="flex flex-wrap gap-3">

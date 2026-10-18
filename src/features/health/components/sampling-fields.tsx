@@ -52,8 +52,8 @@ export function SamplingFields({
 }) {
   const unit = useWatch({ control, name: 'sampling_unit' });
   return (
-    <FormSection title="Muestreo">
-      <div className="space-y-5">
+    <FormSection compact title="Muestreo">
+      <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           className={CAPTURE_FIELD_CLASS}
           disabled={disabled}
@@ -117,19 +117,21 @@ export function SamplingFields({
             </option>
           ))}
         </SelectField>
-        <Controller
-          control={control}
-          name="no_presence"
-          render={({ field }) => (
-            <CheckboxField
-              checked={field.value}
-              disabled={disabled}
-              hint="Marcada, no se registran detecciones ni controles."
-              label="Sin presencia de plagas ni enfermedades"
-              onCheckedChange={(checked) => field.onChange(checked === true)}
-            />
-          )}
-        />
+        <div className="sm:col-span-2">
+          <Controller
+            control={control}
+            name="no_presence"
+            render={({ field }) => (
+              <CheckboxField
+                checked={field.value}
+                disabled={disabled}
+                hint="Marcada, no se registran detecciones ni controles."
+                label="Sin presencia de plagas ni enfermedades"
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+              />
+            )}
+          />
+        </div>
       </div>
     </FormSection>
   );

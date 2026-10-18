@@ -5,19 +5,16 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { components } from '@/lib/api/schema';
-import { formatWeekdayLongDate } from '@/lib/format/dates';
+import { formatShortWeekdayDate } from '@/lib/format/dates';
 
 import { EvidenceSection } from './evidence-section';
 import { MonitoringResultSection } from './monitoring-result-section';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
-const photosText = (count: number) =>
-  count === 1 ? '1 foto' : `${count} fotos`;
-
-// Un monitoreo del historial: cuándo se hizo y en qué parcela, quién lo registró y su resultado,
-// con sus acciones (programar un control o decidir que no hace falta). Las fotos no se cargan hasta
-// que se piden: solo se dice cuántas hay.
+// Un monitoreo del historial en pocas líneas: cuándo y dónde, quién lo registró y su resultado, con
+// sus acciones (programar un control o decidir que no hace falta). Las fotos no se cargan hasta que
+// se piden: el botón dice cuántas hay.
 export function HistoryMonitoringItem({
   activity,
 }: {
@@ -29,37 +26,54 @@ export function HistoryMonitoringItem({
   const date = activity.done_date ?? activity.scheduled_date;
   const photos = monitoring.evidence_count;
   return (
-    <li className="space-y-3 rounded-[var(--radius-card)] bg-card p-5 shadow-card">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h2 className="text-xl text-selva first-letter:uppercase">
-            {formatWeekdayLongDate(date)}
+    <li className="space-y-2 rounded-[var(--radius-card)] bg-card p-4 shadow-card">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="font-sans text-base font-extrabold text-selva">
+            <span className="first-letter:uppercase">
+              {formatShortWeekdayDate(date)}
+            </span>
+            <span className="text-foreground">
+              {' '}
+              · {activity.plot.code} · {activity.plot.farm.name}
+            </span>
           </h2>
-          <p className="font-bold">
-            {activity.plot.code} · {activity.plot.farm.name}
-          </p>
+          {activity.completed_by && (
+            <p className="text-sm text-muted-foreground">
+              Registró {activity.completed_by.full_name}
+            </p>
+          )}
         </div>
-        <p className="text-sm text-muted-foreground">
-          {activity.completed_by &&
-            `Registró ${activity.completed_by.full_name}`}
-          {photos > 0 && ` · ${photosText(photos)}`}
-        </p>
+        <Button
+          aria-expanded={showPhotos}
+          aria-label={
+            showPhotos
+              ? 'Ocultar fotos'
+              : photos > 0
+                ? `Ver fotos (${photos})`
+                : 'Ver fotos'
+          }
+          className="h-9 shrink-0 text-sm"
+          onClick={() => setShowPhotos((value) => !value)}
+          type="button"
+          variant="outline"
+        >
+          <Images aria-hidden="true" className="size-4" />
+          <span aria-hidden="true">
+            <span className="max-sm:hidden">
+              {showPhotos ? 'Ocultar fotos' : 'Fotos'}
+            </span>
+            {!showPhotos && photos > 0 && (
+              <span className="sm:ml-1">{photos}</span>
+            )}
+          </span>
+        </Button>
       </div>
-      <MonitoringResultSection activity={activity} monitoring={monitoring} />
-      <Button
-        aria-expanded={showPhotos}
-        className="h-11"
-        onClick={() => setShowPhotos((value) => !value)}
-        type="button"
-        variant="outline"
-      >
-        <Images aria-hidden="true" className="size-4" />
-        {showPhotos
-          ? 'Ocultar fotos'
-          : photos > 0
-            ? `Ver fotos (${photos})`
-            : 'Fotos'}
-      </Button>
+      <MonitoringResultSection
+        activity={activity}
+        compact
+        monitoring={monitoring}
+      />
       {showPhotos && <EvidenceSection activity={activity} />}
     </li>
   );

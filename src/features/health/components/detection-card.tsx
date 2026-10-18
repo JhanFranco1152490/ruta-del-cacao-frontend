@@ -60,7 +60,7 @@ export function DetectionCard({
   return (
     <li
       aria-labelledby={titleId}
-      className="space-y-4 rounded-(--radius-field) border-[2.5px] border-ink bg-card p-4"
+      className="space-y-3 rounded-(--radius-field) border-[2.5px] border-ink bg-card p-4"
       role="group"
     >
       <div className="flex items-center justify-between gap-3">
@@ -81,41 +81,47 @@ export function DetectionCard({
           <Trash2 aria-hidden="true" className="size-4" /> Quitar
         </Button>
       </div>
-      <Controller
-        control={control}
-        name={`detections.${index}.pest_disease_id`}
-        render={({ field }) => (
-          <PestPicker
-            disabled={disabled}
-            error={rowErrors?.pest_disease_id?.message}
-            onBlur={field.onBlur}
-            onChange={field.onChange}
-            pests={pests}
-            value={field.value}
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_13rem]">
+        <div className="space-y-4">
+          <Controller
+            control={control}
+            name={`detections.${index}.pest_disease_id`}
+            render={({ field }) => (
+              <PestPicker
+                disabled={disabled}
+                error={rowErrors?.pest_disease_id?.message}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                pests={pests}
+                value={field.value}
+              />
+            )}
           />
-        )}
-      />
-      {row?.pest_disease_id === OTHER_PEST_DISEASE && (
-        <TextField
-          className={CAPTURE_FIELD_CLASS}
-          disabled={disabled}
-          error={rowErrors?.other_description?.message}
-          label="¿Qué encontraste?"
-          maxLength={OTHER_DESCRIPTION_MAX_LENGTH}
-          {...register(`detections.${index}.other_description`)}
-        />
-      )}
-      <TextField
-        className={CAPTURE_FIELD_CLASS}
-        disabled={disabled}
-        error={rowErrors?.affected_units?.message}
-        inputMode="numeric"
-        label={SAMPLING_UNITS[unit].affected}
-        {...register(`detections.${index}.affected_units`)}
-      />
-      <p aria-live="polite" className="text-base font-bold text-selva">
-        {incidence ? `Incidencia: ${incidence}` : ''}
-      </p>
+          {row?.pest_disease_id === OTHER_PEST_DISEASE && (
+            <TextField
+              className={CAPTURE_FIELD_CLASS}
+              disabled={disabled}
+              error={rowErrors?.other_description?.message}
+              label="¿Qué encontraste?"
+              maxLength={OTHER_DESCRIPTION_MAX_LENGTH}
+              {...register(`detections.${index}.other_description`)}
+            />
+          )}
+        </div>
+        <div className="space-y-2">
+          <TextField
+            className={CAPTURE_FIELD_CLASS}
+            disabled={disabled}
+            error={rowErrors?.affected_units?.message}
+            inputMode="numeric"
+            label={SAMPLING_UNITS[unit].affected}
+            {...register(`detections.${index}.affected_units`)}
+          />
+          <p aria-live="polite" className="text-base font-bold text-selva">
+            {incidence ? `Incidencia: ${incidence}` : ''}
+          </p>
+        </div>
+      </div>
       <DetectionControl
         disabled={disabled}
         index={index}

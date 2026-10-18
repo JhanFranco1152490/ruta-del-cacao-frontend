@@ -10,6 +10,7 @@ import {
   formatMonthYear,
   formatTimestamp,
   formatWeekdayDate,
+  formatShortWeekdayDate,
   formatWeekdayLongDate,
   formatWeekRange,
   isIsoDate,
@@ -148,6 +149,13 @@ describe('shiftDays', () => {
     expect(shiftDays('2026-10-20', 3)).toBe('2026-10-23');
     expect(shiftDays('2026-10-30', 3)).toBe('2026-11-02');
     expect(shiftDays('2027-01-01', -1)).toBe('2026-12-31');
+  });
+});
+
+describe('formatShortWeekdayDate', () => {
+  it('writes the weekday, the day, the month and the year in a short line', () => {
+    expect(formatShortWeekdayDate('2026-10-22')).toBe('jue 22 oct 2026');
+    expect(formatShortWeekdayDate('2026-09-01')).toBe('mar 1 sep 2026');
   });
 });
 

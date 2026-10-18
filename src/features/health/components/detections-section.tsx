@@ -44,15 +44,15 @@ export function DetectionsSection({
     errors.detections?.root?.message ?? errors.detections?.message;
 
   return (
-    <FormSection title="Detecciones">
-      <div className="space-y-4">
+    <FormSection compact title="Detecciones">
+      <div className="space-y-3">
         {!pests && (
           <p className="text-sm font-bold text-warn">
             {NO_PEST_CATALOG_MESSAGE}
           </p>
         )}
         {fields.length > 0 && (
-          <ul className="space-y-4">
+          <ul className="space-y-3">
             {fields.map((field, index) => (
               <DetectionCard
                 control={control}

@@ -126,7 +126,7 @@ export function MonitoringSheet({
     <FormProvider {...form}>
       <ControlChoicesContext value={controlChoices}>
         <form
-          className="space-y-6"
+          className="space-y-4"
           noValidate
           onSubmit={(event) => void handleSubmit(onSubmit)(event)}
         >
@@ -138,38 +138,46 @@ export function MonitoringSheet({
               Revisa los datos marcados antes de guardar.
             </p>
           )}
-          <SamplingFields
-            control={control}
-            disabled={isSaving}
-            errors={errors}
-            onUnitPicked={() => {
-              unitPickedByHand.current = true;
-            }}
-            plotTrees={plotTrees}
-            register={register}
-            today={today}
-            unitHint={unitHint(recommendations, unit)}
-          />
-          {!noPresence && (
-            <DetectionsSection
-              control={control}
-              disabled={isSaving}
-              errors={errors}
-              pests={pests}
-              register={register}
-            />
-          )}
-          <FormSection title="Observaciones">
-            <TextAreaField
-              disabled={isSaving}
-              error={errors.notes?.message}
-              hint="Lo que no cabe en números. Por ejemplo, un foco de infección en la zona baja."
-              label="Observaciones (opcional)"
-              maxLength={NOTES_MAX_LENGTH}
-              {...register('notes')}
-            />
-          </FormSection>
-          {photosField}
+          {/* En escritorio, el muestreo y las detecciones a la izquierda y lo de apoyo (observaciones
+              y fotos) a la derecha; en celular, una sola columna en ese mismo orden. */}
+          <div className="grid gap-4 lg:grid-cols-5 lg:items-start">
+            <div className="space-y-4 lg:col-span-3">
+              <SamplingFields
+                control={control}
+                disabled={isSaving}
+                errors={errors}
+                onUnitPicked={() => {
+                  unitPickedByHand.current = true;
+                }}
+                plotTrees={plotTrees}
+                register={register}
+                today={today}
+                unitHint={unitHint(recommendations, unit)}
+              />
+              {!noPresence && (
+                <DetectionsSection
+                  control={control}
+                  disabled={isSaving}
+                  errors={errors}
+                  pests={pests}
+                  register={register}
+                />
+              )}
+            </div>
+            <div className="space-y-4 lg:col-span-2">
+              <FormSection compact title="Observaciones">
+                <TextAreaField
+                  disabled={isSaving}
+                  error={errors.notes?.message}
+                  hint="Lo que no cabe en números. Por ejemplo, un foco de infección en la zona baja."
+                  label="Observaciones (opcional)"
+                  maxLength={NOTES_MAX_LENGTH}
+                  {...register('notes')}
+                />
+              </FormSection>
+              {photosField}
+            </div>
+          </div>
           <div className="space-y-4">
             {blockedMessage && (
               <p className="font-bold text-warn" id="monitoring-save-blocked">

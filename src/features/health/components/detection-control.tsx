@@ -57,11 +57,11 @@ export function DetectionControl({
   return (
     <fieldset className="space-y-3">
       <legend className="mb-2 text-sm font-bold">Control</legend>
-      <div className="space-y-2">
+      <div className="grid gap-2 sm:grid-cols-3">
         {options.map(({ mode, label }) => (
           <label
             className={cn(
-              'flex min-h-15 cursor-pointer items-center gap-3 rounded-(--radius-field) border-[2.5px] px-4 text-base font-bold',
+              'flex min-h-15 cursor-pointer items-center gap-3 rounded-(--radius-field) border-[2.5px] px-3 text-base font-bold sm:min-h-14 sm:px-3',
               current.mode === mode
                 ? 'border-selva bg-surface-alt text-selva'
                 : 'border-ink',
