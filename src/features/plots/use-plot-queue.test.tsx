@@ -16,7 +16,7 @@ import {
 } from './use-plot-queue';
 
 const values: PlotFormValues = {
-  code: 'P1',
+  name: 'P1',
   area_hectares: '1.00',
   vertices: [],
 };

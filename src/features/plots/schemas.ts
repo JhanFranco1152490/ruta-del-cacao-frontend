@@ -2,31 +2,31 @@ import { z } from 'zod';
 
 import { areaHectaresField } from '@/lib/validation/decimal';
 
-export const PLOT_CODE_MAX_LENGTH = 50;
+export const PLOT_NAME_MAX_LENGTH = 60;
 
-// La misma forma con la que el servidor compara los códigos: sin espacios a los lados ni
-// distinción de mayúsculas. Dos códigos que solo difieren en eso son el mismo.
-export const normalizeCode = (code: string) =>
-  code.trim().normalize('NFKC').toLowerCase();
+// La misma forma con la que el servidor compara los nombres: sin espacios a los lados ni
+// distinción de mayúsculas. Dos nombres que solo difieren en eso son el mismo.
+export const normalizeName = (name: string) =>
+  name.trim().normalize('NFKC').toLowerCase();
 
-export const DUPLICATE_CODE_MESSAGE =
-  'Ya existe una parcela con este código en la finca';
+export const DUPLICATE_NAME_MESSAGE =
+  'Ya existe una parcela con este nombre en la finca';
 
-// `takenCodes`: los códigos (ya normalizados) de las demás parcelas de la finca que conoce el
-// dispositivo. El servidor repite la comprobación con todas.
-export const createPlotFormSchema = (takenCodes: ReadonlySet<string>) =>
+// `takenNames`: los nombres (ya normalizados) de las demás parcelas de la finca que conoce el
+// dispositivo. El servidor repite la comprobación con todas. El nombre es opcional: el código lo
+// asigna el servidor, y varias parcelas sin nombre conviven.
+export const createPlotFormSchema = (takenNames: ReadonlySet<string>) =>
   z.object({
-    code: z
+    name: z
       .string()
       .trim()
-      .min(1, 'Ingresa el código de la parcela.')
       .max(
-        PLOT_CODE_MAX_LENGTH,
-        `Usa máximo ${PLOT_CODE_MAX_LENGTH} caracteres.`,
+        PLOT_NAME_MAX_LENGTH,
+        `Usa máximo ${PLOT_NAME_MAX_LENGTH} caracteres.`,
       )
       .refine(
-        (code) => !takenCodes.has(normalizeCode(code)),
-        DUPLICATE_CODE_MESSAGE,
+        (name) => !name || !takenNames.has(normalizeName(name)),
+        DUPLICATE_NAME_MESSAGE,
       ),
     area_hectares: areaHectaresField(),
   });

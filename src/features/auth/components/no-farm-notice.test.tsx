@@ -27,7 +27,9 @@ describe('NoFarmNotice', () => {
     const cases = [
       buildSessionUser({
         all_farms: false,
-        farms: [{ id: 'f1', name: 'La Esperanza', is_active: true }],
+        farms: [
+          { id: 'f1', code: 'F01', name: 'La Esperanza', is_active: true },
+        ],
         permissions: [PERMISSIONS.PLOTS_VIEW],
       }),
       buildSessionUser({ permissions: [PERMISSIONS.PLOTS_VIEW] }),

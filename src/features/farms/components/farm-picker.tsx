@@ -21,11 +21,12 @@ import { producerLabelOf } from '@/lib/format/producer';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Farm, useFarms } from '../api';
+import { farmLabel } from '@/lib/format/place-label';
 
 const SEARCH_DELAY_MS = 300;
 
 const labelOf = (farm: Farm) =>
-  `${farm.name} · ${farm.municipality.name} · ${producerLabelOf(farm.producer)}`;
+  `${farmLabel(farm)} · ${farm.municipality.name} · ${producerLabelOf(farm.producer)}`;
 
 // Para registrar una parcela sin pasar antes por la lista de fincas: se busca la finca por
 // nombre y se entrega la elegida. Cada opción dice de qué productor es, porque dos productores

@@ -149,7 +149,7 @@ describe('FarmPlotsSection', () => {
     renderSection();
 
     await user.click(
-      await screen.findByRole('button', { name: 'Ver P1 en el mapa' }),
+      await screen.findByRole('button', { name: 'Ver P01 en el mapa' }),
     );
 
     expect(await screen.findByText('Enfocado: a')).toBeInTheDocument();
@@ -160,7 +160,7 @@ describe('FarmPlotsSection', () => {
     Element.prototype.scrollIntoView = vi.fn();
     server.use(plotsHandler([buildPlot({ id: 'a', boundary: BOUNDARY })]));
     renderSection();
-    await screen.findByRole('button', { name: 'Ver P1 en el mapa' });
+    await screen.findByRole('button', { name: 'Ver P01 en el mapa' });
 
     await chooseFromActionsMenu(user, 'Ver en el mapa');
 
@@ -179,7 +179,9 @@ describe('FarmPlotsSection', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/La Esperanza \(ok\)/)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Ver P1 en el mapa' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Ver P01 en el mapa' }),
+    );
 
     expect(await screen.findByText('Enfocado: a')).toBeInTheDocument();
     expect(
@@ -282,14 +284,14 @@ describe('FarmPlotsSection', () => {
     it('does not offer it without the permission or in an inactive farm', async () => {
       server.use(plotsHandler([buildPlot()]));
       const first = renderSection();
-      await screen.findByText('P1');
+      await screen.findByText('P01');
       expect(
         screen.queryByRole('link', { name: 'Registrar parcela' }),
       ).not.toBeInTheDocument();
       first.unmount();
 
       renderSection({ permissions: ALL, farm: { ...FARM, isActive: false } });
-      await screen.findByText('P1');
+      await screen.findByText('P01');
       expect(
         screen.queryByRole('link', { name: 'Registrar parcela' }),
       ).not.toBeInTheDocument();
@@ -314,12 +316,12 @@ describe('FarmPlotsSection', () => {
     it('shows the plots that wait on the device, and offers to correct one that failed', async () => {
       server.use(plotsHandler([buildPlot({ id: 'a', code: 'P1' })]));
       await enqueuePlotCreate(userId, 'q1', 'f1', {
-        code: 'P-pendiente',
+        name: 'P-pendiente',
         area_hectares: '1.00',
         vertices: [],
       });
       await enqueuePlotCreate(userId, 'q2', 'f1', {
-        code: 'P-con-error',
+        name: 'P-con-error',
         area_hectares: '1.00',
         vertices: [],
       });
@@ -349,12 +351,12 @@ describe('FarmPlotsSection', () => {
     it('discards a plot that failed, after confirming, and not one that is still pending', async () => {
       server.use(plotsHandler([]));
       await enqueuePlotCreate(userId, 'q1', 'f1', {
-        code: 'P-pendiente',
+        name: 'P-pendiente',
         area_hectares: '1.00',
         vertices: [],
       });
       await enqueuePlotCreate(userId, 'q2', 'f1', {
-        code: 'P-con-error',
+        name: 'P-con-error',
         area_hectares: '1.00',
         vertices: [],
       });
@@ -384,7 +386,7 @@ describe('FarmPlotsSection', () => {
     it('does not offer to correct a plot whose farm or plot no longer exists', async () => {
       server.use(plotsHandler([]));
       await enqueuePlotCreate(userId, 'q1', 'f1', {
-        code: 'P1',
+        name: 'P1',
         area_hectares: '1.00',
         vertices: [],
       });
@@ -415,7 +417,7 @@ describe('FarmPlotsSection', () => {
       );
       registerAdapter(plotSyncAdapter);
       await enqueuePlotCreate(userId, 'q1', 'f1', {
-        code: 'P-pendiente',
+        name: 'P-pendiente',
         area_hectares: '1.00',
         vertices: [],
       });
@@ -440,7 +442,7 @@ describe('FarmPlotsSection', () => {
       const requests: URLSearchParams[] = [];
       server.use(plotsHandler([], requests));
       await enqueuePlotCreate(userId, 'q1', 'f1', {
-        code: 'P-pendiente',
+        name: 'P-pendiente',
         area_hectares: '1.00',
         vertices: [],
       });

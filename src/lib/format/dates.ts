@@ -28,6 +28,11 @@ export const formatDateTime = (isoDateTime: string) =>
 export const formatTimestamp = (milliseconds: number) =>
   formatDateTime(new Date(milliseconds).toISOString());
 
+// El día y el mes abreviado con punto ("14 oct."), para nombrar un registro en la bandeja o en una
+// lista, donde el punto cierra la abreviatura.
+export const formatAbbreviatedDate = (isoDate: string) =>
+  `${format(parseISO(isoDate), 'd MMM', { locale: es })}.`;
+
 // Recibe una fecha sin hora (yyyy-MM-dd) y no la desplaza por zona horaria.
 export const formatLongDate = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM 'de' yyyy", { locale: es });

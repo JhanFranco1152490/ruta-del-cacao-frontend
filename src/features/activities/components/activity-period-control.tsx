@@ -1,9 +1,9 @@
 import { formatMonthYear, formatWeekRange } from '@/lib/format/dates';
 
 import type { ActivityView } from '../activity-view';
-import type { useActivityMonth } from '../use-activity-month';
+import type { useMonthParam } from '@/hooks/use-month-param';
 import type { useActivityView } from '../use-activity-view';
-import { ActivityPeriodBar } from './activity-period-bar';
+import { PeriodBar } from '@/components/period-bar';
 
 // El control de lo que se mira, según la vista: el mes o la semana. Va pegado a su calendario,
 // junto a los recuentos.
@@ -13,14 +13,14 @@ export function ActivityPeriodControl({
   viewState,
 }: {
   view: ActivityView;
-  period: ReturnType<typeof useActivityMonth>;
+  period: ReturnType<typeof useMonthParam>;
   viewState: ReturnType<typeof useActivityView>;
 }) {
   // Pendientes no tiene periodo: sus días se eligen dentro de su lista.
   if (view === 'pendientes') return null;
   if (view === 'semana') {
     return (
-      <ActivityPeriodBar
+      <PeriodBar
         isCurrent={viewState.isCurrentWeek}
         nextLabel="Semana siguiente"
         onNext={viewState.goNextWeek}
@@ -32,7 +32,7 @@ export function ActivityPeriodControl({
     );
   }
   return (
-    <ActivityPeriodBar
+    <PeriodBar
       isCurrent={period.isCurrentMonth}
       nextLabel="Mes siguiente"
       onNext={period.goNext}

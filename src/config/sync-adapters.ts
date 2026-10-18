@@ -4,6 +4,8 @@ import { farmSyncAdapter } from '@/features/farms/sync-adapter';
 import { controlSyncAdapter } from '@/features/health/control-sync-adapter';
 import { evidenceSyncAdapter } from '@/features/health/evidence-sync-adapter';
 import { monitoringSyncAdapter } from '@/features/health/monitoring-sync-adapter';
+import { harvestSyncAdapter } from '@/features/harvests/sync-adapter';
+import { lotSyncAdapter } from '@/features/lots/sync-adapter';
 import { plotSyncAdapter } from '@/features/plots/sync-adapter';
 import type { SyncAdapter } from '@/lib/offline/adapters';
 
@@ -17,4 +19,6 @@ export const SYNC_ADAPTERS: readonly SyncAdapter[] = [
   monitoringSyncAdapter,
   controlSyncAdapter,
   evidenceSyncAdapter,
+  harvestSyncAdapter,
+  lotSyncAdapter,
 ];

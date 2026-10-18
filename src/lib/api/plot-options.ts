@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { ProducerRef } from '@/lib/format/producer';
 
+import { readThroughCache } from '@/lib/offline/cached-read';
+
 import { apiFetch } from './client';
 import { queryKeys } from './query-keys';
 import type { components } from './schema';
@@ -13,10 +15,12 @@ type Schemas = components['schemas'];
 export type PlotOption = {
   id: string;
   code: string;
+  name: string | null;
   areaHectares: string;
   isActive: boolean;
   farm: {
     id: string;
+    code: string;
     name: string;
     isActive: boolean;
     producer: ProducerRef;
@@ -48,10 +52,12 @@ export async function fetchPlotOptions(
     options: page.results.map((plot) => ({
       id: plot.id,
       code: plot.code,
+      name: plot.name ?? null,
       areaHectares: plot.area_hectares,
       isActive: plot.is_active,
       farm: {
         id: plot.farm.id,
+        code: plot.farm.code,
         name: plot.farm.name,
         isActive: plot.farm.is_active,
         producer: plot.farm.producer,
@@ -72,4 +78,26 @@ export const usePlotOptions = (
     queryKey: queryKeys.plots.options(filter.farm ?? '', filter.producer ?? ''),
     queryFn: ({ signal }) => fetchPlotOptions(filter, signal),
     enabled,
+  });
+
+// Las mismas parcelas, con copia en el dispositivo: las pide un formulario que se usa en campo, sin
+// conexión (registrar una cosecha). Sin red se ofrecen las de la última vez que se cargaron.
+export const useSavedPlotOptions = (
+  userId: string | undefined,
+  filter: PlotOptionsFilter,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.plots.savedOptions(
+      filter.farm ?? '',
+      filter.producer ?? '',
+    ),
+    queryFn: ({ signal }) =>
+      readThroughCache(
+        userId!,
+        `plot-options:${filter.farm ?? ''}:${filter.producer ?? ''}`,
+        () => fetchPlotOptions(filter, signal),
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
   });

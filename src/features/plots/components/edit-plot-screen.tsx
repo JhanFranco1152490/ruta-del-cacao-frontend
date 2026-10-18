@@ -28,6 +28,7 @@ import {
   type PlotScreenFarm,
 } from './plot-screen-farm';
 import { PlotEditorSkeleton, PlotUnavailable } from './plot-screen-states';
+import { plotLabel } from '@/lib/format/place-label';
 
 const SAVE_FAILED =
   'No fue posible guardar los cambios en el dispositivo. Inténtalo nuevamente.';
@@ -124,7 +125,7 @@ function SavedPlotEditor({
       selfId={plot.id}
       submitLabel="Guardar cambios"
       title="Editar parcela"
-      crumb={plot.code}
+      crumb={plotLabel(plot)}
     />
   );
 }
@@ -181,7 +182,7 @@ function QueuedPlotEditor({
               </p>
               {current ? (
                 <p>
-                  En el servidor la parcela ahora es «{current.code}», de{' '}
+                  En el servidor la parcela ahora es «{plotLabel(current)}», de{' '}
                   {formatHectares(current.area_hectares)}
                   {current.boundary ? ' y con polígono' : ' y sin polígono'}. Si
                   guardas, tus cambios reemplazan esa versión.
@@ -207,7 +208,7 @@ function QueuedPlotEditor({
       selfId={plot.id}
       submitLabel={failed ? 'Guardar y reenviar' : 'Guardar cambios'}
       title={failed ? 'Corregir parcela' : 'Editar parcela'}
-      crumb={plot.values.code}
+      crumb={plotLabel({ name: plot.values.name })}
     />
   );
 }

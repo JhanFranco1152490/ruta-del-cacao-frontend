@@ -4,6 +4,7 @@ import {
   dateInBogota,
   daysBetween,
   formatDayMonth,
+  formatAbbreviatedDate,
   formatShortDate,
   formatShortDayMonth,
   formatLongDate,
@@ -127,6 +128,13 @@ describe('formatShortDayMonth', () => {
     expect(formatShortDayMonth('2026-10-19T15:20:00Z')).toBe('19 oct');
     // A las 2 de la mañana del 20 en UTC todavía es el 19 en Bogotá.
     expect(formatShortDayMonth('2026-10-20T02:00:00Z')).toBe('19 oct');
+  });
+});
+
+describe('formatAbbreviatedDate', () => {
+  it('writes the day and the short month with the period that closes the abbreviation', () => {
+    expect(formatAbbreviatedDate('2026-10-14')).toBe('14 oct.');
+    expect(formatAbbreviatedDate('2026-09-01')).toBe('1 sep.');
   });
 });
 

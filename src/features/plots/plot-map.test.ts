@@ -21,6 +21,7 @@ const BOUNDARY = [
 const plot = (over: Partial<KnownPlot> = {}): KnownPlot => ({
   id: 'pl1',
   code: 'P1',
+  name: null,
   areaHectares: '2.40',
   isActive: true,
   vertices: BOUNDARY,

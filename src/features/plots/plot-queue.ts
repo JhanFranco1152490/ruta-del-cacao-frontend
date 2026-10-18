@@ -18,14 +18,25 @@ export const PLOT_RESOURCE = 'plots';
 // Lo que escribe la persona en el formulario de una parcela. Sin vértices, la parcela queda sin
 // polígono.
 export type PlotFormValues = {
-  code: string;
+  // Vacío si la parcela no tiene nombre: el código lo asigna el servidor.
+  name: string;
   area_hectares: string;
   vertices: DraftVertex[];
 };
 
 type PlotFields = Required<
-  Pick<PlotCreateRequest, 'code' | 'area_hectares' | 'boundary'>
+  Pick<PlotCreateRequest, 'name' | 'area_hectares' | 'boundary'>
 >;
+
+// Antes el código de la parcela lo escribía la persona y viajaba en `code`. Un registro que una
+// versión anterior de la app dejó en la cola todavía lo trae: ese texto es ahora su nombre.
+type StoredPlotFields = Omit<PlotFields, 'name'> & {
+  name?: string | null;
+  code?: string;
+};
+
+const storedName = (fields: StoredPlotFields) =>
+  fields.name ?? fields.code ?? null;
 
 // Lo que guarda la cola. Una parcela nueva lleva el id del dispositivo y su finca; la edición de
 // una del servidor, la versión que se leyó (el id de la parcela es el del item de la cola).
@@ -38,21 +49,31 @@ export type PlotUpdatePayload = PlotFields &
 export const CREATED_PLOT_VERSION = 1;
 
 export const toFields = (values: PlotFormValues): PlotFields => ({
-  code: values.code,
+  name: values.name.trim() || null,
   area_hectares: values.area_hectares,
   boundary: values.vertices.length ? toApiBoundary(values.vertices) : null,
 });
 
-export const toFormValues = (fields: PlotFields): PlotFormValues => ({
-  code: fields.code,
+export const toFormValues = (fields: StoredPlotFields): PlotFormValues => ({
+  name: storedName(fields) ?? '',
   area_hectares: fields.area_hectares,
   vertices: fromApiBoundary(fields.boundary),
 });
 
 export const plotToFormValues = (plot: Plot): PlotFormValues => ({
-  code: plot.code,
+  name: plot.name ?? '',
   area_hectares: plot.area_hectares,
   vertices: fromApiBoundary(plot.boundary),
+});
+
+// Una edición que una versión anterior de la app dejó en la cola manda el nombre como `code`, que
+// el servidor ya no acepta al editar: se envía como nombre.
+export const withStoredName = ({
+  code,
+  ...fields
+}: PlotUpdatePayload & { code?: string }): PlotUpdatePayload => ({
+  ...fields,
+  name: fields.name ?? code ?? null,
 });
 
 // Un alta pendiente que en realidad ya existe en el servidor (se perdió la respuesta) se reenvía
@@ -60,7 +81,7 @@ export const plotToFormValues = (plot: Plot): PlotFormValues => ({
 export const createToUpdate = (
   payload: PlotCreatePayload,
 ): PlotUpdatePayload => ({
-  code: payload.code,
+  name: storedName(payload),
   area_hectares: payload.area_hectares,
   boundary: payload.boundary,
   expected_version: CREATED_PLOT_VERSION,

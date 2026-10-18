@@ -267,7 +267,12 @@ describe('FarmListScreen', () => {
   it('lists the farms from the server with their state and actions', async () => {
     server.use(
       farmsHandler([
-        buildFarm({ id: 's1', name: 'El Porvenir', is_active: false }),
+        buildFarm({
+          id: 's1',
+          code: 'F04',
+          name: 'El Porvenir',
+          is_active: false,
+        }),
       ]),
     );
     renderScreen({
@@ -275,7 +280,7 @@ describe('FarmListScreen', () => {
     });
 
     const [card] = await farmCards();
-    expect(within(card).getByText('El Porvenir')).toBeInTheDocument();
+    expect(within(card).getByText('F04 · El Porvenir')).toBeInTheDocument();
     expect(within(card).getByText('Inactiva')).toBeInTheDocument();
     expect(
       within(card).getByRole('link', { name: 'Ver detalle de El Porvenir' }),

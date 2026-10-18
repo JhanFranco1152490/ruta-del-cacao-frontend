@@ -20,7 +20,7 @@ import {
 } from './plot-queue';
 import { PLOT_DELETED_CODE, plotSyncAdapter } from './sync-adapter';
 
-const fields = { code: 'P1', area_hectares: '2.40', boundary: null };
+const fields = { name: 'El Mango', area_hectares: '2.40', boundary: null };
 
 const CREATED_AT = Date.UTC(2026, 9, 1, 15, 30);
 
@@ -207,7 +207,7 @@ describe('plotSyncAdapter.recover', () => {
     expect(
       plotSyncAdapter.recover?.(
         queueItem({}),
-        apiError(409, 'duplicate_plot_code'),
+        apiError(409, 'duplicate_plot_name'),
       ),
     ).toBeNull();
   });
@@ -234,7 +234,7 @@ describe('the queue with the plot adapter', () => {
       ),
     );
     await enqueuePlotCreate(userId, 'pl1', 'f1', {
-      code: 'P1',
+      name: 'P1',
       area_hectares: '1.00',
       vertices: [],
     });
@@ -257,5 +257,37 @@ describe('plotSyncAdapter.refreshAfterSync', () => {
       queryKeys.farms.detail('f1'),
       queryKeys.farms.lists(),
     ]);
+  });
+});
+
+describe('plotSyncAdapter.assignedCode', () => {
+  it('returns what the server answered', async () => {
+    server.use(
+      http.post(apiUrl('/api/plots'), () =>
+        HttpResponse.json(buildPlot({ code: 'P05' }), { status: 201 }),
+      ),
+    );
+
+    const response = await plotSyncAdapter.send(queueItem({}));
+
+    expect(response).toMatchObject({ code: 'P05' });
+  });
+
+  it('tells the code a new plot got, with its name', () => {
+    expect(
+      plotSyncAdapter.assignedCode!(
+        queueItem({}),
+        buildPlot({ code: 'P05', name: 'Lote del río' }),
+      ),
+    ).toEqual({ kind: 'plot', code: 'P05', name: 'Lote del río' });
+  });
+
+  it('says nothing for an edit, whose code does not change', () => {
+    expect(
+      plotSyncAdapter.assignedCode!(
+        queueItem({ operation: 'update' }),
+        buildPlot(),
+      ),
+    ).toBeNull();
   });
 });

@@ -380,7 +380,7 @@ describe('the actions of a detection', () => {
       name: 'Programar control',
     });
     expect(dialog).toHaveTextContent(
-      'Atiende: Otra (Hormigas en hojas) 6 % · P-03',
+      'Atiende: Otra (Hormigas en hojas) 6 % · P03',
     );
     await userEvent.type(
       within(dialog).getByLabelText('Fecha programada'),
@@ -406,7 +406,7 @@ describe('the actions of a detection', () => {
     expect(queued).toMatchObject({
       parentId: 'd2',
       payload: {
-        label: 'Otra (Hormigas en hojas) · P-03',
+        label: 'Otra (Hormigas en hojas) · P03',
         request: {
           mode: 'scheduled',
           scheduled_date: '2026-10-25',

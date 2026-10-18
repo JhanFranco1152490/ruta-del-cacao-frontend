@@ -13,8 +13,9 @@ const TODAY = '2026-10-22';
 const plotOf = (id: string, code: string, farm: string, farmName: string) => ({
   id,
   code,
+  name: null,
   is_active: true,
-  farm: { id: farm, name: farmName, is_active: true },
+  farm: { id: farm, code: 'F01', name: farmName, is_active: true },
 });
 
 const items = [

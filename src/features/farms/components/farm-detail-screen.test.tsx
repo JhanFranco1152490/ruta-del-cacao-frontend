@@ -71,7 +71,10 @@ describe('FarmDetailScreen', () => {
     renderScreen({ seen });
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'La Esperanza' }),
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'F01 · La Esperanza',
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText('Cúcuta, Norte de Santander')).toBeInTheDocument();
     expect(screen.getByText('10 ha')).toBeInTheDocument();
@@ -112,7 +115,10 @@ describe('FarmDetailScreen', () => {
     server.use(farmHandler(buildFarm()));
     renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW] });
 
-    await screen.findByRole('heading', { level: 1, name: 'La Esperanza' });
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'F01 · La Esperanza',
+    });
     expect(
       screen.queryByRole('link', { name: /Insumos de esta finca/ }),
     ).not.toBeInTheDocument();
@@ -122,7 +128,10 @@ describe('FarmDetailScreen', () => {
     server.use(farmHandler(buildFarm()));
     renderScreen({ permissions: [PERMISSIONS.FARMS_VIEW] });
 
-    await screen.findByRole('heading', { level: 1, name: 'La Esperanza' });
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'F01 · La Esperanza',
+    });
     expect(
       screen.queryByRole('link', { name: /Editar finca/ }),
     ).not.toBeInTheDocument();
@@ -131,14 +140,14 @@ describe('FarmDetailScreen', () => {
   it('shows the saved copy with its date when the server is unreachable', async () => {
     server.use(farmHandler(buildFarm({ name: 'Copia guardada' })));
     const first = renderScreen();
-    await first.findByRole('heading', { name: 'Copia guardada' });
+    await first.findByRole('heading', { name: 'F01 · Copia guardada' });
     first.unmount();
 
     server.use(http.get(apiUrl('/api/farms/f1'), () => HttpResponse.error()));
     renderScreen();
 
     expect(
-      await screen.findByRole('heading', { name: 'Copia guardada' }),
+      await screen.findByRole('heading', { name: 'F01 · Copia guardada' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Datos guardados el/)).toBeInTheDocument();
   });
@@ -232,7 +241,7 @@ describe('FarmDetailScreen and the producer of the farm', () => {
     renderScreen();
 
     expect(
-      await screen.findByRole('heading', { name: 'La Esperanza' }),
+      await screen.findByRole('heading', { name: 'F01 · La Esperanza' }),
     ).toBeVisible();
     expect(screen.queryByText(/Productor:/)).not.toBeInTheDocument();
   });

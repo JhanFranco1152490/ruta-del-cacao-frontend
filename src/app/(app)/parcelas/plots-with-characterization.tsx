@@ -6,6 +6,7 @@ import { farmDetailPath } from '@/features/farms/farm-paths';
 import { PlotHistoryLink } from '@/features/health/components/plot-history-link';
 import { PlotListScreen } from '@/features/plots/components/plot-list-screen';
 import { useSession } from '@/hooks/use-session';
+import { plotLabel } from '@/lib/format/place-label';
 
 // Aquí se juntan los dominios: la lista es de parcelas, la ficha de cada tarjeta y sus envíos
 // fallidos son de cultivos, el historial fitosanitario es de sanidad y el detalle al que lleva cada
@@ -24,12 +25,12 @@ export function PlotsWithCharacterization() {
             farmId={plot.farm.id}
             farmIsActive={plot.farm.isActive}
             pagePlotIds={pagePlotIds}
-            plot={plot}
+            plot={{ ...plot, code: plotLabel(plot) }}
           />
           <PlotHistoryLink
             plot={{
               id: plot.id,
-              code: plot.code,
+              code: plotLabel(plot),
               inServer: plot.queue?.operation !== 'create',
             }}
           />

@@ -16,6 +16,7 @@ import { PLOT_DELETED_CODE } from '../sync-adapter';
 import { PlotDeleteDialog } from './plot-delete-dialog';
 import { PlotDiscardDialog } from './plot-discard-dialog';
 import { PlotStatusDialog } from './plot-status-dialog';
+import { plotLabel } from '@/lib/format/place-label';
 
 // Lo que hace falta saber de la finca: sus parcelas se congelan cuando está inactiva.
 type ActionsFarm = { id: string; isActive: boolean };
@@ -77,7 +78,7 @@ export function PlotCardActions({
   const editHref = plotEditPath(plot.id, farm.id);
   // Una parcela que sigue en el dispositivo se corrige a la vista; en la tarjeta angosta, en el menú.
   const visibleEdit = !!plot.queue && !compact;
-  const menuLabel = `Más acciones de ${plot.code}`;
+  const menuLabel = `Más acciones de ${plotLabel(plot)}`;
 
   const menu = (
     <ActionsMenu className="size-10 px-0" label={menuLabel}>
@@ -140,7 +141,7 @@ export function PlotCardActions({
     <>
       {showEdit && visibleEdit && (
         <EditorLink
-          aria-label={`${label} ${plot.code}`}
+          aria-label={`${label} ${plotLabel(plot)}`}
           className={buttonVariants({
             size: 'office',
             variant: 'action',
@@ -155,7 +156,7 @@ export function PlotCardActions({
       {hasMenuItems && menu}
       {isError && (
         <PlotDiscardDialog
-          code={plot.code}
+          code={plotLabel(plot)}
           control={{ open: dialog === 'discard', onOpenChange: closeDialog }}
           plotId={plot.id}
         />

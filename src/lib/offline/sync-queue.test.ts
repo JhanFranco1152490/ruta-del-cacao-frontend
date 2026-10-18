@@ -526,6 +526,27 @@ describe('onItemSynced', () => {
     expect(listener).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'a1', resource: 'farms' }),
       adapter,
+      undefined,
+    );
+  });
+
+  it('passes on what the server answered', async () => {
+    const userId = randomUserId();
+    const adapter = fakeAdapter({
+      send: vi.fn().mockResolvedValue({ id: 'a1', code: 'F03' }),
+    });
+    registerAdapter(adapter);
+    await enqueueFarm(userId, 'a1');
+    const listener = vi.fn();
+    const stop = onItemSynced(listener);
+
+    await processQueue(userId);
+    stop();
+
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'a1' }),
+      adapter,
+      { id: 'a1', code: 'F03' },
     );
   });
 

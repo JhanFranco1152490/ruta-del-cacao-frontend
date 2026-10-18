@@ -50,7 +50,8 @@ export function ProducerFilters({
     >
       <NativeSelect
         aria-label="Filtrar por estado"
-        className="w-full text-sm sm:w-48"
+        className="text-sm"
+        wrapperClassName="sm:w-48"
         onChange={(event) =>
           filters.setStatus(
             (event.target.value || null) as ProducerStatus | null,

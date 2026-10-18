@@ -26,6 +26,8 @@ export type SearchSelectOption = {
   description?: string;
   // Se ofrece siempre, escriba lo que se escriba ("Otra", al final de la lista).
   pinned?: boolean;
+  // Se ve en la lista pero no se puede elegir; `description` dice por qué.
+  disabled?: boolean;
 };
 
 type Group = { value: string; items: SearchSelectOption[] };
@@ -140,7 +142,7 @@ export function SearchSelect({
   }, [rows, grouped]);
 
   const renderItem = (row: SearchSelectOption) => (
-    <ComboboxItem key={row.id} value={row}>
+    <ComboboxItem disabled={row.disabled} key={row.id} value={row}>
       {row.description ? (
         <span className="flex flex-col gap-0.5 py-0.5">
           <span>{row.label}</span>

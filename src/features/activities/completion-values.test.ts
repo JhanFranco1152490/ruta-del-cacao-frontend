@@ -13,7 +13,7 @@ const queued = (
   overrides: Partial<QueuedCompletion> = {},
 ): QueuedCompletion => ({
   activityId: 'a1',
-  label: 'Fertilización · P-03',
+  label: 'Fertilización · P03',
   status: 'error',
   request: {
     done_date: '2026-10-19',
@@ -28,7 +28,7 @@ const queued = (
 describe('completionLabel', () => {
   it('names the labor and its plot', () => {
     expect(completionLabel(buildAgriculturalActivity())).toBe(
-      'Fertilización · P-03',
+      'Fertilización · P03',
     );
     expect(
       completionLabel(
@@ -37,7 +37,7 @@ describe('completionLabel', () => {
           other_description: 'Resiembra',
         }),
       ),
-    ).toBe('Resiembra · P-03');
+    ).toBe('Resiembra · P03');
   });
 });
 
