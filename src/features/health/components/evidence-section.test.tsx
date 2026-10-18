@@ -159,7 +159,7 @@ describe('EvidenceSection', () => {
     expect(queued[0]).toMatchObject({
       activityId: 'm1',
       kind: 'monitoring',
-      label: 'P-03 · 19 de octubre',
+      label: 'P03 · 19 de octubre',
     });
     expect(await screen.findAllByText('Pendiente de enviar')).toHaveLength(2);
   });

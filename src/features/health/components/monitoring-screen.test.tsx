@@ -175,7 +175,7 @@ describe('MonitoringScreen', () => {
     await sheet();
 
     const card = screen.getByRole('region', { name: 'Monitoreo' });
-    expect(card).toHaveTextContent('Parcela P-03 · Finca de prueba');
+    expect(card).toHaveTextContent('Parcela P03 · Finca de prueba');
     expect(card).toHaveTextContent('Carlos Rincón');
     expect(screen.getByLabelText('Fecha de realización')).toHaveValue(
       '2026-10-22',
@@ -655,7 +655,7 @@ describe('MonitoringScreen', () => {
 
       const dialog = await confirmDialog();
       expect(dialog).toHaveTextContent(
-        'P-03 · 22 de octubre · 50 árboles evaluados',
+        'P03 · 22 de octubre · 50 árboles evaluados',
       );
       expect(dialog).toHaveTextContent('Monilia: 12 árboles · 24 %');
       expect(dialog).toHaveTextContent(
@@ -692,7 +692,7 @@ describe('MonitoringScreen', () => {
       expect(await screen.findByText('Monitoreo registrado')).toBeVisible();
       expect(router.replace).toHaveBeenCalledWith('/actividades');
       const queued = await getQueuedMonitoring(userId, 'a1');
-      expect(queued?.label).toBe('P-03 · 22 de octubre');
+      expect(queued?.label).toBe('P03 · 22 de octubre');
       expect(queued?.request).toMatchObject({
         done_date: '2026-10-22',
         sampling_unit: 'trees',
@@ -785,7 +785,7 @@ describe('MonitoringScreen', () => {
         activityId: 'a1',
         kind: 'monitoring',
         fileName: 'mazorca.jpg',
-        label: 'P-03 · 22 de octubre',
+        label: 'P03 · 22 de octubre',
       });
     });
 
@@ -816,7 +816,7 @@ describe('MonitoringScreen', () => {
             },
           ],
         },
-        label: 'P-03 · 21 de octubre',
+        label: 'P03 · 21 de octubre',
       });
       await getOfflineDb(userId).queue.update(monitoringQueueId('a1'), {
         status: 'error',
@@ -920,7 +920,7 @@ describe('MonitoringScreen', () => {
           no_presence: true,
           detections: [],
         },
-        label: 'P-03 · 20 de octubre',
+        label: 'P03 · 20 de octubre',
       });
       renderScreen();
 
