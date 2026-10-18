@@ -148,9 +148,7 @@ describe('NotificationsPanel', () => {
     const [upcoming, overdue] = rows(panel);
     expect(upcoming).toHaveTextContent('Sin leer');
     expect(upcoming).toHaveTextContent('Actividad próxima a su fecha');
-    expect(upcoming).toHaveTextContent(
-      'Fertilización · P-03 · Finca de prueba',
-    );
+    expect(upcoming).toHaveTextContent('Fertilización · P03 · Finca de prueba');
     expect(upcoming).toHaveTextContent('Faltan 2 días · 20 oct');
     expect(upcoming).toHaveTextContent('hace 2 h');
     expect(overdue).not.toHaveTextContent('Sin leer');

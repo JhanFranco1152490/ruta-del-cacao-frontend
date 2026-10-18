@@ -9,6 +9,7 @@ import { parseCoordinates } from '@/lib/format/coordinates';
 import type { FarmListItem } from '../farm-list-item';
 import { farmDetailPath } from '../farm-paths';
 import { FarmStatusBadge } from './farm-status-badge';
+import { farmLabel } from '@/lib/format/place-label';
 
 export function FarmCardList({
   farms,
@@ -46,7 +47,7 @@ export function FarmCardList({
                 id={`farm-${farm.id}-name`}
                 className="min-w-0 text-lg break-words text-selva"
               >
-                {farm.name}
+                {farmLabel(farm)}
               </h3>
               <FarmStatusBadge status={farm.status} />
             </div>

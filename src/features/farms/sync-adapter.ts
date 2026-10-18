@@ -2,7 +2,7 @@ import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
 
-import { patchFarm, postFarm } from './api';
+import { type Farm, patchFarm, postFarm } from './api';
 import {
   createToUpdate,
   FARM_RESOURCE,
@@ -27,14 +27,20 @@ export const farmSyncAdapter: SyncAdapter = {
 
   async send(item) {
     if (item.operation === 'create') {
-      await postFarm({
+      return postFarm({
         ...(item.payload as FarmCreatePayload),
         // La hora en que se guardó en el dispositivo; informativa para el servidor.
         captured_at: new Date(item.createdAt).toISOString(),
       });
-    } else {
-      await patchFarm(item.id, item.payload as FarmUpdatePayload);
     }
+    return patchFarm(item.id, item.payload as FarmUpdatePayload);
+  },
+
+  // El código lo asigna el servidor al recibir la finca: solo una nueva lo estrena.
+  assignedCode: (item, response) => {
+    if (item.operation !== 'create') return null;
+    const farm = response as Farm;
+    return { kind: 'farm', code: farm.code, name: farm.name };
   },
 
   // El alta llegó al servidor pero se perdió la respuesta, y luego se editó en el dispositivo:

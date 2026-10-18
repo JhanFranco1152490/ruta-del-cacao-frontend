@@ -11,10 +11,10 @@ import {
   type ActivityView,
   initialActivityView,
 } from './activity-view';
+import type { useMonthParam } from '@/hooks/use-month-param';
 import { parseAsIsoDate } from '@/lib/navigation/iso-date-parser';
-import type { useActivityMonth } from './use-activity-month';
 
-type ActivityPeriod = ReturnType<typeof useActivityMonth>;
+type ActivityPeriod = ReturnType<typeof useMonthParam>;
 
 // La vista, la semana y los días de Pendientes viven en la URL (`?vista=semana&semana=2026-10-12`,
 // `?dias=30`), como el

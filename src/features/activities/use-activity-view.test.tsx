@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 
-import { useActivityMonth } from './use-activity-month';
+import { useMonthParam } from '@/hooks/use-month-param';
 import { useActivityView } from './use-activity-view';
 
 vi.mock('@/hooks/use-is-desktop');
@@ -28,7 +28,7 @@ function setup(searchParams = '') {
     onUrlUpdate,
     ...renderHook(
       () => {
-        const period = useActivityMonth();
+        const period = useMonthParam();
         return { period, view: useActivityView(period) };
       },
       { wrapper },

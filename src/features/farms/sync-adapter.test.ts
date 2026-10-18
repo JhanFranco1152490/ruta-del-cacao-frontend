@@ -257,3 +257,35 @@ describe('farmSyncAdapter.refreshAfterSync', () => {
     ).toEqual([queryKeys.farms.all()]);
   });
 });
+
+describe('farmSyncAdapter.assignedCode', () => {
+  it('returns what the server answered', async () => {
+    server.use(
+      http.post(apiUrl('/api/farms'), () =>
+        HttpResponse.json(buildFarm({ code: 'F03' }), { status: 201 }),
+      ),
+    );
+
+    const response = await farmSyncAdapter.send(queueItem({}));
+
+    expect(response).toMatchObject({ code: 'F03' });
+  });
+
+  it('tells the code a new farm got', () => {
+    expect(
+      farmSyncAdapter.assignedCode!(
+        queueItem({}),
+        buildFarm({ code: 'F03', name: 'La Esperanza' }),
+      ),
+    ).toEqual({ kind: 'farm', code: 'F03', name: 'La Esperanza' });
+  });
+
+  it('says nothing for an edit, whose code does not change', () => {
+    expect(
+      farmSyncAdapter.assignedCode!(
+        queueItem({ operation: 'update' }),
+        buildFarm(),
+      ),
+    ).toBeNull();
+  });
+});

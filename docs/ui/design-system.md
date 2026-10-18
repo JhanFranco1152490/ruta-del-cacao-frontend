@@ -173,6 +173,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos, página no encontrada y de error |
 | `BotanicalVine` | Línea botánica en oro, solo sobre fondo oscuro | Inicio de sesión, barra lateral y menú móvil |
 | `StatusPage` | Pantalla completa con la mata, título y acciones | Página no encontrada y error inesperado |
+| `DetailFooter` | Pie de una ficha: «Volver» (44 px, con flecha) a la izquierda, a la pantalla de origen con sus filtros o a la lista, y las acciones de la ficha, si tiene, a la derecha. En celular, las acciones arriba y Volver al final, a todo el ancho | Fichas de cosecha y de lote; las demás en la pasada de estética |
 
 ### Iconografía
 
@@ -246,12 +247,17 @@ poscosecha cobre, calidad azul). Nunca emojis.
   (los permisos de un rol, por área).
 - **Filtros de lista:** una sola fila con la búsqueda y los selects (los poco usados, tras «Más filtros»), sin etiquetas visibles (el
   placeholder dice qué se filtra; la etiqueta sigue ahí para los lectores de pantalla). En el
-  celular, la búsqueda y un botón «Filtros» con el número de filtros activos que despliega el resto.
+  celular, la búsqueda y un botón «Filtros» con el número de filtros activos que despliega el resto. Los filtros llevan el ancho de
+  fila solo desde `sm` (`w-full sm:min-w-40 sm:flex-1 sm:basis-44`): en celular van en columna, y
+  `basis` en una columna es el alto, de modo que cada uno ocuparía 11 rem.
 - **Mapa junto a una lista:** el mapa y su resumen se ocultan juntos («Mapa y resumen ocultos»); en
   el celular empiezan ocultos para que la lista quede arriba, y pedir ver una forma en el mapa lo
   muestra. Con ancho, el mapa de una finca va al lado de sus parcelas y se queda a la vista
   mientras se recorre la lista.
-- **Ficha:** dos columnas (2/3 contenido, 1/3 relaciones e historial de cambios).
+- **Ficha:** dos columnas (2/3 contenido, 1/3 relaciones e historial de cambios). Termina con
+  `DetailFooter`: **Volver** abajo a la izquierda, y las acciones de la ficha, si tiene, a su
+  derecha. La ruta de arriba no se lee como un botón para quien usa poco la web; en campo, con una
+  tablet, se busca un «Volver» donde termina lo que se estaba leyendo.
 - **Formulario de oficina:** columna de 520 px con cards por sección; el mapa o la vista previa
   ocupa el resto.
 - **Captura de campo:** cabecera verde con paso actual, aviso de conexión, contenido de un solo

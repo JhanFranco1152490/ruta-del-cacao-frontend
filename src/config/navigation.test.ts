@@ -93,6 +93,8 @@ describe('NAV_ITEMS', () => {
       '/insumos',
       '/actividades',
       '/sanidad',
+      '/cosechas',
+      '/lotes',
       '/roles',
       '/usuarios',
     ]);
@@ -111,6 +113,8 @@ describe('NAV_ITEMS', () => {
       PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE,
     );
     expect(byHref['/insumos'].permission).toBe(PERMISSIONS.INPUTS_VIEW);
+    expect(byHref['/cosechas'].permission).toBe(PERMISSIONS.HARVESTS_VIEW);
+    expect(byHref['/lotes'].permission).toBe(PERMISSIONS.LOTS_VIEW);
     expect(byHref['/actividades'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/sanidad'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
@@ -125,6 +129,7 @@ describe('NAV_ITEMS', () => {
       '/variedades',
       '/plagas-enfermedades',
       '/sanidad',
+      '/lotes',
       '/roles',
       '/usuarios',
     ]);

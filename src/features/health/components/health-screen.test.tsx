@@ -48,8 +48,9 @@ const monitoring = (
     plot: {
       id: `pl-${code}`,
       code,
+      name: null,
       is_active: true,
-      farm: { ...farm, is_active: true },
+      farm: { code: 'F01', ...farm, is_active: true },
     },
     monitoring: {
       sampling_unit: 'trees',
@@ -112,6 +113,7 @@ beforeEach(() => {
         code: 'P-02',
         farm: {
           id: 'f2',
+          code: 'F02',
           name: 'El Retiro',
           is_active: true,
           producer: buildPlot().farm.producer,
@@ -324,8 +326,9 @@ describe('HealthScreen', () => {
         plot: {
           id: `pl-${code}`,
           code,
+          name: null,
           is_active: true,
-          farm: { ...farm, is_active: true },
+          farm: { code: 'F01', ...farm, is_active: true },
         },
       });
     const section = () =>

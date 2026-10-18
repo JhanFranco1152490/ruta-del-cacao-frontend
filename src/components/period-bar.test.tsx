@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ActivityPeriodBar } from './activity-period-bar';
+import { PeriodBar } from './period-bar';
 
 function setup(isCurrent = false) {
   const handlers = {
@@ -11,7 +11,7 @@ function setup(isCurrent = false) {
     onToday: vi.fn(),
   };
   render(
-    <ActivityPeriodBar
+    <PeriodBar
       isCurrent={isCurrent}
       nextLabel="Semana siguiente"
       previousLabel="Semana anterior"
@@ -22,7 +22,7 @@ function setup(isCurrent = false) {
   return handlers;
 }
 
-describe('ActivityPeriodBar', () => {
+describe('PeriodBar', () => {
   it('shows the period it is on', () => {
     setup();
 

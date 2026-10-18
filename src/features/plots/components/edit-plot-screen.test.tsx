@@ -72,15 +72,23 @@ describe('EditPlotScreen — a plot of the server', () => {
   it('starts from the plot and queues the edit with the version that was read', async () => {
     server.use(
       plotsHandler([
-        buildPlot({ id: 'pl1', code: 'P1', area_hectares: '2.00', version: 4 }),
+        buildPlot({
+          id: 'pl1',
+          code: 'P01',
+          name: 'La loma',
+          area_hectares: '2.00',
+          version: 4,
+        }),
       ]),
     );
     const { user } = renderScreen('pl1');
 
-    const code = await screen.findByLabelText('Código de la parcela');
-    expect(code).toHaveValue('P1');
-    await user.clear(code);
-    await user.type(code, 'P1 renombrada');
+    const name = await screen.findByLabelText(
+      'Nombre de la parcela (opcional)',
+    );
+    expect(name).toHaveValue('La loma');
+    await user.clear(name);
+    await user.type(name, 'P1 renombrada');
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
     await vi.waitFor(() =>
@@ -92,7 +100,7 @@ describe('EditPlotScreen — a plot of the server', () => {
       expectedVersion: 4,
       farmId: 'f1',
     });
-    expect(queued?.values.code).toBe('P1 renombrada');
+    expect(queued?.values.name).toBe('P1 renombrada');
   });
 
   it('returns to the screen it was opened from and confirms with a notice', async () => {
@@ -104,7 +112,9 @@ describe('EditPlotScreen — a plot of the server', () => {
     );
     const { user } = renderScreen('pl1');
 
-    const code = await screen.findByLabelText('Código de la parcela');
+    const code = await screen.findByLabelText(
+      'Nombre de la parcela (opcional)',
+    );
     await user.type(code, 'x');
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
@@ -124,7 +134,7 @@ describe('EditPlotScreen — a plot of the server', () => {
     );
     const { user } = renderScreen('pl1');
 
-    await screen.findByLabelText('Código de la parcela');
+    await screen.findByLabelText('Nombre de la parcela (opcional)');
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
     await vi.waitFor(() => expect(router.replace).toHaveBeenCalled());
@@ -159,7 +169,7 @@ describe('EditPlotScreen — a plot waiting on the device', () => {
   it('corrects a plot the server rejected and sends it again', async () => {
     server.use(plotsHandler([]));
     await enqueuePlotCreate(userId, 'pl9', 'f1', {
-      code: 'P9',
+      name: 'P9',
       area_hectares: '3.00',
       vertices: [],
     });
@@ -195,7 +205,7 @@ describe('EditPlotScreen — a plot waiting on the device', () => {
   it('edits a plot that has not reached the server yet', async () => {
     server.use(plotsHandler([]));
     await enqueuePlotCreate(userId, 'pl9', 'f1', {
-      code: 'P9',
+      name: 'P9',
       area_hectares: '3.00',
       vertices: [],
     });
@@ -204,7 +214,9 @@ describe('EditPlotScreen — a plot waiting on the device', () => {
     expect(
       await screen.findByRole('heading', { name: 'Editar parcela' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Código de la parcela')).toHaveValue('P9');
+    expect(
+      screen.getByLabelText('Nombre de la parcela (opcional)'),
+    ).toHaveValue('P9');
   });
 });
 
@@ -215,7 +227,7 @@ describe('EditPlotScreen — correcting what the server sent back', () => {
     errorData: unknown,
   ) => {
     await enqueuePlotCreate(userId, 'pl9', 'f1', {
-      code: 'P9',
+      name: 'P9',
       area_hectares: '3.00',
       vertices: [],
     });
@@ -289,7 +301,7 @@ describe('EditPlotScreen — correcting what the server sent back', () => {
   it('explains a mismatch of areas with the calculated one to use', async () => {
     server.use(plotsHandler([]));
     await enqueuePlotCreate(userId, 'pl8', 'f1', {
-      code: 'P8',
+      name: 'P8',
       area_hectares: '9.00',
       vertices: [
         {

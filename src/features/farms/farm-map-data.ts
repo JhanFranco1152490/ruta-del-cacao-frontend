@@ -7,6 +7,7 @@ import { parseCoordinates } from '@/lib/format/coordinates';
 import { FARM_STATUS_DISPLAY } from './components/farm-status-badge';
 import type { FarmListItem } from './farm-list-item';
 import type { FarmMapPoint, FarmMunicipalityCount } from './map-api';
+import { farmLabel } from '@/lib/format/place-label';
 
 // Las altas que siguen en el dispositivo todavía no existen en el servidor, así que se suman a
 // su municipio. Una edición pendiente ya está contada; si mueve la finca de municipio, el conteo
@@ -48,7 +49,9 @@ export function farmMapPoints(
       const position = parseCoordinates(farm.location);
       if (!position) return [];
       const { label, tone } = FARM_STATUS_DISPLAY[farm.status];
-      return [{ id: farm.id, label: farm.name, detail: label, position, tone }];
+      return [
+        { id: farm.id, label: farmLabel(farm), detail: label, position, tone },
+      ];
     });
   const fromServer = server
     .filter((point) => !localIds.has(point.id))

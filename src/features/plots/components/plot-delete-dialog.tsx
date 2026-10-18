@@ -16,6 +16,7 @@ import { notify } from '@/lib/notify';
 
 import { useChangePlotStatus, useDeletePlot } from '../api';
 import type { KnownPlot } from '../known-plots';
+import { plotLabel } from '@/lib/format/place-label';
 
 const HAS_RECORDS = 'plot_has_records';
 
@@ -112,8 +113,8 @@ export function PlotDeleteDialog({
   );
 
   const action = offerDeactivate
-    ? deactivateAction(plot.code)
-    : deleteAction(plot.code);
+    ? deactivateAction(plotLabel(plot))
+    : deleteAction(plotLabel(plot));
 
   return (
     <StatusChangeDialog
@@ -125,7 +126,7 @@ export function PlotDeleteDialog({
         // Al cerrar se vuelve a ofrecer eliminar: el siguiente intento consulta de nuevo.
         if (!open) setHasRecords(false);
       }}
-      trigger={control ? undefined : deleteAction(plot.code)}
+      trigger={control ? undefined : deleteAction(plotLabel(plot))}
     />
   );
 }

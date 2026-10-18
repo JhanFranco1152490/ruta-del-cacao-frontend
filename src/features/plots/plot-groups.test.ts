@@ -23,6 +23,7 @@ const plot = (
 ): OverviewPlot => ({
   id,
   code: id.toUpperCase(),
+  name: null,
   areaHectares: '1.00',
   isActive: true,
   vertices: [],

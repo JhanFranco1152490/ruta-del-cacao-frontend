@@ -15,6 +15,7 @@ import { notify } from '@/lib/notify';
 
 import type { KnownPlot } from '../known-plots';
 import { useChangePlotStatus } from '../api';
+import { plotLabel } from '@/lib/format/place-label';
 
 const actionFor = (
   target: 'active' | 'inactive',
@@ -77,7 +78,7 @@ export function PlotStatusDialog({
 }) {
   const changeStatus = useChangePlotStatus();
   const target = plot.isActive ? 'inactive' : 'active';
-  const action = actionFor(target, plot.code);
+  const action = actionFor(target, plotLabel(plot));
   const dialog = useConfirmAction(
     async () => {
       await changeStatus.mutateAsync({

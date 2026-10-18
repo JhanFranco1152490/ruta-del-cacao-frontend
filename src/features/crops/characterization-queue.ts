@@ -4,18 +4,16 @@ import {
   type QueueStatus,
 } from '@/lib/offline/db';
 import type { components } from '@/lib/api/schema';
+import { characterizationQueueId } from '@/lib/offline/queue-ids';
 import { enqueue, resubmit } from '@/lib/offline/sync-queue';
 
 import type { CharacterizationFormFields } from './schemas';
 
 export const CHARACTERIZATION_RESOURCE = 'plot-characterizations';
 
-// La cola guarda cada registro por su id sin distinguir el recurso, y el de una parcela ya usa el
-// id de la parcela: la ficha lleva un prefijo para no pisarlo. La parcela sigue siendo su padre.
-const QUEUE_ID_PREFIX = 'plot-characterization:';
-
-export const characterizationQueueId = (plotId: string) =>
-  `${QUEUE_ID_PREFIX}${plotId}`;
+// La parcela sigue siendo el padre de la ficha en la cola; su id la comparte la cosecha, que la
+// espera.
+export { characterizationQueueId };
 
 // Lo que se envía tal cual en el PUT: la ficha completa y la versión que se leyó (null si la
 // parcela no tenía ficha).

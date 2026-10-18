@@ -29,7 +29,7 @@ describe('ActivityChip', () => {
     );
 
     const chip = screen.getByRole('button');
-    expect(chip).toHaveTextContent('P-03');
+    expect(chip).toHaveTextContent('P03');
     expect(chip).toHaveTextContent('Fertilización');
     expect(chip).toHaveTextContent('Programada');
   });
@@ -44,7 +44,7 @@ describe('ActivityChip', () => {
 
     expect(
       screen.getByRole('button', {
-        name: 'Fertilización, parcela P-03, martes 20 de octubre, Retrasada · 2 días',
+        name: 'Fertilización, parcela P03, martes 20 de octubre, Retrasada · 2 días',
       }),
     ).toBeInTheDocument();
   });

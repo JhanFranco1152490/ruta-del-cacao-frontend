@@ -15,6 +15,7 @@ export function FilterRow({
   more,
   moreActiveCount = 0,
   trailing,
+  compact = false,
   children,
 }: {
   // El buscador, que se ve siempre.
@@ -28,6 +29,8 @@ export function FilterRow({
   moreActiveCount?: number;
   // Lo que va al final de la fila en pantallas anchas (un recuento, un cambio de vista).
   trailing?: ReactNode;
+  // Con filtros compactos (40 px), los botones de la fila miden lo mismo.
+  compact?: boolean;
   children?: ReactNode;
 }) {
   const panelId = useId();
@@ -42,7 +45,7 @@ export function FilterRow({
         <Button
           aria-controls={panelId}
           aria-expanded={expanded}
-          className="sm:hidden"
+          className={cn('sm:hidden', compact && 'h-10')}
           onClick={() => setExpanded((value) => !value)}
           size="office"
           type="button"
@@ -72,7 +75,7 @@ export function FilterRow({
         <Button
           aria-controls={moreId}
           aria-expanded={moreOpen}
-          className="max-sm:hidden"
+          className={cn('max-sm:hidden', compact && 'h-10')}
           onClick={() => setMoreOpen((value) => !value)}
           size="office"
           type="button"

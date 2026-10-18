@@ -25,6 +25,7 @@ import { farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
 import { FarmStatusBadge } from './farm-status-badge';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
+import { farmLabel } from '@/lib/format/place-label';
 
 // Lo que una sección de la pantalla necesita de la finca: datos simples y no la respuesta de la
 // API, para que otros dominios (las parcelas) no dependan de su forma.
@@ -44,6 +45,8 @@ export type FarmPlotsContext = {
 
 type FarmView = {
   id: string;
+  // Solo la del servidor: la que espera en la cola todavía no tiene código.
+  code?: string;
   name: string;
   // Solo la finca del servidor: la que está en la cola todavía no trae el nombre de su productor.
   producer?: Farm['producer'];
@@ -175,6 +178,7 @@ function QueuedFarmDetail({
 
 const serverFarmView = (farm: Farm): FarmView => ({
   id: farm.id,
+  code: farm.code,
   name: farm.name,
   producer: farm.producer,
   municipality: farm.municipality.name,
@@ -212,12 +216,15 @@ function DetailLayout({
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
       <Breadcrumb
-        items={[{ label: 'Fincas', href: '/fincas' }, { label: view.name }]}
+        items={[
+          { label: 'Fincas', href: '/fincas' },
+          { label: farmLabel(view) },
+        ]}
       />
       <PageHeader
         compact
         eyebrow="Detalle de la finca"
-        title={view.name}
+        title={farmLabel(view)}
         description={place}
         actions={
           (showInputs || canEdit) && (
