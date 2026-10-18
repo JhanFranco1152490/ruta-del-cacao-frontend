@@ -15,7 +15,7 @@ import {
   farmsHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
-import { resetLocation } from '@/test/router';
+import { resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 vi.mock(
@@ -70,6 +70,8 @@ const facilities = [
   buildFacility({ id: 'd1', name: 'C-01', farm: diviso }),
 ];
 
+const lotHref = (id: string) => `/lotes/detalle?id=${id}`;
+
 let userId: string;
 let facilityRequests: URLSearchParams[];
 
@@ -108,7 +110,7 @@ function renderScreen({
       permissions,
     }),
   );
-  return renderWithProviders(<FacilitiesScreen />, {
+  return renderWithProviders(<FacilitiesScreen lotHref={lotHref} />, {
     queryClient,
     searchParams,
     onUrlUpdate,
@@ -513,6 +515,51 @@ describe('FacilitiesScreen', () => {
     expect(
       await screen.findByText('Cajón C-2 desactivado'),
     ).toBeInTheDocument();
+  });
+
+  it('links the lot that occupies a facility for whoever can see lots', async () => {
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [PERMISSIONS.FACILITIES_VIEW, PERMISSIONS.LOTS_VIEW],
+    });
+
+    await screen.findByRole('table', { name: 'Cajones y marquesinas' });
+    expect(
+      within(rows()[1]).getByRole('link', { name: '000123-F01-P05-261014-1' }),
+    ).toHaveAttribute('href', '/lotes/detalle?id=l1');
+  });
+
+  it('shows the lot without a link for whoever cannot see lots', async () => {
+    renderScreen({ searchParams: '?finca=f1' });
+
+    await screen.findByRole('table', { name: 'Cajones y marquesinas' });
+    expect(rows()[1]).toHaveTextContent('000123-F01-P05-261014-1');
+    expect(within(rows()[1]).queryByRole('link')).toBeNull();
+  });
+
+  it('opens the lot from the menu of an occupied facility', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    router.push.mockClear();
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [PERMISSIONS.FACILITIES_VIEW, PERMISSIONS.LOTS_VIEW],
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Más acciones de C-3' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: 'Ver el lote' }),
+    );
+
+    expect(router.push).toHaveBeenCalledWith('/lotes/detalle?id=l1');
   });
 
   it('disables registering without a connection', async () => {

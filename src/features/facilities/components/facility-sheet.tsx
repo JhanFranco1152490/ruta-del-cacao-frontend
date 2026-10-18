@@ -10,11 +10,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { formatShortDayMonth } from '@/lib/format/dates';
 import { FACILITY_TYPES, facilityStatus } from '@/lib/facility-labels';
 
 import type { PostharvestFacility } from '../api';
 import { capacityText } from '../facility-form';
+import { FacilityOccupiedBy } from './facility-occupied-by';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -30,17 +30,18 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 export function FacilitySheet({
   facility,
   farmName,
+  lotHref,
   actions,
   onClose,
 }: {
   facility: PostharvestFacility;
   farmName: string;
+  lotHref?: (id: string) => string;
   actions?: ReactNode;
   onClose: () => void;
 }) {
   const type = FACILITY_TYPES[facility.facility_type];
   const status = facilityStatus(facility.status, facility.facility_type);
-  const occupiedBy = facility.occupied_by;
   return (
     <Sheet
       onOpenChange={(open) => {
@@ -65,13 +66,12 @@ export function FacilitySheet({
             </StatusBadge>
           </Fact>
           <Fact label="Ocupado por">
-            {occupiedBy ? (
-              <span className="flex flex-col items-end gap-0.5">
-                <span className="font-mono text-xs">{occupiedBy.lot.code}</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  desde el {formatShortDayMonth(occupiedBy.since)}
-                </span>
-              </span>
+            {facility.occupied_by ? (
+              <FacilityOccupiedBy
+                align="end"
+                facility={facility}
+                lotHref={lotHref}
+              />
             ) : (
               'Ninguno'
             )}

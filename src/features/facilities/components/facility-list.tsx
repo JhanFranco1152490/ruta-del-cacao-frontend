@@ -31,6 +31,7 @@ export function FacilityList({
   farm,
   facilities,
   register,
+  lotHref,
   actionsOf,
   offline,
   onAction,
@@ -40,8 +41,10 @@ export function FacilityList({
   facilities: readonly PostharvestFacility[];
   // «Registrar elemento», para la finca sin elementos; falta sin el permiso.
   register: ReactNode;
+  // El enlace a la ficha de un lote; falta para quien no puede ver lotes.
+  lotHref?: (id: string) => string;
   actionsOf: (facility: PostharvestFacility) => FacilityAction[];
-  // Sin conexión las acciones que escriben se ven deshabilitadas.
+  // Sin conexión las acciones se ven deshabilitadas.
   offline: boolean;
   onAction: (kind: FacilityActionKind, facility: PostharvestFacility) => void;
 }) {
@@ -76,6 +79,7 @@ export function FacilityList({
           }
           facility={selected}
           farmName={farmLabel(farm)}
+          lotHref={lotHref}
           onClose={() => state.showElement(null)}
         />
       )}
@@ -100,6 +104,7 @@ export function FacilityList({
         <>
           <FacilityTable
             facilities={shown}
+            lotHref={lotHref}
             onSelect={state.showElement}
             renderActions={(facility) => (
               <FacilityRowMenu

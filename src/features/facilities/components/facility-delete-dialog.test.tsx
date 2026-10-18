@@ -85,6 +85,34 @@ describe('FacilityDeleteDialog', () => {
     expect(patches).toEqual([{ is_active: false, expected_version: 2 }]);
   });
 
+  it('turns into the occupied notice when a lot occupied it meanwhile', async () => {
+    renderDialog(box, () =>
+      HttpResponse.json(
+        {
+          detail: 'Ocupado.',
+          code: 'facility_occupied',
+          fields: {},
+          lot: {
+            id: 'l1',
+            code: '000123-F02-P05-261014-1',
+            status: 'fermenting',
+          },
+        },
+        { status: 409 },
+      ),
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
+
+    expect(
+      await screen.findByText(
+        'No se puede eliminar: lo ocupa el lote 000123-F02-P05-261014-1. Se podrá eliminar cuando termine su proceso.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument();
+  });
+
   it('only explains it when the used facility is already inactive', async () => {
     renderDialog(
       buildFacility({

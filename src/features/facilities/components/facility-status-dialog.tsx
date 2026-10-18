@@ -1,6 +1,7 @@
 'use client';
 
 import { Power, PowerOff } from 'lucide-react';
+import { useState } from 'react';
 
 import {
   type StatusChangeAction,
@@ -10,6 +11,7 @@ import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { facilityName } from '@/lib/facility-labels';
 
 import { type PostharvestFacility, useUpdateFacility } from '../api';
+import { type OccupyingLot, occupyingLotOf } from '../facility-errors';
 import {
   activatedMessage,
   activateText,
@@ -17,6 +19,7 @@ import {
   deactivateText,
   facilityChangeErrorMessage,
 } from '../facility-messages';
+import { FacilityOccupiedDialog } from './facility-occupied-dialog';
 
 const actionFor = (facility: PostharvestFacility): StatusChangeAction => {
   const name = facilityName(facility.facility_type, facility.name);
@@ -42,24 +45,34 @@ const actionFor = (facility: PostharvestFacility): StatusChangeAction => {
 };
 
 // Desactivar se puede deshacer, así que no es una acción destructiva: usa el botón principal.
-// El servidor rechaza desactivar uno que se ocupó después de cargar la lista, y el diálogo lo dice.
+// El servidor rechaza desactivar uno que se ocupó después de cargar la lista: entonces el diálogo
+// pasa a decir qué lote lo ocupa.
 export function FacilityStatusDialog({
   facility,
+  lotHref,
   onClose,
   onDone,
 }: {
   facility: PostharvestFacility;
+  lotHref?: (id: string) => string;
   onClose: () => void;
   onDone: (message: string) => void;
 }) {
   const update = useUpdateFacility();
   const activate = !facility.is_active;
+  const [lot, setLot] = useState<OccupyingLot>();
   const dialog = useConfirmAction(
     async () => {
-      await update.mutateAsync({
-        id: facility.id,
-        body: { is_active: activate, expected_version: facility.version },
-      });
+      try {
+        await update.mutateAsync({
+          id: facility.id,
+          body: { is_active: activate, expected_version: facility.version },
+        });
+      } catch (error) {
+        const occupying = occupyingLotOf(error);
+        if (occupying) setLot(occupying);
+        throw error;
+      }
       onDone(
         activate ? activatedMessage(facility) : deactivatedMessage(facility),
       );
@@ -71,10 +84,22 @@ export function FacilityStatusDialog({
       ),
   );
 
+  const action = actionFor(facility);
+  if (lot) {
+    return (
+      <FacilityOccupiedDialog
+        lot={lot}
+        lotHref={lotHref}
+        onClose={onClose}
+        title={action.title}
+        verb="desactivar"
+      />
+    );
+  }
   return (
     <StatusChangeDialog
       {...dialog}
-      action={actionFor(facility)}
+      action={action}
       onOpenChange={(open) => {
         if (!open && !dialog.isPending) onClose();
       }}

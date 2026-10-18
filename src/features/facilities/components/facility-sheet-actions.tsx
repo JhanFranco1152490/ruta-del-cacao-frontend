@@ -17,12 +17,12 @@ export function FacilitySheetActions({
   onAction: (kind: FacilityActionKind) => void;
 }) {
   return actions.map(({ kind, disabledReason }) => {
-    const { label, Icon, destructive, online } = FACILITY_ACTION_INFO[kind];
+    const { label, Icon, destructive } = FACILITY_ACTION_INFO[kind];
     return (
       <div key={kind}>
         <Button
           className="w-full"
-          disabled={Boolean(disabledReason) || (online && offline)}
+          disabled={Boolean(disabledReason) || offline}
           onClick={() => onAction(kind)}
           size="field"
           variant={destructive ? 'destructive' : 'outline'}

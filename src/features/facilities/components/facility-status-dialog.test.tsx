@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
@@ -79,6 +79,88 @@ describe('FacilityStatusDialog', () => {
       expect(onDone).toHaveBeenCalledWith('Marquesina M-01 activada'),
     );
     expect(bodies).toEqual([{ is_active: true, expected_version: 1 }]);
+  });
+
+  it('turns into the occupied notice when a lot occupied it meanwhile', async () => {
+    const facility = buildFacility({ id: 'c2', name: 'C-02' });
+    server.use(
+      csrfHandler,
+      http.patch(apiUrl('/api/postharvest-facilities/c2'), () =>
+        HttpResponse.json(
+          {
+            detail: 'Ocupado.',
+            code: 'facility_occupied',
+            fields: {},
+            lot: {
+              id: 'l1',
+              code: '000123-F02-P05-261014-1',
+              status: 'fermenting',
+            },
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    const onClose = vi.fn();
+    renderWithProviders(
+      <FacilityStatusDialog
+        facility={facility}
+        lotHref={(id) => `/lotes/detalle?id=${id}`}
+        onClose={onClose}
+        onDone={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Desactivar' }));
+
+    const dialog = await screen.findByRole('dialog', {
+      name: '¿Desactivar el cajón C-02?',
+    });
+    expect(dialog).toHaveTextContent(
+      'No se puede desactivar: lo ocupa el lote 000123-F02-P05-261014-1. Se podrá desactivar cuando termine su proceso.',
+    );
+    expect(
+      within(dialog).getByRole('link', { name: 'Ver el lote' }),
+    ).toHaveAttribute('href', '/lotes/detalle?id=l1');
+    expect(
+      within(dialog).queryByRole('button', { name: 'Desactivar' }),
+    ).toBeNull();
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Cerrar' }),
+    );
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('leaves out the lot link for whoever cannot see lots', async () => {
+    const facility = buildFacility({ id: 'c2', name: 'C-02' });
+    server.use(
+      csrfHandler,
+      http.patch(apiUrl('/api/postharvest-facilities/c2'), () =>
+        HttpResponse.json(
+          {
+            detail: 'Ocupado.',
+            code: 'facility_occupied',
+            fields: {},
+            lot: { id: 'l1', code: 'L-1', status: 'fermenting' },
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    renderWithProviders(
+      <FacilityStatusDialog
+        facility={facility}
+        onClose={vi.fn()}
+        onDone={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Desactivar' }));
+
+    expect(
+      await screen.findByRole('button', { name: 'Cerrar' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Ver el lote' })).toBeNull();
   });
 
   it('stays open with the reason when someone changed it first', async () => {

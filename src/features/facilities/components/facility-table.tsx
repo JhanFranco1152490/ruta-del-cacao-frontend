@@ -15,24 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatShortDayMonth } from '@/lib/format/dates';
 import { FACILITY_TYPES, facilityStatus } from '@/lib/facility-labels';
 
 import type { PostharvestFacility } from '../api';
 import { capacityText } from '../facility-form';
-
-function OccupiedBy({ facility }: { facility: PostharvestFacility }) {
-  if (!facility.occupied_by) return <span aria-label="Sin lote">—</span>;
-  const { lot, since } = facility.occupied_by;
-  return (
-    <span className="flex flex-col items-start gap-0.5">
-      <span className="font-mono text-xs">{lot.code}</span>
-      <span className="text-sm text-muted-foreground">
-        desde el {formatShortDayMonth(since)}
-      </span>
-    </span>
-  );
-}
+import { FacilityOccupiedBy } from './facility-occupied-by';
 
 // En celular cada fila es una tarjeta: el nombre y su estado arriba, el tipo y la capacidad debajo,
 // y el lote que lo ocupa solo si hay uno. Tocarla abre la hoja del elemento; en escritorio la fila
@@ -41,11 +28,13 @@ export function FacilityTable({
   facilities,
   selectedId,
   onSelect,
+  lotHref,
   renderActions,
 }: {
   facilities: readonly PostharvestFacility[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  lotHref?: (id: string) => string;
   // El menú «⋯» de la fila; en celular las acciones van en la hoja.
   renderActions: (facility: PostharvestFacility) => ReactNode;
 }) {
@@ -103,7 +92,7 @@ export function FacilityTable({
               <TableCell
                 className={`max-md:order-5 ${facility.occupied_by ? '' : 'max-md:hidden'}`}
               >
-                <OccupiedBy facility={facility} />
+                <FacilityOccupiedBy facility={facility} lotHref={lotHref} />
               </TableCell>
               <TableCell className="text-right max-md:hidden">
                 {renderActions(facility)}

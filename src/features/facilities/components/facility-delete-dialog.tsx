@@ -16,12 +16,17 @@ import {
   useDeleteFacility,
   useUpdateFacility,
 } from '../api';
-import { FACILITY_ERROR } from '../facility-errors';
+import {
+  FACILITY_ERROR,
+  type OccupyingLot,
+  occupyingLotOf,
+} from '../facility-errors';
 import {
   deactivatedMessage,
   FACILITY_DELETED_MESSAGE,
   facilityChangeErrorMessage,
 } from '../facility-messages';
+import { FacilityOccupiedDialog } from './facility-occupied-dialog';
 
 const deleteAction = (name: string): StatusChangeAction => ({
   trigger: 'Eliminar',
@@ -58,42 +63,55 @@ const deactivateInstead = (
 // servidor lo rechaza y el mismo diálogo ofrece desactivarlo.
 export function FacilityDeleteDialog({
   facility,
+  lotHref,
   onClose,
   onDone,
 }: {
   facility: PostharvestFacility;
+  lotHref?: (id: string) => string;
   onClose: () => void;
   onDone: (message: string) => void;
 }) {
   const remove = useDeleteFacility();
   const update = useUpdateFacility();
   const [hasRecords, setHasRecords] = useState(false);
+  // Un lote lo ocupó mientras tanto, y qué se intentaba hacer cuando el servidor lo dijo.
+  const [occupied, setOccupied] = useState<{
+    lot: OccupyingLot;
+    verb: 'desactivar' | 'eliminar';
+  }>();
   const offerDeactivate = hasRecords && facility.is_active;
   const name = facilityName(facility.facility_type, facility.name);
+  const verb = offerDeactivate ? 'desactivar' : 'eliminar';
 
   const dialog = useConfirmAction(
     async () => {
-      if (offerDeactivate) {
-        // El rechazo no cambió el elemento: la versión leída sigue siendo la vigente.
-        await update.mutateAsync({
-          id: facility.id,
-          body: { is_active: false, expected_version: facility.version },
-        });
-        onDone(deactivatedMessage(facility));
-        return;
-      }
       try {
-        await remove.mutateAsync({
-          id: facility.id,
-          expectedVersion: facility.version,
-        });
+        if (offerDeactivate) {
+          // El rechazo no cambió el elemento: la versión leída sigue siendo la vigente.
+          await update.mutateAsync({
+            id: facility.id,
+            body: { is_active: false, expected_version: facility.version },
+          });
+        } else {
+          await remove.mutateAsync({
+            id: facility.id,
+            expectedVersion: facility.version,
+          });
+        }
       } catch (error) {
         if (isApiError(error) && error.code === FACILITY_ERROR.hasRecords) {
           setHasRecords(true);
         }
+        const lot = occupyingLotOf(error);
+        if (lot) setOccupied({ lot, verb });
         throw error;
       }
-      onDone(FACILITY_DELETED_MESSAGE);
+      onDone(
+        offerDeactivate
+          ? deactivatedMessage(facility)
+          : FACILITY_DELETED_MESSAGE,
+      );
     },
     (error) =>
       isApiError(error) && error.code === FACILITY_ERROR.hasRecords
@@ -104,6 +122,17 @@ export function FacilityDeleteDialog({
           ),
   );
 
+  if (occupied) {
+    return (
+      <FacilityOccupiedDialog
+        lot={occupied.lot}
+        lotHref={lotHref}
+        onClose={onClose}
+        title={`¿${occupied.verb === 'eliminar' ? 'Eliminar' : 'Desactivar'} ${name}?`}
+        verb={occupied.verb}
+      />
+    );
+  }
   return (
     <StatusChangeDialog
       {...dialog}

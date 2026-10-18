@@ -5,7 +5,7 @@ import {
   type FacilityType,
 } from '@/lib/facility-labels';
 
-import { FACILITY_ERROR, occupyingLotOf } from './facility-errors';
+import { FACILITY_ERROR } from './facility-errors';
 
 type Named = { facility_type: FacilityType; name: string };
 
@@ -31,12 +31,16 @@ export const deactivateText = ({ facility_type }: Named) =>
 export const activateText = ({ facility_type }: Named) =>
   `Quedará Disponible y se ofrecerá de nuevo al iniciar ${FACILITY_TYPES[facility_type].processes}.`;
 
+// Por qué no se hizo lo pedido sobre un elemento que un lote ocupa.
+export const occupiedText = (
+  lotCode: string,
+  verb: 'desactivar' | 'eliminar',
+) =>
+  `No se puede ${verb}: lo ocupa el lote ${lotCode}. Se podrá ${verb} cuando termine su proceso.`;
+
 // Lo que dice un diálogo de activar, desactivar o eliminar cuando el servidor rechaza el cambio.
+// Uno ocupado no llega aquí: el diálogo cambia al aviso de ocupado.
 export function facilityChangeErrorMessage(error: unknown, fallback: string) {
-  const lot = occupyingLotOf(error);
-  if (lot) {
-    return `No se puede desactivar: lo ocupa el lote ${lot.code}. Se podrá desactivar cuando termine su proceso.`;
-  }
   if (isApiError(error)) {
     if (error.code === FACILITY_ERROR.staleVersion) {
       return 'Otra persona cambió este elemento mientras tanto. Cierra y vuelve a intentarlo con sus datos actuales.';

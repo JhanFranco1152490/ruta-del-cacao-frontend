@@ -8,6 +8,7 @@ import {
   deactivatedMessage,
   deactivateText,
   facilityChangeErrorMessage,
+  occupiedText,
 } from './facility-messages';
 
 const box = { facility_type: 'fermentation_box', name: 'C-01' } as const;
@@ -50,8 +51,19 @@ describe('the confirmation texts', () => {
   });
 });
 
+describe('occupiedText', () => {
+  it('says which lot occupies it and when the action will be possible', () => {
+    expect(occupiedText('000123-F02-P05-261014-1', 'desactivar')).toBe(
+      'No se puede desactivar: lo ocupa el lote 000123-F02-P05-261014-1. Se podrá desactivar cuando termine su proceso.',
+    );
+    expect(occupiedText('000123-F02-P05-261014-1', 'eliminar')).toBe(
+      'No se puede eliminar: lo ocupa el lote 000123-F02-P05-261014-1. Se podrá eliminar cuando termine su proceso.',
+    );
+  });
+});
+
 describe('facilityChangeErrorMessage', () => {
-  it('explains a stale version, a facility that no longer exists and an occupied one', () => {
+  it('explains a stale version and a facility that no longer exists', () => {
     expect(
       facilityChangeErrorMessage(apiError(409, 'stale_version'), 'Falló.'),
     ).toBe(
@@ -60,20 +72,6 @@ describe('facilityChangeErrorMessage', () => {
     expect(
       facilityChangeErrorMessage(apiError(404, 'not_found'), 'Falló.'),
     ).toBe('Este elemento ya no existe.');
-    expect(
-      facilityChangeErrorMessage(
-        apiError(409, 'facility_occupied', {
-          lot: {
-            id: 'l1',
-            code: '000123-F02-P05-261014-1',
-            status: 'fermenting',
-          },
-        }),
-        'Falló.',
-      ),
-    ).toBe(
-      'No se puede desactivar: lo ocupa el lote 000123-F02-P05-261014-1. Se podrá desactivar cuando termine su proceso.',
-    );
   });
 
   it('falls back to the message it receives without a response', () => {

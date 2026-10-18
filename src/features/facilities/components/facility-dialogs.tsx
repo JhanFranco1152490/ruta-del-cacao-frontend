@@ -20,6 +20,7 @@ export function FacilityDialogs({
   farms,
   farmId,
   known,
+  lotHref,
   onClose,
   onShowElement,
 }: {
@@ -27,6 +28,8 @@ export function FacilityDialogs({
   farms: readonly FarmOption[];
   farmId: string;
   known: readonly PostharvestFacility[];
+  // El enlace a la ficha de un lote; falta para quien no puede ver lotes.
+  lotHref?: (id: string) => string;
   onClose: () => void;
   onShowElement: (id: string) => void;
 }) {
@@ -57,6 +60,7 @@ export function FacilityDialogs({
     return (
       <FacilityStatusDialog
         facility={pending.facility}
+        lotHref={lotHref}
         onClose={onClose}
         onDone={onSaved}
       />
@@ -66,6 +70,7 @@ export function FacilityDialogs({
     return (
       <FacilityDeleteDialog
         facility={pending.facility}
+        lotHref={lotHref}
         onClose={onClose}
         onDone={onSaved}
       />
