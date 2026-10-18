@@ -1,7 +1,7 @@
 import { StatusBadge } from '@/components/status-badge';
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 
-import type { ActivityOfDay } from '../activity-days';
+import { type ActivityOfDay, isAwaitingSync } from '../activity-days';
 import { activityBadge, activityTitle } from '../activity-labels';
 import { useAssigneeNote } from '../assignees';
 
@@ -28,7 +28,7 @@ export function ActivityCard({
 
   return (
     <button
-      className={`flex w-full cursor-pointer flex-col gap-2 rounded-xl border-l-[5px] bg-card px-4 py-3 text-left shadow-card hover:bg-muted sm:flex-row sm:items-center sm:justify-between ${BORDER_BY_TONE[tone]} ${item.completion === 'pending' ? 'border-dashed' : ''} ${FOCUS_OUTLINE_CLASS}`}
+      className={`flex w-full cursor-pointer flex-col gap-2 rounded-xl border-l-[5px] bg-card px-4 py-3 text-left shadow-card hover:bg-muted sm:flex-row sm:items-center sm:justify-between ${BORDER_BY_TONE[tone]} ${isAwaitingSync(item) ? 'border-dashed' : ''} ${FOCUS_OUTLINE_CLASS}`}
       onClick={onSelect}
       type="button"
     >

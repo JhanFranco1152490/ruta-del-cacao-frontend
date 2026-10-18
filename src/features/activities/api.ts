@@ -10,13 +10,11 @@ import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { monthBounds, shiftDays, todayInBogota } from '@/lib/format/dates';
-import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
+import { readThroughCache } from '@/lib/offline/cached-read';
 
 import { PENDING_FETCH_DAYS } from './activity-pending';
 import {
   activityMonthCacheKey,
-  assigneesCacheKey,
-  findSavedActivity,
   offlineWindowMonths,
   pendingCacheKey,
 } from './activity-cache';
@@ -24,9 +22,6 @@ import {
 type Schemas = components['schemas'];
 export type AgriculturalActivity = Schemas['AgriculturalActivity'];
 export type Assignee = Schemas['Assignee'];
-// Una cuenta de la lista de responsables: con la finca en la que trabaja (nula en el Productor,
-// que vale para todas) y si quien pregunta puede asignarle una labor.
-export type AssigneeOption = Schemas['AssigneeOption'];
 export type UsedInput = Schemas['UsedInputOutput'];
 export type ActivityCreateRequest = Schemas['ActivityCreateRequest'];
 export type ActivityUpdateRequest = Schemas['PatchedActivityUpdateRequest'];
@@ -165,78 +160,25 @@ export const usePendingActivities = (
     networkMode: 'offlineFirst',
   });
 
-export const fetchActivity = (id: string, signal?: AbortSignal) =>
-  apiFetch<AgriculturalActivity>(`/api/agricultural-activities/${id}`, {
-    signal,
-  });
-
-// Sin respuesta del servidor (sin red) la actividad sale de los meses guardados, con la fecha de
-// esa copia. Un error de la API (ya no existe, sin permiso) se muestra como siempre.
-async function readActivity(
-  userId: string,
-  id: string,
-  signal?: AbortSignal,
-): Promise<CachedRead<AgriculturalActivity>> {
-  try {
-    return { data: await fetchActivity(id, signal) };
-  } catch (error) {
-    if (isApiError(error)) throw error;
-    const saved = await findSavedActivity(userId, id).catch(() => null);
-    if (!saved) throw error;
-    return saved;
-  }
-}
-
-// Una actividad sola: la que se va a registrar como realizada, también sin conexión.
-export const useActivity = (userId: string | undefined, id: string) =>
-  useQuery({
-    queryKey: queryKeys.agriculturalActivities.detail(id),
-    queryFn: ({ signal }) => readActivity(userId!, id, signal),
-    enabled: !!userId && !!id,
-    networkMode: 'offlineFirst',
-  });
-
-export async function fetchActivityAssignees(
-  { producer }: { producer: string | null },
-  signal?: AbortSignal,
-): Promise<AssigneeOption[]> {
-  const suffix = producer ? `?${new URLSearchParams({ producer })}` : '';
-  const { results } = await apiFetch<Schemas['AssigneeList']>(
-    `/api/agricultural-activities/assignees${suffix}`,
-    { signal },
-  );
-  return results;
-}
-
-// Las cuentas del productor, activas e inactivas: las inactivas siguen apareciendo en sus
-// actividades, pero el formulario solo ofrece las activas. Con copia en el dispositivo.
-export const useActivityAssignees = (
-  userId: string | undefined,
-  producer: string | null,
-  { enabled = true } = {},
-) =>
-  useQuery({
-    queryKey: queryKeys.agriculturalActivities.assignees(producer),
-    queryFn: ({ signal }) =>
-      readThroughCache(userId!, assigneesCacheKey(producer), () =>
-        fetchActivityAssignees({ producer }, signal),
-      ),
-    enabled: enabled && !!userId,
-    networkMode: 'offlineFirst',
-  });
-
 export const postActivity = (body: ActivityCreateRequest) =>
   apiFetch<AgriculturalActivity>('/api/agricultural-activities', {
     method: 'POST',
     body,
   });
 
+// La bandeja de notificaciones muestra cada actividad como está hoy: realizada, reprogramada o ya
+// sin ella. Se vuelve a pedir junto con las actividades.
 function useInvalidateActivities() {
   const queryClient = useQueryClient();
   return () =>
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.agriculturalActivities.all(),
-    });
+    Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.agriculturalActivities.all(),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.notifications.all(),
+      }),
+    ]);
 }
 
 // Programar es solo en línea: sin red debe fallar en el acto con un aviso, y no quedar en pausa

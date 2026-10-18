@@ -2,7 +2,7 @@ import { TONE_ICONS } from '@/components/status-badge';
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 import { formatWeekdayDate } from '@/lib/format/dates';
 
-import type { ActivityOfDay } from '../activity-days';
+import { type ActivityOfDay, isAwaitingSync } from '../activity-days';
 import { activityBadge, activityTitle } from '../activity-labels';
 import { ActivityTypeIcon } from '../activity-type-icons';
 
@@ -35,7 +35,7 @@ export function ActivityChip({
   return (
     <button
       aria-label={`${title}, parcela ${activity.plot.code}, ${formatWeekdayDate(activity.scheduled_date)}, ${text}`}
-      className={`flex w-full cursor-pointer flex-col gap-0.5 rounded-md border-l-4 px-1.5 py-1 text-left text-xs text-selva hover:brightness-95 ${TONE_CLASSES[tone]} ${item.completion === 'pending' ? 'border-dashed' : ''} ${FOCUS_OUTLINE_CLASS}`}
+      className={`flex w-full cursor-pointer flex-col gap-0.5 rounded-md border-l-4 px-1.5 py-1 text-left text-xs text-selva hover:brightness-95 ${TONE_CLASSES[tone]} ${isAwaitingSync(item) ? 'border-dashed' : ''} ${FOCUS_OUTLINE_CLASS}`}
       onClick={onSelect}
       tabIndex={tabIndex}
       type="button"

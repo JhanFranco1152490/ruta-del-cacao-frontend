@@ -23,7 +23,7 @@ describe('activityActions', () => {
         edit: true,
         complete: true,
         remove: true,
-        awaitsHealthModule: false,
+        recordMonitoring: false,
       });
     }
   });
@@ -33,7 +33,7 @@ describe('activityActions', () => {
       edit: false,
       complete: true,
       remove: false,
-      awaitsHealthModule: false,
+      recordMonitoring: false,
     });
   });
 
@@ -42,7 +42,7 @@ describe('activityActions', () => {
       edit: false,
       complete: false,
       remove: false,
-      awaitsHealthModule: false,
+      recordMonitoring: false,
     });
   });
 
@@ -79,31 +79,30 @@ describe('activityActions', () => {
       edit: false,
       complete: false,
       remove: false,
-      awaitsHealthModule: false,
+      recordMonitoring: false,
     });
   });
 
-  it('tells who could complete a monitoring that it waits for the health module', () => {
+  it('offers who could complete a monitoring to record its result instead', () => {
     expect(
       activityActions('overdue', 'phytosanitary_monitoring', ALL),
-    ).toMatchObject({ complete: false, awaitsHealthModule: true });
+    ).toMatchObject({ complete: false, recordMonitoring: true });
     // Editarlo y eliminarlo sí se puede, como cualquier otra labor.
     expect(
       activityActions('scheduled', 'phytosanitary_monitoring', ALL),
-    ).toMatchObject({ edit: true, remove: true, awaitsHealthModule: true });
+    ).toMatchObject({ edit: true, remove: true, recordMonitoring: true });
   });
 
-  it('says nothing about the health module to who cannot complete or when it is done', () => {
+  it('does not offer the result to who cannot complete or when it is done', () => {
     expect(
       activityActions(
         'scheduled',
         'phytosanitary_monitoring',
         only(PERMISSIONS.ACTIVITIES_CHANGE),
-      ).awaitsHealthModule,
+      ).recordMonitoring,
     ).toBe(false);
     expect(
-      activityActions('done', 'phytosanitary_monitoring', ALL)
-        .awaitsHealthModule,
+      activityActions('done', 'phytosanitary_monitoring', ALL).recordMonitoring,
     ).toBe(false);
   });
 
@@ -114,7 +113,7 @@ describe('activityActions', () => {
       edit: false,
       complete: false,
       remove: false,
-      awaitsHealthModule: false,
+      recordMonitoring: false,
     });
   });
 });
@@ -157,10 +156,10 @@ describe('who records the completion', () => {
     ).toBe(true);
   });
 
-  it('does not tell a worker about the health module of an activity of others', () => {
+  it('does not offer a worker the result of a monitoring of others', () => {
     expect(
       activityActions('scheduled', 'phytosanitary_monitoring', operator, 'u2')
-        .awaitsHealthModule,
+        .recordMonitoring,
     ).toBe(false);
   });
 });

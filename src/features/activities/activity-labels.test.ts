@@ -5,59 +5,15 @@ import {
   ACTIVITY_TYPE_OPTIONS,
   activityBadge,
   activityStateText,
-  activityTitle,
-  activityTypeLabel,
   SCHEDULABLE_ACTIVITY_TYPE_OPTIONS,
 } from './activity-labels';
 
-describe('activity types', () => {
-  it('names every type in Spanish', () => {
-    expect(ACTIVITY_TYPE_OPTIONS.map(({ label }) => label)).toEqual([
-      'Poda',
-      'Fertilización',
-      'Riego',
-      'Control de malezas',
-      'Monitoreo fitosanitario',
-      'Control fitosanitario',
-      'Limpieza o encalado',
-      'Inventario',
-      'Otro',
-    ]);
-    expect(activityTypeLabel('weed_control')).toBe('Control de malezas');
-  });
-
-  it('shows a type this version does not know as it arrives', () => {
-    expect(activityTypeLabel('grafting')).toBe('grafting');
-  });
-
-  it('offers every type but the phytosanitary control to schedule', () => {
+describe('schedulable activity types', () => {
+  it('offers the labors, not the two phytosanitary ones, which have their own way in', () => {
     const values = SCHEDULABLE_ACTIVITY_TYPE_OPTIONS.map(({ value }) => value);
-    expect(values).toHaveLength(ACTIVITY_TYPE_OPTIONS.length - 1);
+    expect(values).toHaveLength(ACTIVITY_TYPE_OPTIONS.length - 2);
     expect(values).not.toContain('phytosanitary_control');
-    expect(values).toContain('phytosanitary_monitoring');
-  });
-});
-
-describe('activityTitle', () => {
-  it('is the label of the type', () => {
-    expect(
-      activityTitle({
-        activity_type: 'fertilization',
-        other_description: null,
-      }),
-    ).toBe('Fertilización');
-  });
-
-  it('is the description when the type is other', () => {
-    expect(
-      activityTitle({ activity_type: 'other', other_description: 'Resiembra' }),
-    ).toBe('Resiembra');
-  });
-
-  it('falls back to the label when an other has no description', () => {
-    expect(
-      activityTitle({ activity_type: 'other', other_description: null }),
-    ).toBe('Otro');
+    expect(values).not.toContain('phytosanitary_monitoring');
   });
 });
 
@@ -99,6 +55,31 @@ describe('activityBadge', () => {
     expect(
       activityBadge({ state: 'delayed', daysLate: 2, completion: 'pending' }),
     ).toEqual({ tone: 'info', text: 'Realizada · pendiente de enviar' });
+  });
+
+  it('says how many detections of a done monitoring have no control', () => {
+    const withoutControl = (count: number) => ({
+      state: 'done' as const,
+      daysLate: 0,
+      activity: { monitoring: { detections_without_control: count } },
+    });
+    expect(activityBadge(withoutControl(1))).toEqual({
+      tone: 'warn',
+      text: 'Realizada · 1 detección sin control',
+    });
+    expect(activityBadge(withoutControl(2)).text).toBe(
+      'Realizada · 2 detecciones sin control',
+    );
+    expect(activityBadge(withoutControl(0))).toEqual({
+      tone: 'ok',
+      text: 'Realizada',
+    });
+  });
+
+  it('says that an activity created in the device has not reached the server', () => {
+    expect(
+      activityBadge({ state: 'scheduled', daysLate: 0, queued: 'pending' }),
+    ).toEqual({ tone: 'info', text: 'Programada · pendiente de enviar' });
   });
 
   it('keeps the state of the activity when the server rejected the completion', () => {

@@ -57,6 +57,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agricultural-activities/{id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las fotos de un monitoreo o un control, de la primera a la última. Uno que no se ha realizado no tiene. Otra actividad responde 422 `evidence_not_allowed`. */
+        get: operations["agricultural_activities_evidence_list"];
+        put?: never;
+        /** @description Adjunta una foto (JPG o PNG, revisado por el contenido; hasta 5 MB y 5 por registro) a un monitoreo o a un control realizados, en `multipart/form-data`. La adjunta quien puede registrar ese monitoreo o control. `id` lo genera el dispositivo: la misma foto reenviada responde 200; un `id` de otra foto, 400. Errores propios: 409 `evidence_requires_done` y `evidence_limit_reached`, 413 `evidence_too_large`, 415 `evidence_format_not_allowed` y 422 `evidence_not_allowed`. */
+        post: operations["agricultural_activities_evidence_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agricultural-activities/{id}/monitoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registra el resultado de un monitoreo (unidades evaluadas y, por cada plaga o enfermedad, las afectadas; o sin presencia) y lo marca realizado. La incidencia la calcula el servidor. Lo registra el responsable, quien programa labores en la finca o el Productor (403 si no). El mismo resultado reenviado responde 200 sin cambios; otro resultado sobre uno ya registrado, 409 `activity_already_done`. Una plaga inexistente es 400 en `detections`, no 404; una inactiva, 422 `pest_disease_inactive` con las afectadas en `pest_disease_ids`. Otra actividad responde 422 `not_a_monitoring`. */
+        post: operations["agricultural_activities_monitoring_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agricultural-activities/assignees": {
         parameters: {
             query?: never;
@@ -81,7 +116,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Las actividades sin realizar con fecha programada hasta `through`, incluida, sin fecha mínima ni paginar: una vencida sigue pendiente mientras no se registre. `state` y `days_late` se calculan con la fecha de hoy en Bogotá. */
+        /** @description Las actividades sin realizar con fecha programada hasta `through`, incluida, sin fecha mínima ni paginar: una vencida sigue pendiente mientras no se registre. `activity_type` deja solo las de un tipo. `state` y `days_late` se calculan con la fecha de hoy en Bogotá. */
         get: operations["agricultural_activities_pending_retrieve"];
         put?: never;
         post?: never;
@@ -339,6 +374,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/evidence/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Elimina una foto equivocada. La elimina quien la subió, quien programa labores en la finca (el Capataz/Operario o un rol propio con ese permiso) o el Productor (403 si no); el historial registra quién la eliminó. */
+        delete: operations["evidence_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evidence/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El archivo de una foto, después de revisar que quien la pide alcance su finca. Nunca hay una dirección pública: 404 si es de otra finca o de otro productor. */
+        get: operations["evidence_file_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/farms": {
         parameters: {
             query?: never;
@@ -443,6 +512,176 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las notificaciones de la cuenta, sin las eliminadas y solo de lo que alcanza hoy: primero las críticas sin leer y después de la más reciente a la más antigua. `activity` viene como está hoy, con la forma del calendario. `unread=true` deja solo las no leídas. */
+        get: operations["notifications_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Elimina la notificación de la bandeja. El aviso no vuelve aunque su condición siga: la siguiente evaluación sabe que ya se dio. Si ya estaba eliminada, no cambia nada. */
+        delete: operations["notifications_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Marca la notificación como leída. Si ya lo estaba, conserva la hora de la primera lectura. Una eliminada, ajena o de una finca que la cuenta ya no alcanza es 404. */
+        post: operations["notifications_read_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Deshace la eliminación: la notificación vuelve a la bandeja. */
+        post: operations["notifications_restore_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/dismiss-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Elimina todas las leídas que la cuenta ve. Dice cuántas. */
+        post: operations["notifications_dismiss_read_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/push-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La llave pública con la que el navegador crea la suscripción de push. Nula si las push no están configuradas: entonces la app no ofrece activarlas. */
+        get: operations["notifications_push_config_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Activa las push en un dispositivo con la suscripción que entrega el navegador. Solo se aceptan los servicios de push de los navegadores. Repetirla actualiza las llaves (200); si el dispositivo era de otra cuenta, pasa a esta. */
+        post: operations["notifications_push_subscriptions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/push-subscriptions/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apaga las push en un dispositivo: al desactivarlas y al cerrar sesión. Va por POST con la dirección en el cuerpo: un DELETE no lleva cuerpo, y en la URL la dirección quedaría en los registros. 204 también si no existía. */
+        post: operations["notifications_push_subscriptions_remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Marca como leídas todas las no leídas que la cuenta ve. Dice cuántas. */
+        post: operations["notifications_read_all_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cuántas notificaciones sin leer ve la cuenta, para el número de la campana. */
+        get: operations["notifications_unread_count_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/permissions": {
         parameters: {
             query?: never;
@@ -451,6 +690,109 @@ export interface paths {
             cookie?: never;
         };
         get: operations["permissions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pests-diseases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El catálogo de plagas y enfermedades, ordenado por nombre y sin paginar: el formulario del monitoreo las necesita todas, también sin conexión. Basta con tener sesión. */
+        get: operations["pests_diseases_list"];
+        put?: never;
+        /** @description Registra una plaga o enfermedad. Un nombre que ya existe, aunque se escriba distinto (`Mazorca negra` y `mazorca-negra`), responde 409 `duplicate_pest_disease_name`. */
+        post: operations["pests_diseases_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pests-diseases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Edita sus datos, o activa y desactiva con `is_active`. Desactivar no cambia los monitoreos que ya la usan: solo deja de ofrecerse en los nuevos. `scientific_name` se quita con `null`. */
+        patch: operations["pests_diseases_partial_update"];
+        trace?: never;
+    };
+    "/api/phytosanitary-detections/{id}/controls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Crea un control desde una detección: programado (`mode: scheduled`, con fecha desde hoy, responsable y, si se sabe, qué se va a hacer y el insumo previsto, que no descuenta) o ya realizado (`mode: done`, con fecha no futura ni anterior al monitoreo, qué se hizo y los insumos, que se descuentan del inventario de la finca). Programar pide el permiso de programar; registrarlo realizado, además el de registrar la realización. `id` lo genera el dispositivo: el mismo control reenviado responde 200; un `id` que ya usa otra actividad es 400 en `fields.id`. Un monitoreo sin presencia no tiene detecciones a las que pedir un control. */
+        post: operations["phytosanitary_detections_controls_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/phytosanitary-detections/{id}/no-control-needed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Decide que una detección no requiere control: sale del aviso de las que esperan uno y queda registrado quién lo decidió. Repetirlo responde 204 sin cambiar quién lo decidió primero. Pide el permiso de programar. */
+        post: operations["phytosanitary_detections_no_control_needed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/phytosanitary-detections/without-control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las detecciones en que alguien pidió que le programen un control y nadie lo ha atendido (ni programado ni marcado como que no lo requiere), del monitoreo más antiguo al más reciente, en las fincas que alcanza la cuenta. Una detección con «Ninguno por ahora» no está: no se pidió nada. Sin fecha mínima ni paginar. Pide el permiso de programar. La cuenta técnica puede acotar con `producer`. */
+        get: operations["phytosanitary_detections_without_control_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/phytosanitary-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los monitoreos realizados de todo lo que alcanza la cuenta, del más reciente al más antiguo, con la forma de la actividad y su `monitoring`. `farm` y `plot` los acotan: una finca o una parcela que la cuenta no alcanza es 404. `from` y `to` filtran por la fecha de realización; `pest_disease` u `other=true` dejan solo los monitoreos donde se detectó, con esa detección. Con `plot`, `summary` trae por plaga (y por cada texto de Otra) la última incidencia y la anterior del mismo tipo de muestreo, calculadas con todas las páginas; sin `plot` viene vacío, porque comparar parcelas distintas no dice si una plaga sube o baja. `producer` solo lo usa la cuenta técnica. */
+        get: operations["phytosanitary_history_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -843,6 +1185,16 @@ export interface components {
         ActivityList: {
             results: components["schemas"]["AgriculturalActivity"][];
         };
+        ActivityMonitoring: {
+            readonly sampling_unit: components["schemas"]["SamplingUnitEnum"];
+            readonly evaluated_units: number;
+            readonly sampling_method: (components["schemas"]["SamplingMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly notes: string | null;
+            readonly no_presence: boolean;
+            readonly detections: components["schemas"]["DetectionOutput"][];
+            readonly detections_without_control: number;
+            readonly evidence_count: number;
+        };
         ActivityPlot: {
             /** Format: uuid */
             id: string;
@@ -894,6 +1246,8 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+            readonly monitoring: components["schemas"]["ActivityMonitoring"] | null;
+            readonly control_of: components["schemas"]["ControlOf"] | null;
         };
         AgriculturalInput: {
             /** Format: uuid */
@@ -998,6 +1352,65 @@ export interface components {
             /** Format: date-time */
             captured_at?: string | null;
         };
+        ControlInputRequest: {
+            /** Format: uuid */
+            input_id: string;
+            /** Format: decimal */
+            quantity: string;
+        };
+        /**
+         * @description * `fruit_removal` - Remoción de frutos enfermos
+         *     * `sanitary_pruning` - Poda sanitaria
+         *     * `product_application` - Aplicación de producto
+         *     * `other` - Otro
+         * @enum {string}
+         */
+        ControlMethodEnum: "fruit_removal" | "sanitary_pruning" | "product_application" | "other";
+        /**
+         * @description * `scheduled` - Programado
+         *     * `done` - Realizado
+         * @enum {string}
+         */
+        ControlModeEnum: "scheduled" | "done";
+        ControlOf: {
+            /** Format: uuid */
+            detection_id: string;
+            /** Format: uuid */
+            monitoring_id: string;
+            pest_disease: components["schemas"]["PestDiseaseRef"] | null;
+            other_description: string | null;
+            /** Format: decimal */
+            incidence: string;
+            sampling_unit: components["schemas"]["SamplingUnitEnum"];
+            /** Format: date */
+            monitoring_done_date: string;
+            method: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+            method_description: string | null;
+            planned_input: components["schemas"]["PlannedInput"] | null;
+            readonly evidence_count: number;
+        };
+        ControlRequest: {
+            /** Format: uuid */
+            id: string;
+            mode: components["schemas"]["ControlModeEnum"];
+            method?: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+            method_description?: string | null;
+            /** Format: date */
+            scheduled_date?: string;
+            /** Format: uuid */
+            assignee_id?: string;
+            /** Format: uuid */
+            planned_input_id?: string | null;
+            inputs?: components["schemas"]["ControlInputRequest"][];
+        };
+        ControlRequestInfo: {
+            requested_by: components["schemas"]["Person"] | null;
+            /** Format: date-time */
+            requested_at: string;
+            dismissed_by: components["schemas"]["Person"] | null;
+            /** Format: date-time */
+            dismissed_at: string | null;
+        };
         CsrfToken: {
             csrf_token: string;
         };
@@ -1008,6 +1421,60 @@ export interface components {
         Detail: {
             detail: string;
         };
+        DetectionControlRequest: {
+            /** Format: uuid */
+            id: string;
+            mode: components["schemas"]["ControlModeEnum"];
+            method?: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+            method_description?: string | null;
+            /** Format: date */
+            scheduled_date?: string;
+            /** Format: uuid */
+            assignee_id?: string;
+            /** Format: uuid */
+            planned_input_id?: string | null;
+            inputs?: components["schemas"]["ControlInputRequest"][];
+            /** Format: date */
+            done_date?: string;
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
+        DetectionControlRow: {
+            /** Format: uuid */
+            id: string;
+            method: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+            method_description: string | null;
+            /** Format: date */
+            scheduled_date: string;
+            state: string;
+            /** Format: date */
+            done_date: string | null;
+        };
+        DetectionOutput: {
+            /** Format: uuid */
+            readonly id: string;
+            pest_disease: components["schemas"]["PestDiseaseRef"] | null;
+            readonly other_description: string | null;
+            readonly affected_units: number;
+            /** Format: decimal */
+            readonly incidence: string;
+            readonly controls: components["schemas"]["DetectionControlRow"][];
+            readonly control_request: components["schemas"]["ControlRequestInfo"] | null;
+        };
+        DetectionWriteRequest: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            pest_disease_id?: string | null;
+            other_description?: string | null;
+            affected_units: number;
+            control?: components["schemas"]["ControlRequest"] | null;
+            /** @default false */
+            control_requested: boolean;
+        };
+        DismissedCount: {
+            dismissed: number;
+        };
         /**
          * @description * `CC` - Cédula de ciudadanía
          *     * `CE` - Cédula de extranjería
@@ -1016,6 +1483,29 @@ export interface components {
          * @enum {string}
          */
         DocumentTypeEnum: "CC" | "CE" | "PPT" | "NIT";
+        Evidence: {
+            /** Format: uuid */
+            id: string;
+            file_name: string;
+            content_type: string;
+            size: number;
+            uploaded_by: components["schemas"]["Person"] | null;
+            /** Format: date-time */
+            uploaded_at: string;
+            /** Format: date-time */
+            captured_at: string | null;
+        };
+        EvidenceList: {
+            results: components["schemas"]["Evidence"][];
+        };
+        EvidenceUploadRequest: {
+            /** Format: uuid */
+            id: string;
+            /** Format: binary */
+            file: string;
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
         ExistingInput: {
             /** Format: uuid */
             id: string;
@@ -1207,6 +1697,19 @@ export interface components {
          * @enum {string}
          */
         ManagementSystemEnum: "conventional" | "organic" | "in_transition";
+        MonitoringResultRequest: {
+            /** Format: date */
+            done_date: string;
+            sampling_unit: components["schemas"]["SamplingUnitEnum"];
+            evaluated_units: number;
+            sampling_method?: (components["schemas"]["SamplingMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+            notes?: string | null;
+            /** @default false */
+            no_presence: boolean;
+            detections?: components["schemas"]["DetectionWriteRequest"][];
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
         Municipality: {
             code: string;
             name: string;
@@ -1215,6 +1718,29 @@ export interface components {
         MunicipalityList: {
             results: components["schemas"]["Municipality"][];
         };
+        Notification: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["NotificationKindEnum"];
+            readonly severity: components["schemas"]["SeverityEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly read_at: string | null;
+            /** Format: date */
+            readonly condition_date: string | null;
+            /** Format: uuid */
+            readonly detection_id: string | null;
+            readonly activity: components["schemas"]["AgriculturalActivity"] | null;
+        };
+        /**
+         * @description * `activity_upcoming` - Actividad próxima
+         *     * `activity_delayed` - Actividad retrasada
+         *     * `activity_overdue` - Actividad vencida
+         *     * `detection_control_pending` - Control pendiente
+         * @enum {string}
+         */
+        NotificationKindEnum: "activity_upcoming" | "activity_delayed" | "activity_overdue" | "detection_control_pending";
         /** @enum {unknown} */
         NullEnum: null;
         Overlap: {
@@ -1327,6 +1853,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["InputMovement"][];
+        };
+        PaginatedNotificationList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Notification"][];
         };
         PaginatedPlotCharacterizationEventList: {
             /** @example 123 */
@@ -1456,6 +1997,15 @@ export interface components {
             is_active?: boolean;
             expected_version: number;
         };
+        PatchedPestDiseaseUpdateRequest: {
+            name?: string;
+            kind?: components["schemas"]["PestDiseaseKindEnum"];
+            scientific_name?: string | null;
+            description?: string;
+            suggested_sampling_unit?: (components["schemas"]["SamplingUnitEnum"] | components["schemas"]["NullEnum"]) | null;
+            suggested_control_method?: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+            is_active?: boolean;
+        };
         PatchedPlotUpdateRequest: {
             code?: string;
             /** Format: decimal */
@@ -1497,6 +2047,72 @@ export interface components {
         };
         PermissionList: {
             results: components["schemas"]["Permission"][];
+        };
+        Person: {
+            /** Format: uuid */
+            id: string;
+            readonly full_name: string;
+        };
+        PestDisease: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly kind: components["schemas"]["PestDiseaseKindEnum"];
+            readonly scientific_name: string | null;
+            readonly description: string;
+            readonly is_active: boolean;
+            readonly suggested_sampling_unit: (components["schemas"]["SamplingUnitEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly suggested_control_method: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+        };
+        PestDiseaseCreateRequest: {
+            name: string;
+            kind: components["schemas"]["PestDiseaseKindEnum"];
+            scientific_name?: string | null;
+            description: string;
+            suggested_sampling_unit?: (components["schemas"]["SamplingUnitEnum"] | components["schemas"]["NullEnum"]) | null;
+            suggested_control_method?: (components["schemas"]["ControlMethodEnum"] | components["schemas"]["NullEnum"]) | null;
+        };
+        /**
+         * @description * `pest` - Plaga
+         *     * `disease` - Enfermedad
+         * @enum {string}
+         */
+        PestDiseaseKindEnum: "pest" | "disease";
+        PestDiseaseList: {
+            results: components["schemas"]["PestDisease"][];
+        };
+        PestDiseaseRef: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly kind: components["schemas"]["PestDiseaseKindEnum"];
+            readonly is_active: boolean;
+        };
+        PestSummary: {
+            pest_disease: components["schemas"]["PestDiseaseRef"] | null;
+            other_description: string | null;
+            sampling_unit: components["schemas"]["SamplingUnitEnum"];
+            /** Format: decimal */
+            latest_incidence: string;
+            /** Format: decimal */
+            previous_incidence: string | null;
+            /** Format: date */
+            latest_date: string;
+        };
+        PhytosanitaryHistory: {
+            count: number;
+            /** Format: uri */
+            next: string | null;
+            /** Format: uri */
+            previous: string | null;
+            results: components["schemas"]["AgriculturalActivity"][];
+            summary: components["schemas"]["PestSummary"][];
+        };
+        PlannedInput: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_active: boolean;
         };
         Planting: {
             variety: components["schemas"]["VarietyRef"];
@@ -1702,6 +2318,28 @@ export interface components {
          * @enum {string}
          */
         PropagationEnum: "grafted" | "seed";
+        PushConfig: {
+            public_key: string | null;
+        };
+        PushKeysRequest: {
+            p256dh: string;
+            auth: string;
+        };
+        PushSubscription: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly device_label: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        PushSubscriptionCreateRequest: {
+            endpoint: string;
+            keys: components["schemas"]["PushKeysRequest"];
+            device_label?: string | null;
+        };
+        PushSubscriptionRemoveRequest: {
+            endpoint: string;
+        };
         Recorder: {
             /** Format: uuid */
             id: string;
@@ -1749,6 +2387,20 @@ export interface components {
             first_name: string;
             last_name: string;
         };
+        /**
+         * @description * `zigzag` - Zig-zag
+         *     * `five_of_gold` - Cinco de oros
+         *     * `diagonal` - Diagonal
+         *     * `all_units` - Todas las unidades
+         * @enum {string}
+         */
+        SamplingMethodEnum: "zigzag" | "five_of_gold" | "diagonal" | "all_units";
+        /**
+         * @description * `trees` - Árboles
+         *     * `pods` - Mazorcas
+         * @enum {string}
+         */
+        SamplingUnitEnum: "trees" | "pods";
         Session: {
             user: components["schemas"]["SessionUser"];
         };
@@ -1769,6 +2421,12 @@ export interface components {
             readonly farms: components["schemas"]["AccountFarm"][];
             readonly all_farms: boolean;
         };
+        /**
+         * @description * `normal` - Normal
+         *     * `critical` - Crítica
+         * @enum {string}
+         */
+        SeverityEnum: "normal" | "critical";
         /**
          * @description * `none` - A plena exposición
          *     * `temporary` - Sombra temporal
@@ -1836,6 +2494,12 @@ export interface components {
          * @enum {string}
          */
         UnitEnum: "kg" | "g" | "l" | "ml" | "unit";
+        UnreadCount: {
+            count: number;
+        };
+        UpdatedCount: {
+            updated: number;
+        };
         UsedInputItem: {
             /** Format: uuid */
             id: string;
@@ -1884,6 +2548,41 @@ export interface components {
             /** Format: date-time */
             captured_at?: string | null;
             source: components["schemas"]["SourceEnum"];
+        };
+        WaitingDetection: {
+            /** Format: uuid */
+            readonly id: string;
+            pest_disease: components["schemas"]["PestDiseaseRef"] | null;
+            readonly other_description: string | null;
+            readonly affected_units: number;
+            /** Format: decimal */
+            readonly incidence: string;
+            sampling_unit: components["schemas"]["SamplingUnitEnum"];
+            monitoring: components["schemas"]["WaitingMonitoring"];
+            plot: components["schemas"]["WaitingPlot"];
+            control_requested_by: components["schemas"]["Person"] | null;
+            /** Format: date-time */
+            control_requested_at: string;
+        };
+        WaitingDetectionList: {
+            results: components["schemas"]["WaitingDetection"][];
+        };
+        WaitingFarm: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        WaitingMonitoring: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            done_date: string;
+        };
+        WaitingPlot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            farm: components["schemas"]["WaitingFarm"];
         };
     };
     responses: never;
@@ -2273,6 +2972,237 @@ export interface operations {
             };
         };
     };
+    agricultural_activities_evidence_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceList"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_evidence_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["EvidenceUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evidence"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evidence"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    agricultural_activities_monitoring_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MonitoringResultRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     agricultural_activities_assignees_retrieve: {
         parameters: {
             query?: {
@@ -2322,6 +3252,8 @@ export interface operations {
     agricultural_activities_pending_retrieve: {
         parameters: {
             query: {
+                /** @description Solo las de este tipo. */
+                activity_type?: string;
                 /** @description Solo para la cuenta técnica. */
                 producer?: string;
                 /** @description Última fecha incluida. */
@@ -3218,6 +4150,96 @@ export interface operations {
             };
         };
     };
+    evidence_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    evidence_file_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     farms_list: {
         parameters: {
             query?: {
@@ -3823,6 +4845,407 @@ export interface operations {
             };
         };
     };
+    notifications_list: {
+        parameters: {
+            query?: {
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Un término de búsqueda. */
+                search?: string;
+                /** @description Solo las no leídas. */
+                unread?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedNotificationList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_read_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_restore_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_dismiss_read_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DismissedCount"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_push_config_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushConfig"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_push_subscriptions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscription"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscription"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_push_subscriptions_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionRemoveRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_read_all_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdatedCount"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    notifications_unread_count_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCount"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     permissions_retrieve: {
         parameters: {
             query?: never;
@@ -3849,6 +5272,399 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pests_diseases_list: {
+        parameters: {
+            query?: {
+                /** @description Solo activas o solo inactivas. */
+                is_active?: boolean;
+                /** @description Busca en el nombre y en el nombre científico, sin mayúsculas, tildes, espacios ni guiones. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PestDiseaseList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pests_diseases_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PestDiseaseCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PestDisease"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pests_diseases_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPestDiseaseUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PestDisease"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    phytosanitary_detections_controls_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DetectionControlRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgriculturalActivity"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    phytosanitary_detections_no_control_needed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    phytosanitary_detections_without_control_list: {
+        parameters: {
+            query?: {
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitingDetectionList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    phytosanitary_history_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Una finca. */
+                farm?: string;
+                /** @description Fecha inicial (incluida). */
+                from?: string;
+                /** @description Solo las detecciones de Otra. */
+                other?: boolean;
+                /** @description Página, desde 1. */
+                page?: number;
+                /** @description De 1 a 100; 20 por defecto. */
+                page_size?: number;
+                /** @description Una plaga o enfermedad. */
+                pest_disease?: string;
+                /** @description Una parcela. */
+                plot?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /** @description Fecha final (incluida). */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhytosanitaryHistory"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

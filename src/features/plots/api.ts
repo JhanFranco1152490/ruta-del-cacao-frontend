@@ -8,6 +8,7 @@ import {
 
 import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
+import { fetchPlot, plotCacheKey } from '@/lib/api/plot-read';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
@@ -94,9 +95,6 @@ export const usePlotBefore = (
   });
 };
 
-export const fetchPlot = (id: string, signal?: AbortSignal) =>
-  apiFetch<Plot>(`/api/plots/${id}`, { signal });
-
 // Parcelas sueltas por su id (las que tienen algo pendiente con error en el dispositivo), con
 // copia para leerlas sin conexión. Una que ya no existe simplemente no viene.
 export function usePlotsByIds(
@@ -107,7 +105,9 @@ export function usePlotsByIds(
     queries: ids.map((id) => ({
       queryKey: queryKeys.plots.detail(id),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
-        readThroughCache(userId!, `plot:${id}`, () => fetchPlot(id, signal)),
+        readThroughCache(userId!, plotCacheKey(id), () =>
+          fetchPlot(id, signal),
+        ),
       enabled: !!userId,
       networkMode: 'offlineFirst' as const,
     })),

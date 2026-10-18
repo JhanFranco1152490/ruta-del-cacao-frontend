@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, ScanSearch } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 export function ActivityScheduleFab({
   offline,
   onClick,
+  onScheduleMonitoring,
 }: {
   offline: boolean;
   onClick: () => void;
+  // El monitoreo tiene su propio botón, más chico, sobre el principal.
+  onScheduleMonitoring: () => void;
 }) {
   return (
     <div className="fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2">
@@ -21,6 +24,16 @@ export function ActivityScheduleFab({
           Programar una actividad necesita conexión.
         </p>
       )}
+      <Button
+        aria-describedby={offline ? 'schedule-needs-connection' : undefined}
+        aria-label="Programar monitoreo"
+        className="size-11 rounded-full shadow-card"
+        disabled={offline}
+        onClick={onScheduleMonitoring}
+        variant="outline"
+      >
+        <ScanSearch aria-hidden="true" className="size-5" />
+      </Button>
       <Button
         aria-describedby={offline ? 'schedule-needs-connection' : undefined}
         aria-label="Programar actividad"

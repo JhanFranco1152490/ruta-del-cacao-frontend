@@ -3,11 +3,13 @@
 import { PlotCharacterizationSummary } from '@/features/crops/components/plot-characterization-summary';
 import { useFailedCharacterizationPlotIds } from '@/features/crops/use-characterization-queue';
 import { farmDetailPath } from '@/features/farms/farm-paths';
+import { PlotHistoryLink } from '@/features/health/components/plot-history-link';
 import { PlotListScreen } from '@/features/plots/components/plot-list-screen';
 import { useSession } from '@/hooks/use-session';
 
 // Aquí se juntan los dominios: la lista es de parcelas, la ficha de cada tarjeta y sus envíos
-// fallidos son de cultivos, y el detalle al que lleva cada finca es de fincas.
+// fallidos son de cultivos, el historial fitosanitario es de sanidad y el detalle al que lleva cada
+// finca es de fincas.
 export function PlotsWithCharacterization() {
   const { data: user } = useSession();
   const failedPlotIds = useFailedCharacterizationPlotIds(user?.id);
@@ -17,12 +19,21 @@ export function PlotsWithCharacterization() {
       failedPlotIds={failedPlotIds}
       farmHref={farmDetailPath}
       renderPlotDetails={(plot, pagePlotIds) => (
-        <PlotCharacterizationSummary
-          farmId={plot.farm.id}
-          farmIsActive={plot.farm.isActive}
-          pagePlotIds={pagePlotIds}
-          plot={plot}
-        />
+        <>
+          <PlotCharacterizationSummary
+            farmId={plot.farm.id}
+            farmIsActive={plot.farm.isActive}
+            pagePlotIds={pagePlotIds}
+            plot={plot}
+          />
+          <PlotHistoryLink
+            plot={{
+              id: plot.id,
+              code: plot.code,
+              inServer: plot.queue?.operation !== 'create',
+            }}
+          />
+        </>
       )}
     />
   );

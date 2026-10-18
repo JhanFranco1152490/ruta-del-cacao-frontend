@@ -28,7 +28,7 @@ function NativeSelect({
     <select
       data-slot="native-select"
       className={cn(
-        'h-11 w-full rounded-md border border-input bg-card px-3 text-base text-foreground transition-colors focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-err',
+        'h-11 w-full rounded-md border border-input bg-card pr-10 pl-3 text-base text-foreground transition-colors focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-err',
         // La opción elegida se pinta con su propio color, no con el del select: por eso las
         // opciones reales fijan el suyo y el placeholder hereda el gris.
         placeholder !== undefined &&

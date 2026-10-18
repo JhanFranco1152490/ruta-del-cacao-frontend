@@ -9,9 +9,11 @@ import {
   CAPTURE_FIELD_CLASS,
 } from '@/components/capture-field-class';
 import { FormSection } from '@/components/form-section';
+import { UsedInputsSection } from '@/components/input-usage/used-inputs-section';
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
+import type { CatalogInput } from '@/lib/input-usage';
 
 import type { AgriculturalActivity } from '../api';
 import {
@@ -19,8 +21,6 @@ import {
   type CompletionFormValues,
   createCompletionSchema,
 } from '../completion-rules';
-import type { CatalogInput } from '../completion-values';
-import { CompletionInputsSection } from './completion-inputs-section';
 
 // Lo que se registra de una labor hecha: cuándo y, si aplica, con qué insumos. Al enviar entrega
 // los valores ya validados; quien lo usa los confirma con la persona antes de guardarlos, porque
@@ -108,12 +108,12 @@ export function CompletionForm({
         />
       </FormSection>
       {acceptsInputs && (
-        <CompletionInputsSection
+        <UsedInputsSection
           catalog={catalog}
           control={control}
           disabled={isSaving}
-          errors={errors}
-          register={register}
+          hint="Si la labor no usó insumos, guárdala sin agregar ninguno."
+          name="inputs"
           stocks={stocks}
           unavailableRows={unavailableRows}
         />
