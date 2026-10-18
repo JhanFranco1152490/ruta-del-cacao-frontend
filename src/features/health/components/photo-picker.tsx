@@ -1,11 +1,21 @@
 'use client';
 
 import { Camera, ImageUp } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
+import { WebcamDialog } from './webcam-dialog';
+
 const ACCEPT = 'image/jpeg,image/png';
+
+// En un celular o una tableta, `capture` abre la cámara. En un computador solo abre el selector de
+// archivos, así que allí se usa la cámara del equipo, si el navegador deja (solo en https o en
+// localhost); si no, queda el selector.
+const canUseWebcam = () =>
+  typeof window.matchMedia === 'function' &&
+  !window.matchMedia('(pointer: coarse)').matches &&
+  typeof navigator.mediaDevices?.getUserMedia === 'function';
 
 // Tomar una foto con la cámara del teléfono o elegir una o varias de la galería. Entrega los
 // archivos tal como llegan: quien lo usa los prepara.
@@ -20,6 +30,7 @@ export function PhotoPicker({
 }) {
   const camera = useRef<HTMLInputElement>(null);
   const gallery = useRef<HTMLInputElement>(null);
+  const [webcamOpen, setWebcamOpen] = useState(false);
   const take = (input: HTMLInputElement) => {
     const files = [...(input.files ?? [])];
     // Se vacía para poder elegir otra vez la misma foto después de quitarla.
@@ -32,7 +43,9 @@ export function PhotoPicker({
       <Button
         className={buttonClassName}
         disabled={disabled}
-        onClick={() => camera.current?.click()}
+        onClick={() =>
+          canUseWebcam() ? setWebcamOpen(true) : camera.current?.click()
+        }
         type="button"
         variant="outline"
       >
@@ -67,6 +80,19 @@ export function PhotoPicker({
         tabIndex={-1}
         type="file"
       />
+      {webcamOpen && (
+        <WebcamDialog
+          onCapture={(file) => {
+            setWebcamOpen(false);
+            onFiles([file]);
+          }}
+          onChooseFile={() => {
+            setWebcamOpen(false);
+            gallery.current?.click();
+          }}
+          onClose={() => setWebcamOpen(false)}
+        />
+      )}
     </div>
   );
 }
