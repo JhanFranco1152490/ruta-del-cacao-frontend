@@ -296,6 +296,74 @@ describe('FacilitiesScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('opens the sheet of a facility touching its card on a phone', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+    renderScreen({ searchParams: '?finca=f1', onUrlUpdate });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Ver C-2' }),
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Cajón C-2' }),
+    ).toHaveTextContent('450 kg de cacao en baba');
+    expect(onUrlUpdate.mock.lastCall?.[0].queryString).toBe(
+      '?finca=f1&elemento=c2',
+    );
+  });
+
+  it('opens a facility from the URL in its own farm', async () => {
+    rememberLastFarm(userId, 'f1');
+
+    renderScreen({ searchParams: '?elemento=d1' });
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Cajón C-01' }),
+    ).toBeInTheDocument();
+    expect(
+      // La hoja abierta deja el resto de la pantalla fuera del alcance de los lectores de pantalla.
+      screen.getByRole('heading', {
+        hidden: true,
+        level: 1,
+        name: 'Infraestructura · F02 · El Diviso',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('closes the sheet and forgets the facility in the URL', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+    renderScreen({ searchParams: '?finca=f1&elemento=c2', onUrlUpdate });
+
+    await screen.findByRole('dialog', { name: 'Cajón C-2' });
+    await userEvent.keyboard('{Escape}');
+
+    expect(onUrlUpdate.mock.lastCall?.[0].queryString).toBe('?finca=f1');
+  });
+
+  describe('on a wide screen', () => {
+    beforeEach(() => {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn(() => ({
+          matches: true,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        })),
+      );
+    });
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('highlights the facility of the URL instead of opening a sheet', async () => {
+      renderScreen({ searchParams: '?finca=f1&elemento=c2' });
+
+      await screen.findByRole('table', { name: 'Cajones y marquesinas' });
+      expect(rows()[0]).toHaveAttribute('data-state', 'selected');
+      expect(rows()[1]).not.toHaveAttribute('data-state');
+      expect(screen.queryByRole('dialog', { name: 'Cajón C-2' })).toBeNull();
+    });
+  });
+
   it('asks the technical account for a producer first', async () => {
     renderScreen({ superuser: true });
 

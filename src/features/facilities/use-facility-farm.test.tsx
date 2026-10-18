@@ -32,6 +32,7 @@ function setup({
   userId = newUser(),
   superuser = false,
   searchParams = '',
+  elementFarm = null as string | null,
 } = {}) {
   const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
   const queryClient = createTestQueryClient();
@@ -49,7 +50,9 @@ function setup({
   return {
     userId,
     onUrlUpdate,
-    ...renderHook(() => useFacilityFarm(userId, superuser), { wrapper }),
+    ...renderHook(() => useFacilityFarm(userId, superuser, elementFarm), {
+      wrapper,
+    }),
   };
 }
 
@@ -105,6 +108,22 @@ describe('useFacilityFarm', () => {
     expect(readLastFarm(userId)).toBe('f2');
     expect(onUrlUpdate.mock.lastCall?.[0].queryString).toBe(
       '?tipo=solar_dryer&finca=f2',
+    );
+  });
+
+  it('opens the farm of the facility in the URL over any other', async () => {
+    server.use(farmsHandler([esperanza, diviso]));
+    const userId = newUser();
+    rememberLastFarm(userId, 'f1');
+
+    const { result } = setup({
+      userId,
+      searchParams: '?finca=f1',
+      elementFarm: 'f2',
+    });
+
+    await waitFor(() =>
+      expect(result.current.resolution).toEqual({ kind: 'farm', farmId: 'f2' }),
     );
   });
 

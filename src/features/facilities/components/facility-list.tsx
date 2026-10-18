@@ -2,7 +2,9 @@
 
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import type { FarmOption } from '@/lib/api/farm-options';
+import { farmLabel } from '@/lib/format/place-label';
 
 import type { PostharvestFacility } from '../api';
 import {
@@ -12,6 +14,7 @@ import {
 } from '../facility-filters';
 import { useFacilityFilters } from '../use-facility-filters';
 import { FacilityFiltersBar } from './facility-filters-bar';
+import { FacilitySheet } from './facility-sheet';
 import { FacilitySummaryCards } from './facility-summary-cards';
 import { FacilityTable } from './facility-table';
 
@@ -28,17 +31,29 @@ export function FacilityList({
   facilities: readonly PostharvestFacility[];
 }) {
   const state = useFacilityFilters();
-  const { filters } = state;
+  const isDesktop = useIsDesktop();
+  const { filters, element } = state;
+  const ofFarm = facilitiesOfFarm(facilities, farm.id);
 
-  if (facilitiesOfFarm(facilities, farm.id).length === 0) {
+  if (ofFarm.length === 0) {
     return (
       <EmptyState title={`${farm.name} aún no tiene cajones ni marquesinas`} />
     );
   }
 
   const shown = filterFacilities(facilities, farm.id, filters);
+  // Se busca entre todos los de la finca: el elemento de la URL se abre aunque los filtros lo
+  // escondan de la lista.
+  const selected = ofFarm.find(({ id }) => id === element);
   return (
     <div className="space-y-5">
+      {selected && !isDesktop && (
+        <FacilitySheet
+          facility={selected}
+          farmName={farmLabel(farm)}
+          onClose={() => state.showElement(null)}
+        />
+      )}
       <FacilitySummaryCards facilities={shown} />
       <FacilityFiltersBar
         filters={filters}
@@ -58,7 +73,11 @@ export function FacilityList({
         />
       ) : (
         <>
-          <FacilityTable facilities={shown} />
+          <FacilityTable
+            facilities={shown}
+            onSelect={state.showElement}
+            selectedId={selected?.id ?? null}
+          />
           <div className="space-y-1 text-sm text-muted-foreground">
             <p>{countText(shown.length)}</p>
             <p>

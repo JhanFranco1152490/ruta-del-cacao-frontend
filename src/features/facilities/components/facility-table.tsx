@@ -1,5 +1,11 @@
-import { COMPACT_TABLE_CLASS } from '@/components/compact-table-class';
+import { ChevronRight } from 'lucide-react';
+
+import {
+  COMPACT_TABLE_CLASS,
+  ROW_LINK_CLASS,
+} from '@/components/compact-table-class';
 import { StatusBadge } from '@/components/status-badge';
+import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 import {
   Table,
   TableBody,
@@ -28,11 +34,16 @@ function OccupiedBy({ facility }: { facility: PostharvestFacility }) {
 }
 
 // En celular cada fila es una tarjeta: el nombre y su estado arriba, el tipo y la capacidad debajo,
-// y el lote que lo ocupa solo si hay uno.
+// y el lote que lo ocupa solo si hay uno. Tocarla abre la hoja del elemento; en escritorio la fila
+// elegida se resalta.
 export function FacilityTable({
   facilities,
+  selectedId,
+  onSelect,
 }: {
   facilities: readonly PostharvestFacility[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
 }) {
   return (
     <Table aria-label="Cajones y marquesinas" className={COMPACT_TABLE_CLASS}>
@@ -53,9 +64,20 @@ export function FacilityTable({
             facility.facility_type,
           );
           return (
-            <TableRow key={facility.id}>
+            <TableRow
+              data-state={facility.id === selectedId ? 'selected' : undefined}
+              key={facility.id}
+            >
               <TableCell className="font-bold text-selva max-md:order-1 max-md:col-span-1">
                 {facility.name}
+                <button
+                  aria-label={`Ver ${facility.name}`}
+                  className={`${ROW_LINK_CLASS} flex items-center md:hidden ${FOCUS_OUTLINE_CLASS}`}
+                  onClick={() => onSelect(facility.id)}
+                  type="button"
+                >
+                  <ChevronRight aria-hidden="true" className="size-5" />
+                </button>
               </TableCell>
               <TableCell className="max-md:order-3 max-md:col-span-1">
                 <span className="inline-flex items-center gap-2">

@@ -62,11 +62,15 @@ export function FacilitiesScreen() {
   const superuser = user?.is_superuser === true;
   const hasConnection = useHasConnection();
   const state = useFacilityFilters();
-  const place = useFacilityFarm(user?.id, superuser);
-  const { resolution, farm, producer } = place;
+  // La cuenta técnica elige el productor; las demás ven el suyo.
+  const producer = superuser ? state.producer : null;
   const read = useFacilities(user?.id, producer, {
-    enabled: resolution.kind !== 'producer',
+    enabled: !superuser || !!producer,
   });
+  const elementFarm =
+    read.data?.data.find(({ id }) => id === state.element)?.farm.id ?? null;
+  const place = useFacilityFarm(user?.id, superuser, elementFarm);
+  const { resolution, farm } = place;
   const selectedProducer = useProducerSummary(producer ?? undefined);
 
   const savedAt = read.data?.savedAt;
