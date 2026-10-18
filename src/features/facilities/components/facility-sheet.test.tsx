@@ -9,7 +9,7 @@ import { FacilitySheet } from './facility-sheet';
 const occupied = buildFacility({
   name: 'M-02',
   facility_type: 'solar_dryer',
-  capacity_kg: 1200,
+  capacity_kg: '1200.0',
   status: 'occupied',
   occupied_by: {
     lot: { id: 'l1', code: '000123-F02-P05-261014-1', status: 'drying' },

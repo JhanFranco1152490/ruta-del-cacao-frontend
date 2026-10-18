@@ -37,7 +37,12 @@ const diviso = { id: 'f2', code: 'F02', name: 'El Diviso', is_active: true };
 
 const facilities = [
   buildFacility({ id: 'c10', name: 'C-10', farm: esperanza }),
-  buildFacility({ id: 'c2', name: 'C-2', farm: esperanza, capacity_kg: 450 }),
+  buildFacility({
+    id: 'c2',
+    name: 'C-2',
+    farm: esperanza,
+    capacity_kg: '450.0',
+  }),
   buildFacility({
     id: 'c3',
     name: 'C-3',
@@ -73,16 +78,21 @@ beforeEach(() => {
   );
 });
 
-afterEach(() => window.localStorage.clear());
+afterEach(() => {
+  window.localStorage.clear();
+  vi.unstubAllGlobals();
+});
 
 function renderScreen({
   searchParams = '',
   superuser = false,
   onUrlUpdate,
+  permissions = [PERMISSIONS.FACILITIES_VIEW],
 }: {
   searchParams?: string;
   superuser?: boolean;
   onUrlUpdate?: OnUrlUpdateFunction;
+  permissions?: string[];
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -90,7 +100,7 @@ function renderScreen({
     buildSession({
       id: userId,
       is_superuser: superuser,
-      permissions: [PERMISSIONS.FACILITIES_VIEW],
+      permissions,
     }),
   );
   return renderWithProviders(<FacilitiesScreen />, {
@@ -352,8 +362,6 @@ describe('FacilitiesScreen', () => {
       );
     });
 
-    afterEach(() => vi.unstubAllGlobals());
-
     it('highlights the facility of the URL instead of opening a sheet', async () => {
       renderScreen({ searchParams: '?finca=f1&elemento=c2' });
 
@@ -362,6 +370,81 @@ describe('FacilitiesScreen', () => {
       expect(rows()[1]).not.toHaveAttribute('data-state');
       expect(screen.queryByRole('dialog', { name: 'Cajón C-2' })).toBeNull();
     });
+  });
+
+  it('registers a facility from the header, starting in the farm of the list', async () => {
+    renderScreen({
+      searchParams: '?finca=f2',
+      permissions: [PERMISSIONS.FACILITIES_VIEW, PERMISSIONS.FACILITIES_ADD],
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Registrar elemento' }),
+    );
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Registrar elemento',
+    });
+    expect(within(dialog).getByRole('combobox', { name: 'Finca' })).toHaveValue(
+      'F02 · El Diviso',
+    );
+  });
+
+  it('does not offer registering without the permission', async () => {
+    renderScreen({ searchParams: '?finca=f1' });
+
+    await screen.findByRole('table', { name: 'Cajones y marquesinas' });
+    expect(
+      screen.queryByRole('button', { name: 'Registrar elemento' }),
+    ).toBeNull();
+  });
+
+  it('edits a facility from the menu of its row', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [PERMISSIONS.FACILITIES_VIEW, PERMISSIONS.FACILITIES_CHANGE],
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Más acciones de C-2' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: 'Editar' }),
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Editar cajón C-2' }),
+    ).toBeInTheDocument();
+  });
+
+  it('disables registering without a connection', async () => {
+    await getOfflineDb(userId).cache.put({
+      key: 'postharvest-facilities',
+      value: facilities,
+      fetchedAt: 1_760_000_000_000,
+    });
+    server.use(
+      http.get(apiUrl('/api/postharvest-facilities'), () =>
+        HttpResponse.error(),
+      ),
+    );
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [PERMISSIONS.FACILITIES_VIEW, PERMISSIONS.FACILITIES_ADD],
+    });
+
+    await screen.findByRole('table', { name: 'Cajones y marquesinas' });
+    expect(
+      screen.getByRole('button', { name: 'Registrar elemento' }),
+    ).toBeDisabled();
   });
 
   it('asks the technical account for a producer first', async () => {

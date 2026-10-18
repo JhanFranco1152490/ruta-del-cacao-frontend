@@ -11,10 +11,10 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { formatShortDayMonth } from '@/lib/format/dates';
-import { formatDecimal } from '@/lib/format/decimal';
 import { FACILITY_TYPES, facilityStatus } from '@/lib/facility-labels';
 
 import type { PostharvestFacility } from '../api';
+import { capacityText } from '../facility-form';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -57,7 +57,7 @@ export function FacilitySheet({
         </SheetHeader>
         <dl className="px-4">
           <Fact label="Capacidad">
-            {formatDecimal(facility.capacity_kg, 0)} kg de cacao en baba
+            {capacityText(facility.capacity_kg)} de cacao en baba
           </Fact>
           <Fact label="Estado">
             <StatusBadge icon={status.Icon} tone={status.tone}>

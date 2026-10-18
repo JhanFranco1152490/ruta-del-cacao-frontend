@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import {
   COMPACT_TABLE_CLASS,
@@ -15,10 +16,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatShortDayMonth } from '@/lib/format/dates';
-import { formatDecimal } from '@/lib/format/decimal';
 import { FACILITY_TYPES, facilityStatus } from '@/lib/facility-labels';
 
 import type { PostharvestFacility } from '../api';
+import { capacityText } from '../facility-form';
 
 function OccupiedBy({ facility }: { facility: PostharvestFacility }) {
   if (!facility.occupied_by) return <span aria-label="Sin lote">—</span>;
@@ -40,10 +41,13 @@ export function FacilityTable({
   facilities,
   selectedId,
   onSelect,
+  renderActions,
 }: {
   facilities: readonly PostharvestFacility[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  // El menú «⋯» de la fila; en celular las acciones van en la hoja.
+  renderActions: (facility: PostharvestFacility) => ReactNode;
 }) {
   return (
     <Table aria-label="Cajones y marquesinas" className={COMPACT_TABLE_CLASS}>
@@ -54,6 +58,9 @@ export function FacilityTable({
           <TableHead className="text-right">Capacidad</TableHead>
           <TableHead>Estado</TableHead>
           <TableHead>Ocupado por</TableHead>
+          <TableHead>
+            <span className="sr-only">Acciones</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -86,7 +93,7 @@ export function FacilityTable({
                 </span>
               </TableCell>
               <TableCell className="text-right tabular-nums max-md:order-4 max-md:col-span-1 max-md:justify-self-end">
-                {formatDecimal(facility.capacity_kg, 0)} kg
+                {capacityText(facility.capacity_kg)}
               </TableCell>
               <TableCell className="max-md:order-2 max-md:col-span-1 max-md:justify-self-end">
                 <StatusBadge icon={status.Icon} tone={status.tone}>
@@ -97,6 +104,9 @@ export function FacilityTable({
                 className={`max-md:order-5 ${facility.occupied_by ? '' : 'max-md:hidden'}`}
               >
                 <OccupiedBy facility={facility} />
+              </TableCell>
+              <TableCell className="text-right max-md:hidden">
+                {renderActions(facility)}
               </TableCell>
             </TableRow>
           );

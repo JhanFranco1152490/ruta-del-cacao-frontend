@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
@@ -7,6 +9,7 @@ import type { FarmOption } from '@/lib/api/farm-options';
 import { farmLabel } from '@/lib/format/place-label';
 
 import type { PostharvestFacility } from '../api';
+import type { FacilityAction, FacilityActionKind } from '../facility-actions';
 import {
   facilitiesOfFarm,
   filterFacilities,
@@ -14,21 +17,33 @@ import {
 } from '../facility-filters';
 import { useFacilityFilters } from '../use-facility-filters';
 import { FacilityFiltersBar } from './facility-filters-bar';
+import { FacilityRowMenu } from './facility-row-menu';
 import { FacilitySheet } from './facility-sheet';
+import { FacilitySheetActions } from './facility-sheet-actions';
 import { FacilitySummaryCards } from './facility-summary-cards';
 import { FacilityTable } from './facility-table';
 
 const countText = (count: number) =>
   `${count === 1 ? '1 elemento' : `${count} elementos`} · ordenados por tipo y nombre`;
 
-// Los cajones y marquesinas de una finca, con su resumen y sus filtros.
+// Los cajones y marquesinas de una finca, con su resumen, sus filtros y sus acciones.
 export function FacilityList({
   farm,
   facilities,
+  register,
+  actionsOf,
+  offline,
+  onAction,
 }: {
   farm: FarmOption;
   // Todos los del productor: la finca y los filtros se aplican aquí.
   facilities: readonly PostharvestFacility[];
+  // «Registrar elemento», para la finca sin elementos; falta sin el permiso.
+  register: ReactNode;
+  actionsOf: (facility: PostharvestFacility) => FacilityAction[];
+  // Sin conexión las acciones que escriben se ven deshabilitadas.
+  offline: boolean;
+  onAction: (kind: FacilityActionKind, facility: PostharvestFacility) => void;
 }) {
   const state = useFacilityFilters();
   const isDesktop = useIsDesktop();
@@ -37,7 +52,10 @@ export function FacilityList({
 
   if (ofFarm.length === 0) {
     return (
-      <EmptyState title={`${farm.name} aún no tiene cajones ni marquesinas`} />
+      <EmptyState
+        action={register}
+        title={`${farm.name} aún no tiene cajones ni marquesinas`}
+      />
     );
   }
 
@@ -49,6 +67,13 @@ export function FacilityList({
     <div className="space-y-5">
       {selected && !isDesktop && (
         <FacilitySheet
+          actions={
+            <FacilitySheetActions
+              actions={actionsOf(selected)}
+              offline={offline}
+              onAction={(kind) => onAction(kind, selected)}
+            />
+          }
           facility={selected}
           farmName={farmLabel(farm)}
           onClose={() => state.showElement(null)}
@@ -76,6 +101,14 @@ export function FacilityList({
           <FacilityTable
             facilities={shown}
             onSelect={state.showElement}
+            renderActions={(facility) => (
+              <FacilityRowMenu
+                actions={actionsOf(facility)}
+                name={facility.name}
+                offline={offline}
+                onAction={(kind) => onAction(kind, facility)}
+              />
+            )}
             selectedId={selected?.id ?? null}
           />
           <div className="space-y-1 text-sm text-muted-foreground">

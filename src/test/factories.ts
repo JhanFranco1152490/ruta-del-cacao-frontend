@@ -393,7 +393,7 @@ export const buildFacility = (
   producer_id: 'p1',
   facility_type: 'fermentation_box',
   name: 'C-01',
-  capacity_kg: 600,
+  capacity_kg: '600.0',
   is_active: true,
   status: 'available',
   occupied_by: null,

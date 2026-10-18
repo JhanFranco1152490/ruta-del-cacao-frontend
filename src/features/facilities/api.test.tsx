@@ -2,16 +2,17 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
+import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { apiError, buildFacility } from '@/test/factories';
-import { apiUrl, facilitiesHandler } from '@/test/handlers';
+import { apiUrl, csrfHandler, facilitiesHandler } from '@/test/handlers';
 import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
 
-import { useFacilities } from './api';
+import { useCreateFacility, useFacilities, useUpdateFacility } from './api';
 
 function wrapperFor(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -99,5 +100,73 @@ describe('useFacilities', () => {
     const { result } = render(() => useFacilities(undefined, null));
 
     expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+describe('writing a facility', () => {
+  function renderWithClient<T>(hook: () => T) {
+    const queryClient = createTestQueryClient();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    return {
+      invalidate,
+      ...renderHook(hook, { wrapper: wrapperFor(queryClient) }),
+    };
+  }
+
+  it('registers one and refreshes the list', async () => {
+    const bodies: unknown[] = [];
+    server.use(
+      csrfHandler,
+      http.post(apiUrl(PATH), async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json(buildFacility(), { status: 201 });
+      }),
+    );
+    const { result, invalidate } = renderWithClient(() => useCreateFacility());
+
+    await result.current.mutateAsync({
+      farm_id: 'f1',
+      facility_type: 'fermentation_box',
+      name: 'C-04',
+      capacity_kg: '600',
+    });
+
+    expect(bodies).toEqual([
+      {
+        farm_id: 'f1',
+        facility_type: 'fermentation_box',
+        name: 'C-04',
+        capacity_kg: '600',
+      },
+    ]);
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: queryKeys.facilities.all(),
+    });
+  });
+
+  it('edits one with the version read, and refreshes the list even when it fails', async () => {
+    const bodies: unknown[] = [];
+    server.use(
+      csrfHandler,
+      http.patch(apiUrl(`${PATH}/fc1`), async ({ request }) => {
+        bodies.push(await request.json());
+        return apiError(409, 'stale_version');
+      }),
+    );
+    const { result, invalidate } = renderWithClient(() => useUpdateFacility());
+
+    await expect(
+      result.current.mutateAsync({
+        id: 'fc1',
+        body: { name: 'C-05', expected_version: 3 },
+      }),
+    ).rejects.toBeInstanceOf(ApiError);
+
+    expect(bodies).toEqual([{ name: 'C-05', expected_version: 3 }]);
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: queryKeys.facilities.all(),
+      }),
+    );
   });
 });

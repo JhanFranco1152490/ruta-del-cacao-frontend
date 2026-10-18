@@ -1,48 +1,37 @@
 'use client';
 
-import { CloudOff } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
 
 import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
-import { isNetworkFailure } from '@/lib/api/errors';
 import { useProducerSummary } from '@/lib/api/producer-options';
-import { formatTimestamp } from '@/lib/format/dates';
 import { farmLabel } from '@/lib/format/place-label';
-import { isPausedWithoutData } from '@/lib/offline/paused-read';
+import { isNeverLoaded } from '@/lib/offline/paused-read';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { useFacilities } from '../api';
+import { type PostharvestFacility, useFacilities } from '../api';
+import { facilityActions } from '../facility-actions';
 import { chooseFarmHref } from '../facility-paths';
 import { useFacilityFarm } from '../use-facility-farm';
 import { useFacilityFilters } from '../use-facility-filters';
+import {
+  FacilityDialogs,
+  type PendingFacilityAction,
+} from './facility-dialogs';
 import { FacilityFarmChooser } from './facility-farm-chooser';
 import { FacilityList } from './facility-list';
+import { FacilityOfflineNotice } from './facility-offline-notice';
 
 const NEEDS_CONNECTION =
   'Necesitas conexión una vez para cargar la infraestructura.';
-
-function offlineMessage(savedAt: number | undefined) {
-  const copy =
-    savedAt === undefined
-      ? 'estás viendo la copia guardada'
-      : `estás viendo la copia del ${formatTimestamp(savedAt)}`;
-  return `Sin conexión: ${copy}. Registrar o cambiar un elemento necesita conexión.`;
-}
-
-// Una consulta que nunca llegó y no tiene copia en el dispositivo.
-const neverLoaded = (
-  query: Parameters<typeof isPausedWithoutData>[0] & {
-    isError: boolean;
-    error: unknown;
-  },
-) =>
-  isPausedWithoutData(query) ||
-  (query.isError && isNetworkFailure(query.error));
 
 const Loading = () => (
   <div
@@ -67,14 +56,35 @@ export function FacilitiesScreen() {
   const read = useFacilities(user?.id, producer, {
     enabled: !superuser || !!producer,
   });
+  const known = read.data?.data;
   const elementFarm =
-    read.data?.data.find(({ id }) => id === state.element)?.farm.id ?? null;
+    known?.find(({ id }) => id === state.element)?.farm.id ?? null;
   const place = useFacilityFarm(user?.id, superuser, elementFarm);
   const { resolution, farm } = place;
   const selectedProducer = useProducerSummary(producer ?? undefined);
+  const [pending, setPending] = useState<PendingFacilityAction>();
 
   const savedAt = read.data?.savedAt;
-  const offline = read.isSuccess && (!hasConnection || savedAt !== undefined);
+  const offline = !hasConnection || savedAt !== undefined;
+  const permissions = {
+    canChange: hasPermission(user, PERMISSIONS.FACILITIES_CHANGE),
+    canDelete: hasPermission(user, PERMISSIONS.FACILITIES_DELETE),
+    canViewLots: hasPermission(user, PERMISSIONS.LOTS_VIEW),
+  };
+  // Activar, desactivar, eliminar y ver el lote llegan con sus diálogos; por ahora, editar.
+  const actionsOf = (facility: PostharvestFacility) =>
+    facilityActions(facility, permissions).filter(
+      ({ kind }) => kind === 'edit',
+    );
+  const register = hasPermission(user, PERMISSIONS.FACILITIES_ADD) && (
+    <Button
+      disabled={offline}
+      onClick={() => setPending({ kind: 'create' })}
+      size="office"
+    >
+      <Plus aria-hidden="true" className="size-5" /> Registrar elemento
+    </Button>
+  );
 
   const body = (() => {
     switch (resolution.kind) {
@@ -87,7 +97,7 @@ export function FacilitiesScreen() {
       case 'loading':
         return <Loading />;
       case 'error':
-        return neverLoaded(place.farmOptions) ? (
+        return isNeverLoaded(place.farmOptions) ? (
           <EmptyState title={NEEDS_CONNECTION} />
         ) : (
           <ErrorState
@@ -105,15 +115,15 @@ export function FacilitiesScreen() {
       case 'choose':
         return (
           <FacilityFarmChooser
-            facilities={read.data?.data}
+            facilities={known}
             farms={place.farms}
             onChoose={place.choose}
           />
         );
       case 'farm':
-        if (read.isPending && !neverLoaded(read)) return <Loading />;
-        if (neverLoaded(read)) return <EmptyState title={NEEDS_CONNECTION} />;
-        if (!read.data || !farm) {
+        if (isNeverLoaded(read)) return <EmptyState title={NEEDS_CONNECTION} />;
+        if (read.isPending) return <Loading />;
+        if (!known || !farm) {
           return (
             <ErrorState
               message="No fue posible cargar la infraestructura."
@@ -121,7 +131,16 @@ export function FacilitiesScreen() {
             />
           );
         }
-        return <FacilityList facilities={read.data.data} farm={farm} />;
+        return (
+          <FacilityList
+            actionsOf={actionsOf}
+            facilities={known}
+            farm={farm}
+            offline={offline}
+            onAction={(kind, facility) => setPending({ kind, facility })}
+            register={register}
+          />
+        );
     }
   })();
 
@@ -133,6 +152,7 @@ export function FacilitiesScreen() {
         </BackLink>
       )}
       <PageHeader
+        actions={farm && known ? register : undefined}
         compact
         description="Los cajones de fermentación y las marquesinas de secado de tus fincas, y qué lote ocupa cada uno."
         eyebrow="Poscosecha"
@@ -149,16 +169,18 @@ export function FacilitiesScreen() {
           selected={selectedProducer}
         />
       )}
-      {offline && (
-        <p
-          className="flex gap-3 rounded-lg border border-border bg-card p-4 text-sm font-bold"
-          role="status"
-        >
-          <CloudOff aria-hidden="true" className="size-5 shrink-0" />
-          {offlineMessage(savedAt)}
-        </p>
-      )}
+      {read.isSuccess && offline && <FacilityOfflineNotice savedAt={savedAt} />}
       {body}
+      {farm && known && (
+        <FacilityDialogs
+          farmId={farm.id}
+          farms={place.farms}
+          known={known}
+          onClose={() => setPending(undefined)}
+          onShowElement={state.showElement}
+          pending={pending}
+        />
+      )}
     </div>
   );
 }

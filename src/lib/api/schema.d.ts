@@ -2395,7 +2395,8 @@ export interface components {
         PatchedPostharvestFacilityUpdateRequest: {
             facility_type?: components["schemas"]["FacilityTypeEnum"];
             name?: string;
-            capacity_kg?: number;
+            /** Format: decimal */
+            capacity_kg?: string;
             is_active?: boolean;
             expected_version?: number;
         };
@@ -2626,7 +2627,8 @@ export interface components {
             readonly producer_id: string;
             readonly facility_type: components["schemas"]["FacilityTypeEnum"];
             readonly name: string;
-            readonly capacity_kg: number;
+            /** Format: decimal */
+            readonly capacity_kg: string;
             readonly is_active: boolean;
             readonly status: components["schemas"]["PostharvestFacilityStatusEnum"];
             readonly occupied_by: components["schemas"]["OccupiedBy"] | null;
@@ -2651,7 +2653,8 @@ export interface components {
             farm_id: string;
             facility_type: components["schemas"]["FacilityTypeEnum"];
             name: string;
-            capacity_kg: number;
+            /** Format: decimal */
+            capacity_kg: string;
         };
         PostharvestFacilityList: {
             results: components["schemas"]["PostharvestFacility"][];
