@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { TONE_ICONS } from '@/components/status-badge';
 
 import {
+  agreeWith,
   FACILITY_STATUS_ORDER,
   FACILITY_TYPE_ORDER,
   FACILITY_TYPES,
@@ -38,6 +39,12 @@ describe('facility types', () => {
       feminine: true,
       Icon: Warehouse,
     });
+  });
+
+  it('agrees a word with the type, masculine without one', () => {
+    expect(agreeWith('fermentation_box', 'ocupad')).toBe('ocupado');
+    expect(agreeWith('solar_dryer', 'ocupad')).toBe('ocupada');
+    expect(agreeWith(undefined, 'inactiv')).toBe('inactivo');
   });
 
   it('writes a facility with its type, as confirmations and notices name it', () => {

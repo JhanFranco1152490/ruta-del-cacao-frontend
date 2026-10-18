@@ -56,6 +56,11 @@ export const facilityName = (type: FacilityType, name: string) => {
   return `${article} ${noun} ${name}`;
 };
 
+// Concuerda un adjetivo con el tipo: «ocupad» + «o» para un cajón, + «a» para una marquesina. Sin
+// tipo va en masculino.
+export const agreeWith = (type: FacilityType | undefined, stem: string) =>
+  `${stem}${type && FACILITY_TYPES[type].feminine ? 'a' : 'o'}`;
+
 export const FACILITY_STATUS_ORDER: readonly FacilityStatus[] = [
   'available',
   'occupied',
@@ -70,17 +75,20 @@ export function facilityStatus(
   status: FacilityStatus,
   type?: FacilityType,
 ): FacilityStatusInfo {
-  const ending = type && FACILITY_TYPES[type].feminine ? 'a' : 'o';
   switch (status) {
     case 'available':
       return { label: 'Disponible', tone: 'ok', Icon: TONE_ICONS.ok };
     case 'occupied':
       return {
-        label: `Ocupad${ending}`,
+        label: agreeWith(type, 'Ocupad'),
         tone: 'info',
         Icon: type ? FACILITY_TYPES[type].busyIcon : TONE_ICONS.info,
       };
     case 'inactive':
-      return { label: `Inactiv${ending}`, tone: 'warn', Icon: TONE_ICONS.warn };
+      return {
+        label: agreeWith(type, 'Inactiv'),
+        tone: 'warn',
+        Icon: TONE_ICONS.warn,
+      };
   }
 }
