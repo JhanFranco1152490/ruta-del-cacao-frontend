@@ -8,7 +8,12 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { PERMISSIONS } from '@/lib/permissions';
 import { buildFacility, buildFarm, buildSession } from '@/test/factories';
-import { apiUrl, facilitiesHandler, farmsHandler } from '@/test/handlers';
+import {
+  apiUrl,
+  csrfHandler,
+  facilitiesHandler,
+  farmsHandler,
+} from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { resetLocation } from '@/test/router';
 import { server } from '@/test/server';
@@ -422,6 +427,91 @@ describe('FacilitiesScreen', () => {
 
     expect(
       await screen.findByRole('dialog', { name: 'Editar cajón C-2' }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers activating, deactivating and deleting by permission and status', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [
+        PERMISSIONS.FACILITIES_VIEW,
+        PERMISSIONS.FACILITIES_CHANGE,
+        PERMISSIONS.FACILITIES_DELETE,
+      ],
+    });
+
+    const menuItems = async (name: string) => {
+      await userEvent.click(
+        await screen.findByRole('button', { name: `Más acciones de ${name}` }),
+      );
+      const items = (await screen.findAllByRole('menuitem')).map((item) => [
+        item.textContent,
+        item.getAttribute('aria-disabled') === 'true',
+      ]);
+      await userEvent.keyboard('{Escape}');
+      return items;
+    };
+
+    expect(await menuItems('C-2')).toEqual([
+      ['Editar', false],
+      ['Desactivar', false],
+      ['Eliminar', false],
+    ]);
+    expect(await menuItems('M-01')).toEqual([
+      ['Editar', false],
+      ['Activar', false],
+      ['Eliminar', false],
+    ]);
+    expect(await menuItems('C-3')).toEqual([
+      ['Editar', false],
+      ['DesactivarEstá ocupado por 000123-F01-P05-261014-1', true],
+    ]);
+  });
+
+  it('deactivates a facility from its row and tells it', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    server.use(
+      csrfHandler,
+      http.patch(apiUrl('/api/postharvest-facilities/c2'), () =>
+        HttpResponse.json(facilities[1]),
+      ),
+    );
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [PERMISSIONS.FACILITIES_VIEW, PERMISSIONS.FACILITIES_CHANGE],
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Más acciones de C-2' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: 'Desactivar' }),
+    );
+    await userEvent.click(
+      within(
+        await screen.findByRole('dialog', {
+          name: '¿Desactivar el cajón C-2?',
+        }),
+      ).getByRole('button', { name: 'Desactivar' }),
+    );
+
+    expect(
+      await screen.findByText('Cajón C-2 desactivado'),
     ).toBeInTheDocument();
   });
 

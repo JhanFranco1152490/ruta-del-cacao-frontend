@@ -71,10 +71,10 @@ export function FacilitiesScreen() {
     canDelete: hasPermission(user, PERMISSIONS.FACILITIES_DELETE),
     canViewLots: hasPermission(user, PERMISSIONS.LOTS_VIEW),
   };
-  // Activar, desactivar, eliminar y ver el lote llegan con sus diálogos; por ahora, editar.
+  // Ver el lote llega con su enlace a la ficha del lote.
   const actionsOf = (facility: PostharvestFacility) =>
     facilityActions(facility, permissions).filter(
-      ({ kind }) => kind === 'edit',
+      ({ kind }) => kind !== 'view-lot',
     );
   const register = hasPermission(user, PERMISSIONS.FACILITIES_ADD) && (
     <Button

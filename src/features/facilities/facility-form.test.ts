@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { buildFacility } from '@/test/factories';
 
 import {
-  activatedMessage,
   capacityText,
   createFacilityFormSchema,
   facilityFormValuesOf,
@@ -138,17 +137,6 @@ describe('capacityText', () => {
   it('leaves out the zero decimal and writes the comma', () => {
     expect(capacityText('600.0')).toBe('600 kg');
     expect(capacityText('12.5')).toBe('12,5 kg');
-  });
-});
-
-describe('activatedMessage', () => {
-  it('names the facility and agrees with its type', () => {
-    expect(
-      activatedMessage({ facility_type: 'fermentation_box', name: 'C-03' }),
-    ).toBe('Cajón C-03 activado');
-    expect(
-      activatedMessage({ facility_type: 'solar_dryer', name: 'M-01' }),
-    ).toBe('Marquesina M-01 activada');
   });
 });
 

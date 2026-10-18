@@ -60,6 +60,16 @@ export const patchFacility = (id: string, body: FacilityUpdateRequest) =>
     body,
   });
 
+// La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP.
+export const deleteFacility = (id: string, expectedVersion: number) => {
+  const params = new URLSearchParams({
+    expected_version: String(expectedVersion),
+  });
+  return apiFetch<void>(`/api/postharvest-facilities/${id}?${params}`, {
+    method: 'DELETE',
+  });
+};
+
 // Volver a leer la lista también renueva su copia en el dispositivo.
 function useInvalidateFacilities() {
   const queryClient = useQueryClient();
@@ -85,6 +95,21 @@ export function useUpdateFacility() {
     networkMode: 'always',
     mutationFn: ({ id, body }: { id: string; body: FacilityUpdateRequest }) =>
       patchFacility(id, body),
+    onSettled: () => invalidate(),
+  });
+}
+
+export function useDeleteFacility() {
+  const invalidate = useInvalidateFacilities();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({
+      id,
+      expectedVersion,
+    }: {
+      id: string;
+      expectedVersion: number;
+    }) => deleteFacility(id, expectedVersion),
     onSettled: () => invalidate(),
   });
 }

@@ -5,7 +5,9 @@ import { notify } from '@/lib/notify';
 
 import type { PostharvestFacility } from '../api';
 import type { FacilityActionKind } from '../facility-actions';
+import { FacilityDeleteDialog } from './facility-delete-dialog';
 import { FacilityFormDialog } from './facility-form-dialog';
+import { FacilityStatusDialog } from './facility-status-dialog';
 
 export type PendingFacilityAction =
   | { kind: 'create' }
@@ -48,6 +50,24 @@ export function FacilityDialogs({
         onClose={onClose}
         onSaved={onSaved}
         onShowExisting={showExisting}
+      />
+    );
+  }
+  if (pending.kind === 'activate' || pending.kind === 'deactivate') {
+    return (
+      <FacilityStatusDialog
+        facility={pending.facility}
+        onClose={onClose}
+        onDone={onSaved}
+      />
+    );
+  }
+  if (pending.kind === 'delete') {
+    return (
+      <FacilityDeleteDialog
+        facility={pending.facility}
+        onClose={onClose}
+        onDone={onSaved}
       />
     );
   }

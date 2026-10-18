@@ -1,12 +1,7 @@
 import { z } from 'zod';
 
 import type { components } from '@/lib/api/schema';
-import {
-  agreeWith,
-  FACILITY_TYPE_ORDER,
-  FACILITY_TYPES,
-  type FacilityType,
-} from '@/lib/facility-labels';
+import { FACILITY_TYPE_ORDER, type FacilityType } from '@/lib/facility-labels';
 import { formatDecimal } from '@/lib/format/decimal';
 import { normalizeCatalogName } from '@/lib/format/search';
 import {
@@ -29,13 +24,6 @@ export const MAX_CAPACITY_KG = 10_000;
 // «600 kg», «12,5 kg»: sin el cero decimal y con la coma del español.
 export const capacityText = (kg: string) =>
   `${formatDecimal(kg, CAPACITY_DECIMALS)} kg`;
-
-// «Cajón C-03 activado», «Marquesina M-01 activada».
-export const activatedMessage = ({
-  facility_type,
-  name,
-}: Pick<PostharvestFacility, 'facility_type' | 'name'>) =>
-  `${FACILITY_TYPES[facility_type].label} ${name} ${agreeWith(facility_type, 'activad')}`;
 
 export const FACILITY_SAVED_MESSAGE = 'Elemento registrado';
 export const FACILITY_UPDATED_MESSAGE = 'Elemento actualizado';

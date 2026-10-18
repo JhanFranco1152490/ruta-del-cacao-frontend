@@ -12,7 +12,12 @@ import { apiUrl, csrfHandler, facilitiesHandler } from '@/test/handlers';
 import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
 
-import { useCreateFacility, useFacilities, useUpdateFacility } from './api';
+import {
+  useCreateFacility,
+  useDeleteFacility,
+  useFacilities,
+  useUpdateFacility,
+} from './api';
 
 function wrapperFor(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -142,6 +147,27 @@ describe('writing a facility', () => {
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: queryKeys.facilities.all(),
     });
+  });
+
+  it('deletes one with the version read in the address, and refreshes the list', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(
+      csrfHandler,
+      http.delete(apiUrl(`${PATH}/fc1`), ({ request }) => {
+        requests.push(new URL(request.url).searchParams);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { result, invalidate } = renderWithClient(() => useDeleteFacility());
+
+    await result.current.mutateAsync({ id: 'fc1', expectedVersion: 3 });
+
+    expect(requests[0].toString()).toBe('expected_version=3');
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: queryKeys.facilities.all(),
+      }),
+    );
   });
 
   it('edits one with the version read, and refreshes the list even when it fails', async () => {

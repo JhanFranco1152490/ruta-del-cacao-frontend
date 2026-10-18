@@ -17,8 +17,8 @@ import {
   type ExistingFacility,
   FACILITY_ERROR,
 } from '../facility-errors';
+import { activatedMessage } from '../facility-messages';
 import {
-  activatedMessage,
   duplicateMessage,
   FACILITY_SAVED_MESSAGE,
   FACILITY_UPDATED_MESSAGE,
