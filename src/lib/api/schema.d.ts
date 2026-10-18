@@ -116,7 +116,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Las actividades sin realizar con fecha programada hasta `through`, incluida, sin fecha mínima ni paginar: una vencida sigue pendiente mientras no se registre. `state` y `days_late` se calculan con la fecha de hoy en Bogotá. */
+        /** @description Las actividades sin realizar con fecha programada hasta `through`, incluida, sin fecha mínima ni paginar: una vencida sigue pendiente mientras no se registre. `activity_type` deja solo las de un tipo. `state` y `days_late` se calculan con la fecha de hoy en Bogotá. */
         get: operations["agricultural_activities_pending_retrieve"];
         put?: never;
         post?: never;
@@ -3252,6 +3252,8 @@ export interface operations {
     agricultural_activities_pending_retrieve: {
         parameters: {
             query: {
+                /** @description Solo las de este tipo. */
+                activity_type?: string;
                 /** @description Solo para la cuenta técnica. */
                 producer?: string;
                 /** @description Última fecha incluida. */

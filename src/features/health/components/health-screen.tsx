@@ -18,6 +18,7 @@ import { useHistoryChoices } from '../use-history-choices';
 import { useHistoryFilters } from '../use-history-filters';
 import { HistoryFiltersBar } from './history-filters-bar';
 import { HistoryMonitoringItem } from './history-monitoring-item';
+import { PendingMonitoringsSection } from './pending-monitorings-section';
 import { PestSummarySection } from './pest-summary-section';
 import { ScheduleMonitoringLink } from './schedule-monitoring-link';
 import { WaitingControlsNotice } from './waiting-controls-notice';
@@ -79,6 +80,11 @@ export function HealthScreen() {
           pestOptions={pestFilterOptions(choices.pests, filters.pest)}
           plotCode={choices.plotCode}
           plotOptions={choices.plotOptions}
+        />
+        <PendingMonitoringsSection
+          farm={filters.farm}
+          plot={filters.plot}
+          producer={filters.producer}
         />
         {history.data?.savedAt !== undefined && (
           <p className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-bold">

@@ -205,7 +205,13 @@ src/
     calendario (`/actividades?programar=monitoreo&finca=&parcela=&origen=`), que abre su formulario
     con el tipo y la parcela elegidos y vuelve a Sanidad al guardar o cancelar
     (`use-schedule-link.ts`, `linked-schedule-dialog.tsx`). Cada monitoreo trae sus acciones y sus
-    fotos a pedido. Con copia en el dispositivo por filtros y página.
+    fotos a pedido. Con copia en el dispositivo por filtros y página. Encima del historial va
+    **Por registrar (N)** (`pending-monitorings-section.tsx`): los monitoreos de hoy y los retrasados
+    o vencidos (`GET …/agricultural-activities/pending?activity_type=`), con su estado y **Registrar**
+    (abre la planilla y vuelve a Sanidad); muestra 3 y enlaza a la vista de pendientes del calendario.
+    Respeta los filtros de finca y parcela, se ve con el permiso de registrar, no ofrece registrar el
+    de un compañero a quien solo registra lo suyo y dice «Guardado en el teléfono» si su resultado
+    espera en la cola.
   - **El monitoreo no está en la lista de tipos de actividad** (`SCHEDULABLE_ACTIVITY_TYPE_OPTIONS`
     tampoco trae el control): se programa con **Programar monitoreo**, un botón junto a «Programar
     actividad» (y uno más chico sobre el flotante en celular) que abre el mismo formulario con el

@@ -21,8 +21,10 @@ import {
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { mockLocation, resetLocation } from '@/test/router';
+import { getOfflineDb } from '@/lib/offline/db';
 import { server } from '@/test/server';
 
+import { enqueueMonitoring } from '../monitoring-queue';
 import { HealthScreen } from './health-screen';
 
 vi.mock(
@@ -80,16 +82,22 @@ const page = (
 
 let requests: URLSearchParams[];
 let answer: () => ReturnType<typeof page>;
+let pending: Activity[];
+let userId: string;
 
 beforeEach(() => {
   resetLocation();
   requests = [];
   answer = () => page([first, second]);
+  pending = [];
   server.use(
     http.get(apiUrl('/api/phytosanitary-history'), ({ request }) => {
       requests.push(new URL(request.url).searchParams);
       return HttpResponse.json(answer());
     }),
+    http.get(apiUrl('/api/agricultural-activities/pending'), () =>
+      HttpResponse.json({ results: pending }),
+    ),
     http.get(apiUrl('/api/phytosanitary-detections/without-control'), () =>
       HttpResponse.json({ results: [] }),
     ),
@@ -127,10 +135,12 @@ function renderScreen(
   searchParams = '',
   permissions: string[] = SCHEDULER,
   queryClient = createTestQueryClient(),
+  session: Parameters<typeof buildSession>[0] = {},
 ) {
+  userId = `health-${crypto.randomUUID()}`;
   queryClient.setQueryData(
     queryKeys.session(),
-    buildSession({ id: `health-${crypto.randomUUID()}`, permissions }),
+    buildSession({ id: userId, permissions, ...session }),
   );
   mockLocation.path = '/sanidad';
   mockLocation.search = searchParams;
@@ -296,6 +306,154 @@ describe('HealthScreen', () => {
         'Sin conexión: estás viendo la última copia del historial.',
       ),
     ).toBeInTheDocument();
+  });
+
+  describe('the monitorings still to record', () => {
+    const waiting = (
+      id: string,
+      code: string,
+      farm: typeof FARM_A,
+      date: string,
+    ) =>
+      buildAgriculturalActivity({
+        id,
+        activity_type: 'phytosanitary_monitoring',
+        scheduled_date: date,
+        status: 'scheduled',
+        assignee: { ...buildAgriculturalActivity().assignee, id: 'me' },
+        plot: {
+          id: `pl-${code}`,
+          code,
+          is_active: true,
+          farm: { ...farm, is_active: true },
+        },
+      });
+    const section = () =>
+      screen.findByRole(
+        'region',
+        { name: 'Monitoreos por registrar' },
+        { timeout: 5000 },
+      );
+
+    it('lists them above the history, with the state of each and a way to record it', async () => {
+      pending = [
+        waiting('w1', 'P-01', FARM_A, '2020-01-01'),
+        waiting('w2', 'P-02', FARM_B, '2999-12-31'),
+      ];
+      renderScreen('', SCHEDULER);
+
+      const region = await section();
+
+      expect(
+        within(region).getByRole('heading', { name: /Por registrar \(2\)/ }),
+      ).toBeInTheDocument();
+      expect(region).toHaveTextContent('P-01 · La Esperanza');
+      expect(region).toHaveTextContent('Vencida');
+      const links = within(region).getAllByRole('link', { name: /^Registrar/ });
+      expect(links[0].getAttribute('href')).toContain(
+        '/sanidad/monitoreo?id=w1',
+      );
+      expect(links[0].getAttribute('href')).toContain('origen=');
+    });
+
+    it('shows only three and says where to see all of them', async () => {
+      pending = ['a', 'b', 'c', 'd', 'e'].map((id, index) =>
+        waiting(id, `P-0${index}`, FARM_A, '2020-01-01'),
+      );
+      renderScreen('', SCHEDULER);
+
+      const region = await section();
+
+      expect(
+        within(region).getAllByRole('link', { name: /^Registrar/ }),
+      ).toHaveLength(3);
+      expect(
+        within(region).getByRole('link', { name: 'Ver todos (5)' }),
+      ).toHaveAttribute('href', '/actividades?vista=pendientes');
+    });
+
+    it('follows the farm and the plot chosen in the filters', async () => {
+      pending = [
+        waiting('w1', 'P-01', FARM_A, '2020-01-01'),
+        waiting('w2', 'P-02', FARM_B, '2020-01-01'),
+      ];
+      renderScreen('?finca=f2', SCHEDULER);
+
+      const region = await section();
+
+      expect(region).toHaveTextContent('P-02');
+      expect(region).not.toHaveTextContent('P-01');
+    });
+
+    it('is not shown when there is nothing to record', async () => {
+      renderScreen('', SCHEDULER);
+      await monitorings();
+
+      expect(
+        screen.queryByRole('region', { name: 'Monitoreos por registrar' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('is not shown to who cannot record', async () => {
+      pending = [waiting('w1', 'P-01', FARM_A, '2020-01-01')];
+      renderScreen('', [PERMISSIONS.ACTIVITIES_VIEW]);
+      await monitorings();
+
+      expect(
+        screen.queryByRole('region', { name: 'Monitoreos por registrar' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not offer to record the one of a workmate to who only records their own', async () => {
+      pending = [
+        {
+          ...waiting('w1', 'P-01', FARM_A, '2020-01-01'),
+          assignee: {
+            ...buildAgriculturalActivity().assignee,
+            id: 'other',
+            full_name: 'Luis Mora',
+          },
+        },
+      ];
+      renderScreen(
+        '',
+        [PERMISSIONS.ACTIVITIES_VIEW, PERMISSIONS.ACTIVITIES_COMPLETE],
+        undefined,
+        { all_farms: false },
+      );
+
+      const region = await section();
+
+      expect(
+        within(region).queryByRole('link', { name: /^Registrar/ }),
+      ).not.toBeInTheDocument();
+      expect(region).toHaveTextContent('Luis Mora');
+    });
+
+    it('says the result is already saved in the phone instead of offering to record it again', async () => {
+      pending = [waiting('w1', 'P-01', FARM_A, '2020-01-01')];
+      renderScreen('', SCHEDULER);
+      await enqueueMonitoring(userId, 'w1', {
+        request: {
+          done_date: '2026-10-21',
+          sampling_unit: 'trees',
+          evaluated_units: 50,
+          no_presence: true,
+          detections: [],
+        },
+        label: 'P-01 · 21 de octubre',
+      });
+
+      const region = await section();
+
+      expect(
+        await within(region).findByText(/Guardado en el teléfono/),
+      ).toBeInTheDocument();
+      expect(
+        within(region).queryByRole('link', { name: /^Registrar/ }),
+      ).not.toBeInTheDocument();
+      await getOfflineDb(userId).queue.clear();
+    });
   });
 
   describe('scheduling a monitoring', () => {

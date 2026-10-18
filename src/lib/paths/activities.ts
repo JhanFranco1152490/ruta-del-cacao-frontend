@@ -19,3 +19,6 @@ export function scheduleMonitoringPath({
   if (plot) params.set('parcela', plot);
   return `${ACTIVITIES_PATH}?${params}`;
 }
+
+// El calendario en su vista de pendientes: todo lo que sigue sin registrar, por viejo que sea.
+export const PENDING_ACTIVITIES_PATH = `${ACTIVITIES_PATH}?vista=pendientes`;

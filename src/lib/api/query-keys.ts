@@ -93,6 +93,9 @@ export const queryKeys = {
     // El historial fitosanitario, con sus filtros y su página; con copia en el dispositivo.
     historyAll: () => ['health', 'history'] as const,
     history: (query: object) => ['health', 'history', query] as const,
+    // Los monitoreos que siguen sin registrar hasta una fecha; con copia en el dispositivo.
+    pendingMonitorings: (producer: string | null, through: string) =>
+      ['health', 'pending-monitorings', producer ?? '', through] as const,
     // Las detecciones en que alguien pidió un control y nadie lo ha atendido; con copia en el
     // dispositivo. La cuenta técnica elige el productor; las demás cuentas pasan `null`.
     withoutControl: (producer: string | null) =>

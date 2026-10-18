@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ACTIVITIES_PATH,
+  PENDING_ACTIVITIES_PATH,
   SCHEDULE_MONITORING,
   SCHEDULE_PARAM,
   scheduleMonitoringPath,
@@ -24,5 +25,11 @@ describe('scheduleMonitoringPath', () => {
     expect(scheduleMonitoringPath({ farm: null, plot: 'pl1' })).toBe(
       '/actividades?programar=monitoreo&parcela=pl1',
     );
+  });
+});
+
+describe('PENDING_ACTIVITIES_PATH', () => {
+  it('opens the calendar on its pending view', () => {
+    expect(PENDING_ACTIVITIES_PATH).toBe(`${ACTIVITIES_PATH}?vista=pendientes`);
   });
 });
