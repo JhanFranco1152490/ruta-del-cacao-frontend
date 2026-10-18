@@ -9,9 +9,12 @@ export {
   activityTypeLabel,
 } from '@/lib/activity-types';
 
-// Un control fitosanitario no se programa suelto: nace de la detección de un monitoreo.
+// Las labores que se eligen en el formulario de programar. Las dos de sanidad tienen su propia
+// entrada: un control nace de la detección de un monitoreo, y un monitoreo se programa con su botón
+// («Programar monitoreo»), porque se cierra con una planilla de resultado y no con la realización.
 export const SCHEDULABLE_ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPE_OPTIONS.filter(
-  ({ value }) => value !== 'phytosanitary_control',
+  ({ value }) =>
+    value !== 'phytosanitary_control' && value !== 'phytosanitary_monitoring',
 );
 
 // Etiqueta y tono de cada estado. El tono trae su ícono: el estado nunca se dice solo con color.

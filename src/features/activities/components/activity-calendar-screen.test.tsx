@@ -371,6 +371,35 @@ describe('ActivityCalendarScreen', () => {
       ).not.toBeInTheDocument();
     });
 
+    it('has its own button to schedule a monitoring, which opens the form with it chosen', async () => {
+      server.use(
+        agriculturalActivitiesHandler([]),
+        farmsHandler([]),
+        activityAssigneesHandler([]),
+      );
+      renderScreen({ permissions: CAN_SCHEDULE });
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Programar monitoreo' }),
+      );
+
+      const form = await screen.findByRole('dialog');
+      expect(within(form).getByLabelText('Tipo de actividad')).toHaveValue(
+        'phytosanitary_monitoring',
+      );
+    });
+
+    it('does not offer the monitoring button to who cannot schedule', async () => {
+      server.use(agriculturalActivitiesHandler([]));
+
+      renderScreen();
+
+      await screen.findByText('No hay actividades programadas en este periodo');
+      expect(
+        screen.queryByRole('button', { name: 'Programar monitoreo' }),
+      ).not.toBeInTheDocument();
+    });
+
     it('opens the form and closes it without saving', async () => {
       server.use(
         agriculturalActivitiesHandler([]),
@@ -477,6 +506,9 @@ describe('ActivityCalendarScreen', () => {
       expect(button).toHaveAccessibleDescription(
         'Programar una actividad necesita conexión.',
       );
+      expect(
+        screen.getByRole('button', { name: 'Programar monitoreo' }),
+      ).toBeDisabled();
     });
   });
 

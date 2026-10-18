@@ -26,10 +26,16 @@ const toChoices = (
 ): FormChoice[] => types.map(({ value, label }) => ({ id: value, label }));
 
 const SCHEDULABLE_TYPES = toChoices(SCHEDULABLE_ACTIVITY_TYPE_OPTIONS);
-// Un control no cambia de tipo: quedaría unido a su detección sin atenderla.
+// Un control no cambia de tipo: quedaría unido a su detección sin atenderla. Un monitoreo tampoco:
+// se cierra con una planilla de resultado, no con la realización de una labor.
 const CONTROL_TYPE = toChoices(
   ACTIVITY_TYPE_OPTIONS.filter(
     ({ value }) => value === 'phytosanitary_control',
+  ),
+);
+const MONITORING_TYPE = toChoices(
+  ACTIVITY_TYPE_OPTIONS.filter(
+    ({ value }) => value === 'phytosanitary_monitoring',
   ),
 );
 
@@ -50,6 +56,8 @@ export function useActivityFormChoices(
   // El productor que eligió la cuenta técnica para acotar las listas (o el de la finca desde la
   // que se abrió el formulario). Sin él se ofrece todo lo que alcanza quien pregunta.
   chosenProducer?: string,
+  // El tipo con el que se abrió el formulario para programar: un monitoreo, desde su botón.
+  presetType?: string,
 ): {
   farms: ChoiceList;
   plots: ChoiceList;
@@ -155,7 +163,10 @@ export function useActivityFormChoices(
     types:
       activity?.activity_type === 'phytosanitary_control'
         ? CONTROL_TYPE
-        : SCHEDULABLE_TYPES,
+        : activity?.activity_type === 'phytosanitary_monitoring' ||
+            presetType === 'phytosanitary_monitoring'
+          ? MONITORING_TYPE
+          : SCHEDULABLE_TYPES,
     assignees: {
       choices: assigneeChoices,
       isLoading: assignees.isLoading,

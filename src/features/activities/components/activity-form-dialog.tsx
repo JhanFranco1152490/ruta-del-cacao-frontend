@@ -124,6 +124,7 @@ export function ActivityFormDialog({
     plotId,
     activity,
     producerId,
+    preset?.activityType,
   );
   const fixedPlot = useMemo(
     () =>

@@ -47,6 +47,7 @@ import { ActivityTypeBreakdown } from './activity-type-breakdown';
 import { ActivityViewSwitch } from './activity-view-switch';
 import { LinkedScheduleDialog } from './linked-schedule-dialog';
 import { ScheduleActivityButton } from './schedule-activity-button';
+import { ScheduleMonitoringButton } from './schedule-monitoring-button';
 
 const NEEDS_CONNECTION = {
   mes: 'Necesitas conexión para ver las actividades de este mes.',
@@ -180,6 +181,8 @@ export function ActivityCalendarScreen({
     onOpen: setLinkedSchedule,
   });
   const openScheduleForm = () => open({ kind: 'schedule' });
+  const openMonitoringForm = () =>
+    open({ kind: 'schedule', activityType: 'phytosanitary_monitoring' });
   // Programar desde un día del calendario necesita permiso y conexión.
   const scheduleOnDay =
     canSchedule && !offline
@@ -242,10 +245,16 @@ export function ActivityCalendarScreen({
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <ActivityViewSwitch onChange={viewState.setView} value={view} />
             {canSchedule && isDesktop && (
-              <ScheduleActivityButton
-                offline={offline}
-                onClick={openScheduleForm}
-              />
+              <div className="flex flex-wrap items-start gap-2">
+                <ScheduleMonitoringButton
+                  offline={offline}
+                  onClick={openMonitoringForm}
+                />
+                <ScheduleActivityButton
+                  offline={offline}
+                  onClick={openScheduleForm}
+                />
+              </div>
             )}
           </div>
           {showFilters &&
@@ -361,7 +370,11 @@ export function ActivityCalendarScreen({
           )}
         </div>
         {canSchedule && !isDesktop && (
-          <ActivityScheduleFab offline={offline} onClick={openScheduleForm} />
+          <ActivityScheduleFab
+            offline={offline}
+            onClick={openScheduleForm}
+            onScheduleMonitoring={openMonitoringForm}
+          />
         )}
         {linkedSchedule && (
           <LinkedScheduleDialog

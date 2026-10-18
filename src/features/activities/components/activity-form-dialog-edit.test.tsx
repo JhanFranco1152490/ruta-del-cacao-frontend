@@ -134,6 +134,20 @@ describe('ActivityFormDialog, editing', () => {
     ).toEqual(['Control fitosanitario']);
   });
 
+  it('keeps a monitoring as a monitoring', async () => {
+    renderEdit({ activity_type: 'phytosanitary_monitoring' });
+
+    await screen.findByRole('dialog');
+    const type = field('Tipo de actividad');
+    expect(type).toHaveValue('phytosanitary_monitoring');
+    expect(
+      within(type)
+        .getAllByRole('option')
+        .filter((option) => !(option as HTMLOptionElement).disabled)
+        .map((option) => option.textContent),
+    ).toEqual(['Monitoreo fitosanitario']);
+  });
+
   it('sends only what changed, with the version that was read', async () => {
     renderEdit();
     await choose('Responsable', 'Otra cuenta');

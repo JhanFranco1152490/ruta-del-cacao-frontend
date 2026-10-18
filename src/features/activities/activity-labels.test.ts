@@ -9,11 +9,11 @@ import {
 } from './activity-labels';
 
 describe('schedulable activity types', () => {
-  it('offers every type but the phytosanitary control to schedule', () => {
+  it('offers the labors, not the two phytosanitary ones, which have their own way in', () => {
     const values = SCHEDULABLE_ACTIVITY_TYPE_OPTIONS.map(({ value }) => value);
-    expect(values).toHaveLength(ACTIVITY_TYPE_OPTIONS.length - 1);
+    expect(values).toHaveLength(ACTIVITY_TYPE_OPTIONS.length - 2);
     expect(values).not.toContain('phytosanitary_control');
-    expect(values).toContain('phytosanitary_monitoring');
+    expect(values).not.toContain('phytosanitary_monitoring');
   });
 });
 
