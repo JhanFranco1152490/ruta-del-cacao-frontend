@@ -33,6 +33,7 @@ export async function fetchFacilities(
 export const useFacilities = (
   userId: string | undefined,
   producer: string | null,
+  { enabled = true } = {},
 ) =>
   useQuery({
     queryKey: queryKeys.facilities.list(producer),
@@ -40,6 +41,6 @@ export const useFacilities = (
       readThroughCache(userId!, facilitiesCacheKey(producer), () =>
         fetchFacilities(producer, signal),
       ),
-    enabled: !!userId,
+    enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
   });
