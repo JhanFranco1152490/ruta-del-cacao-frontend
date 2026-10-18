@@ -18,8 +18,11 @@ vi.mock('@/config/map', async () => {
 });
 
 // jsdom no implementa el desplazamiento de la página; las pantallas lo usan para llevar la vista
-// al mapa o a una tarjeta.
-Element.prototype.scrollIntoView = vi.fn();
+// al mapa o a una tarjeta. Las pruebas que corren sin DOM (las de archivos por la red) no lo
+// necesitan.
+if (typeof Element !== 'undefined') {
+  Element.prototype.scrollIntoView = vi.fn();
+}
 
 // Una petición sin handler es un error: ningún test debe tocar la red real.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

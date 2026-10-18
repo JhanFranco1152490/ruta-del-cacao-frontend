@@ -21,6 +21,7 @@ export const PERMISSIONS = {
   ACTIVITIES_CHANGE: 'activities.change_agriculturalactivity',
   ACTIVITIES_COMPLETE: 'activities.complete_agriculturalactivity',
   ACTIVITIES_DELETE: 'activities.delete_agriculturalactivity',
+  HEALTH_MANAGE_PEST_DISEASE: 'health.manage_pestdisease',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',
   USERS_UPDATE: 'accounts.users_update',
@@ -33,7 +34,8 @@ export const PERMISSIONS = {
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 // Las áreas de lo que cuelga de una finca. Un empleado con algún permiso de estas necesita una
-// finca asignada: sin ella no alcanza nada. El catálogo de variedades es de la asociación.
+// finca asignada: sin ella no alcanza nada. Los catálogos de variedades y de plagas y
+// enfermedades son de la asociación.
 const FIELD_AREAS = ['farms.', 'plots.', 'crops.', 'inputs.', 'activities.'];
 export const isFieldPermission = (code: string) =>
   code !== PERMISSIONS.CROPS_MANAGE_VARIETIES &&

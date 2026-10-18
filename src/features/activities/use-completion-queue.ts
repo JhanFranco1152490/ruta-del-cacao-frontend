@@ -5,15 +5,18 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useQueueMutation, useQueuedRecord } from '@/hooks/use-queue-mutation';
 import { queryKeys } from '@/lib/api/query-keys';
+import {
+  listQueuedByParent,
+  type QueuedByParent,
+} from '@/lib/offline/queued-by-parent';
 import { discard, sendWhenOnline } from '@/lib/offline/sync-queue';
 
 import {
+  COMPLETION_RESOURCE,
   type CompletionPayload,
   completionQueueId,
   enqueueCompletion,
   getQueuedCompletion,
-  listQueuedCompletions,
-  type QueuedCompletion,
   resubmitCompletion,
 } from './completion-queue';
 
@@ -51,33 +54,41 @@ export const useDiscardCompletion = () =>
     discard(userId, completionQueueId(activityId)),
   );
 
-// Las realizaciones que siguen en este dispositivo, por actividad: esperando conexión o rechazadas
-// por el servidor. Se actualiza sola cuando la cola cambia; si no se puede leer, no hay ninguna
-// que mostrar.
-export function useQueuedCompletionStatuses(userId: string | undefined) {
+// Lo que cierra una actividad y sigue en este dispositivo, por actividad: su realización y lo que
+// otros dominios registran en su lugar (`closingResources`, como el resultado de un monitoreo),
+// esperando conexión o rechazado por el servidor. Se actualiza solo cuando la cola cambia; si no se
+// puede leer, no hay nada que mostrar.
+export function useQueuedCompletionStatuses(
+  userId: string | undefined,
+  closingResources: readonly string[] = [],
+) {
   const [state, setState] = useState<{
     userId?: string;
-    items: QueuedCompletion[];
+    items: QueuedByParent[];
   }>({ items: [] });
+  // La lista llega como prop: se compara por su contenido para no volver a suscribirse en cada
+  // render.
+  const resourcesKey = [COMPLETION_RESOURCE, ...closingResources].join('|');
 
   useEffect(() => {
     if (!userId) return;
+    const resources = resourcesKey.split('|');
     const subscription = liveQuery(() =>
-      listQueuedCompletions(userId),
+      listQueuedByParent(userId, resources),
     ).subscribe({
       next: (items) => setState({ userId, items }),
       error: () => setState({ userId, items: [] }),
     });
     return () => subscription.unsubscribe();
-  }, [userId]);
+  }, [userId, resourcesKey]);
 
   // Mientras llega la lectura de esta persona no se muestra la de otra.
   const items = state.userId === userId ? state.items : undefined;
   return useMemo(
     () =>
       new Map(
-        (items ?? []).map(({ activityId, status }) => [
-          activityId,
+        (items ?? []).map(({ parentId, status }) => [
+          parentId,
           status === 'error' ? ('error' as const) : ('pending' as const),
         ]),
       ),

@@ -10,7 +10,9 @@ import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '../api';
 
 // Puerta de entrada (`/`): lleva a la primera sección que la persona puede ver. Es el destino
-// del logo, del inicio de sesión y de la app instalada.
+// del logo, del inicio de sesión, de la app instalada y de la push que resume varios avisos. La
+// consulta pasa a la sección (`?notificaciones=abiertas` abre el panel en cualquier pantalla); se
+// lee de la dirección al redirigir para que la página no tenga que esperar a sus parámetros.
 export function HomeRedirect() {
   const router = useRouter();
   const { data: user } = useSession();
@@ -20,7 +22,7 @@ export function HomeRedirect() {
     : undefined;
 
   useEffect(() => {
-    if (home) router.replace(home.href);
+    if (home) router.replace(`${home.href}${window.location.search}`);
   }, [home, router]);
 
   if (user && !home) {

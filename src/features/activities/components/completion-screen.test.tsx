@@ -530,7 +530,7 @@ describe('CompletionScreen', () => {
       ).toBeInTheDocument();
     });
 
-    it('says that a monitoring is recorded in the health module', async () => {
+    it('says that a monitoring is recorded with its result', async () => {
       server.use(
         activityHandler({ activity_type: 'phytosanitary_monitoring' }),
       );
@@ -538,7 +538,7 @@ describe('CompletionScreen', () => {
 
       expect(
         await screen.findByText(
-          'El registro del monitoreo se habilita con el módulo de sanidad.',
+          'Un monitoreo se registra con su resultado: ábrelo en Actividades y elige Registrar monitoreo.',
         ),
       ).toBeInTheDocument();
     });

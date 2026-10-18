@@ -74,3 +74,59 @@ describe('agricultural activity query keys', () => {
     expect(queued('u-1', 'a-1')).not.toEqual(queued('u-1', 'a-2'));
   });
 });
+
+describe('pest and disease query keys', () => {
+  it('hangs the screen list and the active catalog from the key that writes invalidate', () => {
+    const all = queryKeys.pestsDiseases.all();
+    expect(startsWith(queryKeys.pestsDiseases.list(), all)).toBe(true);
+    expect(startsWith(queryKeys.pestsDiseases.active(), all)).toBe(true);
+    expect(queryKeys.pestsDiseases.list()).not.toEqual(
+      queryKeys.pestsDiseases.active(),
+    );
+  });
+});
+
+describe('plot health query keys', () => {
+  it('hangs every read from the key that a monitoring or a control invalidates', () => {
+    const all = queryKeys.health.all();
+    const { history, withoutControl, evidence, evidenceFile } =
+      queryKeys.health;
+    expect(startsWith(history({}), all)).toBe(true);
+    expect(startsWith(withoutControl(null), all)).toBe(true);
+    expect(startsWith(evidence('a-1'), all)).toBe(true);
+    expect(startsWith(evidenceFile('e-1'), all)).toBe(true);
+  });
+
+  it('keeps each history query apart under one key to invalidate them all', () => {
+    const { history, historyAll } = queryKeys.health;
+    expect(startsWith(history({ plot: 'pl-1' }), historyAll())).toBe(true);
+    expect(history({ plot: 'pl-1' })).not.toEqual(history({ plot: 'pl-2' }));
+  });
+
+  it('keeps the waiting detections of each producer apart', () => {
+    const { withoutControl } = queryKeys.health;
+    expect(withoutControl(null)).not.toEqual(withoutControl('p-1'));
+    expect(withoutControl('p-1')).not.toEqual(withoutControl('p-2'));
+  });
+
+  it('keeps the queued monitoring of each person and activity apart', () => {
+    const { queued } = queryKeys.health;
+    expect(queued('u-1', 'a-1')).not.toEqual(queued('u-2', 'a-1'));
+    expect(queued('u-1', 'a-1')).not.toEqual(queued('u-1', 'a-2'));
+  });
+});
+
+describe('notification query keys', () => {
+  it('hangs the list and the count from the key that every change invalidates', () => {
+    const { all, list, unreadCount } = queryKeys.notifications;
+    expect(startsWith(list(), all())).toBe(true);
+    expect(startsWith(unreadCount(), all())).toBe(true);
+    expect(list()).not.toEqual(unreadCount());
+  });
+
+  it('keeps the push keys apart from the notifications', () => {
+    const { config, subscription } = queryKeys.push;
+    expect(startsWith(config(), queryKeys.notifications.all())).toBe(false);
+    expect(config()).not.toEqual(subscription());
+  });
+});

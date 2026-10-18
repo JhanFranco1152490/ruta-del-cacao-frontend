@@ -12,17 +12,16 @@ import {
   ComboboxItem,
   ComboboxList,
 } from '@/components/ui/combobox';
-
 import {
   type CatalogInput,
   type InputChoice,
   inputChoices,
-} from '../completion-values';
+} from '@/lib/input-usage';
 
 // Un solo campo busca y elige el insumo: se escribe parte del nombre y la lista se va filtrando
 // (sin tildes, mayúsculas ni espacios, como el catálogo). Los insumos de otras filas se ven, pero
 // no se pueden elegir dos veces.
-export function CompletionInputPicker({
+export function UsedInputPicker({
   catalog,
   value,
   takenIds,

@@ -1,7 +1,7 @@
 'use client';
 
 import { CloudOff } from 'lucide-react';
-import { useState } from 'react';
+import { type ComponentProps, type ReactNode, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useSession } from '@/hooks/use-session';
+import { useActivityAssignees } from '@/lib/api/activity-assignees';
 import { formatMonthYear } from '@/lib/format/dates';
 import { onlyFarmOf } from '@/lib/farm-scope';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -24,13 +25,15 @@ import {
 } from '../activity-filters';
 import { summarizeActivities } from '../activity-summary';
 import { isPeriodView } from '../activity-view';
-import { useActivityAssignees } from '../api';
+import type { AgriculturalActivity } from '../api';
 import { AssigneesContext } from '../assignees';
 import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';
 import { useActivityMonth } from '../use-activity-month';
+import { useLinkedActivity } from '../use-linked-activity';
 import { useActivityView } from '../use-activity-view';
 import { useCalendarData } from '../use-calendar-data';
+import { type ScheduleLink, useScheduleLink } from '../use-schedule-link';
 import { ActivityCalendarBody } from './activity-calendar-body';
 import { ActivityDialogs, type PendingDialog } from './activity-dialogs';
 import { ActivityFiltersBar } from './activity-filters-bar';
@@ -42,7 +45,9 @@ import { ActivityScheduleFab } from './activity-schedule-fab';
 import { ActivityStatePills } from './activity-state-pills';
 import { ActivityTypeBreakdown } from './activity-type-breakdown';
 import { ActivityViewSwitch } from './activity-view-switch';
+import { LinkedScheduleDialog } from './linked-schedule-dialog';
 import { ScheduleActivityButton } from './schedule-activity-button';
+import { ScheduleMonitoringButton } from './schedule-monitoring-button';
 
 const NEEDS_CONNECTION = {
   mes: 'Necesitas conexión para ver las actividades de este mes.',
@@ -55,7 +60,34 @@ const NEEDS_CONNECTION = {
 const STATUS_NOTE_CLASS =
   'flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-bold';
 
-export function ActivityCalendarScreen() {
+// Un aviso de otro dominio arriba de las vistas. Recibe el productor que se ve y cómo abrir el
+// detalle de una actividad.
+export type CalendarNoticeRenderer = (context: {
+  producer: string | null;
+  openActivity: (activityId: string) => void;
+}) => ReactNode;
+
+export function ActivityCalendarScreen({
+  closingResources,
+  monitoringHref,
+  renderActivityDetails,
+  queuedActivities,
+  renderNotice,
+}: {
+  // Los recursos de otros dominios que, en la cola, cierran una actividad (el resultado de un
+  // monitoreo): mientras esperan conexión, la actividad se ve realizada.
+  closingResources?: readonly string[];
+  // La pantalla donde se registra el resultado de un monitoreo, que es de otro dominio.
+  monitoringHref?: (activityId: string) => string;
+  // Lo que otro dominio agrega al detalle de una actividad.
+  renderActivityDetails?: ComponentProps<
+    typeof ActivityDialogs
+  >['renderDetails'];
+  // Las actividades de otro dominio creadas en este dispositivo que esperan conexión.
+  queuedActivities?: readonly AgriculturalActivity[];
+  // Un aviso de otro dominio arriba de las vistas (las detecciones que esperan un control).
+  renderNotice?: CalendarNoticeRenderer;
+} = {}) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
   const isDesktop = useIsDesktop();
@@ -77,6 +109,8 @@ export function ActivityCalendarScreen() {
     week,
     today,
     producer,
+    closingResources,
+    queuedActivities,
   });
   // Sin productor elegido la cuenta técnica no tiene una lista de responsables: sale de las
   // actividades que se ven.
@@ -125,9 +159,30 @@ export function ActivityCalendarScreen() {
   };
   const [pending, setPending] = useState<PendingDialog>();
   const open = (dialog: PendingDialog) => setPending(dialog);
+  useLinkedActivity({
+    userId: user?.id,
+    items: filtered,
+    loaded: !data.isPending && data.error === null,
+    month,
+    goToMonth,
+    onOpen: (id) => open({ kind: 'detail', id }),
+  });
 
   const canSchedule = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD);
+  const [linkedSchedule, setLinkedSchedule] = useState<ScheduleLink | null>(
+    null,
+  );
+  useScheduleLink({
+    // Con la sesión y el mes cargados, como el enlace de una actividad: antes no se sabe si la
+    // cuenta puede programar ni hay dónde mostrar el aviso.
+    ready: !!user && !data.isPending,
+    canSchedule,
+    offline: !hasConnection,
+    onOpen: setLinkedSchedule,
+  });
   const openScheduleForm = () => open({ kind: 'schedule' });
+  const openMonitoringForm = () =>
+    open({ kind: 'schedule', activityType: 'phytosanitary_monitoring' });
   // Programar desde un día del calendario necesita permiso y conexión.
   const scheduleOnDay =
     canSchedule && !offline
@@ -183,13 +238,23 @@ export function ActivityCalendarScreen() {
           )}
         </div>
         <div className="mt-4 space-y-3">
+          {renderNotice?.({
+            producer,
+            openActivity: (id) => open({ kind: 'detail', id }),
+          })}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <ActivityViewSwitch onChange={viewState.setView} value={view} />
             {canSchedule && isDesktop && (
-              <ScheduleActivityButton
-                offline={offline}
-                onClick={openScheduleForm}
-              />
+              <div className="flex flex-wrap items-start gap-2">
+                <ScheduleMonitoringButton
+                  offline={offline}
+                  onClick={openMonitoringForm}
+                />
+                <ScheduleActivityButton
+                  offline={offline}
+                  onClick={openScheduleForm}
+                />
+              </div>
             )}
           </div>
           {showFilters &&
@@ -305,12 +370,26 @@ export function ActivityCalendarScreen() {
           )}
         </div>
         {canSchedule && !isDesktop && (
-          <ActivityScheduleFab offline={offline} onClick={openScheduleForm} />
+          <ActivityScheduleFab
+            offline={offline}
+            onClick={openScheduleForm}
+            onScheduleMonitoring={openMonitoringForm}
+          />
+        )}
+        {linkedSchedule && (
+          <LinkedScheduleDialog
+            currentMonth={month}
+            link={linkedSchedule}
+            onClose={() => setLinkedSchedule(null)}
+            onGoToMonth={goToMonth}
+          />
         )}
         <ActivityDialogs
           items={filtered}
           offline={offline}
           currentMonth={month}
+          monitoringHref={monitoringHref}
+          renderDetails={renderActivityDetails}
           onGoToMonth={inMonthView ? goToMonth : undefined}
           onPending={setPending}
           pending={pending}

@@ -5,6 +5,7 @@ import { monthsBetween, shiftDays } from '@/lib/format/dates';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import { type ActivityOfDay, toActivityOfDay } from './activity-days';
+import type { AgriculturalActivity } from './api';
 import type { ActivityView } from './activity-view';
 import { usePendingActivities } from './api';
 import { useActivitiesOfRange } from './use-activities-of-range';
@@ -20,6 +21,12 @@ export type CalendarScope = {
   today: string;
   // Solo la cuenta técnica elige productor; las demás pasan `null`.
   producer: string | null;
+  // Los recursos de la cola, además de la realización, que cierran una actividad mientras esperan
+  // conexión (los entrega la página que une los dominios).
+  closingResources?: readonly string[];
+  // Actividades que se crearon en este dispositivo y todavía no llegan al servidor (los controles
+  // fitosanitarios programados sin conexión). Se muestran en su fecha, marcadas como pendientes.
+  queuedActivities?: readonly AgriculturalActivity[];
 };
 
 // Las actividades que pide la vista que está abierta, con el estado que tienen hoy: el mes en
@@ -32,6 +39,8 @@ export function useCalendarData({
   week,
   today,
   producer,
+  closingResources,
+  queuedActivities = [],
 }: CalendarScope) {
   const isPendingView = view === 'pendientes';
   const weekEnd = shiftDays(week, 6);
@@ -44,7 +53,7 @@ export function useCalendarData({
   const pending = usePendingActivities(userId, today, producer, {
     enabled: isPendingView,
   });
-  const completions = useQueuedCompletionStatuses(userId);
+  const completions = useQueuedCompletionStatuses(userId, closingResources);
 
   const pendingNeverLoaded =
     isPausedWithoutData(pending) ||
@@ -61,11 +70,27 @@ export function useCalendarData({
         )
       : range.activities;
   const neverLoaded = isPendingView ? pendingNeverLoaded : rangeNeverLoaded;
+  // Las del periodo que se ve. Una que ya llegó al servidor aparece en la lectura y no se repite.
+  const known = new Set(activities.map(({ id }) => id));
+  const queued = queuedActivities.filter(
+    ({ id, scheduled_date: date }) =>
+      !known.has(id) &&
+      (isPendingView ||
+        (view === 'semana'
+          ? date >= week && date <= weekEnd
+          : date.startsWith(month))),
+  );
 
   return {
-    items: activities.map((activity): ActivityOfDay =>
-      toActivityOfDay(activity, today, completions),
-    ),
+    items: [
+      ...activities.map((activity): ActivityOfDay =>
+        toActivityOfDay(activity, today, completions),
+      ),
+      ...queued.map((activity): ActivityOfDay => ({
+        ...toActivityOfDay(activity, today),
+        queued: 'pending',
+      })),
+    ],
     savedAt: isPendingView ? pending.data?.savedAt : range.savedAt,
     isPending: isPendingView
       ? pending.isPending && !pendingNeverLoaded

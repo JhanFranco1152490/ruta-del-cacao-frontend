@@ -56,12 +56,32 @@ async function toApiError(response: Response) {
   return unexpectedResponse(response.status);
 }
 
-async function request<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
+// Lo que espera quien pide: casi siempre JSON; el archivo de una foto llega tal cual.
+type ResponseKind = 'json' | 'blob';
+
+const ACCEPT: Record<ResponseKind, string> = {
+  json: 'application/json',
+  // Los errores de ese endpoint siguen llegando en JSON.
+  blob: 'image/*, application/json',
+};
+
+// Una foto viaja como formulario de varias partes: el navegador arma el cuerpo y su tipo, con el
+// separador de las partes, así que aquí no se pone ninguno.
+const isFormData = (body: unknown): body is FormData =>
+  typeof FormData !== 'undefined' && body instanceof FormData;
+
+async function request<T>(
+  path: string,
+  init: ApiRequestInit = {},
+  kind: ResponseKind = 'json',
+): Promise<T> {
   const { body, ...rest } = init;
   const method = (init.method ?? 'GET').toUpperCase();
   const headers = new Headers(init.headers);
-  headers.set('Accept', 'application/json');
-  if (body !== undefined) headers.set('Content-Type', 'application/json');
+  headers.set('Accept', ACCEPT[kind]);
+  const form = isFormData(body);
+  if (body !== undefined && !form)
+    headers.set('Content-Type', 'application/json');
   if (!SAFE_METHODS.has(method))
     headers.set('X-CSRFToken', await getCsrfToken());
 
@@ -69,12 +89,13 @@ async function request<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
     ...rest,
     method,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined || form ? body : JSON.stringify(body),
     credentials: 'include',
     cache: 'no-store',
   });
 
   if (!response.ok) throw await toApiError(response);
+  if (kind === 'blob') return (await response.blob()) as T;
   if (response.status === 204) return undefined as T;
   const text = await response.text();
   if (!text) return undefined as T;
@@ -126,19 +147,24 @@ function logout<T>(path: string, init: ApiRequestInit) {
   return pending;
 }
 
-export async function apiFetch<T>(
-  path: string,
-  init: ApiRequestInit = {},
-): Promise<T> {
+async function send<T>(path: string, init: ApiRequestInit, kind: ResponseKind) {
   if (path.startsWith(LOGOUT_PATH)) return logout<T>(path, init);
   try {
-    return await request<T>(path, init);
+    return await request<T>(path, init, kind);
   } catch (error) {
     const canRenew =
       !logoutRequest &&
       !NO_RENEWAL_PREFIXES.some((prefix) => path.startsWith(prefix));
     if (!isUnauthorized(error) || !canRenew) throw error;
     await renewSession();
-    return request<T>(path, init);
+    return request<T>(path, init, kind);
   }
 }
+
+export const apiFetch = <T>(path: string, init: ApiRequestInit = {}) =>
+  send<T>(path, init, 'json');
+
+// Un archivo (la foto de una evidencia), con la misma sesión, renovación y errores que el resto.
+// No se pide con <img src>: así vale la renovación y se puede guardar una copia en el dispositivo.
+export const apiFetchBlob = (path: string, init: ApiRequestInit = {}) =>
+  send<Blob>(path, init, 'blob');

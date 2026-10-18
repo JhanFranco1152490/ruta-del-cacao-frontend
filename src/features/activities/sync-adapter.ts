@@ -25,12 +25,13 @@ export const isCorrectableCompletionError = (code: string | undefined) =>
 export const completionSyncAdapter: SyncAdapter = {
   resource: COMPLETION_RESOURCE,
 
-  // Al llegar al servidor cambian la actividad (queda realizada) y las existencias de la finca,
-  // que descuentan lo gastado. El registro encolado no sabe de qué mes ni de qué finca era la
-  // copia abierta, así que se refrescan todas.
+  // Al llegar al servidor cambian la actividad (queda realizada, también en la bandeja de
+  // notificaciones) y las existencias de la finca, que descuentan lo gastado. El registro encolado
+  // no sabe de qué mes ni de qué finca era la copia abierta, así que se refrescan todas.
   refreshAfterSync: () => [
     queryKeys.agriculturalActivities.all(),
     queryKeys.inputStocks.all(),
+    queryKeys.notifications.all(),
   ],
 
   // El padre del registro es la actividad, y la realización se registra en su dirección.

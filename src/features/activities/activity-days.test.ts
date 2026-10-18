@@ -4,6 +4,7 @@ import { buildAgriculturalActivity } from '@/test/factories';
 
 import {
   effectiveState,
+  isAwaitingSync,
   groupActivitiesByDay,
   groupItemsByDay,
   toActivityOfDay,
@@ -142,6 +143,16 @@ describe('effectiveState', () => {
       ),
     ).toBe('scheduled');
     expect(effectiveState(toActivityOfDay(activity, TODAY))).toBe('scheduled');
+  });
+});
+
+describe('isAwaitingSync', () => {
+  it('is an activity whose completion, or the activity itself, waits in the device', () => {
+    const item = toActivityOfDay(buildAgriculturalActivity(), TODAY);
+    expect(isAwaitingSync({ ...item, completion: 'pending' })).toBe(true);
+    expect(isAwaitingSync({ ...item, queued: 'pending' })).toBe(true);
+    expect(isAwaitingSync({ ...item, completion: 'error' })).toBe(false);
+    expect(isAwaitingSync(item)).toBe(false);
   });
 });
 

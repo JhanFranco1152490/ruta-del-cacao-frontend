@@ -31,6 +31,14 @@ export const queryKeys = {
     // Las activas, que ofrece la ficha de una parcela; con copia en el dispositivo.
     active: () => ['cacao-varieties', 'active'] as const,
   },
+  pestsDiseases: {
+    all: () => ['pests-diseases'] as const,
+    // El catálogo completo de su pantalla (activas e inactivas); se filtra en la pantalla.
+    list: () => ['pests-diseases', 'list'] as const,
+    // Las activas, que ofrece el buscador de la planilla del monitoreo; con copia en el
+    // dispositivo.
+    active: () => ['pests-diseases', 'active'] as const,
+  },
   agriculturalInputs: {
     all: () => ['agricultural-inputs'] as const,
     // El catálogo completo de un productor (activos e inactivos), con copia en el dispositivo. La
@@ -77,6 +85,43 @@ export const queryKeys = {
     // La realización de una actividad que sigue en la cola del dispositivo de esta persona.
     queued: (userId: string, id: string) =>
       ['agricultural-activities', 'queued', userId, id] as const,
+  },
+  health: {
+    // Lo que invalida registrar un monitoreo, crear un control, decidir que una detección no lo
+    // requiere o adjuntar una foto.
+    all: () => ['health'] as const,
+    // El historial fitosanitario, con sus filtros y su página; con copia en el dispositivo.
+    historyAll: () => ['health', 'history'] as const,
+    history: (query: object) => ['health', 'history', query] as const,
+    // Los monitoreos que siguen sin registrar hasta una fecha; con copia en el dispositivo.
+    pendingMonitorings: (producer: string | null, through: string) =>
+      ['health', 'pending-monitorings', producer ?? '', through] as const,
+    // Las detecciones en que alguien pidió un control y nadie lo ha atendido; con copia en el
+    // dispositivo. La cuenta técnica elige el productor; las demás cuentas pasan `null`.
+    withoutControl: (producer: string | null) =>
+      ['health', 'without-control', producer ?? ''] as const,
+    // Las fotos de un monitoreo o de un control, y el archivo de cada una.
+    evidence: (activityId: string) =>
+      ['health', 'evidence', activityId] as const,
+    evidenceFile: (id: string) => ['health', 'evidence-file', id] as const,
+    // El resultado de un monitoreo que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, activityId: string) =>
+      ['health', 'queued', userId, activityId] as const,
+  },
+  notifications: {
+    // Lo que invalida leer, eliminar o deshacer una notificación, y cambiar una actividad o una
+    // detección: la bandeja muestra cómo está cada una hoy.
+    all: () => ['notifications'] as const,
+    // La bandeja por páginas; la primera, con copia en el dispositivo.
+    list: () => ['notifications', 'list'] as const,
+    // El número de la campana; con copia en el dispositivo.
+    unreadCount: () => ['notifications', 'unread-count'] as const,
+  },
+  push: {
+    // La llave pública con la que el navegador se suscribe: sin ella, la push está apagada.
+    config: () => ['push', 'config'] as const,
+    // Si este navegador ya está suscrito y qué permiso tiene.
+    subscription: () => ['push', 'subscription'] as const,
   },
   characterizations: {
     // Las de todas las fincas: lo que invalida quien no conoce la finca (la cola solo sabe la

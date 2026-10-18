@@ -9,6 +9,7 @@ import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
+import type { CatalogInput } from '@/lib/input-usage';
 import { QueueItemExistsError } from '@/lib/offline/sync-queue';
 
 import type { ActivityOfDay } from '../activity-days';
@@ -20,7 +21,6 @@ import {
   toCompletionRequest,
 } from '../completion-rules';
 import {
-  type CatalogInput,
   completionLabel,
   emptyCompletionForm,
   queuedToFormInput,
@@ -66,7 +66,13 @@ export function CompletionCapture({
   const [{ values: defaultValues, unavailableRows }] = useState(() =>
     rejected
       ? queuedToFormInput(rejected, new Set(catalog?.map(({ id }) => id)))
-      : { values: emptyCompletionForm(today), unavailableRows: [] },
+      : {
+          values: emptyCompletionForm(
+            today,
+            activity.control_of?.planned_input,
+          ),
+          unavailableRows: [],
+        },
   );
   // Lo capturado tiene insumos, pero sin catálogo no se pueden mostrar ni volver a elegir (pasa
   // tras cerrar sesión, que borra las copias y conserva la cola): guardar así los perdería.
