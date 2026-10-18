@@ -1679,6 +1679,7 @@ export interface components {
         FacilityFarm: {
             /** Format: uuid */
             id: string;
+            code: string;
             name: string;
             is_active: boolean;
         };
@@ -2083,6 +2084,17 @@ export interface components {
         NotificationKindEnum: "activity_upcoming" | "activity_delayed" | "activity_overdue" | "detection_control_pending";
         /** @enum {unknown} */
         NullEnum: null;
+        OccupiedBy: {
+            lot: components["schemas"]["OccupyingLot"];
+            /** Format: date-time */
+            since: string;
+        };
+        OccupyingLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+        };
         Overlap: {
             /** Format: uuid */
             plot_id: string;
@@ -2617,6 +2629,7 @@ export interface components {
             readonly capacity_kg: number;
             readonly is_active: boolean;
             readonly status: components["schemas"]["PostharvestFacilityStatusEnum"];
+            readonly occupied_by: components["schemas"]["OccupiedBy"] | null;
             readonly has_records: boolean;
             readonly version: number;
             /** Format: date-time */
@@ -2645,10 +2658,11 @@ export interface components {
         };
         /**
          * @description * `available` - Disponible
+         *     * `occupied` - Ocupado
          *     * `inactive` - Inactivo
          * @enum {string}
          */
-        PostharvestFacilityStatusEnum: "available" | "inactive";
+        PostharvestFacilityStatusEnum: "available" | "occupied" | "inactive";
         ProducerAccount: {
             /** Format: uuid */
             id: string;
