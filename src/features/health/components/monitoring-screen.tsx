@@ -16,7 +16,14 @@ import { useMonitoringSources } from './use-monitoring-sources';
 
 // La pantalla de campo donde se registra el resultado de un monitoreo. Aquí se decide qué mostrar:
 // un aviso si no se puede registrar, lo que le pasó a lo ya guardado, o la planilla.
-export function MonitoringScreen({ activityId }: { activityId: string }) {
+export function MonitoringScreen({
+  activityId,
+  plotTrees = null,
+}: {
+  activityId: string;
+  // Los árboles que suma la ficha de la parcela, si se saben: quien une los dominios los lee.
+  plotTrees?: number | null;
+}) {
   const today = todayInBogota();
   const sources = useMonitoringSources(activityId);
   const { returnPath, finish } = useFinishSave(ACTIVITIES_PATH);
@@ -93,6 +100,7 @@ export function MonitoringScreen({ activityId }: { activityId: string }) {
         finish('Monitoreo registrado');
       }}
       pests={pests}
+      plotTrees={plotTrees}
       rejected={queued}
       today={today}
     />

@@ -129,7 +129,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function renderScreen(user: Parameters<typeof buildSession>[0] = {}) {
+function renderScreen(
+  user: Parameters<typeof buildSession>[0] = {},
+  plotTrees: number | null = null,
+) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
@@ -143,7 +146,10 @@ function renderScreen(user: Parameters<typeof buildSession>[0] = {}) {
       ...user,
     }),
   );
-  renderWithProviders(<MonitoringScreen activityId="a1" />, { queryClient });
+  renderWithProviders(
+    <MonitoringScreen activityId="a1" plotTrees={plotTrees} />,
+    { queryClient },
+  );
 }
 
 const sheet = () =>
@@ -283,6 +289,43 @@ describe('MonitoringScreen', () => {
     expect(
       within(detection(1)).getByLabelText('Árboles afectados'),
     ).toHaveAccessibleDescription('Indica las unidades afectadas');
+  });
+
+  it('says how many trees the plot has and does not let evaluate more', async () => {
+    renderScreen({}, 100);
+    await sheet();
+
+    expect(
+      screen.getByLabelText('Unidades evaluadas'),
+    ).toHaveAccessibleDescription(
+      'La parcela tiene 100 árboles según su ficha.',
+    );
+    await userEvent.type(screen.getByLabelText('Unidades evaluadas'), '101');
+    await choosePest(1, 'moni', /^Monilia/);
+    await userEvent.type(
+      within(detection(1)).getByLabelText('Árboles afectados'),
+      '5',
+    );
+    await userEvent.click(await sheet());
+
+    await waitFor(() =>
+      expect(
+        screen.getByLabelText('Unidades evaluadas'),
+      ).toHaveAccessibleDescription(
+        'No puedes evaluar más árboles de los que tiene la parcela (100)',
+      ),
+    );
+  });
+
+  it('does not mention the trees of the plot when counting pods', async () => {
+    renderScreen({}, 100);
+    await sheet();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mazorcas' }));
+
+    expect(
+      screen.getByLabelText('Unidades evaluadas'),
+    ).not.toHaveAccessibleDescription(/La parcela tiene/);
   });
 
   it('does not let more units be affected than evaluated, nor the same pest twice', async () => {

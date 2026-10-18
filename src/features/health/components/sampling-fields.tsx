@@ -5,6 +5,7 @@ import {
   Controller,
   type FieldErrors,
   type UseFormRegister,
+  useWatch,
 } from 'react-hook-form';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
@@ -33,13 +34,17 @@ export function SamplingFields({
   errors,
   today,
   disabled,
+  plotTrees = null,
 }: {
   control: Control<MonitoringFormInput, unknown, MonitoringFormValues>;
   register: UseFormRegister<MonitoringFormInput>;
   errors: FieldErrors<MonitoringFormInput>;
   today: string;
   disabled: boolean;
+  // Los árboles que suma la ficha de la parcela, si se saben.
+  plotTrees?: number | null;
 }) {
+  const unit = useWatch({ control, name: 'sampling_unit' });
   return (
     <FormSection title="Muestreo">
       <div className="space-y-5">
@@ -73,6 +78,11 @@ export function SamplingFields({
           className={CAPTURE_FIELD_CLASS}
           disabled={disabled}
           error={errors.evaluated_units?.message}
+          hint={
+            unit === 'trees' && plotTrees !== null
+              ? `La parcela tiene ${plotTrees} ${plotTrees === 1 ? 'árbol' : 'árboles'} según su ficha.`
+              : undefined
+          }
           inputMode="numeric"
           label="Unidades evaluadas"
           {...register('evaluated_units')}

@@ -240,4 +240,51 @@ describe('the control of a detection', () => {
   it('asks nothing when the control is requested from who schedules', () => {
     expect(errorsOf(withControl({ mode: 'requested' }))).toEqual({});
   });
+
+  describe('against the trees of the plot', () => {
+    const limited = createMonitoringSchema({
+      today: TODAY,
+      scheduledAt: SCHEDULED_AT,
+      plotTrees: 100,
+    });
+    const errors = (input: MonitoringFormInput) => {
+      const result = limited.safeParse(input);
+      return result.success
+        ? {}
+        : Object.fromEntries(
+            result.error.issues.map((issue) => [
+              issue.path.join('.'),
+              issue.message,
+            ]),
+          );
+    };
+
+    it('rejects more trees than the plot has', () => {
+      expect(errors(form({ evaluated_units: '101' }))).toEqual({
+        evaluated_units:
+          'No puedes evaluar más árboles de los que tiene la parcela (100)',
+      });
+    });
+
+    it('accepts all the trees of the plot', () => {
+      expect(errors(form({ evaluated_units: '100' }))).toEqual({});
+    });
+
+    it('does not limit the pods', () => {
+      expect(
+        errors(form({ sampling_unit: 'pods', evaluated_units: '5000' })),
+      ).toEqual({});
+    });
+
+    it('does not limit a plot whose ficha has no trees yet', () => {
+      const unknown = createMonitoringSchema({
+        today: TODAY,
+        scheduledAt: SCHEDULED_AT,
+        plotTrees: null,
+      });
+      expect(
+        unknown.safeParse(form({ evaluated_units: '100000' })).success,
+      ).toBe(true);
+    });
+  });
 });

@@ -42,6 +42,7 @@ export function MonitoringSheet({
   choices,
   initialErrors = [],
   photosField,
+  plotTrees = null,
 }: {
   // Cuándo se programó el monitoreo: la fecha de realización no puede ser anterior.
   scheduledAt: string;
@@ -62,10 +63,12 @@ export function MonitoringSheet({
   }[];
   // Las fotos: no son parte del formulario (son archivos), las lleva quien guarda.
   photosField?: ReactNode;
+  // Los árboles que suma la ficha de la parcela, si se saben: son el tope de lo que se evalúa.
+  plotTrees?: number | null;
 }) {
   const schema = useMemo(
-    () => createMonitoringSchema({ today, scheduledAt }),
-    [today, scheduledAt],
+    () => createMonitoringSchema({ today, scheduledAt, plotTrees }),
+    [today, scheduledAt, plotTrees],
   );
   const form = useForm<MonitoringFormInput, unknown, MonitoringFormValues>({
     resolver: zodResolver(schema),
@@ -110,6 +113,7 @@ export function MonitoringSheet({
             control={control}
             disabled={isSaving}
             errors={errors}
+            plotTrees={plotTrees}
             register={register}
             today={today}
           />

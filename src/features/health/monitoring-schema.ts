@@ -18,6 +18,8 @@ import {
 export const OTHER_DESCRIPTION_MAX_LENGTH = 100;
 export { METHOD_DESCRIPTION_MAX_LENGTH } from './control-rules';
 export const NOTES_MAX_LENGTH = 500;
+export const treesExceededMessage = (plotTrees: number) =>
+  `No puedes evaluar más árboles de los que tiene la parcela (${plotTrees})`;
 export const REPEATED_DETECTION_MESSAGE =
   'Esta plaga o enfermedad ya está en la lista. Modifica la detección existente';
 
@@ -68,9 +70,12 @@ function checkControl(
 export const createMonitoringSchema = ({
   today,
   scheduledAt,
+  plotTrees = null,
 }: {
   today: string;
   scheduledAt: string;
+  // Los árboles que suma la ficha de la parcela, o `null` si no se saben: entonces no se limita.
+  plotTrees?: number | null;
 }) =>
   z
     .object({
@@ -105,6 +110,12 @@ export const createMonitoringSchema = ({
       const evaluated = parseUnits(values.evaluated_units);
       if (evaluated === null) {
         issue(['evaluated_units'], 'Indica cuántas unidades evaluaste');
+      } else if (
+        values.sampling_unit === 'trees' &&
+        plotTrees !== null &&
+        evaluated > plotTrees
+      ) {
+        issue(['evaluated_units'], treesExceededMessage(plotTrees));
       }
       if (values.notes.length > NOTES_MAX_LENGTH) {
         issue(['notes'], maxLength(NOTES_MAX_LENGTH));

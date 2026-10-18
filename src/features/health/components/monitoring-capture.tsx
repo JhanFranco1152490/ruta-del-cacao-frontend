@@ -56,6 +56,7 @@ export function MonitoringCapture({
   cancelHref,
   choices,
   onSaved,
+  plotTrees,
 }: {
   activity: AgriculturalActivity;
   today: string;
@@ -65,6 +66,8 @@ export function MonitoringCapture({
   cancelHref: string;
   choices: Omit<ControlChoices, 'today'>;
   onSaved: () => void;
+  // Los árboles que suma la ficha de la parcela, si se saben.
+  plotTrees?: number | null;
 }) {
   const { data: user } = useSession();
   const save = useSaveMonitoring();
@@ -182,6 +185,7 @@ export function MonitoringCapture({
             />
           }
           pests={pests}
+          plotTrees={plotTrees}
           scheduledAt={activity.created_at}
           secondaryAction={
             <Link
