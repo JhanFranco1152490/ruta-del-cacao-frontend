@@ -88,18 +88,20 @@ export function FacilityFormDialog({
     submission.setSummary(missing ? MISSING_FIELDS_MESSAGE : undefined);
   };
 
-  // El existente lo dice el servidor; si el aviso salió antes de enviar, se busca en la lista.
-  const localDuplicate =
-    errors.name?.type === 'custom'
-      ? findDuplicateFacility(
+  // El existente lo dice el servidor; si el aviso salió antes de enviar, se busca en la lista. Se
+  // muestra mientras el nombre siga repetido: al corregirlo, el error del campo y el aviso se van.
+  const repeated =
+    errors.name?.type === 'server' || errors.name?.type === 'custom';
+  const existing: ExistingFacility | undefined = !repeated
+    ? undefined
+    : errors.name?.type === 'server'
+      ? submission.existing
+      : findDuplicateFacility(
           known,
           form.getValues('name'),
           form.getValues('farm_id'),
           facility?.id,
-        )
-      : undefined;
-  const existing: ExistingFacility | undefined =
-    submission.existing ?? localDuplicate;
+        );
   const activateExisting = async (target: ExistingFacility) => {
     const found = known.find((candidate) => candidate.id === target.id);
     if (!found || (await submission.activate(found))) onShowExisting(target.id);

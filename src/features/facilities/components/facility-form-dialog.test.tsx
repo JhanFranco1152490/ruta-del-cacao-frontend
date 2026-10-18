@@ -194,6 +194,44 @@ describe('registering a facility', () => {
     expect(onShowExisting).toHaveBeenCalledWith('c9');
   });
 
+  it('drops the notice of the existing facility once the name is fixed', async () => {
+    server.use(
+      csrfHandler,
+      http.post(apiUrl('/api/postharvest-facilities'), () =>
+        HttpResponse.json(
+          {
+            detail: 'Ya existe.',
+            code: 'duplicate_facility_name',
+            fields: {},
+            existing: {
+              id: 'c9',
+              name: 'C-09',
+              facility_type: 'fermentation_box',
+              is_active: true,
+            },
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    renderDialog();
+
+    await userEvent.click(screen.getByLabelText('Cajón para fermentar'));
+    await fill('C-09', '600');
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    expect(
+      await screen.findByRole('button', { name: 'Ver el elemento' }),
+    ).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText('Nombre o código'), 'B');
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: 'Ver el elemento' }),
+      ).toBeNull(),
+    );
+  });
+
   it('says it next to the farm when the farm became inactive', async () => {
     server.use(
       csrfHandler,
