@@ -81,6 +81,90 @@ const fill = async (name: string, capacity: string) => {
   );
 };
 
+describe('the suggested name', () => {
+  const nameField = () => screen.getByLabelText('Nombre o código');
+
+  it('proposes the next free name of the type chosen, and changes it with the type', async () => {
+    renderDialog();
+    expect(nameField()).toHaveValue('');
+
+    await userEvent.click(screen.getByLabelText('Cajón para fermentar'));
+    expect(nameField()).toHaveValue('C-03');
+    expect(
+      screen.getByText(
+        'Nombre sugerido. Cámbialo si en la finca lo llaman distinto.',
+      ),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText('Marquesina para secar'));
+    expect(nameField()).toHaveValue('M-01');
+  });
+
+  it('sends the suggested name when the person keeps it', async () => {
+    server.use(
+      csrfHandler,
+      capture('post', '/api/postharvest-facilities', () =>
+        HttpResponse.json(buildFacility(), { status: 201 }),
+      ),
+    );
+    const { onSaved } = renderDialog();
+
+    await userEvent.click(screen.getByLabelText('Cajón para fermentar'));
+    await userEvent.type(
+      screen.getByLabelText('Capacidad (kg de cacao en baba)'),
+      '600',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(bodies[0].body).toMatchObject({ name: 'C-03' });
+  });
+
+  it('replaces the suggestion when the person writes their own, and keeps it when the type changes', async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByLabelText('Cajón para fermentar'));
+    await userEvent.type(nameField(), 'Cajón del patio');
+    await userEvent.click(screen.getByLabelText('Marquesina para secar'));
+
+    expect(nameField()).toHaveValue('Cajón del patio');
+    expect(screen.queryByText(/Nombre sugerido/)).not.toBeInTheDocument();
+  });
+
+  it('respects a name the person cleared', async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByLabelText('Cajón para fermentar'));
+    await userEvent.clear(nameField());
+    await userEvent.click(screen.getByLabelText('Marquesina para secar'));
+
+    expect(nameField()).toHaveValue('');
+  });
+
+  it('follows the farm chosen', async () => {
+    const elDiviso = { ...esperanza, id: 'f2', code: 'F02', name: 'El Diviso' };
+    renderDialog({
+      known: [c02, buildFacility({ id: 'x', name: 'C-09', farm: elDiviso })],
+    });
+
+    await userEvent.click(screen.getByLabelText('Cajón para fermentar'));
+    expect(nameField()).toHaveValue('C-03');
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Finca' }));
+    await userEvent.click(
+      await screen.findByRole('option', { name: /El Diviso/ }),
+    );
+    expect(nameField()).toHaveValue('C-10');
+  });
+
+  it('does not suggest anything when editing', () => {
+    renderDialog({ facility: c02 });
+
+    expect(nameField()).toHaveValue('C-02');
+    expect(screen.queryByText(/Nombre sugerido/)).not.toBeInTheDocument();
+  });
+});
+
 describe('registering a facility', () => {
   it('registers it in the farm of the list', async () => {
     server.use(

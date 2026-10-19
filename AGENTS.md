@@ -225,6 +225,8 @@ src/
   La lista se lee completa, con copia en el dispositivo (`useFacilities`); la finca, los filtros y el
   orden natural (`C-2` antes que `C-10`) corren aquí (`facility-filters.ts`, `facility-order.ts`).
   Registrar, editar, activar, desactivar y eliminar son solo en línea y se deshabilitan sin conexión.
+  Al registrar, el nombre se propone según el tipo y la finca (`C-01`, `M-01`: `facility-name.ts` y
+  `use-facility-name-suggestion.ts`), sobre la lista del dispositivo, y se respeta lo que la persona escriba.
   El estado Ocupado y el lote que ocupa llegan de la API: fermentación y secado no tocan esta
   pantalla. Las etiquetas por tipo y estado, con su concordancia de género, viven en
   `lib/facility-labels.ts` para que otros dominios nombren igual un cajón. Sin conexión o sin permiso

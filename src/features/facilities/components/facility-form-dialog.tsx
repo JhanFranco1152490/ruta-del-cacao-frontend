@@ -37,6 +37,7 @@ import {
 } from '../facility-form';
 import { FacilityFarmField } from './facility-farm-field';
 import { FacilityTypeField } from './facility-type-field';
+import { useFacilityNameSuggestion } from './use-facility-name-suggestion';
 import { useFacilitySubmit } from './use-facility-submit';
 
 // Registrar un cajón o una marquesina, o editar `facility` si llega. Se monta al abrirse, así que
@@ -78,6 +79,11 @@ export function FacilityFormDialog({
     defaultValues: facilityFormValuesOf(facility, farmId),
   });
   const { errors } = form.formState;
+  const nameIsSuggested = useFacilityNameSuggestion({
+    form,
+    known,
+    enabled: !facility,
+  });
   const submission = useFacilitySubmit({ facility, form, farmName, onSaved });
   const { isSaving } = submission;
 
@@ -152,9 +158,17 @@ export function FacilityFormDialog({
           <TextField
             disabled={isSaving}
             error={errors.name?.message}
-            hint="Como lo identifican en la finca. Único en la finca."
+            hint={
+              nameIsSuggested
+                ? 'Nombre sugerido. Cámbialo si en la finca lo llaman distinto.'
+                : 'Como lo identifican en la finca. Único en la finca.'
+            }
             label="Nombre o código"
             maxLength={FACILITY_NAME_MAX_LENGTH}
+            // Con el nombre sugerido seleccionado, escribir uno propio lo reemplaza.
+            onFocus={(event) => {
+              if (nameIsSuggested) event.target.select();
+            }}
             placeholder="Ej.: C-04"
             {...form.register('name')}
           />
