@@ -74,8 +74,9 @@ export function FacilitiesScreen({
   const savedAt = read.data?.savedAt;
   const offline = !hasConnection || savedAt !== undefined;
   const canViewLots = hasPermission(user, PERMISSIONS.LOTS_VIEW);
-  // Sin el permiso de lotes, el lote se nombra pero no se enlaza.
-  const visibleLotHref = canViewLots ? lotHref : undefined;
+  // Sin el permiso de lotes, o sin conexión (la ficha del lote es en línea), el lote se nombra pero
+  // no se enlaza.
+  const visibleLotHref = canViewLots && !offline ? lotHref : undefined;
   const permissions = {
     canChange: hasPermission(user, PERMISSIONS.FACILITIES_CHANGE),
     canDelete: hasPermission(user, PERMISSIONS.FACILITIES_DELETE),

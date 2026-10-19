@@ -529,6 +529,34 @@ describe('FacilitiesScreen', () => {
     ).toHaveAttribute('href', '/lotes/detalle?id=l1');
   });
 
+  it('names the lot without a link on the saved copy, where its page does not open', async () => {
+    await getOfflineDb(userId).cache.put({
+      key: 'postharvest-facilities',
+      value: facilities,
+      fetchedAt: 1_760_000_000_000,
+    });
+    server.use(
+      http.get(apiUrl('/api/postharvest-facilities'), () =>
+        HttpResponse.error(),
+      ),
+    );
+
+    renderScreen({
+      searchParams: '?finca=f1',
+      permissions: [PERMISSIONS.FACILITIES_VIEW, PERMISSIONS.LOTS_VIEW],
+    });
+
+    await screen.findByText(/Sin conexión: estás viendo la copia del/);
+    expect(
+      within(rows()[1]).getByText('000123-F01-P05-261014-1'),
+    ).toBeInTheDocument();
+    expect(
+      within(rows()[1]).queryByRole('link', {
+        name: '000123-F01-P05-261014-1',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows the lot without a link for whoever cannot see lots', async () => {
     renderScreen({ searchParams: '?finca=f1' });
 
