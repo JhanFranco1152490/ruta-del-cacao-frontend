@@ -1,0 +1,80 @@
+'use client';
+
+import type { FarmOption } from '@/lib/api/farm-options';
+import { notify } from '@/lib/notify';
+
+import type { PostharvestFacility } from '../api';
+import type { FacilityActionKind } from '../facility-actions';
+import { FacilityDeleteDialog } from './facility-delete-dialog';
+import { FacilityFormDialog } from './facility-form-dialog';
+import { FacilityStatusDialog } from './facility-status-dialog';
+
+export type PendingFacilityAction =
+  | { kind: 'create' }
+  | { kind: FacilityActionKind; facility: PostharvestFacility };
+
+// El diálogo de la acción que se eligió. Cada uno se monta al abrirse y se desmonta al cerrarse,
+// así que siempre parte de los datos de ese momento.
+export function FacilityDialogs({
+  pending,
+  farms,
+  farmId,
+  known,
+  lotHref,
+  onClose,
+  onShowElement,
+}: {
+  pending: PendingFacilityAction | undefined;
+  farms: readonly FarmOption[];
+  farmId: string;
+  known: readonly PostharvestFacility[];
+  // El enlace a la ficha de un lote; falta para quien no puede ver lotes.
+  lotHref?: (id: string) => string;
+  onClose: () => void;
+  onShowElement: (id: string) => void;
+}) {
+  if (!pending) return null;
+  const onSaved = (message: string | null) => {
+    if (message) notify.success(message);
+    onClose();
+  };
+  const showExisting = (id: string) => {
+    onClose();
+    onShowElement(id);
+  };
+
+  if (pending.kind === 'create' || pending.kind === 'edit') {
+    return (
+      <FacilityFormDialog
+        facility={pending.kind === 'edit' ? pending.facility : undefined}
+        farmId={farmId}
+        farms={farms}
+        known={known}
+        onClose={onClose}
+        onSaved={onSaved}
+        onShowExisting={showExisting}
+      />
+    );
+  }
+  if (pending.kind === 'activate' || pending.kind === 'deactivate') {
+    return (
+      <FacilityStatusDialog
+        facility={pending.facility}
+        lotHref={lotHref}
+        onClose={onClose}
+        onDone={onSaved}
+      />
+    );
+  }
+  if (pending.kind === 'delete') {
+    return (
+      <FacilityDeleteDialog
+        facility={pending.facility}
+        lotHref={lotHref}
+        onClose={onClose}
+        onDone={onSaved}
+      />
+    );
+  }
+  return null;
+}

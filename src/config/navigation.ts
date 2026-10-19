@@ -10,6 +10,7 @@ import {
   ShieldPlus,
   Sprout,
   Users,
+  Warehouse,
   Wheat,
 } from 'lucide-react';
 
@@ -92,6 +93,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Package,
     permission: PERMISSIONS.LOTS_VIEW,
     needsConnection: true,
+  },
+  // Los cajones y marquesinas donde los lotes fermentan y se secan. Se consulta sin conexión.
+  {
+    href: '/infraestructura',
+    label: 'Infraestructura',
+    icon: Warehouse,
+    permission: PERMISSIONS.FACILITIES_VIEW,
   },
   {
     href: '/roles',

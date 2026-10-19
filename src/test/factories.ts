@@ -385,6 +385,25 @@ export const buildLot = (
   };
 };
 
+export const buildFacility = (
+  overrides: Partial<Schemas['PostharvestFacility']> = {},
+): Schemas['PostharvestFacility'] => ({
+  id: 'fc1',
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza', is_active: true },
+  producer_id: 'p1',
+  facility_type: 'fermentation_box',
+  name: 'C-01',
+  capacity_kg: '600.0',
+  is_active: true,
+  status: 'available',
+  occupied_by: null,
+  has_records: false,
+  version: 1,
+  created_at: '2026-10-16T14:00:00Z',
+  updated_at: '2026-10-16T14:00:00Z',
+  ...overrides,
+});
+
 export const buildCollector = (
   overrides: Partial<Schemas['CollectorOption']> = {},
 ): Schemas['CollectorOption'] => ({
