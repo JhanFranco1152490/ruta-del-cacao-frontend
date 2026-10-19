@@ -47,6 +47,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
+  it('saves the post-harvest infrastructure, read from the device copy', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/infraestructura');
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });

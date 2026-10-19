@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
 import { type FieldErrors, useForm } from 'react-hook-form';
 
+import { DuplicateNotice } from '@/components/duplicate-notice';
 import { ProducerFilter } from '@/components/producer-filter';
 import { SelectField } from '@/components/select-field';
 import { SubmitButton } from '@/components/submit-button';
@@ -36,7 +37,6 @@ import {
   type InputFormInput,
   type InputFormValues,
 } from '../schemas';
-import { InputDuplicateNotice } from './input-duplicate-notice';
 import type { FarmChoice } from './input-farm-select';
 import { InputFormFields } from './input-form-fields';
 import { useInputSubmit } from './use-input-submit';
@@ -225,11 +225,13 @@ export function InputFormDialog({
             errors={errors}
             extra={
               existing && (
-                <InputDuplicateNotice
+                <DuplicateNotice
+                  active={existing.is_active}
                   disabled={isSaving}
-                  existing={existing}
+                  inactiveText={`${existing.name} está inactivo.`}
                   onActivate={() => void activateExisting(existing)}
                   onShow={() => onShowExisting(existing)}
+                  showLabel="Ver el insumo existente"
                 />
               )
             }
