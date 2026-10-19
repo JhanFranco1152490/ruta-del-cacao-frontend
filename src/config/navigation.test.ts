@@ -95,6 +95,7 @@ describe('NAV_ITEMS', () => {
       '/sanidad',
       '/cosechas',
       '/lotes',
+      '/infraestructura',
       '/roles',
       '/usuarios',
     ]);
@@ -115,6 +116,9 @@ describe('NAV_ITEMS', () => {
     expect(byHref['/insumos'].permission).toBe(PERMISSIONS.INPUTS_VIEW);
     expect(byHref['/cosechas'].permission).toBe(PERMISSIONS.HARVESTS_VIEW);
     expect(byHref['/lotes'].permission).toBe(PERMISSIONS.LOTS_VIEW);
+    expect(byHref['/infraestructura'].permission).toBe(
+      PERMISSIONS.FACILITIES_VIEW,
+    );
     expect(byHref['/actividades'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/sanidad'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);

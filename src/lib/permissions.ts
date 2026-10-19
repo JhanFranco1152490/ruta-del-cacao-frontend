@@ -28,6 +28,10 @@ export const PERMISSIONS = {
   LOTS_VIEW: 'lots.view_lot',
   LOTS_ADD: 'lots.add_lot',
   LOTS_DELETE: 'lots.delete_lot',
+  FACILITIES_VIEW: 'facilities.view_postharvestfacility',
+  FACILITIES_ADD: 'facilities.add_postharvestfacility',
+  FACILITIES_CHANGE: 'facilities.change_postharvestfacility',
+  FACILITIES_DELETE: 'facilities.delete_postharvestfacility',
   HEALTH_MANAGE_PEST_DISEASE: 'health.manage_pestdisease',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',
@@ -51,6 +55,7 @@ const FIELD_AREAS = [
   'activities.',
   'harvests.',
   'lots.',
+  'facilities.',
 ];
 export const isFieldPermission = (code: string) =>
   code !== PERMISSIONS.CROPS_MANAGE_VARIETIES &&

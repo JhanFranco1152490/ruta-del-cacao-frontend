@@ -172,6 +172,17 @@ export const lotSummaryHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde los cajones y marquesinas de un productor, sin paginar, y guarda las búsquedas
+// recibidas.
+export const facilitiesHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/postharvest-facilities'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

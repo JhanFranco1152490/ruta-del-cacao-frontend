@@ -218,6 +218,22 @@ src/
   estado (`lot-status-cards.tsx`) cuentan lotes y kilos con `GET /api/lots/summary`, que sigue a los
   demás filtros pero no al estado.
 
+- **Infraestructura (`features/facilities/`).** Los cajones de fermentación y las marquesinas de
+  secado, de una finca a la vez: `use-facility-farm.ts` decide si se pregunta la finca, si se entra
+  a la recordada (`last-farm.ts`, sobre `lib/device-preference.ts`, el mismo almacenamiento de
+  comodidad que usa la última parcela de cosechas) o si la cuenta técnica elige antes el productor.
+  La lista se lee completa, con copia en el dispositivo (`useFacilities`); la finca, los filtros y el
+  orden natural (`C-2` antes que `C-10`) corren aquí (`facility-filters.ts`, `facility-order.ts`).
+  Registrar, editar, activar, desactivar y eliminar son solo en línea y se deshabilitan sin conexión.
+  Al registrar, el nombre se propone según el tipo y la finca (`C-01`, `M-01`: `facility-name.ts` y
+  `use-facility-name-suggestion.ts`), sobre la lista del dispositivo, y se respeta lo que la persona escriba.
+  El estado Ocupado y el lote que ocupa llegan de la API: fermentación y secado no tocan esta
+  pantalla. Las etiquetas por tipo y estado, con su concordancia de género, viven en
+  `lib/facility-labels.ts` para que otros dominios nombren igual un cajón. Sin conexión o sin permiso
+  de lotes, el lote se nombra pero no se enlaza. El aviso de nombre repetido es `DuplicateNotice`
+  (`components/`), compartido con insumos, y `isNeverLoaded` (`lib/offline/paused-read.ts`) dice que
+  una lectura nunca cargó por falta de red.
+
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
   actividades de sanidad. La página de `/actividades` (`calendar-with-health.tsx`) es la que los une y
