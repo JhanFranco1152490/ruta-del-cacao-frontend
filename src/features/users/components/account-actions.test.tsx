@@ -398,6 +398,77 @@ describe('account status', () => {
     expect(change.bodies).toEqual([{ status: 'active' }]);
   });
 
+  it('reactivates the producer account of an inactive producer, saying the producer comes back too', async () => {
+    // La cuenta seguía activa, pero sin acceso: su productor está inactivo.
+    mockSession(allPermissions, 'u1', null);
+    mockAccount({
+      ...producerAccount,
+      producer: { ...producerAccount.producer, status: 'inactive' },
+    });
+    const change = record(() => json(producerAccount));
+    server.use(http.patch(apiUrl(`/api/users/${id}/status`), change.handler));
+    openAccount();
+
+    expect(
+      await screen.findByText('Inactiva · productor inactivo'),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Desactivar' }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(await button('Reactivar'));
+    const dialog = await screen.findByRole('dialog', {
+      name: '¿Reactivar cuenta?',
+    });
+    expect(dialog).toHaveTextContent(
+      'También se reactivará el productor y vuelve el acceso de sus empleados.',
+    );
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Reactivar cuenta' }),
+    );
+
+    await waitFor(() => expect(change.bodies).toEqual([{ status: 'active' }]));
+  });
+
+  it('sends to the producer record from an employee whose producer is inactive', async () => {
+    mockSession([...allPermissions, PERMISSIONS.PRODUCERS_VIEW]);
+    mockAccount({
+      ...account,
+      producer: { ...account.producer, status: 'inactive' },
+    });
+    openAccount();
+
+    expect(
+      await screen.findByText('Inactiva · productor inactivo'),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        /El acceso está bloqueado porque el productor está inactivo/,
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', { name: 'Ver la ficha del productor' }),
+    ).toHaveAttribute('href', `/productores/${producerId}`);
+  });
+
+  it('does not resend the activation of an account whose producer is inactive', async () => {
+    mockSession(allPermissions, 'u1', null);
+    mockAccount({
+      ...producerAccount,
+      activation_pending: true,
+      producer: { ...producerAccount.producer, status: 'inactive' },
+    });
+    openAccount();
+
+    expect(
+      await screen.findByText(
+        'Reactiva el productor para que pueda activar su cuenta.',
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Reenviar activación' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('explains last_administrator with the API message and stays open', async () => {
     server.use(
       http.patch(apiUrl(`/api/users/${id}/status`), () =>

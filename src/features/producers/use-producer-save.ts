@@ -8,6 +8,7 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { applyApiFieldErrors } from '@/lib/api/form-errors';
 import { readOrigin } from '@/lib/navigation/origin';
 import { notify } from '@/lib/notify';
+import { producerPath } from '@/lib/paths/producers';
 
 import { useCreateProducer, useUpdateProducer, type Producer } from './api';
 import {
@@ -55,7 +56,7 @@ export function useProducerSave(
     const input = toProducerRequest(values);
     const options = {
       onSuccess: (saved: Producer) => {
-        const detail = `/productores/${saved.id}`;
+        const detail = producerPath(saved.id);
         router.replace(origin ?? detail);
         if (producer) {
           notify.success('Productor actualizado');

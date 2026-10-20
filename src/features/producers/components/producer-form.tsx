@@ -14,6 +14,7 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
+import { PRODUCERS_PATH, producerPath } from '@/lib/paths/producers';
 
 import type { Producer } from '../api';
 import {
@@ -39,7 +40,7 @@ export function ProducerForm({
   const submitLabel = producer ? 'Guardar cambios' : 'Guardar productor';
   // Cancelar vuelve a donde se abrió el formulario, o a la ficha (o a la lista, si es un alta).
   const cancelPath = useReturnPath(
-    producer ? `/productores/${producer.id}` : '/productores',
+    producer ? producerPath(producer.id) : PRODUCERS_PATH,
   );
   const {
     register,
@@ -69,7 +70,7 @@ export function ProducerForm({
             ? [
                 {
                   label: `${producer.first_name} ${producer.last_name}`,
-                  href: `/productores/${producer.id}`,
+                  href: producerPath(producer.id),
                 },
                 { label: 'Editar' },
               ]

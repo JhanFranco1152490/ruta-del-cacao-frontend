@@ -1,9 +1,13 @@
 'use client';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Globe, MapPin, TriangleAlert } from 'lucide-react';
 import { AccountStatusBadge } from '@/components/account-status-badge';
+import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { roleScopeLabel, type RoleScope } from '@/lib/farm-scope';
+import { producerPath } from '@/lib/paths/producers';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Account } from '../api';
 import { hasFixedRole, isProducerAccount } from '../schemas';
 
@@ -152,10 +156,38 @@ export function AccountSections({ account }: { account: Account }) {
       </Section>
       {showScope && <ScopeSection account={account} />}
       {account.producer?.status === 'inactive' && (
-        <p className="rounded-(--radius) bg-info-bg px-3 py-2 text-sm font-bold text-info">
-          El acceso está bloqueado porque el productor está inactivo.
-        </p>
+        <InactiveProducerNotice account={account} />
       )}
     </>
+  );
+}
+
+// Con el productor inactivo la cuenta no tiene acceso. La cuenta Productor se reactiva junto con su
+// productor; la de un empleado no lo reactiva, así que se lleva a la ficha del productor a quien
+// puede verla.
+function InactiveProducerNotice({ account }: { account: Account }) {
+  const { data: user } = useSession();
+  const producerId = account.producer?.id;
+  return (
+    <div className="space-y-1 rounded-(--radius) bg-info-bg px-3 py-2 text-sm text-info">
+      <p className="font-bold">
+        El acceso está bloqueado porque el productor está inactivo.
+      </p>
+      {isProducerAccount(account) ? (
+        <p>Reactivar la cuenta también reactiva al productor.</p>
+      ) : (
+        <p>
+          Para devolverle el acceso hay que reactivar el productor.{' '}
+          {producerId && hasPermission(user, PERMISSIONS.PRODUCERS_VIEW) && (
+            <Link
+              className="font-bold underline"
+              href={producerPath(producerId)}
+            >
+              Ver la ficha del productor
+            </Link>
+          )}
+        </p>
+      )}
+    </div>
   );
 }

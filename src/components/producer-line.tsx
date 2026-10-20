@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { type ProducerRef, producerLabelOf } from '@/lib/format/producer';
+import { producerPath } from '@/lib/paths/producers';
 
 // De quién es una finca o una parcela. Solo se muestra a quien no tiene un productor propio (la asociación y la
 // cuenta técnica): para un productor sería su propio nombre en cada tarjeta. Es solo de lectura:
@@ -20,7 +21,7 @@ export function ProducerLine({
       {linkable ? (
         <Link
           className="font-bold text-foreground underline underline-offset-4"
-          href={`/productores/${producer.id}`}
+          href={producerPath(producer.id)}
         >
           {label}
         </Link>
