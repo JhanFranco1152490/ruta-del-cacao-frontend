@@ -222,6 +222,24 @@ describe('ProducerAccountCard', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('does not resend the activation while the producer is inactive', async () => {
+    mockProducer({
+      status: 'inactive',
+      account: { ...account, activation_pending: true },
+    });
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+    const region = await card();
+
+    expect(
+      within(region).getByText(
+        'Reactiva el productor para que pueda activar su cuenta.',
+      ),
+    ).toBeVisible();
+    expect(
+      within(region).queryByRole('button', { name: 'Reenviar activación' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('resends the activation of a pending account', async () => {
     mockProducer({ account: { ...account, activation_pending: true } });
     let calls = 0;

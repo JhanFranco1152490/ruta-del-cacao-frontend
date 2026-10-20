@@ -450,6 +450,25 @@ describe('account status', () => {
     ).toHaveAttribute('href', `/productores/${producerId}`);
   });
 
+  it('does not resend the activation of an account whose producer is inactive', async () => {
+    mockSession(allPermissions, 'u1', null);
+    mockAccount({
+      ...producerAccount,
+      activation_pending: true,
+      producer: { ...producerAccount.producer, status: 'inactive' },
+    });
+    openAccount();
+
+    expect(
+      await screen.findByText(
+        'Reactiva el productor para que pueda activar su cuenta.',
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Reenviar activación' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('explains last_administrator with the API message and stays open', async () => {
     server.use(
       http.patch(apiUrl(`/api/users/${id}/status`), () =>

@@ -13,6 +13,7 @@ import { AccountRolesPanel } from './account-roles-panel';
 import { AccountDeleteDialog } from '@/components/account-delete-dialog';
 import { AccountStatusDialog } from '@/components/account-status-dialog';
 import {
+  ACTIVATION_NEEDS_ACTIVE_PRODUCER,
   ActivationDelivery,
   CHANGE_RECORD_EMAIL_HINT,
 } from '@/components/activation-delivery';
@@ -144,7 +145,12 @@ export function AccountDetail({
             )}
           </div>
         )}
-        {data.activation_pending && (
+        {data.activation_pending && data.producer?.status === 'inactive' && (
+          <p className="text-sm text-muted-foreground">
+            {ACTIVATION_NEEDS_ACTIVE_PRODUCER}
+          </p>
+        )}
+        {data.activation_pending && data.producer?.status !== 'inactive' && (
           <ActivationDelivery
             key={id}
             id={id}

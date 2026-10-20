@@ -8,6 +8,7 @@ import { AccountDeleteDialog } from '@/components/account-delete-dialog';
 import { AccountStatusBadge } from '@/components/account-status-badge';
 import { AccountStatusDialog } from '@/components/account-status-dialog';
 import {
+  ACTIVATION_NEEDS_ACTIVE_PRODUCER,
   ActivationDelivery,
   CHANGE_RECORD_EMAIL_HINT,
 } from '@/components/activation-delivery';
@@ -94,7 +95,10 @@ export function ProducerAccountCard({ producer }: { producer: Producer }) {
             user?.id !== account.id && (
               <DeleteAccountAction accountId={account.id} onDeleted={refresh} />
             )}
-          {account.activation_pending && (
+          {account.activation_pending && producer.status === 'inactive' && (
+            <p>{ACTIVATION_NEEDS_ACTIVE_PRODUCER}</p>
+          )}
+          {account.activation_pending && producer.status === 'active' && (
             <ActivationDelivery
               key={account.id}
               id={account.id}
