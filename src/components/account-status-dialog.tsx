@@ -44,6 +44,9 @@ const REACTIVATE_WITH_PRODUCER: StatusChangeAction = {
     'La persona podrá volver a iniciar sesión. También se reactivará el productor y vuelve el acceso de sus empleados.',
 };
 
+const actionOf = (target: AccountStatus, reactivatesProducer: boolean) =>
+  reactivatesProducer ? REACTIVATE_WITH_PRODUCER : ACTIONS[target];
+
 // `last_administrator` y `self_modification` se explican con el mensaje de la API.
 export function AccountStatusDialog({
   account,
@@ -62,16 +65,13 @@ export function AccountStatusDialog({
     reactivatesProducer || account.status === 'inactive'
       ? 'active'
       : 'inactive';
-  const action = reactivatesProducer
-    ? REACTIVATE_WITH_PRODUCER
-    : ACTIONS[target];
   const change = useSetAccountStatus(account.id);
   const [open, setOpen] = useState(false);
   // La acción se congela al abrir: si la cuenta cambia en segundo plano, el texto no cambia.
-  const [opened, setOpened] = useState({ target, action });
+  const [opened, setOpened] = useState({ target, reactivatesProducer });
   function onOpenChange(next: boolean) {
     if (change.isPending) return;
-    if (next) setOpened({ target, action });
+    if (next) setOpened({ target, reactivatesProducer });
     setOpen(next);
     if (!next) change.reset();
   }
@@ -82,7 +82,7 @@ export function AccountStatusDialog({
       onSuccess: () => {
         setOpen(false);
         notify.success(
-          opened.action === REACTIVATE_WITH_PRODUCER
+          opened.reactivatesProducer
             ? 'Cuenta y productor reactivados'
             : opened.target === 'active'
               ? 'Cuenta activada'
@@ -95,8 +95,8 @@ export function AccountStatusDialog({
   }
   return (
     <StatusChangeDialog
-      trigger={action}
-      action={opened.action}
+      trigger={actionOf(target, reactivatesProducer)}
+      action={actionOf(opened.target, opened.reactivatesProducer)}
       open={open}
       onOpenChange={onOpenChange}
       onConfirm={confirm}

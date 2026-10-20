@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { EditorLink } from '@/components/editor-link';
 
 import { MaskedValue } from '@/components/masked-value';
+import { producerPath } from '@/lib/paths/producers';
 
 import type { ProducerListItem } from '../api';
 import { ProducerStatusBadge } from './producer-status-badge';
@@ -104,7 +105,7 @@ export function ProducerTable({
                 <div className="flex flex-wrap justify-start gap-2 max-md:[&>*]:flex-1 max-md:[&>*]:justify-center">
                   <Link
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-card px-3 text-xs font-extrabold text-selva hover:bg-surface-alt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selva"
-                    href={`/productores/${producer.id}`}
+                    href={producerPath(producer.id)}
                   >
                     <Eye aria-hidden="true" className="size-4" />
                     Ver<span className="sr-only"> ficha de {name}</span>
