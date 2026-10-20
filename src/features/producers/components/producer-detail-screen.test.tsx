@@ -427,6 +427,38 @@ describe('ProducerDetailScreen - reactivation', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('says that its deactivated account is reactivated too', async () => {
+    const account = {
+      id: 'u-producer',
+      email: 'productor@example.com',
+      status: 'inactive',
+      activation_pending: false,
+    };
+    server.use(producerHandler({ status: 'inactive', version: 4, account }));
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+
+    const { dialog } = await openDialog('Reactivar');
+
+    expect(dialog).toHaveTextContent(
+      'También se reactivará su cuenta de acceso.',
+    );
+  });
+
+  it('does not mention the account when it is still active', async () => {
+    const account = {
+      id: 'u-producer',
+      email: 'productor@example.com',
+      status: 'active',
+      activation_pending: false,
+    };
+    server.use(producerHandler({ status: 'inactive', version: 4, account }));
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+
+    const { dialog } = await openDialog('Reactivar');
+
+    expect(dialog).not.toHaveTextContent('cuenta de acceso');
+  });
+
   it('reactivates the producer after confirming', async () => {
     server.use(
       statusHandler(() =>

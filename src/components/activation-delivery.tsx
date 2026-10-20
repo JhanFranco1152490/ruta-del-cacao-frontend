@@ -11,6 +11,11 @@ import { useResendActivation } from '@/lib/api/accounts';
 export const CHANGE_RECORD_EMAIL_HINT =
   'Para cambiar el correo, edita el expediente del productor y luego reenvía la activación.';
 
+// Con el productor inactivo la persona no podría entrar aunque activara su cuenta: no se le reenvía
+// el enlace, y se dice qué falta.
+export const ACTIVATION_NEEDS_ACTIVE_PRODUCER =
+  'Reactiva el productor para que pueda activar su cuenta.';
+
 export function ActivationDelivery({
   id,
   email,

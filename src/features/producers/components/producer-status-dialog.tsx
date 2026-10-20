@@ -33,6 +33,15 @@ const ACTIONS: Record<ProducerStatus, StatusChangeAction> = {
   },
 };
 
+// Reactivar el productor reactiva también su cuenta de acceso si estaba desactivada.
+const actionFor = (status: ProducerStatus, producer: Producer) =>
+  status === 'active' && producer.account?.status === 'inactive'
+    ? {
+        ...ACTIONS.active,
+        description: `${ACTIONS.active.description} También se reactivará su cuenta de acceso.`,
+      }
+    : ACTIONS[status];
+
 type ProducerStatusDialogProps = { producer: Producer; target: ProducerStatus };
 
 export function ProducerStatusDialog({
@@ -44,7 +53,7 @@ export function ProducerStatusDialog({
   return (
     <StatusChangeDialog
       trigger={ACTIONS[target]}
-      action={ACTIONS[dialogTarget]}
+      action={actionFor(dialogTarget, producer)}
       open={open}
       onOpenChange={onOpenChange}
       onConfirm={confirm}
