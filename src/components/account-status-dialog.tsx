@@ -36,37 +36,57 @@ const ACTIONS: Record<AccountStatus, StatusChangeAction> = {
   },
 };
 
+// La cuenta Productor de un productor inactivo no tiene acceso aunque esté activa: reactivarla
+// reactiva también al productor, y eso es lo que se ofrece en vez de desactivarla.
+const REACTIVATE_WITH_PRODUCER: StatusChangeAction = {
+  ...ACTIONS.active,
+  description:
+    'La persona podrá volver a iniciar sesión. También se reactivará el productor y vuelve el acceso de sus empleados.',
+};
+
 // `last_administrator` y `self_modification` se explican con el mensaje de la API.
 export function AccountStatusDialog({
   account,
+  reactivatesProducer = false,
   onBusy,
   onChanged,
 }: {
   account: Pick<Account, 'id' | 'status'>;
+  // Es la cuenta Productor y su productor está inactivo.
+  reactivatesProducer?: boolean;
   onBusy: (value: boolean) => void;
   // Quien muestra la cuenta en otra vista (la ficha del productor) la refresca aquí.
   onChanged?: () => void;
 }) {
   const target: AccountStatus =
-    account.status === 'inactive' ? 'active' : 'inactive';
+    reactivatesProducer || account.status === 'inactive'
+      ? 'active'
+      : 'inactive';
+  const action = reactivatesProducer
+    ? REACTIVATE_WITH_PRODUCER
+    : ACTIONS[target];
   const change = useSetAccountStatus(account.id);
   const [open, setOpen] = useState(false);
   // La acción se congela al abrir: si la cuenta cambia en segundo plano, el texto no cambia.
-  const [opened, setOpened] = useState(target);
+  const [opened, setOpened] = useState({ target, action });
   function onOpenChange(next: boolean) {
     if (change.isPending) return;
-    if (next) setOpened(target);
+    if (next) setOpened({ target, action });
     setOpen(next);
     if (!next) change.reset();
   }
   function confirm() {
     if (change.isPending) return;
     onBusy(true);
-    change.mutate(opened, {
+    change.mutate(opened.target, {
       onSuccess: () => {
         setOpen(false);
         notify.success(
-          opened === 'active' ? 'Cuenta activada' : 'Cuenta desactivada',
+          opened.action === REACTIVATE_WITH_PRODUCER
+            ? 'Cuenta y productor reactivados'
+            : opened.target === 'active'
+              ? 'Cuenta activada'
+              : 'Cuenta desactivada',
         );
         onChanged?.();
       },
@@ -75,8 +95,8 @@ export function AccountStatusDialog({
   }
   return (
     <StatusChangeDialog
-      trigger={ACTIONS[target]}
-      action={ACTIONS[opened]}
+      trigger={action}
+      action={opened.action}
       open={open}
       onOpenChange={onOpenChange}
       onConfirm={confirm}

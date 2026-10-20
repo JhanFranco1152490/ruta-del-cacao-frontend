@@ -78,7 +78,10 @@ export function ProducerAccountCard({ producer }: { producer: Producer }) {
               },
             }}
           />
-          {hasPermission(user, PERMISSIONS.USERS_CHANGE_STATUS) &&
+          {/* Con el productor inactivo, su Reactivar de arriba también reactiva la cuenta: aquí no
+              se repite. */}
+          {producer.status === 'active' &&
+            hasPermission(user, PERMISSIONS.USERS_CHANGE_STATUS) &&
             user?.id !== account.id && (
               <AccountStatusDialog
                 account={account}

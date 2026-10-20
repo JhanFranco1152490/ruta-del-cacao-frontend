@@ -170,6 +170,7 @@ export function useDeleteProducer() {
 }
 
 export function useChangeProducerStatus() {
+  const queryClient = useQueryClient();
   const cacheProducer = useCacheProducer();
   const refreshOnStaleVersion = useRefreshOnStaleVersion();
   return useMutation({
@@ -186,7 +187,13 @@ export function useChangeProducerStatus() {
         method: 'PATCH',
         body: { status, expected_version: expectedVersion },
       }),
-    onSuccess: cacheProducer,
+    onSuccess: (producer) => {
+      cacheProducer(producer);
+      // Reactivar el productor reactiva también su cuenta Productor si estaba desactivada.
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.accounts.all(),
+      });
+    },
     onError: (error, { id }) => refreshOnStaleVersion(error, id),
   });
 }

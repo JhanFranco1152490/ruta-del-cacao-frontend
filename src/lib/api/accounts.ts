@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type QueryKey,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
@@ -72,13 +77,20 @@ export function useCreateAccount() {
 export type AccountUpdate = Schemas['PatchedAccountUpdateRequest'];
 export type AccountStatus = Schemas['StatusEnum'];
 // La respuesta de cada cambio es la cuenta completa: reemplaza el detalle y refresca las listas.
-function useAccountMutation<T>(send: (value: T) => Promise<Account>) {
+// `alsoRefresh`: lo que además cambia el servidor con la cuenta.
+function useAccountMutation<T>(
+  send: (value: T) => Promise<Account>,
+  alsoRefresh: readonly QueryKey[] = [],
+) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: send,
     onSuccess: (account) => {
       client.setQueryData(queryKeys.accounts.detail(account.id), account);
       void client.invalidateQueries({ queryKey: queryKeys.accounts.lists() });
+      for (const queryKey of alsoRefresh) {
+        void client.invalidateQueries({ queryKey });
+      }
     },
   });
 }
@@ -97,12 +109,16 @@ export const useSetAccountRoles = (id: string) =>
       body,
     }),
   );
+// Reactivar la cuenta Productor de un productor inactivo reactiva también al productor: su ficha
+// y la lista de productores se vuelven a pedir.
 export const useSetAccountStatus = (id: string) =>
-  useAccountMutation((status: AccountStatus) =>
-    apiFetch<Account>(`/api/users/${encodeURIComponent(id)}/status`, {
-      method: 'PATCH',
-      body: { status },
-    }),
+  useAccountMutation(
+    (status: AccountStatus) =>
+      apiFetch<Account>(`/api/users/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        body: { status },
+      }),
+    [queryKeys.producers.all()],
   );
 // Eliminar es solo en línea y la persona espera la respuesta. La cuenta deja de existir: se quita
 // su detalle y se refrescan las listas, y el expediente del productor que la muestre.

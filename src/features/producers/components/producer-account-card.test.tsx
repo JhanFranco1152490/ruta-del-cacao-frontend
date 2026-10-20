@@ -208,6 +208,20 @@ describe('ProducerAccountCard', () => {
     ).toBeVisible();
   });
 
+  it('leaves the reactivation to the producer when it is inactive', async () => {
+    // Reactivar el productor, arriba en la ficha, ya reactiva su cuenta: la tarjeta no lo repite.
+    mockProducer({ status: 'inactive', account });
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+    const region = await card();
+
+    expect(
+      within(region).getByText('Inactiva · productor inactivo'),
+    ).toBeVisible();
+    expect(
+      within(region).queryByRole('button', { name: /Reactivar|Desactivar/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it('resends the activation of a pending account', async () => {
     mockProducer({ account: { ...account, activation_pending: true } });
     let calls = 0;

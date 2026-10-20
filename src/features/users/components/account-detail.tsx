@@ -130,7 +130,14 @@ export function AccountDetail({
               </Button>
             )}
             {canChangeStatus && (
-              <AccountStatusDialog account={data} onBusy={onBusy} />
+              <AccountStatusDialog
+                account={data}
+                onBusy={onBusy}
+                reactivatesProducer={
+                  isProducerAccount(data) &&
+                  data.producer?.status === 'inactive'
+                }
+              />
             )}
             {canDelete && (
               <AccountDeleteDialog account={data} onDeleted={onDeleted} />
