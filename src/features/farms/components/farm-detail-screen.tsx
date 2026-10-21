@@ -26,6 +26,7 @@ import { useFarmSource } from '../use-farm-source';
 import { FarmStatusBadge } from './farm-status-badge';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
 import { farmLabel } from '@/lib/format/place-label';
+import { pageContainerClass } from '@/components/page-container';
 
 // Lo que una sección de la pantalla necesita de la finca: datos simples y no la respuesta de la
 // API, para que otros dominios (las parcelas) no dependan de su forma.
@@ -214,7 +215,7 @@ function DetailLayout({
   const showInputs =
     !!view.producer && hasPermission(user, PERMISSIONS.INPUTS_VIEW);
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <Breadcrumb
         items={[
           { label: 'Fincas', href: '/fincas' },
@@ -222,7 +223,6 @@ function DetailLayout({
         ]}
       />
       <PageHeader
-        compact
         eyebrow="Detalle de la finca"
         title={farmLabel(view)}
         description={place}

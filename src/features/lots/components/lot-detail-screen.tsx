@@ -22,6 +22,7 @@ import { LOTS_PATH } from '../lot-paths';
 import { LotDeleteDialog } from './lot-delete-dialog';
 import { LotOrigin } from './lot-origin';
 import { LotStatusBadge } from './lot-status-badge';
+import { pageContainerClass } from '@/components/page-container';
 
 async function copyCode(code: string) {
   try {
@@ -64,7 +65,7 @@ export function LotDetailScreen({
     return (
       <div
         aria-label="Cargando lote"
-        className="mx-auto max-w-3xl space-y-4 px-4 py-8"
+        className={pageContainerClass('narrow', 'space-y-4')}
         role="status"
       >
         <Skeleton className="h-24" />
@@ -83,7 +84,7 @@ export function LotDetailScreen({
     lot.status === 'generated' && hasPermission(user, PERMISSIONS.LOTS_DELETE);
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('narrow', 'space-y-6')}>
       <Breadcrumb
         items={[{ label: 'Lotes', href: LOTS_PATH }, { label: lot.code }]}
       />
@@ -92,7 +93,7 @@ export function LotDetailScreen({
           <p className="text-sm font-bold text-muted-foreground">Lote</p>
           <LotStatusBadge status={lot.status} />
         </div>
-        <h1 className="font-mono text-2xl font-bold break-all sm:text-3xl">
+        <h1 className="font-mono text-xl font-bold break-all sm:text-3xl">
           {lot.code}
         </h1>
         <Button

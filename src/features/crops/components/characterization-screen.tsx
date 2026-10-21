@@ -37,6 +37,7 @@ import {
   CharacterizationForm,
   emptyCharacterizationForm,
 } from './characterization-form';
+import { pageContainerClass } from '@/components/page-container';
 
 // Lo que la pantalla necesita de la finca y de la parcela. Lo entrega la página, que los lee de
 // sus dominios: este no los importa.
@@ -93,7 +94,7 @@ export function CharacterizationScreen({
     return (
       <div
         aria-label="Cargando caracterización"
-        className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-8"
+        className={pageContainerClass('wide', 'space-y-6')}
         role="status"
       >
         <Skeleton className="h-12 w-2/3" />
@@ -137,7 +138,7 @@ export function CharacterizationScreen({
         : sync.blockedMessage;
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <Breadcrumb
         items={[
           { label: 'Fincas', href: '/fincas' },

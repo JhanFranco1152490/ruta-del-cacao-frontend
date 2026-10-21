@@ -30,6 +30,7 @@ import {
 import { FacilityFarmChooser } from './facility-farm-chooser';
 import { FacilityList } from './facility-list';
 import { FacilityOfflineNotice } from './facility-offline-notice';
+import { pageContainerClass } from '@/components/page-container';
 
 const NEEDS_CONNECTION =
   'Necesitas conexión una vez para cargar la infraestructura.';
@@ -165,16 +166,15 @@ export function FacilitiesScreen({
   })();
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-5 px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide', 'space-y-5')}>
       {farm && place.canSwitchFarm && (
         <BackLink href={chooseFarmHref(state.filters, producer)}>
-          Fincas
+          Cambiar de finca
         </BackLink>
       )}
       <PageHeader
         actions={farm && known ? register : undefined}
-        compact
-        description="Los cajones de fermentación y las marquesinas de secado de tus fincas, y qué lote ocupa cada uno."
+        description="Los cajones de fermentación y las marquesinas de secado de la finca, y qué lote ocupa cada uno."
         eyebrow="Poscosecha"
         title={
           farm ? `Infraestructura · ${farmLabel(farm)}` : 'Infraestructura'

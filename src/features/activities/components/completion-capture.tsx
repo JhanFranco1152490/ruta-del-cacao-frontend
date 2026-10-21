@@ -29,6 +29,7 @@ import { useSaveCompletion } from '../use-completion-queue';
 import { CompletionActivityCard } from './completion-activity-card';
 import { CompletionConfirmDialog } from './completion-confirm-dialog';
 import { CompletionForm } from './completion-form';
+import { pageContainerClass } from '@/components/page-container';
 
 const SAVE_FAILED =
   'No fue posible guardar la realización en el dispositivo. Inténtalo nuevamente.';
@@ -96,7 +97,7 @@ export function CompletionCapture({
     );
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('narrow')}>
       <Breadcrumb
         items={[
           { label: 'Actividades', href: ACTIVITIES_PATH },

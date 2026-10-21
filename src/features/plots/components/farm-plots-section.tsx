@@ -200,7 +200,7 @@ function PlotsContent({
       )}
       {/* Con espacio, las parcelas van junto al mapa y este se queda a la vista mientras se
           recorre la lista; en el celular, la lista primero y el mapa plegado arriba. */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
         <div
           className="scroll-mt-6 lg:sticky lg:top-20 lg:order-2"
           ref={mapRef}
@@ -237,7 +237,7 @@ function PlotsContent({
           ) : (
             <EmptyState
               title="Esta finca aún no tiene parcelas"
-              description="Registra la primera con su código, su área y, si quieres, su polígono. Puedes hacerlo sin conexión."
+              description="Registra la primera con su área y, si quieres, su nombre y su polígono. Puedes hacerlo sin conexión."
               action={registerLink || undefined}
             />
           )}

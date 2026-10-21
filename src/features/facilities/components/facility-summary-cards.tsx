@@ -1,3 +1,4 @@
+import { SummaryItem, SummaryStrip } from '@/components/summary-strip';
 import { FACILITY_TYPE_ORDER, type FacilityType } from '@/lib/facility-labels';
 
 import type { PostharvestFacility } from '../api';
@@ -23,11 +24,10 @@ function SummaryCard({
   detail: string;
 }) {
   return (
-    <div className="rounded-(--radius) border bg-card p-4">
-      <p className="text-sm text-muted-foreground">{title}</p>
-      <p className="text-2xl font-bold text-selva">{value}</p>
+    <SummaryItem title={title}>
+      <p className="text-xl font-bold text-selva sm:text-2xl">{value}</p>
       {detail && <p className="text-sm">{detail}</p>}
-    </div>
+    </SummaryItem>
   );
 }
 
@@ -40,10 +40,7 @@ export function FacilitySummaryCards({
 }) {
   const { byType, inProcess } = summarizeFacilities(facilities);
   return (
-    <section
-      aria-label="Resumen de la finca"
-      className="grid gap-3 sm:grid-cols-3"
-    >
+    <SummaryStrip label="Resumen de la finca">
       {FACILITY_TYPE_ORDER.map((type) => (
         <SummaryCard
           detail={breakdownText(type, byType[type])}
@@ -57,6 +54,6 @@ export function FacilitySummaryCards({
         title="Lotes en proceso"
         value={inProcess.length > 0 ? String(inProcess.length) : 'Ninguno'}
       />
-    </section>
+    </SummaryStrip>
   );
 }

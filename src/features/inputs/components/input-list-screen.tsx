@@ -28,6 +28,7 @@ import { type FarmChoice, InputFarmSelect } from './input-farm-select';
 import { InputFiltersBar } from './input-filters-bar';
 import { InputDialogs, type PendingAction } from './input-dialogs';
 import { InputTable, type StockState } from './input-table';
+import { pageContainerClass } from '@/components/page-container';
 
 export type FarmChoices = {
   // `undefined` mientras se cargan o si no se pudieron leer.
@@ -121,7 +122,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   );
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         actions={
           catalog.isSuccess ? (

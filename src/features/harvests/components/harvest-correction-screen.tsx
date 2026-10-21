@@ -27,6 +27,7 @@ import { harvestDetailPath, HARVESTS_PATH } from '../harvest-paths';
 import { harvestToFormValues, toHarvestUpdate } from '../harvest-requests';
 import { useHarvestSources } from '../use-harvest-sources';
 import { HarvestForm } from './harvest-form';
+import { pageContainerClass } from '@/components/page-container';
 
 const STALE_MESSAGE =
   'Otra persona cambió esta cosecha. Revisa los datos actuales antes de guardar.';
@@ -36,7 +37,7 @@ const SAVE_FAILED =
 const Loading = () => (
   <div
     aria-label="Cargando cosecha"
-    className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8"
+    className={pageContainerClass('narrow', 'space-y-6')}
     role="status"
   >
     <Skeleton className="h-12 w-2/3" />
@@ -94,7 +95,7 @@ export function HarvestCorrectionScreen({ harvestId }: { harvestId: string }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('narrow')}>
       <Breadcrumb
         items={[
           { label: 'Cosechas', href: HARVESTS_PATH },

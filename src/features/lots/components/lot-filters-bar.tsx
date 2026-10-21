@@ -91,7 +91,7 @@ export function LotFiltersBar({
           hideLabel
           label="Buscar por código"
           onChange={(event) => state.setSearchInput(event.target.value)}
-          placeholder="Código o parte de él: 261014, F02-P05"
+          placeholder="Código del lote"
           type="search"
           value={state.searchInput}
           wrapperClassName="min-w-0 flex-1 sm:w-80 sm:flex-none"

@@ -30,6 +30,7 @@ import { useHarvestFilters } from '../use-harvest-filters';
 import { HarvestFiltersBar } from './harvest-filters-bar';
 import { HarvestTable } from './harvest-table';
 import { HarvestTotals } from './harvest-totals';
+import { pageContainerClass } from '@/components/page-container';
 
 // Las recolecciones de un mes, con sus totales y sus filtros. Sin conexión muestra la última copia
 // del mes guardada en el dispositivo, y lo que espera en el teléfono aparece en su fecha.
@@ -76,10 +77,9 @@ export function HarvestListScreen({
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-5 px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
         actions={register}
-        compact
         description="Las recolecciones de cacao de tus parcelas. De cada una se conforma un lote para la poscosecha."
         eyebrow="Producción"
         title="Cosechas"

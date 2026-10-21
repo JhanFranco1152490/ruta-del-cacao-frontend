@@ -48,6 +48,7 @@ import { ActivityViewSwitch } from './activity-view-switch';
 import { LinkedScheduleDialog } from './linked-schedule-dialog';
 import { ScheduleActivityButton } from './schedule-activity-button';
 import { ScheduleMonitoringButton } from './schedule-monitoring-button';
+import { pageContainerClass } from '@/components/page-container';
 
 const NEEDS_CONNECTION = {
   mes: 'Necesitas conexión para ver las actividades de este mes.',
@@ -220,8 +221,12 @@ export function ActivityCalendarScreen({
 
   return (
     <AssigneesContext value={assignees.data?.data}>
-      <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-8 sm:pb-5">
-        <PageHeader compact title="Actividades" />
+      <div className={pageContainerClass('wide', 'pb-24 sm:pb-6')}>
+        <PageHeader
+          description="Programa las labores de tus parcelas y registra lo que se hizo."
+          eyebrow="Manejo agrícola"
+          title="Actividades"
+        />
         <div className="mt-3 space-y-2 empty:hidden">
           {offline && loaded && (
             <p className={STATUS_NOTE_CLASS} role="status">

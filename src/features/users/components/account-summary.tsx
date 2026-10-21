@@ -118,7 +118,7 @@ export function AccountSections({ account }: { account: Account }) {
   return (
     <>
       <Section title="Datos">
-        <dl className="grid gap-3 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Fact label="Teléfono">{account.phone || 'No registrado'}</Fact>
           <Fact label="Documento">
             {account.document_type} {account.identity_document}

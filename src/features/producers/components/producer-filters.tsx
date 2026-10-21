@@ -41,7 +41,7 @@ export function ProducerFilters({
               )}
               id="producer-search"
               onChange={(event) => filters.setSearchInput(event.target.value)}
-              placeholder="Buscar por documento, nombre o código"
+              placeholder="Buscar productor"
               value={filters.searchInput}
             />
           </div>

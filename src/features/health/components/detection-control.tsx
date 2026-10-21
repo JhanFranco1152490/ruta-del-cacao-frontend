@@ -57,7 +57,7 @@ export function DetectionControl({
   return (
     <fieldset className="space-y-3">
       <legend className="mb-2 text-sm font-bold">Control</legend>
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {options.map(({ mode, label }) => (
           <label
             className={cn(

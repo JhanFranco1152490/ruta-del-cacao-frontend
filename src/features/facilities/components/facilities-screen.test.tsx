@@ -245,10 +245,9 @@ describe('FacilitiesScreen', () => {
   it('goes back to choosing the farm, keeping the filters', async () => {
     renderScreen({ searchParams: '?finca=f1&tipo=solar_dryer' });
 
-    expect(await screen.findByRole('link', { name: 'Fincas' })).toHaveAttribute(
-      'href',
-      '/infraestructura?tipo=solar_dryer&elegir=1',
-    );
+    expect(
+      await screen.findByRole('link', { name: 'Cambiar de finca' }),
+    ).toHaveAttribute('href', '/infraestructura?tipo=solar_dryer&elegir=1');
   });
 
   it('does not offer going back to whoever has a single farm', async () => {
@@ -261,7 +260,7 @@ describe('FacilitiesScreen', () => {
         name: 'Infraestructura · F01 · La Esperanza',
       }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Fincas' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Cambiar de finca' })).toBeNull();
   });
 
   it('says there are no active farms', async () => {

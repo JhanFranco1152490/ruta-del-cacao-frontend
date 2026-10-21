@@ -20,6 +20,7 @@ import { useLotFilters } from '../use-lot-filters';
 import { LotFiltersBar } from './lot-filters-bar';
 import { LotStatusCards } from './lot-status-cards';
 import { LotTable } from './lot-table';
+import { pageContainerClass } from '@/components/page-container';
 
 // Los lotes de las fincas que la cuenta alcanza, del más reciente al más antiguo. Solo con
 // conexión. Un lote se conforma desde su cosecha: `formLotHref` lleva a las que todavía no tienen
@@ -97,10 +98,9 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-5 px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
         actions={formLot}
-        compact
         description="Cada lote lleva su código de trazabilidad desde la cosecha hasta el grano seco."
         eyebrow="Poscosecha"
         title="Lotes"

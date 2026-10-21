@@ -9,7 +9,10 @@ import { FormSection } from '@/components/form-section';
 import { PageHeader } from '@/components/page-header';
 import { MunicipalitySelectField } from '@/components/municipality-select-field';
 import { TextField } from '@/components/text-field';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
+import { MobileActionBar } from '@/components/mobile-action-bar';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { useMunicipalities } from '@/lib/api/municipalities';
 import { altitudeRangeFor } from '@/lib/geo/municipality-altitude';
 import { OPERATING_DEPARTMENT } from '@/lib/departments';
@@ -32,6 +35,7 @@ import {
   FarmMunicipalityMismatch,
   FarmMunicipalitySuggestion,
 } from './farm-municipality-notice';
+import { pageContainerClass } from '@/components/page-container';
 
 export function FarmFormFields({
   defaultValues,
@@ -45,6 +49,7 @@ export function FarmFormFields({
   isSaving,
   error,
   blockedMessage,
+  cancelHref,
   secondaryAction,
   chooseProducer = false,
   breadcrumb,
@@ -65,7 +70,10 @@ export function FarmFormFields({
   error?: string | null;
   // Si hay motivo, no se puede guardar: se explica junto al botón.
   blockedMessage?: string | null;
-  // Otra acción junto a guardar (p. ej. eliminar la finca en la edición).
+  // A dónde vuelve «Cancelar»: la pantalla desde la que se abrió el formulario.
+  cancelHref: string;
+  // Otra acción aparte de guardar (p. ej. eliminar la finca en la edición): va encima de la
+  // barra, porque en el celular la barra solo tiene sitio para guardar y cancelar.
   secondaryAction?: ReactNode;
   // La cuenta técnica elige de qué productor es la finca nueva. Al editar una finca nadie lo elige:
   // no cambia de dueño.
@@ -143,10 +151,9 @@ export function FarmFormFields({
   const warm = useWarmGps(COORDINATES_ALTERNATIVES);
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       {breadcrumb && <Breadcrumb items={breadcrumb} />}
       <PageHeader
-        compact
         eyebrow="Gestión de fincas"
         title={title}
         description={description}
@@ -157,13 +164,13 @@ export function FarmFormFields({
           una columna con el mapa antes de guardar, porque el punto se marca antes de guardar.
           Bajo el mapa queda sitio para lo que dependa de la finca (sus parcelas). */}
       <form
-        className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+        className="mt-5 grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
         noValidate
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="space-y-6 lg:col-start-1 lg:row-start-1">
           <FormSection title="Datos de la finca">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {chooseProducer && (
                 <div className="sm:col-span-2">
                   <FarmProducerField
@@ -272,7 +279,8 @@ export function FarmFormFields({
               {blockedMessage}
             </p>
           )}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {secondaryAction}
+          <MobileActionBar>
             <Button
               aria-describedby={
                 blockedMessage ? 'farm-save-blocked' : undefined
@@ -284,8 +292,17 @@ export function FarmFormFields({
             >
               {isSaving ? 'Guardando…' : submitLabel}
             </Button>
-            {secondaryAction}
-          </div>
+            <Link
+              className={buttonVariants({
+                size: 'office',
+                variant: 'outline',
+                className: CAPTURE_BUTTON_CLASS,
+              })}
+              href={cancelHref}
+            >
+              Cancelar
+            </Link>
+          </MobileActionBar>
         </div>
       </form>
     </div>

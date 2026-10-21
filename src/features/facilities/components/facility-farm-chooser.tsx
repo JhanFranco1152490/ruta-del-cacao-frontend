@@ -23,7 +23,7 @@ export function FacilityFarmChooser({
       <h2 className="text-2xl text-selva" id="facility-farm-question">
         ¿De qué finca quieres ver los cajones y marquesinas?
       </h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {farms.map((farm) => (
           <li key={farm.id}>
             <button

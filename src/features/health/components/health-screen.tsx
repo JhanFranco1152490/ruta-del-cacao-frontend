@@ -22,6 +22,7 @@ import { PendingMonitoringsSection } from './pending-monitorings-section';
 import { PestSummarySection } from './pest-summary-section';
 import { ScheduleMonitoringLink } from './schedule-monitoring-link';
 import { WaitingControlsNotice } from './waiting-controls-notice';
+import { pageContainerClass } from '@/components/page-container';
 
 // Lo que devuelve la API por página.
 const PAGE_SIZE = 20;
@@ -54,12 +55,13 @@ export function HealthScreen() {
   const results = data?.results ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         actions={
           <ScheduleMonitoringLink farm={filters.farm} plot={filters.plot} />
         }
-        compact
+        description="El historial de monitoreos y controles de tus parcelas."
+        eyebrow="Manejo agrícola"
         title="Sanidad"
       />
       <div className="mt-4 space-y-4">

@@ -13,6 +13,7 @@ import { matchesPestFilters } from '../pest-filters';
 import { usePestFilters } from '../use-pest-filters';
 import { PestFormDialog } from './pest-form-dialog';
 import { PestTable } from './pest-table';
+import { pageContainerClass } from '@/components/page-container';
 
 // Primero las plagas y luego las enfermedades: el tipo lo dice el título de cada grupo.
 const PEST_GROUPS = [
@@ -32,7 +33,7 @@ export function PestListScreen() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         actions={
           catalog.isSuccess ? <PestFormDialog catalog={items} /> : undefined
@@ -49,7 +50,7 @@ export function PestListScreen() {
               hideLabel
               label="Buscar plagas y enfermedades"
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por nombre o nombre científico"
+              placeholder="Buscar por nombre"
               type="search"
               value={search}
               wrapperClassName="min-w-0 flex-1 sm:min-w-72"
@@ -57,7 +58,7 @@ export function PestListScreen() {
           }
           trailing={
             catalog.isSuccess && (
-              <p className="self-center text-sm font-bold text-muted-foreground sm:ml-auto">
+              <p className="self-center text-sm font-bold text-muted-foreground max-sm:order-last max-sm:w-full sm:ml-auto">
                 {shown.length === 1
                   ? '1 plaga o enfermedad'
                   : `${shown.length} plagas y enfermedades`}

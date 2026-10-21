@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { pageContainerClass } from '@/components/page-container';
 
 export function PlotEditorSkeleton() {
   return (
     <div
       aria-label="Cargando parcela"
-      className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-8 sm:px-8"
+      className={pageContainerClass('wide', 'space-y-6')}
       role="status"
     >
       <Skeleton className="h-12 w-2/3" />

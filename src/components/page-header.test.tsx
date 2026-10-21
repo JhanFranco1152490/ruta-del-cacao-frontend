@@ -29,13 +29,11 @@ describe('PageHeader', () => {
     expect(screen.getByRole('button', { name: 'Crear' })).toBeInTheDocument();
   });
 
-  it('has a smaller title when it is compact, and the same content', () => {
-    const { rerender } = render(<PageHeader title="Título" />);
-    expect(screen.getByRole('heading')).toHaveClass('text-4xl');
+  it('has the same title size on every screen', () => {
+    render(<PageHeader eyebrow="Sección" title="Título" />);
 
-    rerender(<PageHeader compact title="Título" />);
-
-    expect(screen.getByRole('heading')).toHaveClass('text-3xl');
-    expect(screen.getByRole('heading', { name: 'Título' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Título' })).toHaveClass(
+      'text-3xl',
+    );
   });
 });

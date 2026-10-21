@@ -129,7 +129,7 @@ export function HistoryFiltersBar({
             title="Desde"
             type="date"
             value={filters.from ?? ''}
-            wrapperClassName="min-w-0 flex-1 sm:w-36 sm:flex-none"
+            wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
           />
           <span aria-hidden="true" className="pt-2">
             –
@@ -142,7 +142,7 @@ export function HistoryFiltersBar({
             title="Hasta"
             type="date"
             value={filters.to ?? ''}
-            wrapperClassName="min-w-0 flex-1 sm:w-36 sm:flex-none"
+            wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
           />
         </div>
       </FilterRow>

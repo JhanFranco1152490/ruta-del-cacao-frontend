@@ -1,9 +1,14 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+
 import { SegmentedControl } from '@/components/segmented-control';
 
 import { ACTIVITY_VIEW_OPTIONS, type ActivityView } from '../activity-view';
 
 // El cambio de vista del calendario. En una pantalla angosta las cinco no caben juntas: se
-// desplazan en horizontal en vez de partirse.
+// desplazan en horizontal, llegan hasta el borde para que se vea que hay más a la derecha, y la
+// vista elegida se trae a la vista (con `?vista=pendientes` la última no queda escondida).
 export function ActivityViewSwitch({
   value,
   onChange,
@@ -11,8 +16,19 @@ export function ActivityViewSwitch({
   value: ActivityView;
   onChange: (view: ActivityView) => void;
 }) {
+  const scroller = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scroller.current
+      ?.querySelector('[aria-pressed="true"]')
+      ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [value]);
+
   return (
-    <div className="max-w-full overflow-x-auto">
+    <div
+      className="-mx-4 max-w-[100vw] overflow-x-auto px-4 sm:mx-0 sm:max-w-full sm:px-0"
+      ref={scroller}
+    >
       <SegmentedControl
         label="Vista del calendario"
         onChange={onChange}

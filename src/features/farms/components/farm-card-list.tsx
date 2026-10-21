@@ -32,7 +32,7 @@ export function FarmCardList({
 }) {
   return (
     <ul
-      className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
+      className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
       aria-label="Fincas"
     >
       {farms.map((farm) => (

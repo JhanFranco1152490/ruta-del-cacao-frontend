@@ -49,7 +49,7 @@ export function PlotOverviewFiltersBar({
           hideLabel
           label="Buscar parcela"
           onChange={(event) => filters.setSearchInput(event.target.value)}
-          placeholder="Código de la parcela"
+          placeholder="Código parcela"
           type="search"
           value={filters.searchInput}
           wrapperClassName="min-w-0 flex-1 sm:w-52 sm:flex-none"
@@ -94,7 +94,7 @@ export function PlotOverviewFiltersBar({
           )
         }
         value={filters.characterization ?? ''}
-        wrapperClassName="w-full sm:w-52"
+        wrapperClassName="w-full sm:w-60"
       >
         <option value="">Caracterización: todas</option>
         {(Object.keys(CHARACTERIZATION_LABELS) as CharacterizationState[]).map(

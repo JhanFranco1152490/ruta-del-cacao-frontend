@@ -28,7 +28,7 @@ export function FarmForm({
   const create = useFarmCreate();
   const sync = useFarmSyncStatus();
   const { data: user } = useSession();
-  const { finish } = useFinishSave('/fincas');
+  const { returnPath, finish } = useFinishSave('/fincas');
   // La cuenta técnica no tiene un productor propio: elige de cuál es la finca.
   const chooseProducer = user?.is_superuser === true;
 
@@ -44,6 +44,7 @@ export function FarmForm({
       description="Los campos marcados son obligatorios. Si no hay conexión, la finca se guarda en este dispositivo y se envía cuando vuelva la conexión."
       banner={sync.showBanner && <OfflineBanner status={sync.status} />}
       blockedMessage={sync.blockedMessage}
+      cancelHref={returnPath}
       submitLabel="Guardar finca"
       isSaving={create.isPending}
       error={

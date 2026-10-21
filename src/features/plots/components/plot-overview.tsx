@@ -106,7 +106,7 @@ export function PlotOverview({
           {formatDateTime(new Date(overview.savedAt).toISOString())}.
         </p>
       )}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
         {!overview.isLoading && (
           <div
             className="scroll-mt-6 lg:sticky lg:top-20 lg:order-2"
@@ -205,7 +205,7 @@ export function PlotOverview({
                     ? 'Aún no tienes parcelas registradas'
                     : 'Aún no hay parcelas registradas'
                 }
-                description="Las parcelas se registran dentro de una finca, con su código, su área y, si quieres, su polígono."
+                description="Las parcelas se registran dentro de una finca, con su área y, si quieres, su nombre y su polígono."
                 action={emptyAction}
               />
             ))
