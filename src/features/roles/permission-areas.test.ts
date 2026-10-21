@@ -23,6 +23,10 @@ describe('groupPermissionsByArea', () => {
       labelsOf([
         'roles',
         'users',
+        'facilities',
+        'lots',
+        'harvests',
+        'health',
         'activities',
         'inputs',
         'crops',
@@ -37,9 +41,34 @@ describe('groupPermissionsByArea', () => {
       'Caracterización de parcelas',
       'Insumos',
       'Actividades',
+      'Sanidad',
+      'Cosechas',
+      'Lotes',
+      'Infraestructura',
       'Cuentas',
       'Roles',
     ]);
+  });
+
+  it('names every area the server sends, with no key left in English', () => {
+    const areas = [
+      'producers',
+      'farms',
+      'plots',
+      'crops',
+      'inputs',
+      'activities',
+      'health',
+      'harvests',
+      'lots',
+      'facilities',
+      'users',
+      'roles',
+    ];
+
+    expect(labelsOf(areas).filter((label) => areas.includes(label))).toEqual(
+      [],
+    );
   });
 
   it('puts an area it does not know after the known ones, by name', () => {
