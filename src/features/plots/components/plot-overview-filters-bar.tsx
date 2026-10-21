@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { FarmFilter } from '@/components/farm-filter';
 import { FilterRow } from '@/components/filter-row';
 import { ProducerFilter } from '@/components/producer-filter';
@@ -26,10 +28,13 @@ const CHARACTERIZATION_LABELS: Record<CharacterizationState, string> = {
 export function PlotOverviewFiltersBar({
   filters,
   pickProducer = false,
+  leading,
 }: {
   filters: ReturnType<typeof usePlotFilters>;
   // Solo quien ve parcelas de varios productores filtra y agrupa por productor.
   pickProducer?: boolean;
+  // Lo que va antes de los filtros en la misma fila: cómo se agrupa la lista.
+  leading?: ReactNode;
 }) {
   const { data: user } = useSession();
   // El nombre de la finca elegida, que puede no estar entre lo que trae el buscador.
@@ -44,6 +49,7 @@ export function PlotOverviewFiltersBar({
         (filters.producer ? 1 : 0) +
         (filters.characterization ? 1 : 0)
       }
+      leading={leading}
       search={
         <TextField
           hideLabel
@@ -109,7 +115,8 @@ export function PlotOverviewFiltersBar({
   );
 }
 
-// Cómo se agrupa la lista: va sobre las tarjetas y no en la fila de filtros, que ya está llena.
+// Cómo se agrupa la lista: va al principio de la fila de filtros, sobre la lista que ordena (en
+// celular, debajo, porque la fila ya está llena).
 export function PlotGroupingControl({
   filters,
   pickProducer = false,

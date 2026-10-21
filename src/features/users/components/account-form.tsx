@@ -1,5 +1,6 @@
 'use client';
 import { Controller, useWatch } from 'react-hook-form';
+import { SidePanelActions, SidePanelSection } from '@/components/side-panel';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import { scopeOfRoles } from '@/lib/farm-scope';
@@ -67,37 +68,43 @@ export function AccountForm({
         }}
       >
         <fieldset disabled={isSubmitting} className="space-y-4">
-          <AccountFields form={form} />
+          <SidePanelSection title="Datos">
+            <div className="space-y-4">
+              <AccountFields form={form} />
+            </div>
+          </SidePanelSection>
           {administrator ? (
-            <>
+            <SidePanelSection title="Rol">
               <p>Rol asignado: Administrador</p>
               {errors.role_ids && (
                 <p role="alert" className="text-sm text-err">
                   {errors.role_ids.message}
                 </p>
               )}
-            </>
+            </SidePanelSection>
           ) : (
             <Controller
               name="role_ids"
               control={control}
               render={({ field }) => (
-                <RoleCheckboxes
-                  legend="Roles del empleado"
-                  roles={offered}
-                  canCustomize={(option) => {
-                    const role = offered.find(({ id }) => id === option.id);
-                    return !!role && customization.canCustomize(role);
-                  }}
-                  onCustomize={(option) => {
-                    const role = offered.find(({ id }) => id === option.id);
-                    if (role) customization.start(role);
-                  }}
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={errors.role_ids?.message}
-                  disabled={isSubmitting}
-                />
+                <SidePanelSection title="Roles">
+                  <RoleCheckboxes
+                    legend="Roles del empleado"
+                    roles={offered}
+                    canCustomize={(option) => {
+                      const role = offered.find(({ id }) => id === option.id);
+                      return !!role && customization.canCustomize(role);
+                    }}
+                    onCustomize={(option) => {
+                      const role = offered.find(({ id }) => id === option.id);
+                      if (role) customization.start(role);
+                    }}
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.role_ids?.message}
+                    disabled={isSubmitting}
+                  />
+                </SidePanelSection>
               )}
             />
           )}
@@ -123,17 +130,20 @@ export function AccountForm({
             {failure}
           </p>
         )}
-        <SubmitButton pending={isSubmitting} pendingLabel="Creando…">
-          Crear cuenta
-        </SubmitButton>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isSubmitting}
-          onClick={onCancel}
-        >
-          Cancelar
-        </Button>
+        <SidePanelActions>
+          <SubmitButton pending={isSubmitting} pendingLabel="Creando…">
+            Crear cuenta
+          </SubmitButton>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-12 rounded-md text-base"
+            disabled={isSubmitting}
+            onClick={onCancel}
+          >
+            Cancelar
+          </Button>
+        </SidePanelActions>
       </form>
       {customization.customizing && (
         <CustomizeRoleDialog

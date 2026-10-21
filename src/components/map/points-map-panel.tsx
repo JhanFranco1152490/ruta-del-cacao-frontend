@@ -3,12 +3,12 @@
 import { type ReactNode, useState } from 'react';
 
 import { ErrorState } from '@/components/error-state';
-import { useIsDesktop } from '@/hooks/use-is-desktop';
 
 import type { BaseLayerKind } from './base-layers';
 import { MapFrame, MapHiddenBar } from './map-frame';
 import type { LoadPointsMapProvider, MapPoint, MapShape } from './map-provider';
 import { MapSkeleton } from './map-states';
+import { type MapVisibility, useMapVisibility } from './use-map-visibility';
 import { useMapProvider } from './use-map-provider';
 
 // Mapa de consulta con varios puntos. Es un apoyo visual: la lista que lo acompaña sigue
@@ -24,6 +24,7 @@ export function PointsMapPanel({
   loadProvider,
   heightClassName = 'h-64 md:h-80',
   hiddenOnMobile = false,
+  visibility,
 }: {
   label: string;
   points: readonly MapPoint[];
@@ -40,12 +41,13 @@ export function PointsMapPanel({
   // En el celular el mapa empieza oculto y la lista queda más arriba; pedir una forma (`focus`) lo
   // vuelve a mostrar.
   hiddenOnMobile?: boolean;
+  // Quien dibuja la lista de al lado lo comparte (`MapBesideList`); sin él, el panel lo lleva solo.
+  visibility?: MapVisibility;
 }) {
   const map = useMapProvider(loadProvider);
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>('map');
-  const isDesktop = useIsDesktop();
-  const [chosenVisible, setVisible] = useState<boolean>();
-  const visible = chosenVisible ?? (hiddenOnMobile ? isDesktop : true);
+  const own = useMapVisibility(hiddenOnMobile);
+  const { visible, setVisible } = visibility ?? own;
   const [shownFocus, setShownFocus] = useState(focus);
   if (focus !== shownFocus) {
     setShownFocus(focus);

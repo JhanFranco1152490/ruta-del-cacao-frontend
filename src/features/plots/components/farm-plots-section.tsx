@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { MapBesideList } from '@/components/map/map-beside-list';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -200,11 +201,30 @@ function PlotsContent({
       )}
       {/* Con espacio, las parcelas van junto al mapa y este se queda a la vista mientras se
           recorre la lista; en el celular, la lista primero y el mapa plegado arriba. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
-        <div
-          className="scroll-mt-6 lg:sticky lg:top-20 lg:order-2"
-          ref={mapRef}
-        >
+      <MapBesideList
+        list={(mapVisible) =>
+          plots.length ? (
+            <PlotList
+              className={
+                mapVisible
+                  ? 'grid-cols-1 2xl:grid-cols-2'
+                  : 'grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3'
+              }
+              onShowOnMap={(plot) => onShowOnMap(plot.id)}
+              plots={plots}
+              renderActions={renderActions}
+              renderDetails={renderPlotDetails}
+              renderShortcuts={renderPlotShortcuts}
+            />
+          ) : (
+            <EmptyState
+              title="Esta finca aún no tiene parcelas"
+              description="Registra la primera con su área y, si quieres, su nombre y su polígono. Puedes hacerlo sin conexión."
+              action={registerLink || undefined}
+            />
+          )
+        }
+        map={(visibility) => (
           <PointsMapPanel
             emptyMessage="La finca no tiene ubicación para mostrar en el mapa."
             focus={focus}
@@ -222,27 +242,11 @@ function PlotsContent({
               },
             ]}
             shapes={shapes}
+            visibility={visibility}
           />
-        </div>
-        <div className="lg:order-1">
-          {plots.length ? (
-            <PlotList
-              className="grid-cols-1 2xl:grid-cols-2"
-              onShowOnMap={(plot) => onShowOnMap(plot.id)}
-              plots={plots}
-              renderActions={renderActions}
-              renderDetails={renderPlotDetails}
-              renderShortcuts={renderPlotShortcuts}
-            />
-          ) : (
-            <EmptyState
-              title="Esta finca aún no tiene parcelas"
-              description="Registra la primera con su área y, si quieres, su nombre y su polígono. Puedes hacerlo sin conexión."
-              action={registerLink || undefined}
-            />
-          )}
-        </div>
-      </div>
+        )}
+        mapRef={mapRef}
+      />
     </>
   );
 }

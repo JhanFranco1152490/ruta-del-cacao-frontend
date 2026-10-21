@@ -4,6 +4,7 @@ import { type ReactNode, useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { MapBesideList } from '@/components/map/map-beside-list';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
 import { Pagination } from '@/components/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -84,7 +85,13 @@ export function PlotOverview({
 
   return (
     <section className="mt-5 space-y-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card sm:p-5">
-      <PlotOverviewFiltersBar filters={filters} pickProducer={!ownProducer} />
+      <PlotOverviewFiltersBar
+        filters={filters}
+        pickProducer={!ownProducer}
+        leading={
+          <PlotGroupingControl filters={filters} pickProducer={!ownProducer} />
+        }
+      />
       {overview.queueError && (
         <ErrorState message="No fue posible leer las parcelas guardadas en este dispositivo." />
       )}
@@ -106,12 +113,86 @@ export function PlotOverview({
           {formatDateTime(new Date(overview.savedAt).toISOString())}.
         </p>
       )}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-start">
-        {!overview.isLoading && (
-          <div
-            className="scroll-mt-6 lg:sticky lg:top-20 lg:order-2"
-            ref={mapRef}
-          >
+      <MapBesideList
+        list={(mapVisible) => (
+          <div className="space-y-3">
+            {overview.isLoading ? (
+              <div aria-label="Cargando parcelas" role="status">
+                <Skeleton className="h-40" />
+              </div>
+            ) : plots.length ? (
+              <PlotSections
+                farmHref={farmHref}
+                renderList={(groupPlots) => {
+                  const headers =
+                    sections.find((section) => section.plots === groupPlots)
+                      ?.headers ?? [];
+                  const hasHeader = (level: string) =>
+                    headers.some((header) => header.level === level);
+                  return (
+                    <PlotList
+                      className={
+                        mapVisible
+                          ? 'grid-cols-1 2xl:grid-cols-2'
+                          : 'grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3'
+                      }
+                      highlightedId={highlightedId}
+                      label={labelOf(sections, groupPlots)}
+                      onShowOnMap={showOnMap}
+                      plots={groupPlots}
+                      renderActions={(plot, card) => (
+                        <PlotCardActions
+                          compact={card.compact}
+                          farm={plot.farm}
+                          onShowOnMap={card.showOnMap}
+                          plot={plot}
+                        />
+                      )}
+                      renderDetails={(plot) => (
+                        <>
+                          <PlotFarmLine
+                            canOpenProducer={canOpenProducer}
+                            farm={plot.farm}
+                            farmHref={farmHref}
+                            showFarm={!hasHeader('farm')}
+                            showProducer={
+                              !ownProducer &&
+                              (filters.grouping === 'ninguno' ||
+                                hasHeader('device'))
+                            }
+                          />
+                          {renderPlotDetails?.(plot, pagePlotIds)}
+                        </>
+                      )}
+                    />
+                  );
+                }}
+                sections={sections}
+              />
+            ) : (
+              !overview.serverError &&
+              !overview.serverUnreachable &&
+              (filters.filtered ? (
+                <EmptyState
+                  title="No hay parcelas que coincidan"
+                  description="Prueba con otro código, otra finca, otro productor u otra caracterización."
+                />
+              ) : (
+                <EmptyState
+                  title={
+                    ownProducer
+                      ? 'Aún no tienes parcelas registradas'
+                      : 'Aún no hay parcelas registradas'
+                  }
+                  description="Las parcelas se registran dentro de una finca, con su área y, si quieres, su nombre y su polígono."
+                  action={emptyAction}
+                />
+              ))
+            )}
+          </div>
+        )}
+        map={(visibility) =>
+          !overview.isLoading && (
             <PointsMapPanel
               emptyMessage="Ninguna parcela de esta página tiene polígono para mostrar."
               focus={focus}
@@ -136,82 +217,12 @@ export function PlotOverview({
                   />
                 )
               }
+              visibility={visibility}
             />
-          </div>
-        )}
-        <div className="space-y-3 lg:order-1">
-          <PlotGroupingControl filters={filters} pickProducer={!ownProducer} />
-          {overview.isLoading ? (
-            <div aria-label="Cargando parcelas" role="status">
-              <Skeleton className="h-40" />
-            </div>
-          ) : plots.length ? (
-            <PlotSections
-              farmHref={farmHref}
-              renderList={(groupPlots) => {
-                const headers =
-                  sections.find((section) => section.plots === groupPlots)
-                    ?.headers ?? [];
-                const hasHeader = (level: string) =>
-                  headers.some((header) => header.level === level);
-                return (
-                  <PlotList
-                    className="grid-cols-1 2xl:grid-cols-2"
-                    highlightedId={highlightedId}
-                    label={labelOf(sections, groupPlots)}
-                    onShowOnMap={showOnMap}
-                    plots={groupPlots}
-                    renderActions={(plot, card) => (
-                      <PlotCardActions
-                        compact={card.compact}
-                        farm={plot.farm}
-                        onShowOnMap={card.showOnMap}
-                        plot={plot}
-                      />
-                    )}
-                    renderDetails={(plot) => (
-                      <>
-                        <PlotFarmLine
-                          canOpenProducer={canOpenProducer}
-                          farm={plot.farm}
-                          farmHref={farmHref}
-                          showFarm={!hasHeader('farm')}
-                          showProducer={
-                            !ownProducer &&
-                            (filters.grouping === 'ninguno' ||
-                              hasHeader('device'))
-                          }
-                        />
-                        {renderPlotDetails?.(plot, pagePlotIds)}
-                      </>
-                    )}
-                  />
-                );
-              }}
-              sections={sections}
-            />
-          ) : (
-            !overview.serverError &&
-            !overview.serverUnreachable &&
-            (filters.filtered ? (
-              <EmptyState
-                title="No hay parcelas que coincidan"
-                description="Prueba con otro código, otra finca, otro productor u otra caracterización."
-              />
-            ) : (
-              <EmptyState
-                title={
-                  ownProducer
-                    ? 'Aún no tienes parcelas registradas'
-                    : 'Aún no hay parcelas registradas'
-                }
-                description="Las parcelas se registran dentro de una finca, con su área y, si quieres, su nombre y su polígono."
-                action={emptyAction}
-              />
-            ))
-          )}
-        </div>
-      </div>
+          )
+        }
+        mapRef={mapRef}
+      />
       {overview.total !== undefined && (
         <Pagination
           label="parcelas"

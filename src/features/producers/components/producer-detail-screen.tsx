@@ -1,14 +1,16 @@
 'use client';
 
 import { Pencil } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { EditorLink } from '@/components/editor-link';
 import { Breadcrumb } from '@/components/breadcrumb';
+import { DetailFooter } from '@/components/detail-footer';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
+import { readOrigin } from '@/lib/navigation/origin';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useMunicipalityName } from '../api';
@@ -34,6 +36,7 @@ export function ProducerDetailScreen({
 }) {
   const municipalityName = useMunicipalityName();
   const router = useRouter();
+  const origin = readOrigin(useSearchParams());
   const { data: user } = useSession();
   const canDelete = hasPermission(user, PERMISSIONS.PRODUCERS_DELETE);
 
@@ -116,6 +119,9 @@ export function ProducerDetailScreen({
                 </div>
               </div>
             )}
+            <div className="mt-6">
+              <DetailFooter backHref={origin ?? '/productores'} />
+            </div>
           </div>
         );
       }}

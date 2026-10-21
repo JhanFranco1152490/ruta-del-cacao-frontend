@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import { Package } from 'lucide-react';
+import { Wheat } from 'lucide-react';
 import Link from 'next/link';
 
 import { EmptyState } from '@/components/empty-state';
@@ -41,7 +41,7 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
       className={cn(buttonVariants({ size: 'office' }), 'h-11')}
       href={formLotHref}
     >
-      <Package aria-hidden="true" className="size-4" /> Conformar lote
+      <Wheat aria-hidden="true" className="size-4" /> Cosechas sin lote
     </Link>
   );
 
@@ -101,7 +101,7 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
     <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
         actions={formLot}
-        description="Cada lote lleva su código de trazabilidad desde la cosecha hasta el grano seco."
+        description="Cada lote nace de una cosecha completa y lleva su código de trazabilidad hasta el grano seco."
         eyebrow="Poscosecha"
         title="Lotes"
       />

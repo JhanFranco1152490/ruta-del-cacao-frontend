@@ -3,10 +3,12 @@
 import { cn } from 'cn';
 import { MapPin, Package, Pencil } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { EditorLink } from '@/components/editor-link';
 import { Breadcrumb } from '@/components/breadcrumb';
+import { DetailFooter } from '@/components/detail-footer';
 import { PageHeader } from '@/components/page-header';
 import { ProducerLine } from '@/components/producer-line';
 import { buttonVariants } from '@/components/ui/button';
@@ -14,6 +16,7 @@ import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { formatDateTime } from '@/lib/format/dates';
 import { formatHectares } from '@/lib/format/hectares';
+import { readOrigin } from '@/lib/navigation/origin';
 import { inputListPath } from '@/lib/paths/inputs';
 import { producerLabelOf } from '@/lib/format/producer';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -209,6 +212,7 @@ function DetailLayout({
 }) {
   const place = [view.municipality, view.department].filter(Boolean).join(', ');
   const { data: user } = useSession();
+  const origin = readOrigin(useSearchParams());
   // De quién es la finca, para quien no tiene un productor propio (solo lectura: no cambia de dueño).
   const showProducer = !!view.producer && !user?.producer_id;
   // Las existencias de insumos de esta finca. Solo la finca que ya está en el servidor las tiene.
@@ -313,6 +317,9 @@ function DetailLayout({
         </dl>
       </section>
       {children}
+      <div className="mt-6">
+        <DetailFooter backHref={origin ?? '/fincas'} />
+      </div>
     </div>
   );
 }

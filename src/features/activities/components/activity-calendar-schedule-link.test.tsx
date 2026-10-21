@@ -89,7 +89,6 @@ function renderScreen(
   });
 }
 
-const field = (name: string) => screen.getByLabelText(name);
 const LINK = `?mes=2026-10&programar=monitoreo&finca=f1&parcela=pl1&origen=${ORIGIN}`;
 
 describe('a monitoring to schedule in the calendar URL', () => {
@@ -98,13 +97,11 @@ describe('a monitoring to schedule in the calendar URL', () => {
 
     const dialog = await screen.findByRole(
       'dialog',
-      { name: /Programar actividad/ },
+      { name: /Programar monitoreo/ },
       { timeout: 5000 },
     );
 
-    expect(within(dialog).getByLabelText('Tipo de actividad')).toHaveValue(
-      'phytosanitary_monitoring',
-    );
+    expect(within(dialog).queryByLabelText('Tipo de actividad')).toBeNull();
     expect(
       await within(dialog).findByRole('combobox', { name: 'Finca' }),
     ).toHaveValue('F01 · La Esperanza');
@@ -118,7 +115,7 @@ describe('a monitoring to schedule in the calendar URL', () => {
     renderScreen(LINK);
     const dialog = await screen.findByRole(
       'dialog',
-      { name: /Programar actividad/ },
+      { name: /Programar monitoreo/ },
       { timeout: 5000 },
     );
 
@@ -133,7 +130,7 @@ describe('a monitoring to schedule in the calendar URL', () => {
     renderScreen(LINK);
     const dialog = await screen.findByRole(
       'dialog',
-      { name: /Programar actividad/ },
+      { name: /Programar monitoreo/ },
       { timeout: 5000 },
     );
     fireEvent.change(within(dialog).getByLabelText('Fecha programada'), {
@@ -170,7 +167,7 @@ describe('a monitoring to schedule in the calendar URL', () => {
     renderScreen('?mes=2026-10&programar=monitoreo');
     const dialog = await screen.findByRole(
       'dialog',
-      { name: /Programar actividad/ },
+      { name: /Programar monitoreo/ },
       { timeout: 5000 },
     );
 
@@ -187,7 +184,7 @@ describe('a monitoring to schedule in the calendar URL', () => {
     );
     const dialog = await screen.findByRole(
       'dialog',
-      { name: /Programar actividad/ },
+      { name: /Programar monitoreo/ },
       { timeout: 5000 },
     );
 
@@ -205,7 +202,7 @@ describe('a monitoring to schedule in the calendar URL', () => {
       await screen.findByText('No tienes permiso para programar actividades'),
     ).toBeVisible();
     expect(
-      screen.queryByRole('dialog', { name: /Programar actividad/ }),
+      screen.queryByRole('dialog', { name: /Programar monitoreo/ }),
     ).not.toBeInTheDocument();
     await waitFor(() => expect(urls.at(-1)).toBe('?mes=2026-10'));
   });
@@ -215,7 +212,7 @@ describe('a monitoring to schedule in the calendar URL', () => {
 
     await screen.findByRole('heading', { name: 'Actividades' });
     expect(
-      screen.queryByRole('dialog', { name: /Programar actividad/ }),
+      screen.queryByRole('dialog', { name: /Programar monitoreo/ }),
     ).not.toBeInTheDocument();
   });
 });

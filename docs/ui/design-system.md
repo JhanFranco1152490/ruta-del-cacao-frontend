@@ -228,6 +228,18 @@ poscosecha cobre, calidad azul). Nunca emojis.
   con uno el menú queda plano, y una entrada sin grupo va suelta arriba. Cada grupo se pliega con su
   flecha y la elección se recuerda en el navegador. Con más de 10 entradas (la cuenta técnica ve 13)
   los grupos empiezan plegados, menos el de la pantalla actual, que nunca se pliega.
+- **Modal, hoja lateral o página.** Una alta corta de oficina, de unos seis campos o menos y sin
+  listas dentro, es un **modal centrado** (`sm:max-w-lg`; con una lista adentro, como los insumos de
+  un control, `sm:max-w-xl`). Un registro con listas o permisos (una cuenta, un rol) es una **hoja
+  lateral** (`SidePanelHeader`, `SidePanelSection`, `SidePanelActions`): franja de color arriba,
+  secciones en tarjeta y acciones fijas abajo. Una captura de campo (con cola sin conexión, mapa o
+  fotos) o un formulario de más de seis campos es una **página**.
+- **Una lista con su mapa (`MapBesideList`).** Con espacio, la lista a la izquierda y el mapa a la
+  derecha; con el mapa oculto, la franja «Mapa oculto» queda arriba y la lista toma todo el ancho en
+  dos o tres columnas, como en la lista de fincas.
+- **Totales y agrupación de una lista.** Los filtros arriba; debajo, en una sola fila, el recuento a
+  la izquierda y, a la derecha, el cambio de vista y plegar o desplegar los grupos (un botón de
+  ícono con su texto en el `title`).
 - **Barras de desplazamiento:** una sola, definida en `globals.css`: delgada, con el pulgar redondeado
   y sin pista ni flechas (`scrollbar-on-dark` sobre la barra lateral y el cajón del celular). Solo
   aparece si hay algo que desplazar: ningún contenedor fuerza `overflow: scroll`, y los adornos (la

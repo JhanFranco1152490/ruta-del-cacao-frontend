@@ -384,9 +384,10 @@ describe('ActivityCalendarScreen', () => {
       );
 
       const form = await screen.findByRole('dialog');
-      expect(within(form).getByLabelText('Tipo de actividad')).toHaveValue(
-        'phytosanitary_monitoring',
-      );
+      expect(
+        within(form).getByRole('heading', { name: 'Programar monitoreo' }),
+      ).toBeInTheDocument();
+      expect(within(form).queryByLabelText('Tipo de actividad')).toBeNull();
     });
 
     it('does not offer the monitoring button to who cannot schedule', async () => {

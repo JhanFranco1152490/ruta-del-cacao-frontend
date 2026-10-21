@@ -174,7 +174,7 @@ describe('LotListScreen', () => {
     renderScreen();
 
     expect(
-      await screen.findByRole('link', { name: 'Conformar lote' }),
+      await screen.findByRole('link', { name: 'Cosechas sin lote' }),
     ).toHaveAttribute('href', '/cosechas?lote=sin');
   });
 
@@ -182,7 +182,9 @@ describe('LotListScreen', () => {
     renderScreen({ permissions: [PERMISSIONS.LOTS_VIEW] });
     await table();
 
-    expect(screen.queryByRole('link', { name: 'Conformar lote' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: 'Cosechas sin lote' }),
+    ).toBeNull();
   });
 
   it('says when no lot matches the filters, and clears them', async () => {

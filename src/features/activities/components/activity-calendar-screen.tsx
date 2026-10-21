@@ -38,7 +38,6 @@ import { ActivityCalendarBody } from './activity-calendar-body';
 import { ActivityDialogs, type PendingDialog } from './activity-dialogs';
 import { ActivityFiltersBar } from './activity-filters-bar';
 import { ActivityFiltersToggle } from './activity-filters-toggle';
-import { ActivityLegend } from './activity-legend';
 import { ActivityPeriodControl } from './activity-period-control';
 import { ActivityPeriodSlider } from './activity-period-slider';
 import { ActivityScheduleFab } from './activity-schedule-fab';
@@ -365,13 +364,8 @@ export function ActivityCalendarScreen({
               />
             )}
           </ActivityPeriodSlider>
-          {loaded && (
-            <>
-              {isPeriodView(view) && (
-                <ActivityTypeBreakdown rows={summary.byType} />
-              )}
-              <ActivityLegend />
-            </>
+          {loaded && isPeriodView(view) && (
+            <ActivityTypeBreakdown rows={summary.byType} />
           )}
         </div>
         {canSchedule && !isDesktop && (

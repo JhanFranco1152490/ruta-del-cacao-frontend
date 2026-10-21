@@ -124,7 +124,6 @@ export function CompletionCapture({
         </p>
       )}
       <div className="mt-6 space-y-6">
-        <CompletionActivityCard item={item} />
         <CompletionForm
           activity={activity}
           blockedMessage={
@@ -150,6 +149,7 @@ export function CompletionCapture({
           }
           stocks={stocks}
           submitLabel={submitLabel}
+          summary={<CompletionActivityCard item={item} />}
           today={today}
           unavailableRows={unavailableRows}
         />

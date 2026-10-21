@@ -84,24 +84,30 @@ export function HarvestListScreen({
         eyebrow="Producción"
         title="Cosechas"
       />
-      {superuser && (
-        <ProducerFilter
-          className="max-w-md"
-          onClear={() => filterState.setProducer(null)}
-          onSelect={filterState.setProducer}
-          producer={producer ?? undefined}
-          selected={selectedProducer}
-        />
-      )}
-      <PeriodBar
-        isCurrent={period.isCurrentMonth}
-        nextLabel="Mes siguiente"
-        onNext={period.goNext}
-        onPrevious={period.goPrevious}
-        onToday={period.goToday}
-        previousLabel="Mes anterior"
-        title={formatMonthYear(period.month)}
-      />
+      {/* El filtro de productor a la izquierda y el mes a la derecha, en la misma fila; sin filtro, el
+          mes queda a la derecha igual, para que esté siempre en el mismo sitio. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        {superuser && (
+          <ProducerFilter
+            className="w-full max-w-md"
+            onClear={() => filterState.setProducer(null)}
+            onSelect={filterState.setProducer}
+            producer={producer ?? undefined}
+            selected={selectedProducer}
+          />
+        )}
+        <div className="ml-auto">
+          <PeriodBar
+            isCurrent={period.isCurrentMonth}
+            nextLabel="Mes siguiente"
+            onNext={period.goNext}
+            onPrevious={period.goPrevious}
+            onToday={period.goToday}
+            previousLabel="Mes anterior"
+            title={formatMonthYear(period.month)}
+          />
+        </div>
+      </div>
       {read.data?.savedAt !== undefined && (
         <p
           className="rounded-(--radius) bg-warn-bg px-4 py-3 font-bold text-warn"
