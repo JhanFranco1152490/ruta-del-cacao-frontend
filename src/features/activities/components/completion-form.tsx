@@ -38,6 +38,7 @@ export function CompletionForm({
   error,
   onSubmit,
   secondaryAction,
+  summary,
 }: {
   activity: Pick<AgriculturalActivity, 'activity_type' | 'created_at'>;
   // La fecha de Bogotá: la realización no puede ser futura.
@@ -55,6 +56,8 @@ export function CompletionForm({
   error?: string | null;
   onSubmit: (values: CompletionFormValues) => void;
   secondaryAction?: ReactNode;
+  // La actividad que se registra, a la izquierda de la fecha.
+  summary?: ReactNode;
 }) {
   const schema = useMemo(
     () => createCompletionSchema({ today, activity }),
@@ -96,17 +99,23 @@ export function CompletionForm({
             : `Revisa los ${errorCount} datos marcados antes de guardar.`}
         </p>
       )}
-      <FormSection title="Fecha de realización">
-        <TextField
-          className={CAPTURE_FIELD_CLASS}
-          disabled={isSaving}
-          error={errors.done_date?.message}
-          label="Fecha de realización"
-          max={today}
-          type="date"
-          {...register('done_date')}
-        />
-      </FormSection>
+      {/* La actividad y la fecha, lado a lado: son dos tarjetas de poco contenido y apiladas
+          dejaban media pantalla vacía. */}
+      <div className="grid gap-6 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        {summary}
+        <FormSection compact title="Fecha de realización">
+          <TextField
+            className={CAPTURE_FIELD_CLASS}
+            disabled={isSaving}
+            error={errors.done_date?.message}
+            hideLabel
+            label="Fecha de realización"
+            max={today}
+            type="date"
+            {...register('done_date')}
+          />
+        </FormSection>
+      </div>
       {acceptsInputs && (
         <UsedInputsSection
           catalog={catalog}

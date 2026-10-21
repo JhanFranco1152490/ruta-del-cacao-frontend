@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { FilterRow } from '@/components/filter-row';
 import { ProducerFilter } from '@/components/producer-filter';
 import { SelectField } from '@/components/select-field';
@@ -22,6 +24,7 @@ export function InputFiltersBar({
   onClear,
   producer,
   onProducer,
+  farmSelect,
 }: {
   filters: InputFilters;
   onSearch: (search: string) => void;
@@ -31,6 +34,8 @@ export function InputFiltersBar({
   // Solo para la cuenta técnica, que ve los catálogos de todos los productores.
   producer?: string | null;
   onProducer?: (producer: string | null) => void;
+  // De qué finca se ven las existencias: un filtro más de la fila.
+  farmSelect?: ReactNode;
 }) {
   const selectedProducer = useProducerSummary(producer ?? undefined);
   const hasFilters =
@@ -58,6 +63,7 @@ export function InputFiltersBar({
           />
         }
       >
+        {farmSelect}
         {onProducer && (
           <ProducerFilter
             className="w-full sm:w-80"

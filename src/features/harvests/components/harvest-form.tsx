@@ -139,22 +139,24 @@ export function HarvestForm({
       onSubmit={(event) => void handleSubmit(onSubmit)(event)}
     >
       <FormSection title="Recolección">
-        <div className="grid gap-5">
-          <Controller
-            control={control}
-            name="plot_id"
-            render={({ field }) => (
-              <HarvestPlotField
-                disabled={isSaving || plotLocked}
-                error={errors.plot_id?.message}
-                onBlur={field.onBlur}
-                onChange={choosePlot}
-                plots={plots}
-                truncated={truncated}
-                value={field.value}
-              />
-            )}
-          />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Controller
+              control={control}
+              name="plot_id"
+              render={({ field }) => (
+                <HarvestPlotField
+                  disabled={isSaving || plotLocked}
+                  error={errors.plot_id?.message}
+                  onBlur={field.onBlur}
+                  onChange={choosePlot}
+                  plots={plots}
+                  truncated={truncated}
+                  value={field.value}
+                />
+              )}
+            />
+          </div>
           <SelectField
             className={CAPTURE_FIELD_CLASS}
             disabled={isSaving || !plot}

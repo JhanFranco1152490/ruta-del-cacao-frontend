@@ -71,15 +71,6 @@ export function InputRowActions({
             <MoreHorizontal aria-hidden="true" />
           </MenuTrigger>
           <MenuContent>
-            {stockActions && input.is_active && (
-              <MenuItem
-                disabled={disabled}
-                onClick={() => onAction('entry', input)}
-              >
-                <PackagePlus aria-hidden="true" className="size-4" />
-                Registrar entrada
-              </MenuItem>
-            )}
             {stockActions && (
               <MenuItem
                 disabled={disabled}

@@ -140,7 +140,7 @@ export function MonitoringSheet({
           )}
           {/* En escritorio, el muestreo y las detecciones a la izquierda y lo de apoyo (observaciones
               y fotos) a la derecha; en celular, una sola columna en ese mismo orden. */}
-          <div className="grid gap-4 lg:grid-cols-5 lg:items-start">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-start">
             <div className="space-y-4 lg:col-span-3">
               <SamplingFields
                 control={control}

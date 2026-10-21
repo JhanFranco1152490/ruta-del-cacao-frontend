@@ -1,29 +1,22 @@
 export type InitialFarm =
-  { kind: 'farm'; farmId: string } | { kind: 'choose' } | { kind: 'no-farms' };
+  { kind: 'farm'; farmId: string } | { kind: 'no-farms' };
 
 // Con qué finca se abre la lista. `farms` son las activas que la cuenta alcanza: una finca que ya
-// no está entre ellas (en la URL o recordada) se trata como si no estuviera y se pregunta de nuevo.
-// Quien tiene una sola nunca elige, ni siquiera si lo pide la URL.
+// no está entre ellas (en la URL o recordada) se trata como si no estuviera. La lista es de una
+// finca a la vez y no se pregunta antes: manda la de la URL, después la última que se vio en este
+// dispositivo y, si no hay ninguna, la primera. Cambiar de finca se hace desde la misma pantalla.
 export function initialFarm({
   farms,
   urlFarm,
-  choose,
   remembered,
 }: {
   farms: readonly string[];
   urlFarm: string | null;
-  choose: boolean;
   remembered: string | null;
 }): InitialFarm {
   if (farms.length === 0) return { kind: 'no-farms' };
-  if (farms.length === 1) return { kind: 'farm', farmId: farms[0] };
-  if (urlFarm) {
-    return farms.includes(urlFarm)
-      ? { kind: 'farm', farmId: urlFarm }
-      : { kind: 'choose' };
-  }
-  if (!choose && remembered && farms.includes(remembered)) {
-    return { kind: 'farm', farmId: remembered };
-  }
-  return { kind: 'choose' };
+  const known = [urlFarm, remembered].find(
+    (farm) => farm !== null && farms.includes(farm),
+  );
+  return { kind: 'farm', farmId: known ?? farms[0] };
 }

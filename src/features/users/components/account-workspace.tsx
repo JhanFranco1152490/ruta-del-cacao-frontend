@@ -18,6 +18,7 @@ import { AccountList } from './account-list';
 import { AccountPanel } from './account-panel';
 import { MissingFarmsNotice } from './missing-farms-notice';
 import { ProducerFilter } from '@/components/producer-filter';
+import { pageContainerClass } from '@/components/page-container';
 
 export function AccountWorkspace({
   user,
@@ -47,7 +48,7 @@ export function AccountWorkspace({
     void panel.open(account.id);
   }
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         eyebrow="Administración"
         title="Usuarios y accesos"

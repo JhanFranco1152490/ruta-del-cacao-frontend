@@ -35,6 +35,7 @@ import { PlotMapControls } from './plot-map-controls';
 import { PlotNotices } from './plot-notices';
 import { PlotVertexList } from './plot-vertex-list';
 import { PLOT_NAME_MAX_LENGTH } from '../schemas';
+import { pageContainerClass } from '@/components/page-container';
 
 export type PlotEditorFarm = {
   id: string;
@@ -142,7 +143,7 @@ export function PlotEditor({
   const saveBlocked = !!blockedMessage || editor.hasBlockers;
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <Breadcrumb
         items={[
           { label: 'Fincas', href: '/fincas' },
@@ -151,7 +152,6 @@ export function PlotEditor({
         ]}
       />
       <PageHeader
-        compact
         eyebrow={`Finca ${farm.name}`}
         title={title}
         description={description}
@@ -159,7 +159,7 @@ export function PlotEditor({
       {banner && <div className="mt-4">{banner}</div>}
       {notice}
       <form
-        className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+        className="mt-5 grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
         noValidate
         onSubmit={handleSubmit((values) =>
           onSubmit({

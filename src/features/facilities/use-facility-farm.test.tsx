@@ -57,13 +57,13 @@ function setup({
 }
 
 describe('useFacilityFarm', () => {
-  it('offers only the active farms and asks the first time', async () => {
+  it('offers only the active farms and opens the first one the first time', async () => {
     server.use(farmsHandler([esperanza, diviso, retired]));
 
     const { result } = setup();
 
     await waitFor(() =>
-      expect(result.current.resolution).toEqual({ kind: 'choose' }),
+      expect(result.current.resolution).toEqual({ kind: 'farm', farmId: 'f1' }),
     );
     expect(result.current.farms.map(({ id }) => id)).toEqual(['f1', 'f2']);
     expect(result.current.canSwitchFarm).toBe(true);
@@ -82,7 +82,7 @@ describe('useFacilityFarm', () => {
     expect(result.current.farm?.name).toBe('El Diviso');
   });
 
-  it('asks again when the remembered farm is no longer active', async () => {
+  it('opens the first farm when the remembered one is no longer active', async () => {
     server.use(farmsHandler([esperanza, diviso, retired]));
     const userId = newUser();
     rememberLastFarm(userId, 'f3');
@@ -90,24 +90,24 @@ describe('useFacilityFarm', () => {
     const { result } = setup({ userId });
 
     await waitFor(() =>
-      expect(result.current.resolution).toEqual({ kind: 'choose' }),
+      expect(result.current.resolution).toEqual({ kind: 'farm', farmId: 'f1' }),
     );
   });
 
   it('remembers the farm chosen and opens it in the URL', async () => {
     server.use(farmsHandler([esperanza, diviso]));
     const { result, userId, onUrlUpdate } = setup({
-      searchParams: '?elegir=1&tipo=solar_dryer',
+      searchParams: '?finca=f1&tipo=solar_dryer',
     });
     await waitFor(() =>
-      expect(result.current.resolution).toEqual({ kind: 'choose' }),
+      expect(result.current.resolution).toEqual({ kind: 'farm', farmId: 'f1' }),
     );
 
-    await act(() => result.current.choose('f2'));
+    await act(() => result.current.select('f2'));
 
     expect(readLastFarm(userId)).toBe('f2');
     expect(onUrlUpdate.mock.lastCall?.[0].queryString).toBe(
-      '?tipo=solar_dryer&finca=f2',
+      '?finca=f2&tipo=solar_dryer',
     );
   });
 
@@ -127,10 +127,10 @@ describe('useFacilityFarm', () => {
     );
   });
 
-  it('never asks whoever has a single farm', async () => {
+  it('offers no selector to whoever has a single farm', async () => {
     server.use(farmsHandler([esperanza]));
 
-    const { result } = setup({ searchParams: '?elegir=1' });
+    const { result } = setup();
 
     await waitFor(() =>
       expect(result.current.resolution).toEqual({ kind: 'farm', farmId: 'f1' }),
@@ -168,7 +168,7 @@ describe('useFacilityFarm', () => {
     });
 
     await waitFor(() =>
-      expect(result.current.resolution).toEqual({ kind: 'choose' }),
+      expect(result.current.resolution).toEqual({ kind: 'farm', farmId: 'f1' }),
     );
     expect(requests[0].get('producer')).toBe('p7');
     expect(result.current.producer).toBe('p7');
@@ -181,7 +181,7 @@ describe('useFacilityFarm', () => {
     const { result } = setup({ searchParams: '?productor=p7' });
 
     await waitFor(() =>
-      expect(result.current.resolution).toEqual({ kind: 'choose' }),
+      expect(result.current.resolution).toEqual({ kind: 'farm', farmId: 'f1' }),
     );
     expect(requests[0].get('producer')).toBeNull();
     expect(result.current.producer).toBeNull();

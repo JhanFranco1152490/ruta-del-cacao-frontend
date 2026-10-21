@@ -26,7 +26,7 @@ describe('PlotHistoryLink', () => {
 
     expect(
       screen.getByRole('link', { name: 'Historial fitosanitario de P-03' }),
-    ).toHaveAttribute('href', '/sanidad?parcela=pl1');
+    ).toHaveAttribute('href', '/sanidad?vista=historial&parcela=pl1');
   });
 
   it('is not offered for a plot that still waits in the device', () => {

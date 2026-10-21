@@ -68,6 +68,10 @@ export function ActivityFormDialog({
   onRejected: (message: string) => void;
 }) {
   const [activityId] = useState(() => crypto.randomUUID());
+  // Desde Sanidad el tipo ya está decidido: es un monitoreo, y el diálogo no lo pregunta para que
+  // no se confunda con programar una labor.
+  const monitoring =
+    !activity && preset?.activityType === 'phytosanitary_monitoring';
   const today = todayInBogota();
   const create = useCreateActivity();
   const update = useUpdateActivity();
@@ -171,12 +175,18 @@ export function ActivityFormDialog({
         >
           <DialogHeader>
             <DialogTitle>
-              {activity ? 'Editar actividad' : 'Programar actividad'}
+              {activity
+                ? 'Editar actividad'
+                : monitoring
+                  ? 'Programar monitoreo'
+                  : 'Programar actividad'}
             </DialogTitle>
             <DialogDescription>
               {activity
                 ? 'Puedes cambiar el tipo, la fecha o el responsable. La parcela no cambia.'
-                : 'Queda en el calendario como programada, a nombre de su responsable.'}
+                : monitoring
+                  ? 'Se revisa la parcela en busca de plagas y enfermedades. Queda en el calendario, a nombre de su responsable.'
+                  : 'Queda en el calendario como programada, a nombre de su responsable.'}
             </DialogDescription>
           </DialogHeader>
           {delayed && !submission.summary && (
@@ -198,6 +208,7 @@ export function ActivityFormDialog({
             errors={errors}
             fixedPlot={fixedPlot}
             form={form}
+            hideType={monitoring}
             onFarmFilter={setFarmFilter}
             producer={
               needsProducer

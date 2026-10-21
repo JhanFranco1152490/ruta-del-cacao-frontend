@@ -12,6 +12,7 @@ import { isPausedWithoutData } from '@/lib/offline/paused-read';
 import { useCharacterizationHistory } from '../api';
 import { characterizationPath } from '../characterization-paths';
 import { CharacterizationHistoryVersion } from './characterization-history-version';
+import { pageContainerClass } from '@/components/page-container';
 
 export type HistoryFarm = { id: string; name: string; detailPath: string };
 export type HistoryPlot = { id: string; code: string };
@@ -30,7 +31,7 @@ export function CharacterizationHistoryScreen({
   const events = history.data?.pages.flatMap((page) => page.results) ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('narrow')}>
       <Breadcrumb
         items={[
           { label: 'Fincas', href: '/fincas' },

@@ -63,9 +63,17 @@ describe('AppShell', () => {
   it('keeps the menu in view below the fixed header while the page scrolls', () => {
     renderShell();
 
-    const menu = screen.getByText('Menú').parentElement;
-    expect(menu).toHaveClass('sticky', 'top-16');
+    const scroller = screen.getByText('Menú').parentElement;
+    expect(scroller?.parentElement).toHaveClass('sticky', 'top-16');
     // Más alto que la ventana, el menú se desplaza por dentro en vez de quedar cortado.
-    expect(menu).toHaveClass('overflow-y-auto');
+    expect(scroller).toHaveClass('overflow-y-auto');
+  });
+
+  it('keeps the vine out of what scrolls, so the scrollbar is not there for it', () => {
+    renderShell();
+
+    const scroller = screen.getByText('Menú').parentElement;
+    expect(scroller?.querySelector('svg')).toBeNull();
+    expect(scroller?.parentElement?.querySelector('svg')).not.toBeNull();
   });
 });

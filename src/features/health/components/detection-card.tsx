@@ -81,7 +81,7 @@ export function DetectionCard({
           <Trash2 aria-hidden="true" className="size-4" /> Quitar
         </Button>
       </div>
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_13rem]">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_13rem]">
         <div className="space-y-4">
           <Controller
             control={control}

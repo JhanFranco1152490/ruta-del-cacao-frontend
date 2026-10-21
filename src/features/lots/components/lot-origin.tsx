@@ -44,7 +44,7 @@ export function LotOrigin({
       <h2 className="text-lg font-bold" id="lot-origin-title">
         Origen
       </h2>
-      <dl className="grid gap-4 rounded-(--radius) border bg-card p-5 sm:grid-cols-2">
+      <dl className="grid grid-cols-1 gap-4 rounded-(--radius) border bg-card p-5 sm:grid-cols-2">
         <Fact label="Cosecha">
           {linkOrText(harvestHref, formatLongDate(harvest.harvest_date))}
         </Fact>

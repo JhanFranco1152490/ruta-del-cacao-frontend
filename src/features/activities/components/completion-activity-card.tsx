@@ -26,7 +26,7 @@ export function CompletionActivityCard({ item }: { item: ActivityOfDay }) {
           {badge.text}
         </StatusBadge>
       </div>
-      <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
         <div>
           <dt className="font-bold text-muted-foreground">Programada</dt>
           <dd className="first-letter:uppercase">

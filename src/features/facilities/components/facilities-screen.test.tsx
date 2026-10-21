@@ -123,11 +123,18 @@ const rows = () =>
     .slice(1);
 
 describe('FacilitiesScreen', () => {
-  it('asks for the farm the first time, and opens the one chosen', async () => {
+  it('opens the first farm the first time, and changes farm from the same screen', async () => {
     renderScreen();
 
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Infraestructura · F01 · La Esperanza',
+      }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Finca' }));
     await userEvent.click(
-      await screen.findByRole('button', { name: /F02 · El Diviso/ }),
+      await screen.findByRole('option', { name: /F02 · El Diviso/ }),
     );
 
     expect(
@@ -242,16 +249,19 @@ describe('FacilitiesScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('goes back to choosing the farm, keeping the filters', async () => {
-    renderScreen({ searchParams: '?finca=f1&tipo=solar_dryer' });
+  it('says in the selector what each farm has', async () => {
+    renderScreen({ searchParams: '?finca=f1' });
 
-    expect(await screen.findByRole('link', { name: 'Fincas' })).toHaveAttribute(
-      'href',
-      '/infraestructura?tipo=solar_dryer&elegir=1',
+    await userEvent.click(
+      await screen.findByRole('combobox', { name: 'Finca' }),
     );
+
+    expect(
+      await screen.findByRole('option', { name: /F02 · El Diviso/ }),
+    ).toHaveTextContent('1 cajón');
   });
 
-  it('does not offer going back to whoever has a single farm', async () => {
+  it('offers no selector to whoever has a single farm', async () => {
     server.use(farmsHandler([esperanzaFarm]));
 
     renderScreen();
@@ -261,7 +271,7 @@ describe('FacilitiesScreen', () => {
         name: 'Infraestructura · F01 · La Esperanza',
       }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Fincas' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Finca' })).toBeNull();
   });
 
   it('says there are no active farms', async () => {

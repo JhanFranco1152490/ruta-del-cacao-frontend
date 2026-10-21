@@ -1,12 +1,11 @@
 'use client';
 import { useRef, useState } from 'react';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
+  SIDE_PANEL_CLASS,
+  SidePanelBody,
+  SidePanelHeader,
+} from '@/components/side-panel';
 import { ErrorState } from '@/components/error-state';
 import { isUuid } from '@/lib/validation/is-uuid';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -52,49 +51,57 @@ export function AccountPanel({
         if (!open && !lock.current) close();
       }}
     >
-      {/* Una cuenta que ya existe tiene su franja de color hasta los bordes y su propio relleno. */}
+      {/* Una cuenta que ya existe trae su franja de color hasta los bordes y su propio relleno; una
+          nueva usa la franja común de las hojas laterales. */}
       <SheetContent
-        className={
-          existing
-            ? 'gap-0 p-0 sm:max-w-lg has-[[data-band]]:[&_[data-slot=sheet-close]]:text-white has-[[data-band]]:[&_[data-slot=sheet-close]]:hover:bg-white/15 has-[[data-band]]:[&_[data-slot=sheet-close]]:hover:text-white'
-            : undefined
-        }
+        className={SIDE_PANEL_CLASS}
         side="right"
         showCloseButton={!busy}
       >
-        <SheetHeader className={existing ? 'sr-only' : undefined}>
-          <SheetTitle>
-            {selected === 'nueva'
+        <SidePanelHeader
+          band={!existing}
+          description={
+            existing
+              ? 'Consulta y administra los datos, roles y estado de la cuenta.'
+              : !chosen
+                ? 'Elige qué tipo de cuenta vas a crear.'
+                : association && !chosen.producer
+                  ? 'Una cuenta con acceso de administración de la asociación.'
+                  : 'Los datos de acceso, los roles y las fincas de la persona.'
+          }
+          title={
+            selected === 'nueva'
               ? !chosen
                 ? 'Crear cuenta'
                 : association && !chosen.producer
                   ? 'Crear cuenta de administrador'
                   : 'Crear cuenta de empleado'
-              : 'Detalle de la cuenta'}
-          </SheetTitle>
-          <SheetDescription>
-            Consulta y administra los datos, roles y estado de la cuenta.
-          </SheetDescription>
-        </SheetHeader>
+              : 'Detalle de la cuenta'
+          }
+        />
         {selected === 'nueva' ? (
           hasPermission(user, PERMISSIONS.USERS_CREATE) ? (
-            !chosen ? (
-              <AccountTypeStep
-                user={user}
-                initialProducer={producer}
-                onChoose={(picked) => setChosen({ producer: picked })}
-              />
-            ) : (
-              <AccountCreatePanel
-                user={user}
-                producer={chosen.producer}
-                onCreated={onCreated}
-                onBusy={onBusy}
-                close={close}
-              />
-            )
+            <SidePanelBody>
+              {!chosen ? (
+                <AccountTypeStep
+                  user={user}
+                  initialProducer={producer}
+                  onChoose={(picked) => setChosen({ producer: picked })}
+                />
+              ) : (
+                <AccountCreatePanel
+                  user={user}
+                  producer={chosen.producer}
+                  onCreated={onCreated}
+                  onBusy={onBusy}
+                  close={close}
+                />
+              )}
+            </SidePanelBody>
           ) : (
-            <ErrorState message="No tienes permiso para crear cuentas." />
+            <SidePanelBody>
+              <ErrorState message="No tienes permiso para crear cuentas." />
+            </SidePanelBody>
           )
         ) : isUuid(selected) ? (
           <AccountDetail
@@ -105,7 +112,9 @@ export function AccountPanel({
             onDeleted={close}
           />
         ) : (
-          <ErrorState message="Cuenta no disponible" />
+          <SidePanelBody>
+            <ErrorState message="Cuenta no disponible" />
+          </SidePanelBody>
         )}
       </SheetContent>
     </Sheet>

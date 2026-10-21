@@ -1,3 +1,4 @@
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/segmented-control';
@@ -31,8 +32,19 @@ export function ListViewToolbar({
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {view === 'agrupada' && groups && (
-          <Button variant="outline" onClick={groups.toggleAll}>
-            {groups.allOpen ? 'Plegar todo' : 'Desplegar todo'}
+          <Button
+            aria-label={groups.allOpen ? 'Plegar todo' : 'Desplegar todo'}
+            onClick={groups.toggleAll}
+            className="size-11"
+            size="icon-lg"
+            title={groups.allOpen ? 'Plegar todo' : 'Desplegar todo'}
+            variant="outline"
+          >
+            {groups.allOpen ? (
+              <ChevronsDownUp aria-hidden="true" className="size-5" />
+            ) : (
+              <ChevronsUpDown aria-hidden="true" className="size-5" />
+            )}
           </Button>
         )}
         {view && onViewChange && (

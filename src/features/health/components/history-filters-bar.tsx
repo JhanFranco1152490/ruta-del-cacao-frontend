@@ -41,6 +41,7 @@ export function HistoryFiltersBar({
   onTo,
   onClear,
   onProducer,
+  placesOnly = false,
 }: {
   filters: HistoryFilters;
   farmOptions: readonly SearchSelectOption[];
@@ -58,15 +59,15 @@ export function HistoryFiltersBar({
   onClear: () => void;
   // Solo para la cuenta técnica, que ve el historial de todos los productores.
   onProducer?: (producer: string | null) => void;
+  // En la pestaña Pendiente solo importa dónde (finca y parcela): sin plaga ni periodo.
+  placesOnly?: boolean;
 }) {
   const selectedProducer = useProducerSummary(filters.producer ?? undefined);
-  const activeCount = [
-    filters.producer,
-    filters.plot,
-    filters.pest,
-    filters.from,
-    filters.to,
-  ].filter(Boolean).length;
+  const activeCount = (
+    placesOnly
+      ? [filters.producer, filters.plot]
+      : [filters.producer, filters.plot, filters.pest, filters.from, filters.to]
+  ).filter(Boolean).length;
 
   return (
     <div className="space-y-2">
@@ -104,49 +105,53 @@ export function HistoryFiltersBar({
           options={plotOptions}
           value={chosen(filters.plot, plotOptions, plotCode)}
         />
-        <SelectField
-          className="h-10 text-sm"
-          hideLabel
-          label="Plaga o enfermedad"
-          onChange={(event) => onPest(event.target.value || null)}
-          value={filters.pest ?? ''}
-          wrapperClassName="w-full sm:w-48"
-        >
-          <option value="">Todas las plagas</option>
-          {pestOptions.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </SelectField>
-        <div className="flex w-full items-start gap-2 sm:w-auto">
-          <TextField
-            className="h-10 text-sm"
-            error={periodError}
-            hideLabel
-            label="Desde"
-            onChange={(event) => onFrom(event.target.value)}
-            title="Desde"
-            type="date"
-            value={filters.from ?? ''}
-            wrapperClassName="min-w-0 flex-1 sm:w-36 sm:flex-none"
-          />
-          <span aria-hidden="true" className="pt-2">
-            –
-          </span>
-          <TextField
+        {!placesOnly && (
+          <SelectField
             className="h-10 text-sm"
             hideLabel
-            label="Hasta"
-            onChange={(event) => onTo(event.target.value)}
-            title="Hasta"
-            type="date"
-            value={filters.to ?? ''}
-            wrapperClassName="min-w-0 flex-1 sm:w-36 sm:flex-none"
-          />
-        </div>
+            label="Plaga o enfermedad"
+            onChange={(event) => onPest(event.target.value || null)}
+            value={filters.pest ?? ''}
+            wrapperClassName="w-full sm:w-48"
+          >
+            <option value="">Todas las plagas</option>
+            {pestOptions.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </SelectField>
+        )}
+        {!placesOnly && (
+          <div className="flex w-full items-start gap-2 sm:w-auto">
+            <TextField
+              className="h-10 text-sm"
+              error={periodError}
+              hideLabel
+              label="Desde"
+              onChange={(event) => onFrom(event.target.value)}
+              title="Desde"
+              type="date"
+              value={filters.from ?? ''}
+              wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+            />
+            <span aria-hidden="true" className="pt-2">
+              –
+            </span>
+            <TextField
+              className="h-10 text-sm"
+              hideLabel
+              label="Hasta"
+              onChange={(event) => onTo(event.target.value)}
+              title="Hasta"
+              type="date"
+              value={filters.to ?? ''}
+              wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+            />
+          </div>
+        )}
       </FilterRow>
-      {hasFilters && (
+      {(placesOnly ? !!(filters.farm || filters.plot) : hasFilters) && (
         <Button
           className="h-9"
           onClick={onClear}

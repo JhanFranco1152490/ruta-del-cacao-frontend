@@ -16,6 +16,7 @@ import { normalizeCatalogName } from '@/lib/format/search';
 import { type CacaoVariety, useCacaoVarietyCatalog } from '../api';
 import { VarietyFormDialog } from './variety-form-dialog';
 import { VarietyStatusDialog } from './variety-status-dialog';
+import { pageContainerClass } from '@/components/page-container';
 
 const PAGE_SIZE = 20;
 
@@ -64,7 +65,7 @@ export function VarietyListScreen() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         actions={
           catalog.isSuccess ? (
@@ -83,7 +84,7 @@ export function VarietyListScreen() {
               hideLabel
               label="Buscar variedades"
               onChange={(event) => changeSearch(event.target.value)}
-              placeholder="Buscar variedad: nombre o procedencia"
+              placeholder="Buscar variedad"
               type="search"
               value={search}
               wrapperClassName="min-w-0 flex-1 sm:min-w-72"
@@ -91,7 +92,7 @@ export function VarietyListScreen() {
           }
           trailing={
             catalog.isSuccess && (
-              <p className="self-center text-sm font-bold text-muted-foreground sm:ml-auto">
+              <p className="self-center text-sm font-bold text-muted-foreground max-sm:order-last max-sm:w-full sm:ml-auto">
                 {shown.length} variedades
               </p>
             )

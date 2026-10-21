@@ -74,7 +74,7 @@ export function AccountTable({
             )}
             {showFarms && (
               <TableCell
-                className="max-w-64 break-words whitespace-normal"
+                className="max-w-64 break-words whitespace-normal max-md:order-5 max-md:has-[>[data-empty]]:hidden"
                 data-label="Fincas"
               >
                 {account.all_farms && !hasFixedRole(account) ? (
@@ -84,7 +84,7 @@ export function AccountTable({
                 ) : account.needs_farm ? (
                   <span className="font-bold text-warn">Sin asignar</span>
                 ) : (
-                  '—'
+                  <span data-empty>—</span>
                 )}
               </TableCell>
             )}

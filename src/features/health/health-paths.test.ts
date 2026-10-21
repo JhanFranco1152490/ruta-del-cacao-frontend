@@ -6,6 +6,7 @@ import {
   PESTS_DISEASES_PATH,
   monitoringPath,
   plotHistoryPath,
+  scheduledMonitoringPath,
 } from './health-paths';
 
 describe('health paths', () => {
@@ -19,11 +20,19 @@ describe('health paths', () => {
   });
 
   it('opens the history of a plot in the health section', () => {
-    expect(plotHistoryPath('pl1')).toBe('/sanidad?parcela=pl1');
+    expect(plotHistoryPath('pl1')).toBe('/sanidad?vista=historial&parcela=pl1');
   });
 
   it('opens the history of a farm, or of everything', () => {
-    expect(healthHistoryPath({ farm: 'f1' })).toBe('/sanidad?finca=f1');
-    expect(healthHistoryPath({})).toBe('/sanidad');
+    expect(healthHistoryPath({ farm: 'f1' })).toBe(
+      '/sanidad?vista=historial&finca=f1',
+    );
+    expect(healthHistoryPath({})).toBe('/sanidad?vista=historial');
+  });
+
+  it('opens a scheduled monitoring in the calendar of its month', () => {
+    expect(scheduledMonitoringPath('a1', '2026-11-03')).toBe(
+      '/actividades?mes=2026-11&actividad=a1',
+    );
   });
 });

@@ -39,7 +39,7 @@ export function ActivityWeekView({
 
   return (
     <section aria-label={`Semana del ${formatWeekRange(week)}`}>
-      <ol className="grid gap-3 md:grid-cols-7 md:gap-0 md:overflow-hidden md:rounded-xl md:border-r md:border-b md:border-border md:shadow-card">
+      <ol className="grid grid-cols-1 gap-3 md:grid-cols-7 md:gap-0 md:overflow-hidden md:rounded-xl md:border-r md:border-b md:border-border md:shadow-card">
         {weekDates(week).map((date) => {
           const activities = byDate.get(date) ?? [];
           const isToday = date === today;

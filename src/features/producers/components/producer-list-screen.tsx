@@ -20,6 +20,7 @@ import { useProducerFilters } from '../use-producer-filters';
 import { ProducerFilters } from './producer-filters';
 import { ProducerTableSkeleton } from './producer-skeletons';
 import { ProducerTable } from './producer-table';
+import { pageContainerClass } from '@/components/page-container';
 
 export function ProducerListScreen() {
   const filters = useProducerFilters();
@@ -36,7 +37,7 @@ export function ProducerListScreen() {
   // El error reemplaza la tabla solo si la lista nunca cargó (`isLoadingError`): un refetch
   // fallido en segundo plano conserva `data` y la tabla sigue a la vista.
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         eyebrow="Administración"
         title="Productores asociados"

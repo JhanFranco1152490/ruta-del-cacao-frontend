@@ -26,6 +26,7 @@ import {
 } from '../schemas';
 import { useReturnPath } from '@/hooks/use-return-path';
 import { useProducerSave } from '../use-producer-save';
+import { pageContainerClass } from '@/components/page-container';
 
 export function ProducerForm({
   producer: initialProducer,
@@ -62,7 +63,7 @@ export function ProducerForm({
   );
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <Breadcrumb
         items={[
           { label: 'Productores', href: '/productores' },
@@ -78,7 +79,6 @@ export function ProducerForm({
         ]}
       />
       <PageHeader
-        compact
         className="mt-5"
         eyebrow="Administración"
         title={producer ? 'Editar productor' : 'Registrar productor'}
@@ -89,13 +89,13 @@ export function ProducerForm({
         }
       />
       <form
-        className="mt-5 grid items-start gap-5 lg:grid-cols-2"
+        className="mt-5 grid grid-cols-1 items-start gap-5 lg:grid-cols-2"
         noValidate
         onSubmit={handleSubmit(save, clearError)}
       >
         <div className="space-y-6">
           <FormSection title="Identificación">
-            <div className="grid gap-5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               <SelectField
                 label="Tipo de documento"
                 error={errors.document_type?.message}
@@ -118,7 +118,7 @@ export function ProducerForm({
           </FormSection>
 
           <FormSection title="Contacto">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <DigitsField
                 control={control}
                 name="phone"
@@ -140,7 +140,7 @@ export function ProducerForm({
         {/* Guardar queda junto a los datos, a la altura de Contacto, para que todo se vea sin bajar. */}
         <div className="space-y-6">
           <FormSection title="Datos del productor">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <TextField
                 label="Nombres"
                 maxLength={100}

@@ -33,6 +33,7 @@ import { MonitoringActivityCard } from './monitoring-activity-card';
 import { MonitoringConfirmDialog } from './monitoring-confirm-dialog';
 import { MonitoringPhotosField } from './monitoring-photos-field';
 import { MonitoringSheet } from './monitoring-sheet';
+import { pageContainerClass } from '@/components/page-container';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
@@ -136,7 +137,7 @@ export function MonitoringCapture({
   const isSaving = save.isPending || saveEvidence.isPending;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-8">
+    <div className={pageContainerClass('narrow')}>
       <Breadcrumb
         items={[
           { label: 'Actividades', href: ACTIVITIES_PATH },
@@ -144,8 +145,8 @@ export function MonitoringCapture({
         ]}
       />
       <PageHeader
-        compact
         description="Se guarda en este dispositivo y se envía cuando haya conexión. Después no se podrá modificar."
+        eyebrow="Manejo agrícola"
         title={
           rejected ? 'Corregir monitoreo' : 'Registrar monitoreo fitosanitario'
         }

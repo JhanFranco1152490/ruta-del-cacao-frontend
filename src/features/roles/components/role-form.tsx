@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextField } from '@/components/text-field';
+import { SidePanelActions, SidePanelSection } from '@/components/side-panel';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import { applyApiFieldErrors } from '@/lib/api/form-errors';
@@ -127,18 +128,22 @@ export function RoleForm({
             )}
           </div>
         )}
-        <TextField
-          label="Nombre"
-          maxLength={100}
-          error={errors.name?.message}
-          {...register('name')}
-        />
-        <TextField
-          label="Descripción"
-          maxLength={255}
-          error={errors.description?.message}
-          {...register('description')}
-        />
+        <SidePanelSection title="Datos">
+          <div className="space-y-4">
+            <TextField
+              label="Nombre"
+              maxLength={100}
+              error={errors.name?.message}
+              {...register('name')}
+            />
+            <TextField
+              label="Descripción"
+              maxLength={255}
+              error={errors.description?.message}
+              {...register('description')}
+            />
+          </div>
+        </SidePanelSection>
         <Controller
           name="farm_scope"
           control={control}
@@ -170,17 +175,20 @@ export function RoleForm({
           {failure}
         </p>
       )}
-      <SubmitButton pending={isSubmitting} pendingLabel="Guardando…">
-        Guardar rol
-      </SubmitButton>
-      <Button
-        type="button"
-        variant="outline"
-        disabled={isSubmitting}
-        onClick={onCancel}
-      >
-        Cancelar
-      </Button>
+      <SidePanelActions>
+        <SubmitButton pending={isSubmitting} pendingLabel="Guardando…">
+          Guardar rol
+        </SubmitButton>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 rounded-md text-base"
+          disabled={isSubmitting}
+          onClick={onCancel}
+        >
+          Cancelar
+        </Button>
+      </SidePanelActions>
     </form>
   );
 }

@@ -64,7 +64,7 @@ export function AccountFilters({
             hideLabel
             label="Buscar usuarios"
             onChange={(event) => filters.setSearchInput(event.target.value)}
-            placeholder="Nombre, correo o documento"
+            placeholder="Buscar cuenta"
             type="search"
             value={filters.searchInput}
             wrapperClassName="min-w-0 flex-1 sm:min-w-64"

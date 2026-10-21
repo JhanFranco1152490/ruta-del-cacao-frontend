@@ -1,16 +1,21 @@
+import type { ReactNode } from 'react';
+
 import { EmptyState } from '@/components/empty-state';
+import { pageContainerClass } from '@/components/page-container';
 
 // Aviso que ocupa el lugar de una pantalla completa, con el mismo margen que las pantallas.
 export function PageNotice({
   title,
   description,
+  action,
 }: {
   title: string;
   description?: string;
+  action?: ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8">
-      <EmptyState title={title} description={description} />
+    <div className={pageContainerClass('wide')}>
+      <EmptyState action={action} description={description} title={title} />
     </div>
   );
 }
