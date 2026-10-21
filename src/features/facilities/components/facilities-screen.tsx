@@ -4,7 +4,6 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { PageHeader } from '@/components/page-header';
@@ -20,14 +19,13 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type PostharvestFacility, useFacilities } from '../api';
 import { type FacilityActionKind, facilityActions } from '../facility-actions';
-import { chooseFarmHref } from '../facility-paths';
 import { useFacilityFarm } from '../use-facility-farm';
 import { useFacilityFilters } from '../use-facility-filters';
 import {
   FacilityDialogs,
   type PendingFacilityAction,
 } from './facility-dialogs';
-import { FacilityFarmChooser } from './facility-farm-chooser';
+import { FacilityFarmSelect } from './facility-farm-select';
 import { FacilityList } from './facility-list';
 import { FacilityOfflineNotice } from './facility-offline-notice';
 import { pageContainerClass } from '@/components/page-container';
@@ -46,8 +44,8 @@ const Loading = () => (
   </div>
 );
 
-// Infraestructura: primero la finca (o el productor, para la cuenta técnica) y después sus cajones
-// y marquesinas. Sin conexión muestra la última copia guardada en el dispositivo. La ficha del
+// Infraestructura: los cajones y marquesinas de una finca a la vez (la última que se vio, o la
+// primera), con un selector para cambiar de finca; la cuenta técnica elige antes el productor. Sin conexión muestra la última copia guardada en el dispositivo. La ficha del
 // lote es de otro dominio: la ruta la entrega quien monta la pantalla.
 export function FacilitiesScreen({
   lotHref,
@@ -132,14 +130,6 @@ export function FacilitiesScreen({
             title="Aún no tienes fincas activas."
           />
         );
-      case 'choose':
-        return (
-          <FacilityFarmChooser
-            facilities={known}
-            farms={place.farms}
-            onChoose={place.choose}
-          />
-        );
       case 'farm':
         if (isNeverLoaded(read)) return <EmptyState title={NEEDS_CONNECTION} />;
         if (read.isPending) return <Loading />;
@@ -167,11 +157,6 @@ export function FacilitiesScreen({
 
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>
-      {farm && place.canSwitchFarm && (
-        <BackLink href={chooseFarmHref(state.filters, producer)}>
-          Cambiar de finca
-        </BackLink>
-      )}
       <PageHeader
         actions={farm && known ? register : undefined}
         description="Los cajones de fermentación y las marquesinas de secado de la finca, y qué lote ocupa cada uno."
@@ -187,6 +172,14 @@ export function FacilitiesScreen({
           onSelect={state.setProducer}
           producer={producer ?? undefined}
           selected={selectedProducer}
+        />
+      )}
+      {farm && place.canSwitchFarm && (
+        <FacilityFarmSelect
+          facilities={known}
+          farm={farm}
+          farms={place.farms}
+          onChange={place.select}
         />
       )}
       {read.isSuccess && offline && <FacilityOfflineNotice savedAt={savedAt} />}
