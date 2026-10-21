@@ -4,8 +4,10 @@ import { SearchSelect } from '@/components/search-select';
 
 export type FarmChoice = { id: string; name: string; is_active: boolean };
 
-// De qué bodega se ven las existencias. Sin una finca elegida se ve el total de todas. Quien
-// trabaja en una sola la tiene fija (`fixed`): no tiene un total que ver.
+// De qué bodega se ven las existencias, como un filtro más de la fila (sin etiqueta visible: «Todas
+// las fincas» ya dice qué es). Sin una finca elegida se ve el total de todas. Quien trabaja en una
+// sola la tiene fija (`fixed`): no tiene un total que ver. Lo que significa elegir una finca lo
+// dice `farmSelectNote`, bajo la tabla.
 export function InputFarmSelect({
   farms,
   farm,
@@ -24,13 +26,9 @@ export function InputFarmSelect({
   return (
     <SearchSelect
       allLabel={fixed ? undefined : 'Todas las fincas'}
-      className="sm:max-w-sm"
+      className="w-full sm:w-64"
       disabled={fixed}
-      hint={
-        fixed
-          ? 'Las existencias de la finca en la que trabajas.'
-          : 'Las existencias se llevan por finca. Con «Todas las fincas» ves el total.'
-      }
+      hideLabel
       label="Finca"
       onChange={(option) => onChange(option?.id ?? null)}
       options={options}
@@ -38,3 +36,8 @@ export function InputFarmSelect({
     />
   );
 }
+
+export const farmSelectNote = (fixed: boolean) =>
+  fixed
+    ? 'Las existencias son las de la finca en la que trabajas.'
+    : 'Las existencias se llevan por finca. Con «Todas las fincas» ves el total.';

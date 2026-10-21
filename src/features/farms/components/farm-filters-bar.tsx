@@ -34,7 +34,7 @@ export function FarmFiltersBar({
           hideLabel
           label="Buscar finca"
           onChange={(event) => filters.setSearchInput(event.target.value)}
-          placeholder="Buscar finca por nombre"
+          placeholder="Buscar finca"
           type="search"
           value={filters.searchInput}
           wrapperClassName="min-w-0 flex-1 sm:w-80 sm:flex-none"

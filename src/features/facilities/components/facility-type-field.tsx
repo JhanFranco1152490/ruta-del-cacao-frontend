@@ -29,7 +29,7 @@ export function FacilityTypeField({
       disabled={disabled || Boolean(lockedHint)}
     >
       <legend className="mb-2 font-bold text-selva">Tipo</legend>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {FACILITY_TYPE_ORDER.map((type) => {
           const { Icon, purpose } = FACILITY_TYPES[type];
           return (

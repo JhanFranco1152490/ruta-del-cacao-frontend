@@ -253,20 +253,34 @@ describe('InputListScreen', () => {
     ).not.toHaveLength(0);
   });
 
+  it('puts the farm among the filters, with its explanation under the table', async () => {
+    server.use(agriculturalInputsHandler([urea]), inputStocksHandler());
+
+    renderScreen({ searchParams: '?finca=f1' });
+
+    expect(
+      await screen.findByRole('combobox', { name: 'Finca' }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        'Las existencias se llevan por finca. Con «Todas las fincas» ves el total.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('offers every action to someone with every permission', async () => {
     server.use(agriculturalInputsHandler([urea]), inputStocksHandler());
 
     renderScreen({ searchParams: '?finca=f1' });
 
     expect(await menuItemsOf('Urea 46 %')).toEqual([
-      'Registrar entrada',
       'Registrar conteo',
       'Ver movimientos',
       'Editar',
       'Desactivar',
       'Eliminar',
     ]);
-    // Solo la entrada, además, a la vista en la fila.
+    // La entrada está a la vista en la fila y no se repite en el menú.
     expect(
       screen.getByRole('button', { name: 'Registrar entrada de Urea 46 %' }),
     ).toBeEnabled();

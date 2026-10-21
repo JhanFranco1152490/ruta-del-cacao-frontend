@@ -31,4 +31,14 @@ describe('ActivityViewSwitch', () => {
 
     expect(onChange).toHaveBeenCalledWith('parcela');
   });
+
+  it('brings the open view into sight when the row scrolls', () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    render(<ActivityViewSwitch onChange={vi.fn()} value="pendientes" />);
+
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView.mock.contexts[0]).toHaveTextContent('Pendientes');
+  });
 });

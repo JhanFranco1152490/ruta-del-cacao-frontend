@@ -422,14 +422,17 @@ describe('the views of the calendar', () => {
     ).toBeInTheDocument();
   });
 
-  it('keeps the legend in sight', async () => {
+  it('explains each state in its pill and has no separate legend', async () => {
     server.use(agriculturalActivitiesHandler(october));
 
     renderScreen();
 
     expect(
-      await screen.findByRole('region', { name: 'Leyenda de estados' }),
-    ).toBeInTheDocument();
+      await screen.findByRole('button', { name: /^Retrasada/ }),
+    ).toHaveAttribute('title', 'Pasó su fecha: se puede reprogramar');
+    expect(
+      screen.queryByRole('region', { name: 'Leyenda de estados' }),
+    ).toBeNull();
   });
 });
 

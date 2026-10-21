@@ -34,7 +34,8 @@ export const ACTIVITY_STATES = Object.keys(
   ACTIVITY_STATE_DISPLAY,
 ) as ActivityState[];
 
-// Qué se puede hacer con una actividad en cada estado, para la leyenda del calendario.
+// Qué se puede hacer con una actividad en cada estado: es el texto de ayuda de las píldoras de
+// estado del calendario, que además son su recuento y su clave de colores.
 export const ACTIVITY_STATE_HINT = {
   scheduled: 'Todavía no llega su fecha',
   delayed: 'Pasó su fecha: se puede reprogramar',

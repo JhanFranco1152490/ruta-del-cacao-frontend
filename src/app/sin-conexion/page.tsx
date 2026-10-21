@@ -15,7 +15,8 @@ export default function OfflinePage() {
           Esta pantalla necesita conexión
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Las fincas y sus capturas sí funcionan sin conexión.
+          Lo que ya abriste con conexión y las capturas de campo sí funcionan
+          sin conexión.
         </p>
         <Link
           className={cn(buttonVariants({ size: 'office' }), 'mt-6')}

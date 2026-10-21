@@ -165,8 +165,17 @@ export function renderInputsScreen({
   return { urls };
 }
 
-// Abre una acción del menú "Más acciones" de un insumo y devuelve su diálogo.
+// Abre una acción de un insumo y devuelve su diálogo. La entrada es el botón de la fila; lo demás,
+// el menú "Más acciones".
 export async function openMenuAction(name: string, action: string) {
+  if (action === 'Registrar entrada') {
+    await userEvent.click(
+      await screen.findByRole('button', {
+        name: `Registrar entrada de ${name}`,
+      }),
+    );
+    return screen.findByRole('dialog');
+  }
   await userEvent.click(
     await screen.findByRole('button', { name: `Más acciones de ${name}` }),
   );

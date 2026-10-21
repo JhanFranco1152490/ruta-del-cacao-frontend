@@ -1,3 +1,4 @@
+import { SummaryItem, SummaryStrip } from '@/components/summary-strip';
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatMonthYear } from '@/lib/format/dates';
 
@@ -22,12 +23,9 @@ export function HarvestTotals({
   waiting: number;
 }) {
   return (
-    <section aria-label="Totales del mes" className="grid gap-3 sm:grid-cols-3">
-      <div className="rounded-(--radius) border bg-card p-4">
-        <p className="text-sm text-muted-foreground first-letter:uppercase">
-          Recolectado en {formatMonthYear(month)}
-        </p>
-        <p className="text-2xl font-bold text-selva">
+    <SummaryStrip label="Totales del mes">
+      <SummaryItem title={`Recolectado en ${formatMonthYear(month)}`}>
+        <p className="text-xl font-bold text-selva sm:text-2xl">
           {kg(totals.kg)} en verde
         </p>
         <p className="text-sm">{harvestsWord(totals.count)}</p>
@@ -37,16 +35,14 @@ export function HarvestTotals({
             este teléfono.
           </p>
         )}
-      </div>
-      <div className="rounded-(--radius) border bg-card p-4">
-        <p className="text-sm text-muted-foreground">Sin lote</p>
-        <p className="text-2xl font-bold text-selva">
+      </SummaryItem>
+      <SummaryItem title="Sin lote">
+        <p className="text-xl font-bold text-selva sm:text-2xl">
           {lotWord(totals.withoutLot.count)} · {kg(totals.withoutLot.kg)}
         </p>
         <p className="text-sm">Listas para formar un lote</p>
-      </div>
-      <div className="rounded-(--radius) border bg-card p-4">
-        <p className="text-sm text-muted-foreground">Por variedad</p>
+      </SummaryItem>
+      <SummaryItem title="Por variedad">
         {totals.byVariety.length === 0 ? (
           <p className="text-sm">Sin cosechas</p>
         ) : (
@@ -59,7 +55,7 @@ export function HarvestTotals({
             ))}
           </ul>
         )}
-      </div>
-    </section>
+      </SummaryItem>
+    </SummaryStrip>
   );
 }

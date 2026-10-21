@@ -13,6 +13,7 @@ import { ACTIVITIES_PATH } from '@/lib/paths/activities';
 
 import { MonitoringCapture } from './monitoring-capture';
 import { useMonitoringSources } from './use-monitoring-sources';
+import { pageContainerClass } from '@/components/page-container';
 
 // La pantalla de campo donde se registra el resultado de un monitoreo. Aquí se decide qué mostrar:
 // un aviso si no se puede registrar, lo que le pasó a lo ya guardado, o la planilla.
@@ -57,7 +58,7 @@ export function MonitoringScreen({
     return (
       <div
         aria-label="Cargando monitoreo"
-        className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8"
+        className={pageContainerClass('narrow', 'space-y-6')}
         role="status"
       >
         <Skeleton className="h-12 w-2/3" />

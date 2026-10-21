@@ -61,7 +61,7 @@ export function NewPlotScreen({ farm }: { farm: PlotScreenFarm }) {
       }
       cancelHref={returnPath}
       defaultValues={defaultValues}
-      description="El código y el área son obligatorios; el polígono es opcional. Si no hay conexión, la parcela se guarda en este dispositivo y se envía cuando vuelva la conexión."
+      description="El área es obligatoria; el nombre y el polígono son opcionales, y el código lo asigna el servidor. Si no hay conexión, la parcela se guarda en este dispositivo y se envía cuando vuelva la conexión."
       error={
         create.isError
           ? 'No fue posible guardar la parcela en el dispositivo. Inténtalo nuevamente.'

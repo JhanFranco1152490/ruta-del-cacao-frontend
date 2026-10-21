@@ -12,7 +12,9 @@ export type FieldControl = {
 type FormFieldProps = {
   label: string;
   error?: string;
-  hint?: string;
+  hint?: ReactNode;
+  // Algo pequeño junto a la etiqueta (un ícono de ayuda).
+  labelAddon?: ReactNode;
   id?: string;
   className?: string;
   // La etiqueta solo para lectores de pantalla, en filtros compactos donde el campo ya dice qué es.
@@ -25,6 +27,7 @@ export function FormField({
   label,
   error,
   hint,
+  labelAddon,
   id: idProp,
   className,
   hideLabel = false,
@@ -37,15 +40,18 @@ export function FormField({
 
   return (
     <div className={className}>
-      <label
-        htmlFor={id}
-        className={cn(
-          'block text-sm font-bold text-selva',
-          hideLabel ? 'sr-only' : 'mb-2',
-        )}
-      >
-        {label}
-      </label>
+      <div className={cn('flex items-center gap-2', hideLabel ? '' : 'mb-2')}>
+        <label
+          htmlFor={id}
+          className={cn(
+            'block text-sm font-bold text-selva',
+            hideLabel && 'sr-only',
+          )}
+        >
+          {label}
+        </label>
+        {!hideLabel && labelAddon}
+      </div>
       {children({
         id,
         'aria-invalid': Boolean(error),

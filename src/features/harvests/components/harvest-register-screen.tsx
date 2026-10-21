@@ -21,6 +21,7 @@ import { readLastPlot } from '../last-plot';
 import { useHarvestSources } from '../use-harvest-sources';
 import { useQueuedHarvest } from '../use-harvest-queue';
 import { HarvestCapture } from './harvest-capture';
+import { pageContainerClass } from '@/components/page-container';
 
 // La pantalla de campo donde se registra una recolección. Todo se guarda primero en el
 // dispositivo: con conexión se envía de inmediato y, sin ella, cuando vuelva. `plotId` llega al
@@ -59,7 +60,7 @@ export function HarvestRegisterScreen({
     return (
       <div
         aria-label="Cargando parcelas"
-        className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8"
+        className={pageContainerClass('narrow', 'space-y-6')}
         role="status"
       >
         <Skeleton className="h-12 w-2/3" />
@@ -92,7 +93,7 @@ export function HarvestRegisterScreen({
   const canCharacterize = hasPermission(user, PERMISSIONS.CROPS_CHARACTERIZE);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('narrow')}>
       <Breadcrumb
         items={[
           { label: 'Cosechas', href: HARVESTS_PATH },

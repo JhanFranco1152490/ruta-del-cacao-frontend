@@ -42,6 +42,7 @@ export function ActivityFormFields({
   assignees,
   producer,
   onFarmFilter,
+  hideType = false,
 }: {
   form: UseFormReturn<ActivityFormInput, unknown, ActivityFormValues>;
   errors: FieldErrors<ActivityFormInput>;
@@ -49,6 +50,8 @@ export function ActivityFormFields({
   // La fecha de Bogotá: el selector no ofrece días anteriores.
   today: string;
   fixedPlot?: { farm: string; plot: string };
+  // El tipo ya está decidido (un monitoreo desde Sanidad): no se pregunta.
+  hideType?: boolean;
   farms: ChoiceList;
   // Las de la finca elegida o, sin ella, las de todas (hasta el tope de una página).
   plots: ChoiceList;
@@ -101,15 +104,17 @@ export function ActivityFormFields({
           />
         </>
       )}
-      <SelectField
-        placeholder="Elige un tipo"
-        disabled={disabled}
-        error={errors.activity_type?.message}
-        label="Tipo de actividad"
-        {...register('activity_type')}
-      >
-        {options(types)}
-      </SelectField>
+      {!hideType && (
+        <SelectField
+          placeholder="Elige un tipo"
+          disabled={disabled}
+          error={errors.activity_type?.message}
+          label="Tipo de actividad"
+          {...register('activity_type')}
+        >
+          {options(types)}
+        </SelectField>
+      )}
       {isOther && (
         <TextField
           disabled={disabled}

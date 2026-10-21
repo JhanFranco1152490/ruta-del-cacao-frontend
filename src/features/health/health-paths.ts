@@ -11,8 +11,8 @@ export const MONITORING_PATH = `${HEALTH_PATH}/monitoreo`;
 export const monitoringPath = (activityId: string) =>
   `${MONITORING_PATH}?${new URLSearchParams({ id: activityId })}`;
 
-// El historial fitosanitario es la pantalla de Sanidad con sus filtros en la dirección: desde la
-// tarjeta de una parcela se abre ya filtrado por ella.
+// El historial fitosanitario es la pestaña Historial de Sanidad, con sus filtros en la dirección:
+// desde la tarjeta de una parcela se abre ya filtrado por ella.
 export const healthHistoryPath = ({
   farm,
   plot,
@@ -20,11 +20,15 @@ export const healthHistoryPath = ({
   farm?: string | null;
   plot?: string | null;
 }) => {
-  const params = new URLSearchParams();
+  const params = new URLSearchParams({ vista: 'historial' });
   if (farm) params.set('finca', farm);
   if (plot) params.set('parcela', plot);
-  return params.size ? `${HEALTH_PATH}?${params}` : HEALTH_PATH;
+  return `${HEALTH_PATH}?${params}`;
 };
+
+// Un monitoreo programado en el calendario, con su detalle abierto, en el mes que le toca.
+export const scheduledMonitoringPath = (activityId: string, date: string) =>
+  `/actividades?${new URLSearchParams({ mes: date.slice(0, 7), actividad: activityId })}`;
 
 export const plotHistoryPath = (plotId: string) =>
   healthHistoryPath({ plot: plotId });

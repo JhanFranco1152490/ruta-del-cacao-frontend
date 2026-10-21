@@ -34,7 +34,6 @@ describe('useFacilityFilters', () => {
 
     expect(result.current.filters).toEqual({ type: 'all', status: 'all' });
     expect(result.current.farm).toBeNull();
-    expect(result.current.choose).toBe(false);
     expect(result.current.element).toBeNull();
     expect(result.current.producer).toBeNull();
   });
@@ -51,10 +50,6 @@ describe('useFacilityFilters', () => {
     expect(result.current.farm).toBe('f1');
     expect(result.current.producer).toBe('p1');
     expect(result.current.element).toBe('fc1');
-  });
-
-  it('reads the request to choose the farm', () => {
-    expect(setup('?elegir=1').result.current.choose).toBe(true);
   });
 
   it('falls back to defaults for malformed parameters', () => {
@@ -95,19 +90,11 @@ describe('useFacilityFilters', () => {
   });
 
   it('opens a farm keeping the filters', async () => {
-    const { result, onUrlUpdate } = setup('?elegir=1&tipo=solar_dryer');
+    const { result, onUrlUpdate } = setup('?finca=f1&tipo=solar_dryer');
 
     await act(() => result.current.openFarm('f2'));
 
-    expect(lastQuery(onUrlUpdate)).toBe('?tipo=solar_dryer&finca=f2');
-  });
-
-  it('goes back to choosing the farm keeping the filters', async () => {
-    const { result, onUrlUpdate } = setup('?finca=f1&estado=available');
-
-    await act(() => result.current.chooseFarm());
-
-    expect(lastQuery(onUrlUpdate)).toBe('?estado=available&elegir=1');
+    expect(lastQuery(onUrlUpdate)).toBe('?finca=f2&tipo=solar_dryer');
   });
 
   it('forgets the farm when the producer changes', async () => {

@@ -10,6 +10,7 @@ import { FarmPicker } from '@/features/farms/components/farm-picker';
 import { NewPlotScreen } from '@/features/plots/components/new-plot-screen';
 import { plotNewPath } from '@/features/plots/plot-paths';
 import { readOrigin, withOrigin } from '@/lib/navigation/origin';
+import { pageContainerClass } from '@/components/page-container';
 
 // Aquí se juntan los dos dominios: la pantalla de parcelas recibe la finca ya leída, sin saber
 // cómo se lee. Es de cliente porque la finca se entrega como función. Sin finca en la dirección
@@ -21,9 +22,8 @@ export function NewPlotWithFarm() {
   return (
     <FarmGateFromQuery
       missing={
-        <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-8">
+        <div className={pageContainerClass('narrow')}>
           <PageHeader
-            compact
             description="¿En qué finca? Busca la finca por su nombre."
             eyebrow="Parcelas"
             title="Registrar parcela"

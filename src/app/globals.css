@@ -162,7 +162,11 @@
   --shadow-card: var(--shadow-card);
 }
 
-button,
+/* Los campos heredan la letra del cuerpo (16 px). La regla va fuera de las capas a propósito: le
+   gana a `text-sm` puesto en un campo, y en el iPhone un campo de menos de 16 px acerca la
+   pantalla al tocarlo. Los botones no la llevan: su `font: inherit` ya viene en la capa base de
+   Tailwind, y una regla fuera de las capas le ganaba a `text-sm font-bold` y dejaba los botones a
+   16 px y sin negrita. */
 input {
   font: inherit;
 }
@@ -170,6 +174,60 @@ input {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Barras de desplazamiento: delgadas, redondeadas y sin pista, para que no pesen sobre el contenido.
+   Donde existe ::-webkit-scrollbar (Chrome, Edge, Safari) se dibuja el pulgar redondeado con aire
+   alrededor; en los demás (Firefox) queda la barra estándar, que solo sabe de ancho y color. Cada
+   navegador usa uno de los dos modos: con `scrollbar-color` puesto, Chrome ignora ::-webkit-scrollbar.
+   Sobre fondo oscuro, como la barra lateral, el color pasa a crema. Aparecen solo cuando hay algo
+   que desplazar: ningún contenedor fuerza `overflow: scroll`. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--selva) 35%, transparent)
+      transparent;
+  }
+
+  .scrollbar-on-dark {
+    scrollbar-color: color-mix(in srgb, var(--crema) 35%, transparent)
+      transparent;
+  }
+}
+
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-color: color-mix(in srgb, var(--selva) 35%, transparent);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--selva) 60%, transparent);
+  }
+
+  .scrollbar-on-dark::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--crema) 30%, transparent);
+  }
+
+  .scrollbar-on-dark::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--crema) 55%, transparent);
+  }
 }
 
 ::selection {

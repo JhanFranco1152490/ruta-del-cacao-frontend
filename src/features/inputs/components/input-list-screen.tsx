@@ -24,10 +24,15 @@ import {
 } from '../api';
 import { buildInputRows } from '../input-rows';
 import { useInputFilters } from '../use-input-filters';
-import { type FarmChoice, InputFarmSelect } from './input-farm-select';
+import {
+  type FarmChoice,
+  farmSelectNote,
+  InputFarmSelect,
+} from './input-farm-select';
 import { InputFiltersBar } from './input-filters-bar';
 import { InputDialogs, type PendingAction } from './input-dialogs';
 import { InputTable, type StockState } from './input-table';
+import { pageContainerClass } from '@/components/page-container';
 
 export type FarmChoices = {
   // `undefined` mientras se cargan o si no se pudieron leer.
@@ -121,7 +126,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   );
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         actions={
           catalog.isSuccess ? (
@@ -155,17 +160,19 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
             Este productor aún no tiene fincas: las existencias se llevan por
             finca.
           </p>
-        ) : (
-          choices && (
-            <InputFarmSelect
-              fixed={!!onlyFarm}
-              farm={farm}
-              farms={choices}
-              onChange={filters.setFarm}
-            />
-          )
-        )}
+        ) : null}
         <InputFiltersBar
+          farmSelect={
+            !needsProducer &&
+            !!choices?.length && (
+              <InputFarmSelect
+                fixed={!!onlyFarm}
+                farm={farm}
+                farms={choices}
+                onChange={filters.setFarm}
+              />
+            )
+          }
           filters={filters.filters}
           onClear={filters.clear}
           onProducer={superuser ? filters.setProducer : undefined}
@@ -218,6 +225,14 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
               stockState={stockState}
             />
           ))}
+        {catalog.isSuccess &&
+          !needsProducer &&
+          !!choices?.length &&
+          rows.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {farmSelectNote(!!onlyFarm)}
+            </p>
+          )}
       </section>
       <InputDialogs
         catalog={catalogInputs}

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from 'cn';
 
 import { FormField } from '@/components/form-field';
+import { InfoHint } from '@/components/info-hint';
 import {
   Combobox,
   ComboboxCollection,
@@ -24,6 +25,9 @@ export type SearchSelectOption = {
   // Se lee debajo del nombre en la lista (no en el campo) y también se busca: ayuda a reconocer la
   // opción aunque no se recuerde el nombre.
   description?: string;
+  // Una explicación que sale al poner el mouse sobre un ícono «i» al final de la fila, para lo que
+  // ayuda a reconocer la opción pero no debe ocuparle espacio a la lista. También se busca.
+  info?: string;
   // Se ofrece siempre, escriba lo que se escriba ("Otra", al final de la lista).
   pinned?: boolean;
   // Se ve en la lista pero no se puede elegir; `description` dice por qué.
@@ -61,6 +65,8 @@ export function SearchSelect({
   hint,
   error,
   disabled = false,
+  clearable = true,
+  labelAddon,
   showTrigger = true,
   compact = false,
   hideLabel = false,
@@ -80,9 +86,13 @@ export function SearchSelect({
   onSearch?: (text: string) => void;
   placeholder?: string;
   emptyMessage?: string;
-  hint?: string;
+  hint?: ReactNode;
   error?: string;
   disabled?: boolean;
+  // Sin la equis para vaciar el campo: cuando una elección es obligatoria y vaciarla no significa nada.
+  clearable?: boolean;
+  // Algo pequeño junto a la etiqueta (un ícono de ayuda con la explicación de lo elegido).
+  labelAddon?: ReactNode;
   // Sin la flecha se lee como un campo para escribir y no como una lista cerrada.
   showTrigger?: boolean;
   // Para una fila de filtros: 40 px en lugar de 44, texto pequeño y la etiqueta solo para lectores
@@ -150,6 +160,11 @@ export function SearchSelect({
             {row.description}
           </span>
         </span>
+      ) : row.info ? (
+        <span className="flex w-full items-center justify-between gap-3">
+          <span>{row.label}</span>
+          <InfoHint text={row.info} />
+        </span>
       ) : (
         row.label
       )}
@@ -164,6 +179,7 @@ export function SearchSelect({
       hint={hint}
       id={id}
       label={label}
+      labelAddon={labelAddon}
     >
       {(control) => (
         <Combobox<SearchSelectOption>
@@ -177,7 +193,7 @@ export function SearchSelect({
                   typed === null ||
                   row.pinned === true ||
                   plain(
-                    `${row.label} ${row.group ?? ''} ${row.description ?? ''}`,
+                    `${row.label} ${row.group ?? ''} ${row.description ?? ''} ${row.info ?? ''}`,
                   ).includes(plain(query.trim()))
           }
           inputValue={typed ?? selected?.label ?? ''}
@@ -214,7 +230,7 @@ export function SearchSelect({
               event.preventDefault();
             }}
             placeholder={placeholder}
-            showClear={!allOption}
+            showClear={!allOption && clearable}
             showTrigger={showTrigger}
           />
           <ComboboxContent>

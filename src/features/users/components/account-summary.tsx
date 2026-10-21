@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Globe, MapPin, TriangleAlert } from 'lucide-react';
 import { AccountStatusBadge } from '@/components/account-status-badge';
+import { SidePanelSection } from '@/components/side-panel';
 import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
 import { roleScopeLabel, type RoleScope } from '@/lib/farm-scope';
@@ -40,15 +41,6 @@ export function AccountBand({ account }: { account: Account }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="space-y-3 rounded-[var(--radius-card)] border border-border p-4">
-      <h3 className="section-label">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
@@ -61,7 +53,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 // Las fincas en las que trabaja un empleado, o todas. Sin ninguna no alcanza nada de campo: se dice.
 function ScopeSection({ account }: { account: Account }) {
   return (
-    <Section title="Fincas en las que trabaja">
+    <SidePanelSection title="Fincas en las que trabaja">
       {account.all_farms ? (
         <p className="flex items-start gap-2 font-bold text-foreground">
           <Globe
@@ -108,7 +100,7 @@ function ScopeSection({ account }: { account: Account }) {
           Asígnale las fincas, o todas, con «Editar datos».
         </p>
       )}
-    </Section>
+    </SidePanelSection>
   );
 }
 
@@ -117,8 +109,8 @@ export function AccountSections({ account }: { account: Account }) {
   const showScope = !hasFixedRole(account) && Boolean(account.producer);
   return (
     <>
-      <Section title="Datos">
-        <dl className="grid gap-3 sm:grid-cols-2">
+      <SidePanelSection title="Datos">
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Fact label="Teléfono">{account.phone || 'No registrado'}</Fact>
           <Fact label="Documento">
             {account.document_type} {account.identity_document}
@@ -132,8 +124,8 @@ export function AccountSections({ account }: { account: Account }) {
             </>
           )}
         </dl>
-      </Section>
-      <Section title="Roles asignados">
+      </SidePanelSection>
+      <SidePanelSection title="Roles asignados">
         {account.roles.length ? (
           <ul className="space-y-2">
             {account.roles.map((role) => (
@@ -153,7 +145,7 @@ export function AccountSections({ account }: { account: Account }) {
         ) : (
           <p className="text-muted-foreground">Sin roles</p>
         )}
-      </Section>
+      </SidePanelSection>
       {showScope && <ScopeSection account={account} />}
       {account.producer?.status === 'inactive' && (
         <InactiveProducerNotice account={account} />

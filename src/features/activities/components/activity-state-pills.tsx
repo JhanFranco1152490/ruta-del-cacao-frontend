@@ -1,7 +1,11 @@
 import { TONE_ICONS } from '@/components/status-badge';
 import { FOCUS_OUTLINE_CLASS } from '@/components/ui/focus-outline';
 
-import { ACTIVITY_STATE_DISPLAY, ACTIVITY_STATES } from '../activity-labels';
+import {
+  ACTIVITY_STATE_DISPLAY,
+  ACTIVITY_STATE_HINT,
+  ACTIVITY_STATES,
+} from '../activity-labels';
 import type { ActivityState } from '../activity-state';
 import type { StateCounts } from '../activity-summary';
 
@@ -46,6 +50,7 @@ export function ActivityStatePills({
             } ${FOCUS_OUTLINE_CLASS}`}
             key={key}
             onClick={() => onState(selected ? null : key)}
+            title={ACTIVITY_STATE_HINT[key]}
             type="button"
           >
             <Icon aria-hidden="true" className="size-4" />

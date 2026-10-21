@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 // pantallas anchas todo va en la misma fila; en celular queda el buscador y un botón «Filtros»,
 // con el número de filtros activos, que abre el resto: así la lista llega antes.
 export function FilterRow({
+  leading,
   search,
   activeCount = 0,
   more,
@@ -18,6 +19,9 @@ export function FilterRow({
   compact = false,
   children,
 }: {
+  // Lo que va antes del buscador en pantallas anchas (cómo se agrupa o se ve la lista); en celular
+  // pasa al final, tras los filtros.
+  leading?: ReactNode;
   // El buscador, que se ve siempre.
   search: ReactNode;
   // Cuántos de los filtros de `children` están puestos, para el botón de celular.
@@ -40,6 +44,7 @@ export function FilterRow({
 
   return (
     <div className="flex flex-wrap items-start gap-3">
+      {leading && <div className="max-sm:order-last">{leading}</div>}
       {search}
       {(children || more) && (
         <Button

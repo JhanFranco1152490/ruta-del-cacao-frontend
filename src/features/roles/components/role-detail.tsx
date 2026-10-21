@@ -51,7 +51,7 @@ export function RoleDetail({
       {/* La franja de arriba dice de un vistazo qué rol es: nombre, de qué tipo y cuántos permisos. */}
       <div
         className="bg-gradient-to-br from-selva to-selva-2 px-5 pt-5 pr-12 pb-4 text-white"
-        data-role-band
+        data-band
       >
         <h2 className="font-serif text-3xl break-words">{role.name}</h2>
         <div className="mt-3 flex flex-wrap gap-2 text-sm font-bold">

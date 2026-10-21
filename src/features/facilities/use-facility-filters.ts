@@ -20,17 +20,15 @@ const parsers = {
     'all',
   ] as const).withDefault('all'),
   farm: parseAsString,
-  choose: parseAsStringLiteral(['1'] as const),
   element: parseAsString,
   producer: parseAsString,
 };
 
-// En la URL los parámetros van en español, como las rutas. `elegir=1` pide la elección de finca.
+// En la URL los parámetros van en español, como las rutas.
 const urlKeys = {
   type: 'tipo',
   status: 'estado',
   farm: 'finca',
-  choose: 'elegir',
   element: 'elemento',
   producer: 'productor',
 };
@@ -50,7 +48,6 @@ export function useFacilityFilters() {
     filters,
     // Vacíos en la URL son «sin elegir».
     farm: params.farm || null,
-    choose: params.choose === '1',
     element: params.element || null,
     // Solo lo usa la cuenta técnica.
     producer: params.producer || null,
@@ -59,9 +56,8 @@ export function useFacilityFilters() {
     // La finca no es un filtro sino qué finca se está viendo: se conserva.
     clear: () => setParams({ type: null, status: null }),
     // Cambiar de finca conserva los filtros: se compara lo mismo en otra finca.
-    openFarm: (farm: string) => setParams({ farm, choose: null }),
-    chooseFarm: () => setParams({ farm: null, choose: '1' }),
-    // La finca elegida era de otro productor: al cambiarlo, se vuelve a elegir.
+    openFarm: (farm: string) => setParams({ farm }),
+    // La finca elegida era de otro productor: al cambiarlo, se abre la que corresponda.
     setProducer: (producer: string | null) =>
       setParams({ producer, farm: null }),
     showElement: (element: string | null) => setParams({ element }),

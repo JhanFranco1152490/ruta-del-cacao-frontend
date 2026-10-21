@@ -174,17 +174,40 @@ describe('ActivityFormDialog', () => {
     expect(optionsOf('Tipo de actividad')).toContain('Poda');
   });
 
-  it('offers only the monitoring when it is opened to schedule one', () => {
+  it('is called Programar monitoreo and does not ask for the type when opened to schedule one', () => {
     renderDialog({ activityType: 'phytosanitary_monitoring' });
 
-    expect(optionsOf('Tipo de actividad')).toEqual(['Monitoreo fitosanitario']);
-    expect(field('Tipo de actividad')).toHaveValue('phytosanitary_monitoring');
+    expect(
+      screen.getByRole('heading', { name: 'Programar monitoreo' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText('Tipo de actividad')).toBeNull();
   });
 
-  it('starts with the type chosen when it is opened to schedule one in particular', () => {
+  it('still schedules a monitoring, with the type that was decided before opening', async () => {
     renderDialog({ activityType: 'phytosanitary_monitoring' });
+    await pick('Finca', 'F01 · La Esperanza');
+    await pick('Parcela', 'P-01 · 2,4 ha');
+    fireEvent.change(field('Fecha programada'), {
+      target: { value: '2026-10-25' },
+    });
+    await choose('Responsable', 'Otra cuenta');
 
-    expect(field('Tipo de actividad')).toHaveValue('phytosanitary_monitoring');
+    await save();
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+    expect(posted[0]).toMatchObject({
+      plot_id: 'pl1',
+      activity_type: 'phytosanitary_monitoring',
+    });
+  });
+
+  it('keeps asking for the type when scheduling a labor', () => {
+    renderDialog();
+
+    expect(
+      screen.getByRole('heading', { name: 'Programar actividad' }),
+    ).toBeInTheDocument();
+    expect(field('Tipo de actividad')).toBeInTheDocument();
   });
 
   it('starts with no type when none was asked for', () => {

@@ -158,7 +158,7 @@ export function CharacterizationForm({
 
   return (
     <form
-      className="grid items-start gap-6 lg:grid-cols-2"
+      className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2"
       noValidate
       onSubmit={handleSubmit(onSubmit)}
     >

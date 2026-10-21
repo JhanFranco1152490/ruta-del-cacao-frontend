@@ -21,6 +21,7 @@ import type { HarvestLotSource } from '../harvest-lot-source';
 import { HARVESTS_PATH } from '../harvest-paths';
 import { HarvestDetailActions } from './harvest-detail-actions';
 import { HarvestFacts } from './harvest-facts';
+import { pageContainerClass } from '@/components/page-container';
 
 // Lo registrado de una recolección. La consulta no modifica: corregir y eliminar son acciones
 // aparte, solo mientras la cosecha no forme un lote y con conexión. Los lotes y la ficha son de
@@ -56,7 +57,7 @@ export function HarvestDetailScreen({
     return (
       <div
         aria-label="Cargando cosecha"
-        className="mx-auto max-w-3xl space-y-4 px-4 py-8"
+        className={pageContainerClass('narrow', 'space-y-4')}
         role="status"
       >
         <Skeleton className="h-12 w-2/3" />
@@ -68,7 +69,7 @@ export function HarvestDetailScreen({
   const { data: harvest, savedAt } = read.data;
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('narrow', 'space-y-6')}>
       <Breadcrumb
         items={[
           { label: 'Cosechas', href: HARVESTS_PATH },
@@ -76,7 +77,6 @@ export function HarvestDetailScreen({
         ]}
       />
       <PageHeader
-        compact
         description={`${plotLabel(harvest.plot)} · ${farmLabel(harvest.plot.farm)}`}
         eyebrow="Cosecha"
         title={`${formatDecimal(harvest.green_weight_kg, 1)} kg en verde`}
