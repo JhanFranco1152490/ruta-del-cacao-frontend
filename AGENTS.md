@@ -93,7 +93,8 @@ src/
                        /fincas, /actividades, /sanidad, /plagas-enfermedades, /cosechas, /lotes,
                        /usuarios, /roles y sus pantallas hijas. El
                        permiso y la conexión de cada sección se comprueban en el shell a
-                       partir de config/navigation.ts: una sección nueva solo se suma ahí
+                       partir de config/navigation.ts: una sección nueva solo se suma ahí,
+                       con su `group` (el menú agrupa por tarea; ver el sistema de diseño)
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
                        health, notifications, harvests, lots, users y roles): api.ts, schemas.ts, hooks propios
@@ -119,7 +120,7 @@ src/
 - Componentes en **tres niveles**: (1) `components/ui/`, primitivas de shadcn/ui con las
   variantes del sistema de diseño, sin conocer el dominio; (2) `components/`, piezas
   compartidas con el aspecto de la app (`TextField`, `TextAreaField`, `SelectField`, `PasswordField`,
-  `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `Pagination`, `EmptyState`, `ErrorState`,
+  `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `pageContainerClass`, `SummaryStrip`, `Pagination`, `EmptyState`, `ErrorState`,
   `MaskedValue`, la sección de insumos utilizados de `input-usage/`, el descarte de la bandeja
   `sync-tray/queue-discard-dialog.tsx`...) que solo reciben props y no conocen la API; (3)
   `features/<dominio>/components/`, pantallas (`*-screen.tsx`) y piezas de un dominio: la
@@ -568,6 +569,13 @@ referencia en `docs/ui/ref/*.html`.
   etiquetas visibles (`hideLabel`), y en el celular detrás de «Filtros». Los mapas que acompañan
   una lista (`MunicipalityMapPanel`, `PointsMapPanel`) aceptan `hiddenOnMobile`; el resumen se
   oculta junto con el mapa. Detalle y razones en `docs/ui/design-system.md` §7.
+- **Encabezado y ancho, siempre los mismos.** Toda pantalla abre con `PageHeader` (categoría, título de
+  30 px y descripción; no tiene versión «compacta») y envuelve su contenido en
+  `pageContainerClass('wide' | 'narrow')`: `wide` para listas, calendarios y lo que lleva mapa o tabla,
+  `narrow` (centrado) para formularios y fichas de una columna. No se escribe un `max-w-*` ni un
+  `py-*` propio en una pantalla. Toda `grid` con columnas desde un punto de corte lleva `grid-cols-1`
+  de base, o una tarjeta con texto largo ensancha la columna y se sale de la pantalla en el celular.
+  Los totales de arriba de una lista usan `SummaryStrip`.
 - **Toda ficha termina con «Volver» abajo a la izquierda** (`DetailFooter`; las acciones de la
   ficha, si tiene, van a su derecha). Volver lleva a la pantalla desde la que se abrió la ficha, con
   sus filtros (`readOrigin`; los enlaces que abren una ficha usan `EditorLink`), o a la lista de la

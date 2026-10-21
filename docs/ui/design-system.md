@@ -157,7 +157,9 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `SyncQueueItem` | Registro pendiente, con reintento | Cola de sincronización |
 | `KpiCard` | Etiqueta, cifra en serif, delta y sparkline | Dashboard |
 | `StageFlow` | Cadena de etapas cosecha → venta | Dashboard, página QR |
-| `PageHeader` | Migas, H1 en serif, subtítulo y acciones | Todas las de oficina |
+| `PageHeader` | Categoría en versalitas, H1 en serif de 30 px, subrayado, descripción y acciones. Un solo tamaño y la misma separación de arriba en todas las pantallas | Todas las de oficina |
+| `pageContainerClass` | El ancho y los márgenes de una pantalla: `wide` (1440 px) para listas, calendarios y lo que lleva mapa o tabla; `narrow` (896 px, centrado) para formularios y fichas de una columna. Arriba y a los lados no cambian de una pantalla a otra | Todas |
+| `SummaryStrip` / `SummaryItem` | Los totales de arriba de una lista: tarjetas sueltas en pantallas anchas y un solo recuadro con rayas en el celular, que ocupa un tercio menos de alto | Cosechas, Infraestructura |
 | `SectionLabel` | Etiqueta cobre en versalitas | Todas |
 | `MapFrame` | El recuadro del mapa con sus controles encima, arriba a la derecha (mapa base, ocultar, ir a la finca, ir a mi ubicación), una leyenda opcional abajo a la izquierda y la franja «Mapa oculto» cuando se oculta. Los cuatro paneles de mapa lo usan | Todos los mapas |
 | `MapPanel` | Mapa con controles propios, capas, escala y lectura de coordenadas | Finca, parcela |
@@ -215,7 +217,33 @@ poscosecha cobre, calidad azul). Nunca emojis.
   con texto `--selva`; las demás, texto `--crema` con ícono `--oro`; arriba, la etiqueta «Menú» en
   versalitas oro. La marca del encabezado lleva la mazorca en `--amarillo-mazorca` y «Cacao» en
   itálica. Los botones del encabezado siguen siendo claros (fondo blanco, texto oscuro).
-- **Título de página:** H1 en serif con un subrayado `--cobre` de 48 × 4 px debajo.
+- **Título de página:** categoría en versalitas, H1 en serif de 30 px y un subrayado `--cobre` de 48 × 4 px
+  debajo, y una descripción de una o dos líneas. Todas las pantallas llevan las tres cosas y el mismo
+  tamaño; no hay una versión «compacta».
+- **Menú de navegación por grupos:** las entradas (`NAV_ITEMS`) llevan un `group`: Administración
+  (Productores, Usuarios, Roles y permisos), Finca, Manejo agrícola, Cosecha y poscosecha y
+  Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,
+  Administración va primero (empieza con Productores); para el productor, que solo ve Usuarios y
+  Roles, va al final. Los encabezados solo se dibujan si la persona ve entradas de dos o más grupos;
+  con uno el menú queda plano, y una entrada sin grupo va suelta arriba. Cada grupo se pliega con su
+  flecha y la elección se recuerda en el navegador. Con más de 10 entradas (la cuenta técnica ve 13)
+  los grupos empiezan plegados, menos el de la pantalla actual, que nunca se pliega.
+- **Barras de desplazamiento:** una sola, definida en `globals.css`: delgada, con el pulgar redondeado
+  y sin pista ni flechas (`scrollbar-on-dark` sobre la barra lateral y el cajón del celular). Solo
+  aparece si hay algo que desplazar: ningún contenedor fuerza `overflow: scroll`, y los adornos (la
+  rama de la barra lateral) van fuera de lo que se desplaza, porque dentro sumaban alto y hacían
+  aparecer la barra aunque el menú cupiera.
+- **Ancho de las pantallas:** `pageContainerClass('wide' | 'narrow')`, nunca un `max-w-*` propio. Las
+  listas, el calendario y lo que lleva mapa o tabla van a todo el ancho; los formularios y las fichas
+  de una sola columna, a 896 px y centrados.
+- **Barra de acciones fija del celular (`MobileActionBar`):** en una sola fila, **Cancelar** a la
+  izquierda y la acción principal al doble de ancho. Apiladas ocupaban casi la quinta parte de la
+  pantalla.
+- **Cuadrículas de tarjetas:** toda `grid` con columnas desde un punto de corte lleva `grid-cols-1`
+  de base. Sin ella la columna única mide lo que mide su contenido y una tarjeta con texto largo se
+  sale de la pantalla.
+- **Placeholders de los buscadores:** cortos (`Buscar finca`, `Buscar cuenta`): en el celular el
+  campo comparte la fila con «Filtros» y un texto largo se corta.
 - **Lista:** PageHeader + buscador + chips de filtro + tabla + paginación + fila de contexto al pie.
 - **Tarjeta de lista compacta:** nombre y estado en una fila, los datos en una o dos líneas, y al
   pie la acción principal (ancho completo, p. ej. «Ver detalle»), un botón de icono por cada atajo
