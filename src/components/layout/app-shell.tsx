@@ -39,10 +39,14 @@ export function AppShell({
               : 'lg:w-60',
           )}
         >
-          {/* top-16: la altura del encabezado fijo. */}
-          <div className="sticky top-16 flex h-[calc(100dvh-4rem)] w-60 flex-col overflow-y-auto p-4">
-            {sidebar}
-            <BotanicalVine className="pointer-events-none -mx-4 mt-auto -mb-4 h-44 w-60 shrink-0 opacity-50" />
+          {/* top-16: la altura del encabezado fijo. La rama es un adorno fijo al fondo, fuera de lo que
+              se desplaza: dentro del contenedor sumaba 176 px al alto y la barra de desplazamiento
+              aparecía aunque el menú cupiera. */}
+          <div className="sticky top-16 h-[calc(100dvh-4rem)] w-60">
+            <BotanicalVine className="pointer-events-none absolute inset-x-0 bottom-0 h-44 w-60 opacity-50" />
+            <div className="scrollbar-on-dark relative h-full overflow-y-auto p-4">
+              {sidebar}
+            </div>
           </div>
         </aside>
         <main

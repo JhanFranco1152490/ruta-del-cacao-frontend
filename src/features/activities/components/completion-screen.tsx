@@ -1,9 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { PageNotice } from '@/components/page-notice';
+import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
@@ -14,12 +16,20 @@ import { ACTIVITIES_PATH } from '../activity-paths';
 import { activityState, canComplete } from '../activity-state';
 import { CompletionCapture } from './completion-capture';
 import { useCompletionSources } from './use-completion-sources';
+import { pageContainerClass } from '@/components/page-container';
 
 // La pantalla de campo donde se registra una labor como realizada. Todo se guarda primero en el
 // dispositivo: con conexión se envía de inmediato y, sin ella, cuando vuelva. Aquí se decide qué
 // mostrar: un aviso si la actividad no se puede registrar, lo que le pasó a lo ya guardado, o la
 // captura.
-export function CompletionScreen({ activityId }: { activityId: string }) {
+export function CompletionScreen({
+  activityId,
+  monitoringHref,
+}: {
+  activityId: string;
+  // Dónde se registra el resultado de un monitoreo, que es de otro dominio.
+  monitoringHref?: (activityId: string) => string;
+}) {
   const today = todayInBogota();
   const sources = useCompletionSources(activityId);
   const { returnPath, finish } = useFinishSave(ACTIVITIES_PATH);
@@ -54,7 +64,7 @@ export function CompletionScreen({ activityId }: { activityId: string }) {
     return (
       <div
         aria-label="Cargando actividad"
-        className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-8"
+        className={pageContainerClass('narrow', 'space-y-6')}
         role="status"
       >
         <Skeleton className="h-12 w-2/3" />
@@ -85,7 +95,17 @@ export function CompletionScreen({ activityId }: { activityId: string }) {
         description={
           done
             ? 'Una actividad realizada no se modifica.'
-            : 'Un monitoreo se registra con su resultado: ábrelo en Actividades y elige Registrar monitoreo.'
+            : 'Un monitoreo se registra con su resultado, no como una labor más.'
+        }
+        action={
+          !done && monitoringHref ? (
+            <Link
+              className={buttonVariants({ size: 'office' })}
+              href={monitoringHref(activity.id)}
+            >
+              Registrar monitoreo
+            </Link>
+          ) : undefined
         }
         title={
           done

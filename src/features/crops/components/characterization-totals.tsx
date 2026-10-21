@@ -15,7 +15,7 @@ export function CharacterizationTotals({
   areaHectares: string;
 }) {
   return (
-    <dl className="mt-5 grid gap-3 rounded-(--radius) bg-muted px-4 py-3 text-sm sm:grid-cols-3">
+    <dl className="mt-5 grid grid-cols-1 gap-3 rounded-(--radius) bg-muted px-4 py-3 text-sm sm:grid-cols-3">
       <div>
         <dt className="text-muted-foreground">Total de árboles</dt>
         <dd className="text-lg font-bold">{formatCount(trees)}</dd>

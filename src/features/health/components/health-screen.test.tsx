@@ -84,6 +84,8 @@ const page = (
 let requests: URLSearchParams[];
 let answer: () => ReturnType<typeof page>;
 let pending: Activity[];
+let upcoming: Activity[];
+let waitingDetections: unknown[];
 let userId: string;
 
 beforeEach(() => {
@@ -91,6 +93,8 @@ beforeEach(() => {
   requests = [];
   answer = () => page([first, second]);
   pending = [];
+  upcoming = [];
+  waitingDetections = [];
   server.use(
     http.get(apiUrl('/api/phytosanitary-history'), ({ request }) => {
       requests.push(new URL(request.url).searchParams);
@@ -99,8 +103,11 @@ beforeEach(() => {
     http.get(apiUrl('/api/agricultural-activities/pending'), () =>
       HttpResponse.json({ results: pending }),
     ),
+    http.get(apiUrl('/api/agricultural-activities'), () =>
+      HttpResponse.json({ results: upcoming }),
+    ),
     http.get(apiUrl('/api/phytosanitary-detections/without-control'), () =>
-      HttpResponse.json({ results: [] }),
+      HttpResponse.json({ results: waitingDetections }),
     ),
     farmsHandler([
       buildFarm({ id: 'f1', name: 'La Esperanza' }),
@@ -151,7 +158,7 @@ function renderScreen(
 }
 
 const monitorings = () =>
-  screen.findByRole('list', { name: 'Monitoreos' }, { timeout: 5000 });
+  screen.findByRole('table', { name: 'Monitoreos' }, { timeout: 5000 });
 
 describe('HealthScreen', () => {
   it('lists the monitorings of all the plots without choosing one first', async () => {
@@ -159,10 +166,11 @@ describe('HealthScreen', () => {
 
     const list = await monitorings();
 
-    const items = within(list).getAllByRole('listitem', { name: '' });
-    expect(list).toHaveTextContent('P-01 · La Esperanza');
-    expect(list).toHaveTextContent('P-02 · El Retiro');
-    expect(items.length).toBeGreaterThanOrEqual(2);
+    expect(list).toHaveTextContent('P-01');
+    expect(list).toHaveTextContent('La Esperanza');
+    expect(list).toHaveTextContent('P-02');
+    expect(list).toHaveTextContent('El Retiro');
+    expect(within(list).getAllByText('Sin presencia')).toHaveLength(2);
     expect(requests[0].toString()).toBe('');
   });
 
@@ -359,7 +367,7 @@ describe('HealthScreen', () => {
       expect(links[0].getAttribute('href')).toContain('origen=');
     });
 
-    it('shows only three and says where to see all of them', async () => {
+    it('shows all of them, none hidden behind another link', async () => {
       pending = ['a', 'b', 'c', 'd', 'e'].map((id, index) =>
         waiting(id, `P-0${index}`, FARM_A, '2020-01-01'),
       );
@@ -369,10 +377,10 @@ describe('HealthScreen', () => {
 
       expect(
         within(region).getAllByRole('link', { name: /^Registrar/ }),
-      ).toHaveLength(3);
+      ).toHaveLength(5);
       expect(
-        within(region).getByRole('link', { name: 'Ver todos (5)' }),
-      ).toHaveAttribute('href', '/actividades?vista=pendientes');
+        within(region).queryByRole('link', { name: /Ver todos/ }),
+      ).not.toBeInTheDocument();
     });
 
     it('follows the farm and the plot chosen in the filters', async () => {
@@ -389,7 +397,7 @@ describe('HealthScreen', () => {
     });
 
     it('is not shown when there is nothing to record', async () => {
-      renderScreen('', SCHEDULER);
+      renderScreen('?vista=historial', SCHEDULER);
       await monitorings();
 
       expect(
@@ -459,9 +467,215 @@ describe('HealthScreen', () => {
     });
   });
 
+  describe('the tabs', () => {
+    const detection = {
+      id: 'd1',
+      pest_disease: {
+        id: 'monilia',
+        name: 'Monilia',
+        kind: 'disease' as const,
+        is_active: true,
+      },
+      other_description: null,
+      affected_units: 12,
+      incidence: '24.00',
+      controls: [],
+      control_request: null,
+    };
+    const found = buildAgriculturalActivity({
+      id: 'm9',
+      activity_type: 'phytosanitary_monitoring',
+      status: 'done',
+      done_date: '2026-10-19',
+      completed_by: { id: 'u1', full_name: 'Ana Ruiz' },
+      monitoring: {
+        sampling_unit: 'trees',
+        evaluated_units: 50,
+        sampling_method: null,
+        notes: 'Foco en la zona baja',
+        no_presence: false,
+        detections: [detection],
+        detections_without_control: 1,
+        evidence_count: 0,
+      },
+    });
+    const scheduled = (id: string, code: string, date: string) =>
+      buildAgriculturalActivity({
+        id,
+        activity_type: 'phytosanitary_monitoring',
+        status: 'scheduled',
+        scheduled_date: date,
+        plot: {
+          id: `pl-${code}`,
+          code,
+          name: null,
+          is_active: true,
+          farm: { code: 'F01', ...FARM_A, is_active: true },
+        },
+      });
+
+    it('opens on the history when nothing is left to do', async () => {
+      renderScreen();
+
+      await monitorings();
+
+      expect(
+        screen.getByRole('button', { name: 'Historial', pressed: true }),
+      ).toBeInTheDocument();
+    });
+
+    it('opens on what is pending when there is something to record, and counts it', async () => {
+      pending = [scheduled('w1', 'P-01', '2020-01-01')];
+      renderScreen();
+
+      expect(
+        await screen.findByRole('region', { name: 'Monitoreos por registrar' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Pendiente (1)', pressed: true }),
+      ).toBeInTheDocument();
+      expect(requests).toHaveLength(0);
+    });
+
+    it('opens on what is pending when a control waits to be decided', async () => {
+      waitingDetections = [
+        {
+          ...detection,
+          sampling_unit: 'trees',
+          monitoring: { id: 'm1', done_date: '2026-10-19' },
+          plot: {
+            id: 'pl-P-01',
+            code: 'P-01',
+            name: null,
+            farm: { id: 'f1', code: 'F01', name: 'La Esperanza' },
+          },
+          control_requested_by: { id: 'u2', full_name: 'Luis Mora' },
+          control_requested_at: '2026-10-19T15:20:00Z',
+        },
+      ];
+      renderScreen();
+
+      const region = await screen.findByRole(
+        'region',
+        { name: 'Controles por atender' },
+        { timeout: 5000 },
+      );
+
+      expect(region).toHaveTextContent('Controles por atender (1)');
+      expect(
+        within(region).getByRole('button', { name: /Programar control/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('lists the monitorings that are coming, the nearest first, and only monitorings', async () => {
+      upcoming = [
+        scheduled('u2', 'P-02', '2999-12-30'),
+        scheduled('u1', 'P-01', '2999-12-01'),
+        {
+          ...scheduled('u3', 'P-03', '2999-12-15'),
+          activity_type: 'pruning',
+        },
+        { ...scheduled('u4', 'P-04', '2999-12-16'), status: 'done' },
+      ];
+      renderScreen('?vista=pendiente');
+
+      const region = await screen.findByRole(
+        'region',
+        { name: 'Próximos monitoreos' },
+        { timeout: 5000 },
+      );
+
+      expect(region).toHaveTextContent('Próximos monitoreos (2)');
+      const items = within(region).getAllByRole('listitem');
+      expect(items[0]).toHaveTextContent('P-01');
+      expect(items[1]).toHaveTextContent('P-02');
+      expect(
+        within(items[0]).getByRole('link', { name: /Programado/ }),
+      ).toHaveAttribute('href', '/actividades?mes=2999-12&actividad=u1');
+    });
+
+    it('says there is nothing pending when there is nothing at all', async () => {
+      renderScreen('?vista=pendiente');
+
+      expect(
+        await screen.findByText('No hay nada pendiente'),
+      ).toBeInTheDocument();
+    });
+
+    it('keeps only the place filters on the pending tab', async () => {
+      renderScreen('?vista=pendiente');
+      await screen.findByText('No hay nada pendiente');
+
+      expect(
+        screen.queryByRole('combobox', { name: 'Plaga o enfermedad' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('changes the tab and keeps it in the URL', async () => {
+      const onUrlUpdate = vi.fn();
+      const queryClient = createTestQueryClient();
+      queryClient.setQueryData(
+        queryKeys.session(),
+        buildSession({ id: 'health-tabs', permissions: SCHEDULER }),
+      );
+      mockLocation.path = '/sanidad';
+      renderWithProviders(<HealthScreen />, { queryClient, onUrlUpdate });
+      await monitorings();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Pendiente' }));
+
+      await waitFor(() =>
+        expect(onUrlUpdate.mock.lastCall?.[0].queryString).toContain(
+          'vista=pendiente',
+        ),
+      );
+    });
+
+    it('shows one row per detection with its incidence and what happened to the control', async () => {
+      answer = () => page([found, first]);
+      renderScreen('?vista=historial');
+
+      const table = await monitorings();
+
+      const rows = within(table).getAllByRole('row');
+      // La fila de títulos, la detección y el monitoreo sin presencia.
+      expect(rows).toHaveLength(3);
+      expect(rows[1]).toHaveTextContent('Monilia');
+      expect(rows[1]).toHaveTextContent('24 %');
+      expect(rows[1]).toHaveTextContent('Sin control');
+      expect(rows[2]).toHaveTextContent('Sin presencia');
+    });
+
+    it('puts the detail button on the same row as the actions of a detection', async () => {
+      answer = () => page([found]);
+      renderScreen('?vista=historial');
+      const table = await monitorings();
+
+      const detail = within(table).getByRole('button', { name: /Detalle/ });
+      const schedule = within(table).getByRole('button', {
+        name: /Programar control/,
+      });
+
+      expect(schedule.parentElement).toBe(detail.parentElement);
+    });
+
+    it('opens the detail of a monitoring with its notes', async () => {
+      answer = () => page([found]);
+      renderScreen('?vista=historial');
+      const table = await monitorings();
+
+      await userEvent.click(
+        within(table).getByRole('button', { name: /Detalle/ }),
+      );
+
+      expect(table).toHaveTextContent('Foco en la zona baja');
+      expect(table).toHaveTextContent('Registró Ana Ruiz');
+    });
+  });
+
   describe('scheduling a monitoring', () => {
     it('goes to the activities form carrying the farm and the plot, and where to come back', async () => {
-      renderScreen('?finca=f1&parcela=pl-P-01');
+      renderScreen('?vista=historial&finca=f1&parcela=pl-P-01');
       await monitorings();
 
       const [link] = screen.getAllByRole('link', {
@@ -475,7 +689,7 @@ describe('HealthScreen', () => {
       expect(url.searchParams.get('finca')).toBe('f1');
       expect(url.searchParams.get('parcela')).toBe('pl-P-01');
       expect(url.searchParams.get('origen')).toBe(
-        '/sanidad?finca=f1&parcela=pl-P-01',
+        '/sanidad?vista=historial&finca=f1&parcela=pl-P-01',
       );
     });
 

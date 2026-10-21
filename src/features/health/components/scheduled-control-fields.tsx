@@ -44,16 +44,18 @@ export function ScheduledControlFields({
 
   return (
     <div className="space-y-4">
-      <TextField
-        className={CAPTURE_FIELD_CLASS}
-        disabled={disabled}
-        error={errorOf('scheduled_date')}
-        label="Fecha programada"
-        min={today}
-        type="date"
-        {...register(`${base}scheduled_date`)}
-      />
-      <ControlAssigneeField disabled={disabled} name={`${base}assignee_id`} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <TextField
+          className={CAPTURE_FIELD_CLASS}
+          disabled={disabled}
+          error={errorOf('scheduled_date')}
+          label="Fecha programada"
+          min={today}
+          type="date"
+          {...register(`${base}scheduled_date`)}
+        />
+        <ControlAssigneeField disabled={disabled} name={`${base}assignee_id`} />
+      </div>
       <SelectField
         className={CAPTURE_FIELD_CLASS}
         disabled={disabled}

@@ -11,9 +11,16 @@ export type NavChild = {
   permission?: Permission;
 };
 
+// Los grupos del menú, por tarea. Una entrada sin grupo queda suelta, arriba.
+export type NavGroupKey =
+  'admin' | 'farm' | 'agriculture' | 'postharvest' | 'catalogs';
+
 export type NavItem = {
   href: string;
   label: string;
+  // El grupo del menú al que pertenece. Los grupos solo se dibujan si la persona ve entradas de
+  // dos o más; con uno solo, el menú queda plano.
+  group?: NavGroupKey;
   // El nombre para quien tiene un productor propio, que ve solo lo suyo ("Mis fincas"). Sin él,
   // todos ven `label`.
   ownLabel?: string;

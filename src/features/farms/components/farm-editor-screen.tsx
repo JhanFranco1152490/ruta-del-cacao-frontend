@@ -27,6 +27,7 @@ import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
 import { FarmStaleVersionSummary } from './farm-stale-version-summary';
+import { pageContainerClass } from '@/components/page-container';
 
 // El formulario se inicializa una sola vez con la finca, así que esa lectura tiene que ser del
 // momento en que se abre: se pide siempre al montar (una copia guardada de una visita anterior
@@ -90,7 +91,7 @@ function ServerFarmEditor({ id }: { id: string }) {
 
 function SavedFarmEditor({ farm }: { farm: Farm }) {
   const router = useRouter();
-  const { finish } = useFinishSave('/fincas');
+  const { returnPath, finish } = useFinishSave('/fincas');
   const update = useFarmUpdate();
   const sync = useFarmSyncStatus();
   const { data: user } = useSession();
@@ -115,6 +116,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
       description="Los cambios se guardan en este dispositivo y se envían cuando haya conexión."
       banner={sync.showBanner && <OfflineBanner status={sync.status} />}
       blockedMessage={sync.blockedMessage}
+      cancelHref={returnPath}
       submitLabel="Guardar cambios"
       secondaryAction={
         canDelete && (
@@ -136,7 +138,7 @@ function SavedFarmEditor({ farm }: { farm: Farm }) {
 }
 
 function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
-  const { finish } = useFinishSave('/fincas');
+  const { returnPath, finish } = useFinishSave('/fincas');
   const resubmit = useFarmResubmit();
   const sync = useFarmSyncStatus();
   const isStale = farm.errorCode === 'stale_version';
@@ -184,6 +186,7 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
           ? 'Necesitas conexión para ver la versión vigente de la finca antes de reenviar tus cambios.'
           : null)
       }
+      cancelHref={returnPath}
       submitLabel={failed ? 'Guardar y reenviar' : 'Guardar cambios'}
       isSaving={resubmit.isPending}
       error={
@@ -203,7 +206,7 @@ function EditorSkeleton() {
   return (
     <div
       aria-label="Cargando finca"
-      className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8 sm:px-8"
+      className={pageContainerClass('narrow', 'space-y-6')}
       role="status"
     >
       <Skeleton className="h-12 w-2/3" />

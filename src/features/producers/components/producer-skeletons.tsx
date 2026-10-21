@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
+import { pageContainerClass } from '@/components/page-container';
 
 export function ProducerTableSkeleton() {
   return (
@@ -17,7 +18,7 @@ export function ProducerTableSkeleton() {
 
 export function ProducerDetailSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-[1280px] space-y-6 px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide', 'space-y-6')}>
       <Skeleton className="h-5 w-36" />
       <Skeleton className="h-11 w-80" />
       <Skeleton className="h-72 w-full" />

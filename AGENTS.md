@@ -93,7 +93,8 @@ src/
                        /fincas, /actividades, /sanidad, /plagas-enfermedades, /cosechas, /lotes,
                        /usuarios, /roles y sus pantallas hijas. El
                        permiso y la conexión de cada sección se comprueban en el shell a
-                       partir de config/navigation.ts: una sección nueva solo se suma ahí
+                       partir de config/navigation.ts: una sección nueva solo se suma ahí,
+                       con su `group` (el menú agrupa por tarea; ver el sistema de diseño)
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
                        health, notifications, harvests, lots, users y roles): api.ts, schemas.ts, hooks propios
@@ -119,7 +120,7 @@ src/
 - Componentes en **tres niveles**: (1) `components/ui/`, primitivas de shadcn/ui con las
   variantes del sistema de diseño, sin conocer el dominio; (2) `components/`, piezas
   compartidas con el aspecto de la app (`TextField`, `TextAreaField`, `SelectField`, `PasswordField`,
-  `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `Pagination`, `EmptyState`, `ErrorState`,
+  `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `pageContainerClass`, `SummaryStrip`, `Pagination`, `EmptyState`, `ErrorState`,
   `MaskedValue`, la sección de insumos utilizados de `input-usage/`, el descarte de la bandeja
   `sync-tray/queue-discard-dialog.tsx`...) que solo reciben props y no conocen la API; (3)
   `features/<dominio>/components/`, pantallas (`*-screen.tsx`) y piezas de un dominio: la
@@ -242,23 +243,37 @@ src/
   (`renderNotice`), el recurso de la cola que cierra un monitoreo (`closingResources`) y los
   controles programados que esperan en el dispositivo (`queuedActivities`, marcados `queued`). Lo
   mismo hacen las páginas de parcelas con el enlace al historial, junto a la ficha.
-  - **La pantalla de Sanidad** (`/sanidad`, `health-screen.tsx`) es el historial: los monitoreos de
-    todo lo que alcanza la cuenta, de a 20, con filtros de finca, parcela, plaga y periodo en la
-    URL (`finca`, `parcela`, `plaga`, `desde`, `hasta`, `pagina`, y `productor` para la cuenta
-    técnica; `use-history-filters.ts`). Desde la tarjeta de una parcela se abre ya filtrada
-    (`plotHistoryPath`). Con una parcela elegida muestra además el resumen por plaga; sin ella no,
-    porque comparar parcelas distintas no dice si una plaga sube o baja. Arriba van el aviso de
-    detecciones que esperan un control y **Programar monitoreo**, que no programa aquí: lleva al
-    calendario (`/actividades?programar=monitoreo&finca=&parcela=&origen=`), que abre su formulario
-    con el tipo y la parcela elegidos y vuelve a Sanidad al guardar o cancelar
-    (`use-schedule-link.ts`, `linked-schedule-dialog.tsx`). Cada monitoreo trae sus acciones y sus
-    fotos a pedido. Con copia en el dispositivo por filtros y página. Encima del historial va
-    **Por registrar (N)** (`pending-monitorings-section.tsx`): los monitoreos de hoy y los retrasados
-    o vencidos (`GET …/agricultural-activities/pending?activity_type=`), con su estado y **Registrar**
-    (abre la planilla y vuelve a Sanidad); muestra 3 y enlaza a la vista de pendientes del calendario.
-    Respeta los filtros de finca y parcela, se ve con el permiso de registrar, no ofrece registrar el
-    de un compañero a quien solo registra lo suyo y dice «Guardado en el teléfono» si su resultado
-    espera en la cola.
+  - **La pantalla de Sanidad** (`/sanidad`, `health-screen.tsx`) tiene dos pestañas (`vista=` en la
+    URL, `use-history-filters.ts`). Sin `vista` abre en **Pendiente** si hay algo que le toque a quien
+    mira (monitoreos por registrar o controles por atender) y en **Historial** si no; la decisión se
+    toma una sola vez para que resolver lo último pendiente no cambie la pantalla. Las dos comparten
+    los filtros de finca y parcela; Pendiente no muestra plaga ni periodo (`placesOnly`).
+    - **Pendiente** (`pending-tab.tsx`, datos de `use-pending-items.ts`): **Por registrar (N)**
+      (`GET …/agricultural-activities/pending?activity_type=`, hoy y retrasados o vencidos, con
+      **Registrar** que abre la planilla y vuelve a Sanidad, sin tope de filas; no ofrece registrar el
+      de un compañero a quien solo registra lo suyo y dice «Guardado en el teléfono» si su resultado
+      espera en la cola), **Controles por atender (N)** (las detecciones con un control pedido y sin
+      atender, con las mismas decisiones que el aviso del calendario) y **Próximos monitoreos (N)**
+      (los programados desde mañana, 120 días: salen del listado de actividades filtrado en el
+      cliente por tipo y estado, `upcoming-monitorings.ts`, y cada uno abre su detalle en el
+      calendario). Lo de «por registrar» y «controles por atender» cuenta en la pestaña; lo que viene
+      no, porque todavía no se puede hacer nada con ello.
+      Una fila con enlace (Registrar, Programado) es una tarjeta que se abre tocándola en cualquier
+      parte, no solo el botón: el enlace se estira con un `::after` (`pending-row-class.ts`).
+    - **Historial** (`history-tab.tsx`, `history-table.tsx`): una fila por plaga o enfermedad
+      encontrada (`history-rows.ts`), con la incidencia y su barra, el estado del control y, si no
+      tiene control, sus acciones; un monitoreo sin hallazgos es una sola fila «Sin presencia». El
+      **Detalle** de cada monitoreo (qué se evaluó, quién lo registró, observaciones y fotos a
+      pedido) se despliega bajo sus filas. De a 20, con filtros de plaga y periodo en la URL
+      (`finca`, `parcela`, `plaga`, `desde`, `hasta`, `pagina`, y `productor` para la cuenta
+      técnica) y copia en el dispositivo por filtros y página. Con una parcela elegida muestra además
+      el resumen por plaga; sin ella no, porque comparar parcelas distintas no dice si una plaga
+      sube o baja. Desde la tarjeta de una parcela se abre ya filtrado (`plotHistoryPath`, que trae
+      `vista=historial`).
+    - **Programar monitoreo** (arriba) no programa aquí: lleva al calendario
+      (`/actividades?programar=monitoreo&finca=&parcela=&origen=`), que abre su formulario con el
+      tipo y la parcela elegidos y vuelve a Sanidad al guardar o cancelar (`use-schedule-link.ts`,
+      `linked-schedule-dialog.tsx`).
   - **El monitoreo no está en la lista de tipos de actividad** (`SCHEDULABLE_ACTIVITY_TYPE_OPTIONS`
     tampoco trae el control): se programa con **Programar monitoreo**, un botón junto a «Programar
     actividad» (y uno más chico sobre el flotante en celular) que abre el mismo formulario con el
@@ -568,12 +583,21 @@ referencia en `docs/ui/ref/*.html`.
   etiquetas visibles (`hideLabel`), y en el celular detrás de «Filtros». Los mapas que acompañan
   una lista (`MunicipalityMapPanel`, `PointsMapPanel`) aceptan `hiddenOnMobile`; el resumen se
   oculta junto con el mapa. Detalle y razones en `docs/ui/design-system.md` §7.
+- **Encabezado y ancho, siempre los mismos.** Toda pantalla abre con `PageHeader` (categoría, título de
+  30 px y descripción; no tiene versión «compacta») y envuelve su contenido en
+  `pageContainerClass('wide' | 'narrow')`: `wide` para listas, calendarios y lo que lleva mapa o tabla,
+  `narrow` (centrado) para formularios y fichas de una columna. No se escribe un `max-w-*` ni un
+  `py-*` propio en una pantalla. Toda `grid` con columnas desde un punto de corte lleva `grid-cols-1`
+  de base, o una tarjeta con texto largo ensancha la columna y se sale de la pantalla en el celular.
+  Los totales de arriba de una lista usan `SummaryStrip`. Una lista con mapa usa `MapBesideList`, y
+  las hojas laterales (cuentas, roles) comparten `SidePanelHeader`/`SidePanelSection`/
+  `SidePanelActions`. Qué es modal, hoja o página está en el sistema de diseño.
 - **Toda ficha termina con «Volver» abajo a la izquierda** (`DetailFooter`; las acciones de la
   ficha, si tiene, van a su derecha). Volver lleva a la pantalla desde la que se abrió la ficha, con
   sus filtros (`readOrigin`; los enlaces que abren una ficha usan `EditorLink`), o a la lista de la
   sección si se entró directo. La ruta de arriba no basta para quien usa poco la web: un botón
-  «Volver» sí se entiende. Hoy lo tienen las fichas de cosecha y de lote; las demás lo reciben en la
-  pasada de estética.
+  «Volver» sí se entiende. Hoy lo tienen las fichas de cosecha, de lote, de finca y de productor; el
+  historial de la ficha de una parcela ya trae su «Volver» arriba.
 - **Estados.** Siempre color + ícono + texto, nunca color solo. Variantes tintadas en oficina y
   sólidas en campo o para avisos críticos.
 - **Contraste.** Texto mínimo 4.5:1 (3:1 desde 24 px). Prohibido gris claro para datos

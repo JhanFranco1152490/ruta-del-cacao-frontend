@@ -15,14 +15,18 @@ import {
 } from 'lucide-react';
 
 import { PERMISSIONS } from '@/lib/permissions';
-import type { NavItem } from '@/types/navigation';
+import type { NavGroupKey, NavItem } from '@/types/navigation';
 
-// Cada sección nueva de la app se suma aquí con una entrada. El orden decide también dónde
-// entra cada persona: en la primera sección que puede ver.
+// Cada sección nueva de la app se suma aquí con una entrada y su grupo. El menú agrupa en el orden en
+// que aparecen las entradas, así que un grupo sale donde aparece la primera que la persona ve:
+// Administración arranca con Productores (primero para la asociación) y termina con Usuarios y
+// Roles (último para el productor, que solo ve esas dos). El orden decide también dónde entra cada
+// persona: en la primera sección que puede ver.
 export const NAV_ITEMS: readonly NavItem[] = [
   {
     href: '/productores',
     label: 'Productores',
+    group: 'admin',
     icon: Sprout,
     permission: PERMISSIONS.PRODUCERS_VIEW,
     needsConnection: true,
@@ -33,6 +37,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/fincas',
     label: 'Fincas',
     ownLabel: 'Mis fincas',
+    group: 'farm',
     icon: MapPinned,
     permission: PERMISSIONS.FARMS_VIEW,
   },
@@ -40,33 +45,22 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/parcelas',
     label: 'Parcelas',
     ownLabel: 'Mis parcelas',
+    group: 'farm',
     icon: LandPlot,
     permission: PERMISSIONS.PLOTS_VIEW,
     routes: ['/fincas/parcelas'],
   },
   {
-    href: '/variedades',
-    label: 'Variedades de cacao',
-    icon: Leaf,
-    permission: PERMISSIONS.CROPS_MANAGE_VARIETIES,
-    needsConnection: true,
-  },
-  {
-    href: '/plagas-enfermedades',
-    label: 'Plagas y enfermedades',
-    icon: Bug,
-    permission: PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE,
-    needsConnection: true,
-  },
-  {
     href: '/insumos',
     label: 'Insumos',
+    group: 'farm',
     icon: FlaskConical,
     permission: PERMISSIONS.INPUTS_VIEW,
   },
   {
     href: '/actividades',
     label: 'Actividades',
+    group: 'agriculture',
     icon: CalendarDays,
     permission: PERMISSIONS.ACTIVITIES_VIEW,
   },
@@ -76,6 +70,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     href: '/sanidad',
     label: 'Sanidad',
+    group: 'agriculture',
     icon: ShieldPlus,
     permission: PERMISSIONS.ACTIVITIES_VIEW,
     needsConnection: true,
@@ -84,12 +79,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     href: '/cosechas',
     label: 'Cosechas',
+    group: 'postharvest',
     icon: Wheat,
     permission: PERMISSIONS.HARVESTS_VIEW,
   },
   {
     href: '/lotes',
     label: 'Lotes',
+    group: 'postharvest',
     icon: Package,
     permission: PERMISSIONS.LOTS_VIEW,
     needsConnection: true,
@@ -98,24 +95,76 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     href: '/infraestructura',
     label: 'Infraestructura',
+    group: 'postharvest',
     icon: Warehouse,
     permission: PERMISSIONS.FACILITIES_VIEW,
   },
   {
-    href: '/roles',
-    label: 'Roles y permisos',
-    icon: ShieldCheck,
-    permission: PERMISSIONS.ROLES_VIEW,
+    href: '/variedades',
+    label: 'Variedades de cacao',
+    group: 'catalogs',
+    icon: Leaf,
+    permission: PERMISSIONS.CROPS_MANAGE_VARIETIES,
+    needsConnection: true,
+  },
+  {
+    href: '/plagas-enfermedades',
+    label: 'Plagas y enfermedades',
+    group: 'catalogs',
+    icon: Bug,
+    permission: PERMISSIONS.HEALTH_MANAGE_PEST_DISEASE,
     needsConnection: true,
   },
   {
     href: '/usuarios',
     label: 'Usuarios',
+    group: 'admin',
     icon: Users,
     permission: PERMISSIONS.USERS_VIEW,
     needsConnection: true,
   },
+  {
+    href: '/roles',
+    label: 'Roles y permisos',
+    group: 'admin',
+    icon: ShieldCheck,
+    permission: PERMISSIONS.ROLES_VIEW,
+    needsConnection: true,
+  },
 ];
+
+export const NAV_GROUP_LABELS: Record<NavGroupKey, string> = {
+  admin: 'Administración',
+  farm: 'Finca',
+  agriculture: 'Manejo agrícola',
+  postharvest: 'Cosecha y poscosecha',
+  catalogs: 'Catálogos',
+};
+
+export type NavSection = {
+  // Sin clave: las entradas sueltas (Productores), que van arriba sin encabezado.
+  key: NavGroupKey | null;
+  items: NavItem[];
+};
+
+// Las entradas que la persona ve, agrupadas en el orden en que aparecen. Los encabezados solo
+// tienen sentido si hay dos o más grupos: con uno, el menú queda plano como antes.
+export function groupNavItems(items: readonly NavItem[]): {
+  sections: NavSection[];
+  showHeadings: boolean;
+} {
+  const sections: NavSection[] = [];
+  for (const item of items) {
+    const key = item.group ?? null;
+    const section = sections.find((s) => s.key === key);
+    if (section) section.items.push(item);
+    else sections.push({ key, items: [item] });
+  }
+  return {
+    sections,
+    showHeadings: sections.filter((s) => s.key !== null).length >= 2,
+  };
+}
 
 export function visibleNavItems(
   items: readonly NavItem[],

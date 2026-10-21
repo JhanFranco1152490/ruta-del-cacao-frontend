@@ -27,6 +27,7 @@ import type { FarmChoice } from './input-farm-select';
 import { InputMovementDialog } from './input-movement-dialog';
 import { InputMovementItem } from './input-movement-item';
 import type { MovementKind } from './use-movement-form';
+import { pageContainerClass } from '@/components/page-container';
 
 // Los movimientos de un insumo en una finca, del más nuevo al más viejo. Es una consulta en línea,
 // como el historial de las fichas: sin conexión lo dice en vez de quedarse cargando.
@@ -50,7 +51,7 @@ export function InputMovementsScreen({
 
   if (catalog.isSuccess && !input) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
+      <div className={pageContainerClass('narrow')}>
         <BackLink href={backHref}>Volver a Insumos</BackLink>
         <ErrorState message="Este insumo ya no existe." />
       </div>
@@ -64,7 +65,7 @@ export function InputMovementsScreen({
   const offline = !hasConnection || isPausedWithoutData(movements);
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('narrow')}>
       <BackLink href={backHref}>Volver a Insumos</BackLink>
       <PageHeader
         actions={
@@ -96,7 +97,7 @@ export function InputMovementsScreen({
         title={input ? `Movimientos de ${input.name}` : 'Movimientos'}
       />
       {input && stocks.isSuccess && (
-        <dl className="mt-6 grid gap-3 rounded-lg bg-card p-4 shadow-card sm:grid-cols-2">
+        <dl className="mt-6 grid grid-cols-1 gap-3 rounded-lg bg-card p-4 shadow-card sm:grid-cols-2">
           <div>
             <dt className="text-sm font-bold text-muted-foreground">
               Existencias

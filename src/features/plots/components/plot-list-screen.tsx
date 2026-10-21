@@ -10,6 +10,7 @@ import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { PlotOverview } from './plot-overview';
+import { pageContainerClass } from '@/components/page-container';
 
 // Sin finca en la dirección, el editor deja elegirla.
 const REGISTER_PLOT_PATH = '/fincas/parcelas/nueva';
@@ -34,9 +35,8 @@ export function PlotListScreen(
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
-        compact
         eyebrow="Gestión de parcelas"
         title={ownProducer ? 'Mis parcelas' : 'Parcelas'}
         description={

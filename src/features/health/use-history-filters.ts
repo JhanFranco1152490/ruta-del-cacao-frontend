@@ -1,14 +1,24 @@
 'use client';
 
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
+import {
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryStates,
+} from 'nuqs';
 
 import { parseAsIsoDate } from '@/lib/navigation/iso-date-parser';
 
 import type { HistoryFilters } from './history-filters';
 
-// Los filtros y la página viven en la URL: se pueden compartir y el botón atrás los respeta. Una
-// fecha mal escrita cae en "sin filtro".
+// Las dos pestañas de Sanidad: lo que hay por hacer y lo que ya se registró.
+export const HEALTH_VIEWS = ['pendiente', 'historial'] as const;
+export type HealthView = (typeof HEALTH_VIEWS)[number];
+
+// La pestaña, los filtros y la página viven en la URL: se pueden compartir y el botón atrás los
+// respeta. Una fecha mal escrita cae en "sin filtro".
 const parsers = {
+  view: parseAsStringLiteral(HEALTH_VIEWS),
   farm: parseAsString,
   plot: parseAsString,
   producer: parseAsString,
@@ -19,6 +29,7 @@ const parsers = {
 };
 // En la URL los parámetros van en español, como las rutas.
 const urlKeys = {
+  view: 'vista',
   farm: 'finca',
   plot: 'parcela',
   producer: 'productor',
@@ -44,6 +55,9 @@ export function useHistoryFilters() {
     setParams({ ...patch, page: null });
   return {
     filters,
+    // Sin `vista` en la dirección, la pantalla decide con lo que haya por hacer.
+    view: params.view,
+    setView: (view: HealthView) => setParams({ view, page: null }),
     page: params.page && params.page > 0 ? params.page : 1,
     hasFilters: !!(
       filters.farm ||

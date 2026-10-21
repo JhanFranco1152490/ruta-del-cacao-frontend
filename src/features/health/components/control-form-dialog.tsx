@@ -137,7 +137,7 @@ export function ControlFormDialog({
       }}
       open
     >
-      <DialogContent showCloseButton={!save.isPending}>
+      <DialogContent className="sm:max-w-xl" showCloseButton={!save.isPending}>
         <FormProvider {...form}>
           <ControlChoicesContext value={controlChoices}>
             <form
@@ -158,19 +158,21 @@ export function ControlFormDialog({
               </DialogHeader>
               {mode === 'done' ? (
                 <>
-                  <TextField
-                    className={CAPTURE_FIELD_CLASS}
-                    disabled={save.isPending}
-                    error={form.formState.errors.done_date?.message}
-                    label="Fecha de aplicación"
-                    max={today}
-                    type="date"
-                    {...form.register('done_date')}
-                  />
-                  <ControlAssigneeField
-                    disabled={save.isPending}
-                    name="assignee_id"
-                  />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <TextField
+                      className={CAPTURE_FIELD_CLASS}
+                      disabled={save.isPending}
+                      error={form.formState.errors.done_date?.message}
+                      label="Fecha de aplicación"
+                      max={today}
+                      type="date"
+                      {...form.register('done_date')}
+                    />
+                    <ControlAssigneeField
+                      disabled={save.isPending}
+                      name="assignee_id"
+                    />
+                  </div>
                   <DoneControlFields
                     base=""
                     disabled={save.isPending}

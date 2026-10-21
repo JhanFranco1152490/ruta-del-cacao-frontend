@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
+import { InfoHint } from '@/components/info-hint';
 import {
   SearchSelect,
   type SearchSelectOption,
@@ -14,13 +15,15 @@ import type { PestDisease } from '../pest-api';
 const OTHER_OPTION: SearchSelectOption = {
   id: OTHER_PEST_DISEASE,
   label: 'Otra',
-  description: 'Lo que no está en la lista: escribes qué encontraste.',
+  info: 'Lo que no está en la lista: escribes qué encontraste.',
   pinned: true,
 };
 
-// Las plagas y enfermedades activas, cada una con su descripción debajo para reconocerla aunque no
-// se recuerde el nombre, y al final siempre Otra. Una que ya no está activa (llegó así de una
-// corrección) sigue mostrándose mientras esté elegida, para poder cambiarla.
+// Las plagas y enfermedades activas, solo con su nombre, y al final siempre Otra. La
+// descripción, para reconocerla aunque no se recuerde el nombre, sale en un ícono «i» al poner el
+// mouse encima, en cada opción y junto a la etiqueta de la elegida; también se busca. Una que ya no
+// está activa (llegó así de una corrección) sigue mostrándose mientras esté elegida, para poder
+// cambiarla.
 export function PestPicker({
   pests,
   value,
@@ -42,7 +45,7 @@ export function PestPicker({
       ...(pests ?? []).map((pest) => ({
         id: pest.id,
         label: pest.name,
-        description: pest.description,
+        info: pest.description,
       })),
       OTHER_OPTION,
     ],
@@ -57,12 +60,20 @@ export function PestPicker({
       disabled={disabled}
       emptyMessage="Ninguna coincide. Elige Otra y escribe qué encontraste."
       error={error}
-      hint={selected?.description}
+      // La descripción va en el ícono «i»; para quien no usa el mouse queda aquí, sin verse.
+      hint={
+        selected?.info ? (
+          <span className="sr-only">{selected.info}</span>
+        ) : undefined
+      }
       inputClassName={CAPTURE_FIELD_CLASS}
       label="Plaga o enfermedad"
       onBlur={onBlur}
       onChange={(option) => onChange(option?.id ?? '')}
       options={options}
+      labelAddon={
+        selected?.info ? <InfoHint text={selected.info} /> : undefined
+      }
       placeholder="Escribe para buscar"
       value={selected}
     />

@@ -43,12 +43,12 @@ export function PeriodBar({
       {/* Cambia al navegar: se anuncia sin mover el foco de la flecha. */}
       <h2
         aria-live="polite"
-        className="mx-1 text-xl text-selva first-letter:uppercase"
+        className="mx-1 min-w-0 text-lg whitespace-nowrap text-selva first-letter:uppercase sm:text-xl"
       >
         {title}
       </h2>
       <Button
-        className="h-10"
+        className="h-10 max-sm:ml-auto"
         disabled={isCurrent}
         onClick={onToday}
         size="office"

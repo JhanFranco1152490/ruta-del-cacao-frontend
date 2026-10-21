@@ -190,7 +190,7 @@ describe('MonitoringScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the description of each pest while searching and of the chosen one', async () => {
+  it('lists the pests by name only, finds them by their description and keeps it for the info icon', async () => {
     renderScreen();
     await sheet();
 
@@ -198,18 +198,40 @@ describe('MonitoringScreen', () => {
       name: 'Plaga o enfermedad',
     });
     await userEvent.type(field, 'polvo blanco');
-    expect(
-      await screen.findByRole('option', { name: /^Monilia/ }),
-    ).toHaveTextContent(
-      'Manchas cafés que se cubren de un polvo blanco crema.',
-    );
+    const monilia = await screen.findByRole('option', { name: /^Monilia/ });
+    // Se encontró por lo que dice su descripción, que no ocupa lugar en la lista.
+    expect(monilia).not.toHaveTextContent('polvo blanco');
     // Otra está siempre, aunque no coincida.
     expect(screen.getByRole('option', { name: /^Otra/ })).toBeVisible();
-    await userEvent.click(screen.getByRole('option', { name: /^Monilia/ }));
+    await userEvent.click(monilia);
 
+    // La descripción sale en el ícono «i»; sin mouse, queda como ayuda del campo.
     expect(field).toHaveAccessibleDescription(
       'Manchas cafés que se cubren de un polvo blanco crema.',
     );
+  });
+
+  it('shows the description in the info icon when the mouse is over it', async () => {
+    renderScreen();
+    await sheet();
+    const field = within(detection(1)).getByRole('combobox', {
+      name: 'Plaga o enfermedad',
+    });
+    await userEvent.type(field, 'polvo blanco');
+    await userEvent.click(
+      await screen.findByRole('option', { name: /^Monilia/ }),
+    );
+
+    const icon = detection(1).querySelector('svg.lucide-info');
+    expect(icon).not.toBeNull();
+    await userEvent.hover(icon!.parentElement!);
+
+    expect(
+      await screen.findByText(
+        'Manchas cafés que se cubren de un polvo blanco crema.',
+        { selector: '[data-slot], div' },
+      ),
+    ).toBeVisible();
   });
 
   it('computes the incidence while the person writes, in the unit evaluated', async () => {

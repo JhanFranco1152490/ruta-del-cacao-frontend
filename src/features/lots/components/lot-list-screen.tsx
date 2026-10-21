@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import { Package } from 'lucide-react';
+import { Wheat } from 'lucide-react';
 import Link from 'next/link';
 
 import { EmptyState } from '@/components/empty-state';
@@ -20,6 +20,7 @@ import { useLotFilters } from '../use-lot-filters';
 import { LotFiltersBar } from './lot-filters-bar';
 import { LotStatusCards } from './lot-status-cards';
 import { LotTable } from './lot-table';
+import { pageContainerClass } from '@/components/page-container';
 
 // Los lotes de las fincas que la cuenta alcanza, del más reciente al más antiguo. Solo con
 // conexión. Un lote se conforma desde su cosecha: `formLotHref` lleva a las que todavía no tienen
@@ -40,7 +41,7 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
       className={cn(buttonVariants({ size: 'office' }), 'h-11')}
       href={formLotHref}
     >
-      <Package aria-hidden="true" className="size-4" /> Conformar lote
+      <Wheat aria-hidden="true" className="size-4" /> Cosechas sin lote
     </Link>
   );
 
@@ -97,11 +98,10 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-5 px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
         actions={formLot}
-        compact
-        description="Cada lote lleva su código de trazabilidad desde la cosecha hasta el grano seco."
+        description="Cada lote nace de una cosecha completa y lleva su código de trazabilidad hasta el grano seco."
         eyebrow="Poscosecha"
         title="Lotes"
       />

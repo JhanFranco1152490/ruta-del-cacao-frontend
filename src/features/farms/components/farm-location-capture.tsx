@@ -103,7 +103,7 @@ export function FarmLocationFields({
       <h2 className="sr-only" id="farm-location-title">
         Ubicación de la finca
       </h2>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextField
           className={CAPTURE_FIELD_CLASS}
           error={latitudeError}

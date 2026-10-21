@@ -92,7 +92,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function renderScreen(user: Parameters<typeof buildSession>[0] = {}) {
+function renderScreen(
+  user: Parameters<typeof buildSession>[0] = {},
+  monitoringHref?: (activityId: string) => string,
+) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
@@ -105,7 +108,10 @@ function renderScreen(user: Parameters<typeof buildSession>[0] = {}) {
       ...user,
     }),
   );
-  renderWithProviders(<CompletionScreen activityId="a1" />, { queryClient });
+  renderWithProviders(
+    <CompletionScreen activityId="a1" monitoringHref={monitoringHref} />,
+    { queryClient },
+  );
 }
 
 const form = () => screen.findByRole('button', { name: /^Guardar/ });
@@ -542,9 +548,32 @@ describe('CompletionScreen', () => {
 
       expect(
         await screen.findByText(
-          'Un monitoreo se registra con su resultado: ábrelo en Actividades y elige Registrar monitoreo.',
+          'Un monitoreo se registra con su resultado, no como una labor más.',
         ),
       ).toBeInTheDocument();
+    });
+
+    it('offers to record the monitoring where its result is captured', async () => {
+      server.use(
+        activityHandler({ activity_type: 'phytosanitary_monitoring' }),
+      );
+      renderScreen({}, (id) => `/resultado?id=${id}`);
+
+      expect(
+        await screen.findByRole('link', { name: 'Registrar monitoreo' }),
+      ).toHaveAttribute('href', '/resultado?id=a1');
+    });
+
+    it('does not offer it for an activity that is already done', async () => {
+      server.use(activityHandler({ status: 'done' }));
+      renderScreen({}, (id) => `/resultado?id=${id}`);
+
+      await screen.findByRole('heading', {
+        name: 'Esta actividad ya fue registrada como realizada.',
+      });
+      expect(
+        screen.queryByRole('link', { name: 'Registrar monitoreo' }),
+      ).toBeNull();
     });
 
     it('says that the activity no longer exists', async () => {

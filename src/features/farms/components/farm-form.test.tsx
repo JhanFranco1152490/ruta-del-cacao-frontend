@@ -169,6 +169,16 @@ describe('FarmForm', () => {
     );
   });
 
+  it('cancels back to where it was opened from, like the plot form', async () => {
+    mockLocation.search = `origen=${encodeURIComponent('/fincas?buscar=la')}`;
+    await renderForm();
+
+    expect(screen.getByRole('link', { name: 'Cancelar' })).toHaveAttribute(
+      'href',
+      '/fincas?buscar=la',
+    );
+  });
+
   it('offers the next step in the notice when the page gives one', async () => {
     const user = userEvent.setup();
     await renderForm({}, (farmId) => ({

@@ -51,7 +51,7 @@ export function PlotList<T extends KnownPlot>({
 }: PlotListProps<T>) {
   return (
     <ul
-      className={cn('grid gap-3', className ?? 'md:grid-cols-2')}
+      className={cn('grid grid-cols-1 gap-3', className ?? 'md:grid-cols-2')}
       aria-label={label}
     >
       {plots.map((plot) => (

@@ -25,7 +25,7 @@ export function HarvestFacts({
   historyHref?: (harvest: Harvest) => string;
 }) {
   return (
-    <dl className="grid gap-4 rounded-(--radius) border bg-card p-5 sm:grid-cols-2">
+    <dl className="grid grid-cols-1 gap-4 rounded-(--radius) border bg-card p-5 sm:grid-cols-2">
       <Fact label="Fecha">{formatLongDate(harvest.harvest_date)}</Fact>
       <Fact label="Parcela de origen">{plotLabel(harvest.plot)}</Fact>
       <Fact label="Finca">{farmLabel(harvest.plot.farm)}</Fact>

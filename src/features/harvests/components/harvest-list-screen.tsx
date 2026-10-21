@@ -30,6 +30,7 @@ import { useHarvestFilters } from '../use-harvest-filters';
 import { HarvestFiltersBar } from './harvest-filters-bar';
 import { HarvestTable } from './harvest-table';
 import { HarvestTotals } from './harvest-totals';
+import { pageContainerClass } from '@/components/page-container';
 
 // Las recolecciones de un mes, con sus totales y sus filtros. Sin conexión muestra la última copia
 // del mes guardada en el dispositivo, y lo que espera en el teléfono aparece en su fecha.
@@ -76,32 +77,37 @@ export function HarvestListScreen({
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-5 px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
         actions={register}
-        compact
         description="Las recolecciones de cacao de tus parcelas. De cada una se conforma un lote para la poscosecha."
         eyebrow="Producción"
         title="Cosechas"
       />
-      {superuser && (
-        <ProducerFilter
-          className="max-w-md"
-          onClear={() => filterState.setProducer(null)}
-          onSelect={filterState.setProducer}
-          producer={producer ?? undefined}
-          selected={selectedProducer}
-        />
-      )}
-      <PeriodBar
-        isCurrent={period.isCurrentMonth}
-        nextLabel="Mes siguiente"
-        onNext={period.goNext}
-        onPrevious={period.goPrevious}
-        onToday={period.goToday}
-        previousLabel="Mes anterior"
-        title={formatMonthYear(period.month)}
-      />
+      {/* El filtro de productor a la izquierda y el mes a la derecha, en la misma fila; sin filtro, el
+          mes queda a la derecha igual, para que esté siempre en el mismo sitio. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        {superuser && (
+          <ProducerFilter
+            className="w-full max-w-md"
+            onClear={() => filterState.setProducer(null)}
+            onSelect={filterState.setProducer}
+            producer={producer ?? undefined}
+            selected={selectedProducer}
+          />
+        )}
+        <div className="ml-auto">
+          <PeriodBar
+            isCurrent={period.isCurrentMonth}
+            nextLabel="Mes siguiente"
+            onNext={period.goNext}
+            onPrevious={period.goPrevious}
+            onToday={period.goToday}
+            previousLabel="Mes anterior"
+            title={formatMonthYear(period.month)}
+          />
+        </div>
+      </div>
       {read.data?.savedAt !== undefined && (
         <p
           className="rounded-(--radius) bg-warn-bg px-4 py-3 font-bold text-warn"

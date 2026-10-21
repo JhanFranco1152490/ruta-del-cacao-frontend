@@ -17,7 +17,7 @@ export type FacilityFarmResolution =
   // cuál.
   | { kind: 'error' };
 
-// Qué finca muestra la lista de cajones y marquesinas, o si hay que preguntarla. Las fincas son las
+// Qué finca muestra la lista de cajones y marquesinas. Las fincas son las
 // activas que la cuenta alcanza, con su código, y salen de la misma lista que usan los filtros de
 // finca de la app, con su copia para abrir sin conexión. `elementFarm` es la finca del elemento de
 // `?elemento=`: manda sobre la de la URL, porque el elemento se muestra en la suya.
@@ -48,7 +48,6 @@ export function useFacilityFarm(
         : initialFarm({
             farms: farms.map(({ id }) => id),
             urlFarm: elementFarm ?? state.farm,
-            choose: state.choose,
             remembered: userId ? readLastFarm(userId) : null,
           });
 
@@ -60,9 +59,9 @@ export function useFacilityFarm(
     farm: farms.find(({ id }) => id === farmId),
     producer,
     farmOptions,
-    // Con una sola finca no hay a dónde volver: no se ofrece «‹ Fincas».
+    // Con una sola finca no hay qué elegir: no se ofrece el selector.
     canSwitchFarm: farms.length > 1,
-    choose: (id: string) => {
+    select: (id: string) => {
       if (userId) rememberLastFarm(userId, id);
       return state.openFarm(id);
     },

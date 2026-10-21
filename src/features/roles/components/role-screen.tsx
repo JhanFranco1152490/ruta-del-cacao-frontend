@@ -14,6 +14,7 @@ import { useRolePanel } from '../use-role-panel';
 import type { Role } from '../api';
 import { RolePanel } from './role-panel';
 import { RoleList } from './role-list';
+import { pageContainerClass } from '@/components/page-container';
 
 export function RoleScreen() {
   return (
@@ -55,7 +56,7 @@ function RoleWorkspace({
   const canCreate =
     manage && (!association || pickProducer || !!filters.producer);
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
         eyebrow="Administración"
         title="Roles y permisos"

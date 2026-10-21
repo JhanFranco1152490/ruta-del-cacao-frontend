@@ -6,6 +6,7 @@ import type { NavItem } from '@/types/navigation';
 
 import {
   NAV_ITEMS,
+  groupNavItems,
   homeNavItem,
   isActiveRoute,
   navItemForPath,
@@ -83,21 +84,41 @@ describe('isActiveRoute', () => {
 });
 
 describe('NAV_ITEMS', () => {
-  it('lists the domain sections and then administration', () => {
+  it('lists the sections grouped by task, with the producers first', () => {
     expect(NAV_ITEMS.map((item) => item.href)).toEqual([
       '/productores',
       '/fincas',
       '/parcelas',
-      '/variedades',
-      '/plagas-enfermedades',
       '/insumos',
       '/actividades',
       '/sanidad',
       '/cosechas',
       '/lotes',
       '/infraestructura',
-      '/roles',
+      '/variedades',
+      '/plagas-enfermedades',
       '/usuarios',
+      '/roles',
+    ]);
+  });
+
+  it('keeps the entries of a group together, so the menu groups in order', () => {
+    const groups = NAV_ITEMS.map((item) => item.group ?? null);
+
+    expect(groups).toEqual([
+      'admin',
+      'farm',
+      'farm',
+      'farm',
+      'agriculture',
+      'agriculture',
+      'postharvest',
+      'postharvest',
+      'postharvest',
+      'catalogs',
+      'catalogs',
+      'admin',
+      'admin',
     ]);
   });
 
@@ -130,12 +151,12 @@ describe('NAV_ITEMS', () => {
       NAV_ITEMS.filter((item) => item.needsConnection).map((item) => item.href),
     ).toEqual([
       '/productores',
-      '/variedades',
-      '/plagas-enfermedades',
       '/sanidad',
       '/lotes',
-      '/roles',
+      '/variedades',
+      '/plagas-enfermedades',
       '/usuarios',
+      '/roles',
     ]);
   });
 });
@@ -214,5 +235,50 @@ describe('homeNavItem', () => {
 
   it('has no start when the person can see no section', () => {
     expect(homeNavItem([office, field], [], true)).toBeUndefined();
+  });
+});
+
+describe('groupNavItems', () => {
+  const farm = (href: string): NavItem => ({ ...open, href, group: 'farm' });
+  const admin = (href: string): NavItem => ({ ...open, href, group: 'admin' });
+
+  it('keeps the loose entries on top, without a heading of their own', () => {
+    const { sections } = groupNavItems([open, farm('/a'), admin('/b')]);
+
+    expect(sections.map((section) => section.key)).toEqual([
+      null,
+      'farm',
+      'admin',
+    ]);
+  });
+
+  it('shows the headings when the person has two or more groups', () => {
+    expect(groupNavItems([farm('/a'), admin('/b')]).showHeadings).toBe(true);
+  });
+
+  it('leaves the menu flat when the person has only one group', () => {
+    const { showHeadings } = groupNavItems([open, farm('/a'), farm('/b')]);
+
+    expect(showHeadings).toBe(false);
+  });
+
+  it('has no groups for the loose entries alone', () => {
+    expect(groupNavItems([open]).showHeadings).toBe(false);
+  });
+
+  it('puts every entry of a group in the same section', () => {
+    const { sections } = groupNavItems([farm('/a'), admin('/b'), farm('/c')]);
+
+    expect(sections[0].items.map((item) => item.href)).toEqual(['/a', '/c']);
+  });
+
+  it('groups what visibleNavItems lets through, so a group without access is gone', () => {
+    const visible = visibleNavItems(
+      NAV_ITEMS,
+      [PERMISSIONS.FARMS_VIEW, PERMISSIONS.PLOTS_VIEW],
+      { ownProducer: true },
+    );
+
+    expect(groupNavItems(visible).sections.map((s) => s.key)).toEqual(['farm']);
   });
 });

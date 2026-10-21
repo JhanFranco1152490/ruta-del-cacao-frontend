@@ -25,6 +25,7 @@ import { FarmCardList } from './farm-card-list';
 import { FarmFiltersBar } from './farm-filters-bar';
 import { FarmCardActions } from './farm-card-actions';
 import { FarmsMap } from './farms-map';
+import { pageContainerClass } from '@/components/page-container';
 
 const isQueued = (farm: FarmListItem) =>
   farm.status === 'pending' || farm.status === 'error';
@@ -118,9 +119,8 @@ export function FarmListScreen() {
     );
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8">
+    <div className={pageContainerClass('wide')}>
       <PageHeader
-        compact
         eyebrow="Gestión de fincas"
         title={isAssociation ? 'Fincas' : 'Mis fincas'}
         description={
@@ -192,7 +192,7 @@ export function FarmListScreen() {
         {isLoading ? (
           <div
             aria-label="Cargando fincas"
-            className="grid gap-4 md:grid-cols-2"
+            className="grid grid-cols-1 gap-4 md:grid-cols-2"
             role="status"
           >
             <Skeleton className="h-40" />
