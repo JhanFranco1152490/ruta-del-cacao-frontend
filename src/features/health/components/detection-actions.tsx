@@ -1,7 +1,7 @@
 'use client';
 
 import { CalendarPlus, Check } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
@@ -21,11 +21,15 @@ export function DetectionActions({
   detection,
   monitoring,
   compact = false,
+  children,
 }: {
   detection: Detection;
   monitoring: AgriculturalActivity;
   // En una lista: botones más bajos.
   compact?: boolean;
+  // Más botones de la misma fila (p. ej. «Detalle» en el historial): salen al mismo nivel que los
+  // de las acciones y se acomodan juntos.
+  children?: ReactNode;
 }) {
   const { data: user } = useSession();
   const [open, setOpen] = useState<'scheduled' | 'done'>();
@@ -56,6 +60,7 @@ export function DetectionActions({
         </Button>
       )}
       {requested && <NoControlNeededDialog detection={detection} />}
+      {children}
       {open && (
         <ControlFormDialog
           detection={detection}

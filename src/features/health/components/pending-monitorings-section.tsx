@@ -6,26 +6,23 @@ import {
   CloudOff,
   TriangleAlert,
 } from 'lucide-react';
-import Link from 'next/link';
 
 import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { mayRecordFor } from '@/lib/activity-recorders';
 import { activityState } from '@/lib/activity-state';
-import { formatShortWeekdayDate, todayInBogota } from '@/lib/format/dates';
-import { PENDING_ACTIVITIES_PATH } from '@/lib/paths/activities';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { formatShortWeekdayDate } from '@/lib/format/dates';
 
 import { monitoringPath } from '../health-paths';
-import {
-  type PendingMonitoring,
-  usePendingMonitorings,
-} from '../pending-monitorings';
+import type { PendingMonitoring } from '../pending-monitorings';
 import { useQueuedMonitoring } from '../use-monitoring-queue';
 
-// Cuántos se muestran: lo que sigue está en el calendario, en su vista de pendientes.
-const MAX_SHOWN = 3;
+import {
+  LINKED_ROW_CLASS,
+  ROW_CLASS,
+  STRETCHED_LINK_CLASS,
+} from './pending-row-class';
 
 const daysText = (days: number) => `${days} ${days === 1 ? 'día' : 'días'}`;
 
@@ -66,7 +63,9 @@ function PendingMonitoringRow({
   const mayRecord = mayRecordFor(user, activity.assignee.id);
 
   return (
-    <li className="flex items-center justify-between gap-3">
+    <li
+      className={`${ROW_CLASS} ${mayRecord && !saved ? LINKED_ROW_CLASS : ''}`}
+    >
       <div className="min-w-0">
         <p className="font-bold">
           {activity.plot.code} · {activity.plot.farm.name}
@@ -93,7 +92,7 @@ function PendingMonitoringRow({
             className={buttonVariants({
               size: 'office',
               variant: 'action',
-              className: 'h-9 shrink-0 text-sm',
+              className: `h-9 shrink-0 text-sm ${STRETCHED_LINK_CLASS}`,
             })}
             href={monitoringPath(activity.id)}
           >
@@ -106,51 +105,26 @@ function PendingMonitoringRow({
   );
 }
 
-// Los monitoreos que todavía no tienen resultado, encima del historial: lo que le toca hacer hoy a
-// quien registra. Respeta la finca y la parcela de los filtros. Programarlos y ver todos los
-// pendientes sigue siendo del calendario. Se ve con el permiso de registrar.
+// Los monitoreos que todavía no tienen resultado: lo que le toca hacer hoy a quien registra, de
+// hoy hacia atrás. Programarlos y ver todos los pendientes sigue siendo del calendario.
 export function PendingMonitoringsSection({
-  producer,
-  farm,
-  plot,
+  rows,
+  today,
 }: {
-  producer: string | null;
-  farm: string | null;
-  plot: string | null;
+  rows: readonly PendingMonitoring[];
+  today: string;
 }) {
-  const { data: user } = useSession();
-  const today = todayInBogota();
-  const canRecord = hasPermission(user, PERMISSIONS.ACTIVITIES_COMPLETE);
-  const pending = usePendingMonitorings(user?.id, today, producer, {
-    enabled: canRecord,
-  });
-  const rows = (pending.data?.data ?? []).filter(
-    (activity) =>
-      (!farm || activity.plot.farm.id === farm) &&
-      (!plot || activity.plot.id === plot),
-  );
-  if (!canRecord || rows.length === 0) return null;
-
+  if (rows.length === 0) return null;
   return (
     <section
       aria-label="Monitoreos por registrar"
       className="space-y-3 rounded-[var(--radius-card)] bg-card p-4 shadow-card"
     >
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-sans text-base font-extrabold text-selva">
-          Por registrar ({rows.length})
-        </h2>
-        {rows.length > MAX_SHOWN && (
-          <Link
-            className="text-sm font-bold text-selva underline underline-offset-4"
-            href={PENDING_ACTIVITIES_PATH}
-          >
-            Ver todos ({rows.length})
-          </Link>
-        )}
-      </div>
+      <h2 className="font-sans text-base font-extrabold text-selva">
+        Por registrar ({rows.length})
+      </h2>
       <ul className="space-y-3">
-        {rows.slice(0, MAX_SHOWN).map((activity) => (
+        {rows.map((activity) => (
           <PendingMonitoringRow
             activity={activity}
             key={activity.id}

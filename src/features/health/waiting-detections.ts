@@ -74,6 +74,8 @@ export function useWaitingDetections(
   return {
     detections,
     isLoaded: query.isSuccess,
+    // Ya respondió o ya se sabe que no va a responder (sin conexión y sin copia, o con error).
+    isSettled: !query.isPending || query.fetchStatus === 'paused',
     savedAt: query.data?.savedAt,
   };
 }

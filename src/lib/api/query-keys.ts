@@ -130,6 +130,9 @@ export const queryKeys = {
     // Los monitoreos que siguen sin registrar hasta una fecha; con copia en el dispositivo.
     pendingMonitorings: (producer: string | null, through: string) =>
       ['health', 'pending-monitorings', producer ?? '', through] as const,
+    // Los monitoreos programados que todavía no llegan a su fecha; con copia en el dispositivo.
+    upcomingMonitorings: (producer: string | null, from: string) =>
+      ['health', 'upcoming-monitorings', producer ?? '', from] as const,
     // Las detecciones en que alguien pidió un control y nadie lo ha atendido; con copia en el
     // dispositivo. La cuenta técnica elige el productor; las demás cuentas pasan `null`.
     withoutControl: (producer: string | null) =>
