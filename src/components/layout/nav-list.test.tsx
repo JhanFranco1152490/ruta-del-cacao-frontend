@@ -165,4 +165,148 @@ describe('NavList', () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe('groups', () => {
+    const entry = (href: string, group?: NavItem['group']): NavItem => ({
+      href,
+      label: href.slice(1),
+      icon: Sprout,
+      group,
+    });
+    const few = [
+      entry('/productores', 'admin'),
+      entry('/fincas', 'farm'),
+      entry('/actividades', 'agriculture'),
+    ];
+    // Más de diez entradas: los grupos empiezan plegados.
+    const many = [
+      entry('/productores', 'admin'),
+      entry('/fincas', 'farm'),
+      entry('/parcelas', 'farm'),
+      entry('/insumos', 'farm'),
+      entry('/actividades', 'agriculture'),
+      entry('/sanidad', 'agriculture'),
+      entry('/cosechas', 'postharvest'),
+      entry('/lotes', 'postharvest'),
+      entry('/infraestructura', 'postharvest'),
+      entry('/usuarios', 'admin'),
+      entry('/roles', 'admin'),
+    ];
+
+    beforeEach(() => {
+      window.localStorage.clear();
+    });
+
+    it('names each group when the person has two or more', () => {
+      pathname.current = '/productores';
+      render(<NavList items={few} />);
+
+      expect(screen.getByRole('button', { name: 'Finca' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Manejo agrícola' }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'fincas' })).toBeInTheDocument();
+    });
+
+    it('leaves the menu flat when there is only one group', () => {
+      render(
+        <NavList
+          items={[entry('/fincas', 'farm'), entry('/parcelas', 'farm')]}
+        />,
+      );
+
+      expect(screen.queryByRole('button', { name: 'Finca' })).toBeNull();
+      expect(screen.getAllByRole('link')).toHaveLength(2);
+    });
+
+    it('keeps an entry without a group on top, outside any heading', () => {
+      pathname.current = '/fincas';
+      render(<NavList items={[entry('/inicio'), ...few]} />);
+
+      const links = screen.getAllByRole('link').map((l) => l.textContent);
+      expect(links[0]).toBe('inicio');
+    });
+
+    it('starts with every group open when the menu is short', () => {
+      pathname.current = '/productores';
+      render(<NavList items={few} />);
+
+      expect(screen.getByRole('button', { name: 'Finca' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+      expect(screen.getByRole('link', { name: 'actividades' })).toBeVisible();
+    });
+
+    it('keeps the groups open for ten entries, which fit', () => {
+      pathname.current = '/lotes';
+      render(<NavList items={many.slice(0, 10)} />);
+
+      expect(screen.getByRole('button', { name: 'Finca' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+    });
+
+    it('starts with the groups folded when the menu is long, except the current one', () => {
+      pathname.current = '/lotes';
+      render(<NavList items={many} />);
+
+      expect(
+        screen.getByRole('button', { name: 'Cosecha y poscosecha' }),
+      ).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('button', { name: 'Finca' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      expect(screen.queryByRole('link', { name: 'fincas' })).toBeNull();
+    });
+
+    it('opens a folded group on request, and folds it again', async () => {
+      pathname.current = '/lotes';
+      render(<NavList items={many} />);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Finca' }));
+      expect(screen.getByRole('link', { name: 'fincas' })).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Finca' }));
+      expect(screen.queryByRole('link', { name: 'fincas' })).toBeNull();
+    });
+
+    it('does not fold the group the person is in', async () => {
+      pathname.current = '/lotes';
+      render(<NavList items={many} />);
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Cosecha y poscosecha' }),
+      );
+
+      expect(screen.getByRole('link', { name: 'lotes' })).toBeInTheDocument();
+    });
+
+    it('remembers what the person chose on the next visit', async () => {
+      pathname.current = '/lotes';
+      const first = render(<NavList items={many} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Finca' }));
+      first.unmount();
+
+      render(<NavList items={many} />);
+
+      expect(screen.getByRole('button', { name: 'Finca' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+    });
+
+    it('follows the default when the stored choice is garbage', () => {
+      window.localStorage.setItem('nav-groups-folded', '{no es json');
+      pathname.current = '/lotes';
+      render(<NavList items={many} />);
+
+      expect(screen.getByRole('button', { name: 'Finca' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+  });
 });
