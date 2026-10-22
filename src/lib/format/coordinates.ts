@@ -26,3 +26,9 @@ export function parseCoordinates(coordinates: Coordinates): GeoPoint | null {
   if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
   return { latitude, longitude };
 }
+
+// La dirección que abre un punto en Google Maps (en el celular, en su aplicación si la tiene
+// instalada). Es la forma documentada de la API de URLs de Maps: busca las coordenadas y deja el
+// marcador, sin pedir ninguna llave.
+export const googleMapsUrl = ({ latitude, longitude }: GeoPoint) =>
+  `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;

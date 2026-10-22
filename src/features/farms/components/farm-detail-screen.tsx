@@ -1,7 +1,8 @@
 'use client';
 
+import { LocationLink } from '@/components/location-link';
 import { cn } from 'cn';
-import { MapPin, Package, Pencil } from 'lucide-react';
+import { Package, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -306,12 +307,7 @@ function DetailLayout({
           )}
           <Fact
             label="Ubicación"
-            value={
-              <span className="inline-flex items-center gap-1">
-                <MapPin aria-hidden="true" className="size-4 text-selva" />
-                {view.location.latitude}, {view.location.longitude}
-              </span>
-            }
+            value={<LocationLink coordinates={view.location} />}
           />
           {view.details && <Fact label="Detalles" value={view.details} />}
         </dl>
