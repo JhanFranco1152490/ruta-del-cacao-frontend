@@ -62,6 +62,19 @@ export function PlotOverviewFiltersBar({
         />
       }
     >
+      {pickProducer && (
+        <ProducerFilter
+          className="w-full sm:w-64"
+          hideLabel
+          label="Filtrar por productor"
+          onClear={() => void filters.setProducer(null)}
+          onSelect={(id) => void filters.setProducer(id)}
+          placeholder="Productor: nombre, documento o código"
+          producer={filters.producer ?? undefined}
+          selected={selectedProducer}
+          showTrigger={false}
+        />
+      )}
       {/* Quien trabaja en una sola finca no tiene otra que buscar. */}
       {!onlyFarmOf(user) && (
         <FarmFilter
@@ -76,19 +89,6 @@ export function PlotOverviewFiltersBar({
           producer={filters.producer ?? undefined}
           selectedLabel={filters.farm ? farm.data?.data.name : undefined}
           showProducer={pickProducer}
-        />
-      )}
-      {pickProducer && (
-        <ProducerFilter
-          className="w-full sm:w-64"
-          hideLabel
-          label="Filtrar por productor"
-          onClear={() => void filters.setProducer(null)}
-          onSelect={(id) => void filters.setProducer(id)}
-          placeholder="Productor: nombre, documento o código"
-          producer={filters.producer ?? undefined}
-          selected={selectedProducer}
-          showTrigger={false}
         />
       )}
       <SelectField

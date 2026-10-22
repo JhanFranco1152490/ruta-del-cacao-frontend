@@ -92,10 +92,13 @@ export function FarmPlotsSection({
   return (
     <section
       aria-labelledby="plots-heading"
-      className="mt-5 space-y-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card sm:p-5"
+      className="relative mt-5 space-y-4 overflow-hidden rounded-[var(--radius-card)] bg-card p-4 pt-6 shadow-card before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-[var(--hoja)] sm:p-5 sm:pt-6"
     >
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <h2 id="plots-heading" className="text-2xl text-selva">
+        <h2
+          id="plots-heading"
+          className="font-sans text-base font-extrabold text-selva"
+        >
           Parcelas de esta finca
           {known.plots ? ` · ${known.plots.length}` : ''}
         </h2>

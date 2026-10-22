@@ -77,6 +77,8 @@ export function HarvestDetailScreen({
         ]}
       />
       <PageHeader
+        tone="bosque"
+        accent="cobre"
         description={`${plotLabel(harvest.plot)} · ${farmLabel(harvest.plot.farm)}`}
         eyebrow="Cosecha"
         title={`${formatDecimal(harvest.green_weight_kg, 1)} kg en verde`}

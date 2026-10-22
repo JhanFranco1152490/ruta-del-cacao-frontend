@@ -100,6 +100,8 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
+        tone="selva"
+        accent="cobre"
         actions={formLot}
         description="Cada lote nace de una cosecha completa y lleva su código de trazabilidad hasta el grano seco."
         eyebrow="Poscosecha"

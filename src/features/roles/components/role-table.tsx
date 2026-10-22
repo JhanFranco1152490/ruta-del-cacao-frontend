@@ -33,14 +33,18 @@ export function RoleTable({
   showProducer?: boolean;
 }) {
   return (
-    <Table className={COMPACT_TABLE_CLASS}>
+    // Anchos fijos (desde `md`): con la vista por productor cada grupo es una tabla aparte, y sin
+    // ellos cada una repartía sus columnas distinto y no quedaban alineadas.
+    <Table className={`${COMPACT_TABLE_CLASS} md:table-fixed`}>
       <TableHeader>
         <TableRow>
           <TableHead>Nombre</TableHead>
-          <TableHead>Tipo</TableHead>
-          {showProducer && <TableHead>Productor</TableHead>}
-          <TableHead>Permisos</TableHead>
-          <TableHead>
+          <TableHead className="md:w-40">Tipo</TableHead>
+          {showProducer && (
+            <TableHead className="md:w-[30%]">Productor</TableHead>
+          )}
+          <TableHead className="md:w-28">Permisos</TableHead>
+          <TableHead className="md:w-32">
             <span className="sr-only">Acciones</span>
           </TableHead>
         </TableRow>

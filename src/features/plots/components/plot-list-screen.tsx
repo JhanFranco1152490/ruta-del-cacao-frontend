@@ -37,6 +37,8 @@ export function PlotListScreen(
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="selva"
+        accent="hoja"
         eyebrow="Gestión de parcelas"
         title={ownProducer ? 'Mis parcelas' : 'Parcelas'}
         description={

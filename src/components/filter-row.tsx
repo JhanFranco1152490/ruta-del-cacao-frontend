@@ -6,6 +6,15 @@ import { type ReactNode, useId, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
+// Todos los filtros de una lista miden lo mismo (40 px, texto de 14 px), sea un buscador, una lista
+// o una fecha: antes cada pantalla los dejaba de 40 o de 44 px. Lo usan también las barras de
+// filtros que no son una `FilterRow` (actividades, infraestructura).
+export const FILTER_CONTROLS_CLASS = [
+  '[&_[data-slot=input-group]]:h-10 [&_[data-slot=input-group-control]]:text-sm',
+  '[&_[data-slot=native-select]]:h-10 [&_[data-slot=native-select]]:text-sm',
+  '[&_[data-slot=input]]:h-10 [&_[data-slot=input]]:text-sm',
+].join(' ');
+
 // La fila de filtros de una lista, sin etiquetas visibles (cada campo dice qué es con su texto). En
 // pantallas anchas todo va en la misma fila; en celular queda el buscador y un botón «Filtros»,
 // con el número de filtros activos, que abre el resto: así la lista llega antes.
@@ -43,7 +52,9 @@ export function FilterRow({
   const moreId = useId();
 
   return (
-    <div className="flex flex-wrap items-start gap-3">
+    <div
+      className={cn('flex flex-wrap items-start gap-3', FILTER_CONTROLS_CLASS)}
+    >
       {leading && (
         <div className="max-sm:order-last max-sm:w-full">{leading}</div>
       )}

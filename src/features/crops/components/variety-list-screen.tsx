@@ -67,6 +67,8 @@ export function VarietyListScreen() {
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="claro"
+        accent="hoja"
         actions={
           catalog.isSuccess ? (
             <VarietyFormDialog catalog={varieties} />

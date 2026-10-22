@@ -7,7 +7,10 @@ import {
   StatusChangeDialog,
   type StatusChangeAction,
 } from '@/components/status-change-dialog';
-import { useConfirmAction } from '@/hooks/use-confirm-action';
+import {
+  type ConfirmControl,
+  useConfirmAction,
+} from '@/hooks/use-confirm-action';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import {
   DEPENDENT_FARM_NAMES,
@@ -113,9 +116,12 @@ function Dependents({ producerId }: { producerId: string }) {
 export function ProducerDeleteDialog({
   producer,
   onDone,
+  control,
 }: {
   producer: Producer;
   onDone: () => void;
+  // Si lo abre un menú de acciones, quien lo monta lleva su estado y el diálogo no trae botón.
+  control?: ConfirmControl;
 }) {
   const remove = useDeleteProducer();
   const changeStatus = useChangeProducerStatus();
@@ -156,6 +162,7 @@ export function ProducerDeleteDialog({
             'No fue posible desactivar el productor. Inténtalo nuevamente.',
           )
         : deleteErrorMessage(error),
+    control,
   );
 
   const action = offerDeactivate ? deactivateAction(name) : deleteAction(name);
@@ -170,7 +177,7 @@ export function ProducerDeleteDialog({
         // Al cerrar se vuelve a ofrecer eliminar: el siguiente intento consulta de nuevo.
         if (!open) setHasRecords(false);
       }}
-      trigger={deleteAction(name)}
+      trigger={control ? undefined : deleteAction(name)}
     >
       {dialog.open && !hasRecords && <Dependents producerId={producer.id} />}
     </StatusChangeDialog>

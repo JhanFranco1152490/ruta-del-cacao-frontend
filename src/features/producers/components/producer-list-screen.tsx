@@ -39,6 +39,8 @@ export function ProducerListScreen() {
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="claro"
+        accent="cobre"
         eyebrow="Administración"
         title="Productores asociados"
         description="Consulta y administra los expedientes de productores de la asociación."
