@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-
+import { KeyValue } from '@/components/page-blocks/section-card';
 import { EditorLink } from '@/components/editor-link';
 
 import { formatDecimal } from '@/lib/format/decimal';
@@ -7,15 +6,6 @@ import { formatLongDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
 
 import type { Lot } from '../api';
-
-function Fact({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="space-y-0.5">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="font-bold">{children}</dd>
-    </div>
-  );
-}
 
 const linkOrText = (href: string | undefined, text: string) =>
   href ? (
@@ -45,26 +35,26 @@ export function LotOrigin({
         Origen
       </h2>
       <dl className="grid grid-cols-1 gap-4 rounded-(--radius) border bg-card p-5 sm:grid-cols-2">
-        <Fact label="Cosecha">
+        <KeyValue label="Cosecha">
           {linkOrText(harvestHref, formatLongDate(harvest.harvest_date))}
-        </Fact>
-        <Fact label="Peso en verde">
+        </KeyValue>
+        <KeyValue label="Peso en verde">
           {formatDecimal(lot.green_weight_kg, 1)} kg
-        </Fact>
-        <Fact label="Parcela">{plotLabel(harvest.plot)}</Fact>
-        <Fact label="Finca">{farmLabel(harvest.plot.farm)}</Fact>
-        <Fact label="Productor">{lot.producer.member_code}</Fact>
-        <Fact label="Variedad">{harvest.variety.name}</Fact>
-        <Fact label="Recolector">
+        </KeyValue>
+        <KeyValue label="Parcela">{plotLabel(harvest.plot)}</KeyValue>
+        <KeyValue label="Finca">{farmLabel(harvest.plot.farm)}</KeyValue>
+        <KeyValue label="Productor">{lot.producer.member_code}</KeyValue>
+        <KeyValue label="Variedad">{harvest.variety.name}</KeyValue>
+        <KeyValue label="Recolector">
           {harvest.collector.full_name}
           {!harvest.collector.is_active && ' · Cuenta inactiva'}
-        </Fact>
-        <Fact label="Ficha de la parcela">
+        </KeyValue>
+        <KeyValue label="Ficha de la parcela">
           {linkOrText(
             historyHref,
             `Versión ${harvest.characterization_version}`,
           )}
-        </Fact>
+        </KeyValue>
       </dl>
     </section>
   );
