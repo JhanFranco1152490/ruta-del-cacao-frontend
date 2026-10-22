@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { InlineError } from '@/components/form-message';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import type { SessionUser } from '@/hooks/use-session';
 import { fullName } from '@/lib/format/person-name';
@@ -105,9 +106,9 @@ export function AccountDialog({
                 </p>
               )}
               {reset.isError && (
-                <p role="alert" className="text-sm font-bold text-err">
+                <InlineError>
                   No fue posible enviar el enlace. Inténtalo nuevamente.
-                </p>
+                </InlineError>
               )}
             </>
           )}

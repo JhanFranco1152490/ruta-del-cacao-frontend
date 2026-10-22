@@ -1,12 +1,16 @@
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
+import {
+  isRetryableStatus,
+  rejectionConflict,
+  type SyncAdapter,
+  VALIDATION_ERROR_CODE,
+} from '@/lib/offline/adapters';
 
 import { HARVEST_ERROR, postHarvest } from './api';
 import { HARVEST_RESOURCE, type HarvestPayload } from './harvest-queue';
 
 export const HARVEST_PLOT_GONE_CODE = 'harvest_plot_gone';
-const VALIDATION_ERROR_CODE = 'validation_error';
 
 export const HARVEST_PLOT_GONE_MESSAGE = 'Esta parcela ya no está disponible.';
 export const VARIETY_NOT_IN_PLOT_MESSAGE =
@@ -60,13 +64,6 @@ export const harvestSyncAdapter: SyncAdapter = {
     if (error.code === HARVEST_ERROR.idConflict) {
       return { code: error.code, message: HARVEST_ALREADY_SENT_MESSAGE };
     }
-    return {
-      code: error.code,
-      message: error.message,
-      data:
-        error.code === VALIDATION_ERROR_CODE
-          ? { fields: error.fields }
-          : undefined,
-    };
+    return rejectionConflict(error);
   },
 };

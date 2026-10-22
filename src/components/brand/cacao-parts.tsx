@@ -3,19 +3,21 @@
 // y tallos en `--mazorca-negra`, y una sombra suave en el piso.
 export const LEAF = 'M0 0 C9 -9 27 -11 42 0 C27 11 9 9 0 0Z';
 
+type LeafProps = {
+  x: number;
+  y: number;
+  angle: number;
+  scale?: number;
+  tone?: string;
+};
+
 export function Leaf({
   x,
   y,
   angle,
   scale = 1,
   tone = 'var(--hoja)',
-}: {
-  x: number;
-  y: number;
-  angle: number;
-  scale?: number;
-  tone?: string;
-}) {
+}: LeafProps) {
   return (
     <g transform={`translate(${x} ${y}) rotate(${angle}) scale(${scale})`}>
       <path d={LEAF} fill={tone} />
@@ -26,6 +28,32 @@ export function Leaf({
         strokeWidth="1"
       />
     </g>
+  );
+}
+
+// Un brote: el tallo (`stem`, un trazo de abajo hacia arriba) y sus hojas.
+export function Sprout({
+  stem,
+  width = 4,
+  leaves,
+}: {
+  stem: string;
+  width?: number;
+  leaves: readonly LeafProps[];
+}) {
+  return (
+    <>
+      <path
+        d={stem}
+        fill="none"
+        stroke="var(--mazorca-negra)"
+        strokeLinecap="round"
+        strokeWidth={width}
+      />
+      {leaves.map((leaf) => (
+        <Leaf key={`${leaf.x},${leaf.y},${leaf.angle}`} {...leaf} />
+      ))}
+    </>
   );
 }
 

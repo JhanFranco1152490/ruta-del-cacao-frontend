@@ -9,11 +9,10 @@ import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
-import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { getErrorMessage, isApiError, isNotFound } from '@/lib/api/errors';
 import { todayInBogota } from '@/lib/format/dates';
 
 import {
@@ -29,6 +28,8 @@ import { harvestToFormValues, toHarvestUpdate } from '../harvest-requests';
 import { useHarvestSources } from '../use-harvest-sources';
 import { HarvestForm } from './harvest-form';
 import { pageContainerClass } from '@/components/page-container';
+import { FormMessage } from '@/components/form-message';
+import { LoadingBlock } from '@/components/loading-block';
 
 const STALE_MESSAGE =
   'Otra persona cambió esta cosecha. Revisa los datos actuales antes de guardar.';
@@ -36,14 +37,11 @@ const SAVE_FAILED =
   'No fue posible corregir la cosecha. Revisa tu conexión e inténtalo nuevamente.';
 
 const Loading = () => (
-  <div
-    aria-label="Cargando cosecha"
+  <LoadingBlock
     className={pageContainerClass('narrow', 'space-y-6')}
-    role="status"
-  >
-    <Skeleton className="h-12 w-2/3" />
-    <Skeleton className="h-96" />
-  </div>
+    label="Cargando cosecha"
+    shapes={['h-12 w-2/3', 'h-96']}
+  />
 );
 
 // Corregir una cosecha que ya está en el servidor y todavía no forma un lote: un error de
@@ -74,7 +72,7 @@ export function HarvestCorrectionScreen({ harvestId }: { harvestId: string }) {
       />
     );
   }
-  if (read.isError && isApiError(read.error) && read.error.status === 404) {
+  if (isNotFound(read.error)) {
     return <PageNotice title="Esta cosecha ya no existe." />;
   }
   if (!harvest || sources.status !== 'ready') return <Loading />;
@@ -109,14 +107,7 @@ export function HarvestCorrectionScreen({ harvestId }: { harvestId: string }) {
         eyebrow="Producción"
         title="Corregir cosecha"
       />
-      {message && (
-        <p
-          className="mt-6 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-          role="alert"
-        >
-          {message}
-        </p>
-      )}
+      {message && <FormMessage className="mt-6">{message}</FormMessage>}
       <div className="mt-6">
         <HarvestForm
           collectors={collectors.data?.data}

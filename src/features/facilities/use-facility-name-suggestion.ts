@@ -4,9 +4,9 @@ import { useEffect, useRef } from 'react';
 import { useWatch } from 'react-hook-form';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { PostharvestFacility } from '../api';
-import type { FacilityFormInput, FacilityFormValues } from '../facility-form';
-import { suggestFacilityName } from '../facility-name';
+import type { PostharvestFacility } from './api';
+import type { FacilityFormInput, FacilityFormValues } from './facility-form';
+import { suggestFacilityName } from './facility-name';
 
 // Al registrar, propone el nombre (C-01, M-01) según el tipo y la finca elegidos, y lo cambia si
 // la persona cambia el tipo o la finca. En cuanto escribe uno propio, o lo borra, deja de tocarlo.

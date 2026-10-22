@@ -8,8 +8,8 @@ import {
 } from '@/components/page-blocks/detail-hero';
 import { pageContainerClass } from '@/components/page-container';
 import { SegmentedControl } from '@/components/segmented-control';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
+import { LoadingBlock } from '@/components/loading-block';
 
 import { historyQuery } from '../history-filters';
 import { pestFilterOptions } from '../history-summary';
@@ -99,9 +99,7 @@ export function HealthScreen() {
           plotOptions={choices.plotOptions}
         />
         {view === undefined ? (
-          <div aria-label="Cargando" role="status">
-            <Skeleton className="h-48" />
-          </div>
+          <LoadingBlock label="Cargando" shapes={['h-48']} />
         ) : view === 'pendiente' ? (
           <PendingTab items={items} producer={filters.producer} />
         ) : (

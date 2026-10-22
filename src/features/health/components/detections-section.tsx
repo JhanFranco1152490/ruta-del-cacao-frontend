@@ -11,6 +11,7 @@ import {
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FormSection } from '@/components/form-section';
 import { Button } from '@/components/ui/button';
+import { InlineError } from '@/components/form-message';
 
 import { emptyDetection, type MonitoringFormInput } from '../monitoring-form';
 import type { MonitoringFormValues } from '../monitoring-schema';
@@ -67,11 +68,7 @@ export function DetectionsSection({
             ))}
           </ul>
         )}
-        {listError && (
-          <p className="text-sm font-bold text-err" role="alert">
-            {listError}
-          </p>
-        )}
+        {listError && <InlineError>{listError}</InlineError>}
         <Button
           className={CAPTURE_BUTTON_CLASS}
           disabled={disabled}

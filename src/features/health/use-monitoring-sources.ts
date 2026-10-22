@@ -2,13 +2,13 @@
 
 import { useSession } from '@/hooks/use-session';
 import { useActivity } from '@/lib/api/activity-read';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import type { components } from '@/lib/api/schema';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
-import type { QueuedMonitoring } from '../monitoring-queue';
-import { type PestDisease, useActivePestsDiseases } from '../pest-api';
-import { useQueuedMonitoring } from '../use-monitoring-queue';
+import type { QueuedMonitoring } from './monitoring-queue';
+import { type PestDisease, useActivePestsDiseases } from './pest-api';
+import { useQueuedMonitoring } from './use-monitoring-queue';
 import type { ControlChoices } from './control-choices';
 import { useControlChoicesSource } from './use-control-choices-source';
 
@@ -47,7 +47,7 @@ export function useMonitoringSources(activityId: string): MonitoringSources {
   });
 
   if (isPausedWithoutData(activity) || activity.isError) {
-    return isApiError(activity.error) && activity.error.status === 404
+    return isNotFound(activity.error)
       ? { status: 'missing' }
       : { status: 'unreachable' };
   }

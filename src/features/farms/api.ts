@@ -11,6 +11,7 @@ import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { type Farm, fetchFarm } from '@/lib/api/farm-detail';
 import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
+import { apiPath } from '@/lib/api/path';
 
 // La lectura de una finca vive en `lib/api/farm-detail.ts`: la comparte el dominio de parcelas.
 export { type Farm, fetchFarm, useFarmDetail } from '@/lib/api/farm-detail';
@@ -30,13 +31,13 @@ export type FarmQuery = {
 };
 
 function listPath(query: FarmQuery) {
-  const params = new URLSearchParams();
-  if (query.search) params.set('search', query.search);
-  if (query.municipality) params.set('municipality', query.municipality);
-  if (query.producer) params.set('producer', query.producer);
-  params.set('page', String(query.page ?? 1));
-  params.set('page_size', String(PAGE_SIZE));
-  return `/api/farms?${params}`;
+  return apiPath('/api/farms', {
+    search: query.search,
+    municipality: query.municipality,
+    producer: query.producer,
+    page: query.page ?? 1,
+    page_size: PAGE_SIZE,
+  });
 }
 
 export const fetchFarms = (query: FarmQuery, signal?: AbortSignal) =>

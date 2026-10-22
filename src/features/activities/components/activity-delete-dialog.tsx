@@ -4,7 +4,7 @@ import { Trash2 } from 'lucide-react';
 
 import { StatusChangeDialog } from '@/components/status-change-dialog';
 import { useConfirmAction } from '@/hooks/use-confirm-action';
-import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { getErrorMessage, isApiError, isNotFound } from '@/lib/api/errors';
 import { formatWeekdayDate } from '@/lib/format/dates';
 
 import { activityTitle } from '../activity-labels';
@@ -58,7 +58,7 @@ export function ActivityDeleteDialog({
     } catch (error) {
       if (!isFinal(error)) throw error;
       onRejected(
-        isApiError(error) && error.status === 404
+        isNotFound(error)
           ? ACTIVITY_GONE_MESSAGE
           : getErrorMessage(error, DELETE_FAILED_MESSAGE),
       );

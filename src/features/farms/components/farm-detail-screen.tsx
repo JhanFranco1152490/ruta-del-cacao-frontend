@@ -21,6 +21,7 @@ import { FarmStatusBadge } from './farm-status-badge';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
 import { farmLabel } from '@/lib/format/place-label';
 import { pageContainerClass } from '@/components/page-container';
+import { syncFailureText } from '@/components/sync-rejected-notice';
 
 // Lo que una sección de la pantalla necesita de la finca: datos simples y no la respuesta de la
 // API, para que otros dominios (las parcelas) no dependan de su forma.
@@ -152,7 +153,7 @@ function QueuedFarmDetail({
       }
       notice={
         failed
-          ? `No se pudo sincronizar${farm.errorMessage ? `: ${farm.errorMessage}` : '.'}`
+          ? syncFailureText(farm.errorMessage)
           : existsOnServer
             ? 'Esta finca tiene cambios en este dispositivo que todavía no se envían.'
             : 'Esta finca está solo en este dispositivo y se enviará cuando haya conexión. Puedes registrar sus parcelas ahora: se enviarán después de la finca.'

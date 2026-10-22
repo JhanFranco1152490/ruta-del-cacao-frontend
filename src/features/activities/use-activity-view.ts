@@ -10,6 +10,7 @@ import {
   ACTIVITY_VIEWS,
   type ActivityView,
   initialActivityView,
+  isPeriodView,
 } from './activity-view';
 import type { useMonthParam } from '@/hooks/use-month-param';
 import { parseAsIsoDate } from '@/lib/navigation/iso-date-parser';
@@ -55,6 +56,11 @@ export function useActivityView(period: ActivityPeriod) {
     return setSelectedView(next);
   };
 
+  const goPreviousWeek = () => goToWeek(shiftDays(week, -7));
+  const goNextWeek = () => goToWeek(shiftDays(week, 7));
+  const goThisWeek = () => setSelectedWeek(null);
+  const inWeek = view === 'semana';
+
   return {
     view,
     setView,
@@ -63,8 +69,22 @@ export function useActivityView(period: ActivityPeriod) {
     pendingDays,
     setPendingDays: (days: number) =>
       setSelectedDays(days === DEFAULT_PENDING_DAYS ? null : days),
-    goPreviousWeek: () => goToWeek(shiftDays(week, -7)),
-    goNextWeek: () => goToWeek(shiftDays(week, 7)),
-    goThisWeek: () => setSelectedWeek(null),
+    goPreviousWeek,
+    goNextWeek,
+    goThisWeek,
+    // Moverse por el periodo de la vista: semanas en Semana y meses en las demás. `goToday` falta
+    // cuando ya se está en el periodo de hoy o la vista no tiene periodo.
+    periodNavigation: {
+      key: inWeek ? week : period.month,
+      previous: inWeek ? goPreviousWeek : period.goPrevious,
+      next: inWeek ? goNextWeek : period.goNext,
+      goToday: inWeek
+        ? week === thisWeek
+          ? undefined
+          : goThisWeek
+        : isPeriodView(view) && !period.isCurrentMonth
+          ? period.goToday
+          : undefined,
+    },
   };
 }

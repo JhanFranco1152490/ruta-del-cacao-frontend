@@ -1,6 +1,11 @@
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
+import {
+  isRetryableStatus,
+  rejectionConflict,
+  type SyncAdapter,
+  VALIDATION_ERROR_CODE,
+} from '@/lib/offline/adapters';
 
 import { HEALTH_ERROR, postMonitoringResult } from './monitoring-api';
 import {
@@ -9,7 +14,6 @@ import {
 } from './monitoring-queue';
 
 export const MONITORING_DELETED_CODE = 'monitoring_deleted';
-const VALIDATION_ERROR_CODE = 'validation_error';
 
 export const MONITORING_DELETED_MESSAGE = 'Este monitoreo ya no existe.';
 export const MONITORING_ALREADY_DONE_MESSAGE =
@@ -75,13 +79,6 @@ export const monitoringSyncAdapter: SyncAdapter = {
         data: { input_ids: error.body.input_ids ?? [] },
       };
     }
-    return {
-      code: error.code,
-      message: error.message,
-      data:
-        error.code === VALIDATION_ERROR_CODE
-          ? { fields: error.fields }
-          : undefined,
-    };
+    return rejectionConflict(error);
   },
 };

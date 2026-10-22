@@ -43,6 +43,23 @@ export const emptyControlForm = (
 
 const methodValues = CONTROL_METHOD_OPTIONS.map(({ value }) => value);
 
+// Los campos de un control, el del formulario propio y el de cada detección de la planilla: qué se
+// hace, con qué insumos, cuándo y quién.
+export const CONTROL_WORK_FIELDS = {
+  id: z.string(),
+  method: z.enum(['', ...methodValues] as ['', ...ControlMethod[]]),
+  method_description: z.string().trim(),
+  inputs: z.array(
+    z.object({
+      input_id: z.string(),
+      quantity: z.string().transform(normalizeQuantity),
+    }),
+  ),
+  scheduled_date: z.string().trim(),
+  assignee_id: z.string(),
+  planned_input_id: z.string(),
+};
+
 // `today` es la fecha de Bogotá; `monitoringDate`, el día en que se hizo el monitoreo: un control
 // hecho no puede ser anterior a lo que atiende.
 export const createControlSchema = ({
@@ -54,20 +71,9 @@ export const createControlSchema = ({
 }) =>
   z
     .object({
-      id: z.string(),
+      ...CONTROL_WORK_FIELDS,
       mode: z.enum(['scheduled', 'done']),
       done_date: z.string().trim(),
-      scheduled_date: z.string().trim(),
-      assignee_id: z.string(),
-      method: z.enum(['', ...methodValues] as ['', ...ControlMethod[]]),
-      method_description: z.string().trim(),
-      inputs: z.array(
-        z.object({
-          input_id: z.string(),
-          quantity: z.string().transform(normalizeQuantity),
-        }),
-      ),
-      planned_input_id: z.string(),
     })
     .superRefine((values, context) => {
       const issues = [...controlWorkIssues(values)];

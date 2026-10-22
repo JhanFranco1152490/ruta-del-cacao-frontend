@@ -1,7 +1,7 @@
 import {
   Ground,
   IllustrationFrame,
-  Leaf,
+  Sprout,
 } from '@/components/brand/cacao-parts';
 
 const DAYS = Array.from({ length: 12 }, (_, index) => ({
@@ -45,16 +45,15 @@ export function CalendarSprout({ className }: { className?: string }) {
           y={y}
         />
       ))}
-      <path
-        d="M128 130 C127 118 129 106 126 92"
-        stroke="var(--mazorca-negra)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        fill="none"
+      <Sprout
+        stem="M128 130 C127 118 129 106 126 92"
+        width={3}
+        leaves={[
+          { x: 127, y: 104, angle: -150, scale: 0.62 },
+          { x: 127, y: 96, angle: -40, scale: 0.62, tone: 'var(--selva-2)' },
+          { x: 126, y: 92, angle: -110, scale: 0.5 },
+        ]}
       />
-      <Leaf angle={-150} scale={0.62} x={127} y={104} />
-      <Leaf angle={-40} scale={0.62} tone="var(--selva-2)" x={127} y={96} />
-      <Leaf angle={-110} scale={0.5} x={126} y={92} />
     </IllustrationFrame>
   );
 }

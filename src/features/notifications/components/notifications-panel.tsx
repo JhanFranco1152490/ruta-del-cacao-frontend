@@ -13,10 +13,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { todayInBogota } from '@/lib/format/dates';
+import { LoadingBlock } from '@/components/loading-block';
 
 import { useNotifications, useUnreadCount } from '../api';
 import { describeNotification } from '../notification-text';
@@ -71,9 +71,7 @@ export function NotificationsPanel({ onClose }: { onClose: () => void }) {
         </p>
       )}
       {notifications.isPending && (
-        <div aria-label="Cargando notificaciones" role="status">
-          <Skeleton className="h-48" />
-        </div>
+        <LoadingBlock label="Cargando notificaciones" shapes={['h-48']} />
       )}
       {notifications.isError && offline && (
         <p className="text-muted-foreground">

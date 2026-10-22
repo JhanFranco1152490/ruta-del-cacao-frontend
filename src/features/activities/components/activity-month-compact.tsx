@@ -1,12 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
-
-import { formatMonthYear, monthGridDates } from '@/lib/format/dates';
+import { formatMonthYear } from '@/lib/format/dates';
 
 import { canScheduleOn } from '../activity-actions';
 import type { ActivityDay, ActivityOfDay } from '../activity-days';
 import { type DayKeyboard, useGridNavigation } from '../use-grid-navigation';
+import { useMonthDays } from '../use-month-days';
 import { ActivityCompactCell } from './activity-compact-cell';
 import { ActivityDayAgenda } from './activity-day-agenda';
 
@@ -45,11 +44,7 @@ export function ActivityMonthCompact({
   // Pasar de mes con el teclado al salir por una flecha, y dónde queda el foco.
   keyboard?: DayKeyboard;
 }) {
-  const weeks = useMemo(() => monthGridDates(month), [month]);
-  const byDate = useMemo(
-    () => new Map(days.map((day) => [day.date, day.activities])),
-    [days],
-  );
+  const { weeks, byDate } = useMonthDays(month, days);
   const navigation = useGridNavigation({
     ...keyboard,
     month,

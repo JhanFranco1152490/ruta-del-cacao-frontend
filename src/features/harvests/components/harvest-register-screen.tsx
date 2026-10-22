@@ -8,7 +8,6 @@ import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
@@ -23,6 +22,8 @@ import { useHarvestSources } from '../use-harvest-sources';
 import { useQueuedHarvest } from '../use-harvest-queue';
 import { HarvestCapture } from './harvest-capture';
 import { pageContainerClass } from '@/components/page-container';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
+import { LoadingBlock } from '@/components/loading-block';
 
 // La pantalla de campo donde se registra una recolección. Todo se guarda primero en el
 // dispositivo: con conexión se envía de inmediato y, sin ella, cuando vuelva. `plotId` llega al
@@ -60,14 +61,11 @@ export function HarvestRegisterScreen({
   }
   if (sources.status === 'loading' || (correcting && queued.isPending)) {
     return (
-      <div
-        aria-label="Cargando parcelas"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-6')}
-        role="status"
-      >
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-96" />
-      </div>
+        label="Cargando parcelas"
+        shapes={['h-12 w-2/3', 'h-96']}
+      />
     );
   }
   const rejected = correcting ? (queued.data ?? undefined) : undefined;
@@ -112,15 +110,7 @@ export function HarvestRegisterScreen({
           <OfflineBanner status={sync.status} />
         </div>
       )}
-      {rejected && (
-        <p
-          className="mt-6 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-          role="alert"
-        >
-          No se pudo sincronizar
-          {rejected.errorMessage ? `: ${rejected.errorMessage}` : '.'}
-        </p>
-      )}
+      {rejected && <SyncRejectedNotice errorMessage={rejected.errorMessage} />}
       {askedPlot?.disabled && (
         <div
           className="mt-6 space-y-2 rounded-(--radius) bg-warn-bg px-4 py-3"

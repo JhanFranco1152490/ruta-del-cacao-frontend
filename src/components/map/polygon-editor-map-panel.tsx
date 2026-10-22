@@ -3,8 +3,6 @@
 import { cn } from 'cn';
 import { useState } from 'react';
 
-import { ErrorState } from '@/components/error-state';
-
 import type { BaseLayerKind } from './base-layers';
 import { MapFrame, MapHiddenBar } from './map-frame';
 import type {
@@ -12,7 +10,7 @@ import type {
   MapFocusTarget,
   PolygonEditorMapProviderProps,
 } from './map-provider';
-import { MapSkeleton } from './map-states';
+import { mapPlaceholder } from './map-states';
 import { useMapProvider } from './use-map-provider';
 
 type PanelProps = Omit<
@@ -44,21 +42,13 @@ export function PolygonEditorMapPanel({
   const [focus, setFocus] = useState<{ target: MapFocusTarget }>();
   const [visible, setVisible] = useState(true);
 
-  if (map.isLoading) {
-    return <MapSkeleton className={cn('h-80', frameClassName)} />;
-  }
-
-  if (!map.Provider) {
-    return (
-      <ErrorState
-        message="No fue posible cargar el mapa. Tus datos y vértices se conservan: puedes capturar vértices con el GPS y reintentar el mapa."
-        onRetry={() => {
-          map.retry();
-          onRetry?.();
-        }}
-      />
-    );
-  }
+  const placeholder = mapPlaceholder(map, {
+    className: cn('h-80', frameClassName),
+    failureMessage:
+      'No fue posible cargar el mapa. Tus datos y vértices se conservan: puedes capturar vértices con el GPS y reintentar el mapa.',
+    onRetry,
+  });
+  if (placeholder || !map.Provider) return placeholder;
 
   const { Provider } = map;
 

@@ -5,6 +5,7 @@ import { type ReactNode, useState } from 'react';
 
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { buttonVariants } from '@/components/ui/button';
+import { FormMessage } from '@/components/form-message';
 import { useSession } from '@/hooks/use-session';
 
 import { useHarvestCollectors } from '../api';
@@ -146,14 +147,7 @@ export function HarvestCapture({
 
   return (
     <div className="space-y-4">
-      {save.isError && (
-        <p
-          className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-          role="alert"
-        >
-          {SAVE_FAILED}
-        </p>
-      )}
+      {save.isError && <FormMessage>{SAVE_FAILED}</FormMessage>}
       <HarvestForm
         blockedMessage={blockedMessage}
         collectors={collectors.data?.data}

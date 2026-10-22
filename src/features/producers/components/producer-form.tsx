@@ -27,6 +27,7 @@ import {
 import { useReturnPath } from '@/hooks/use-return-path';
 import { useProducerSave } from '../use-producer-save';
 import { pageContainerClass } from '@/components/page-container';
+import { FormMessage } from '@/components/form-message';
 
 export function ProducerForm({
   producer: initialProducer,
@@ -168,14 +169,7 @@ export function ProducerForm({
             </div>
           </FormSection>
 
-          {generalError && (
-            <p
-              className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-              role="alert"
-            >
-              {generalError}
-            </p>
-          )}
+          {generalError && <FormMessage>{generalError}</FormMessage>}
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link

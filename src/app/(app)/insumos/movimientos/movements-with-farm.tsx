@@ -3,10 +3,10 @@
 import { useSearchParams } from 'next/navigation';
 
 import { ErrorState } from '@/components/error-state';
-import { Skeleton } from '@/components/ui/skeleton';
 import { InputMovementsScreen } from '@/features/inputs/components/input-movements-screen';
 import { useSession } from '@/hooks/use-session';
 import { useFarmDetail } from '@/lib/api/farm-detail';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Aquí se juntan los dominios: los insumos no leen las fincas, así que la página les pasa la finca
 // de la URL.
@@ -49,11 +49,7 @@ function MovementsOfFarm({
     );
   }
   if (!farm.data) {
-    return (
-      <div aria-label="Cargando" className="p-8" role="status">
-        <Skeleton className="h-40" />
-      </div>
-    );
+    return <LoadingBlock className="p-8" label="Cargando" shapes={['h-40']} />;
   }
   const { id, name, is_active } = farm.data.data;
   return (

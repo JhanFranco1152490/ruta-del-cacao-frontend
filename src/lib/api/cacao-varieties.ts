@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from './client';
 import { queryKeys } from './query-keys';
 import type { components, operations } from './schema';
+import { apiPath } from '@/lib/api/path';
 
 type Schemas = components['schemas'];
 export type CacaoVariety = Schemas['CacaoVariety'];
@@ -15,13 +16,11 @@ export async function fetchCacaoVarieties(
   query: CacaoVarietyQuery = {},
   signal?: AbortSignal,
 ): Promise<CacaoVariety[]> {
-  const params = new URLSearchParams();
-  if (query.is_active !== undefined)
-    params.set('is_active', String(query.is_active));
-  if (query.search) params.set('search', query.search);
-  const suffix = params.size ? `?${params}` : '';
   const { results } = await apiFetch<Schemas['CacaoVarietyList']>(
-    `/api/cacao-varieties${suffix}`,
+    apiPath('/api/cacao-varieties', {
+      is_active: query.is_active,
+      search: query.search,
+    }),
     { signal },
   );
   return results;

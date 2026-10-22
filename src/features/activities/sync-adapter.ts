@@ -1,6 +1,11 @@
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
-import { isRetryableStatus, type SyncAdapter } from '@/lib/offline/adapters';
+import {
+  isRetryableStatus,
+  rejectionConflict,
+  type SyncAdapter,
+  VALIDATION_ERROR_CODE,
+} from '@/lib/offline/adapters';
 
 import { ACTIVITY_ERROR, postCompletion } from './api';
 import {
@@ -10,7 +15,6 @@ import {
 
 export const COMPLETION_ACTIVITY_DELETED_CODE = 'activity_deleted';
 export const COMPLETION_INPUT_INACTIVE_CODE = 'input_inactive';
-const VALIDATION_ERROR_CODE = 'validation_error';
 
 export const COMPLETION_ACTIVITY_DELETED_MESSAGE =
   'Esta actividad ya no existe.';
@@ -65,13 +69,6 @@ export const completionSyncAdapter: SyncAdapter = {
         data: { input_ids: error.body.input_ids ?? [] },
       };
     }
-    return {
-      code: error.code,
-      message: error.message,
-      data:
-        error.code === VALIDATION_ERROR_CODE
-          ? { fields: error.fields }
-          : undefined,
-    };
+    return rejectionConflict(error);
   },
 };
