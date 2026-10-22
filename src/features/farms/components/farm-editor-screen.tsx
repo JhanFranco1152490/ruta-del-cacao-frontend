@@ -23,12 +23,14 @@ import {
   useQueuedFarm,
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
-import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
+import { FarmUnavailable } from './farm-screen-states';
 import { FarmStaleVersionSummary } from './farm-stale-version-summary';
 import { pageContainerClass } from '@/components/page-container';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
+import { LoadingBlock } from '@/components/loading-block';
 
 // El formulario se inicializa una sola vez con la finca, así que esa lectura tiene que ser del
 // momento en que se abre: se pide siempre al montar (una copia guardada de una visita anterior
@@ -198,36 +200,10 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
 
 function EditorSkeleton() {
   return (
-    <div
-      aria-label="Cargando finca"
+    <LoadingBlock
       className={pageContainerClass('narrow', 'space-y-6')}
-      role="status"
-    >
-      <Skeleton className="h-12 w-2/3" />
-      <Skeleton className="h-96" />
-    </div>
-  );
-}
-
-function FarmUnavailable({ message }: { message: string }) {
-  return (
-    <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-8">
-      <CircleOff aria-hidden="true" className="mx-auto size-10 text-err" />
-      <h1 className="mt-4 text-3xl text-selva">
-        No fue posible abrir la finca
-      </h1>
-      <p className="mt-3 text-muted-foreground" role="alert">
-        {message}
-      </p>
-      <Link
-        className={buttonVariants({
-          size: 'office',
-          className: cn(CAPTURE_BUTTON_CLASS, 'mt-6'),
-        })}
-        href="/fincas"
-      >
-        Volver a mis fincas
-      </Link>
-    </div>
+      label="Cargando finca"
+      shapes={['h-12 w-2/3', 'h-96']}
+    />
   );
 }

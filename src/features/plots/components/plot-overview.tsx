@@ -8,11 +8,11 @@ import { PlotOutline } from '@/components/illustrations/plot-outline';
 import { MapBesideList } from '@/components/map/map-beside-list';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
 import { Pagination } from '@/components/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
 import { loadPointsMapProvider } from '@/config/map';
 import { useSession } from '@/hooks/use-session';
 import { formatDateTime } from '@/lib/format/dates';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { LoadingBlock } from '@/components/loading-block';
 
 import { PLOT_LIST_PAGE_SIZE } from '../api';
 import { sectionPlots } from '../plot-groups';
@@ -118,9 +118,7 @@ export function PlotOverview({
         list={(mapVisible) => (
           <div className="space-y-3">
             {overview.isLoading ? (
-              <div aria-label="Cargando parcelas" role="status">
-                <Skeleton className="h-40" />
-              </div>
+              <LoadingBlock label="Cargando parcelas" shapes={['h-40']} />
             ) : plots.length ? (
               <PlotSections
                 farmHref={farmHref}

@@ -1,17 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageNotice } from '@/components/page-notice';
 import { buttonVariants } from '@/components/ui/button';
-import { useLeaveIfNotAssignee } from '@/hooks/use-leave-if-not-assignee';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
-import { useSession } from '@/hooks/use-session';
-import { mayRecordFor } from '@/lib/activity-recorders';
+import { useLeaveIfNotAssignee } from '@/hooks/use-leave-if-not-assignee';
 import { todayInBogota } from '@/lib/format/dates';
 
 import { ACTIVITIES_PATH } from '../activity-paths';
@@ -19,6 +15,7 @@ import { activityState, canComplete } from '../activity-state';
 import { CompletionCapture } from './completion-capture';
 import { useCompletionSources } from '../use-completion-sources';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // La pantalla de campo donde se registra una labor como realizada. Todo se guarda primero en el
 // dispositivo: con conexión se envía de inmediato y, sin ella, cuando vuelva. Aquí se decide qué
@@ -57,14 +54,11 @@ export function CompletionScreen({
   }
   if (sources.status === 'loading') {
     return (
-      <div
-        aria-label="Cargando actividad"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-6')}
-        role="status"
-      >
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-96" />
-      </div>
+        label="Cargando actividad"
+        shapes={['h-12 w-2/3', 'h-96']}
+      />
     );
   }
 

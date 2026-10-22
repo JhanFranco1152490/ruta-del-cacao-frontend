@@ -1,21 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageNotice } from '@/components/page-notice';
-import { useLeaveIfNotAssignee } from '@/hooks/use-leave-if-not-assignee';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
-import { useSession } from '@/hooks/use-session';
-import { mayRecordFor } from '@/lib/activity-recorders';
+import { useLeaveIfNotAssignee } from '@/hooks/use-leave-if-not-assignee';
 import { todayInBogota } from '@/lib/format/dates';
 import { ACTIVITIES_PATH } from '@/lib/paths/activities';
 
 import { MonitoringCapture } from './monitoring-capture';
 import { useMonitoringSources } from '../use-monitoring-sources';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // La pantalla de campo donde se registra el resultado de un monitoreo. Aquí se decide qué mostrar:
 // un aviso si no se puede registrar, lo que le pasó a lo ya guardado, o la planilla.
@@ -52,14 +49,11 @@ export function MonitoringScreen({
   }
   if (sources.status === 'loading') {
     return (
-      <div
-        aria-label="Cargando monitoreo"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-6')}
-        role="status"
-      >
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-96" />
-      </div>
+        label="Cargando monitoreo"
+        shapes={['h-12 w-2/3', 'h-96']}
+      />
     );
   }
 

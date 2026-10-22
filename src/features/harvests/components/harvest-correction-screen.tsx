@@ -28,8 +28,9 @@ import { harvestDetailPath, HARVESTS_PATH } from '../harvest-paths';
 import { harvestToFormValues, toHarvestUpdate } from '../harvest-requests';
 import { useHarvestSources } from '../use-harvest-sources';
 import { HarvestForm } from './harvest-form';
-import { FormMessage } from '@/components/form-message';
 import { pageContainerClass } from '@/components/page-container';
+import { FormMessage } from '@/components/form-message';
+import { LoadingBlock } from '@/components/loading-block';
 
 const STALE_MESSAGE =
   'Otra persona cambió esta cosecha. Revisa los datos actuales antes de guardar.';
@@ -37,14 +38,11 @@ const SAVE_FAILED =
   'No fue posible corregir la cosecha. Revisa tu conexión e inténtalo nuevamente.';
 
 const Loading = () => (
-  <div
-    aria-label="Cargando cosecha"
+  <LoadingBlock
     className={pageContainerClass('narrow', 'space-y-6')}
-    role="status"
-  >
-    <Skeleton className="h-12 w-2/3" />
-    <Skeleton className="h-96" />
-  </div>
+    label="Cargando cosecha"
+    shapes={['h-12 w-2/3', 'h-96']}
+  />
 );
 
 // Corregir una cosecha que ya está en el servidor y todavía no forma un lote: un error de

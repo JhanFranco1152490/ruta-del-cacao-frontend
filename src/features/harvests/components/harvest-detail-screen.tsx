@@ -23,6 +23,7 @@ import { HARVESTS_PATH } from '../harvest-paths';
 import { HarvestDetailActions } from './harvest-detail-actions';
 import { HarvestFacts } from './harvest-facts';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Lo registrado de una recolección. La consulta no modifica: corregir y eliminar son acciones
 // aparte, solo mientras la cosecha no forme un lote y con conexión. Los lotes y la ficha son de
@@ -57,14 +58,11 @@ export function HarvestDetailScreen({
   }
   if (!read.data) {
     return (
-      <div
-        aria-label="Cargando cosecha"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-4')}
-        role="status"
-      >
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-64" />
-      </div>
+        label="Cargando cosecha"
+        shapes={['h-12 w-2/3', 'h-64']}
+      />
     );
   }
 

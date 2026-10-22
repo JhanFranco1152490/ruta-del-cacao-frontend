@@ -1,23 +1,14 @@
-import { cn } from 'cn';
-import { UnavailablePage } from '@/components/unavailable-page';
-import { CircleOff } from 'lucide-react';
-import Link from 'next/link';
-
-import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
-import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { pageContainerClass } from '@/components/page-container';
+import { UnavailablePage } from '@/components/unavailable-page';
+import { LoadingBlock } from '@/components/loading-block';
 
 export function PlotEditorSkeleton() {
   return (
-    <div
-      aria-label="Cargando parcela"
+    <LoadingBlock
       className={pageContainerClass('wide', 'space-y-6')}
-      role="status"
-    >
-      <Skeleton className="h-12 w-2/3" />
-      <Skeleton className="h-96" />
-    </div>
+      label="Cargando parcela"
+      shapes={['h-12 w-2/3', 'h-96']}
+    />
   );
 }
 

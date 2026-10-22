@@ -23,6 +23,7 @@ import { LotDeleteDialog } from './lot-delete-dialog';
 import { LotOrigin } from './lot-origin';
 import { LotStatusBadge } from './lot-status-badge';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 async function copyCode(code: string) {
   try {
@@ -63,14 +64,11 @@ export function LotDetailScreen({
   }
   if (!read.data) {
     return (
-      <div
-        aria-label="Cargando lote"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-4')}
-        role="status"
-      >
-        <Skeleton className="h-24" />
-        <Skeleton className="h-64" />
-      </div>
+        label="Cargando lote"
+        shapes={['h-24', 'h-64']}
+      />
     );
   }
 

@@ -10,7 +10,6 @@ import { InputSupplies } from '@/components/illustrations/input-supplies';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { formatLongDate } from '@/lib/format/dates';
@@ -30,6 +29,7 @@ import { InputMovementDialog } from './input-movement-dialog';
 import { InputMovementItem } from './input-movement-item';
 import type { MovementKind } from '../use-movement-form';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Los movimientos de un insumo en una finca, del más nuevo al más viejo. Es una consulta en línea,
 // como el historial de las fichas: sin conexión lo dice en vez de quedarse cargando.
@@ -139,14 +139,11 @@ export function InputMovementsScreen({
             onRetry={() => void movements.refetch()}
           />
         ) : movements.isPending || !input ? (
-          <div
-            aria-label="Cargando movimientos"
+          <LoadingBlock
             className="space-y-4"
-            role="status"
-          >
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-          </div>
+            label="Cargando movimientos"
+            shapes={['h-24', 'h-24']}
+          />
         ) : items.length === 0 ? (
           <EmptyState
             description="Registra una entrada o un conteo para empezar a llevar sus existencias en esta finca."

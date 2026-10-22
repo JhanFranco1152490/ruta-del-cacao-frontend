@@ -11,7 +11,6 @@ import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { useProducerSummary } from '@/lib/api/producer-options';
@@ -31,19 +30,13 @@ import { FacilityFarmSelect } from './facility-farm-select';
 import { FacilityList } from './facility-list';
 import { FacilityOfflineNotice } from './facility-offline-notice';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 const NEEDS_CONNECTION =
   'Necesitas conexión una vez para cargar la infraestructura.';
 
 const Loading = () => (
-  <div
-    aria-label="Cargando infraestructura"
-    className="space-y-3"
-    role="status"
-  >
-    <Skeleton className="h-28" />
-    <Skeleton className="h-64" />
-  </div>
+  <LoadingBlock label="Cargando infraestructura" shapes={['h-28', 'h-64']} />
 );
 
 // Infraestructura: los cajones y marquesinas de una finca a la vez (la última que se vio, o la

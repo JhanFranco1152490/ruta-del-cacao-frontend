@@ -7,10 +7,10 @@ import { ErrorState } from '@/components/error-state';
 import { LeafInspection } from '@/components/illustrations/leaf-inspection';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { Pagination } from '@/components/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
 import { isNetworkFailure } from '@/lib/api/errors';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
+import { LoadingBlock } from '@/components/loading-block';
 
 import { useHealthHistory } from '../history-api';
 import { type HistoryFilters, historyQuery } from '../history-filters';
@@ -54,9 +54,7 @@ export function HistoryTab({
         </p>
       )}
       {history.isPending && !neverLoaded && 'query' in request && (
-        <div aria-label="Cargando historial" role="status">
-          <Skeleton className="h-64" />
-        </div>
+        <LoadingBlock label="Cargando historial" shapes={['h-64']} />
       )}
       {neverLoaded && (
         <EmptyState
