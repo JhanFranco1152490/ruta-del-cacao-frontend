@@ -158,7 +158,7 @@ function renderScreen(
 }
 
 const monitorings = () =>
-  screen.findByRole('table', { name: 'Monitoreos' }, { timeout: 5000 });
+  screen.findByRole('list', { name: 'Monitoreos' }, { timeout: 5000 });
 
 describe('HealthScreen', () => {
   it('lists the monitorings of all the plots without choosing one first', async () => {
@@ -211,7 +211,9 @@ describe('HealthScreen', () => {
       name: 'Resumen por plaga',
     });
 
-    expect(summary).toHaveTextContent('Monilia: 24 % de árboles · antes 31 %');
+    expect(summary).toHaveTextContent('Monilia');
+    expect(summary).toHaveTextContent('24 %');
+    expect(summary).toHaveTextContent('Baja 7 puntos');
   });
 
   it('does not show a summary without a plot', async () => {
@@ -631,22 +633,34 @@ describe('HealthScreen', () => {
       );
     });
 
-    it('shows one row per detection with its incidence and what happened to the control', async () => {
+    it('shows a card per monitoring with each detection, its incidence and what happened to the control', async () => {
       answer = () => page([found, first]);
       renderScreen('?vista=historial');
 
-      const table = await monitorings();
+      const list = await monitorings();
 
-      const rows = within(table).getAllByRole('row');
-      // La fila de títulos, la detección y el monitoreo sin presencia.
-      expect(rows).toHaveLength(3);
-      expect(rows[1]).toHaveTextContent('Monilia');
-      expect(rows[1]).toHaveTextContent('24 %');
-      expect(rows[1]).toHaveTextContent('Sin control');
-      expect(rows[2]).toHaveTextContent('Sin presencia');
+      const cards = within(list).getAllByRole('article');
+      expect(cards).toHaveLength(2);
+      expect(cards[0]).toHaveTextContent('Monilia');
+      expect(cards[0]).toHaveTextContent('24 %');
+      expect(cards[0]).toHaveTextContent('Sin control');
+      expect(cards[1]).toHaveTextContent('Sin presencia');
     });
 
-    it('puts the detail button on the same row as the actions of a detection on a wide screen', async () => {
+    it('opens the detail inside the card of the monitoring', async () => {
+      answer = () => page([found]);
+      renderScreen('?vista=historial');
+      const list = await monitorings();
+      const [card] = within(list).getAllByRole('article');
+
+      await userEvent.click(
+        within(card).getByRole('button', { name: /Detalle/ }),
+      );
+
+      expect(card).toHaveTextContent('Foco en la zona baja');
+    });
+
+    it('shows the control buttons of a detection on a wide screen', async () => {
       vi.stubGlobal(
         'matchMedia',
         vi.fn(() => ({
@@ -655,59 +669,40 @@ describe('HealthScreen', () => {
           removeEventListener: vi.fn(),
         })),
       );
-      answer = () => page([found]);
-      renderScreen('?vista=historial');
-      const table = await monitorings();
+      try {
+        answer = () => page([found]);
+        renderScreen('?vista=historial');
+        const list = await monitorings();
 
-      const detail = within(table).getByRole('button', { name: /Detalle/ });
-      const schedule = within(table).getByRole('button', {
-        name: /Programar control/,
-      });
-
-      expect(schedule.parentElement).toBe(detail.parentElement);
-      vi.unstubAllGlobals();
+        expect(
+          within(list).getByRole('button', { name: /Programar control/ }),
+        ).toBeInTheDocument();
+        expect(
+          within(list).getByRole('button', {
+            name: /Registrar control realizado/,
+          }),
+        ).toBeInTheDocument();
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
-    it('keeps the control actions behind a menu on a phone, next to the detail button', async () => {
+    it('keeps the control actions behind a menu on a phone', async () => {
       answer = () => page([found]);
       renderScreen('?vista=historial');
-      const table = await monitorings();
+      const list = await monitorings();
 
       expect(
-        within(table).queryByRole('button', { name: /Programar control/ }),
+        within(list).queryByRole('button', { name: /Programar control/ }),
       ).not.toBeInTheDocument();
       await userEvent.click(
-        within(table).getByRole('button', {
+        within(list).getByRole('button', {
           name: 'Más acciones de Monilia',
         }),
       );
 
       expect(
         await screen.findByRole('menuitem', { name: /Programar control/ }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('menuitem', { name: /Registrar control realizado/ }),
-      ).toBeInTheDocument();
-      expect(
-        within(table).getByRole('button', { name: /Detalle/ }),
-      ).toBeInTheDocument();
-    });
-
-    it('opens the detail inside the same card on a phone, not in another one', async () => {
-      answer = () => page([found]);
-      renderScreen('?vista=historial');
-      const table = await monitorings();
-      const rowsBefore = within(table).getAllByRole('row').length;
-
-      await userEvent.click(
-        within(table).getByRole('button', { name: /Detalle/ }),
-      );
-
-      expect(within(table).getAllByRole('row')).toHaveLength(rowsBefore);
-      expect(
-        within(within(table).getAllByRole('row')[1]).getByText(
-          /Foco en la zona baja/,
-        ),
       ).toBeInTheDocument();
     });
 

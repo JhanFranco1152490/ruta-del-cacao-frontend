@@ -48,6 +48,14 @@ export function ProducerFilters({
         </div>
       }
     >
+      <MunicipalityFilter
+        className="w-full sm:w-60"
+        hideLabel
+        inputClassName="text-sm"
+        municipalities={municipalities}
+        onChange={filters.setMunicipality}
+        value={filters.municipality}
+      />
       <NativeSelect
         aria-label="Filtrar por estado"
         className="text-sm"
@@ -63,14 +71,6 @@ export function ProducerFilters({
         <option value="active">Activos</option>
         <option value="inactive">Inactivos</option>
       </NativeSelect>
-      <MunicipalityFilter
-        className="w-full sm:w-60"
-        hideLabel
-        inputClassName="text-sm"
-        municipalities={municipalities}
-        onChange={filters.setMunicipality}
-        value={filters.municipality}
-      />
     </FilterRow>
   );
 }

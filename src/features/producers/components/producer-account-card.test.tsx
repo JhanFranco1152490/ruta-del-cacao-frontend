@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   apiError,
@@ -11,6 +11,7 @@ import {
 } from '@/test/factories';
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
+import { stubWideScreen } from '@/test/screen-size';
 import { server } from '@/test/server';
 import type { Producer } from '../api';
 import { ProducerDetailScreen } from './producer-detail-screen';
@@ -75,6 +76,10 @@ beforeEach(() => {
     ),
   );
 });
+
+// Desactivar y Eliminar son botones en pantallas anchas; en celular van en «⋯».
+beforeEach(stubWideScreen);
+afterEach(() => vi.unstubAllGlobals());
 
 describe('ProducerAccountCard', () => {
   it('keeps Cancelar inside the create dialog: the save button does not take the whole footer', async () => {

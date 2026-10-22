@@ -17,10 +17,12 @@ export function ScheduleMonitoringLink({
   farm,
   plot,
   variant = 'default',
+  className,
 }: {
   farm: string | null;
   plot: string | null;
   variant?: 'default' | 'outline';
+  className?: string;
 }) {
   const { data: user } = useSession();
   const hasConnection = useHasConnection();
@@ -29,7 +31,7 @@ export function ScheduleMonitoringLink({
   }
   return (
     <EditorLink
-      className={buttonVariants({ size: 'office', variant })}
+      className={buttonVariants({ size: 'office', variant, className })}
       href={scheduleMonitoringPath({ farm, plot })}
     >
       <CalendarPlus aria-hidden="true" className="size-5" /> Programar monitoreo

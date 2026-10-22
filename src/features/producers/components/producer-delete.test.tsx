@@ -2,7 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PERMISSIONS } from '@/lib/permissions';
 import {
@@ -15,6 +15,7 @@ import {
 import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { renderWithProviders } from '@/test/render';
 import { router } from '@/test/router';
+import { stubWideScreen } from '@/test/screen-size';
 import { server } from '@/test/server';
 
 import type { Producer } from '../api';
@@ -97,6 +98,10 @@ beforeEach(() => {
   signIn([PERMISSIONS.PRODUCERS_VIEW, PERMISSIONS.PRODUCERS_DELETE]);
   dependents();
 });
+
+// Desactivar y Eliminar son botones en pantallas anchas; en celular van en «⋯».
+beforeEach(stubWideScreen);
+afterEach(() => vi.unstubAllGlobals());
 
 describe('deleting a producer from the record', () => {
   it('counts the inputs of the catalog that go with the producer', async () => {

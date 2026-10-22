@@ -35,6 +35,8 @@ export function PestListScreen() {
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="claro"
+        accent="cacao"
         actions={
           catalog.isSuccess ? <PestFormDialog catalog={items} /> : undefined
         }

@@ -22,7 +22,7 @@ export function UpcomingMonitoringsSection({
   return (
     <section
       aria-label="Próximos monitoreos"
-      className="space-y-3 rounded-[var(--radius-card)] bg-card p-4 shadow-card"
+      className="relative space-y-3 overflow-hidden rounded-[var(--radius-card)] bg-card p-4 pt-5 shadow-card before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-[var(--morado-cacao)]"
     >
       <h2 className="font-sans text-base font-extrabold text-selva">
         Próximos monitoreos ({rows.length})
