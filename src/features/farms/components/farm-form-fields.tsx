@@ -36,6 +36,7 @@ import {
   FarmMunicipalitySuggestion,
 } from './farm-municipality-notice';
 import { pageContainerClass } from '@/components/page-container';
+import { FormMessage } from '@/components/form-message';
 
 export function FarmFormFields({
   defaultValues,
@@ -265,14 +266,7 @@ export function FarmFormFields({
         </div>
 
         <div className="space-y-4 lg:col-start-1 lg:row-start-2">
-          {error && (
-            <p
-              className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-              role="alert"
-            >
-              {error}
-            </p>
-          )}
+          {error && <FormMessage>{error}</FormMessage>}
 
           {blockedMessage && (
             <p className="font-bold text-warn" id="farm-save-blocked">

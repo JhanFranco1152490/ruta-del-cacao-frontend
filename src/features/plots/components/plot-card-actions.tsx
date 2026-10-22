@@ -11,8 +11,8 @@ import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import type { KnownPlot } from '../known-plots';
+import { plotActions } from '../plot-actions';
 import { plotEditPath } from '../plot-paths';
-import { PLOT_DELETED_CODE } from '../sync-adapter';
 import { PlotDeleteDialog } from './plot-delete-dialog';
 import { PlotDiscardDialog } from './plot-discard-dialog';
 import { PlotStatusDialog } from './plot-status-dialog';
@@ -43,41 +43,33 @@ export function PlotCardActions({
   extraItems?: ReactNode;
 }) {
   const { data: user } = useSession();
-  const canAdd = hasPermission(user, PERMISSIONS.PLOTS_ADD);
-  const canChange = hasPermission(user, PERMISSIONS.PLOTS_CHANGE);
-  const canDeletePlot = hasPermission(user, PERMISSIONS.PLOTS_DELETE);
-
+  const actions = plotActions(
+    plot,
+    farm.isActive,
+    {
+      canAdd: hasPermission(user, PERMISSIONS.PLOTS_ADD),
+      canChange: hasPermission(user, PERMISSIONS.PLOTS_CHANGE),
+      canDelete: hasPermission(user, PERMISSIONS.PLOTS_DELETE),
+    },
+    compact,
+  );
+  const { serverPlot, editLabel } = actions;
   const [dialog, setDialog] = useState<'status' | 'delete' | 'discard'>();
   const closeDialog = (open: boolean) => {
     if (!open) setDialog(undefined);
   };
 
-  const isError = plot.queue?.status === 'error';
-  // La parcela (o su finca) ya no existe en el servidor: corregirla no sirve, solo descartarla.
-  const canCorrect = plot.queue?.errorCode !== PLOT_DELETED_CODE;
-  const label = isError ? 'Corregir' : 'Editar';
-  const showEdit =
-    farm.isActive &&
-    canCorrect &&
-    // Una parcela que solo está en el dispositivo se corrige con el permiso de registrar; una
-    // del servidor, con el de editar.
-    (plot.queue?.operation === 'create' ? canAdd : canChange);
-  // Activar, desactivar y eliminar son en línea y sobre la versión del servidor: no se ofrecen
-  // mientras la parcela tenga algo pendiente en el dispositivo.
-  const serverPlot =
-    !plot.queue && plot.version !== undefined
-      ? { ...plot, version: plot.version }
-      : null;
-  const canDeactivate = serverPlot && canChange && farm.isActive;
-  const canDelete = serverPlot && canDeletePlot && farm.isActive;
   const leadingItems = onShowOnMap || (compact && extraItems);
-  if (!showEdit && !isError && !canDeactivate && !canDelete && !leadingItems) {
-    return null;
-  }
+  // Sin nada que ofrecer en el menú no se dibuja: solo queda el enlace a la vista.
+  const hasMenuItems =
+    !!leadingItems ||
+    actions.editInMenu ||
+    actions.discard ||
+    actions.toggleStatus ||
+    actions.remove;
+  if (!hasMenuItems && !actions.editVisible) return null;
 
   const editHref = plotEditPath(plot.id, farm.id);
-  // Una parcela que sigue en el dispositivo se corrige a la vista; en la tarjeta angosta, en el menú.
-  const visibleEdit = !!plot.queue && !compact;
   const menuLabel = `Más acciones de ${plotLabel(plot)}`;
 
   const menu = (
@@ -89,14 +81,13 @@ export function PlotCardActions({
         </MenuItem>
       )}
       {compact && extraItems}
-      {showEdit && !visibleEdit && (
+      {actions.editInMenu && (
         <MenuItem render={<EditorLink href={editHref} />}>
           <Pencil aria-hidden="true" className="size-4" />
-          {label}
+          {editLabel}
         </MenuItem>
       )}
-      {/* Descartar solo cuando falló: una pendiente todavía puede llegar bien. */}
-      {isError && (
+      {actions.discard && (
         <MenuItem
           className="text-destructive"
           onClick={() => setDialog('discard')}
@@ -105,7 +96,7 @@ export function PlotCardActions({
           Descartar
         </MenuItem>
       )}
-      {canDeactivate && (
+      {actions.toggleStatus && (
         <MenuItem
           className={plot.isActive ? 'text-destructive' : undefined}
           onClick={() => setDialog('status')}
@@ -118,7 +109,7 @@ export function PlotCardActions({
           {plot.isActive ? 'Desactivar' : 'Activar'}
         </MenuItem>
       )}
-      {canDelete && (
+      {actions.remove && (
         <MenuItem
           className="text-destructive"
           onClick={() => setDialog('delete')}
@@ -129,46 +120,39 @@ export function PlotCardActions({
       )}
     </ActionsMenu>
   );
-  // Sin nada que ofrecer en el menú no se dibuja: solo queda el enlace a la vista.
-  const hasMenuItems =
-    leadingItems ||
-    (showEdit && !visibleEdit) ||
-    isError ||
-    canDeactivate ||
-    canDelete;
 
   return (
     <>
-      {showEdit && visibleEdit && (
+      {actions.editVisible && (
         <EditorLink
-          aria-label={`${label} ${plotLabel(plot)}`}
+          aria-label={`${editLabel} ${plotLabel(plot)}`}
           className={buttonVariants({
             size: 'office',
             variant: 'action',
             className: 'size-10 px-0',
           })}
           href={editHref}
-          title={label}
+          title={editLabel}
         >
           <Pencil aria-hidden="true" className="size-4" />
         </EditorLink>
       )}
       {hasMenuItems && menu}
-      {isError && (
+      {actions.discard && (
         <PlotDiscardDialog
           code={plotLabel(plot)}
           control={{ open: dialog === 'discard', onOpenChange: closeDialog }}
           plotId={plot.id}
         />
       )}
-      {canDeactivate && serverPlot && (
+      {actions.toggleStatus && serverPlot && (
         <PlotStatusDialog
           control={{ open: dialog === 'status', onOpenChange: closeDialog }}
           farmId={farm.id}
           plot={serverPlot}
         />
       )}
-      {canDelete && serverPlot && (
+      {actions.remove && serverPlot && (
         <PlotDeleteDialog
           control={{ open: dialog === 'delete', onOpenChange: closeDialog }}
           farmId={farm.id}

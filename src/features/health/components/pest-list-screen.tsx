@@ -7,7 +7,6 @@ import { LeafPest } from '@/components/illustrations/leaf-pest';
 import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
-import { Skeleton } from '@/components/ui/skeleton';
 
 import { usePestDiseaseCatalog } from '../pest-api';
 import { matchesPestFilters } from '../pest-filters';
@@ -15,6 +14,7 @@ import { usePestFilters } from '../use-pest-filters';
 import { PestFormDialog } from './pest-form-dialog';
 import { PestTable } from './pest-table';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Primero las plagas y luego las enfermedades: el tipo lo dice el título de cada grupo.
 const PEST_GROUPS = [
@@ -83,9 +83,10 @@ export function PestListScreen() {
         </FilterRow>
 
         {catalog.isPending && (
-          <div aria-label="Cargando plagas y enfermedades" role="status">
-            <Skeleton className="h-64" />
-          </div>
+          <LoadingBlock
+            label="Cargando plagas y enfermedades"
+            shapes={['h-64']}
+          />
         )}
         {catalog.isError && (
           <ErrorState

@@ -1,3 +1,5 @@
+import type { ApiError } from '@/lib/api/errors';
+
 import type { QueueItem, QueueOperation } from './db';
 
 export interface SyncConflict {
@@ -48,4 +50,19 @@ export interface SyncAdapter {
 // el registro se reintenta en vez de ir a la bandeja.
 export function isRetryableStatus(status: number) {
   return status === 401 || status === 429 || status >= 500;
+}
+
+export const VALIDATION_ERROR_CODE = 'validation_error';
+
+// El rechazo tal como lo dio el servidor. Si es de validación, lleva los errores por campo para que
+// la corrección los muestre junto a cada campo.
+export function rejectionConflict(error: ApiError): SyncConflict {
+  return {
+    code: error.code,
+    message: error.message,
+    data:
+      error.code === VALIDATION_ERROR_CODE
+        ? { fields: error.fields }
+        : undefined,
+  };
 }

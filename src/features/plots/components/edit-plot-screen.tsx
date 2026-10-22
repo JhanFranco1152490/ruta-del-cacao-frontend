@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 
 import { OfflineBanner } from '@/components/offline-banner';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
 import { useFinishSave } from '@/hooks/use-finish-save';
 
@@ -172,14 +173,7 @@ function QueuedPlotEditor({
       notice={
         <>
           {failed && (
-            <div
-              className="mt-6 space-y-2 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-              role="alert"
-            >
-              <p>
-                No se pudo sincronizar
-                {plot.errorMessage ? `: ${plot.errorMessage}` : '.'}
-              </p>
+            <SyncRejectedNotice errorMessage={plot.errorMessage}>
               {current ? (
                 <p>
                   En el servidor la parcela ahora es «{plotLabel(current)}», de{' '}
@@ -190,7 +184,7 @@ function QueuedPlotEditor({
               ) : (
                 <p>Corrige los datos y guarda para reenviarla.</p>
               )}
-            </div>
+            </SyncRejectedNotice>
           )}
           {known.serverUnavailable && (
             <p className="mt-6 font-bold text-warn" role="status">

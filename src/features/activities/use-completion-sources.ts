@@ -2,14 +2,14 @@
 
 import { useSession } from '@/hooks/use-session';
 import { useActivity } from '@/lib/api/activity-read';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import type { CatalogInput } from '@/lib/input-usage';
 import { useUsableInputs } from '@/lib/api/usable-inputs';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
-import type { AgriculturalActivity } from '../api';
-import type { QueuedCompletion } from '../completion-queue';
-import { useQueuedCompletion } from '../use-completion-queue';
+import type { AgriculturalActivity } from './api';
+import type { QueuedCompletion } from './completion-queue';
+import { useQueuedCompletion } from './use-completion-queue';
 
 export type CompletionSources =
   // La actividad ya no existe en el servidor.
@@ -43,7 +43,7 @@ export function useCompletionSources(activityId: string): CompletionSources {
   });
 
   if (isPausedWithoutData(activity) || activity.isError) {
-    return isApiError(activity.error) && activity.error.status === 404
+    return isNotFound(activity.error)
       ? { status: 'missing' }
       : { status: 'unreachable' };
   }

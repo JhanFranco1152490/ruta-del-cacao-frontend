@@ -5,7 +5,7 @@ import { Controller, get, useFormContext } from 'react-hook-form';
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
 import { SearchSelect } from '@/components/search-select';
 
-import { useControlChoices } from './control-choices';
+import { useControlChoices } from '../control-choices';
 
 // Quién hace (o hizo) el control: alguien que trabaja en la finca de la parcela. `name` es la ruta
 // del campo en el formulario que lo usa.

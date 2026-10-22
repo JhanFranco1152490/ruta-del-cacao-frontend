@@ -11,7 +11,7 @@ import { useCurrentPath } from '@/hooks/use-current-path';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useSession } from '@/hooks/use-session';
-import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { getErrorMessage, isNotFound } from '@/lib/api/errors';
 import { withOrigin } from '@/lib/navigation/origin';
 import { notify } from '@/lib/notify';
 import { harvestQueueId } from '@/lib/offline/queue-ids';
@@ -34,7 +34,7 @@ const QUEUE_FAILED =
   'No fue posible guardar el lote en el dispositivo. Inténtalo nuevamente.';
 
 const createErrorMessage = (error: unknown) =>
-  isApiError(error) && error.status === 404
+  isNotFound(error)
     ? 'Esta cosecha ya no existe.'
     : getErrorMessage(error, CREATE_FAILED);
 

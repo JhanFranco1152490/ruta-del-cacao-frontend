@@ -1,17 +1,16 @@
 'use client';
 
-import { get, useFormContext, useWatch } from 'react-hook-form';
-
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
 import { UsedInputsSection } from '@/components/input-usage/used-inputs-section';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
+import { InlineError } from '@/components/form-message';
 
 import { METHOD_DESCRIPTION_MAX_LENGTH } from '../control-rules';
 import { CONTROL_METHOD_OPTIONS } from '../monitoring-rules';
 import { methodHint, type Recommendation } from '../recommendations';
-import { useControlChoices } from './control-choices';
-import { useSuggestedMethod } from './use-suggested-method';
+import { useControlMethod } from '../use-control-method';
+import { useControlChoices } from '../control-choices';
 
 // Lo que se hizo contra una detección: qué y, si se aplicó algo, con qué insumos, que se descuentan
 // del inventario de la finca. `base` es dónde está el control en el formulario que lo usa
@@ -26,15 +25,11 @@ export function DoneControlFields({
   // Lo que el catálogo recomienda para la plaga que se atiende.
   recommendation?: Recommendation | null;
 }) {
-  const { control, register, formState } = useFormContext();
+  const { control, register, method, errorOf } = useControlMethod(
+    base,
+    recommendation,
+  );
   const { catalog, stocks } = useControlChoices();
-  const method = useWatch({ control, name: `${base}method` }) as string;
-  useSuggestedMethod(base, recommendation?.method ?? null);
-  const errorOf = (field: string) =>
-    (
-      get(formState.errors, `${base}${field}`) as
-        { message?: string } | undefined
-    )?.message;
 
   return (
     <div className="space-y-4">
@@ -71,11 +66,7 @@ export function DoneControlFields({
         name={`${base}inputs`}
         stocks={stocks}
       />
-      {errorOf('inputs') && (
-        <p className="text-sm font-bold text-err" role="alert">
-          {errorOf('inputs')}
-        </p>
-      )}
+      {errorOf('inputs') && <InlineError>{errorOf('inputs')}</InlineError>}
     </div>
   );
 }

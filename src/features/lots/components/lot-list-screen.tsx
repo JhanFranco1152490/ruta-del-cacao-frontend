@@ -11,7 +11,6 @@ import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { ProducerFilter } from '@/components/producer-filter';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
 import { useProducerSummary } from '@/lib/api/producer-options';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -22,6 +21,7 @@ import { LotFiltersBar } from './lot-filters-bar';
 import { LotStatusCards } from './lot-status-cards';
 import { LotTable } from './lot-table';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Los lotes de las fincas que la cuenta alcanza, del más reciente al más antiguo. Solo con
 // conexión. Un lote se conforma desde su cosecha: `formLotHref` lleva a las que todavía no tienen
@@ -48,11 +48,7 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
 
   const content = () => {
     if (list.isPending) {
-      return (
-        <div aria-label="Cargando lotes" role="status">
-          <Skeleton className="h-64" />
-        </div>
-      );
+      return <LoadingBlock label="Cargando lotes" shapes={['h-64']} />;
     }
     if (list.isError) {
       return (

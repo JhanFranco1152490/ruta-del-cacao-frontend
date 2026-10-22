@@ -10,12 +10,12 @@ import { PlotOutline } from '@/components/illustrations/plot-outline';
 import { MapBesideList } from '@/components/map/map-beside-list';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { loadPointsMapProvider } from '@/config/map';
 import { useSession } from '@/hooks/use-session';
 import { formatDateTime } from '@/lib/format/dates';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
+import { LoadingBlock } from '@/components/loading-block';
 
 import type { KnownPlot } from '../known-plots';
 import { plotsToShapes } from '../plot-map';
@@ -116,9 +116,7 @@ export function FarmPlotsSection({
         )}
       </div>
       {known.isLoading && (
-        <div aria-label="Cargando parcelas" role="status">
-          <Skeleton className="h-64" />
-        </div>
+        <LoadingBlock label="Cargando parcelas" shapes={['h-64']} />
       )}
       {known.isError && (
         <ErrorState message="No fue posible leer las parcelas guardadas en este dispositivo." />

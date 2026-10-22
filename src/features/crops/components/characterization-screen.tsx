@@ -7,7 +7,6 @@ import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
@@ -20,6 +19,10 @@ import {
   useActiveCacaoVarieties,
   useFarmCharacterizations,
 } from '../api';
+import {
+  characterizationBase,
+  characterizationBlockedMessage,
+} from '../characterization-base';
 import type { QueuedCharacterization } from '../characterization-queue';
 import { characterizationHistoryPath } from '../characterization-paths';
 import { characterizationSummary } from '../characterization-summary';
@@ -38,6 +41,8 @@ import {
   emptyCharacterizationForm,
 } from './characterization-form';
 import { pageContainerClass } from '@/components/page-container';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Lo que la pantalla necesita de la finca y de la parcela. Lo entrega la página, que los lee de
 // sus dominios: este no los importa.
@@ -54,21 +59,8 @@ export type CharacterizationPlot = {
   isActive: boolean;
 };
 
-export const NO_CATALOG_MESSAGE =
-  'Necesitas conexión una vez para cargar las variedades de cacao.';
 const SAVE_FAILED =
   'No fue posible guardar la caracterización en el dispositivo. Inténtalo nuevamente.';
-
-// La ficha que trae `stale_version` con el error: la vigente en el servidor, o null si allá la
-// parcela no tiene.
-function staleCurrent(
-  queued: QueuedCharacterization | null | undefined,
-): PlotCharacterization | null | undefined {
-  if (queued?.errorCode !== 'stale_version') return undefined;
-  const data = queued.errorData as
-    { current?: PlotCharacterization | null } | undefined;
-  return data?.current ?? null;
-}
 
 export function CharacterizationScreen({
   farm,
@@ -92,35 +84,23 @@ export function CharacterizationScreen({
     (!queued.data && server.isPending && !serverUnreachable);
   if (waiting) {
     return (
-      <div
-        aria-label="Cargando caracterización"
+      <LoadingBlock
         className={pageContainerClass('wide', 'space-y-6')}
-        role="status"
-      >
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-96" />
-      </div>
+        label="Cargando caracterización"
+        shapes={['h-12 w-2/3', 'h-96']}
+      />
     );
   }
 
   const fromServer = server.data?.data.find((item) => item.plot_id === plot.id);
   const pending = queued.data ?? undefined;
-  const current = staleCurrent(pending);
-  // La versión con la que se envía: la de la ficha vigente que trajo el error, la que se leyó
-  // del servidor para una pendiente, o la de la ficha guardada.
-  const expectedVersion =
-    current !== undefined
-      ? (current?.version ?? null)
-      : pending
-        ? pending.expectedVersion
-        : (fromServer?.version ?? null);
+  const { current, expectedVersion, serverCharacterization } =
+    characterizationBase(pending, fromServer);
   const defaultValues = pending
     ? queuedToFormInput(pending.fields)
     : fromServer
       ? serverToFormInput(fromServer)
       : emptyCharacterizationForm();
-  // La ficha del servidor contra la que se guarda: la que trajo el conflicto o la leída.
-  const serverCharacterization = current ?? fromServer;
   const options = varietyOptionsFor(
     catalog.data?.data ?? [],
     serverCharacterization,
@@ -129,13 +109,12 @@ export function CharacterizationScreen({
     serverCharacterization?.plantings.map((row) => row.variety.id),
   );
   const failed = pending?.status === 'error';
-  const blockedMessage = !farm.isActive
-    ? 'La finca está inactiva: la caracterización de sus parcelas no se puede editar. Reactívala para continuar.'
-    : !plot.isActive
-      ? 'La parcela está inactiva: su caracterización no se puede editar. Reactívala para continuar.'
-      : !catalog.data
-        ? NO_CATALOG_MESSAGE
-        : sync.blockedMessage;
+  const blockedMessage = characterizationBlockedMessage({
+    farmActive: farm.isActive,
+    plotActive: plot.isActive,
+    hasCatalog: !!catalog.data,
+    syncBlocked: sync.blockedMessage,
+  });
 
   return (
     <div className={pageContainerClass('wide')}>
@@ -172,40 +151,12 @@ export function CharacterizationScreen({
           <OfflineBanner status={sync.status} />
         </div>
       )}
-      {failed && (
-        <div
-          className="mt-6 space-y-2 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-          role="alert"
-        >
-          <p>
-            No se pudo sincronizar
-            {pending.errorMessage ? `: ${pending.errorMessage}` : '.'}
-          </p>
-          {current !== undefined && (
-            <p>
-              {current
-                ? `En el servidor la ficha ahora dice: ${characterizationSummary(serverSummaryLines(current))}.`
-                : 'En el servidor la parcela ya no tiene caracterización.'}{' '}
-              Si guardas, tus datos reemplazan esa versión.
-            </p>
-          )}
-        </div>
-      )}
-      {!pending && (server.isError || serverUnreachable) && (
-        <p className="mt-6 font-bold text-warn" role="status">
-          No pudimos leer la caracterización guardada de esta parcela. Si ya
-          tiene una, al sincronizar se te pedirá revisarla.
-        </p>
-      )}
-      {!pending && server.data?.savedAt !== undefined && (
-        <p
-          className="mt-6 text-sm font-bold text-muted-foreground"
-          role="status"
-        >
-          Sin conexión: se muestra la caracterización guardada el{' '}
-          {formatDateTime(new Date(server.data.savedAt).toISOString())}.
-        </p>
-      )}
+      <CharacterizationNotices
+        current={current}
+        pending={pending}
+        serverSavedAt={server.data?.savedAt}
+        serverUnread={server.isError || serverUnreachable}
+      />
       <div className="mt-8">
         <CharacterizationForm
           areaHectares={plot.areaHectares}
@@ -239,5 +190,51 @@ export function CharacterizationScreen({
         />
       </div>
     </div>
+  );
+}
+
+// Lo que hay que saber antes de editar: que el servidor rechazó lo enviado (y qué tiene él), que no
+// se pudo leer la ficha guardada o que se ve la copia del dispositivo.
+function CharacterizationNotices({
+  pending,
+  current,
+  serverUnread,
+  serverSavedAt,
+}: {
+  pending: QueuedCharacterization | undefined;
+  current: PlotCharacterization | null | undefined;
+  serverUnread: boolean;
+  serverSavedAt: number | undefined;
+}) {
+  return (
+    <>
+      {pending?.status === 'error' && (
+        <SyncRejectedNotice errorMessage={pending.errorMessage}>
+          {current !== undefined && (
+            <p>
+              {current
+                ? `En el servidor la ficha ahora dice: ${characterizationSummary(serverSummaryLines(current))}.`
+                : 'En el servidor la parcela ya no tiene caracterización.'}{' '}
+              Si guardas, tus datos reemplazan esa versión.
+            </p>
+          )}
+        </SyncRejectedNotice>
+      )}
+      {!pending && serverUnread && (
+        <p className="mt-6 font-bold text-warn" role="status">
+          No pudimos leer la caracterización guardada de esta parcela. Si ya
+          tiene una, al sincronizar se te pedirá revisarla.
+        </p>
+      )}
+      {!pending && serverSavedAt !== undefined && (
+        <p
+          className="mt-6 text-sm font-bold text-muted-foreground"
+          role="status"
+        >
+          Sin conexión: se muestra la caracterización guardada el{' '}
+          {formatDateTime(new Date(serverSavedAt).toISOString())}.
+        </p>
+      )}
+    </>
   );
 }

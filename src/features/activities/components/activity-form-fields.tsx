@@ -10,7 +10,11 @@ import {
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 
-import { type ChoiceList, type FormChoice, listHint } from './activity-choices';
+import {
+  type ChoiceList,
+  type FormChoice,
+  listHint,
+} from '../activity-choices';
 import { ActivityPlotFields } from './activity-plot-fields';
 import { ActivityProducerField } from './activity-producer-field';
 

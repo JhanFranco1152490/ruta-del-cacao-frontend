@@ -11,7 +11,7 @@ import {
   type ConfirmControl,
   useConfirmAction,
 } from '@/hooks/use-confirm-action';
-import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { getErrorMessage, isApiError, isNotFound } from '@/lib/api/errors';
 import { notify } from '@/lib/notify';
 
 import { useChangePlotStatus, useDeletePlot } from '../api';
@@ -94,7 +94,7 @@ export function PlotDeleteDialog({
           expectedVersion: plot.version,
         });
       } catch (error) {
-        if (isApiError(error) && error.status === 404) return;
+        if (isNotFound(error)) return;
         if (isApiError(error) && error.code === HAS_RECORDS) {
           setHasRecords(true);
         }

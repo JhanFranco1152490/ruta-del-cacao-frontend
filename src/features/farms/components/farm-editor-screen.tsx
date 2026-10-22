@@ -1,16 +1,11 @@
 'use client';
 
-import { cn } from 'cn';
-import { CircleOff } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { OfflineBanner } from '@/components/offline-banner';
-import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Farm, useFarm } from '../api';
@@ -23,11 +18,13 @@ import {
   useQueuedFarm,
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
-import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
+import { FarmUnavailable } from './farm-screen-states';
 import { FarmStaleVersionSummary } from './farm-stale-version-summary';
 import { pageContainerClass } from '@/components/page-container';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
+import { LoadingBlock } from '@/components/loading-block';
 
 // El formulario se inicializa una sola vez con la finca, así que esa lectura tiene que ser del
 // momento en que se abre: se pide siempre al montar (una copia guardada de una visita anterior
@@ -79,7 +76,7 @@ function ServerFarmEditor({ id }: { id: string }) {
     return (
       <FarmUnavailable
         message={
-          isApiError(farm.error) && farm.error.status === 404
+          isNotFound(farm.error)
             ? 'No encontramos esta finca entre las tuyas.'
             : 'No fue posible cargar la finca. Revisa tu conexión e inténtalo nuevamente.'
         }
@@ -164,20 +161,13 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
       banner={sync.showBanner && <OfflineBanner status={sync.status} />}
       notice={
         failed && (
-          <div
-            className="mt-6 space-y-2 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-            role="alert"
-          >
-            <p>
-              No se pudo sincronizar
-              {farm.errorMessage ? `: ${farm.errorMessage}` : '.'}
-            </p>
+          <SyncRejectedNotice errorMessage={farm.errorMessage}>
             {isStale && current ? (
               <FarmStaleVersionSummary current={current} mine={farm.values} />
             ) : (
               <p>Corrige los datos y guarda para reenviarla.</p>
             )}
-          </div>
+          </SyncRejectedNotice>
         )
       }
       blockedMessage={
@@ -204,36 +194,10 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
 
 function EditorSkeleton() {
   return (
-    <div
-      aria-label="Cargando finca"
+    <LoadingBlock
       className={pageContainerClass('narrow', 'space-y-6')}
-      role="status"
-    >
-      <Skeleton className="h-12 w-2/3" />
-      <Skeleton className="h-96" />
-    </div>
-  );
-}
-
-function FarmUnavailable({ message }: { message: string }) {
-  return (
-    <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-8">
-      <CircleOff aria-hidden="true" className="mx-auto size-10 text-err" />
-      <h1 className="mt-4 text-3xl text-selva">
-        No fue posible abrir la finca
-      </h1>
-      <p className="mt-3 text-muted-foreground" role="alert">
-        {message}
-      </p>
-      <Link
-        className={buttonVariants({
-          size: 'office',
-          className: cn(CAPTURE_BUTTON_CLASS, 'mt-6'),
-        })}
-        href="/fincas"
-      >
-        Volver a mis fincas
-      </Link>
-    </div>
+      label="Cargando finca"
+      shapes={['h-12 w-2/3', 'h-96']}
+    />
   );
 }

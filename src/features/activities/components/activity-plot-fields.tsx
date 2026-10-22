@@ -8,7 +8,7 @@ import {
 
 import { SearchSelect } from '@/components/search-select';
 
-import { type ChoiceList, listHint } from './activity-choices';
+import { type ChoiceList, listHint } from '../activity-choices';
 
 import type { ActivityFormInput, ActivityFormValues } from '../schemas';
 

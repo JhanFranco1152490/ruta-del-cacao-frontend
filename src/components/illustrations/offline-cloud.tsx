@@ -1,7 +1,7 @@
 import {
   Ground,
   IllustrationFrame,
-  Leaf,
+  Sprout,
 } from '@/components/brand/cacao-parts';
 
 // Una nube tachada sobre una mata que sigue creciendo: sin conexión, el trabajo sigue en el
@@ -23,16 +23,14 @@ export function OfflineCloud({ className }: { className?: string }) {
         strokeWidth="5"
         strokeLinecap="round"
       />
-      <path
-        d="M80 131 C78 120 81 108 79 96"
-        stroke="var(--mazorca-negra)"
-        strokeWidth="4"
-        strokeLinecap="round"
-        fill="none"
+      <Sprout
+        stem="M80 131 C78 120 81 108 79 96"
+        leaves={[
+          { x: 80, y: 114, angle: -155, scale: 0.6 },
+          { x: 80, y: 106, angle: -25, scale: 0.6, tone: 'var(--selva-2)' },
+          { x: 79, y: 98, angle: -100, scale: 0.5 },
+        ]}
       />
-      <Leaf angle={-155} scale={0.6} x={80} y={114} />
-      <Leaf angle={-25} scale={0.6} tone="var(--selva-2)" x={80} y={106} />
-      <Leaf angle={-100} scale={0.5} x={79} y={98} />
     </IllustrationFrame>
   );
 }

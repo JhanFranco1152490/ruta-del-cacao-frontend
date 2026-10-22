@@ -4,7 +4,6 @@ import { cn } from 'cn';
 import { ArrowLeft } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
-import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 
 import type { BaseLayerKind } from './base-layers';
@@ -14,7 +13,7 @@ import type {
   LoadMunicipalityMapProvider,
   MunicipalityMapView,
 } from './map-provider';
-import { MapSkeleton } from './map-states';
+import { mapPlaceholder } from './map-states';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useMapProvider } from './use-map-provider';
 
@@ -66,16 +65,11 @@ export function MunicipalityMapPanel({
   const [chosenVisible, setVisible] = useState<boolean>();
   const visible = chosenVisible ?? (hiddenOnMobile ? isDesktop : true);
 
-  if (map.isLoading) return <MapSkeleton className={MUNICIPALITY_MAP_HEIGHT} />;
-
-  if (!map.Provider) {
-    return (
-      <ErrorState
-        message="No fue posible cargar el mapa. La lista sigue disponible."
-        onRetry={map.retry}
-      />
-    );
-  }
+  const placeholder = mapPlaceholder(map, {
+    className: MUNICIPALITY_MAP_HEIGHT,
+    failureMessage: 'No fue posible cargar el mapa. La lista sigue disponible.',
+  });
+  if (placeholder || !map.Provider) return placeholder;
 
   const { Provider } = map;
   const inMunicipality = view.level === 'municipality';

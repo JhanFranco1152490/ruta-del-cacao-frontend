@@ -25,11 +25,10 @@ import {
   InputRowActions,
 } from './input-row-actions';
 import type { AgriculturalInput } from '../api';
+import type { StockState } from '../use-input-list';
 
 // Cómo están las existencias de la finca elegida: listas, cargando o sin datos (sin conexión y
 // sin copia de esa finca).
-export type StockState = 'ready' | 'loading' | 'unavailable';
-
 const producerLabel = ({ producer }: AgriculturalInput) =>
   `${producer.first_name} ${producer.last_name} · ${producer.member_code}`;
 

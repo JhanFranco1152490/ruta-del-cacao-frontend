@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { InlineError } from '@/components/form-message';
 
 export type StatusChangeAction = {
   trigger: string;
@@ -84,11 +85,7 @@ export function StatusChangeDialog({
           <DialogDescription>{action.description}</DialogDescription>
         </DialogHeader>
         {children}
-        {error && (
-          <p className="text-sm font-bold text-err" role="alert">
-            {error}
-          </p>
-        )}
+        {error && <InlineError>{error}</InlineError>}
         <DialogFooter>
           <DialogClose
             disabled={isPending}

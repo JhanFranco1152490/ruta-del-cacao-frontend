@@ -11,13 +11,13 @@ import { Pagination } from '@/components/pagination';
 import { SelectField } from '@/components/select-field';
 import { StatusBadge } from '@/components/status-badge';
 import { TextField } from '@/components/text-field';
-import { Skeleton } from '@/components/ui/skeleton';
 import { normalizeCatalogName } from '@/lib/format/search';
 
 import { type CacaoVariety, useCacaoVarietyCatalog } from '../api';
 import { VarietyFormDialog } from './variety-form-dialog';
 import { VarietyStatusDialog } from './variety-status-dialog';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 const PAGE_SIZE = 20;
 
@@ -117,9 +117,7 @@ export function VarietyListScreen() {
         </FilterRow>
 
         {catalog.isPending && (
-          <div aria-label="Cargando variedades" role="status">
-            <Skeleton className="h-64" />
-          </div>
+          <LoadingBlock label="Cargando variedades" shapes={['h-64']} />
         )}
         {catalog.isError && (
           <ErrorState

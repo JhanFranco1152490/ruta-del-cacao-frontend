@@ -1,7 +1,7 @@
 'use client';
 
 import { CloudOff, PackageSearch, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
@@ -9,32 +9,19 @@ import { InputSupplies } from '@/components/illustrations/input-supplies';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useHasConnection } from '@/hooks/use-has-connection';
-import { useSession } from '@/hooks/use-session';
-import { isNetworkFailure } from '@/lib/api/errors';
-import { isFarmEmployee, onlyFarmOf } from '@/lib/farm-scope';
 import { notify } from '@/lib/notify';
 import { formatTimestamp } from '@/lib/format/dates';
-import { isPausedWithoutData } from '@/lib/offline/paused-read';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import {
-  useAgriculturalInputs,
-  useInputStocks,
-  useInputStockTotals,
-} from '../api';
-import { buildInputRows } from '../input-rows';
-import { useInputFilters } from '../use-input-filters';
-import {
-  type FarmChoice,
-  farmSelectNote,
-  InputFarmSelect,
-} from './input-farm-select';
+import type { AgriculturalInput } from '../api';
+import type { FarmChoice } from '../input-options';
+import { useInputList } from '../use-input-list';
+import { farmSelectNote, InputFarmSelect } from './input-farm-select';
 import { InputFiltersBar } from './input-filters-bar';
 import { InputDialogs, type PendingAction } from './input-dialogs';
-import { InputTable, type StockState } from './input-table';
+import type { InputActionKind } from './input-row-actions';
+import { InputTable } from './input-table';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 export type FarmChoices = {
   // `undefined` mientras se cargan o si no se pudieron leer.
@@ -49,61 +36,25 @@ function offlineMessage(savedAt: number | undefined) {
 
 // Las fincas llegan de la página: este dominio no lee las de otro.
 export function InputListScreen({ farms }: { farms: FarmChoices }) {
-  const { data: user } = useSession();
-  const hasConnection = useHasConnection();
-  const filters = useInputFilters();
-  const superuser = user?.is_superuser === true;
-  // Un empleado ve los insumos de sus fincas y trae a ellas los de otras con una entrada.
-  const employee = isFarmEmployee(user);
-  const producer = superuser ? filters.producer : null;
-  // Las fincas se eligen dentro de un productor: la cuenta técnica sin uno elegido ve el total de
-  // todos los catálogos y no puede escoger una finca.
-  const needsProducer = superuser && !producer;
-  const catalog = useAgriculturalInputs(user?.id, producer);
-  const choices = needsProducer ? undefined : farms.choices;
-  // Quien trabaja en una sola finca ve siempre sus existencias: no hay un total que elegir.
-  const onlyFarm = onlyFarmOf(user);
-  // Una finca de la URL que no está entre las del productor (de otro, o eliminada) no se usa.
-  const farm = onlyFarm
-    ? onlyFarm.id
-    : needsProducer
-      ? null
-      : choices
-        ? choices.some((choice) => choice.id === filters.farm)
-          ? filters.farm
-          : null
-        : filters.farm;
-  // Con una finca, sus existencias; sin ella, el total de todas las del alcance.
-  const farmStocks = useInputStocks(user?.id, farm);
-  const totalStocks = useInputStockTotals(user?.id, producer, {
-    enabled: !farm,
-  });
-  const stocks = farm ? farmStocks : totalStocks;
-  const [pending, setPending] = useState<PendingAction>();
-
-  const savedAt = catalog.data?.savedAt;
-  const offline = !hasConnection || savedAt !== undefined;
-  const permissions = {
-    canChange: hasPermission(user, PERMISSIONS.INPUTS_CHANGE),
-    canDelete: hasPermission(user, PERMISSIONS.INPUTS_DELETE),
-    canManageStock: hasPermission(user, PERMISSIONS.INPUTS_MANAGE_STOCK),
-  };
-  const canAdd = hasPermission(user, PERMISSIONS.INPUTS_ADD);
-  const stockState: StockState = stocks.isSuccess
-    ? 'ready'
-    : stocks.isError || isPausedWithoutData(stocks)
-      ? 'unavailable'
-      : 'loading';
-
-  const catalogInputs = catalog.data?.data ?? [];
-  const rows = buildInputRows(
+  const list = useInputList(farms.choices);
+  const {
+    filters,
+    superuser,
+    employee,
+    producer,
+    needsProducer,
+    choices,
+    onlyFarm,
+    farm,
+    catalog,
     catalogInputs,
-    stocks.data?.data ?? [],
-    filters.filters,
-  );
-  const neverLoaded =
-    isPausedWithoutData(catalog) ||
-    (catalog.isError && isNetworkFailure(catalog.error));
+    rows,
+    offline,
+    savedAt,
+    canAdd,
+    permissions,
+  } = list;
+  const [pending, setPending] = useState<PendingAction>();
 
   const registerButton = canAdd && (
     <Button
@@ -186,52 +137,11 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
           producer={producer}
         />
 
-        {catalog.isPending && !neverLoaded && (
-          <div aria-label="Cargando insumos" role="status">
-            <Skeleton className="h-64" />
-          </div>
-        )}
-        {neverLoaded && (
-          <EmptyState
-            description="Cuando tengas conexión, abre esta pantalla una vez y quedarán guardados para consultarlos sin conexión."
-            illustration={OfflineCloud}
-            title="Necesitas conexión una vez para cargar los insumos."
-          />
-        )}
-        {catalog.isError && !neverLoaded && (
-          <ErrorState
-            message="No fue posible cargar los insumos."
-            onRetry={() => void catalog.refetch()}
-          />
-        )}
-        {catalog.isSuccess &&
-          (catalogInputs.length === 0 ? (
-            <EmptyState
-              action={registerButton}
-              description="Registra los fertilizantes, abonos y demás productos que usas para elegirlos al registrar una labor."
-              illustration={InputSupplies}
-              title="Aún no hay insumos registrados"
-            />
-          ) : rows.length === 0 ? (
-            <EmptyState
-              description="Prueba con otro nombre o cambia los filtros."
-              illustration={InputSupplies}
-              title="No se encontraron insumos"
-            />
-          ) : (
-            <InputTable
-              actionsDisabled={offline}
-              farm={farm}
-              onAction={(kind, input) => setPending({ kind, input })}
-              permissions={permissions}
-              rows={rows}
-              showProducer={needsProducer}
-              // Entrada y conteo piden una finca: la de la lista o la que se elija en el diálogo, y sin
-              // productor elegido el insumo ya dice de cuál.
-              stockFarms={!!farm || needsProducer || (choices?.length ?? 0) > 0}
-              stockState={stockState}
-            />
-          ))}
+        <InputCatalogStates
+          list={list}
+          onAction={(kind, input) => setPending({ kind, input })}
+          registerButton={registerButton}
+        />
         {catalog.isSuccess &&
           !needsProducer &&
           !!choices?.length &&
@@ -269,5 +179,80 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         producer={producer}
       />
     </div>
+  );
+}
+
+// Lo que va en lugar de la tabla mientras el catálogo carga, si nunca se cargó, si falló o si está
+// vacío; y la tabla cuando hay filas.
+function InputCatalogStates({
+  list,
+  registerButton,
+  onAction,
+}: {
+  list: ReturnType<typeof useInputList>;
+  registerButton: ReactNode;
+  onAction: (kind: InputActionKind, input: AgriculturalInput) => void;
+}) {
+  const {
+    catalog,
+    catalogInputs,
+    rows,
+    neverLoaded,
+    farm,
+    needsProducer,
+    choices,
+  } = list;
+  if (neverLoaded) {
+    return (
+      <EmptyState
+        description="Cuando tengas conexión, abre esta pantalla una vez y quedarán guardados para consultarlos sin conexión."
+        illustration={OfflineCloud}
+        title="Necesitas conexión una vez para cargar los insumos."
+      />
+    );
+  }
+  if (catalog.isPending) {
+    return <LoadingBlock label="Cargando insumos" shapes={['h-64']} />;
+  }
+  if (catalog.isError) {
+    return (
+      <ErrorState
+        message="No fue posible cargar los insumos."
+        onRetry={() => void catalog.refetch()}
+      />
+    );
+  }
+  if (catalogInputs.length === 0) {
+    return (
+      <EmptyState
+        action={registerButton}
+        description="Registra los fertilizantes, abonos y demás productos que usas para elegirlos al registrar una labor."
+        illustration={InputSupplies}
+        title="Aún no hay insumos registrados"
+      />
+    );
+  }
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        description="Prueba con otro nombre o cambia los filtros."
+        illustration={InputSupplies}
+        title="No se encontraron insumos"
+      />
+    );
+  }
+  return (
+    <InputTable
+      actionsDisabled={list.offline}
+      farm={farm}
+      onAction={onAction}
+      permissions={list.permissions}
+      rows={rows}
+      showProducer={needsProducer}
+      // Entrada y conteo piden una finca: la de la lista o la que se elija en el diálogo, y sin
+      // productor elegido el insumo ya dice de cuál.
+      stockFarms={!!farm || needsProducer || (choices?.length ?? 0) > 0}
+      stockState={list.stockState}
+    />
   );
 }

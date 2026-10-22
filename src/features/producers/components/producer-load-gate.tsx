@@ -2,10 +2,10 @@
 
 import type { ReactNode } from 'react';
 
+import { UnavailablePage } from '@/components/unavailable-page';
 import { getErrorMessage } from '@/lib/api/errors';
 
 import { useProducer, type Producer } from '../api';
-import { ProducerPageError } from './producer-page-error';
 import { ProducerDetailSkeleton } from './producer-skeletons';
 
 type ProducerLoadGateProps = {
@@ -27,11 +27,14 @@ export function ProducerLoadGate({
   if (producer.isPending) return <ProducerDetailSkeleton />;
   if (producer.isLoadingError) {
     return (
-      <ProducerPageError
+      <UnavailablePage
+        backHref="/productores"
+        backLabel="Volver a productores"
         message={getErrorMessage(
           producer.error,
           'No fue posible cargar la ficha del productor.',
         )}
+        title="No fue posible abrir la ficha"
       />
     );
   }

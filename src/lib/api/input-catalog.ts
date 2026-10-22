@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { readThroughCache } from '@/lib/offline/cached-read';
+import { apiPath } from '@/lib/api/path';
 
 import { apiFetch } from './client';
 import { queryKeys } from './query-keys';
@@ -19,12 +20,8 @@ export async function fetchAgriculturalInputs(
   { producer, farm }: { producer: string | null; farm?: string },
   signal?: AbortSignal,
 ): Promise<AgriculturalInput[]> {
-  const params = new URLSearchParams();
-  if (producer) params.set('producer', producer);
-  if (farm) params.set('farm', farm);
-  const suffix = params.size ? `?${params}` : '';
   const { results } = await apiFetch<Schemas['AgriculturalInputList']>(
-    `/api/agricultural-inputs${suffix}`,
+    apiPath('/api/agricultural-inputs', { producer, farm }),
     { signal },
   );
   return results;
@@ -74,12 +71,8 @@ export async function fetchInputStocks(
   { farm, producer }: { farm: string | null; producer: string | null },
   signal?: AbortSignal,
 ): Promise<InputStock[]> {
-  const params = new URLSearchParams();
-  if (farm) params.set('farm', farm);
-  if (producer) params.set('producer', producer);
-  const suffix = params.size ? `?${params}` : '';
   const { results } = await apiFetch<Schemas['InputStockList']>(
-    `/api/input-stocks${suffix}`,
+    apiPath('/api/input-stocks', { farm, producer }),
     { signal },
   );
   return results;

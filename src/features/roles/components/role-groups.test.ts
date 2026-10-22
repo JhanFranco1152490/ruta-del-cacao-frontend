@@ -26,7 +26,7 @@ describe('groupRoles', () => {
       false,
     );
 
-    expect(groups.map((group) => group.name)).toEqual([
+    expect(groups.map((group) => group.title)).toEqual([
       'Roles del sistema',
       'Roles propios',
     ]);
@@ -47,7 +47,7 @@ describe('groupRoles', () => {
       true,
     );
 
-    expect(groups.map((group) => group.name)).toEqual([
+    expect(groups.map((group) => group.title)).toEqual([
       'Roles propios de Ana Prueba · PROD-Ana',
       'Roles propios de Beto Prueba · PROD-Beto',
     ]);

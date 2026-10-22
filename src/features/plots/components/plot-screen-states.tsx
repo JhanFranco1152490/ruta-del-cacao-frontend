@@ -1,22 +1,14 @@
-import { cn } from 'cn';
-import { CircleOff } from 'lucide-react';
-import Link from 'next/link';
-
-import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
-import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { pageContainerClass } from '@/components/page-container';
+import { UnavailablePage } from '@/components/unavailable-page';
+import { LoadingBlock } from '@/components/loading-block';
 
 export function PlotEditorSkeleton() {
   return (
-    <div
-      aria-label="Cargando parcela"
+    <LoadingBlock
       className={pageContainerClass('wide', 'space-y-6')}
-      role="status"
-    >
-      <Skeleton className="h-12 w-2/3" />
-      <Skeleton className="h-96" />
-    </div>
+      label="Cargando parcela"
+      shapes={['h-12 w-2/3', 'h-96']}
+    />
   );
 }
 
@@ -28,23 +20,11 @@ export function PlotUnavailable({
   backHref: string;
 }) {
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-8">
-      <CircleOff aria-hidden="true" className="mx-auto size-10 text-err" />
-      <h1 className="mt-4 text-3xl text-selva">
-        No fue posible abrir la parcela
-      </h1>
-      <p className="mt-3 text-muted-foreground" role="alert">
-        {message}
-      </p>
-      <Link
-        className={buttonVariants({
-          size: 'office',
-          className: cn(CAPTURE_BUTTON_CLASS, 'mt-6'),
-        })}
-        href={backHref}
-      >
-        Volver a la finca
-      </Link>
-    </div>
+    <UnavailablePage
+      backHref={backHref}
+      backLabel="Volver a la finca"
+      message={message}
+      title="No fue posible abrir la parcela"
+    />
   );
 }

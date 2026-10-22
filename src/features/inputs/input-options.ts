@@ -3,6 +3,9 @@ import { PACKAGE_TYPE_OPTIONS, UNIT_SYMBOLS } from '@/lib/format/input-units';
 import { normalizeCatalogName } from '@/lib/format/search';
 
 type Schemas = components['schemas'];
+
+// Una finca que se puede elegir para ver o mover existencias.
+export type FarmChoice = { id: string; name: string; is_active: boolean };
 type Option<T extends string> = { value: T; label: string };
 
 // En el orden en que se ofrecen en el formulario y en el filtro de la lista.

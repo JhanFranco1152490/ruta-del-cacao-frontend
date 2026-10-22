@@ -1,13 +1,13 @@
 'use client';
 import { SidePanelEditBand } from '@/components/side-panel';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Pencil, ShieldCheck } from 'lucide-react';
 import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { components } from '@/lib/api/schema';
 import { useAccount } from '../api';
-import { hasFixedRole, isProducerAccount } from '../schemas';
+import { accountActions, farmAssignerFor } from '../account-actions';
+import { isProducerAccount } from '../schemas';
 import { AccountEditForm } from './account-edit-form';
 import { AccountBand, AccountSections } from './account-summary';
 import { AccountRolesPanel } from './account-roles-panel';
@@ -57,64 +57,33 @@ export function AccountDetail({
     );
   const data = account.data;
   const back = () => setMode('view');
-  // La finca de un empleado la asigna quien alcanza todas: el Productor o la cuenta técnica.
-  const farmsOf =
-    user.all_farms && data.producer && !hasFixedRole(data)
-      ? {
-          userId: user.id,
-          producer: user.producer_id ? undefined : data.producer.id,
-        }
-      : undefined;
+  const farmsOf = farmAssignerFor(data, user);
+  const fullName = `${data.first_name} ${data.last_name}`;
   if (mode === 'edit')
     return (
-      <div>
-        <SidePanelEditBand
-          kicker="Datos de la cuenta"
-          title={`${data.first_name} ${data.last_name}`}
+      <EditPanel kicker="Datos de la cuenta" title={fullName}>
+        <AccountEditForm
+          account={data}
+          farmsOf={farmsOf}
+          onDone={back}
+          onBusy={onBusy}
         />
-        <div className="space-y-4 px-5 py-4">
-          <AccountEditForm
-            account={data}
-            farmsOf={farmsOf}
-            onDone={back}
-            onBusy={onBusy}
-          />
-        </div>
-      </div>
+      </EditPanel>
     );
   if (mode === 'roles')
     return (
-      <div>
-        <SidePanelEditBand
-          kicker="Roles de la cuenta"
-          title={`${data.first_name} ${data.last_name}`}
+      <EditPanel kicker="Roles de la cuenta" title={fullName}>
+        <AccountRolesPanel
+          account={data}
+          user={user}
+          farmsOf={farmsOf}
+          onDone={back}
+          onBusy={onBusy}
         />
-        <div className="space-y-4 px-5 py-4">
-          <AccountRolesPanel
-            account={data}
-            user={user}
-            farmsOf={farmsOf}
-            onDone={back}
-            onBusy={onBusy}
-          />
-        </div>
-      </div>
+      </EditPanel>
     );
-  // Nadie modifica su propia cuenta (`self_modification`), y desde el espacio del productor
-  // nadie alcanza a la cuenta Productor: solo la asociación puede administrarla.
-  const reachable =
-    data.id !== user.id && !(isProducerAccount(data) && user.producer_id);
-  const canUpdate = reachable && hasPermission(user, PERMISSIONS.USERS_UPDATE);
-  const canChangeStatus =
-    reachable && hasPermission(user, PERMISSIONS.USERS_CHANGE_STATUS);
-  const canDelete =
-    reachable &&
-    !data.has_signed_in &&
-    hasPermission(user, PERMISSIONS.USERS_DELETE);
-  const canChangeRoles =
-    canUpdate &&
-    !hasFixedRole(data) &&
-    hasPermission(user, PERMISSIONS.ROLES_VIEW);
+  const { canUpdate, canChangeStatus, canDelete, canChangeRoles } =
+    accountActions(data, user);
   return (
     <div>
       <AccountBand account={data} />
@@ -175,6 +144,24 @@ export function AccountDetail({
           />
         )}
       </div>
+    </div>
+  );
+}
+
+// Editar ocupa el panel: la franja dice qué se edita y de quién.
+function EditPanel({
+  kicker,
+  title,
+  children,
+}: {
+  kicker: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <SidePanelEditBand kicker={kicker} title={title} />
+      <div className="space-y-4 px-5 py-4">{children}</div>
     </div>
   );
 }

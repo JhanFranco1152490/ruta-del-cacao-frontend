@@ -30,7 +30,7 @@ import {
 import type { VarietyChoice } from '../variety-choices';
 import { plantingLineSummary } from '../planting-line-summary';
 import { PlantingMonthField } from './planting-month-field';
-import { usePlantingSuggestions } from './use-planting-suggestions';
+import { usePlantingSuggestions } from '../use-planting-suggestions';
 
 const KEPT_INACTIVE_HINT =
   'Variedad desactivada: ya no se ofrece para fichas nuevas. Puedes conservarla o cambiarla.';

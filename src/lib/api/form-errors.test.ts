@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from './errors';
-import { applyApiFieldErrors } from './form-errors';
+import { applyApiFieldErrors, serverErrorSummary } from './form-errors';
 
 describe('applyApiFieldErrors', () => {
   it('sets the first message of each known field and reports it', () => {
@@ -76,5 +76,47 @@ describe('applyApiFieldErrors', () => {
       unmatched: [],
     });
     expect(setError).not.toHaveBeenCalled();
+  });
+});
+
+describe('serverErrorSummary', () => {
+  it('says nothing when every message lands on a field', () => {
+    const setError = vi.fn();
+    const error = new ApiError(400, {
+      detail: 'Datos inválidos',
+      code: 'validation_error',
+      fields: { name: ['Nombre repetido.'] },
+    });
+
+    expect(serverErrorSummary(error, setError, ['name'], 'Falló')).toBe(
+      undefined,
+    );
+    expect(setError).toHaveBeenCalledWith('name', {
+      type: 'server',
+      message: 'Nombre repetido.',
+    });
+  });
+
+  it('gives the first message without a field, or the general one', () => {
+    const withoutField = new ApiError(400, {
+      detail: 'Datos inválidos',
+      code: 'validation_error',
+      fields: { other: ['Algo más.'] },
+    });
+    const general = new ApiError(409, {
+      detail: 'Otra persona lo cambió.',
+      code: 'stale_version',
+      fields: {},
+    });
+
+    expect(serverErrorSummary(withoutField, vi.fn(), ['name'], 'Falló')).toBe(
+      'Algo más.',
+    );
+    expect(serverErrorSummary(general, vi.fn(), ['name'], 'Falló')).toBe(
+      'Otra persona lo cambió.',
+    );
+    expect(
+      serverErrorSummary(new Error('red'), vi.fn(), ['name'], 'Falló'),
+    ).toBe('Falló');
   });
 });

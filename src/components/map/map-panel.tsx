@@ -4,7 +4,6 @@ import { cn } from 'cn';
 import { MapPinned } from 'lucide-react';
 import { useState } from 'react';
 
-import { ErrorState } from '@/components/error-state';
 import { formatGeoPoint, parseCoordinates } from '@/lib/format/coordinates';
 import type { Coordinates, GeoBounds } from '@/types/geo';
 
@@ -15,7 +14,7 @@ import type {
   LoadMapProvider,
   MapFocusTarget,
 } from './map-provider';
-import { MapSkeleton } from './map-states';
+import { mapPlaceholder } from './map-states';
 import { useMapProvider } from './use-map-provider';
 
 export function MapPanel({
@@ -48,21 +47,13 @@ export function MapPanel({
   const [focus, setFocus] = useState<{ target: MapFocusTarget }>();
   const [visible, setVisible] = useState(true);
 
-  if (map.isLoading) {
-    return <MapSkeleton className={cn('h-80', frameClassName)} />;
-  }
-
-  if (!map.Provider) {
-    return (
-      <ErrorState
-        message="No fue posible cargar el mapa. Puedes seguir usando el GPS o escribir las coordenadas."
-        onRetry={() => {
-          map.retry();
-          onRetry?.();
-        }}
-      />
-    );
-  }
+  const placeholder = mapPlaceholder(map, {
+    className: cn('h-80', frameClassName),
+    failureMessage:
+      'No fue posible cargar el mapa. Puedes seguir usando el GPS o escribir las coordenadas.',
+    onRetry,
+  });
+  if (placeholder || !map.Provider) return placeholder;
 
   const { Provider } = map;
   const point = parseCoordinates(location);

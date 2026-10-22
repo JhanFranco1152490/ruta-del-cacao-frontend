@@ -4,26 +4,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
 import { type FieldErrors, useForm, useWatch } from 'react-hook-form';
 
-import { SubmitButton } from '@/components/submit-button';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useSession } from '@/hooks/use-session';
-import { useFarmDetail } from '@/lib/api/farm-detail';
+import { FormDialog } from '@/components/form-dialog';
 import { todayInBogota } from '@/lib/format/dates';
 import {
   MISSING_FIELDS_MESSAGE,
   REQUIRED_FIELD_MESSAGE,
 } from '@/lib/validation/messages';
 
-import { type ActivityType, activityState } from '../activity-state';
+import {
+  type ActivityPreset,
+  activityFormDefaults,
+  activityFormTexts,
+} from '../activity-form-setup';
+import { activityState } from '../activity-state';
 import {
   type AgriculturalActivity,
   useCreateActivity,
@@ -33,12 +26,11 @@ import {
   type ActivityFormInput,
   type ActivityFormValues,
   createActivityFormSchema,
-  EMPTY_ACTIVITY_FORM,
-  toFormValues,
 } from '../schemas';
 import { ActivityFormFields } from './activity-form-fields';
-import { useActivityFormChoices } from './use-activity-form-choices';
-import { useActivitySubmit } from './use-activity-submit';
+import { useActivityFormChoices } from '../use-activity-form-choices';
+import { useActivityProducerChoice } from '../use-activity-producer-choice';
+import { useActivitySubmit } from '../use-activity-submit';
 
 export const DELAYED_EDIT_NOTICE =
   'Esta actividad está retrasada: elige una fecha nueva o registra su realización.';
@@ -57,12 +49,7 @@ export function ActivityFormDialog({
   onRejected,
 }: {
   activity?: AgriculturalActivity;
-  preset?: {
-    farmId?: string;
-    plotId?: string;
-    date?: string;
-    activityType?: ActivityType;
-  };
+  preset?: ActivityPreset;
   onClose: () => void;
   onSaved: (activity: AgriculturalActivity, message: string) => void;
   onRejected: (message: string) => void;
@@ -85,15 +72,7 @@ export function ActivityFormDialog({
   );
   const form = useForm<ActivityFormInput, unknown, ActivityFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: activity
-      ? toFormValues(activity)
-      : {
-          ...EMPTY_ACTIVITY_FORM,
-          farm_id: preset?.farmId ?? '',
-          plot_id: preset?.plotId ?? '',
-          activity_type: preset?.activityType ?? '',
-          scheduled_date: preset?.date ?? '',
-        },
+    defaultValues: activityFormDefaults(activity, preset),
   });
   const submission = useActivitySubmit({
     form,
@@ -112,22 +91,22 @@ export function ActivityFormDialog({
   // formulario: al elegir una parcela, esa finca se rellena sola y las demás parcelas deben seguir
   // a la vista.
   const [farmFilter, setFarmFilter] = useState(preset?.farmId ?? '');
-  // La cuenta técnica puede acotar por productor al programar, salvo que el formulario venga de una
-  // finca, que ya lo dice. Es opcional; para las demás cuentas no hay nada que elegir.
-  const { data: user } = useSession();
-  const needsProducer =
-    user?.is_superuser === true && !activity && !preset?.farmId;
-  const [chosenProducer, setChosenProducer] = useState<string>();
-  const presetFarm = useFarmDetail(
-    user?.id,
-    user?.is_superuser === true && !activity ? (preset?.farmId ?? '') : '',
-  );
-  const producerId = chosenProducer ?? presetFarm.data?.data.producer.id;
+  const { setValue } = form;
+  const producer = useActivityProducerChoice({
+    editing: !!activity,
+    preset,
+    onChange: () => {
+      setFarmFilter('');
+      setValue('farm_id', '');
+      setValue('plot_id', '');
+      setValue('assignee_id', '');
+    },
+  });
   const choices = useActivityFormChoices(
     farmFilter,
     plotId,
     activity,
-    producerId,
+    producer.producerId,
     preset?.activityType,
   );
   const fixedPlot = useMemo(
@@ -139,16 +118,6 @@ export function ActivityFormDialog({
     [activity],
   );
 
-  const { setValue } = form;
-
-  // Lo elegido bajo el productor anterior ya no vale.
-  const changeProducer = (producer: string | undefined) => {
-    setChosenProducer(producer);
-    setFarmFilter('');
-    setValue('farm_id', '');
-    setValue('plot_id', '');
-    setValue('assignee_id', '');
-  };
   const reportInvalid = (fieldErrors: FieldErrors<ActivityFormInput>) => {
     const missing = Object.values(fieldErrors).some(
       (error) => error?.message === REQUIRED_FIELD_MESSAGE,
@@ -159,81 +128,34 @@ export function ActivityFormDialog({
     !!activity && activityState(activity, today).state === 'delayed';
 
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open && !isSaving) onClose();
+    <FormDialog
+      {...activityFormTexts(!!activity, monitoring)}
+      error={submission.summary}
+      isSaving={isSaving}
+      onClose={onClose}
+      onSubmit={(event) => {
+        void form.handleSubmit(submission.submit, reportInvalid)(event);
       }}
-      open
     >
-      <DialogContent className="sm:max-w-lg" showCloseButton={!isSaving}>
-        <form
-          className="space-y-4"
-          noValidate
-          onSubmit={(event) => {
-            void form.handleSubmit(submission.submit, reportInvalid)(event);
-          }}
+      {delayed && !submission.summary && (
+        <p
+          className="rounded-md border border-warn/30 bg-warn-bg px-4 py-3 text-sm leading-6 font-bold text-warn"
+          role="status"
         >
-          <DialogHeader>
-            <DialogTitle>
-              {activity
-                ? 'Editar actividad'
-                : monitoring
-                  ? 'Programar monitoreo'
-                  : 'Programar actividad'}
-            </DialogTitle>
-            <DialogDescription>
-              {activity
-                ? 'Puedes cambiar el tipo, la fecha o el responsable. La parcela no cambia.'
-                : monitoring
-                  ? 'Se revisa la parcela en busca de plagas y enfermedades. Queda en el calendario, a nombre de su responsable.'
-                  : 'Queda en el calendario como programada, a nombre de su responsable.'}
-            </DialogDescription>
-          </DialogHeader>
-          {delayed && !submission.summary && (
-            <p
-              className="rounded-md border border-warn/30 bg-warn-bg px-4 py-3 text-sm leading-6 font-bold text-warn"
-              role="status"
-            >
-              {DELAYED_EDIT_NOTICE}
-            </p>
-          )}
-          {submission.summary && (
-            <p className="text-sm font-bold text-err" role="alert">
-              {submission.summary}
-            </p>
-          )}
-          <ActivityFormFields
-            {...choices}
-            disabled={isSaving}
-            errors={errors}
-            fixedPlot={fixedPlot}
-            form={form}
-            hideType={monitoring}
-            onFarmFilter={setFarmFilter}
-            producer={
-              needsProducer
-                ? { value: chosenProducer, onChange: changeProducer }
-                : undefined
-            }
-            today={today}
-          />
-          <DialogFooter>
-            <DialogClose
-              disabled={isSaving}
-              render={<Button variant="outline" />}
-            >
-              Cancelar
-            </DialogClose>
-            <SubmitButton
-              className="sm:w-auto"
-              pending={isSaving}
-              pendingLabel="Guardando…"
-            >
-              {activity ? 'Guardar cambios' : 'Guardar'}
-            </SubmitButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          {DELAYED_EDIT_NOTICE}
+        </p>
+      )}
+      <ActivityFormFields
+        {...choices}
+        disabled={isSaving}
+        errors={errors}
+        fixedPlot={fixedPlot}
+        form={form}
+        hideType={monitoring}
+        onFarmFilter={setFarmFilter}
+        producer={producer.field}
+        today={today}
+      />
+    </FormDialog>
   );
 }

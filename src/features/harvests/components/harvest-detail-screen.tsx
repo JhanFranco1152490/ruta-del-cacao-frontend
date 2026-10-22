@@ -9,9 +9,8 @@ import { EditorLink } from '@/components/editor-link';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatDateTime, formatLongDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
@@ -23,6 +22,7 @@ import { HARVESTS_PATH } from '../harvest-paths';
 import { HarvestDetailActions } from './harvest-detail-actions';
 import { HarvestFacts } from './harvest-facts';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Lo registrado de una recolección. La consulta no modifica: corregir y eliminar son acciones
 // aparte, solo mientras la cosecha no forme un lote y con conexión. Los lotes y la ficha son de
@@ -45,7 +45,7 @@ export function HarvestDetailScreen({
   const backHref = readOrigin(useSearchParams()) ?? HARVESTS_PATH;
 
   if (read.isError) {
-    return isApiError(read.error) && read.error.status === 404 ? (
+    return isNotFound(read.error) ? (
       <PageNotice title="Esta cosecha ya no existe." />
     ) : (
       <PageNotice
@@ -57,14 +57,11 @@ export function HarvestDetailScreen({
   }
   if (!read.data) {
     return (
-      <div
-        aria-label="Cargando cosecha"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-4')}
-        role="status"
-      >
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-64" />
-      </div>
+        label="Cargando cosecha"
+        shapes={['h-12 w-2/3', 'h-64']}
+      />
     );
   }
 

@@ -8,9 +8,8 @@ import { DetailFooter } from '@/components/detail-footer';
 import { ErrorState } from '@/components/error-state';
 import { PageNotice } from '@/components/page-notice';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format/dates';
 import { readLotCode } from '@/lib/format/lot-code';
 import { readOrigin } from '@/lib/navigation/origin';
@@ -23,6 +22,7 @@ import { LotDeleteDialog } from './lot-delete-dialog';
 import { LotOrigin } from './lot-origin';
 import { LotStatusBadge } from './lot-status-badge';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 async function copyCode(code: string) {
   try {
@@ -52,7 +52,7 @@ export function LotDetailScreen({
   const origin = readOrigin(useSearchParams());
 
   if (read.isError) {
-    return isApiError(read.error) && read.error.status === 404 ? (
+    return isNotFound(read.error) ? (
       <PageNotice title="Este lote ya no existe." />
     ) : (
       <ErrorState
@@ -63,14 +63,11 @@ export function LotDetailScreen({
   }
   if (!read.data) {
     return (
-      <div
-        aria-label="Cargando lote"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-4')}
-        role="status"
-      >
-        <Skeleton className="h-24" />
-        <Skeleton className="h-64" />
-      </div>
+        label="Cargando lote"
+        shapes={['h-24', 'h-64']}
+      />
     );
   }
 
