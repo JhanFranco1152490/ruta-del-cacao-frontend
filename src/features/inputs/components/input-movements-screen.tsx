@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { BackLink } from '@/components/back-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { InputSupplies } from '@/components/illustrations/input-supplies';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -128,6 +130,7 @@ export function InputMovementsScreen({
         {offline ? (
           <EmptyState
             description="Los movimientos se consultan con conexión. Las existencias de la lista sí se ven sin conexión."
+            illustration={OfflineCloud}
             title="Necesitas conexión para ver los movimientos"
           />
         ) : movements.isError ? (
@@ -147,6 +150,7 @@ export function InputMovementsScreen({
         ) : items.length === 0 ? (
           <EmptyState
             description="Registra una entrada o un conteo para empezar a llevar sus existencias en esta finca."
+            illustration={InputSupplies}
             title="Este insumo aún no tiene movimientos en esta finca"
           />
         ) : (

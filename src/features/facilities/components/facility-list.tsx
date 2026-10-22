@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
+import { DryingShed } from '@/components/illustrations/drying-shed';
 import { Button } from '@/components/ui/button';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import type { FarmOption } from '@/lib/api/farm-options';
@@ -57,6 +58,7 @@ export function FacilityList({
     return (
       <EmptyState
         action={register}
+        illustration={DryingShed}
         title={`${farm.name} aún no tiene cajones ni marquesinas`}
       />
     );
@@ -98,6 +100,7 @@ export function FacilityList({
             </Button>
           }
           description={noMatchesText(filters)}
+          illustration={DryingShed}
           title="No se encontraron elementos"
         />
       ) : (

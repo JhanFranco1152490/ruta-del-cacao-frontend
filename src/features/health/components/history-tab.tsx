@@ -4,6 +4,8 @@ import { CloudOff } from 'lucide-react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { LeafInspection } from '@/components/illustrations/leaf-inspection';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { Pagination } from '@/components/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
@@ -59,6 +61,7 @@ export function HistoryTab({
       {neverLoaded && (
         <EmptyState
           description="Ábrelo una vez con conexión y quedará guardado para verlo sin conexión."
+          illustration={OfflineCloud}
           title="Necesitas conexión para ver este historial"
         />
       )}
@@ -72,7 +75,10 @@ export function HistoryTab({
         data &&
         (results.length === 0 ? (
           hasFilters ? (
-            <EmptyState title="No hay monitoreos con estos filtros" />
+            <EmptyState
+              illustration={LeafInspection}
+              title="No hay monitoreos con estos filtros"
+            />
           ) : (
             <EmptyState
               action={
@@ -82,6 +88,7 @@ export function HistoryTab({
                 />
               }
               description="Cuando se registre el resultado de un monitoreo aparecerá aquí."
+              illustration={LeafInspection}
               title="Todavía no hay monitoreos registrados"
             />
           )

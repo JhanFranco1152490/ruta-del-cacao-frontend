@@ -1,6 +1,7 @@
 'use client';
 import { ErrorState } from '@/components/error-state';
 import { EmptyState } from '@/components/empty-state';
+import { FarmerHat } from '@/components/illustrations/farmer-hat';
 import { Pagination } from '@/components/pagination';
 import { isApiError } from '@/lib/api/errors';
 import { useMissingPageReset } from '@/hooks/use-missing-page-reset';
@@ -61,6 +62,7 @@ export function RoleList({
         />
       ) : (
         <EmptyState
+          illustration={FarmerHat}
           title="No hay roles para mostrar"
           description="Ajusta los filtros o crea un rol propio."
         />

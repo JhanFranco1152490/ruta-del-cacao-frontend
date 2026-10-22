@@ -5,6 +5,7 @@ import { UserRoundPlus } from 'lucide-react';
 import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FarmerHat } from '@/components/illustrations/farmer-hat';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { buttonVariants } from '@/components/ui/button';
@@ -74,6 +75,7 @@ export function ProducerListScreen() {
             />
           ) : (
             <EmptyState
+              illustration={FarmerHat}
               title="No hay productores para mostrar"
               description="Ajusta los filtros o registra el primer productor asociado."
               action={

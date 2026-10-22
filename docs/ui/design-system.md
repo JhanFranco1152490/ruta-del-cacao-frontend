@@ -175,7 +175,8 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `ActionsMenu` | El botón «⋯» (44 px, con `aria-label` «Más acciones de …») que reúne lo que no se hace a diario en una tarjeta o fila: editar, activar, desactivar, eliminar, descartar. Las opciones son `MenuItem`; las que piden confirmación abren su diálogo desde fuera del menú (con `ConfirmControl`), porque el menú se desmonta al cerrarse. Cada dominio arma su propio menú | Tarjetas de fincas y parcelas |
 | `Toaster` / `notify` | Aviso flotante de lo que terminó bien («Finca actualizada»), basado en el Toast de Base UI. Se invoca con `notify.success / info / warning / error` desde cualquier archivo. Dura 5 s (8 s con acción, p. ej. «Ver productor»); el de error no se cierra solo. Botón de cerrar de 44 px y cierre deslizando, para usarlo con guantes; sin movimiento si el sistema lo pide. Hasta 3 a la vez: abajo a la derecha en pantallas anchas y abajo, a todo el ancho, en celular. Solo para lo que terminó: lo pendiente de enviar y los errores del servidor siguen en la bandeja y el indicador, y la validación junto al campo | Toda la app |
 | `MaskedValue` | Muestra `CC ••••4821` y registra en bitácora al revelar | Productores, usuarios |
-| `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos, página no encontrada y de error |
+| `CacaoPlant` | Ilustración de una mata de cacao (hojas `--hoja`/`--selva-2`, mazorcas amarilla y morada) | Estados vacíos sin módulo, página no encontrada y de error |
+| Ilustraciones por módulo (`components/illustrations/`) | Escenas planas de 160×140 con las piezas de la mata (`brand/cacao-parts.tsx`: hoja, mazorca, suelo, marco). `EmptyState` y `PageNotice` reciben la del módulo en `illustration` | Ver la tabla de ilustración y fotografía |
 | `BotanicalVine` | Línea botánica en oro, solo sobre fondo oscuro | Inicio de sesión, barra lateral y menú móvil |
 | `StatusPage` | Pantalla completa con la mata, título y acciones | Página no encontrada y error inesperado |
 | `DetailFooter` | Pie de una ficha: «Volver» (44 px, con flecha) a la izquierda, a la pantalla de origen con sus filtros o a la lista, y las acciones de la ficha, si tiene, a la derecha. En celular, las acciones arriba y Volver al final, a todo el ancho | Fichas de cosecha y de lote; las demás en la pasada de estética |
@@ -189,8 +190,30 @@ poscosecha cobre, calidad azul). Nunca emojis.
 ### Ilustración y fotografía
 
 - Mazorcas planas con contorno chocolate: solo para elegir estado sanitario y para estados vacíos.
-- La mata de cacao (`CacaoPlant`) acompaña los estados vacíos y las páginas de no encontrado y de
-  error; nunca lleva información ni reemplaza el texto.
+- Cada estado vacío lleva la ilustración de su módulo; la mata de cacao (`CacaoPlant`) queda para
+  lo que no es de un módulo (sin permiso, ya no existe) y las páginas de no encontrado y de error.
+  Ninguna lleva información ni reemplaza el texto: son decorativas (`aria-hidden`).
+- Solo en estados vacíos (también los que dejan los filtros) y avisos de pantalla completa;
+  nunca en encabezados, tarjetas, tablas, formularios, avisos flotantes ni errores.
+
+  | Ilustración | Dónde |
+  | --- | --- |
+  | `FarmHills` (lomas, árboles y casa) | Fincas, sin fincas al elegir una |
+  | `PlotOutline` (contorno con vértices y bandera) | Parcelas e historial de la ficha |
+  | `CalendarSprout` (calendario con brote) | Actividades |
+  | `LeafInspection` (hoja bajo la lupa) | Historial de Sanidad |
+  | `LeafPest` (hoja con plaga) | Catálogo de plagas y enfermedades |
+  | `HarvestBasket` (canasto de mazorcas) | Cosechas |
+  | `BeanSack` (costal de grano) | Lotes |
+  | `DryingShed` (cajón y marquesina) | Infraestructura |
+  | `InputSupplies` (abono y aspersora) | Insumos |
+  | `PodVarieties` (tres mazorcas) | Variedades |
+  | `FarmerHat` (sombrero con rama) | Productores, usuarios y roles |
+  | `AllDone` (visto bueno con brote) | Nada pendiente, notificaciones al día |
+  | `OfflineCloud` (nube tachada) | Todo «necesitas conexión» |
+
+- Una ilustración nueva usa la misma paleta (`--hoja`, `--selva-2`, `--amarillo-mazorca`,
+  `--morado-cacao`, `--cobre`, tallos en `--mazorca-negra`), el marco de 160×140 y el suelo.
 - Fotografía y línea botánica en oro: solo marca, autenticación, el marco de la app (al pie de la
   barra lateral y del menú móvil, al 50 % de opacidad) y página pública del QR.
 - Ninguna textura detrás de texto corrido.
