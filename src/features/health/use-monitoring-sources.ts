@@ -6,9 +6,9 @@ import { isApiError } from '@/lib/api/errors';
 import type { components } from '@/lib/api/schema';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
-import type { QueuedMonitoring } from '../monitoring-queue';
-import { type PestDisease, useActivePestsDiseases } from '../pest-api';
-import { useQueuedMonitoring } from '../use-monitoring-queue';
+import type { QueuedMonitoring } from './monitoring-queue';
+import { type PestDisease, useActivePestsDiseases } from './pest-api';
+import { useQueuedMonitoring } from './use-monitoring-queue';
 import type { ControlChoices } from './control-choices';
 import { useControlChoicesSource } from './use-control-choices-source';
 

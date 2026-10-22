@@ -7,9 +7,9 @@ import type { CatalogInput } from '@/lib/input-usage';
 import { useUsableInputs } from '@/lib/api/usable-inputs';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
-import type { AgriculturalActivity } from '../api';
-import type { QueuedCompletion } from '../completion-queue';
-import { useQueuedCompletion } from '../use-completion-queue';
+import type { AgriculturalActivity } from './api';
+import type { QueuedCompletion } from './completion-queue';
+import { useQueuedCompletion } from './use-completion-queue';
 
 export type CompletionSources =
   // La actividad ya no existe en el servidor.

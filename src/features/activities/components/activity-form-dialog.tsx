@@ -37,8 +37,8 @@ import {
   toFormValues,
 } from '../schemas';
 import { ActivityFormFields } from './activity-form-fields';
-import { useActivityFormChoices } from './use-activity-form-choices';
-import { useActivitySubmit } from './use-activity-submit';
+import { useActivityFormChoices } from '../use-activity-form-choices';
+import { useActivitySubmit } from '../use-activity-submit';
 
 export const DELAYED_EDIT_NOTICE =
   'Esta actividad está retrasada: elige una fecha nueva o registra su realización.';

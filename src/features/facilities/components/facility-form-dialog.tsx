@@ -37,8 +37,8 @@ import {
 } from '../facility-form';
 import { FacilityFarmField } from './facility-farm-field';
 import { FacilityTypeField } from './facility-type-field';
-import { useFacilityNameSuggestion } from './use-facility-name-suggestion';
-import { useFacilitySubmit } from './use-facility-submit';
+import { useFacilityNameSuggestion } from '../use-facility-name-suggestion';
+import { useFacilitySubmit } from '../use-facility-submit';
 
 // Registrar un cajón o una marquesina, o editar `facility` si llega. Se monta al abrirse, así que
 // parte de los valores de ese momento y no adopta lecturas posteriores: guardar la versión nueva

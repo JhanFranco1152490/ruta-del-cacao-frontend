@@ -10,14 +10,14 @@ import {
   type PostharvestFacility,
   useCreateFacility,
   useUpdateFacility,
-} from '../api';
+} from './api';
 import {
   currentFacilityOf,
   duplicateFacilityOf,
   type ExistingFacility,
   FACILITY_ERROR,
-} from '../facility-errors';
-import { activatedMessage } from '../facility-messages';
+} from './facility-errors';
+import { activatedMessage } from './facility-messages';
 import {
   duplicateMessage,
   FACILITY_SAVED_MESSAGE,
@@ -30,7 +30,7 @@ import {
   toCreateRequest,
   toUpdateRequest,
   TYPE_LOCKED_HINT,
-} from '../facility-form';
+} from './facility-form';
 
 const FIELDS = ['facility_type', 'name', 'farm_id', 'capacity_kg'] as const;
 

@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 
 import { todayInBogota } from '@/lib/format/dates';
 
-import { type MovementInput, useCreateInputMovement } from '../api';
-import { movementErrorOf, type MovementField } from '../movement-errors';
+import { type MovementInput, useCreateInputMovement } from './api';
+import { movementErrorOf, type MovementField } from './movement-errors';
 import {
   buildMovementRequest,
   type CountValues,
@@ -15,10 +15,10 @@ import {
   createEntrySchema,
   type EntryValues,
   type MovementFormInput,
-} from '../movement-schemas';
-import { REQUIRED_FIELD_MESSAGE } from '../schemas';
+} from './movement-schemas';
+import { REQUIRED_FIELD_MESSAGE } from './schemas';
 import { inputPackageOf } from '@/lib/format/input-quantity';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from './components/input-farm-select';
 
 export type MovementKind = 'entry' | 'count';
 

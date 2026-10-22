@@ -28,7 +28,7 @@ import type { PestDisease } from '../pest-api';
 import { awaitingSend, type SelectedPhoto } from '../photo-selection';
 import { useQueuedEvidence, useSaveEvidence } from '../use-evidence-queue';
 import { useSaveMonitoring } from '../use-monitoring-queue';
-import type { ControlChoices } from './control-choices';
+import type { ControlChoices } from '../control-choices';
 import { MonitoringActivityCard } from './monitoring-activity-card';
 import { MonitoringConfirmDialog } from './monitoring-confirm-dialog';
 import { MonitoringPhotosField } from './monitoring-photos-field';

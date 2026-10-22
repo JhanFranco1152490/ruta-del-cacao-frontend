@@ -12,8 +12,8 @@ import { METHOD_DESCRIPTION_MAX_LENGTH } from '../control-rules';
 import { CONTROL_METHOD_OPTIONS } from '../monitoring-rules';
 import { methodHint, type Recommendation } from '../recommendations';
 import { ControlAssigneeField } from './control-assignee-field';
-import { useControlChoices } from './control-choices';
-import { useSuggestedMethod } from './use-suggested-method';
+import { useControlChoices } from '../control-choices';
+import { useSuggestedMethod } from '../use-suggested-method';
 
 // Un control para después: cuándo y quién, y si ya se sabe, qué se va a hacer y con qué insumo. El
 // insumo previsto es solo una referencia para quien lo aplique: no descuenta nada. `base` es dónde

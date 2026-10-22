@@ -34,10 +34,10 @@ import { useActivePestsDiseases } from '../pest-api';
 import { recommendationFor } from '../recommendations';
 import { useSaveControl } from '../use-control-actions';
 import { ControlAssigneeField } from './control-assignee-field';
-import { ControlChoicesContext } from './control-choices';
+import { ControlChoicesContext } from '../control-choices';
 import { DoneControlFields } from './done-control-fields';
 import { ScheduledControlFields } from './scheduled-control-fields';
-import { useControlChoicesSource } from './use-control-choices-source';
+import { useControlChoicesSource } from '../use-control-choices-source';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 

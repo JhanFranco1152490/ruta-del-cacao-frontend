@@ -12,9 +12,9 @@ import { producerLabelOf } from '@/lib/format/producer';
 import {
   ACTIVITY_TYPE_OPTIONS,
   SCHEDULABLE_ACTIVITY_TYPE_OPTIONS,
-} from '../activity-labels';
-import type { AgriculturalActivity } from '../api';
-import { assigneeNote } from '../assignees';
+} from './activity-labels';
+import type { AgriculturalActivity } from './api';
+import { assigneeNote } from './assignees';
 import {
   type ChoiceList,
   type FormChoice,

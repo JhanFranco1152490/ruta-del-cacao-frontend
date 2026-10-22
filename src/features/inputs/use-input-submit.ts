@@ -14,7 +14,7 @@ import {
   INPUT_ERROR,
   type useCreateAgriculturalInput,
   type useUpdateAgriculturalInput,
-} from '../api';
+} from './api';
 import {
   formValuesOf,
   INPUT_ACTIVATED_MESSAGE,
@@ -22,12 +22,12 @@ import {
   INPUT_UPDATED_MESSAGE,
   STALE_INPUT_MESSAGE,
   UNIT_LOCKED_HINT,
-} from '../input-form-values';
+} from './input-form-values';
 import {
   DUPLICATE_INPUT_MESSAGE,
   type InputFormInput,
   type InputFormValues,
-} from '../schemas';
+} from './schemas';
 
 const FIELDS = [
   'name',

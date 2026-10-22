@@ -14,7 +14,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { activitiesPath } from '../activity-paths';
 import { onScheduleRequest, requestSchedule } from '../schedule-requests';
 import { ActivityFormDialog } from './activity-form-dialog';
-import { ACTIVITY_SCHEDULED_MESSAGE } from './use-activity-submit';
+import { ACTIVITY_SCHEDULED_MESSAGE } from '../use-activity-submit';
 
 type PlotRef = {
   id: string;

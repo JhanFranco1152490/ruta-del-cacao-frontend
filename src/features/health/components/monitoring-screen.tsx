@@ -13,7 +13,7 @@ import { todayInBogota } from '@/lib/format/dates';
 import { ACTIVITIES_PATH } from '@/lib/paths/activities';
 
 import { MonitoringCapture } from './monitoring-capture';
-import { useMonitoringSources } from './use-monitoring-sources';
+import { useMonitoringSources } from '../use-monitoring-sources';
 import { pageContainerClass } from '@/components/page-container';
 
 // La pantalla de campo donde se registra el resultado de un monitoreo. Aquí se decide qué mostrar:

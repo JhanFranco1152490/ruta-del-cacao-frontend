@@ -27,7 +27,7 @@ import {
   unitHint,
   unitRecommendation,
 } from '../recommendations';
-import { type ControlChoices, ControlChoicesContext } from './control-choices';
+import { type ControlChoices, ControlChoicesContext } from '../control-choices';
 import { DetectionsSection } from './detections-section';
 import { SamplingFields } from './sampling-fields';
 

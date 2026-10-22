@@ -10,8 +10,8 @@ import { TextField } from '@/components/text-field';
 import { METHOD_DESCRIPTION_MAX_LENGTH } from '../control-rules';
 import { CONTROL_METHOD_OPTIONS } from '../monitoring-rules';
 import { methodHint, type Recommendation } from '../recommendations';
-import { useControlChoices } from './control-choices';
-import { useSuggestedMethod } from './use-suggested-method';
+import { useControlChoices } from '../control-choices';
+import { useSuggestedMethod } from '../use-suggested-method';
 
 // Lo que se hizo contra una detección: qué y, si se aplicó algo, con qué insumos, que se descuentan
 // del inventario de la finca. `base` es dónde está el control en el formulario que lo usa

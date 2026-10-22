@@ -26,7 +26,7 @@ import {
   MOVEMENT_TEXT,
   type MovementKind,
   useMovementForm,
-} from './use-movement-form';
+} from '../use-movement-form';
 
 // Una entrada o un conteo de un insumo en una finca. El formulario y su envío viven en
 // `useMovementForm`; aquí solo se dibujan.

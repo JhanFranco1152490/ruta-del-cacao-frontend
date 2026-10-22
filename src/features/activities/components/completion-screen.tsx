@@ -16,7 +16,7 @@ import { todayInBogota } from '@/lib/format/dates';
 import { ACTIVITIES_PATH } from '../activity-paths';
 import { activityState, canComplete } from '../activity-state';
 import { CompletionCapture } from './completion-capture';
-import { useCompletionSources } from './use-completion-sources';
+import { useCompletionSources } from '../use-completion-sources';
 import { pageContainerClass } from '@/components/page-container';
 
 // La pantalla de campo donde se registra una labor como realizada. Todo se guarda primero en el

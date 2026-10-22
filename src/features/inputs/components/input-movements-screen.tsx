@@ -28,7 +28,7 @@ import { formatStock, inputPackageOf } from '@/lib/format/input-quantity';
 import type { FarmChoice } from './input-farm-select';
 import { InputMovementDialog } from './input-movement-dialog';
 import { InputMovementItem } from './input-movement-item';
-import type { MovementKind } from './use-movement-form';
+import type { MovementKind } from '../use-movement-form';
 import { pageContainerClass } from '@/components/page-container';
 
 // Los movimientos de un insumo en una finca, del más nuevo al más viejo. Es una consulta en línea,

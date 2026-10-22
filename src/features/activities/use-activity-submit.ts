@@ -12,14 +12,14 @@ import {
   currentActivityOf,
   type useCreateActivity,
   type useUpdateActivity,
-} from '../api';
+} from './api';
 import {
   type ActivityFormInput,
   type ActivityFormValues,
   toCreateRequest,
   toFormValues,
   toUpdateRequest,
-} from '../schemas';
+} from './schemas';
 
 const FIELDS = [
   'plot_id',

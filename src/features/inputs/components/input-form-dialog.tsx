@@ -39,7 +39,7 @@ import {
 } from '../schemas';
 import type { FarmChoice } from './input-farm-select';
 import { InputFormFields } from './input-form-fields';
-import { useInputSubmit } from './use-input-submit';
+import { useInputSubmit } from '../use-input-submit';
 
 // Registrar un insumo, o editar `input` si llega. Se monta al abrirse, así que parte de los
 // valores de ese momento y no adopta lecturas posteriores: guardar la versión nueva con valores
