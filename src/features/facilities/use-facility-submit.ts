@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
-import { applyApiFieldErrors } from '@/lib/api/form-errors';
+import { serverErrorSummary } from '@/lib/api/form-errors';
 
 import {
   type PostharvestFacility,
@@ -98,13 +98,9 @@ export function useFacilitySubmit({
       });
       return;
     }
-    const { applied, unmatched } = applyApiFieldErrors(
-      error,
-      form.setError,
-      FIELDS,
+    setSummary(
+      serverErrorSummary(error, form.setError, FIELDS, SAVE_FAILED_MESSAGE),
     );
-    if (applied && unmatched.length === 0) return;
-    setSummary(unmatched[0] ?? getErrorMessage(error, SAVE_FAILED_MESSAGE));
   };
 
   const submit = async (values: FacilityFormValues) => {
