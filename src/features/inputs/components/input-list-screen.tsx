@@ -5,6 +5,8 @@ import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { InputSupplies } from '@/components/illustrations/input-supplies';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -192,6 +194,7 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
         {neverLoaded && (
           <EmptyState
             description="Cuando tengas conexión, abre esta pantalla una vez y quedarán guardados para consultarlos sin conexión."
+            illustration={OfflineCloud}
             title="Necesitas conexión una vez para cargar los insumos."
           />
         )}
@@ -206,11 +209,13 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
             <EmptyState
               action={registerButton}
               description="Registra los fertilizantes, abonos y demás productos que usas para elegirlos al registrar una labor."
+              illustration={InputSupplies}
               title="Aún no hay insumos registrados"
             />
           ) : rows.length === 0 ? (
             <EmptyState
               description="Prueba con otro nombre o cambia los filtros."
+              illustration={InputSupplies}
               title="No se encontraron insumos"
             />
           ) : (

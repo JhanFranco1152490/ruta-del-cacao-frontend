@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { FilterRow } from '@/components/filter-row';
+import { PodVarieties } from '@/components/illustrations/pod-varieties';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { SelectField } from '@/components/select-field';
@@ -197,6 +198,7 @@ export function VarietyListScreen() {
                   ? 'Prueba con otro nombre o cambia el filtro de estado.'
                   : 'Registra la primera variedad para que los productores puedan elegirla.'
               }
+              illustration={PodVarieties}
               title={
                 varieties.length
                   ? 'Ninguna variedad coincide con la búsqueda'

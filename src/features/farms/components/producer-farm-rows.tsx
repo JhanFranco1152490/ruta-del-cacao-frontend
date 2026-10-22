@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FarmHills } from '@/components/illustrations/farm-hills';
 import { SectionCard } from '@/components/page-blocks/section-card';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -76,6 +77,7 @@ export function ProducerFarmRows({
         (total === 0 ? (
           <EmptyState
             description="Cuando se registre una, aparecerá aquí con su área y sus parcelas."
+            illustration={FarmHills}
             title="Este productor aún no tiene fincas"
           />
         ) : (

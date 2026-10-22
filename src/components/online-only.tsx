@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageNotice } from '@/components/page-notice';
 import { useHasConnection } from '@/hooks/use-has-connection';
 
@@ -12,6 +13,7 @@ export function OnlineOnly({ children }: { children: ReactNode }) {
   if (hasConnection) return children;
   return (
     <PageNotice
+      illustration={OfflineCloud}
       title="Esta sección necesita conexión"
       description="Las fincas y sus capturas sí funcionan sin conexión."
     />

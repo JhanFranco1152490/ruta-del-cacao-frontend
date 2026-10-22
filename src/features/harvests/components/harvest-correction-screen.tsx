@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
 import { buttonVariants } from '@/components/ui/button';
@@ -68,6 +69,7 @@ export function HarvestCorrectionScreen({ harvestId }: { harvestId: string }) {
     return (
       <PageNotice
         description="Vuelve a intentarlo cuando haya señal."
+        illustration={OfflineCloud}
         title="Corregir una cosecha necesita conexión."
       />
     );

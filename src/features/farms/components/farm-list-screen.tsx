@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FarmHills } from '@/components/illustrations/farm-hills';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { buttonVariants } from '@/components/ui/button';
@@ -98,6 +99,7 @@ export function FarmListScreen() {
   const emptyState =
     filters.query.search || filters.municipality || filters.producer ? (
       <EmptyState
+        illustration={FarmHills}
         title="No hay fincas que coincidan"
         description={
           isAssociation
@@ -107,11 +109,13 @@ export function FarmListScreen() {
       />
     ) : isAssociation ? (
       <EmptyState
+        illustration={FarmHills}
         title="Aún no hay fincas registradas"
         description="Las fincas que registren los productores aparecerán aquí."
       />
     ) : (
       <EmptyState
+        illustration={FarmHills}
         title="Aún no tienes fincas registradas"
         description="Registra tu primera finca con su ubicación. Puedes hacerlo sin conexión."
         action={registerLink}

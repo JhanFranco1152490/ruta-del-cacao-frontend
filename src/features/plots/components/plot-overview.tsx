@@ -4,6 +4,7 @@ import { type ReactNode, useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { PlotOutline } from '@/components/illustrations/plot-outline';
 import { MapBesideList } from '@/components/map/map-beside-list';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
 import { Pagination } from '@/components/pagination';
@@ -174,11 +175,13 @@ export function PlotOverview({
               !overview.serverUnreachable &&
               (filters.filtered ? (
                 <EmptyState
+                  illustration={PlotOutline}
                   title="No hay parcelas que coincidan"
                   description="Prueba con otro código, otra finca, otro productor u otra caracterización."
                 />
               ) : (
                 <EmptyState
+                  illustration={PlotOutline}
                   title={
                     ownProducer
                       ? 'Aún no tienes parcelas registradas'

@@ -4,6 +4,7 @@ import { CloudOff, Info } from 'lucide-react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { AllDone } from '@/components/illustrations/all-done';
 import { PushNoticeCard } from '@/components/push/push-notice-card';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,6 +89,7 @@ export function NotificationsPanel({ onClose }: { onClose: () => void }) {
       {items?.length === 0 && (
         <EmptyState
           description="Cuando una actividad se acerque a su fecha o se pase, o un control quede pendiente, aparecerá aquí."
+          illustration={AllDone}
           title="Estás al día"
         />
       )}
