@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { OfflineBanner } from '@/components/offline-banner';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
@@ -52,6 +53,7 @@ export function HarvestRegisterScreen({
     return (
       <PageNotice
         description="Abre Cosechas una vez con conexión y tus parcelas quedarán guardadas para registrar sin conexión."
+        illustration={OfflineCloud}
         title="Necesitas conexión una vez para cargar tus parcelas."
       />
     );

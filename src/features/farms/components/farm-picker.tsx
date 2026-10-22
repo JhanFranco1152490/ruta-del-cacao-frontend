@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useId, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
+import { FarmHills } from '@/components/illustrations/farm-hills';
 import { ProducerFilter } from '@/components/producer-filter';
 import {
   Combobox,
@@ -70,6 +71,7 @@ export function FarmPicker({ onPick }: { onPick: (farmId: string) => void }) {
       )}
       {noFarmsYet ? (
         <EmptyState
+          illustration={FarmHills}
           title={
             producer
               ? 'Este productor aún no tiene fincas'

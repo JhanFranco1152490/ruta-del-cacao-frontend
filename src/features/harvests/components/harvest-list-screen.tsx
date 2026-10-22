@@ -7,6 +7,8 @@ import { type ReactNode, useMemo } from 'react';
 import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { HarvestBasket } from '@/components/illustrations/harvest-basket';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { PeriodBar } from '@/components/period-bar';
 import { ProducerFilter } from '@/components/producer-filter';
@@ -133,6 +135,7 @@ export function HarvestListScreen({
         ) : (
           <EmptyState
             description="Conéctate para verlo; los meses que ya abriste con conexión se pueden consultar sin ella."
+            illustration={OfflineCloud}
             title="Este mes no está guardado en el teléfono."
           />
         )
@@ -157,12 +160,14 @@ export function HarvestListScreen({
                   Limpiar filtros
                 </Button>
               }
+              illustration={HarvestBasket}
               title="No se encontraron cosechas"
             />
           ) : (
             <EmptyState
               action={register}
               description="Las recolecciones que se registren aparecerán aquí, con sus totales."
+              illustration={HarvestBasket}
               title={`No hay cosechas en ${formatMonthYear(period.month)}`}
             />
           )}

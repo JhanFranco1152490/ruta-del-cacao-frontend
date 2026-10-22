@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { BeanSack } from '@/components/illustrations/bean-sack';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { ProducerFilter } from '@/components/producer-filter';
@@ -86,12 +87,14 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
             Limpiar filtros
           </Button>
         }
+        illustration={BeanSack}
         title="No se encontraron lotes"
       />
     ) : (
       <EmptyState
         action={formLot}
         description="Un lote se conforma con una cosecha registrada y recibe ahí su código de trazabilidad."
+        illustration={BeanSack}
         title="Aún no hay lotes"
       />
     );

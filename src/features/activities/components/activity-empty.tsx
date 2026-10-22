@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/empty-state';
+import { CalendarSprout } from '@/components/illustrations/calendar-sprout';
 import { Button } from '@/components/ui/button';
 
 import { ScheduleActivityButton } from './schedule-activity-button';
@@ -27,6 +28,7 @@ export function ActivityEmpty({
           </Button>
         }
         description="Prueba con otros filtros o quítalos para ver todas las actividades del periodo."
+        illustration={CalendarSprout}
         title="Ninguna actividad cumple los filtros"
       />
     );
@@ -41,6 +43,7 @@ export function ActivityEmpty({
         )
       }
       description="Las labores que se programen en tus parcelas para este periodo aparecerán aquí."
+      illustration={CalendarSprout}
       title="No hay actividades programadas en este periodo"
     />
   );

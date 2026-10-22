@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { DetailFooter } from '@/components/detail-footer';
 import { EditorLink } from '@/components/editor-link';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,6 +50,7 @@ export function HarvestDetailScreen({
     ) : (
       <PageNotice
         description="Ábrela una vez con conexión desde Cosechas y quedará guardada en el teléfono."
+        illustration={OfflineCloud}
         title="Necesitas conexión para ver esta cosecha."
       />
     );
