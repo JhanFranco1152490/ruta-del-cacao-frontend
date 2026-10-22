@@ -32,7 +32,7 @@ describe('groupAccounts', () => {
       'Ana Prueba · PROD-000001',
       'Beto Prueba · PROD-000002',
     ]);
-    expect(groups.map((group) => group.accounts.length)).toEqual([2, 1]);
+    expect(groups.map((group) => group.items.length)).toEqual([2, 1]);
   });
 
   it('puts the accounts without a producer in the association group', () => {
