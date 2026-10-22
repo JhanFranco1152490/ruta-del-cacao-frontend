@@ -128,6 +128,8 @@ export function InputListScreen({ farms }: { farms: FarmChoices }) {
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="selva"
+        accent="cobre"
         actions={
           catalog.isSuccess ? (
             <>

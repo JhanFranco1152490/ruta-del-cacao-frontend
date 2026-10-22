@@ -1,5 +1,6 @@
 'use client';
 
+import { FILTER_CONTROLS_CLASS } from '@/components/filter-row';
 import { ProducerFilter } from '@/components/producer-filter';
 import {
   SearchSelect,
@@ -81,7 +82,7 @@ export function ActivityFiltersBar({
   );
 
   return (
-    <div className="flex flex-wrap items-end gap-2">
+    <div className={`flex flex-wrap items-end gap-2 ${FILTER_CONTROLS_CLASS}`}>
       {onProducer && (
         <ProducerFilter
           className={FILTER_WIDTH}

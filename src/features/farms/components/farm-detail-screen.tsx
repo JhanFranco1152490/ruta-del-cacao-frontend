@@ -1,32 +1,22 @@
 'use client';
 
-import { LocationLink } from '@/components/location-link';
 import { cn } from 'cn';
-import { Package, Pencil } from 'lucide-react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { EditorLink } from '@/components/editor-link';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { DetailFooter } from '@/components/detail-footer';
-import { PageHeader } from '@/components/page-header';
-import { ProducerLine } from '@/components/producer-line';
-import { buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
-import { formatDateTime } from '@/lib/format/dates';
-import { formatHectares } from '@/lib/format/hectares';
 import { readOrigin } from '@/lib/navigation/origin';
-import { inputListPath } from '@/lib/paths/inputs';
 import { producerLabelOf } from '@/lib/format/producer';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Coordinates } from '@/types/geo';
 
 import type { Farm } from '../api';
 import type { QueuedFarm } from '../farm-queue';
-import { farmEditPath } from '../farm-paths';
 import { useFarmSource } from '../use-farm-source';
+import { FarmDetailHeader } from './farm-detail-header';
 import { FarmStatusBadge } from './farm-status-badge';
 import { FarmScreenSkeleton, FarmUnavailable } from './farm-screen-states';
 import { farmLabel } from '@/lib/format/place-label';
@@ -219,6 +209,17 @@ function DetailLayout({
   // Las existencias de insumos de esta finca. Solo la finca que ya está en el servidor las tiene.
   const showInputs =
     !!view.producer && hasPermission(user, PERMISSIONS.INPUTS_VIEW);
+  const noticeBox = notice && (
+    <p
+      className={cn(
+        'mt-3 rounded-(--radius) px-4 py-3 font-bold',
+        noticeIsError ? 'bg-err-bg text-err' : 'bg-info-bg text-info',
+      )}
+      role={noticeIsError ? 'alert' : 'status'}
+    >
+      {notice}
+    </p>
+  );
   return (
     <div className={pageContainerClass('wide')}>
       <Breadcrumb
@@ -227,104 +228,21 @@ function DetailLayout({
           { label: farmLabel(view) },
         ]}
       />
-      <PageHeader
-        eyebrow="Detalle de la finca"
-        title={farmLabel(view)}
-        description={place}
-        actions={
-          (showInputs || canEdit) && (
-            <div className="flex flex-wrap gap-3">
-              {showInputs && (
-                <Link
-                  aria-label="Insumos de esta finca"
-                  className={buttonVariants({
-                    size: 'office',
-                    variant: 'action',
-                  })}
-                  href={inputListPath(view.id, view.producer?.id)}
-                >
-                  <Package aria-hidden="true" className="size-4" />
-                  <span>
-                    Insumos
-                    <span className="hidden sm:inline"> de esta finca</span>
-                  </span>
-                </Link>
-              )}
-              {canEdit && (
-                <EditorLink
-                  aria-label="Editar finca"
-                  className={buttonVariants({
-                    size: 'office',
-                    variant: 'action',
-                  })}
-                  href={farmEditPath(view.id)}
-                >
-                  <Pencil aria-hidden="true" className="size-4" />
-                  <span>
-                    Editar
-                    <span className="hidden sm:inline"> finca</span>
-                  </span>
-                </EditorLink>
-              )}
-            </div>
-          )
-        }
+      <FarmDetailHeader
+        badge={badge}
+        canEdit={canEdit}
+        canOpenProducer={hasPermission(user, PERMISSIONS.PRODUCERS_VIEW)}
+        place={place}
+        savedAt={savedAt}
+        showInputs={showInputs}
+        showProducer={showProducer}
+        view={view}
       />
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-        {badge}
-        {showProducer && view.producer && (
-          <ProducerLine
-            producer={view.producer}
-            linkable={hasPermission(user, PERMISSIONS.PRODUCERS_VIEW)}
-          />
-        )}
-        {savedAt !== undefined && (
-          <p className="text-sm font-bold text-muted-foreground" role="status">
-            Datos guardados el {formatDateTime(new Date(savedAt).toISOString())}
-            .
-          </p>
-        )}
-      </div>
-      {notice && (
-        <p
-          className={cn(
-            'mt-3 rounded-(--radius) px-4 py-3 font-bold',
-            noticeIsError ? 'bg-err-bg text-err' : 'bg-info-bg text-info',
-          )}
-          role={noticeIsError ? 'alert' : 'status'}
-        >
-          {notice}
-        </p>
-      )}
-      <section
-        aria-label="Datos de la finca"
-        className="mt-4 rounded-[var(--radius-card)] bg-card px-4 py-3 shadow-card sm:px-5"
-      >
-        <dl className="flex flex-wrap gap-x-8 gap-y-2">
-          <Fact label="Área total" value={formatHectares(view.areaHectares)} />
-          {view.altitudeMasl != null && (
-            <Fact label="Altitud" value={`${view.altitudeMasl} m s. n. m.`} />
-          )}
-          <Fact
-            label="Ubicación"
-            value={<LocationLink coordinates={view.location} />}
-          />
-          {view.details && <Fact label="Detalles" value={view.details} />}
-        </dl>
-      </section>
+      {noticeBox}
       {children}
       <div className="mt-6">
         <DetailFooter backHref={origin ?? '/fincas'} />
       </div>
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-baseline gap-x-2">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="font-bold text-foreground">{value}</dd>
     </div>
   );
 }

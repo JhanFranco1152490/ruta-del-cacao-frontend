@@ -58,6 +58,8 @@ function RoleWorkspace({
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="claro"
+        accent="cobre"
         eyebrow="Administración"
         title="Roles y permisos"
         description="Consulta los roles del sistema y administra los permisos de los roles propios."
@@ -89,6 +91,21 @@ function RoleWorkspace({
             />
           }
         >
+          {pickProducer && (
+            <ProducerFilter
+              className="w-full sm:w-72"
+              hideLabel
+              placeholder="Productor: nombre, documento o código"
+              producer={filters.producer}
+              selected={selectedProducer}
+              onSelect={(id) => {
+                void filters.setProducer(id);
+              }}
+              onClear={() => {
+                void filters.clearProducer();
+              }}
+            />
+          )}
           <SelectField
             hideLabel
             label="Filtrar por tipo"
@@ -105,21 +122,6 @@ function RoleWorkspace({
             <option value="predefined">Predefinidos</option>
             <option value="custom">Propios</option>
           </SelectField>
-          {pickProducer && (
-            <ProducerFilter
-              className="w-full sm:w-72"
-              hideLabel
-              placeholder="Productor: nombre, documento o código"
-              producer={filters.producer}
-              selected={selectedProducer}
-              onSelect={(id) => {
-                void filters.setProducer(id);
-              }}
-              onClear={() => {
-                void filters.clearProducer();
-              }}
-            />
-          )}
         </FilterRow>
         <RoleList filters={filters} open={panel.open} byProducer={superuser} />
       </section>

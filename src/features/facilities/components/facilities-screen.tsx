@@ -158,6 +158,8 @@ export function FacilitiesScreen({
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
+        tone="selva"
+        accent="cobre"
         actions={farm && known ? register : undefined}
         description="Los cajones de fermentación y las marquesinas de secado de la finca, y qué lote ocupa cada uno."
         eyebrow="Poscosecha"

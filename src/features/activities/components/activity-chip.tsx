@@ -14,8 +14,8 @@ const TONE_CLASSES = {
   ok: 'border-l-ok bg-ok-bg',
 } as const;
 
-// La ficha de una actividad en una celda del calendario: la parcela, la labor con su ícono y el
-// estado con el suyo. Tocarla abre su detalle. Su nombre accesible lo dice todo junto.
+// La ficha de una actividad en una celda del calendario: la labor (en negrita, es lo que se busca
+// con la vista) con su ícono, la parcela y el estado con el suyo. Tocarla abre su detalle. Su nombre accesible lo dice todo junto.
 export function ActivityChip({
   item,
   onSelect,
@@ -46,11 +46,11 @@ export function ActivityChip({
           type={activity.activity_type}
         />
         <span className="flex min-w-0 flex-wrap gap-x-1.5">
-          <span className="font-extrabold">{activity.plot.code}</span>
-          <span className="font-semibold break-words">{title}</span>
+          <span className="font-extrabold break-words">{title}</span>
+          <span className="font-semibold">{activity.plot.code}</span>
         </span>
       </span>
-      <span className="flex items-start gap-1 font-bold">
+      <span className="flex items-start gap-1 font-semibold">
         <StateIcon aria-hidden="true" className="mt-px size-3.5 shrink-0" />
         {text}
       </span>

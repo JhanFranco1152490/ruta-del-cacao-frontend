@@ -71,37 +71,25 @@ export function AccountFilters({
           />
         }
       >
-        <SelectField
-          hideLabel
-          label="Estado"
-          value={filters.status ?? ''}
-          onChange={(event) => {
-            void filters.setStatus(
-              (event.target.value || undefined) as
-                'active' | 'inactive' | undefined,
-            );
-          }}
-          wrapperClassName="w-full sm:w-44"
-        >
-          <option value="">Todos los estados</option>
-          <option value="active">Activa</option>
-          <option value="inactive">Inactiva</option>
-        </SelectField>
-        <SelectField
-          hideLabel
-          label="Activación"
-          value={filters.activation ?? ''}
-          onChange={(event) => {
-            void filters.setActivation(
-              (event.target.value || null) as 'pendiente' | 'activada' | null,
-            );
-          }}
-          wrapperClassName="w-full sm:w-48"
-        >
-          <option value="">Todas las cuentas</option>
-          <option value="pendiente">Pendiente de activación</option>
-          <option value="activada">Activada</option>
-        </SelectField>
+        {farms && (
+          <SelectField
+            hideLabel
+            label="Finca"
+            value={filters.farm ?? ''}
+            onChange={(event) => {
+              void filters.setFarm(event.target.value || null);
+            }}
+            wrapperClassName="w-full sm:w-52"
+          >
+            <option value="">Todas las fincas</option>
+            <option value={WITHOUT_FARM}>Sin alcance asignado</option>
+            {farms.map((farm) => (
+              <option key={farm.id} value={farm.id}>
+                {farm.name}
+              </option>
+            ))}
+          </SelectField>
+        )}
         {canReadRoles && (
           <SelectField
             hideLabel
@@ -125,25 +113,37 @@ export function AccountFilters({
             ))}
           </SelectField>
         )}
-        {farms && (
-          <SelectField
-            hideLabel
-            label="Finca"
-            value={filters.farm ?? ''}
-            onChange={(event) => {
-              void filters.setFarm(event.target.value || null);
-            }}
-            wrapperClassName="w-full sm:w-52"
-          >
-            <option value="">Todas las fincas</option>
-            <option value={WITHOUT_FARM}>Sin alcance asignado</option>
-            {farms.map((farm) => (
-              <option key={farm.id} value={farm.id}>
-                {farm.name}
-              </option>
-            ))}
-          </SelectField>
-        )}
+        <SelectField
+          hideLabel
+          label="Activación"
+          value={filters.activation ?? ''}
+          onChange={(event) => {
+            void filters.setActivation(
+              (event.target.value || null) as 'pendiente' | 'activada' | null,
+            );
+          }}
+          wrapperClassName="w-full sm:w-48"
+        >
+          <option value="">Todas las cuentas</option>
+          <option value="pendiente">Pendiente de activación</option>
+          <option value="activada">Activada</option>
+        </SelectField>
+        <SelectField
+          hideLabel
+          label="Estado"
+          value={filters.status ?? ''}
+          onChange={(event) => {
+            void filters.setStatus(
+              (event.target.value || undefined) as
+                'active' | 'inactive' | undefined,
+            );
+          }}
+          wrapperClassName="w-full sm:w-44"
+        >
+          <option value="">Todos los estados</option>
+          <option value="active">Activa</option>
+          <option value="inactive">Inactiva</option>
+        </SelectField>
       </FilterRow>
       {canReadRoles && roles.isError && (
         <div role="alert">

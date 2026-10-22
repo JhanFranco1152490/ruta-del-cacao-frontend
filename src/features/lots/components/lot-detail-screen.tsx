@@ -88,16 +88,19 @@ export function LotDetailScreen({
       <Breadcrumb
         items={[{ label: 'Lotes', href: LOTS_PATH }, { label: lot.code }]}
       />
-      <section className="space-y-4 rounded-(--radius) border bg-card p-6">
+      {/* La cabecera del lote es un banner bosque, como la de los demás detalles del campo. */}
+      <section className="space-y-4 rounded-[var(--radius-card)] bg-selva-2 p-6 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm font-bold text-muted-foreground">Lote</p>
+          <p className="text-xs font-bold tracking-[0.12em] text-[#e8c873] uppercase">
+            Lote
+          </p>
           <LotStatusBadge status={lot.status} />
         </div>
         <h1 className="font-mono text-xl font-bold break-all sm:text-3xl">
           {lot.code}
         </h1>
         <Button
-          className="h-11"
+          className="h-11 border-white/60 bg-transparent text-white hover:bg-white/10"
           onClick={() => void copyCode(lot.code)}
           size="office"
           variant="outline"
@@ -110,7 +113,7 @@ export function LotDetailScreen({
             <p>{reading}</p>
           </div>
         )}
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-white/80">
           Conformado por {lot.created_by?.full_name ?? 'una cuenta eliminada'}{' '}
           el {formatDateTime(lot.created_at)}.
         </p>

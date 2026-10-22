@@ -260,14 +260,18 @@ src/
       no, porque todavía no se puede hacer nada con ello.
       Una fila con enlace (Registrar, Programado) es una tarjeta que se abre tocándola en cualquier
       parte, no solo el botón: el enlace se estira con un `::after` (`pending-row-class.ts`).
-    - **Historial** (`history-tab.tsx`, `history-table.tsx`): una fila por plaga o enfermedad
-      encontrada (`history-rows.ts`), con la incidencia y su barra, el estado del control y, si no
-      tiene control, sus acciones; un monitoreo sin hallazgos es una sola fila «Sin presencia». El
-      **Detalle** de cada monitoreo (qué se evaluó, quién lo registró, observaciones y fotos a
-      pedido) se despliega bajo sus filas. De a 20, con filtros de plaga y periodo en la URL
+    - **Historial** (`history-tab.tsx`, `history-cards.tsx`): una tarjeta por monitoreo con la fecha,
+      la parcela y quién lo registró arriba, y una fila por plaga o enfermedad encontrada
+      (`history-rows.ts`) con la incidencia en grande y su barra, el estado del control y, si no
+      tiene control, sus acciones (en «⋯» por debajo de `xl`); un monitoreo sin hallazgos dice «Sin
+      presencia». Desde `xl` lo encontrado y la incidencia tienen ancho fijo para que las barras
+      queden alineadas entre tarjetas. El **Detalle** de cada monitoreo (qué se evaluó, quién lo
+      registró, observaciones y fotos a pedido, `monitoring-result-parts.tsx`) se abre dentro de su
+      tarjeta. De a 20, con filtros de plaga y periodo en la URL
       (`finca`, `parcela`, `plaga`, `desde`, `hasta`, `pagina`, y `productor` para la cuenta
       técnica) y copia en el dispositivo por filtros y página. Con una parcela elegida muestra además
-      el resumen por plaga; sin ella no, porque comparar parcelas distintas no dice si una plaga
+      el resumen por plaga (`pest-summary-cards.tsx`: la última incidencia, si sube o baja en puntos y
+      las dos barras); sin ella no, porque comparar parcelas distintas no dice si una plaga
       sube o baja. Desde la tarjeta de una parcela se abre ya filtrado (`plotHistoryPath`, que trae
       `vista=historial`).
     - **Programar monitoreo** (arriba) no programa aquí: lleva al calendario
@@ -583,8 +587,14 @@ referencia en `docs/ui/ref/*.html`.
   etiquetas visibles (`hideLabel`), y en el celular detrás de «Filtros». Los mapas que acompañan
   una lista (`MunicipalityMapPanel`, `PointsMapPanel`) aceptan `hiddenOnMobile`; el resumen se
   oculta junto con el mapa. Detalle y razones en `docs/ui/design-system.md` §7.
-- **Encabezado y ancho, siempre los mismos.** Toda pantalla abre con `PageHeader` (categoría, título de
-  30 px y descripción; no tiene versión «compacta») y envuelve su contenido en
+- **Encabezado y ancho, siempre los mismos.** Toda pantalla abre con `PageHeader` (categoría, título y
+  descripción). Las listas y los detalles le pasan `tone` y `accent` y se vuelve un banner de color
+  (`components/page-blocks/detail-hero.tsx`): `selva` en las de trabajo diario, `bosque` en los detalles
+  del campo y `claro` en administración y catálogos; los formularios no llevan banner. Las cifras van
+  en una franja suelta (`StatStrip`, `SummaryStrip`), las secciones de un detalle en `SectionCard` (con
+  filete del acento solo si hay varias) y los datos en `KeyValues`. Los filtros son todos blancos y de
+  40 px (`FILTER_CONTROLS_CLASS`) y siguen un orden: principal, productor, lugar, atributos, estado,
+  periodo, «Más filtros». Detalle en el sistema de diseño §7. Cada pantalla envuelve su contenido en
   `pageContainerClass('wide' | 'narrow')`: `wide` para listas, calendarios y lo que lleva mapa o tabla,
   `narrow` (centrado) para formularios y fichas de una columna. No se escribe un `max-w-*` ni un
   `py-*` propio en una pantalla. Toda `grid` con columnas desde un punto de corte lleva `grid-cols-1`

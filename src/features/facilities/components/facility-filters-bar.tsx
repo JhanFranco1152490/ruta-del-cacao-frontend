@@ -1,5 +1,6 @@
 'use client';
 
+import { FILTER_CONTROLS_CLASS } from '@/components/filter-row';
 import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +26,9 @@ export function FacilityFiltersBar({
   onClear: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-start gap-3">
+    <div
+      className={`flex flex-wrap items-start gap-3 ${FILTER_CONTROLS_CLASS}`}
+    >
       <SelectField
         hideLabel
         label="Filtrar por tipo"

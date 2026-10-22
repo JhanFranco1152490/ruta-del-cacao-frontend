@@ -45,6 +45,8 @@ export function CharacterizationHistoryScreen({
         <BackLink href={backHref}>Volver a la caracterización</BackLink>
       </div>
       <PageHeader
+        tone="bosque"
+        accent="hoja"
         description="Cada vez que se guarda la ficha queda una versión, con lo que cambió y quién la guardó."
         eyebrow="Caracterización productiva"
         title={`Historial de ${plot.code}`}

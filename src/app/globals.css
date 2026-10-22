@@ -28,6 +28,11 @@
   --mazorca-negra: #2e211b;
   --monilia: #c9c58a;
 
+  /* Tintes de acento por módulo: fondo claro de cada color de la paleta (cifras, filetes). */
+  --cobre-tint: #f6e8dc;
+  --hoja-tint: #e3efe6;
+  --cacao-tint: #f3e4e8;
+
   /* --- Mapeo shadcn/ui ------------------------------------------------- */
   --background: #f7f2ea;
   --foreground: #231812;

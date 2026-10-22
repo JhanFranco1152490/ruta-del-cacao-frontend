@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { apiError, buildProducer, buildSession } from '@/test/factories';
@@ -9,6 +9,7 @@ import { apiUrl, municipalitiesHandler } from '@/test/handlers';
 import { expectVisibleFocusOutline } from '@/test/focus-outline';
 import { renderWithProviders } from '@/test/render';
 import { mockLocation } from '@/test/router';
+import { stubWideScreen } from '@/test/screen-size';
 import { server } from '@/test/server';
 
 import type { Producer } from '../api';
@@ -58,6 +59,16 @@ beforeEach(() => {
   );
 });
 
+// La cabecera de la ficha, donde se ve el estado del productor (también con un diálogo abierto, que
+// deja el resto de la pantalla oculto para los lectores de pantalla).
+const heroStatus = () =>
+  within(
+    screen.getByRole('heading', { level: 1, hidden: true }).closest('section')!,
+  );
+// Desactivar y Eliminar son botones en pantallas anchas; en celular van en «⋯».
+beforeEach(stubWideScreen);
+afterEach(() => vi.unstubAllGlobals());
+
 describe('ProducerDetailScreen', () => {
   it('shows the record with the sensitive data masked', async () => {
     server.use(
@@ -77,28 +88,17 @@ describe('ProducerDetailScreen', () => {
     expect(screen.queryByText(/1234567890/)).not.toBeInTheDocument();
     expect(screen.queryByText(/3001234567/)).not.toBeInTheDocument();
     expect(screen.queryByText(/ana\.prueba/)).not.toBeInTheDocument();
-    expect(screen.getByText('Productor activo')).toBeInTheDocument();
+    expect(heroStatus().getByText('Activo')).toBeInTheDocument();
   });
 
   it('shows the municipality name (not its code) and the long date', async () => {
     renderWithProviders(<ProducerDetailScreen id="p1" />);
 
-    expect(await screen.findByText('Cúcuta')).toBeInTheDocument();
+    expect((await screen.findAllByText('Cúcuta')).length).toBeGreaterThan(0);
     expect(screen.queryByText('54001')).not.toBeInTheDocument();
     expect(screen.getByText('15 de marzo de 2026')).toBeInTheDocument();
-    expect(
-      screen.getByText('Código de asociado: PROD-000001'),
-    ).toBeInTheDocument();
-  });
-
-  it('stacks the header until wide screens, where two actions fit next to the title', async () => {
-    renderWithProviders(<ProducerDetailScreen id="p1" />);
-
-    const header = (await screen.findByRole('heading', { name: 'Ana Prueba' }))
-      .parentElement!.parentElement!;
-    expect(header).toHaveClass('mt-5', 'sm:flex-col', 'lg:flex-row');
-    expect(header).not.toHaveClass('mt-4');
-    expect(header).not.toHaveClass('sm:flex-row');
+    expect(screen.getByText('Código de asociado')).toBeInTheDocument();
+    expect(screen.getAllByText('PROD-000001').length).toBeGreaterThan(0);
   });
 
   it('keeps showing the record when a background refresh fails', async () => {
@@ -216,7 +216,7 @@ describe('ProducerDetailScreen - deactivation', () => {
       within(dialog).getByRole('button', { name: 'Desactivar productor' }),
     );
 
-    expect(await screen.findByText('Productor inactivo')).toBeInTheDocument();
+    expect(await heroStatus().findByText('Inactivo')).toBeInTheDocument();
     expect(statusBodies).toEqual([{ status: 'inactive', expected_version: 3 }]);
     await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(
@@ -236,7 +236,7 @@ describe('ProducerDetailScreen - deactivation', () => {
 
     await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(statusBodies).toEqual([]);
-    expect(screen.getByText('Productor activo')).toBeInTheDocument();
+    expect(heroStatus().getByText('Activo')).toBeInTheDocument();
   });
 
   it('shows the server error in the dialog when the request fails', async () => {
@@ -255,7 +255,7 @@ describe('ProducerDetailScreen - deactivation', () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
       'Ocurrió un error interno.',
     );
-    expect(screen.getByText('Productor activo')).toBeInTheDocument();
+    expect(heroStatus().getByText('Activo')).toBeInTheDocument();
   });
 
   it('shows a generic message in the dialog when there is no connection', async () => {
@@ -287,8 +287,8 @@ describe('ProducerDetailScreen - deactivation', () => {
       STALE_DETAIL,
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('Productor activo')).toBeInTheDocument();
-    expect(screen.queryByText('Productor inactivo')).not.toBeInTheDocument();
+    expect(heroStatus().getByText('Activo')).toBeInTheDocument();
+    expect(heroStatus().queryByText('Inactivo')).not.toBeInTheDocument();
   });
 
   it('keeps the action and the version the dialog opened with when the record changes underneath', async () => {
@@ -403,7 +403,7 @@ describe('ProducerDetailScreen - deactivation', () => {
     ).toBeDisabled();
     await user.click(pending);
 
-    expect(await screen.findByText('Productor inactivo')).toBeInTheDocument();
+    expect(await heroStatus().findByText('Inactivo')).toBeInTheDocument();
     expect(statusBodies).toHaveLength(1);
   });
 });
@@ -419,7 +419,7 @@ describe('ProducerDetailScreen - reactivation', () => {
     expect(
       await screen.findByRole('button', { name: 'Reactivar' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Productor inactivo')).toBeInTheDocument();
+    expect(heroStatus().getByText('Inactivo')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Desactivar' }),
     ).not.toBeInTheDocument();
@@ -485,7 +485,7 @@ describe('ProducerDetailScreen - reactivation', () => {
       within(dialog).getByRole('button', { name: 'Reactivar productor' }),
     );
 
-    expect(await screen.findByText('Productor activo')).toBeInTheDocument();
+    expect(await heroStatus().findByText('Activo')).toBeInTheDocument();
     expect(statusBodies).toEqual([{ status: 'active', expected_version: 4 }]);
     await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(
@@ -504,7 +504,7 @@ describe('ProducerDetailScreen - reactivation', () => {
 
     await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
     expect(statusBodies).toEqual([]);
-    expect(screen.getByText('Productor inactivo')).toBeInTheDocument();
+    expect(heroStatus().getByText('Inactivo')).toBeInTheDocument();
   });
 
   it('shows the server error when the reactivation fails', async () => {
@@ -521,6 +521,6 @@ describe('ProducerDetailScreen - reactivation', () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
       STALE_DETAIL,
     );
-    expect(screen.getByText('Productor inactivo')).toBeInTheDocument();
+    expect(heroStatus().getByText('Inactivo')).toBeInTheDocument();
   });
 });

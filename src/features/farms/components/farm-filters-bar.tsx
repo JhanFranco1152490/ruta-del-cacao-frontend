@@ -41,13 +41,6 @@ export function FarmFiltersBar({
         />
       }
     >
-      <MunicipalityFilter
-        className="w-full sm:w-64"
-        hideLabel
-        municipalities={municipalities.data ?? []}
-        onChange={(code) => void filters.setMunicipality(code)}
-        value={filters.municipality}
-      />
       {pickProducer && (
         <ProducerFilter
           className="w-full sm:w-80"
@@ -61,6 +54,13 @@ export function FarmFiltersBar({
           showTrigger={false}
         />
       )}
+      <MunicipalityFilter
+        className="w-full sm:w-64"
+        hideLabel
+        municipalities={municipalities.data ?? []}
+        onChange={(code) => void filters.setMunicipality(code)}
+        value={filters.municipality}
+      />
     </FilterRow>
   );
 }
