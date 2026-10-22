@@ -36,14 +36,14 @@ export function FarmCardList({
 }) {
   return (
     <ul
-      className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
+      className="motion-stagger grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
       aria-label="Fincas"
     >
       {farms.map((farm) => (
         <li key={farm.id}>
           <article
             aria-labelledby={`farm-${farm.id}-name`}
-            className={`relative flex h-full flex-col gap-1.5 rounded-[var(--radius-card)] border border-border bg-card p-4 hover:bg-surface-alt data-[highlighted]:ring-3 data-[highlighted]:ring-cobre ${STRETCHED_CARD_FOCUS_CLASS}`}
+            className={`relative flex h-full flex-col gap-1.5 rounded-[var(--radius-card)] border border-border bg-card p-4 transition-colors hover:bg-surface-alt data-[highlighted]:ring-3 data-[highlighted]:ring-cobre ${STRETCHED_CARD_FOCUS_CLASS}`}
             data-highlighted={farm.id === highlightedId || undefined}
           >
             <div className="flex items-start justify-between gap-3">

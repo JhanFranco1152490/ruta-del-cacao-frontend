@@ -58,7 +58,7 @@ export function ActivityDayAgenda({
         )}
       </div>
       {items.length > 0 && (
-        <ul className="space-y-3">
+        <ul className="motion-stagger space-y-3">
           {items.map((item) => (
             <li key={item.activity.id}>
               <ActivityCard item={item} onSelect={() => onSelect(item)} />

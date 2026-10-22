@@ -123,7 +123,7 @@ export function PendingMonitoringsSection({
       <h2 className="font-sans text-base font-extrabold text-selva">
         Por registrar ({rows.length})
       </h2>
-      <ul className="space-y-3">
+      <ul className="motion-stagger space-y-3">
         {rows.map((activity) => (
           <PendingMonitoringRow
             activity={activity}
