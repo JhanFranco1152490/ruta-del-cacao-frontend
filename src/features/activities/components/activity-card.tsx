@@ -41,8 +41,10 @@ export function ActivityCard({
             {plot.code}
           </span>
           <span>{plot.farm.name}</span>
-          <span aria-hidden="true">·</span>
-          <span>
+          <span aria-hidden="true" className="max-sm:hidden">
+            ·
+          </span>
+          <span className="max-sm:basis-full">
             {assignee.full_name}
             {note && ` (${note.toLowerCase()})`}
           </span>

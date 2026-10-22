@@ -39,14 +39,14 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="scrollbar-on-dark border-selva-barra bg-selva-barra text-crema [&_[data-slot=sheet-close]]:text-crema [&_[data-slot=sheet-close]]:hover:bg-white/10"
+        className="scrollbar-on-dark w-80 max-w-[88vw] overflow-x-hidden border-selva-barra bg-selva-barra text-crema [&_[data-slot=sheet-close]]:bg-transparent [&_[data-slot=sheet-close]]:text-crema [&_[data-slot=sheet-close]]:shadow-none [&_[data-slot=sheet-close]]:ring-0 [&_[data-slot=sheet-close]]:hover:bg-white/10"
       >
         <SheetHeader>
           <SheetTitle className="font-serif text-xl text-crema">
             Menú de navegación
           </SheetTitle>
         </SheetHeader>
-        <div className="relative flex flex-1 flex-col">
+        <div className="relative flex flex-1 flex-col overflow-x-clip">
           {/* El adorno va fuera del flujo: así no suma alto ni hace aparecer la barra de
               desplazamiento del panel cuando el menú cabe. */}
           <BotanicalVine className="pointer-events-none absolute inset-x-0 bottom-0 -mx-4 h-40 w-72 opacity-40" />

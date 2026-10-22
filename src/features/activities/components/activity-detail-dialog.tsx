@@ -82,6 +82,14 @@ export function ActivityDetailDialog({
   const showEdit = actions.edit && !!onEdit;
   const showDelete = actions.remove && !!onDelete;
   const onlineOnly = offline && (showEdit || showDelete);
+  // La acción principal (registrar lo que se hizo) va arriba, junto al título: debajo de los datos y
+  // del resultado quedaba fuera de la primera pantalla de un celular.
+  const primary =
+    actions.complete && completeHref
+      ? { href: completeHref, label: 'Registrar realización' }
+      : actions.recordMonitoring && monitoringHref
+        ? { href: monitoringHref, label: 'Registrar monitoreo' }
+        : null;
 
   return (
     <Dialog
@@ -128,6 +136,14 @@ export function ActivityDetailDialog({
             El servidor no aceptó la realización guardada en este teléfono.
             Corrígela o descártala desde Registros del dispositivo.
           </p>
+        )}
+        {primary && (
+          <EditorLink
+            className={buttonVariants({ size: 'office', className: 'w-full' })}
+            href={primary.href}
+          >
+            <Check aria-hidden="true" /> {primary.label}
+          </EditorLink>
         )}
         <ActivityDetailFacts
           item={item}
@@ -177,15 +193,7 @@ export function ActivityDetailDialog({
               <Pencil aria-hidden="true" /> Editar
             </Button>
           )}
-          {actions.complete && completeHref ? (
-            <EditorLink className={buttonVariants()} href={completeHref}>
-              <Check aria-hidden="true" /> Registrar realización
-            </EditorLink>
-          ) : actions.recordMonitoring && monitoringHref ? (
-            <EditorLink className={buttonVariants()} href={monitoringHref}>
-              <Check aria-hidden="true" /> Registrar monitoreo
-            </EditorLink>
-          ) : (
+          {!primary && (
             <Button onClick={onClose} variant="outline">
               Cerrar
             </Button>

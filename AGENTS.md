@@ -592,6 +592,18 @@ referencia en `docs/ui/ref/*.html`.
   Los totales de arriba de una lista usan `SummaryStrip`. Una lista con mapa usa `MapBesideList`, y
   las hojas laterales (cuentas, roles) comparten `SidePanelHeader`/`SidePanelSection`/
   `SidePanelActions`. Qué es modal, hoja o página está en el sistema de diseño.
+  - **Modales y hojas en celular.** El botón de cerrar (`ModalClose`) va pegado arriba mientras el
+    contenido se desplaza, con fondo propio (se ve sobre una franja de color y sobre el contenido);
+    el recuadro declara su relleno y su `gap` en `--pad` y `--gap` (una hoja sin relleno los pone en
+    0). «Atrás» cierra el modal en vez de salir de la pantalla (`useBackToClose`, dentro de
+    `Dialog`); un modal que se abre con la dirección y ya trae su entrada de historial
+    (`history: 'push'`, las hojas de cuentas y roles) pasa `closeOnBack={false}`. Mientras se edita
+    algo del registro que se veía, la hoja conserva su franja (`SidePanelEditBand`).
+  - **Barras y tarjetas.** Una barra fija (`MobileActionBar`) lleva `mb-0!`: el `space-y-*` del
+    formulario le pondría margen abajo y quedaría despegada del borde. En la tabla compacta las
+    celdas que comparten fila llevan `max-md:col-span-1!` (con `!`) y la fila tiene fondo de tarjeta,
+    para distinguirse del fondo crema de la página. Una tarjeta con un enlace principal se abre
+    tocándola en cualquier parte (`stretched-link-class`).
 - **Toda ficha termina con «Volver» abajo a la izquierda** (`DetailFooter`; las acciones de la
   ficha, si tiene, van a su derecha). Volver lleva a la pantalla desde la que se abrió la ficha, con
   sus filtros (`readOrigin`; los enlaces que abren una ficha usan `EditorLink`), o a la lista de la

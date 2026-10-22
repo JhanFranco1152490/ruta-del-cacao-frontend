@@ -5,10 +5,55 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { cn } from 'cn';
 
 import { Button } from '@/components/ui/button';
-import { XIcon } from 'lucide-react';
+import { useBackToClose } from '@/hooks/use-back-to-close';
+import { ModalClose } from '@/components/ui/modal-close';
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+// En el celular, «atrás» cierra el modal en vez de salir de la pantalla (`useBackToClose`). Para
+// saber si está abierto cuando nadie lo controla, la apertura se lleva aquí también.
+function Dialog({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  closeOnBack = true,
+  ...props
+}: DialogPrimitive.Root.Props & {
+  // Falso en un modal que ya tiene su propia entrada de historial (se abre con la dirección).
+  closeOnBack?: boolean;
+}) {
+  const [ownOpen, setOwnOpen] = React.useState(defaultOpen);
+  const dismissedByUser = React.useRef(false);
+  const open = openProp ?? ownOpen;
+  const change: NonNullable<DialogPrimitive.Root.Props['onOpenChange']> = (
+    next,
+    details,
+  ) => {
+    // Cerrar por la X, tocando fuera o con Escape pasa por aquí; un cierre del código, no.
+    if (!next) {
+      dismissedByUser.current = true;
+      // Si quien lo controla no lo cierra (está guardando), la marca no debe quedar puesta.
+      setTimeout(() => {
+        dismissedByUser.current = false;
+      }, 100);
+    }
+    if (openProp === undefined) setOwnOpen(next);
+    onOpenChange?.(next, details);
+  };
+  useBackToClose(
+    open && closeOnBack,
+    () => {
+      if (openProp === undefined) setOwnOpen(false);
+      onOpenChange?.(false, undefined as never);
+    },
+    dismissedByUser,
+  );
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      onOpenChange={change}
+      open={open}
+      {...props}
+    />
+  );
 }
 
 function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
@@ -55,27 +100,15 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 sm:max-w-sm',
+          'fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none [--gap:1rem] [--pad:1rem] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 sm:max-w-sm',
           className,
         )}
         {...props}
       >
-        {children}
         {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            render={
-              <Button
-                variant="ghost"
-                className="absolute top-2 right-2"
-                size="icon-sm"
-              />
-            }
-          >
-            <XIcon />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
+          <ModalClose label="Cerrar ventana" slot="dialog-close" />
         )}
+        {children}
       </DialogPrimitive.Popup>
     </DialogPortal>
   );

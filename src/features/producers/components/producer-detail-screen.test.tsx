@@ -151,7 +151,15 @@ describe('ProducerDetailScreen', () => {
     renderWithProviders(<ProducerDetailScreen id="p1" />);
 
     expect(
-      await screen.findByRole('link', { name: /Editar datos/ }),
+      await screen.findByRole('link', { name: 'Editar datos' }),
+    ).toHaveAttribute('href', '/productores/p1/editar?origen=%2Fproductores');
+  });
+
+  it('also offers a pencil next to the registered data', async () => {
+    renderWithProviders(<ProducerDetailScreen id="p1" />);
+
+    expect(
+      await screen.findByRole('link', { name: 'Editar datos del productor' }),
     ).toHaveAttribute('href', '/productores/p1/editar?origen=%2Fproductores');
   });
 
@@ -159,7 +167,7 @@ describe('ProducerDetailScreen', () => {
     renderWithProviders(<ProducerDetailScreen id="p1" />);
 
     expectVisibleFocusOutline(
-      await screen.findByRole('link', { name: /Editar datos/ }),
+      await screen.findByRole('link', { name: 'Editar datos' }),
     );
   });
 

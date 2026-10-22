@@ -45,9 +45,9 @@ function Stat({
   percentage?: number;
 }) {
   return (
-    <div className="rounded-[var(--radius-card)] bg-card p-4 shadow-card">
+    <div className="rounded-[var(--radius-card)] bg-card p-3 shadow-card sm:p-4">
       <p className="section-label">{label}</p>
-      <p className="mt-1 font-serif text-3xl text-selva">{value}</p>
+      <p className="mt-1 font-serif text-2xl text-selva sm:text-3xl">{value}</p>
       {note && <p className="text-sm text-muted-foreground">{note}</p>}
       {percentage !== undefined && (
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">

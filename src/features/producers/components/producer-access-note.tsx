@@ -22,12 +22,14 @@ export function ProducerAccessNote({
   const note = NOTES[status];
   return (
     <aside
-      className={`rounded-[var(--radius-card)] bg-card shadow-card ${tile ? 'p-4' : 'p-5'}`}
+      className={`rounded-[var(--radius-card)] bg-card shadow-card ${tile ? 'p-3 sm:p-4' : 'p-5'}`}
     >
       <p className="section-label">Estado de acceso</p>
       <h2
         className={
-          tile ? 'mt-1 text-xl text-selva' : 'mt-2 text-2xl text-selva'
+          tile
+            ? 'mt-1 text-lg text-selva sm:text-xl'
+            : 'mt-2 text-2xl text-selva'
         }
       >
         {note.title}
@@ -35,7 +37,7 @@ export function ProducerAccessNote({
       <p
         className={
           tile
-            ? 'mt-1 text-sm text-muted-foreground'
+            ? 'mt-1 text-sm text-muted-foreground max-sm:hidden'
             : 'mt-3 text-sm leading-6 text-muted-foreground'
         }
       >

@@ -96,7 +96,7 @@ export function HarvestListScreen({
             selected={selectedProducer}
           />
         )}
-        <div className="ml-auto">
+        <div className="ml-auto max-sm:w-full">
           <PeriodBar
             isCurrent={period.isCurrentMonth}
             nextLabel="Mes siguiente"

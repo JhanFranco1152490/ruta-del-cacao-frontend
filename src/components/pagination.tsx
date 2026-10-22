@@ -22,12 +22,12 @@ export function Pagination({
   return (
     <nav
       aria-label={`Paginación de ${label}`}
-      className="mt-5 flex items-center justify-between gap-4"
+      className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
     >
       <p className="text-sm text-muted-foreground">
         {total} {label} encontrados
       </p>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 max-sm:w-full max-sm:justify-between">
         <Button
           className="h-10"
           disabled={page <= 1}
@@ -36,7 +36,7 @@ export function Pagination({
         >
           Anterior
         </Button>
-        <span className="text-sm font-bold">
+        <span className="text-sm font-bold whitespace-nowrap">
           Página {page} de {totalPages}
         </span>
         <Button

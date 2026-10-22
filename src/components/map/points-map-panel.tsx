@@ -55,10 +55,12 @@ export function PointsMapPanel({
   }
 
   const { Provider } = map;
+  // Con el mapa oculto, el total va dentro de la franja «Mapa oculto» y no en una fila aparte.
+  const toolbarInBar = !visible && !map.isLoading && !!Provider;
 
   return (
     <section aria-label={label} className="space-y-2">
-      {toolbar && <div>{toolbar}</div>}
+      {toolbar && !toolbarInBar && <div>{toolbar}</div>}
       {map.isLoading ? (
         <MapSkeleton className={heightClassName} />
       ) : !Provider ? (
@@ -85,7 +87,7 @@ export function PointsMapPanel({
               />
             </MapFrame>
           ) : (
-            <MapHiddenBar onShow={() => setVisible(true)} />
+            <MapHiddenBar onShow={() => setVisible(true)} summary={toolbar} />
           )}
           {visible && points.length === 0 && shapes.length === 0 && (
             <p className="text-sm font-bold text-muted-foreground">

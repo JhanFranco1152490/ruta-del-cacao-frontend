@@ -65,4 +65,23 @@ describe('SegmentedControl', () => {
       'min-h-11',
     );
   });
+
+  it('shares the width equally on a phone when it is full width', () => {
+    render(
+      <SegmentedControl
+        fullWidth
+        label="Opciones"
+        onChange={vi.fn()}
+        options={OPTIONS}
+        value="a"
+      />,
+    );
+
+    expect(screen.getByRole('group', { name: 'Opciones' })).toHaveClass(
+      'w-full',
+    );
+    expect(screen.getByRole('button', { name: 'Primera' })).toHaveClass(
+      'max-sm:flex-1',
+    );
+  });
 });

@@ -646,7 +646,15 @@ describe('HealthScreen', () => {
       expect(rows[2]).toHaveTextContent('Sin presencia');
     });
 
-    it('puts the detail button on the same row as the actions of a detection', async () => {
+    it('puts the detail button on the same row as the actions of a detection on a wide screen', async () => {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn(() => ({
+          matches: true,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        })),
+      );
       answer = () => page([found]);
       renderScreen('?vista=historial');
       const table = await monitorings();
@@ -657,6 +665,50 @@ describe('HealthScreen', () => {
       });
 
       expect(schedule.parentElement).toBe(detail.parentElement);
+      vi.unstubAllGlobals();
+    });
+
+    it('keeps the control actions behind a menu on a phone, next to the detail button', async () => {
+      answer = () => page([found]);
+      renderScreen('?vista=historial');
+      const table = await monitorings();
+
+      expect(
+        within(table).queryByRole('button', { name: /Programar control/ }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(
+        within(table).getByRole('button', {
+          name: 'Más acciones de Monilia',
+        }),
+      );
+
+      expect(
+        await screen.findByRole('menuitem', { name: /Programar control/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('menuitem', { name: /Registrar control realizado/ }),
+      ).toBeInTheDocument();
+      expect(
+        within(table).getByRole('button', { name: /Detalle/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('opens the detail inside the same card on a phone, not in another one', async () => {
+      answer = () => page([found]);
+      renderScreen('?vista=historial');
+      const table = await monitorings();
+      const rowsBefore = within(table).getAllByRole('row').length;
+
+      await userEvent.click(
+        within(table).getByRole('button', { name: /Detalle/ }),
+      );
+
+      expect(within(table).getAllByRole('row')).toHaveLength(rowsBefore);
+      expect(
+        within(within(table).getAllByRole('row')[1]).getByText(
+          /Foco en la zona baja/,
+        ),
+      ).toBeInTheDocument();
     });
 
     it('opens the detail of a monitoring with its notes', async () => {

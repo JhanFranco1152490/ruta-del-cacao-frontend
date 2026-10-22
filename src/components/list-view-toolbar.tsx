@@ -10,7 +10,7 @@ const VIEW_OPTIONS = [
 ] as const;
 
 // Una sola línea sobre la lista: cuántos hay y qué falta elegir, a la izquierda; a la derecha,
-// la vista (solo para quien ve varios productores) y plegar o desplegar los grupos.
+// la vista (solo para quien ve varios productores) y, a su derecha, plegar o desplegar los grupos.
 export function ListViewToolbar({
   count,
   hint,
@@ -31,6 +31,14 @@ export function ListViewToolbar({
         {hint && <p>{hint}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-3">
+        {view && onViewChange && (
+          <SegmentedControl
+            label="Vista de la lista"
+            options={VIEW_OPTIONS}
+            value={view}
+            onChange={onViewChange}
+          />
+        )}
         {view === 'agrupada' && groups && (
           <Button
             aria-label={groups.allOpen ? 'Plegar todo' : 'Desplegar todo'}
@@ -46,14 +54,6 @@ export function ListViewToolbar({
               <ChevronsUpDown aria-hidden="true" className="size-5" />
             )}
           </Button>
-        )}
-        {view && onViewChange && (
-          <SegmentedControl
-            label="Vista de la lista"
-            options={VIEW_OPTIONS}
-            value={view}
-            onChange={onViewChange}
-          />
         )}
       </div>
     </div>
