@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageNotice } from '@/components/page-notice';
 import { buttonVariants } from '@/components/ui/button';
+import { useLeaveIfNotAssignee } from '@/hooks/use-leave-if-not-assignee';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
@@ -37,18 +38,10 @@ export function CompletionScreen({
   // Entre guardar y que la navegación llegue, la lectura de lo guardado ya cambió: sin esto se vería
   // un instante el aviso de «ya está guardada».
   const [saved, setSaved] = useState(false);
-  const router = useRouter();
-  const { data: user } = useSession();
-  // Quien llega escribiendo la dirección de una actividad que no le toca registrar vuelve a la
-  // pantalla de antes sin aviso: el botón ya no se le ofrece, y lo que guardara aquí el servidor
-  // lo rechazaría.
-  const notYours =
-    sources.status === 'ready' &&
-    !!user &&
-    !mayRecordFor(user, sources.activity.assignee.id);
-  useEffect(() => {
-    if (notYours) router.replace(returnPath);
-  }, [notYours, router, returnPath]);
+  const notYours = useLeaveIfNotAssignee(
+    sources.status === 'ready' ? sources.activity.assignee.id : undefined,
+    returnPath,
+  );
 
   if (sources.status === 'missing') {
     return <PageNotice title="Esta actividad ya no existe." />;
