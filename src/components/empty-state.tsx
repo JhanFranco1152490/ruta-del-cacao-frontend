@@ -17,8 +17,8 @@ export function EmptyState({
   illustration?: Illustration;
 }) {
   return (
-    <div className="p-10 text-center">
-      <Art className="mx-auto mb-4 h-28 w-32" />
+    <div className="motion-rise p-10 text-center">
+      <Art className="motion-pop mx-auto mb-4 h-28 w-32" />
       <h2 className="text-2xl text-selva">{title}</h2>
       {description && (
         <p className="mx-auto mt-2 max-w-md text-muted-foreground">

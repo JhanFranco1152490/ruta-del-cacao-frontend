@@ -52,7 +52,7 @@ export function ActivityPendingView({
                 </h3>
                 {index === 0 && daysControl}
               </div>
-              <ul className="mt-3 space-y-3">
+              <ul className="motion-stagger mt-3 space-y-3">
                 {items.map((item) => (
                   <li key={item.activity.id}>
                     <ActivityCard item={item} onSelect={() => onSelect(item)} />

@@ -21,6 +21,9 @@
   --crema: #f7f2ea;
   --ink: #231812;
 
+  /* Movimiento: salida suave, la que usan todas las entradas. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
   /* Ilustración */
   --amarillo-mazorca: #e3a92b;
   --morado-cacao: #6b2a3a;
@@ -432,6 +435,77 @@ a {
     .map-focus {
       animation: none;
     }
+  }
+
+  /* Movimiento de la app: corto (menos de 300 ms), que se note sin hacer esperar. Entran
+     subiendo un poco y apareciendo; nada se repite ni llama la atención por sí solo. */
+  .motion-fade {
+    animation: motion-fade 160ms var(--ease-out) backwards;
+  }
+  .motion-rise {
+    animation: motion-rise 240ms var(--ease-out) backwards;
+  }
+  .motion-pop {
+    animation: motion-pop 280ms var(--ease-out) backwards;
+  }
+  /* Los hijos directos entran escalonados: los primeros ocho, 40 ms uno tras otro; el resto, junto
+     con el octavo, para que una lista larga no tarde en terminar de aparecer. */
+  .motion-stagger > * {
+    animation: motion-rise 240ms var(--ease-out) backwards;
+  }
+  .motion-stagger > :nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .motion-stagger > :nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .motion-stagger > :nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .motion-stagger > :nth-child(5) {
+    animation-delay: 160ms;
+  }
+  .motion-stagger > :nth-child(6) {
+    animation-delay: 200ms;
+  }
+  .motion-stagger > :nth-child(7) {
+    animation-delay: 240ms;
+  }
+  .motion-stagger > :nth-child(n + 8) {
+    animation-delay: 280ms;
+  }
+  @keyframes motion-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes motion-rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes motion-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+  }
+}
+
+/* Con «reducir movimiento» en el sistema, lo que se anima pasa a su estado final de inmediato: sin
+   desplazamientos, sin escalas. Cubre también los diálogos y hojas (tw-animate-css), que no lo
+   respetan por sí solos. Fuera de la capa para ganarle a cualquier utilidad. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
