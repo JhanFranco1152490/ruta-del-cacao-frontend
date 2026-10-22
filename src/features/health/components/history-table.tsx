@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useSession } from '@/hooks/use-session';
 import type { components } from '@/lib/api/schema';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -127,6 +128,7 @@ function MonitoringRows({ rows }: { rows: readonly HistoryRow[] }) {
   const { activity } = rows[0];
   const photos = activity.monitoring?.evidence_count ?? 0;
   const { data: user } = useSession();
+  const isDesktop = useIsDesktop();
   const canAct = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD);
   const detailButton = (
     <Button
@@ -192,6 +194,7 @@ function MonitoringRows({ rows }: { rows: readonly HistoryRow[] }) {
               <DetectionActions
                 compact
                 detection={detection}
+                menu={!isDesktop}
                 monitoring={activity}
               >
                 {first && detailButton}
@@ -200,9 +203,17 @@ function MonitoringRows({ rows }: { rows: readonly HistoryRow[] }) {
               <div className="flex md:justify-end">{first && detailButton}</div>
             )}
           </TableCell>
+          {/* En celular cada fila es una tarjeta: el detalle se abre dentro de la primera, no en otra. */}
+          {first && open && !isDesktop && (
+            <TableCell className="max-md:order-7">
+              <div className="mt-2 border-t border-border pt-2">
+                <MonitoringDetail activity={activity} />
+              </div>
+            </TableCell>
+          )}
         </TableRow>
       ))}
-      {open && (
+      {open && isDesktop && (
         <TableRow>
           <TableCell className="md:col-span-6" colSpan={6}>
             <MonitoringDetail activity={activity} />
@@ -223,7 +234,11 @@ export function HistoryTable({ rows }: { rows: readonly HistoryRow[] }) {
     else groups.push([row]);
   }
   return (
-    <Table aria-label="Monitoreos" className={COMPACT_TABLE_CLASS}>
+    // Sin la flecha de las tarjetas que se abren (`pr-10`): aquí ninguna fila es un enlace.
+    <Table
+      aria-label="Monitoreos"
+      className={`${COMPACT_TABLE_CLASS} max-md:[&_tr]:pr-3!`}
+    >
       <TableHeader>
         <TableRow>
           <TableHead>Fecha</TableHead>

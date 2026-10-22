@@ -1,3 +1,7 @@
+import {
+  STRETCHED_CARD_FOCUS_CLASS,
+  STRETCHED_LINK_CLASS,
+} from '@/components/stretched-link-class';
 import { Eye, MapPin, MapPinned } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -39,7 +43,7 @@ export function FarmCardList({
         <li key={farm.id}>
           <article
             aria-labelledby={`farm-${farm.id}-name`}
-            className="flex h-full flex-col gap-1.5 rounded-[var(--radius-card)] border border-border bg-card p-4 data-[highlighted]:ring-3 data-[highlighted]:ring-cobre"
+            className={`relative flex h-full flex-col gap-1.5 rounded-[var(--radius-card)] border border-border bg-card p-4 hover:bg-surface-alt data-[highlighted]:ring-3 data-[highlighted]:ring-cobre ${STRETCHED_CARD_FOCUS_CLASS}`}
             data-highlighted={farm.id === highlightedId || undefined}
           >
             <div className="flex items-start justify-between gap-3">
@@ -58,10 +62,12 @@ export function FarmCardList({
               <span>{farm.areaHectares} ha</span>
             </p>
             {showProducer && farm.producer && (
-              <ProducerLine
-                producer={farm.producer}
-                linkable={canOpenProducer}
-              />
+              <div className="relative z-10 w-fit max-w-full">
+                <ProducerLine
+                  producer={farm.producer}
+                  linkable={canOpenProducer}
+                />
+              </div>
             )}
             {farm.details && (
               <p className="truncate text-sm text-muted-foreground">
@@ -78,7 +84,7 @@ export function FarmCardList({
                 aria-label={`Ver detalle de ${farm.name}`}
                 className={buttonVariants({
                   size: 'office',
-                  className: 'min-w-0 flex-1',
+                  className: `min-w-0 flex-1 ${STRETCHED_LINK_CLASS}`,
                 })}
                 href={farmDetailPath(farm.id)}
               >
@@ -87,7 +93,7 @@ export function FarmCardList({
               {onShowOnMap && parseCoordinates(farm.location) && (
                 <Button
                   aria-label={`Ver ${farm.name} en el mapa`}
-                  className="px-3"
+                  className="relative z-10 px-3"
                   onClick={() => onShowOnMap(farm)}
                   size="office"
                   title="Ver en el mapa"
@@ -97,7 +103,9 @@ export function FarmCardList({
                   <MapPinned aria-hidden="true" className="size-4" />
                 </Button>
               )}
-              {renderActions?.(farm)}
+              {renderActions && (
+                <span className="relative z-10">{renderActions(farm)}</span>
+              )}
             </div>
           </article>
         </li>

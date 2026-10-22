@@ -92,7 +92,7 @@ export function ProducerDetailScreen({
               // izquierda las fincas con la cuenta de acceso y a la derecha los datos, para que las dos
               // columnas queden de alto parecido.
               <div className="mt-5 space-y-5">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                   {farms.stats}
                   <ProducerAccessNote status={producer.status} tile />
                 </div>

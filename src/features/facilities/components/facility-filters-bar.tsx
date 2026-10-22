@@ -33,7 +33,7 @@ export function FacilityFiltersBar({
           onType(event.target.value as FacilityFilters['type'])
         }
         value={filters.type}
-        wrapperClassName="w-full sm:w-48"
+        wrapperClassName="min-w-0 flex-1 sm:w-48 sm:flex-none"
       >
         <option value="all">Todos los tipos</option>
         {FACILITY_TYPE_ORDER.map((type) => (
@@ -49,7 +49,7 @@ export function FacilityFiltersBar({
           onStatus(event.target.value as FacilityFilters['status'])
         }
         value={filters.status}
-        wrapperClassName="w-full sm:w-48"
+        wrapperClassName="min-w-0 flex-1 sm:w-48 sm:flex-none"
       >
         <option value="all">Todos los estados</option>
         {FACILITY_STATUS_ORDER.map((status) => (

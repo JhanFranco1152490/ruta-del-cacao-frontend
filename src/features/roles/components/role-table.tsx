@@ -55,7 +55,9 @@ export function RoleTable({
               <StatusBadge tone="info">{KIND_LABEL[role.kind]}</StatusBadge>
             </TableCell>
             {showProducer && (
-              <TableCell className="max-w-64 break-words whitespace-normal max-md:order-4">
+              <TableCell
+                className={`max-w-64 break-words whitespace-normal max-md:order-4 ${role.producer ? '' : 'max-md:hidden'}`}
+              >
                 {role.producer
                   ? `${role.producer.first_name} ${role.producer.last_name} · ${role.producer.member_code}`
                   : '—'}

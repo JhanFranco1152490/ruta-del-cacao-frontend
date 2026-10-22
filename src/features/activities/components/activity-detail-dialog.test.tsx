@@ -85,7 +85,7 @@ const dialog = () => screen.findByRole('dialog');
 const buttonNames = async () =>
   Array.from((await dialog()).querySelectorAll('button, a'))
     .map((action) => action.textContent?.trim())
-    .filter((name) => name !== 'Close');
+    .filter((name) => name !== 'Cerrar ventana');
 
 describe('ActivityDetailDialog', () => {
   it('shows what is scheduled, where and who does it', async () => {
@@ -110,9 +110,9 @@ describe('ActivityDetailDialog', () => {
     const handlers = renderDetail({ scheduled_date: '2026-10-30' });
 
     expect(await buttonNames()).toEqual([
+      'Registrar realización',
       'Eliminar',
       'Editar',
-      'Registrar realización',
     ]);
     await userEvent.click(screen.getByRole('button', { name: 'Editar' }));
     await userEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
@@ -149,9 +149,9 @@ describe('ActivityDetailDialog', () => {
       'El viernes 23 de octubre · ya no se podrá reprogramar',
     );
     expect(await buttonNames()).toEqual([
+      'Registrar realización',
       'Eliminar',
       'Editar',
-      'Registrar realización',
     ]);
   });
 
@@ -245,9 +245,9 @@ describe('ActivityDetailDialog', () => {
     });
     expect(record.getAttribute('href')).toMatch(/^\/sanidad\/monitoreo\?id=a1/);
     expect(await buttonNames()).toEqual([
+      'Registrar monitoreo',
       'Eliminar',
       'Editar',
-      'Registrar monitoreo',
     ]);
   });
 
@@ -318,9 +318,9 @@ describe('ActivityDetailDialog', () => {
     );
     expect(within(detail).getByText('Programada')).toBeInTheDocument();
     expect(await buttonNames()).toEqual([
+      'Registrar realización',
       'Eliminar',
       'Editar',
-      'Registrar realización',
     ]);
   });
 });

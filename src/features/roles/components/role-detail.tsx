@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
+import { SidePanelEditBand } from '@/components/side-panel';
 import { roleScopeLabel } from '@/lib/farm-scope';
 import { groupRolePermissions } from '../permission-areas';
 import { canEditRole } from '../schemas';
@@ -27,14 +28,17 @@ export function RoleDetail({
   const editable = manage && canEditRole(role, catalog);
   if (editing && editable)
     return (
-      <div className="px-5 py-4">
-        <RoleForm
-          role={role}
-          catalog={catalog}
-          onBusy={onBusy}
-          onSaved={() => setEditing(false)}
-          onCancel={() => setEditing(false)}
-        />
+      <div>
+        <SidePanelEditBand kicker="Editar rol" title={role.name} />
+        <div className="px-5 py-4">
+          <RoleForm
+            role={role}
+            catalog={catalog}
+            onBusy={onBusy}
+            onSaved={() => setEditing(false)}
+            onCancel={() => setEditing(false)}
+          />
+        </div>
       </div>
     );
   // El nombre lo trae el propio rol: el catálogo solo ofrece los permisos delegables, y los de un

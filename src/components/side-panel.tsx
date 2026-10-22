@@ -9,10 +9,9 @@ import {
 
 // Las hojas laterales de la app (cuentas, roles) comparten forma: una franja de color arriba con el
 // título, el contenido con su propio relleno, secciones en tarjeta y las acciones fijas abajo. La
-// hoja se declara sin relleno (`SIDE_PANEL_CLASS`) y la franja del detalle de un registro, que ya
-// trae la suya hasta los bordes, usa `data-band` para pintar de blanco el botón de cerrar.
-export const SIDE_PANEL_CLASS =
-  'gap-0 p-0 sm:max-w-lg has-[[data-band]]:[&_[data-slot=sheet-close]]:text-white has-[[data-band]]:[&_[data-slot=sheet-close]]:hover:bg-white/15 has-[[data-band]]:[&_[data-slot=sheet-close]]:hover:text-white';
+// hoja se declara sin relleno (`SIDE_PANEL_CLASS`, que se lo dice también al botón de cerrar) y la
+// franja del detalle de un registro trae la suya hasta los bordes.
+export const SIDE_PANEL_CLASS = 'gap-0 p-0 [--gap:0px] [--pad:0px] sm:max-w-lg';
 
 // La cabecera de la hoja. Sin `band` queda solo para los lectores de pantalla: el detalle de un
 // registro ya tiene su propia franja con el nombre.
@@ -37,6 +36,26 @@ export function SidePanelHeader({
         {description}
       </SheetDescription>
     </SheetHeader>
+  );
+}
+
+// La franja de color mientras se edita algo del registro que se estaba viendo: el panel conserva su
+// identidad y dice qué se edita y de quién. Más baja que la del detalle.
+export function SidePanelEditBand({
+  kicker,
+  title,
+}: {
+  kicker: string;
+  title: string;
+}) {
+  return (
+    <div
+      className="bg-gradient-to-br from-selva to-selva-2 px-5 pt-4 pr-12 pb-3 text-white"
+      data-band
+    >
+      <p className="text-sm font-bold text-white/80">{kicker}</p>
+      <h2 className="font-serif text-2xl break-words">{title}</h2>
+    </div>
   );
 }
 
@@ -71,7 +90,7 @@ export function SidePanelSection({
 // La acción principal va primero en el código y la fila se invierte para dejarla a la derecha.
 export function SidePanelActions({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-5 -mb-4 flex flex-row-reverse gap-2 border-t border-border bg-popover px-5 py-3 [&>*]:w-auto [&>*]:min-w-0 [&>*]:flex-1 [&>*:first-child]:flex-[2]">
+    <div className="sticky bottom-0 z-10 -mx-5 -mb-4! flex flex-row-reverse gap-2 border-t border-border bg-popover px-5 py-3 [&>*]:w-auto [&>*]:min-w-0 [&>*]:flex-1 [&>*:first-child]:flex-[2]">
       {children}
     </div>
   );
