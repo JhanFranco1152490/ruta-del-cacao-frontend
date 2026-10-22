@@ -166,7 +166,7 @@ export function HistoryCards({ rows }: { rows: readonly HistoryRow[] }) {
   return (
     <div
       aria-label="Monitoreos"
-      className="grid gap-3"
+      className="motion-stagger grid gap-3"
       role="list"
       style={accentStyle('cacao')}
     >

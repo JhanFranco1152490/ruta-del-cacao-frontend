@@ -27,7 +27,7 @@ export function UpcomingMonitoringsSection({
       <h2 className="font-sans text-base font-extrabold text-selva">
         Próximos monitoreos ({rows.length})
       </h2>
-      <ul className="space-y-3">
+      <ul className="motion-stagger space-y-3">
         {rows.map((activity) => (
           <li className={`${ROW_CLASS} ${LINKED_ROW_CLASS}`} key={activity.id}>
             <div className="min-w-0">

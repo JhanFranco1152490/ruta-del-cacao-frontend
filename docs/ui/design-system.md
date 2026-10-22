@@ -218,6 +218,27 @@ poscosecha cobre, calidad azul). Nunca emojis.
   barra lateral y del menú móvil, al 50 % de opacidad) y página pública del QR.
 - Ninguna textura detrás de texto corrido.
 
+### Movimiento
+
+Solo CSS (Tailwind y `tw-animate-css`, ya instalados): sin librería de animación, que sumaría peso
+a una app que se usa en celulares modestos y sin conexión. Las utilidades están en `globals.css`.
+
+- `motion-fade` (160 ms, solo opacidad): el contenido de cada pantalla al navegar
+  (`app/(app)/template.tsx`). Solo opacidad: un desplazamiento volvería a esa capa el bloque de
+  contención de las barras fijas mientras dura.
+- `motion-rise` (240 ms, sube 8 px y aparece): bloques que entran con la pantalla: encabezado,
+  franja de cifras, tarjetas de sección, estados vacíos y el contenido de un grupo que se abre.
+- `motion-pop` (280 ms, de 94 % a 100 %): la ilustración de un estado vacío.
+- `motion-stagger` en un contenedor: sus hijos entran escalonados (40 ms entre uno y otro, los
+  primeros ocho; del octavo en adelante, juntos). Va en las filas de las tablas (`TableBody`) y en
+  las listas de tarjetas: fincas, parcelas, actividades y Sanidad.
+- Curva `--ease-out` en todas. Nada se repite ni se anima solo; el movimiento acompaña un cambio,
+  no llama la atención.
+- Con «reducir movimiento» en el sistema, todo pasa a su estado final de inmediato (regla global al
+  final de `globals.css`, que cubre también diálogos y hojas).
+- Una animación de entrada con `backwards` (sin `forwards`) no deja `transform` al terminar, así que
+  no afecta a nada que se posicione dentro.
+
 ---
 
 ## 6. Reglas de accesibilidad y de campo (no negociables)

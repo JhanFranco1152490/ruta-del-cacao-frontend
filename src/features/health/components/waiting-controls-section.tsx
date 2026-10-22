@@ -23,7 +23,7 @@ export function WaitingControlsSection({
         Alguien pidió que se programara un control. Prográmalo o decide que no
         hace falta.
       </p>
-      <ul className="space-y-3">
+      <ul className="motion-stagger space-y-3">
         {detections.map((detection) => (
           <WaitingDetectionRow
             detection={detection}

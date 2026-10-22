@@ -24,7 +24,7 @@ export function ActivityDayList({
               </span>
             )}
           </h3>
-          <ul className="mt-3 space-y-3">
+          <ul className="motion-stagger mt-3 space-y-3">
             {day.activities.map((item) => (
               <li key={item.activity.id}>
                 <ActivityCard item={item} onSelect={() => onSelect(item)} />

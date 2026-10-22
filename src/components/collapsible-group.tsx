@@ -21,7 +21,7 @@ export function CollapsibleGroup({
   return (
     <section className="rounded-lg border border-border">
       {/* El conteo va fuera del título: el nombre del encabezado es solo el del grupo. */}
-      <div className="flex items-center gap-3 rounded-lg px-4 hover:bg-surface-alt">
+      <div className="flex items-center gap-3 rounded-lg px-4 transition-colors hover:bg-surface-alt">
         <h2 className="min-w-0 flex-1">
           <button
             type="button"
@@ -47,7 +47,7 @@ export function CollapsibleGroup({
         )}
       </div>
       {open && (
-        <div id={bodyId} className="px-2 pb-4">
+        <div id={bodyId} className="motion-rise px-2 pb-4">
           {children}
         </div>
       )}

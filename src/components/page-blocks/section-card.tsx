@@ -29,7 +29,7 @@ export function SectionCard({
       aria-labelledby={headingId}
       aria-label={headingId ? undefined : title}
       className={cn(
-        'relative min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-card p-4 pt-5 shadow-card before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-[var(--mod)] sm:p-5 sm:pt-6',
+        'motion-rise relative min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-card p-4 pt-5 shadow-card before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-[var(--mod)] sm:p-5 sm:pt-6',
         className,
       )}
       style={accentStyle(accent)}
