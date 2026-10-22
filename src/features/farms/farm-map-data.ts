@@ -4,7 +4,7 @@ import type {
 } from '@/components/map/map-provider';
 import { parseCoordinates } from '@/lib/format/coordinates';
 
-import { FARM_STATUS_DISPLAY } from './components/farm-status-badge';
+import { FARM_STATUS_DISPLAY } from './farm-status';
 import type { FarmListItem } from './farm-list-item';
 import type { FarmMapPoint, FarmMunicipalityCount } from './map-api';
 import { farmLabel } from '@/lib/format/place-label';

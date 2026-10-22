@@ -10,15 +10,17 @@ import { FarmHills } from '@/components/illustrations/farm-hills';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
 import { useMunicipalityName } from '@/lib/api/municipalities';
-import { matchesSearch } from '@/lib/format/search';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import { PAGE_SIZE, useFarms } from '../api';
-import { type FarmListItem, serverFarmToListItem } from '../farm-list-item';
+import {
+  type FarmListItem,
+  mergeFarmLists,
+  searchFarms,
+} from '../farm-list-item';
 import { useFarmFilters } from '../use-farm-filters';
 import { useFarmMapMode } from '../use-farm-map-mode';
 import { useLocalFarms } from '../use-local-farms';
@@ -27,6 +29,7 @@ import { FarmFiltersBar } from './farm-filters-bar';
 import { FarmCardActions } from './farm-card-actions';
 import { FarmsMap } from './farms-map';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 const isQueued = (farm: FarmListItem) =>
   farm.status === 'pending' || farm.status === 'error';
@@ -49,20 +52,10 @@ export function FarmListScreen() {
   // La asociación mirando a todos los productores necesita saber de quién es cada finca.
   const showProducer = isAssociation && !filters.producer;
 
-  // Lo que está en el dispositivo va primero (necesita atención o aún no llega) y reemplaza a su
-  // copia del servidor: una edición pendiente muestra los datos nuevos, no los viejos.
-  const searchedLocalFarms = (local.farms ?? []).filter((farm) =>
-    matchesSearch([farm.name], filters.query.search ?? ''),
-  );
-  const localFarms = searchedLocalFarms.filter(
-    (farm) =>
-      !filters.municipality || farm.municipalityCode === filters.municipality,
-  );
-  const localIds = new Set(local.farms?.map((farm) => farm.id));
-  const serverFarms = (list.data?.results ?? [])
-    .filter((farm) => !localIds.has(farm.id))
-    .map(serverFarmToListItem);
-  const farms = [...localFarms, ...serverFarms];
+  const farms = mergeFarmLists(local.farms ?? [], list.data?.results ?? [], {
+    search: filters.query.search,
+    municipality: filters.municipality,
+  });
 
   // Sin conexión se muestra lo del dispositivo en vez de un esqueleto sin fin.
   const serverUnreachable = isPausedWithoutData(list);
@@ -71,77 +64,27 @@ export function FarmListScreen() {
     (!local.farms && !local.isError);
   const hasError = list.isLoadingError || local.isError;
 
-  const registerLink = canAdd && (
-    <EditorLink
-      className={buttonVariants({ size: 'office' })}
-      href="/fincas/nueva"
-    >
-      <Plus aria-hidden="true" className="size-5" /> Registrar finca
-    </EditorLink>
-  );
-  // Quien no tiene un productor propio (la cuenta técnica) registra parcelas en fincas de muchos:
-  // el atajo le ahorra abrir antes la finca. Un productor llega desde la suya.
-  const registerPlotLink = isAssociation &&
-    hasPermission(user, PERMISSIONS.PLOTS_ADD) && (
-      <EditorLink
-        className={buttonVariants({ size: 'office', variant: 'outline' })}
-        href="/fincas/parcelas/nueva"
-      >
-        <Plus aria-hidden="true" className="size-5" /> Registrar parcela
-      </EditorLink>
-    );
-
   const renderActions = (farm: FarmListItem) =>
     (isQueued(farm) ? canAdd || canChange : canChange) && (
       <FarmCardActions farm={farm} />
     );
 
-  const emptyState =
-    filters.query.search || filters.municipality || filters.producer ? (
-      <EmptyState
-        illustration={FarmHills}
-        title="No hay fincas que coincidan"
-        description={
-          isAssociation
-            ? 'Prueba con otro nombre, municipio o productor.'
-            : 'Prueba con otro nombre o con otro municipio.'
-        }
-      />
-    ) : isAssociation ? (
-      <EmptyState
-        illustration={FarmHills}
-        title="Aún no hay fincas registradas"
-        description="Las fincas que registren los productores aparecerán aquí."
-      />
-    ) : (
-      <EmptyState
-        illustration={FarmHills}
-        title="Aún no tienes fincas registradas"
-        description="Registra tu primera finca con su ubicación. Puedes hacerlo sin conexión."
-        action={registerLink}
-      />
-    );
+  const emptyState = (
+    <FarmListEmpty
+      filtered={
+        !!(filters.query.search || filters.municipality || filters.producer)
+      }
+      canAdd={canAdd}
+      isAssociation={isAssociation}
+    />
+  );
 
   return (
     <div className={pageContainerClass('wide')}>
-      <PageHeader
-        tone="selva"
-        accent="hoja"
-        eyebrow="Gestión de fincas"
-        title={isAssociation ? 'Fincas' : 'Mis fincas'}
-        description={
-          isAssociation
-            ? 'Consulta las fincas de los productores de la asociación.'
-            : 'Consulta tus fincas y su estado de sincronización.'
-        }
-        actions={
-          registerLink || registerPlotLink ? (
-            <>
-              {registerPlotLink}
-              {registerLink}
-            </>
-          ) : undefined
-        }
+      <FarmListHeader
+        canAdd={canAdd}
+        canAddPlot={hasPermission(user, PERMISSIONS.PLOTS_ADD)}
+        isAssociation={isAssociation}
       />
       <section className="mt-5 space-y-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card">
         <FarmFiltersBar
@@ -167,7 +110,7 @@ export function FarmListScreen() {
               focus={focus}
               mode={mapMode.mode}
               onModeChange={mapMode.setMode}
-              localFarms={searchedLocalFarms}
+              localFarms={searchFarms(local.farms ?? [], filters.query.search)}
               municipality={filters.municipality}
               municipalityName={municipalityName}
               onMunicipalityChange={(code) =>
@@ -196,14 +139,11 @@ export function FarmListScreen() {
           </p>
         )}
         {isLoading ? (
-          <div
-            aria-label="Cargando fincas"
+          <LoadingBlock
             className="grid grid-cols-1 gap-4 md:grid-cols-2"
-            role="status"
-          >
-            <Skeleton className="h-40" />
-            <Skeleton className="h-40" />
-          </div>
+            label="Cargando fincas"
+            shapes={['h-40', 'h-40']}
+          />
         ) : farms.length ? (
           <FarmCardList
             farms={farms}
@@ -239,5 +179,105 @@ export function FarmListScreen() {
         )}
       </section>
     </div>
+  );
+}
+
+// La lista vacía: por los filtros, porque la asociación aún no tiene fincas, o porque el productor
+// todavía no registra la primera.
+function FarmListEmpty({
+  filtered,
+  isAssociation,
+  canAdd,
+}: {
+  filtered: boolean;
+  isAssociation: boolean;
+  canAdd: boolean;
+}) {
+  if (filtered) {
+    return (
+      <EmptyState
+        description={
+          isAssociation
+            ? 'Prueba con otro nombre, municipio o productor.'
+            : 'Prueba con otro nombre o con otro municipio.'
+        }
+        illustration={FarmHills}
+        title="No hay fincas que coincidan"
+      />
+    );
+  }
+  if (isAssociation) {
+    return (
+      <EmptyState
+        description="Las fincas que registren los productores aparecerán aquí."
+        illustration={FarmHills}
+        title="Aún no hay fincas registradas"
+      />
+    );
+  }
+  return (
+    <EmptyState
+      action={canAdd && <RegisterFarmLink />}
+      description="Registra tu primera finca con su ubicación. Puedes hacerlo sin conexión."
+      illustration={FarmHills}
+      title="Aún no tienes fincas registradas"
+    />
+  );
+}
+
+function RegisterFarmLink() {
+  return (
+    <EditorLink
+      className={buttonVariants({ size: 'office' })}
+      href="/fincas/nueva"
+    >
+      <Plus aria-hidden="true" className="size-5" /> Registrar finca
+    </EditorLink>
+  );
+}
+
+// La asociación consulta las fincas de todos; el productor, las suyas. Quien no tiene un productor
+// propio (la cuenta técnica) registra parcelas en fincas de muchos: el atajo le ahorra abrir antes
+// la finca. Un productor llega desde la suya.
+function FarmListHeader({
+  isAssociation,
+  canAdd,
+  canAddPlot,
+}: {
+  isAssociation: boolean;
+  canAdd: boolean;
+  canAddPlot: boolean;
+}) {
+  const plotShortcut = isAssociation && canAddPlot;
+  return (
+    <PageHeader
+      accent="hoja"
+      actions={
+        canAdd || plotShortcut ? (
+          <>
+            {plotShortcut && (
+              <EditorLink
+                className={buttonVariants({
+                  size: 'office',
+                  variant: 'outline',
+                })}
+                href="/fincas/parcelas/nueva"
+              >
+                <Plus aria-hidden="true" className="size-5" /> Registrar parcela
+              </EditorLink>
+            )}
+            {canAdd && <RegisterFarmLink />}
+          </>
+        ) : undefined
+      }
+      description={
+        isAssociation
+          ? 'Consulta las fincas de los productores de la asociación.'
+          : 'Consulta tus fincas y su estado de sincronización.'
+      }
+      eyebrow="Gestión de fincas"
+      title={isAssociation ? 'Fincas' : 'Mis fincas'}
+      tone="selva"
+    />
   );
 }
