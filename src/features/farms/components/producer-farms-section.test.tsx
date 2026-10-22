@@ -50,18 +50,20 @@ describe('ProducerFarmsList and ProducerFarmStats', () => {
     renderSection();
 
     expect(
-      await screen.findByRole('heading', {
-        name: 'Fincas de este productor · 2',
-      }),
+      await screen.findByRole('heading', { name: /^Fincas\s*2$/ }),
     ).toBeInTheDocument();
     expect(requests[0].get('producer')).toBe('p1');
     expect(screen.getByText('40 ha')).toBeInTheDocument();
     expect(screen.getByText('10 % del área')).toBeInTheDocument();
-    const row = screen.getByRole('row', { name: /El Porvenir/ });
-    expect(within(row).getByText('Inactiva')).toBeInTheDocument();
+    const list = screen.getByRole('list', { name: 'Fincas del productor' });
+    const porvenir = within(list).getByRole('link', { name: /El Porvenir/ });
+    expect(within(porvenir).getByText('Inactiva')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'Ver detalle de La Esperanza' }),
+      within(list).getByRole('link', { name: /Ver detalle de La Esperanza/ }),
     ).toHaveAttribute('href', '/fincas/detalle?id=f1');
+    expect(
+      within(list).getByText('4 de 10 ha en parcelas'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver en Fincas' })).toHaveAttribute(
       'href',
       '/fincas?productor=p1',
@@ -71,7 +73,7 @@ describe('ProducerFarmsList and ProducerFarmStats', () => {
   it('offers to register a farm only with the permission', async () => {
     server.use(farmsHandler([buildFarm()]));
     const first = renderSection();
-    await screen.findByRole('table', { name: 'Fincas del productor' });
+    await screen.findByRole('list', { name: 'Fincas del productor' });
     expect(
       screen.queryByRole('link', { name: /Registrar finca/ }),
     ).not.toBeInTheDocument();

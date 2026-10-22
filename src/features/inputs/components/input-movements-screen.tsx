@@ -68,6 +68,8 @@ export function InputMovementsScreen({
     <div className={pageContainerClass('narrow')}>
       <BackLink href={backHref}>Volver a Insumos</BackLink>
       <PageHeader
+        tone="selva"
+        accent="cobre"
         actions={
           input &&
           canManage && (

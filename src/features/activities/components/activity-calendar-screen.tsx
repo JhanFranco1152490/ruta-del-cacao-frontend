@@ -222,6 +222,8 @@ export function ActivityCalendarScreen({
     <AssigneesContext value={assignees.data?.data}>
       <div className={pageContainerClass('wide', 'pb-24 sm:pb-6')}>
         <PageHeader
+          tone="selva"
+          accent="hoja"
           description="Programa las labores de tus parcelas y registra lo que se hizo."
           eyebrow="Manejo agrícola"
           title="Actividades"

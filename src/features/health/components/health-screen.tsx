@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 
-import { PageHeader } from '@/components/page-header';
+import {
+  DetailHero,
+  HERO_PRIMARY_CLASS,
+} from '@/components/page-blocks/detail-hero';
 import { pageContainerClass } from '@/components/page-container';
 import { SegmentedControl } from '@/components/segmented-control';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,9 +46,15 @@ export function HealthScreen() {
 
   return (
     <div className={pageContainerClass('wide')}>
-      <PageHeader
+      <DetailHero
+        tone="selva"
+        accent="cacao"
         actions={
-          <ScheduleMonitoringLink farm={filters.farm} plot={filters.plot} />
+          <ScheduleMonitoringLink
+            className={HERO_PRIMARY_CLASS}
+            farm={filters.farm}
+            plot={filters.plot}
+          />
         }
         description="Lo que hay por hacer y el historial de monitoreos y controles de tus parcelas."
         eyebrow="Manejo agrícola"

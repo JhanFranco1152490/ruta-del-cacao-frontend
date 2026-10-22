@@ -79,6 +79,8 @@ export function HarvestListScreen({
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>
       <PageHeader
+        tone="selva"
+        accent="cobre"
         actions={register}
         description="Las recolecciones de cacao de tus parcelas. De cada una se conforma un lote para la poscosecha."
         eyebrow="Producción"

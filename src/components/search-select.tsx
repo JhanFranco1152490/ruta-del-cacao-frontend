@@ -211,9 +211,10 @@ export function SearchSelect({
           <ComboboxInput
             {...control}
             // Los controles de oficina del sistema de diseño miden 44 px (h-11); el combobox trae
-            // 32 px por defecto (h-8).
+            // 32 px por defecto (h-8). Fondo blanco como el resto de los campos: sin él tomaba el
+            // color de lo que tuviera detrás (crema sobre la página, blanco en una tarjeta).
             className={cn(
-              'w-full',
+              'w-full bg-card',
               compact ? 'h-10 text-sm' : 'h-11',
               inputClassName,
             )}

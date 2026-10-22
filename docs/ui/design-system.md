@@ -159,7 +159,10 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `StageFlow` | Cadena de etapas cosecha → venta | Dashboard, página QR |
 | `PageHeader` | Categoría en versalitas, H1 en serif de 30 px, subrayado, descripción y acciones. Un solo tamaño y la misma separación de arriba en todas las pantallas | Todas las de oficina |
 | `pageContainerClass` | El ancho y los márgenes de una pantalla: `wide` (1440 px) para listas, calendarios y lo que lleva mapa o tabla; `narrow` (896 px, centrado) para formularios y fichas de una columna. Arriba y a los lados no cambian de una pantalla a otra | Todas |
-| `SummaryStrip` / `SummaryItem` | Los totales de arriba de una lista: tarjetas sueltas en pantallas anchas y un solo recuadro con rayas en el celular, que ocupa un tercio menos de alto | Cosechas, Infraestructura |
+| `SummaryStrip` / `SummaryItem` | Los totales de arriba de una lista: una franja blanca con una línea entre uno y otro (apilados en celular) | Cosechas, Lotes, Infraestructura |
+| `DetailHero` / `HeroChip` | El banner de una pantalla: tono `selva`, `bosque` o `claro`, categoría, título, marca opcional, chips y acciones. Lo dibuja `PageHeader` cuando recibe `tone` | Listas y detalles |
+| `StatStrip` / `StatCell` | Las cifras de un detalle: franja blanca de celdas pegadas, con ícono en el tinte del acento y una barra opcional | Ficha del productor, detalle de finca |
+| `SectionCard` / `KeyValues` | Sección con filete del acento, título y contador; datos en dos niveles | Detalles, Sanidad |
 | `SectionLabel` | Etiqueta cobre en versalitas | Todas |
 | `MapFrame` | El recuadro del mapa con sus controles encima, arriba a la derecha (mapa base, ocultar, ir a la finca, ir a mi ubicación), una leyenda opcional abajo a la izquierda y la franja «Mapa oculto» cuando se oculta. Los cuatro paneles de mapa lo usan | Todos los mapas |
 | `MapPanel` | Mapa con controles propios, capas, escala y lectura de coordenadas | Finca, parcela |
@@ -217,9 +220,42 @@ poscosecha cobre, calidad azul). Nunca emojis.
   con texto `--selva`; las demás, texto `--crema` con ícono `--oro`; arriba, la etiqueta «Menú» en
   versalitas oro. La marca del encabezado lleva la mazorca en `--amarillo-mazorca` y «Cacao» en
   itálica. Los botones del encabezado siguen siendo claros (fondo blanco, texto oscuro).
-- **Título de página:** categoría en versalitas, H1 en serif de 30 px y un subrayado `--cobre` de 48 × 4 px
-  debajo, y una descripción de una o dos líneas. Todas las pantallas llevan las tres cosas y el mismo
-  tamaño; no hay una versión «compacta».
+- **Título de página:** categoría en versalitas, H1 en serif y una descripción de una o dos líneas.
+  En las listas y los detalles es un **banner de color** (`PageHeader` con `tone`, que dibuja
+  `DetailHero`), con su tono según la pantalla:
+  - **`selva`** (verde muy oscuro) en las pantallas de trabajo diario: Actividades, Sanidad,
+    Cosechas, Lotes, Infraestructura, Insumos, Fincas y Parcelas;
+  - **`bosque`** (`--selva-2`) en los detalles del campo: finca, cosecha, lote, historial de la ficha;
+  - **`claro`** (blanco con un filete del acento del módulo a la izquierda) en administración y
+    catálogos: Productores y su ficha, Usuarios, Roles, Variedades, Plagas.
+  Sobre los oscuros el texto va en blanco (13:1 en selva, 7.9:1 en bosque) y la categoría en un
+  dorado claro (`#e8c873`, 8.1:1 y 4.8:1): el `--oro` no alcanza en bosque. Los botones del banner se
+  adaptan solos por su variante (el principal a blanco, los de contorno a contorno claro, los que
+  piden confirmación a fondo sólido). Los **formularios no llevan banner**: conservan el título con
+  el subrayado `--cobre` de 48 × 4 px, porque ahí la atención va a los campos. Un detalle con un
+  código propio (la finca) lo muestra como marca junto al título (oculta en celular, donde va con la
+  categoría) y el lector de pantalla lo oye con el título.
+- **Acento de cada módulo** (`components/page-blocks/accent.ts`): productores, administración, cosecha y
+  poscosecha en `--cobre`; fincas, parcelas, actividades y variedades en `--hoja`; sanidad y plagas en
+  `--morado-cacao`, cada uno con su tinte claro (`--cobre-tint`, `--hoja-tint`, `--cacao-tint`).
+  Pinta los íconos de las cifras, las barras y los filetes.
+- **Cifras de una pantalla** (`StatStrip` / `StatCell` en un detalle, `SummaryStrip` en una lista):
+  una franja blanca, suelta debajo del banner, con las celdas pegadas y una línea entre ellas; en
+  un detalle cada cifra lleva su ícono en el tinte del acento.
+- **Secciones** (`SectionCard`): tarjeta blanca con un filete de 4 px del acento arriba, que se
+  recorta con las esquinas, y el título en Karla 800 de 16 px con el contador en un chip. El filete
+  va solo donde hay **varias secciones en una pantalla** (detalles, Pendiente de Sanidad, resumen por
+  plaga); la tarjeta única de una lista no lo lleva, porque ya va bajo un banner de color.
+- **Datos de un registro** (`KeyValues` / `KeyValue`): la etiqueta pequeña y tenue, el valor firme;
+  nunca los dos en negrita.
+- **Filtros de una lista:** todos blancos y de 40 px con texto de 14 px (`FILTER_CONTROLS_CLASS`), en
+  este orden: el filtro principal (el que queda a la vista en celular), el productor, el lugar
+  (finca, parcela o municipio), los atributos (tipo, rol, plaga, responsable), el estado, el periodo
+  y al final «Más filtros» o «Limpiar». Un productor que hace falta elegir para ver algo (cosechas,
+  lotes e infraestructura de la cuenta técnica) va arriba con su etiqueta, no en la fila.
+- **Columnas que se repiten en varias tablas o tarjetas** (los grupos de Roles, las detecciones del
+  historial de Sanidad, las fincas de un productor) tienen ancho fijo, para que queden alineadas
+  entre un grupo y otro.
 - **Menú de navegación por grupos:** las entradas (`NAV_ITEMS`) llevan un `group`: Administración
   (Productores, Usuarios, Roles y permisos), Finca, Manejo agrícola, Cosecha y poscosecha y
   Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,

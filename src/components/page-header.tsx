@@ -1,19 +1,43 @@
 import type { ReactNode } from 'react';
 import { cn } from 'cn';
 
+import type { ModuleAccent } from '@/components/page-blocks/accent';
+import {
+  DetailHero,
+  type HeroTone,
+} from '@/components/page-blocks/detail-hero';
+
 export function PageHeader({
   eyebrow,
   title,
   description,
   actions,
   className,
+  tone,
+  accent = 'hoja',
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
   className?: string;
+  // Con un tono, el encabezado es un banner de color (`DetailHero`). Los formularios no lo pasan:
+  // ahí la atención va a los campos.
+  tone?: HeroTone;
+  accent?: ModuleAccent;
 }) {
+  if (tone) {
+    return (
+      <DetailHero
+        accent={accent}
+        actions={actions}
+        description={description}
+        eyebrow={eyebrow}
+        title={title}
+        tone={tone}
+      />
+    );
+  }
   return (
     <div
       className={cn(

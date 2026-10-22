@@ -14,8 +14,8 @@ import { useHealthHistory } from '../history-api';
 import { type HistoryFilters, historyQuery } from '../history-filters';
 import { historyRows } from '../history-rows';
 import type { useHistoryFilters } from '../use-history-filters';
-import { HistoryTable } from './history-table';
-import { PestSummarySection } from './pest-summary-section';
+import { HistoryCards } from './history-cards';
+import { PestSummaryCards } from './pest-summary-cards';
 import { ScheduleMonitoringLink } from './schedule-monitoring-link';
 
 // Lo que devuelve la API por página.
@@ -87,8 +87,8 @@ export function HistoryTab({
           )
         ) : (
           <>
-            {filters.plot && <PestSummarySection summary={data.summary} />}
-            <HistoryTable rows={historyRows(results)} />
+            {filters.plot && <PestSummaryCards summary={data.summary} />}
+            <HistoryCards rows={historyRows(results)} />
             <Pagination
               label="monitoreos"
               onPageChange={filterState.setPage}

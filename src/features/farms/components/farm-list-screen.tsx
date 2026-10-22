@@ -121,6 +121,8 @@ export function FarmListScreen() {
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="selva"
+        accent="hoja"
         eyebrow="Gestión de fincas"
         title={isAssociation ? 'Fincas' : 'Mis fincas'}
         description={

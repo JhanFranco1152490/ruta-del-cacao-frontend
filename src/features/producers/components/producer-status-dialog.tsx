@@ -10,7 +10,10 @@ import {
 import type { Producer, ProducerStatus } from '../api';
 import { useProducerStatusChange } from '../use-producer-status-change';
 
-const ACTIONS: Record<ProducerStatus, StatusChangeAction> = {
+export const PRODUCER_STATUS_ACTIONS: Record<
+  ProducerStatus,
+  StatusChangeAction
+> = {
   inactive: {
     trigger: 'Desactivar',
     title: '¿Desactivar productor?',
@@ -34,13 +37,16 @@ const ACTIONS: Record<ProducerStatus, StatusChangeAction> = {
 };
 
 // Reactivar el productor reactiva también su cuenta de acceso si estaba desactivada.
-const actionFor = (status: ProducerStatus, producer: Producer) =>
+export const producerStatusActionFor = (
+  status: ProducerStatus,
+  producer: Producer,
+) =>
   status === 'active' && producer.account?.status === 'inactive'
     ? {
-        ...ACTIONS.active,
-        description: `${ACTIONS.active.description} También se reactivará su cuenta de acceso.`,
+        ...PRODUCER_STATUS_ACTIONS.active,
+        description: `${PRODUCER_STATUS_ACTIONS.active.description} También se reactivará su cuenta de acceso.`,
       }
-    : ACTIONS[status];
+    : PRODUCER_STATUS_ACTIONS[status];
 
 type ProducerStatusDialogProps = { producer: Producer; target: ProducerStatus };
 
@@ -52,8 +58,8 @@ export function ProducerStatusDialog({
     useProducerStatusChange(producer, target);
   return (
     <StatusChangeDialog
-      trigger={ACTIONS[target]}
-      action={actionFor(dialogTarget, producer)}
+      trigger={PRODUCER_STATUS_ACTIONS[target]}
+      action={producerStatusActionFor(dialogTarget, producer)}
       open={open}
       onOpenChange={onOpenChange}
       onConfirm={confirm}
