@@ -98,7 +98,9 @@ src/
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
                        health, notifications, harvests, lots, users y roles): api.ts, schemas.ts, hooks propios
-                       y components/ (pantallas y piezas de ese dominio)
+                       y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
+                       La raíz nunca importa de components/: un tipo o una regla que comparten
+                       los dos vive en la raíz
   components/          piezas compartidas entre dominios; ui/ = shadcn/ui, brand/ = marca
   hooks/               hooks de React compartidos entre dominios (sin JSX; si el hook es de
                        un solo dominio, vive en features/<dominio>/ en vez de aquí)
@@ -125,6 +127,18 @@ src/
   `sync-tray/queue-discard-dialog.tsx`...) que solo reciben props y no conocen la API; (3)
   `features/<dominio>/components/`, pantallas (`*-screen.tsx`) y piezas de un dominio: la
   pantalla compone y obtiene los datos de los hooks de `features/<dominio>/api.ts`.
+- **Piezas comunes antes que copiar** (se usan en vez de escribir lo mismo a mano):
+  - formularios: `FormDialog` (diálogo siempre abierto que no se cierra mientras guarda) y
+    `FormDialogForm` (el formulario dentro de un diálogo con su botón); `CatalogItemDialog` con
+    `useCatalogItemForm` para los catálogos de la asociación; `SaveConfirmDialog` para confirmar lo
+    que no se corrige después; `InlineError` (error de una línea) y `FormMessage` (en caja);
+    `serverErrorSummary` para lo que el servidor rechaza y no cae en un campo;
+  - pantallas: `LoadingBlock` (esqueleto con su etiqueta), `UnavailablePage` («No fue posible
+    abrir…» con el camino de vuelta), `SyncRejectedNotice` y `syncFailureText` (lo que el servidor
+    rechazó de la cola), `CollapsibleGroupList` con `groupInOrder` (listas en grupos plegables),
+    `mapPlaceholder` (el mapa mientras carga o si no cargó);
+  - API: `apiPath` (ruta con su consulta, sin los vacíos) e `isNotFound` (404);
+  - cola sin conexión: `rejectionConflict` y `VALIDATION_ERROR_CODE` en `lib/offline/adapters.ts`.
 - **Un dominio no importa de la carpeta de otro.** Cuando una pantalla junta dos (el detalle de
   una finca muestra sus parcelas), el dominio dueño de la pantalla recibe la sección del otro como
   función (`renderPlots`) y quien las une es la página en `app/`, que sí puede importar de ambos.
