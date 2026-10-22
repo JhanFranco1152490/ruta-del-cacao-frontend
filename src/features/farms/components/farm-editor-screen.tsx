@@ -1,16 +1,11 @@
 'use client';
 
-import { cn } from 'cn';
-import { CircleOff } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { OfflineBanner } from '@/components/offline-banner';
-import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Farm, useFarm } from '../api';
@@ -23,7 +18,6 @@ import {
   useQueuedFarm,
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
-import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
 import { FarmUnavailable } from './farm-screen-states';
@@ -82,7 +76,7 @@ function ServerFarmEditor({ id }: { id: string }) {
     return (
       <FarmUnavailable
         message={
-          isApiError(farm.error) && farm.error.status === 404
+          isNotFound(farm.error)
             ? 'No encontramos esta finca entre las tuyas.'
             : 'No fue posible cargar la finca. Revisa tu conexión e inténtalo nuevamente.'
         }

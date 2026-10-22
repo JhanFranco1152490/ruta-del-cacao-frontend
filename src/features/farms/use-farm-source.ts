@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 
 import { type Farm, useFarmDetail } from './api';
 import type { QueuedFarm } from './farm-queue';
@@ -36,10 +36,9 @@ export function useFarmSource(id: string): FarmSource {
   if (farm.isError) {
     return {
       status: 'error',
-      message:
-        isApiError(farm.error) && farm.error.status === 404
-          ? 'No encontramos esta finca entre las tuyas.'
-          : 'No fue posible cargar la finca. Si no la has abierto antes con conexión, necesitas conexión para verla.',
+      message: isNotFound(farm.error)
+        ? 'No encontramos esta finca entre las tuyas.'
+        : 'No fue posible cargar la finca. Si no la has abierto antes con conexión, necesitas conexión para verla.',
     };
   }
   return { status: 'server', farm: farm.data.data, savedAt: farm.data.savedAt };

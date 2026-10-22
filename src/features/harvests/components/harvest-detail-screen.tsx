@@ -9,9 +9,8 @@ import { EditorLink } from '@/components/editor-link';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/hooks/use-session';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatDateTime, formatLongDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
@@ -46,7 +45,7 @@ export function HarvestDetailScreen({
   const backHref = readOrigin(useSearchParams()) ?? HARVESTS_PATH;
 
   if (read.isError) {
-    return isApiError(read.error) && read.error.status === 404 ? (
+    return isNotFound(read.error) ? (
       <PageNotice title="Esta cosecha ya no existe." />
     ) : (
       <PageNotice

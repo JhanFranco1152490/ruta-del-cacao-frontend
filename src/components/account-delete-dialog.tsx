@@ -13,7 +13,7 @@ import {
   useSetAccountStatus,
   type Account,
 } from '@/lib/api/accounts';
-import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { getErrorMessage, isApiError, isNotFound } from '@/lib/api/errors';
 import { notify } from '@/lib/notify';
 
 const HAS_ACTIVITY = 'account_has_activity';
@@ -79,7 +79,7 @@ export function AccountDeleteDialog({
             error,
             'No fue posible desactivar la cuenta. Inténtalo nuevamente.',
           )
-        : isApiError(error) && error.status === 404
+        : isNotFound(error)
           ? 'Esta cuenta ya no existe.'
           : getErrorMessage(
               error,

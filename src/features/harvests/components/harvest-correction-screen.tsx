@@ -9,11 +9,10 @@ import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
-import { getErrorMessage, isApiError } from '@/lib/api/errors';
+import { getErrorMessage, isApiError, isNotFound } from '@/lib/api/errors';
 import { todayInBogota } from '@/lib/format/dates';
 
 import {
@@ -73,7 +72,7 @@ export function HarvestCorrectionScreen({ harvestId }: { harvestId: string }) {
       />
     );
   }
-  if (read.isError && isApiError(read.error) && read.error.status === 404) {
+  if (isNotFound(read.error)) {
     return <PageNotice title="Esta cosecha ya no existe." />;
   }
   if (!harvest || sources.status !== 'ready') return <Loading />;

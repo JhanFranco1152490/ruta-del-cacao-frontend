@@ -12,6 +12,7 @@ import { fetchPlot, plotCacheKey } from '@/lib/api/plot-read';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
+import { apiPath } from '@/lib/api/path';
 
 type Schemas = components['schemas'];
 export type Plot = Schemas['Plot'];
@@ -44,16 +45,16 @@ export type PlotQuery = {
 };
 
 export const fetchPlots = (query: PlotQuery, signal?: AbortSignal) => {
-  const params = new URLSearchParams();
-  if (query.search) params.set('search', query.search);
-  if (query.farm) params.set('farm', query.farm);
-  if (query.producer) params.set('producer', query.producer);
-  if (query.characterization)
-    params.set('characterization', query.characterization);
-  if (query.ordering) params.set('ordering', query.ordering);
-  params.set('page', String(query.page ?? 1));
-  params.set('page_size', String(query.pageSize ?? PLOT_LIST_PAGE_SIZE));
-  return apiFetch<Schemas['PaginatedPlotList']>(`/api/plots?${params}`, {
+  const path = apiPath('/api/plots', {
+    search: query.search,
+    farm: query.farm,
+    producer: query.producer,
+    characterization: query.characterization,
+    ordering: query.ordering,
+    page: query.page ?? 1,
+    page_size: query.pageSize ?? PLOT_LIST_PAGE_SIZE,
+  });
+  return apiFetch<Schemas['PaginatedPlotList']>(path, {
     signal,
   });
 };

@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
+import { apiPath } from '@/lib/api/path';
 
 type Schemas = components['schemas'];
 export type Lot = Schemas['Lot'];
@@ -57,20 +58,8 @@ export function useCreateLot() {
   });
 }
 
-// Los filtros como parámetros de la dirección, sin los vacíos.
-function searchParamsOf(query: object) {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== '') params.set(key, String(value));
-  }
-  return params;
-}
-
-function listPath(query: LotQuery) {
-  const params = searchParamsOf(query);
-  params.set('page_size', String(LOT_PAGE_SIZE));
-  return `/api/lots?${params}`;
-}
+const listPath = (query: LotQuery) =>
+  apiPath('/api/lots', { ...query, page_size: LOT_PAGE_SIZE });
 
 export const fetchLots = (query: LotQuery, signal?: AbortSignal) =>
   apiFetch<LotPage>(listPath(query), { signal });
@@ -93,10 +82,8 @@ export const useLotSummary = (query: LotSummaryQuery) =>
   useQuery({
     queryKey: queryKeys.lots.summary(query),
     queryFn: async ({ signal }) => {
-      const params = searchParamsOf(query);
-      const suffix = params.size ? `?${params}` : '';
       const { results } = await apiFetch<Schemas['LotSummary']>(
-        `/api/lots/summary${suffix}`,
+        apiPath('/api/lots/summary', query),
         { signal },
       );
       return results;

@@ -33,6 +33,10 @@ export const isNetworkFailure = (error: unknown) => error instanceof TypeError;
 export const isUnauthorized = (error: unknown) =>
   isApiError(error) && error.status === 401;
 
+// El servidor dice que el registro no existe (o que no es de quien pregunta, que es lo mismo).
+export const isNotFound = (error: unknown) =>
+  isApiError(error) && error.status === 404;
+
 export function getErrorMessage(error: unknown, fallback: string) {
   if (!isApiError(error)) return fallback;
   return error.code === 'throttled' ? RATE_LIMIT_MESSAGE : error.message;

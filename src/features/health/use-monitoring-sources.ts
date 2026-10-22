@@ -2,7 +2,7 @@
 
 import { useSession } from '@/hooks/use-session';
 import { useActivity } from '@/lib/api/activity-read';
-import { isApiError } from '@/lib/api/errors';
+import { isNotFound } from '@/lib/api/errors';
 import type { components } from '@/lib/api/schema';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
@@ -47,7 +47,7 @@ export function useMonitoringSources(activityId: string): MonitoringSources {
   });
 
   if (isPausedWithoutData(activity) || activity.isError) {
-    return isApiError(activity.error) && activity.error.status === 404
+    return isNotFound(activity.error)
       ? { status: 'missing' }
       : { status: 'unreachable' };
   }

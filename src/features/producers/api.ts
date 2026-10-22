@@ -16,6 +16,7 @@ import {
   type Municipality,
 } from '@/lib/api/municipalities';
 import { LIST_REFETCH_INTERVAL_MS } from '@/lib/query-client';
+import { apiPath } from '@/lib/api/path';
 
 type Schemas = components['schemas'];
 export type Producer = Schemas['ProducerDetail'];
@@ -44,13 +45,13 @@ export type ProducerQuery = {
 };
 
 function listPath(query: ProducerQuery) {
-  const params = new URLSearchParams();
-  if (query.search) params.set('search', query.search);
-  if (query.status) params.set('status', query.status);
-  if (query.municipality) params.set('municipality_code', query.municipality);
-  params.set('page', String(query.page ?? 1));
-  params.set('page_size', String(PAGE_SIZE));
-  return `/api/producers?${params}`;
+  return apiPath('/api/producers', {
+    search: query.search,
+    status: query.status,
+    municipality_code: query.municipality,
+    page: query.page ?? 1,
+    page_size: PAGE_SIZE,
+  });
 }
 
 export const fetchProducers = (query: ProducerQuery, signal?: AbortSignal) =>
