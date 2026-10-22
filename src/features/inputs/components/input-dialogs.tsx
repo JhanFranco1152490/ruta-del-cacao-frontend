@@ -8,7 +8,7 @@ import { useFarmOptions } from '@/lib/api/farm-options';
 import type { AgriculturalInput, ExistingInput } from '../api';
 import { CatalogEntryDialog } from './catalog-entry-dialog';
 import { InputDeleteDialog } from './input-delete-dialog';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from '../input-options';
 import { InputFormDialog } from './input-form-dialog';
 import { InputMovementDialog } from './input-movement-dialog';
 import type { InputActionKind } from './input-row-actions';

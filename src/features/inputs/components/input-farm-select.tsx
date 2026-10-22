@@ -2,7 +2,7 @@
 
 import { SearchSelect } from '@/components/search-select';
 
-export type FarmChoice = { id: string; name: string; is_active: boolean };
+import type { FarmChoice } from '../input-options';
 
 // De qué bodega se ven las existencias, como un filtro más de la fila (sin etiqueta visible: «Todas
 // las fincas» ya dice qué es). Sin una finca elegida se ve el total de todas. Quien trabaja en una

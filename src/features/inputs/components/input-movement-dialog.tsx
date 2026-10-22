@@ -19,7 +19,7 @@ import { todayInBogota } from '@/lib/format/dates';
 import { type MovementInput, useInputStocks } from '../api';
 import { NOTE_MAX_LENGTH } from '../movement-schemas';
 import { inputPackageOf } from '@/lib/format/input-quantity';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from '../input-options';
 import { MovementAmountField } from './movement-amount-field';
 import { MovementCountSummary } from './movement-count-summary';
 import {

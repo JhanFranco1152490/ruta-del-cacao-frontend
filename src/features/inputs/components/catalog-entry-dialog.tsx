@@ -19,7 +19,7 @@ import {
   type CatalogInput,
   useCatalogSearch,
 } from '../api';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from '../input-options';
 import { InputMovementDialog } from './input-movement-dialog';
 
 // Registrar la entrada de un insumo que todavía no está en la finca de quien la registra: lo

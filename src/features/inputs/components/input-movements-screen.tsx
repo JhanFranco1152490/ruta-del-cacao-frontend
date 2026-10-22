@@ -25,7 +25,7 @@ import {
 } from '../api';
 import { inputListPath } from '../input-paths';
 import { formatStock, inputPackageOf } from '@/lib/format/input-quantity';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from '../input-options';
 import { InputMovementDialog } from './input-movement-dialog';
 import { InputMovementItem } from './input-movement-item';
 import type { MovementKind } from '../use-movement-form';

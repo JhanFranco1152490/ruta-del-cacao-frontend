@@ -24,13 +24,10 @@ import {
   useInputStocks,
   useInputStockTotals,
 } from '../api';
+import type { FarmChoice } from '../input-options';
 import { buildInputRows } from '../input-rows';
 import { useInputFilters } from '../use-input-filters';
-import {
-  type FarmChoice,
-  farmSelectNote,
-  InputFarmSelect,
-} from './input-farm-select';
+import { farmSelectNote, InputFarmSelect } from './input-farm-select';
 import { InputFiltersBar } from './input-filters-bar';
 import { InputDialogs, type PendingAction } from './input-dialogs';
 import { InputTable, type StockState } from './input-table';

@@ -37,7 +37,7 @@ import {
   type InputFormInput,
   type InputFormValues,
 } from '../schemas';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from '../input-options';
 import { InputFormFields } from './input-form-fields';
 import { useInputSubmit } from '../use-input-submit';
 
