@@ -14,13 +14,27 @@ export function useRoleCustomization(roles: Role[], enabled: boolean) {
     ...roles,
     ...created.filter((role) => !roles.some(({ id }) => id === role.id)),
   ];
+  // Solo un rol del sistema con permisos: los propios se editan en Roles.
+  const canCustomize = (role: Role) =>
+    enabled && role.kind === 'predefined' && role.permissions.length > 0;
+  const roleOf = (option: { id: string }) =>
+    list.find(({ id }) => id === option.id);
   return {
     roles: list,
     customizing,
-    // Solo un rol del sistema con permisos: los propios se editan en Roles.
-    canCustomize: (role: Role) =>
-      enabled && role.kind === 'predefined' && role.permissions.length > 0,
+    canCustomize,
     start: (role: Role) => setCustomizing(role),
+    // Para las casillas de roles, que hablan de opciones y no de roles.
+    checkboxHandlers: {
+      canCustomize: (option: { id: string }) => {
+        const role = roleOf(option);
+        return !!role && canCustomize(role);
+      },
+      onCustomize: (option: { id: string }) => {
+        const role = roleOf(option);
+        if (role) setCustomizing(role);
+      },
+    },
     close: () => setCustomizing(undefined),
     // Agrega el rol nuevo y devuelve la selección con él en lugar del que se personalizó.
     finish: (role: Role, selected: string[]) => {

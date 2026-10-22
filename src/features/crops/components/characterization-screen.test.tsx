@@ -32,10 +32,10 @@ import {
   characterizationQueueId,
   enqueueCharacterization,
 } from '../characterization-queue';
+import { NO_CATALOG_MESSAGE } from '../characterization-base';
 import {
   CharacterizationScreen,
   type CharacterizationPlot,
-  NO_CATALOG_MESSAGE,
 } from './characterization-screen';
 
 type User = ReturnType<typeof userEvent.setup>;

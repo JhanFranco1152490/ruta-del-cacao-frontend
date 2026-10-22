@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import type { ControlMethod } from '../monitoring-rules';
+import type { ControlMethod } from './monitoring-rules';
 
 // Precarga el control que el catálogo recomienda para la plaga de la detección. Solo toca el campo
 // mientras la persona no lo haya cambiado: vacío, o con lo último que se puso aquí. Si la plaga

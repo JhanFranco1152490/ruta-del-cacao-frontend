@@ -1,23 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageNotice } from '@/components/page-notice';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useFinishSave } from '@/hooks/use-finish-save';
-import { useSession } from '@/hooks/use-session';
-import { mayRecordFor } from '@/lib/activity-recorders';
+import { useLeaveIfNotAssignee } from '@/hooks/use-leave-if-not-assignee';
 import { todayInBogota } from '@/lib/format/dates';
 
 import { ACTIVITIES_PATH } from '../activity-paths';
 import { activityState, canComplete } from '../activity-state';
 import { CompletionCapture } from './completion-capture';
-import { useCompletionSources } from './use-completion-sources';
+import { useCompletionSources } from '../use-completion-sources';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // La pantalla de campo donde se registra una labor como realizada. Todo se guarda primero en el
 // dispositivo: con conexión se envía de inmediato y, sin ella, cuando vuelva. Aquí se decide qué
@@ -37,18 +35,10 @@ export function CompletionScreen({
   // Entre guardar y que la navegación llegue, la lectura de lo guardado ya cambió: sin esto se vería
   // un instante el aviso de «ya está guardada».
   const [saved, setSaved] = useState(false);
-  const router = useRouter();
-  const { data: user } = useSession();
-  // Quien llega escribiendo la dirección de una actividad que no le toca registrar vuelve a la
-  // pantalla de antes sin aviso: el botón ya no se le ofrece, y lo que guardara aquí el servidor
-  // lo rechazaría.
-  const notYours =
-    sources.status === 'ready' &&
-    !!user &&
-    !mayRecordFor(user, sources.activity.assignee.id);
-  useEffect(() => {
-    if (notYours) router.replace(returnPath);
-  }, [notYours, router, returnPath]);
+  const notYours = useLeaveIfNotAssignee(
+    sources.status === 'ready' ? sources.activity.assignee.id : undefined,
+    returnPath,
+  );
 
   if (sources.status === 'missing') {
     return <PageNotice title="Esta actividad ya no existe." />;
@@ -64,14 +54,11 @@ export function CompletionScreen({
   }
   if (sources.status === 'loading') {
     return (
-      <div
-        aria-label="Cargando actividad"
+      <LoadingBlock
         className={pageContainerClass('narrow', 'space-y-6')}
-        role="status"
-      >
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-96" />
-      </div>
+        label="Cargando actividad"
+        shapes={['h-12 w-2/3', 'h-96']}
+      />
     );
   }
 

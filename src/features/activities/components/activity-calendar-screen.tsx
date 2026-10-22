@@ -1,32 +1,18 @@
 'use client';
 
-import { CloudOff } from 'lucide-react';
 import { type ComponentProps, type ReactNode, useState } from 'react';
 
-import { EmptyState } from '@/components/empty-state';
-import { ErrorState } from '@/components/error-state';
-import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useSession } from '@/hooks/use-session';
 import { useActivityAssignees } from '@/lib/api/activity-assignees';
-import { formatMonthYear } from '@/lib/format/dates';
 import { onlyFarmOf } from '@/lib/farm-scope';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import {
-  applyActivityFilters,
-  assigneeOptionsOf,
-  farmOptionsOf,
-  hasActivityFilters,
-  plotOptionsOf,
-} from '../activity-filters';
-import { summarizeActivities } from '../activity-summary';
+import { filterCalendar } from '../calendar-filtering';
 import { isPeriodView } from '../activity-view';
 import type { AgriculturalActivity } from '../api';
+import type { PendingDialog } from '../activity-dialog-state';
 import { AssigneesContext } from '../assignees';
 import { useActivityDay } from '../use-activity-day';
 import { useActivityFilters } from '../use-activity-filters';
@@ -34,32 +20,24 @@ import { useMonthParam } from '@/hooks/use-month-param';
 import { useLinkedActivity } from '../use-linked-activity';
 import { useActivityView } from '../use-activity-view';
 import { useCalendarData } from '../use-calendar-data';
-import { type ScheduleLink, useScheduleLink } from '../use-schedule-link';
+import { useCalendarKeyboard } from '../use-calendar-keyboard';
+import { useCalendarScheduling } from '../use-calendar-scheduling';
 import { ActivityCalendarBody } from './activity-calendar-body';
-import { ActivityDialogs, type PendingDialog } from './activity-dialogs';
-import { ActivityFiltersBar } from './activity-filters-bar';
-import { ActivityFiltersToggle } from './activity-filters-toggle';
-import { ActivityPeriodControl } from './activity-period-control';
+import {
+  CalendarLoadState,
+  CalendarStatusNotes,
+} from './activity-calendar-states';
+import { ActivityDialogs } from './activity-dialogs';
+import { ActivityCalendarFilters } from './activity-calendar-filters';
+import {
+  CalendarPeriodRow,
+  CalendarViewRow,
+} from './activity-calendar-toolbar';
 import { ActivityPeriodSlider } from './activity-period-slider';
 import { ActivityScheduleFab } from './activity-schedule-fab';
-import { ActivityStatePills } from './activity-state-pills';
 import { ActivityTypeBreakdown } from './activity-type-breakdown';
-import { ActivityViewSwitch } from './activity-view-switch';
 import { LinkedScheduleDialog } from './linked-schedule-dialog';
-import { ScheduleActivityButton } from './schedule-activity-button';
-import { ScheduleMonitoringButton } from './schedule-monitoring-button';
 import { pageContainerClass } from '@/components/page-container';
-
-const NEEDS_CONNECTION = {
-  mes: 'Necesitas conexión para ver las actividades de este mes.',
-  lista: 'Necesitas conexión para ver las actividades de este mes.',
-  parcela: 'Necesitas conexión para ver las actividades de este mes.',
-  semana: 'Necesitas conexión para ver las actividades de esta semana.',
-  pendientes: 'Necesitas conexión para ver las actividades pendientes.',
-} as const;
-
-const STATUS_NOTE_CLASS =
-  'flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-bold';
 
 // Un aviso de otro dominio arriba de las vistas. Recibe el productor que se ve y cómo abrir el
 // detalle de una actividad.
@@ -93,7 +71,7 @@ export function ActivityCalendarScreen({
   const hasConnection = useHasConnection();
   const isDesktop = useIsDesktop();
   const period = useMonthParam();
-  const { month, today, isCurrentMonth, goToMonth } = period;
+  const { month, today, goToMonth } = period;
   const viewState = useActivityView(period);
   const selectedDay = useActivityDay(month, today);
   const { view, week } = viewState;
@@ -121,43 +99,21 @@ export function ActivityCalendarScreen({
 
   const offline = !hasConnection || data.savedAt !== undefined;
   const loaded = !data.isPending && !data.neverLoaded && data.error === null;
-  // Pendientes no tiene recuentos de estado desde donde filtrarlo: un estado que quedó en la
-  // dirección no debe filtrar a escondidas lo que se ve.
-  const activeFilters =
-    view === 'pendientes' ? { ...filters, state: null } : filters;
-  const filtersSet = hasActivityFilters(activeFilters);
-  const filtered = applyActivityFilters(data.items, activeFilters);
-  // Los recuentos respetan los demás filtros pero no el de estado, para que los números no cambien
-  // al tocarlos.
-  const summary = summarizeActivities(
-    applyActivityFilters(data.items, { ...filters, state: null }),
+  const { filtered, filtersSet, summary, barFiltersSet } = filterCalendar(
+    data.items,
+    filters,
+    view,
   );
   const activities = data.items.map(({ activity }) => activity);
-  const assigneeOptions = assigneeOptionsOf([
-    ...new Map(
-      [
-        ...(assignees.data?.data ?? []),
-        ...activities.map((activity) => activity.assignee),
-      ].map((assignee) => [assignee.id, assignee]),
-    ).values(),
-  ]);
 
-  // El día que recibe el foco cuando una flecha del teclado cruza de mes o de semana.
-  const [focusDate, setFocusDate] = useState<string>();
-  const keyboard = {
-    focusDate,
-    onFocusHandled: () => setFocusDate(undefined),
-    onCrossMonth: (date: string) => {
-      setFocusDate(date);
-      goToMonth(date.slice(0, 7));
-      if (!isDesktop) selectedDay.setDay(date);
-    },
-    onCrossWeek: (date: string) => {
-      setFocusDate(date);
-      if (date < week) viewState.goPreviousWeek();
-      else viewState.goNextWeek();
-    },
-  };
+  const keyboard = useCalendarKeyboard({
+    week,
+    isDesktop,
+    goToMonth,
+    goPreviousWeek: viewState.goPreviousWeek,
+    goNextWeek: viewState.goNextWeek,
+    selectDay: selectedDay.setDay,
+  });
   const [pending, setPending] = useState<PendingDialog>();
   const open = (dialog: PendingDialog) => setPending(dialog);
   useLinkedActivity({
@@ -169,49 +125,13 @@ export function ActivityCalendarScreen({
     onOpen: (id) => open({ kind: 'detail', id }),
   });
 
-  const canSchedule = hasPermission(user, PERMISSIONS.ACTIVITIES_ADD);
-  const [linkedSchedule, setLinkedSchedule] = useState<ScheduleLink | null>(
-    null,
-  );
-  useScheduleLink({
-    // Con la sesión y el mes cargados, como el enlace de una actividad: antes no se sabe si la
-    // cuenta puede programar ni hay dónde mostrar el aviso.
-    ready: !!user && !data.isPending,
-    canSchedule,
-    offline: !hasConnection,
-    onOpen: setLinkedSchedule,
+  const scheduling = useCalendarScheduling({
+    ready: !data.isPending,
+    offline,
+    hasConnection,
+    open,
   });
-  const openScheduleForm = () => open({ kind: 'schedule' });
-  const openMonitoringForm = () =>
-    open({ kind: 'schedule', activityType: 'phytosanitary_monitoring' });
-  // Programar desde un día del calendario necesita permiso y conexión.
-  const scheduleOnDay =
-    canSchedule && !offline
-      ? (date: string, farmId?: string, plotId?: string) =>
-          open({ kind: 'schedule', date, farmId, plotId })
-      : undefined;
-  // Cuántos filtros de la barra hay puestos; el estado se ve y se filtra desde los recuentos.
-  const barFiltersSet = [filters.farm, filters.plot, filters.assignee].filter(
-    Boolean,
-  ).length;
-  const filtersBar = (
-    <ActivityFiltersBar
-      assignedToMe={filterState.assignedToMe}
-      assigneeOptions={assigneeOptions}
-      farmOptions={farmOptionsOf(activities)}
-      filters={filters}
-      hasFilters={filtersSet}
-      onAssignee={filterState.setAssignee}
-      onClear={filterState.clear}
-      onFarm={filterState.setFarm}
-      onPlot={filterState.setPlot}
-      onProducer={superuser ? filterState.setProducer : undefined}
-      onToggleAssignedToMe={filterState.toggleAssignedToMe}
-      onlyFarm={onlyFarmOf(user)}
-      plotOptions={plotOptionsOf(activities)}
-      producer={producer}
-    />
-  );
+  const { canSchedule } = scheduling;
   const inMonthView = view === 'mes' || view === 'lista' || view === 'parcela';
   const showFilters =
     (superuser || data.items.length > 0 || filtersSet) && !data.neverLoaded;
@@ -229,116 +149,71 @@ export function ActivityCalendarScreen({
           eyebrow="Manejo agrícola"
           title="Actividades"
         />
-        <div className="mt-3 space-y-2 empty:hidden">
-          {offline && loaded && (
-            <p className={STATUS_NOTE_CLASS} role="status">
-              <CloudOff aria-hidden="true" className="size-4 shrink-0" />
-              Sin conexión: estás viendo la última copia de las actividades.
-            </p>
-          )}
-          {data.missingMonths.length > 0 && (
-            <p className={STATUS_NOTE_CLASS} role="status">
-              <CloudOff aria-hidden="true" className="size-4 shrink-0" />
-              Necesitas conexión para ver las actividades de{' '}
-              {data.missingMonths.map(formatMonthYear).join(' y ')}.
-            </p>
-          )}
-        </div>
+        <CalendarStatusNotes
+          missingMonths={data.missingMonths}
+          showingCopy={offline && loaded}
+        />
         <div className="mt-4 space-y-3">
           {renderNotice?.({
             producer,
             openActivity: (id) => open({ kind: 'detail', id }),
           })}
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <ActivityViewSwitch onChange={viewState.setView} value={view} />
-            {canSchedule && isDesktop && (
-              <div className="flex flex-wrap items-start gap-2">
-                <ScheduleMonitoringButton
-                  offline={offline}
-                  onClick={openMonitoringForm}
-                />
-                <ScheduleActivityButton
-                  offline={offline}
-                  onClick={openScheduleForm}
-                />
-              </div>
-            )}
-          </div>
-          {showFilters &&
-            (isDesktop ? (
-              filtersBar
-            ) : (
-              <ActivityFiltersToggle activeCount={barFiltersSet}>
-                {filtersBar}
-              </ActivityFiltersToggle>
-            ))}
-          {/* Los recuentos y el periodo van juntos y pegados al calendario. */}
-          {view !== 'pendientes' && (
-            <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-              {loaded && isPeriodView(view) && data.items.length > 0 && (
-                <ActivityStatePills
-                  counts={summary.byState}
-                  onState={filterState.setState}
-                  state={filters.state}
-                  total={summary.total}
-                />
-              )}
-              <div className="lg:ml-auto">
-                <ActivityPeriodControl
-                  period={period}
-                  view={view}
-                  viewState={viewState}
-                />
-              </div>
-            </div>
+          <CalendarViewRow
+            scheduling={
+              canSchedule && isDesktop
+                ? {
+                    offline,
+                    onSchedule: scheduling.openScheduleForm,
+                    onScheduleMonitoring: scheduling.openMonitoringForm,
+                  }
+                : undefined
+            }
+            switcher={{ onChange: viewState.setView, value: view }}
+          />
+          {showFilters && (
+            <ActivityCalendarFilters
+              activities={activities}
+              assignees={assignees.data?.data}
+              barFiltersSet={barFiltersSet}
+              filterState={filterState}
+              filtersSet={filtersSet}
+              isDesktop={isDesktop}
+              onlyFarm={onlyFarmOf(user)}
+              producer={producer}
+              superuser={superuser}
+            />
+          )}
+          {isPeriodView(view) && (
+            <CalendarPeriodRow
+              period={{ period, view, viewState }}
+              pills={
+                loaded && data.items.length > 0
+                  ? {
+                      counts: summary.byState,
+                      onState: filterState.setState,
+                      state: filters.state,
+                      total: summary.total,
+                    }
+                  : undefined
+              }
+            />
           )}
           <ActivityPeriodSlider
             enabled={swipeEnabled}
-            onNext={view === 'semana' ? viewState.goNextWeek : period.goNext}
-            onPrevious={
-              view === 'semana' ? viewState.goPreviousWeek : period.goPrevious
-            }
-            periodKey={view === 'semana' ? week : month}
+            onNext={viewState.periodNavigation.next}
+            onPrevious={viewState.periodNavigation.previous}
+            periodKey={viewState.periodNavigation.key}
             ready={loaded}
             scope={view}
           >
-            {data.isPending && (
-              <div aria-label="Cargando actividades" role="status">
-                <Skeleton className="h-64" />
-              </div>
-            )}
-            {data.neverLoaded && (
-              <EmptyState
-                action={
-                  inMonthView && !isCurrentMonth ? (
-                    <Button
-                      onClick={period.goToday}
-                      size="office"
-                      variant="outline"
-                    >
-                      Ir a hoy
-                    </Button>
-                  ) : view === 'semana' && !viewState.isCurrentWeek ? (
-                    <Button
-                      onClick={viewState.goThisWeek}
-                      size="office"
-                      variant="outline"
-                    >
-                      Ir a hoy
-                    </Button>
-                  ) : undefined
-                }
-                description="Cuando tengas conexión, abre esta vista una vez y quedará guardada para consultarla sin conexión."
-                illustration={OfflineCloud}
-                title={NEEDS_CONNECTION[view]}
-              />
-            )}
-            {data.error !== null && !data.isPending && (
-              <ErrorState
-                message="No fue posible cargar las actividades."
-                onRetry={data.refetch}
-              />
-            )}
+            <CalendarLoadState
+              failed={data.error !== null}
+              isPending={data.isPending}
+              neverLoaded={data.neverLoaded}
+              onGoToday={viewState.periodNavigation.goToday}
+              onRetry={data.refetch}
+              view={view}
+            />
             {loaded && (
               <ActivityCalendarBody
                 canSchedule={canSchedule}
@@ -352,8 +227,8 @@ export function ActivityCalendarScreen({
                 onOpenDay={(date, plotId) =>
                   open({ kind: 'day', date, plotId })
                 }
-                onSchedule={() => open({ kind: 'schedule' })}
-                onScheduleDay={scheduleOnDay}
+                onSchedule={scheduling.openScheduleForm}
+                onScheduleDay={scheduling.scheduleOnDay}
                 onSelect={({ activity }) =>
                   open({ kind: 'detail', id: activity.id })
                 }
@@ -375,15 +250,15 @@ export function ActivityCalendarScreen({
         {canSchedule && !isDesktop && (
           <ActivityScheduleFab
             offline={offline}
-            onClick={openScheduleForm}
-            onScheduleMonitoring={openMonitoringForm}
+            onClick={scheduling.openScheduleForm}
+            onScheduleMonitoring={scheduling.openMonitoringForm}
           />
         )}
-        {linkedSchedule && (
+        {scheduling.linkedSchedule && (
           <LinkedScheduleDialog
             currentMonth={month}
-            link={linkedSchedule}
-            onClose={() => setLinkedSchedule(null)}
+            link={scheduling.linkedSchedule}
+            onClose={scheduling.closeLinkedSchedule}
             onGoToMonth={goToMonth}
           />
         )}

@@ -1,7 +1,7 @@
 import {
   Ground,
   IllustrationFrame,
-  Leaf,
+  Sprout,
 } from '@/components/brand/cacao-parts';
 
 // Una mata pequeña junto a un visto bueno: no queda nada por hacer. Para Pendiente y la bandeja
@@ -19,16 +19,14 @@ export function AllDone({ className }: { className?: string }) {
         strokeLinejoin="round"
         fill="none"
       />
-      <path
-        d="M54 131 C52 116 56 102 53 86"
-        stroke="var(--mazorca-negra)"
-        strokeWidth="4"
-        strokeLinecap="round"
-        fill="none"
+      <Sprout
+        stem="M54 131 C52 116 56 102 53 86"
+        leaves={[
+          { x: 54, y: 104, angle: -150, scale: 0.75 },
+          { x: 54, y: 96, angle: -30, scale: 0.7, tone: 'var(--selva-2)' },
+          { x: 53, y: 88, angle: -95, scale: 0.65 },
+        ]}
       />
-      <Leaf angle={-150} scale={0.75} x={54} y={104} />
-      <Leaf angle={-30} scale={0.7} tone="var(--selva-2)" x={54} y={96} />
-      <Leaf angle={-95} scale={0.65} x={53} y={88} />
     </IllustrationFrame>
   );
 }

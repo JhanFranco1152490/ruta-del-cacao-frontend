@@ -10,11 +10,11 @@ import {
   ageInMonths,
   isSeedVariety,
   suggestStage,
-} from '../characterization-rules';
+} from './characterization-rules';
 import type {
   CharacterizationFormFields,
   CharacterizationFormInput,
-} from '../schemas';
+} from './schemas';
 
 type Params = {
   index: number;

@@ -27,6 +27,7 @@ import {
 } from '../schemas';
 import { type VarietyOption, varietyChoices } from '../variety-choices';
 import { MobileActionBar } from '@/components/mobile-action-bar';
+import { FormMessage } from '@/components/form-message';
 import { CharacterizationTotals } from './characterization-totals';
 import { CharacterizationWarnings } from './characterization-warnings';
 import { PlantingLine } from './planting-line';
@@ -215,14 +216,7 @@ export function CharacterizationForm({
 
         <div className="space-y-4">
           <CharacterizationWarnings warnings={warnings} />
-          {error && (
-            <p
-              className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-              role="alert"
-            >
-              {error}
-            </p>
-          )}
+          {error && <FormMessage>{error}</FormMessage>}
           {blockedMessage && (
             <p
               className="font-bold text-warn"

@@ -4,6 +4,7 @@ import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
+import { apiPath } from '@/lib/api/path';
 
 type Schemas = components['schemas'];
 export type PestDisease = Schemas['PestDisease'];
@@ -23,13 +24,11 @@ export async function fetchPestsDiseases(
   query: PestDiseaseQuery = {},
   signal?: AbortSignal,
 ): Promise<PestDisease[]> {
-  const params = new URLSearchParams();
-  if (query.is_active !== undefined)
-    params.set('is_active', String(query.is_active));
-  if (query.search) params.set('search', query.search);
-  const suffix = params.size ? `?${params}` : '';
   const { results } = await apiFetch<Schemas['PestDiseaseList']>(
-    `/api/pests-diseases${suffix}`,
+    apiPath('/api/pests-diseases', {
+      is_active: query.is_active,
+      search: query.search,
+    }),
     { signal },
   );
   return results;

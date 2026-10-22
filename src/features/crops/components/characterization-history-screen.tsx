@@ -7,13 +7,13 @@ import { ErrorState } from '@/components/error-state';
 import { PlotOutline } from '@/components/illustrations/plot-outline';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { isPausedWithoutData } from '@/lib/offline/paused-read';
 
 import { useCharacterizationHistory } from '../api';
 import { characterizationPath } from '../characterization-paths';
 import { CharacterizationHistoryVersion } from './characterization-history-version';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 export type HistoryFarm = { id: string; name: string; detailPath: string };
 export type HistoryPlot = { id: string; code: string };
@@ -63,14 +63,11 @@ export function CharacterizationHistoryScreen({
             onRetry={() => void history.refetch()}
           />
         ) : history.isPending ? (
-          <div
-            aria-label="Cargando historial"
+          <LoadingBlock
             className="space-y-4"
-            role="status"
-          >
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-          </div>
+            label="Cargando historial"
+            shapes={['h-28', 'h-28']}
+          />
         ) : events.length === 0 ? (
           <EmptyState
             description="El historial empieza cuando se guarda la caracterización."

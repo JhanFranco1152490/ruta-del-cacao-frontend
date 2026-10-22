@@ -5,17 +5,8 @@ import { useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
-import { SubmitButton } from '@/components/submit-button';
 import { TextField } from '@/components/text-field';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { FormDialog } from '@/components/form-dialog';
 import type { components } from '@/lib/api/schema';
 import { todayInBogota } from '@/lib/format/dates';
 import { formatDecimal } from '@/lib/format/decimal';
@@ -34,10 +25,10 @@ import { useActivePestsDiseases } from '../pest-api';
 import { recommendationFor } from '../recommendations';
 import { useSaveControl } from '../use-control-actions';
 import { ControlAssigneeField } from './control-assignee-field';
-import { ControlChoicesContext } from './control-choices';
+import { ControlChoicesContext } from '../control-choices';
 import { DoneControlFields } from './done-control-fields';
 import { ScheduledControlFields } from './scheduled-control-fields';
-import { useControlChoicesSource } from './use-control-choices-source';
+import { useControlChoicesSource } from '../use-control-choices-source';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
@@ -131,88 +122,60 @@ export function ControlFormDialog({
     );
 
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open && !save.isPending) onClose();
-      }}
-      open
-    >
-      <DialogContent className="sm:max-w-xl" showCloseButton={!save.isPending}>
-        <FormProvider {...form}>
-          <ControlChoicesContext value={controlChoices}>
-            <form
-              className="space-y-4"
-              noValidate
-              onSubmit={(event) => void form.handleSubmit(submit)(event)}
-            >
-              <DialogHeader>
-                <DialogTitle>
-                  {mode === 'done'
-                    ? 'Registrar control realizado'
-                    : 'Programar control'}
-                </DialogTitle>
-                <DialogDescription>
-                  Atiende: {name} {formatDecimal(detection.incidence, 2)} % ·{' '}
-                  {origin.plot.code}
-                </DialogDescription>
-              </DialogHeader>
-              {mode === 'done' ? (
-                <>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <TextField
-                      className={CAPTURE_FIELD_CLASS}
-                      disabled={save.isPending}
-                      error={form.formState.errors.done_date?.message}
-                      label="Fecha de aplicación"
-                      max={today}
-                      type="date"
-                      {...form.register('done_date')}
-                    />
-                    <ControlAssigneeField
-                      disabled={save.isPending}
-                      name="assignee_id"
-                    />
-                  </div>
-                  <DoneControlFields
-                    base=""
-                    disabled={save.isPending}
-                    recommendation={recommendation}
-                  />
-                </>
-              ) : (
-                <ScheduledControlFields
-                  base=""
+    <FormProvider {...form}>
+      <ControlChoicesContext value={controlChoices}>
+        <FormDialog
+          contentClassName="sm:max-w-xl"
+          description={`Atiende: ${name} ${formatDecimal(detection.incidence, 2)} % · ${origin.plot.code}`}
+          error={
+            save.isError
+              ? 'No fue posible guardar el control en el dispositivo. Inténtalo nuevamente.'
+              : undefined
+          }
+          isSaving={save.isPending}
+          onClose={onClose}
+          onSubmit={(event) => void form.handleSubmit(submit)(event)}
+          submitLabel={
+            mode === 'done' ? 'Registrar control' : 'Programar control'
+          }
+          title={
+            mode === 'done'
+              ? 'Registrar control realizado'
+              : 'Programar control'
+          }
+        >
+          {mode === 'done' ? (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <TextField
+                  className={CAPTURE_FIELD_CLASS}
                   disabled={save.isPending}
-                  recommendation={recommendation}
+                  error={form.formState.errors.done_date?.message}
+                  label="Fecha de aplicación"
+                  max={today}
+                  type="date"
+                  {...form.register('done_date')}
                 />
-              )}
-              {save.isError && (
-                <p className="text-sm font-bold text-err" role="alert">
-                  No fue posible guardar el control en el dispositivo. Inténtalo
-                  nuevamente.
-                </p>
-              )}
-              <DialogFooter>
-                <Button
+                <ControlAssigneeField
                   disabled={save.isPending}
-                  onClick={onClose}
-                  type="button"
-                  variant="outline"
-                >
-                  Cancelar
-                </Button>
-                <SubmitButton
-                  className="sm:w-auto"
-                  pending={save.isPending}
-                  pendingLabel="Guardando…"
-                >
-                  {mode === 'done' ? 'Registrar control' : 'Programar control'}
-                </SubmitButton>
-              </DialogFooter>
-            </form>
-          </ControlChoicesContext>
-        </FormProvider>
-      </DialogContent>
-    </Dialog>
+                  name="assignee_id"
+                />
+              </div>
+              <DoneControlFields
+                base=""
+                disabled={save.isPending}
+                recommendation={recommendation}
+              />
+            </>
+          ) : (
+            <ScheduledControlFields
+              base=""
+              disabled={save.isPending}
+              recommendation={recommendation}
+            />
+          )}
+        </FormDialog>
+      </ControlChoicesContext>
+    </FormProvider>
   );
 }

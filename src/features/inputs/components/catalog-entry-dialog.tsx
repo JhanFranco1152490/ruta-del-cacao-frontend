@@ -13,13 +13,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { InlineError } from '@/components/form-message';
 
 import {
   CATALOG_SEARCH_MIN_LENGTH,
   type CatalogInput,
   useCatalogSearch,
 } from '../api';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from '../input-options';
 import { InputMovementDialog } from './input-movement-dialog';
 
 // Registrar la entrada de un insumo que todavía no está en la finca de quien la registra: lo
@@ -83,9 +84,9 @@ export function CatalogEntryDialog({
             {found.isPending ? (
               <p role="status">Buscando…</p>
             ) : found.isError ? (
-              <p className="text-sm font-bold text-err" role="alert">
+              <InlineError>
                 No fue posible buscar. Revisa tu conexión e inténtalo de nuevo.
-              </p>
+              </InlineError>
             ) : results.length === 0 ? (
               <p>No hay insumos activos con ese nombre.</p>
             ) : (

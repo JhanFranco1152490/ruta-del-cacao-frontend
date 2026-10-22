@@ -2,6 +2,9 @@ import { useId, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from 'cn';
 
+import type { useGroupCollapse } from '@/hooks/use-group-collapse';
+import type { ItemGroup } from '@/lib/group-in-order';
+
 // Un grupo de una lista que se pliega desde su título. El contenido no se monta mientras está
 // plegado.
 export function CollapsibleGroup({
@@ -52,5 +55,32 @@ export function CollapsibleGroup({
         </div>
       )}
     </section>
+  );
+}
+
+// Una lista paginada partida en grupos plegables, con lo que trae cada grupo en esta página.
+export function CollapsibleGroupList<T>({
+  groups,
+  collapse,
+  children,
+}: {
+  groups: readonly ItemGroup<T>[];
+  collapse: ReturnType<typeof useGroupCollapse>;
+  children: (items: T[]) => ReactNode;
+}) {
+  return (
+    <div className="space-y-4">
+      {groups.map((group) => (
+        <CollapsibleGroup
+          key={group.key}
+          meta={`${group.items.length} en esta página`}
+          onToggle={() => collapse.toggle(group.key)}
+          open={collapse.isOpen(group.key)}
+          title={group.title}
+        >
+          {children(group.items)}
+        </CollapsibleGroup>
+      ))}
+    </div>
   );
 }

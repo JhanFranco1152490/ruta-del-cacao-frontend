@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
+import { syncFailureText } from '@/components/sync-rejected-notice';
 
 import {
   characterizationHistoryPath,
@@ -65,8 +66,7 @@ export function PlotCharacterizationSummary({
         )}
         {failed && (
           <p className="font-bold text-err">
-            No se pudo sincronizar la caracterización
-            {pending?.errorMessage ? `: ${pending.errorMessage}` : '.'}
+            {syncFailureText(pending?.errorMessage, 'la caracterización')}
           </p>
         )}
       </div>

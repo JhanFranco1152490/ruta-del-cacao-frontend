@@ -1,8 +1,9 @@
 import type { QueueItem, QueueOperation } from '@/lib/offline/db';
+import { matchesSearch } from '@/lib/format/search';
 import type { Coordinates } from '@/types/geo';
 
 import type { Farm } from './api';
-import type { FarmDisplayStatus } from './components/farm-status-badge';
+import type { FarmDisplayStatus } from './farm-status';
 import type { FarmFields } from './farm-queue';
 
 export type FarmProducer = Farm['producer'];
@@ -62,3 +63,29 @@ export const serverFarmToListItem = (farm: Farm): FarmListItem => ({
 
 export const byFarmName = (a: FarmListItem, b: FarmListItem) =>
   a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+
+// Las fincas del dispositivo cuyo nombre coincide con la búsqueda (las del servidor ya vienen
+// buscadas).
+export const searchFarms = (
+  farms: readonly FarmListItem[],
+  search: string | undefined,
+) => farms.filter((farm) => matchesSearch([farm.name], search ?? ''));
+
+// La lista de fincas: lo que está en el dispositivo va primero (necesita atención o aún no llega)
+// y reemplaza a su copia del servidor, para que una edición pendiente muestre los datos nuevos.
+// Lo del dispositivo se filtra aquí con la búsqueda y el municipio; lo del servidor ya viene
+// filtrado.
+export function mergeFarmLists(
+  local: readonly FarmListItem[],
+  server: readonly Farm[],
+  { search, municipality }: { search?: string; municipality: string | null },
+): FarmListItem[] {
+  const localIds = new Set(local.map((farm) => farm.id));
+  const shownLocal = searchFarms(local, search).filter(
+    (farm) => !municipality || farm.municipalityCode === municipality,
+  );
+  const fromServer = server
+    .filter((farm) => !localIds.has(farm.id))
+    .map(serverFarmToListItem);
+  return [...shownLocal, ...fromServer];
+}

@@ -2,12 +2,10 @@ import { z } from 'zod';
 
 import { doneDateIssue } from '@/lib/activity-dates';
 import { dateInBogota } from '@/lib/format/dates';
-import { normalizeQuantity } from '@/lib/input-usage';
 
 import { controlWorkIssues, scheduleIssues } from './control-rules';
+import { CONTROL_WORK_FIELDS } from './control-schema';
 import {
-  CONTROL_METHOD_OPTIONS,
-  type ControlMethod,
   detectionKey,
   OTHER_PEST_DISEASE,
   parseUnits,
@@ -23,24 +21,12 @@ export const treesExceededMessage = (plotTrees: number) =>
 export const REPEATED_DETECTION_MESSAGE =
   'Esta plaga o enfermedad ya está en la lista. Modifica la detección existente';
 
-const methodValues = CONTROL_METHOD_OPTIONS.map(({ value }) => value);
 const samplingMethodValues = SAMPLING_METHOD_OPTIONS.map(({ value }) => value);
 const maxLength = (length: number) => `Usa máximo ${length} caracteres.`;
 
 const controlShape = z.object({
-  id: z.string(),
+  ...CONTROL_WORK_FIELDS,
   mode: z.enum(['none', 'done', 'scheduled', 'requested']),
-  method: z.enum(['', ...methodValues] as ['', ...ControlMethod[]]),
-  method_description: z.string().trim(),
-  inputs: z.array(
-    z.object({
-      input_id: z.string(),
-      quantity: z.string().transform(normalizeQuantity),
-    }),
-  ),
-  scheduled_date: z.string().trim(),
-  assignee_id: z.string(),
-  planned_input_id: z.string(),
 });
 
 export type ControlValues = z.output<typeof controlShape>;

@@ -115,15 +115,7 @@ export function AccountRolesForm({
             <RoleCheckboxes
               legend="Roles de la cuenta"
               roles={offered}
-              canCustomize={(option) => {
-                const role = offered.find(({ id }) => id === option.id);
-                return !!role && customization.canCustomize(role);
-              }}
-              onCustomize={(option) => {
-                const role = offered.find(({ id }) => id === option.id);
-                if (role) customization.start(role);
-              }}
-
+              {...customization.checkboxHandlers}
               locked={locked}
               value={field.value}
               onChange={field.onChange}

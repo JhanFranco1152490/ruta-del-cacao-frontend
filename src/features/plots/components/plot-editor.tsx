@@ -36,6 +36,7 @@ import { PlotNotices } from './plot-notices';
 import { PlotVertexList } from './plot-vertex-list';
 import { PLOT_NAME_MAX_LENGTH } from '../schemas';
 import { pageContainerClass } from '@/components/page-container';
+import { FormMessage } from '@/components/form-message';
 
 export type PlotEditorFarm = {
   id: string;
@@ -296,14 +297,7 @@ export function PlotEditor({
           />
 
           <div className="space-y-4">
-            {error && (
-              <p
-                className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-                role="alert"
-              >
-                {error}
-              </p>
-            )}
+            {error && <FormMessage>{error}</FormMessage>}
             {blockedMessage && (
               <p className="font-bold text-warn" id="plot-save-blocked">
                 {blockedMessage}

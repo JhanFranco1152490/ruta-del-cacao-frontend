@@ -2,12 +2,10 @@
 
 import { type ReactNode, useState } from 'react';
 
-import { ErrorState } from '@/components/error-state';
-
 import type { BaseLayerKind } from './base-layers';
 import { MapFrame, MapHiddenBar } from './map-frame';
 import type { LoadPointsMapProvider, MapPoint, MapShape } from './map-provider';
-import { MapSkeleton } from './map-states';
+import { mapPlaceholder } from './map-states';
 import { type MapVisibility, useMapVisibility } from './use-map-visibility';
 import { useMapProvider } from './use-map-provider';
 
@@ -55,19 +53,19 @@ export function PointsMapPanel({
   }
 
   const { Provider } = map;
+  const placeholder = mapPlaceholder(map, {
+    className: heightClassName,
+    failureMessage:
+      'No fue posible cargar el mapa. La lista de abajo sigue disponible.',
+  });
   // Con el mapa oculto, el total va dentro de la franja «Mapa oculto» y no en una fila aparte.
   const toolbarInBar = !visible && !map.isLoading && !!Provider;
 
   return (
     <section aria-label={label} className="space-y-2">
       {toolbar && !toolbarInBar && <div>{toolbar}</div>}
-      {map.isLoading ? (
-        <MapSkeleton className={heightClassName} />
-      ) : !Provider ? (
-        <ErrorState
-          message="No fue posible cargar el mapa. La lista de abajo sigue disponible."
-          onRetry={map.retry}
-        />
+      {placeholder || !Provider ? (
+        placeholder
       ) : (
         <>
           {visible ? (

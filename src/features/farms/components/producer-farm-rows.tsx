@@ -9,8 +9,8 @@ import { ErrorState } from '@/components/error-state';
 import { FarmHills } from '@/components/illustrations/farm-hills';
 import { SectionCard } from '@/components/page-blocks/section-card';
 import { buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { formatHectareValue, formatHectares } from '@/lib/format/hectares';
+import { LoadingBlock } from '@/components/loading-block';
 
 import type { useFarms } from '../api';
 import { farmDetailPath } from '../farm-paths';
@@ -63,9 +63,7 @@ export function ProducerFarmRows({
       title="Fincas"
     >
       {farms.isPending && (
-        <div aria-label="Cargando fincas" role="status">
-          <Skeleton className="h-32" />
-        </div>
+        <LoadingBlock label="Cargando fincas" shapes={['h-32']} />
       )}
       {farms.isError && (
         <ErrorState

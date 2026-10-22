@@ -13,7 +13,6 @@ import { PageHeader } from '@/components/page-header';
 import { PeriodBar } from '@/components/period-bar';
 import { ProducerFilter } from '@/components/producer-filter';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useMonthParam } from '@/hooks/use-month-param';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useSession } from '@/hooks/use-session';
@@ -33,6 +32,7 @@ import { HarvestFiltersBar } from './harvest-filters-bar';
 import { HarvestTable } from './harvest-table';
 import { HarvestTotals } from './harvest-totals';
 import { pageContainerClass } from '@/components/page-container';
+import { LoadingBlock } from '@/components/loading-block';
 
 // Las recolecciones de un mes, con sus totales y sus filtros. Sin conexión muestra la última copia
 // del mes guardada en el dispositivo, y lo que espera en el teléfono aparece en su fecha.
@@ -122,10 +122,7 @@ export function HarvestListScreen({
         </p>
       )}
       {read.isPending ? (
-        <div aria-label="Cargando cosechas" className="space-y-3" role="status">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-64" />
-        </div>
+        <LoadingBlock label="Cargando cosechas" shapes={['h-28', 'h-64']} />
       ) : read.isError && !read.data ? (
         isApiError(read.error) ? (
           <ErrorState

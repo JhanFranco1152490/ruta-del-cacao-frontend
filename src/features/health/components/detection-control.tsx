@@ -12,7 +12,7 @@ import {
 } from '../monitoring-form';
 import type { MonitoringFormValues } from '../monitoring-schema';
 import type { Recommendation } from '../recommendations';
-import { useControlChoices } from './control-choices';
+import { useControlChoices } from '../control-choices';
 import { DoneControlFields } from './done-control-fields';
 import { ScheduledControlFields } from './scheduled-control-fields';
 

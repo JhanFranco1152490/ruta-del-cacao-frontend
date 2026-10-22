@@ -3,18 +3,8 @@
 import { useState } from 'react';
 
 import { CheckboxField } from '@/components/checkbox-field';
-import { SubmitButton } from '@/components/submit-button';
 import { TextField } from '@/components/text-field';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { FormDialog } from '@/components/form-dialog';
 import { getErrorMessage, isApiError } from '@/lib/api/errors';
 import { type Role, useCreateRole } from '@/lib/api/roles';
 
@@ -74,86 +64,52 @@ export function CustomizeRoleDialog({
   }
 
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open && !create.isPending) onClose();
+    <FormDialog
+      onClose={onClose}
+
+      description="Quita lo que esta persona no debe hacer. Se guarda como un rol propio y queda en la lista para los siguientes empleados."
+      error={failure}
+      isSaving={create.isPending}
+      onSubmit={(event) => {
+        event.preventDefault();
+        // El diálogo sale por un portal, pero en React el evento sigue subiendo hasta el
+        // formulario de la cuenta: sin esto, guardar el rol enviaría también la cuenta.
+        event.stopPropagation();
+        void save();
       }}
-      open
+      submitLabel="Guardar rol"
+      title={`Personalizar permisos de ${base.name}`}
     >
-      <DialogContent
-        className="sm:max-w-lg"
-        showCloseButton={!create.isPending}
-      >
-        <form
-          className="space-y-4"
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            // El diálogo sale por un portal, pero en React el evento sigue subiendo hasta el
-            // formulario de la cuenta: sin esto, guardar el rol enviaría también la cuenta.
-            event.stopPropagation();
-            void save();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Personalizar permisos de {base.name}</DialogTitle>
-            <DialogDescription>
-              Quita lo que esta persona no debe hacer. Se guarda como un rol
-              propio y queda en la lista para los siguientes empleados.
-            </DialogDescription>
-          </DialogHeader>
-          {failure && (
-            <p className="text-sm font-bold text-err" role="alert">
-              {failure}
-            </p>
-          )}
-          <TextField
+      <TextField
+        disabled={create.isPending}
+        error={nameError}
+        label="Nombre del rol"
+        maxLength={NAME_MAX_LENGTH}
+        onChange={(event) => {
+          setName(event.target.value);
+          setNameError(undefined);
+        }}
+        placeholder="Por ejemplo, Operario"
+        value={name}
+      />
+      <fieldset className="space-y-1">
+        <legend className="mb-2 font-bold text-selva">Permisos</legend>
+        {base.permission_details.map((permission) => (
+          <CheckboxField
+            checked={codes.includes(permission.code)}
             disabled={create.isPending}
-            error={nameError}
-            label="Nombre del rol"
-            maxLength={NAME_MAX_LENGTH}
-            onChange={(event) => {
-              setName(event.target.value);
-              setNameError(undefined);
-            }}
-            placeholder="Por ejemplo, Operario"
-            value={name}
+            key={permission.code}
+            label={permission.name}
+            onCheckedChange={(checked) =>
+              setCodes(
+                checked
+                  ? [...codes, permission.code]
+                  : codes.filter((code) => code !== permission.code),
+              )
+            }
           />
-          <fieldset className="space-y-1">
-            <legend className="mb-2 font-bold text-selva">Permisos</legend>
-            {base.permission_details.map((permission) => (
-              <CheckboxField
-                checked={codes.includes(permission.code)}
-                disabled={create.isPending}
-                key={permission.code}
-                label={permission.name}
-                onCheckedChange={(checked) =>
-                  setCodes(
-                    checked
-                      ? [...codes, permission.code]
-                      : codes.filter((code) => code !== permission.code),
-                  )
-                }
-              />
-            ))}
-          </fieldset>
-          <DialogFooter>
-            <DialogClose
-              disabled={create.isPending}
-              render={<Button variant="outline" />}
-            >
-              Cancelar
-            </DialogClose>
-            <SubmitButton
-              className="sm:w-auto"
-              pending={create.isPending}
-              pendingLabel="Guardando…"
-            >
-              Guardar rol
-            </SubmitButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        ))}
+      </fieldset>
+    </FormDialog>
   );
 }

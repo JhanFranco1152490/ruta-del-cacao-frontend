@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form';
 
-import { isApiError } from './errors';
+import { getErrorMessage, isApiError } from './errors';
 
 export type ApiFieldErrorsResult = {
   applied: boolean;
@@ -28,4 +28,17 @@ export function applyApiFieldErrors<T extends FieldValues>(
     }
   }
   return result;
+}
+
+// Lo que queda por decir tras volcar los errores por campo: nada si todos cayeron en un campo
+// del formulario; si no, el primero que no tiene campo o el mensaje general del error.
+export function serverErrorSummary<T extends FieldValues>(
+  error: unknown,
+  setError: UseFormSetError<T>,
+  allowed: readonly string[],
+  fallback: string,
+): string | undefined {
+  const { applied, unmatched } = applyApiFieldErrors(error, setError, allowed);
+  if (applied && unmatched.length === 0) return undefined;
+  return unmatched[0] ?? getErrorMessage(error, fallback);
 }

@@ -1,7 +1,8 @@
 'use client';
+
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 import { Globe, MapPin, TriangleAlert } from 'lucide-react';
+import { KeyValue } from '@/components/page-blocks/section-card';
 import { AccountStatusBadge } from '@/components/account-status-badge';
 import { SidePanelSection } from '@/components/side-panel';
 import { useSession } from '@/hooks/use-session';
@@ -37,15 +38,6 @@ export function AccountBand({ account }: { account: Account }) {
           {kindOf(account)}
         </span>
       </div>
-    </div>
-  );
-}
-
-function Fact({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="font-bold break-words text-foreground">{children}</dd>
     </div>
   );
 }
@@ -111,16 +103,20 @@ export function AccountSections({ account }: { account: Account }) {
     <>
       <SidePanelSection title="Datos">
         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Fact label="Teléfono">{account.phone || 'No registrado'}</Fact>
-          <Fact label="Documento">
+          <KeyValue label="Teléfono">
+            {account.phone || 'No registrado'}
+          </KeyValue>
+          <KeyValue label="Documento">
             {account.document_type} {account.identity_document}
-          </Fact>
+          </KeyValue>
           {account.producer && (
             <>
-              <Fact label="Productor">{account.producer.member_code}</Fact>
-              <Fact label="Municipio">
+              <KeyValue label="Productor">
+                {account.producer.member_code}
+              </KeyValue>
+              <KeyValue label="Municipio">
                 {municipalityName(account.producer.municipality_code)}
-              </Fact>
+              </KeyValue>
             </>
           )}
         </dl>

@@ -30,6 +30,7 @@ import { CompletionActivityCard } from './completion-activity-card';
 import { CompletionConfirmDialog } from './completion-confirm-dialog';
 import { CompletionForm } from './completion-form';
 import { pageContainerClass } from '@/components/page-container';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 
 const SAVE_FAILED =
   'No fue posible guardar la realización en el dispositivo. Inténtalo nuevamente.';
@@ -114,15 +115,7 @@ export function CompletionCapture({
           <OfflineBanner status={sync.status} />
         </div>
       )}
-      {rejected && (
-        <p
-          className="mt-6 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-          role="alert"
-        >
-          No se pudo sincronizar
-          {rejected.errorMessage ? `: ${rejected.errorMessage}` : '.'}
-        </p>
-      )}
+      {rejected && <SyncRejectedNotice errorMessage={rejected.errorMessage} />}
       <div className="mt-6 space-y-6">
         <CompletionForm
           activity={activity}

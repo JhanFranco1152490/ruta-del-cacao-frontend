@@ -7,17 +7,7 @@ import { type FieldErrors, useForm } from 'react-hook-form';
 import { DuplicateNotice } from '@/components/duplicate-notice';
 import { ProducerFilter } from '@/components/producer-filter';
 import { SelectField } from '@/components/select-field';
-import { SubmitButton } from '@/components/submit-button';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { FormDialog } from '@/components/form-dialog';
 import { useProducerSummary } from '@/lib/api/producer-options';
 
 import {
@@ -37,9 +27,9 @@ import {
   type InputFormInput,
   type InputFormValues,
 } from '../schemas';
-import type { FarmChoice } from './input-farm-select';
+import type { FarmChoice } from '../input-options';
 import { InputFormFields } from './input-form-fields';
-import { useInputSubmit } from './use-input-submit';
+import { useInputSubmit } from '../use-input-submit';
 
 // Registrar un insumo, o editar `input` si llega. Se monta al abrirse, así que parte de los
 // valores de ese momento y no adopta lecturas posteriores: guardar la versión nueva con valores
@@ -150,116 +140,83 @@ export function InputFormDialog({
   };
 
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open && !isSaving) onClose();
+    <FormDialog
+      description={
+        input
+          ? 'El cambio se ve en todas las pantallas que ofrecen este insumo.'
+          : 'Queda disponible para elegirlo al registrar labores y controles.'
+      }
+      error={submission.summary}
+      isSaving={isSaving}
+      onClose={onClose}
+      onSubmit={(event) => {
+        void form.handleSubmit(submitValid, reportInvalid)(event);
       }}
-      open
+      submitLabel={input ? 'Guardar cambios' : 'Registrar insumo'}
+      title={input ? `Editar ${input.name}` : 'Registrar insumo'}
     >
-      <DialogContent className="sm:max-w-lg" showCloseButton={!isSaving}>
-        <form
-          className="space-y-4"
-          noValidate
-          onSubmit={(event) => {
-            void form.handleSubmit(submitValid, reportInvalid)(event);
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>
-              {input ? `Editar ${input.name}` : 'Registrar insumo'}
-            </DialogTitle>
-            <DialogDescription>
-              {input
-                ? 'El cambio se ve en todas las pantallas que ofrecen este insumo.'
-                : 'Queda disponible para elegirlo al registrar labores y controles.'}
-            </DialogDescription>
-          </DialogHeader>
-          {submission.summary && (
-            <p className="text-sm font-bold text-err" role="alert">
-              {submission.summary}
-            </p>
-          )}
-          {askProducer && (
-            <div>
-              <ProducerFilter
-                label="Productor"
-                onClear={() => setProducerId(null)}
-                onSelect={(id) => {
-                  setProducerId(id);
-                  setProducerError(undefined);
-                }}
-                producer={producerId ?? undefined}
-                selected={selectedProducer}
-              />
-              {producerError && (
-                <p className="mt-1 text-sm font-bold text-err">
-                  {producerError}
-                </p>
-              )}
-            </div>
-          )}
-          {askFarm && (
-            <SelectField
-              disabled={isSaving}
-              error={farmError}
-              hint="El insumo queda en esta finca; a las otras lo traes con una entrada."
-              label="Finca"
-              onChange={(event) => {
-                setFarmId(event.target.value || null);
-                setFarmError(undefined);
-              }}
-              value={farmId ?? ''}
-            >
-              <option value="">Elige una finca</option>
-              {employeeFarms
-                ?.filter((choice) => choice.is_active)
-                .map((choice) => (
-                  <option key={choice.id} value={choice.id}>
-                    {choice.name}
-                  </option>
-                ))}
-            </SelectField>
-          )}
-          <InputFormFields
-            disabled={isSaving}
-            errors={errors}
-            extra={
-              existing && (
-                <DuplicateNotice
-                  active={existing.is_active}
-                  disabled={isSaving}
-                  inactiveText={`${existing.name} está inactivo.`}
-                  onActivate={() => void activateExisting(existing)}
-                  onShow={() => onShowExisting(existing)}
-                  showLabel="Ver el insumo existente"
-                />
-              )
-            }
-            form={form}
-            unitLocked={submission.unitLocked}
-            unitLockedHint={
-              employeeFarms && input && !input.has_records
-                ? 'Solo el productor cambia la unidad de un insumo.'
-                : undefined
-            }
+      {askProducer && (
+        <div>
+          <ProducerFilter
+            label="Productor"
+            onClear={() => setProducerId(null)}
+            onSelect={(id) => {
+              setProducerId(id);
+              setProducerError(undefined);
+            }}
+            producer={producerId ?? undefined}
+            selected={selectedProducer}
           />
-          <DialogFooter>
-            <DialogClose
+          {producerError && (
+            <p className="mt-1 text-sm font-bold text-err">{producerError}</p>
+          )}
+        </div>
+      )}
+      {askFarm && (
+        <SelectField
+          disabled={isSaving}
+          error={farmError}
+          hint="El insumo queda en esta finca; a las otras lo traes con una entrada."
+          label="Finca"
+          onChange={(event) => {
+            setFarmId(event.target.value || null);
+            setFarmError(undefined);
+          }}
+          value={farmId ?? ''}
+        >
+          <option value="">Elige una finca</option>
+          {employeeFarms
+            ?.filter((choice) => choice.is_active)
+            .map((choice) => (
+              <option key={choice.id} value={choice.id}>
+                {choice.name}
+              </option>
+            ))}
+        </SelectField>
+      )}
+      <InputFormFields
+        disabled={isSaving}
+        errors={errors}
+        extra={
+          existing && (
+            <DuplicateNotice
+              active={existing.is_active}
               disabled={isSaving}
-              render={<Button variant="outline" />}
-            >
-              Cancelar
-            </DialogClose>
-            <SubmitButton
-              className="sm:w-auto"
-              pending={isSaving}
-              pendingLabel="Guardando…"
-            >
-              {input ? 'Guardar cambios' : 'Registrar insumo'}
-            </SubmitButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              inactiveText={`${existing.name} está inactivo.`}
+              onActivate={() => void activateExisting(existing)}
+              onShow={() => onShowExisting(existing)}
+              showLabel="Ver el insumo existente"
+            />
+          )
+        }
+        form={form}
+        unitLocked={submission.unitLocked}
+        unitLockedHint={
+          employeeFarms && input && !input.has_records
+            ? 'Solo el productor cambia la unidad de un insumo.'
+            : undefined
+        }
+      />
+    </FormDialog>
   );
 }
