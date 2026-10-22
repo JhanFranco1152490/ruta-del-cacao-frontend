@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/empty-state';
+import { AllDone } from '@/components/illustrations/all-done';
 
 import type { usePendingItems } from '../use-pending-items';
 import { PendingMonitoringsSection } from './pending-monitorings-section';
@@ -19,6 +20,7 @@ export function PendingTab({
     return (
       <EmptyState
         description="Los monitoreos por registrar, los controles por atender y los que ya están programados aparecen aquí."
+        illustration={AllDone}
         title="No hay nada pendiente"
       />
     );

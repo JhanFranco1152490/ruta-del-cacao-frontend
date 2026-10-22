@@ -1,5 +1,6 @@
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FarmerHat } from '@/components/illustrations/farmer-hat';
 import { Pagination } from '@/components/pagination';
 import { isApiError } from '@/lib/api/errors';
 import { useMissingPageReset } from '@/hooks/use-missing-page-reset';
@@ -68,6 +69,7 @@ export function AccountList({
         />
       ) : (
         <EmptyState
+          illustration={FarmerHat}
           title="No hay usuarios para mostrar"
           description="Ajusta los filtros o crea una cuenta."
         />

@@ -3,6 +3,7 @@
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { FilterRow } from '@/components/filter-row';
+import { LeafPest } from '@/components/illustrations/leaf-pest';
 import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
@@ -115,6 +116,7 @@ export function PestListScreen() {
                   ? 'Prueba con otro nombre o cambia el filtro de estado.'
                   : 'Registra la primera para que el capataz pueda elegirla en un monitoreo.'
               }
+              illustration={LeafPest}
               title={
                 items.length
                   ? 'Ninguna plaga o enfermedad coincide con la búsqueda'

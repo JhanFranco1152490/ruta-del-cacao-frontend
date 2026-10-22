@@ -5,6 +5,7 @@ import { type ComponentProps, type ReactNode, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -328,6 +329,7 @@ export function ActivityCalendarScreen({
                   ) : undefined
                 }
                 description="Cuando tengas conexión, abre esta vista una vez y quedará guardada para consultarla sin conexión."
+                illustration={OfflineCloud}
                 title={NEEDS_CONNECTION[view]}
               />
             )}

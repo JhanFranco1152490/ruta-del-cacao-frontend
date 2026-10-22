@@ -6,6 +6,8 @@ import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { FarmHills } from '@/components/illustrations/farm-hills';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
 import { Button } from '@/components/ui/button';
@@ -116,7 +118,7 @@ export function FacilitiesScreen({
         return <Loading />;
       case 'error':
         return isNeverLoaded(place.farmOptions) ? (
-          <EmptyState title={NEEDS_CONNECTION} />
+          <EmptyState illustration={OfflineCloud} title={NEEDS_CONNECTION} />
         ) : (
           <ErrorState
             message="No fue posible cargar las fincas."
@@ -127,11 +129,15 @@ export function FacilitiesScreen({
         return (
           <EmptyState
             description="Registra una finca para agregar sus cajones y marquesinas."
+            illustration={FarmHills}
             title="Aún no tienes fincas activas."
           />
         );
       case 'farm':
-        if (isNeverLoaded(read)) return <EmptyState title={NEEDS_CONNECTION} />;
+        if (isNeverLoaded(read))
+          return (
+            <EmptyState illustration={OfflineCloud} title={NEEDS_CONNECTION} />
+          );
         if (read.isPending) return <Loading />;
         if (!known || !farm) {
           return (

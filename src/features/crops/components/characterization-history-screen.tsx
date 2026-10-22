@@ -4,6 +4,7 @@ import { BackLink } from '@/components/back-link';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { PlotOutline } from '@/components/illustrations/plot-outline';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,6 +74,7 @@ export function CharacterizationHistoryScreen({
         ) : events.length === 0 ? (
           <EmptyState
             description="El historial empieza cuando se guarda la caracterización."
+            illustration={PlotOutline}
             title="Esta parcela todavía no tiene versiones"
           />
         ) : (

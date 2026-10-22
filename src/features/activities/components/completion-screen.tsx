@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageNotice } from '@/components/page-notice';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -56,6 +57,7 @@ export function CompletionScreen({
     return (
       <PageNotice
         description="Ábrela una vez con conexión desde Actividades y quedará guardada para registrarla sin conexión."
+        illustration={OfflineCloud}
         title="Necesitas conexión para abrir esta actividad."
       />
     );

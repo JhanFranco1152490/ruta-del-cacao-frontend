@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/empty-state';
+import { AllDone } from '@/components/illustrations/all-done';
 
 import type { ActivityOfDay } from '../activity-days';
 import type { PendingGroup } from '../activity-pending';
@@ -31,6 +32,7 @@ export function ActivityPendingView({
           <div className="flex justify-end">{daysControl}</div>
           <EmptyState
             description={`No hay labores vencidas, retrasadas ni por hacer en los próximos ${days} días.`}
+            illustration={AllDone}
             title="Todo al día"
           />
         </>

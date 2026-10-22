@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { EditorLink } from '@/components/editor-link';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { PlotOutline } from '@/components/illustrations/plot-outline';
 import { MapBesideList } from '@/components/map/map-beside-list';
 import { PointsMapPanel } from '@/components/map/points-map-panel';
 import { buttonVariants } from '@/components/ui/button';
@@ -221,6 +222,7 @@ function PlotsContent({
             />
           ) : (
             <EmptyState
+              illustration={PlotOutline}
               title="Esta finca aún no tiene parcelas"
               description="Registra la primera con su área y, si quieres, su nombre y su polígono. Puedes hacerlo sin conexión."
               action={registerLink || undefined}
