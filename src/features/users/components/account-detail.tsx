@@ -1,4 +1,5 @@
 'use client';
+import { SidePanelEditBand } from '@/components/side-panel';
 import { useState } from 'react';
 import { Pencil, ShieldCheck } from 'lucide-react';
 import { ErrorState } from '@/components/error-state';
@@ -66,27 +67,37 @@ export function AccountDetail({
       : undefined;
   if (mode === 'edit')
     return (
-      <div className="space-y-4 px-5 py-4">
-        <h2 className="font-serif text-2xl text-selva">Datos de la cuenta</h2>
-        <AccountEditForm
-          account={data}
-          farmsOf={farmsOf}
-          onDone={back}
-          onBusy={onBusy}
+      <div>
+        <SidePanelEditBand
+          kicker="Datos de la cuenta"
+          title={`${data.first_name} ${data.last_name}`}
         />
+        <div className="space-y-4 px-5 py-4">
+          <AccountEditForm
+            account={data}
+            farmsOf={farmsOf}
+            onDone={back}
+            onBusy={onBusy}
+          />
+        </div>
       </div>
     );
   if (mode === 'roles')
     return (
-      <div className="space-y-4 px-5 py-4">
-        <h2 className="font-serif text-2xl text-selva">Roles de la cuenta</h2>
-        <AccountRolesPanel
-          account={data}
-          user={user}
-          farmsOf={farmsOf}
-          onDone={back}
-          onBusy={onBusy}
+      <div>
+        <SidePanelEditBand
+          kicker="Roles de la cuenta"
+          title={`${data.first_name} ${data.last_name}`}
         />
+        <div className="space-y-4 px-5 py-4">
+          <AccountRolesPanel
+            account={data}
+            user={user}
+            farmsOf={farmsOf}
+            onDone={back}
+            onBusy={onBusy}
+          />
+        </div>
       </div>
     );
   // Nadie modifica su propia cuenta (`self_modification`), y desde el espacio del productor

@@ -86,7 +86,9 @@ function PlotCard<T extends KnownPlot>({
       data-highlighted={plot.id === highlightedId || undefined}
       ref={ref}
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div
+        className={`flex flex-wrap items-center gap-x-3 gap-y-2 ${compact ? 'relative min-h-10 pr-12' : ''}`}
+      >
         <h3 id={`plot-${plot.id}-code`} className="text-lg text-selva">
           {plotLabel(plot)}
         </h3>
@@ -99,9 +101,12 @@ function PlotCard<T extends KnownPlot>({
         </p>
         <PlotStatusBadge status={plotStatus(plot)} />
         {/* Lo que se hace con la parcela, arriba a la derecha y sin gastar una fila. En una tarjeta
-            angosta queda solo el «⋯». */}
+            angosta queda solo el «⋯», fijo en la esquina para que no baje a una fila propia cuando el
+            código, el área y el estado ocupan todo el ancho. */}
         {(showOnMap || shortcuts || actions) && (
-          <div className="ml-auto flex items-center gap-1.5">
+          <div
+            className={`flex items-center gap-1.5 ${compact ? 'absolute top-0 right-0' : 'ml-auto'}`}
+          >
             {showOnMap && !compact && (
               <Button
                 aria-label={`Ver ${plotLabel(plot)} en el mapa`}

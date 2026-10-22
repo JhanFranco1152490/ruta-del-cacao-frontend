@@ -38,6 +38,7 @@ export function RolePanel(props: Props) {
   const isNew = props.selected === 'nuevo';
   return (
     <Sheet
+      closeOnBack={false}
       open
       onOpenChange={(value) => {
         if (!value && !lock.current) props.close();

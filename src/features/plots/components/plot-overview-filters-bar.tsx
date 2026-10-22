@@ -133,6 +133,7 @@ export function PlotGroupingControl({
   ];
   return (
     <SegmentedControl
+      fullWidth
       label="Agrupar"
       onChange={(value) => void filters.setGrouping(value)}
       options={groupings}

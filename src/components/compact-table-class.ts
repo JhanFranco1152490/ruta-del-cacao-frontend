@@ -2,7 +2,8 @@
 // tarjeta compacta de pocas líneas, con las celdas como elementos que se acomodan en ellas. Sin la
 // etiqueta de cada dato (el valor se entiende solo, como «Cúcuta» o «CC ••••0004»), porque la
 // versión con «etiqueta: valor» por línea cuadruplicaba el alto de la lista. Cada tabla decide en
-// qué línea va cada celda con `max-md:order-*`, `max-md:col-span-1` y `max-md:justify-self-end`; la fila de títulos queda solo
+// qué línea va cada celda con `max-md:order-*`, `max-md:col-span-1!` (con `!`: la regla de las celdas, `col-span-2`, pesa más) y
+// `max-md:justify-self-end`; la fila de títulos queda solo
 // para lectores de pantalla.
 export const COMPACT_TABLE_CLASS = [
   'max-md:block',
@@ -10,8 +11,9 @@ export const COMPACT_TABLE_CLASS = [
   'max-md:[&_tbody]:block',
   // Dos columnas: el nombre y su estado arriba, y cada dato que sigue ocupa el ancho (`col-span-2`,
   // el valor por defecto) o una mitad. `!` en el borde porque el cuerpo de la tabla se lo quita a la
-  // última fila. `pr-10` deja sitio a la flecha que cubre la tarjeta.
-  'max-md:[&_tr]:relative max-md:[&_tr]:mb-2 max-md:[&_tr]:grid max-md:[&_tr]:grid-cols-[minmax(0,1fr)_auto] max-md:[&_tr]:gap-x-3 max-md:[&_tr]:gap-y-0.5 max-md:[&_tr]:rounded-lg max-md:[&_tr]:border! max-md:[&_tr]:border-border max-md:[&_tr]:p-3 max-md:[&_tr]:pr-10',
+  // última fila. Con fondo de tarjeta (blanco): sobre el fondo crema de la página, la fila sin fondo
+  // no se distingue. `pr-10` deja sitio a la flecha que cubre la tarjeta.
+  'max-md:[&_tr]:relative max-md:[&_tr]:mb-2 max-md:[&_tr]:grid max-md:[&_tr]:grid-cols-[minmax(0,1fr)_auto] max-md:[&_tr]:gap-x-3 max-md:[&_tr]:gap-y-0.5 max-md:[&_tr]:rounded-lg max-md:[&_tr]:border! max-md:[&_tr]:border-border max-md:[&_tr]:bg-card max-md:[&_tr]:p-3 max-md:[&_tr]:pr-10',
   'max-md:[&_td]:col-span-2 max-md:[&_td]:max-w-none max-md:[&_td]:min-w-0 max-md:[&_td]:p-0 max-md:[&_td]:text-sm max-md:[&_td]:whitespace-normal',
 ].join(' ');
 

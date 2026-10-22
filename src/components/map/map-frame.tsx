@@ -119,8 +119,11 @@ export function MapFrame({
 export function MapHiddenBar({
   onShow,
   label = 'Mapa oculto',
+  summary,
 }: {
   onShow: () => void;
+  // Un total que acompañaba al mapa: va arriba de la etiqueta, en la misma franja.
+  summary?: ReactNode;
   // Lo que se oculta junto con el mapa, si es más que el mapa («Mapa y resumen ocultos»).
   label?: string;
 }) {
@@ -129,7 +132,18 @@ export function MapHiddenBar({
       className="flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-card)] border border-dashed border-border bg-card px-4"
       data-slot="map-hidden"
     >
-      <p className="text-sm font-bold text-muted-foreground">{label}</p>
+      <div className="min-w-0 py-1.5">
+        {summary && <div>{summary}</div>}
+        <p
+          className={
+            summary
+              ? 'text-xs font-bold text-muted-foreground'
+              : 'text-sm font-bold text-muted-foreground'
+          }
+        >
+          {label}
+        </p>
+      </div>
       <MapVisibilityButton onToggle={onShow} visible={false} />
     </div>
   );

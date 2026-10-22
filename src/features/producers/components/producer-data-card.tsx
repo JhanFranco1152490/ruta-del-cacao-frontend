@@ -1,6 +1,9 @@
+import { Pencil } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { EditorLink } from '@/components/editor-link';
 import { MaskedValue } from '@/components/masked-value';
+import { buttonVariants } from '@/components/ui/button';
 import { formatLongDate } from '@/lib/format/dates';
 
 import type { Producer } from '../api';
@@ -31,7 +34,21 @@ export function ProducerDataCard({
           <p className="section-label">Datos del productor</p>
           <h2 className="mt-2 text-2xl text-selva">Información registrada</h2>
         </div>
-        <ProducerStatusBadge status={producer.status} />
+        <div className="flex items-center gap-2">
+          <ProducerStatusBadge status={producer.status} />
+          {/* El lápiz queda junto a los datos: en celular el botón de la cabecera queda lejos. */}
+          <EditorLink
+            aria-label="Editar datos del productor"
+            className={buttonVariants({
+              variant: 'action',
+              size: 'icon',
+              className: 'size-10',
+            })}
+            href={`/productores/${producer.id}/editar`}
+          >
+            <Pencil aria-hidden="true" className="size-4" />
+          </EditorLink>
+        </div>
       </div>
       <dl className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
         <DataItem label="Documento">

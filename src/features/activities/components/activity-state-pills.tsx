@@ -16,7 +16,8 @@ const TONE_CLASSES = {
   ok: 'border-ok/30 bg-ok-bg text-ok',
 } as const;
 
-// Cuántas actividades hay del periodo en cada estado, en una sola fila. Cada una es a la vez el
+// Cuántas actividades hay del periodo en cada estado; en celular se parten en dos filas en vez de
+// esconderse tras un desplazamiento. Cada una es a la vez el
 // recuento, la clave de colores del calendario y el filtro de estado: tocarla deja solo ese
 // estado, y tocarla otra vez lo quita. El número va en texto y el ícono repite el del estado.
 export function ActivityStatePills({
@@ -33,7 +34,7 @@ export function ActivityStatePills({
   return (
     <div
       aria-label="Estados del periodo"
-      className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+      className="flex flex-wrap items-center gap-2"
       role="group"
     >
       {ACTIVITY_STATES.map((key) => {

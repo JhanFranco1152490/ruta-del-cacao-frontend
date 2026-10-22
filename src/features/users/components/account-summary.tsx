@@ -20,14 +20,14 @@ const kindOf = (account: Account) =>
       : 'Empleado';
 
 // La franja de arriba dice de un vistazo quién es la cuenta: nombre, correo, estado y qué clase de
-// cuenta es. Llega hasta los bordes del panel (`data-band` le da su color al botón de cerrar).
+// cuenta es. Llega hasta los bordes del panel.
 export function AccountBand({ account }: { account: Account }) {
   return (
     <div
-      className="bg-gradient-to-br from-selva to-selva-2 px-5 pt-5 pr-12 pb-4 text-white"
+      className="bg-gradient-to-br from-selva to-selva-2 px-5 pt-4 pr-12 pb-3 text-white sm:pt-5 sm:pb-4"
       data-band
     >
-      <h2 className="font-serif text-3xl break-words">
+      <h2 className="font-serif text-2xl break-words sm:text-3xl">
         {account.first_name} {account.last_name}
       </h2>
       <p className="mt-1 text-sm break-all text-white/80">{account.email}</p>

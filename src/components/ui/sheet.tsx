@@ -3,9 +3,8 @@
 import * as React from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { cn } from 'cn';
-import { XIcon } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { ModalClose } from '@/components/ui/modal-close';
 import {
   Dialog,
   DialogClose,
@@ -50,28 +49,14 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          'fixed z-50 flex flex-col gap-4 overflow-y-auto bg-popover p-4 text-sm text-popover-foreground shadow-card duration-200 outline-none data-closed:animate-out data-open:animate-in',
+          'fixed z-50 flex flex-col gap-4 overflow-y-auto bg-popover p-4 text-sm text-popover-foreground shadow-card duration-200 outline-none [--gap:1rem] [--pad:1rem] data-closed:animate-out data-open:animate-in',
           SIDE_CLASSES[side],
           className,
         )}
         {...props}
       >
+        {showCloseButton && <ModalClose label="Cerrar" slot="sheet-close" />}
         {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="sheet-close"
-            render={
-              <Button
-                variant="ghost"
-                className="absolute top-2 right-2"
-                size="icon-sm"
-              />
-            }
-          >
-            <XIcon aria-hidden="true" />
-            <span className="sr-only">Cerrar</span>
-          </DialogPrimitive.Close>
-        )}
       </DialogPrimitive.Popup>
     </DialogPortal>
   );

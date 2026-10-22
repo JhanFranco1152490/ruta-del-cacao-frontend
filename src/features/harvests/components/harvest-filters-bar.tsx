@@ -48,7 +48,7 @@ export function HarvestFiltersBar({
       search={
         <SearchSelect
           allLabel="Todas las parcelas"
-          className={FILTER_WIDTH}
+          className="min-w-0 flex-1 basis-40 sm:min-w-40 sm:basis-44"
           compact
           label="Parcela"
           onChange={(option) => state.setPlot(option?.id ?? null)}
