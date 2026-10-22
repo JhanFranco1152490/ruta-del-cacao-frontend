@@ -3,6 +3,7 @@
 import { type Control, Controller } from 'react-hook-form';
 
 import { ProducerFilter } from '@/components/producer-filter';
+import { InlineError } from '@/components/form-message';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useProducerSummary } from '@/lib/api/producer-options';
 
@@ -64,11 +65,7 @@ function ProducerChoice({
         producer={value}
         selected={summary}
       />
-      {error && (
-        <p className="text-sm font-bold text-err" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <InlineError>{error}</InlineError>}
     </div>
   );
 }

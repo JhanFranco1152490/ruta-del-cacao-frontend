@@ -13,6 +13,7 @@ import { UsedInputsSection } from '@/components/input-usage/used-inputs-section'
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
+import { FormMessage } from '@/components/form-message';
 import type { CatalogInput } from '@/lib/input-usage';
 
 import type { AgriculturalActivity } from '../api';
@@ -90,14 +91,11 @@ export function CompletionForm({
       onSubmit={(event) => void handleSubmit(onSubmit)(event)}
     >
       {submitCount > 0 && !isValid && errorCount > 0 && (
-        <p
-          className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-          role="alert"
-        >
+        <FormMessage>
           {errorCount === 1
             ? 'Revisa el dato marcado antes de guardar.'
             : `Revisa los ${errorCount} datos marcados antes de guardar.`}
-        </p>
+        </FormMessage>
       )}
       {/* La actividad y la fecha, lado a lado: son dos tarjetas de poco contenido y apiladas
           dejaban media pantalla vacía. */}
@@ -128,14 +126,7 @@ export function CompletionForm({
         />
       )}
       <div className="space-y-4">
-        {error && (
-          <p
-            className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
+        {error && <FormMessage>{error}</FormMessage>}
         {blockedMessage && (
           <p className="font-bold text-warn" id="completion-save-blocked">
             {blockedMessage}

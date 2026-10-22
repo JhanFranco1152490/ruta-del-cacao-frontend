@@ -28,6 +28,7 @@ import { harvestDetailPath, HARVESTS_PATH } from '../harvest-paths';
 import { harvestToFormValues, toHarvestUpdate } from '../harvest-requests';
 import { useHarvestSources } from '../use-harvest-sources';
 import { HarvestForm } from './harvest-form';
+import { FormMessage } from '@/components/form-message';
 import { pageContainerClass } from '@/components/page-container';
 
 const STALE_MESSAGE =
@@ -109,14 +110,7 @@ export function HarvestCorrectionScreen({ harvestId }: { harvestId: string }) {
         eyebrow="Producción"
         title="Corregir cosecha"
       />
-      {message && (
-        <p
-          className="mt-6 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-          role="alert"
-        >
-          {message}
-        </p>
-      )}
+      {message && <FormMessage className="mt-6">{message}</FormMessage>}
       <div className="mt-6">
         <HarvestForm
           collectors={collectors.data?.data}

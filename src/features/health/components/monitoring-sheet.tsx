@@ -14,6 +14,7 @@ import { FormSection } from '@/components/form-section';
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { TextAreaField } from '@/components/text-area-field';
 import { Button } from '@/components/ui/button';
+import { FormMessage } from '@/components/form-message';
 
 import type { MonitoringFormInput } from '../monitoring-form';
 import {
@@ -131,12 +132,9 @@ export function MonitoringSheet({
           onSubmit={(event) => void handleSubmit(onSubmit)(event)}
         >
           {submitCount > 0 && !isValid && (
-            <p
-              className="rounded-(--radius) bg-err-bg px-4 py-3 text-sm font-bold text-err"
-              role="alert"
-            >
+            <FormMessage>
               Revisa los datos marcados antes de guardar.
-            </p>
+            </FormMessage>
           )}
           {/* En escritorio, el muestreo y las detecciones a la izquierda y lo de apoyo (observaciones
               y fotos) a la derecha; en celular, una sola columna en ese mismo orden. */}

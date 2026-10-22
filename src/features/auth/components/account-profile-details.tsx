@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { InlineError } from '@/components/form-message';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { fullName } from '@/lib/format/person-name';
 
@@ -29,9 +30,7 @@ export function AccountProfileDetails() {
   if (profile.isError) {
     return (
       <div className="space-y-2">
-        <p role="alert" className="text-sm font-bold text-err">
-          No fue posible cargar los datos de tu cuenta.
-        </p>
+        <InlineError>No fue posible cargar los datos de tu cuenta.</InlineError>
         <Button variant="outline" onClick={() => void profile.refetch()}>
           Reintentar
         </Button>

@@ -4,6 +4,7 @@ import { get, useFormContext, useWatch } from 'react-hook-form';
 
 import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
 import { UsedInputsSection } from '@/components/input-usage/used-inputs-section';
+import { InlineError } from '@/components/form-message';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 
@@ -71,11 +72,7 @@ export function DoneControlFields({
         name={`${base}inputs`}
         stocks={stocks}
       />
-      {errorOf('inputs') && (
-        <p className="text-sm font-bold text-err" role="alert">
-          {errorOf('inputs')}
-        </p>
-      )}
+      {errorOf('inputs') && <InlineError>{errorOf('inputs')}</InlineError>}
     </div>
   );
 }

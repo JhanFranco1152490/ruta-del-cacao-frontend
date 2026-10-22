@@ -3,6 +3,7 @@
 import type { UseFormReturn } from 'react-hook-form';
 
 import { SearchSelect } from '@/components/search-select';
+import { InlineError } from '@/components/form-message';
 import type { FarmOption } from '@/lib/api/farm-options';
 import { farmLabel } from '@/lib/format/place-label';
 
@@ -39,11 +40,7 @@ export function FacilityFarmField({
             en ella.
           </p>
         )}
-        {error && (
-          <p className="text-sm font-bold text-err" role="alert">
-            {error}
-          </p>
-        )}
+        {error && <InlineError>{error}</InlineError>}
       </div>
     );
   }

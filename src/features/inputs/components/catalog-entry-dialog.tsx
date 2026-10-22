@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { InlineError } from '@/components/form-message';
 
 import {
   CATALOG_SEARCH_MIN_LENGTH,
@@ -83,9 +84,9 @@ export function CatalogEntryDialog({
             {found.isPending ? (
               <p role="status">Buscando…</p>
             ) : found.isError ? (
-              <p className="text-sm font-bold text-err" role="alert">
+              <InlineError>
                 No fue posible buscar. Revisa tu conexión e inténtalo de nuevo.
-              </p>
+              </InlineError>
             ) : results.length === 0 ? (
               <p>No hay insumos activos con ese nombre.</p>
             ) : (
