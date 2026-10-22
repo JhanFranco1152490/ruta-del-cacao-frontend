@@ -72,7 +72,7 @@ export function DetailHero({
     <section
       aria-label={title}
       className={cn(
-        'relative mt-4 overflow-hidden rounded-[var(--radius-card)] p-4 sm:p-6',
+        'motion-rise relative mt-4 overflow-hidden rounded-[var(--radius-card)] p-4 sm:p-6',
         style.box,
         !dark && 'pl-5 sm:pl-7',
       )}

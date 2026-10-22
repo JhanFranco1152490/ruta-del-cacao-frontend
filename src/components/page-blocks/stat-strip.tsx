@@ -17,7 +17,7 @@ export function StatStrip({
   return (
     <section
       aria-label={label}
-      className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] bg-border shadow-card lg:grid-cols-4"
+      className="motion-rise mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] bg-border shadow-card lg:grid-cols-4"
       style={accentStyle(accent)}
     >
       {children}
