@@ -557,6 +557,8 @@ describe('FacilitiesScreen', () => {
     });
 
     await screen.findByText(/Sin conexión: estás viendo la copia del/);
+    // La tabla llega después del aviso: bajo carga, todavía no está cuando el aviso aparece.
+    await screen.findByRole('table', { name: 'Cajones y marquesinas' });
     expect(
       within(rows()[1]).getByText('000123-F01-P05-261014-1'),
     ).toBeInTheDocument();
