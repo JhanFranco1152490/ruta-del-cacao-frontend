@@ -23,6 +23,7 @@ import {
   useQueuedFarm,
 } from '../use-farm-queue';
 import { useFarmSyncStatus } from '../use-farm-sync-status';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { FarmDeleteDialog } from './farm-delete-dialog';
 import { FarmFormFields } from './farm-form-fields';
@@ -164,20 +165,13 @@ function QueuedFarmEditor({ farm }: { farm: QueuedFarm }) {
       banner={sync.showBanner && <OfflineBanner status={sync.status} />}
       notice={
         failed && (
-          <div
-            className="mt-6 space-y-2 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-            role="alert"
-          >
-            <p>
-              No se pudo sincronizar
-              {farm.errorMessage ? `: ${farm.errorMessage}` : '.'}
-            </p>
+          <SyncRejectedNotice errorMessage={farm.errorMessage}>
             {isStale && current ? (
               <FarmStaleVersionSummary current={current} mine={farm.values} />
             ) : (
               <p>Corrige los datos y guarda para reenviarla.</p>
             )}
-          </div>
+          </SyncRejectedNotice>
         )
       }
       blockedMessage={

@@ -34,6 +34,7 @@ import { MonitoringConfirmDialog } from './monitoring-confirm-dialog';
 import { MonitoringPhotosField } from './monitoring-photos-field';
 import { MonitoringSheet } from './monitoring-sheet';
 import { pageContainerClass } from '@/components/page-container';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 
 type AgriculturalActivity = components['schemas']['AgriculturalActivity'];
 
@@ -156,15 +157,7 @@ export function MonitoringCapture({
           <OfflineBanner status={sync.status} />
         </div>
       )}
-      {rejected && (
-        <p
-          className="mt-6 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-          role="alert"
-        >
-          No se pudo sincronizar
-          {rejected.errorMessage ? `: ${rejected.errorMessage}` : '.'}
-        </p>
-      )}
+      {rejected && <SyncRejectedNotice errorMessage={rejected.errorMessage} />}
       <div className="mt-4 space-y-4">
         <MonitoringActivityCard activity={activity} />
         <MonitoringSheet

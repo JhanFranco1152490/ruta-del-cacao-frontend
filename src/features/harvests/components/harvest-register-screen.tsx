@@ -22,6 +22,7 @@ import { readLastPlot } from '../last-plot';
 import { useHarvestSources } from '../use-harvest-sources';
 import { useQueuedHarvest } from '../use-harvest-queue';
 import { HarvestCapture } from './harvest-capture';
+import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 import { pageContainerClass } from '@/components/page-container';
 
 // La pantalla de campo donde se registra una recolección. Todo se guarda primero en el
@@ -112,15 +113,7 @@ export function HarvestRegisterScreen({
           <OfflineBanner status={sync.status} />
         </div>
       )}
-      {rejected && (
-        <p
-          className="mt-6 rounded-(--radius) bg-err-bg px-4 py-3 font-bold text-err"
-          role="alert"
-        >
-          No se pudo sincronizar
-          {rejected.errorMessage ? `: ${rejected.errorMessage}` : '.'}
-        </p>
-      )}
+      {rejected && <SyncRejectedNotice errorMessage={rejected.errorMessage} />}
       {askedPlot?.disabled && (
         <div
           className="mt-6 space-y-2 rounded-(--radius) bg-warn-bg px-4 py-3"
