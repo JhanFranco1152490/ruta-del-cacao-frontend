@@ -50,6 +50,8 @@ export function AccountWorkspace({
   return (
     <div className={pageContainerClass('wide')}>
       <PageHeader
+        tone="claro"
+        accent="cobre"
         eyebrow="Administración"
         title="Usuarios y accesos"
         description="Consulta las cuentas y asigna los roles de tu equipo."
