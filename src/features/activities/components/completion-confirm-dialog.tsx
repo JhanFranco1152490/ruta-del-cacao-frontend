@@ -1,14 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { SaveConfirmDialog } from '@/components/save-confirm-dialog';
 
 // Una realización no se corrige después de guardada: antes de guardarla se dice, con todas sus
 // letras, qué se va a registrar.
@@ -29,33 +21,14 @@ export function CompletionConfirmDialog({
   onBack: () => void;
 }) {
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open && !isSaving) onBack();
-      }}
-      open
-    >
-      <DialogContent className="sm:max-w-lg" showCloseButton={!isSaving}>
-        <DialogHeader>
-          <DialogTitle>Confirma la realización</DialogTitle>
-          <DialogDescription className="text-base text-foreground">
-            {summary}
-          </DialogDescription>
-        </DialogHeader>
-        {error && (
-          <p className="text-sm font-bold text-err" role="alert">
-            {error}
-          </p>
-        )}
-        <DialogFooter>
-          <Button disabled={isSaving} onClick={onBack} variant="outline">
-            Volver
-          </Button>
-          <Button disabled={isSaving} onClick={onConfirm}>
-            {isSaving ? 'Guardando…' : confirmLabel}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <SaveConfirmDialog
+      confirmLabel={confirmLabel}
+      error={error}
+      isSaving={isSaving}
+      onBack={onBack}
+      onConfirm={onConfirm}
+      summary={summary}
+      title="Confirma la realización"
+    />
   );
 }

@@ -6,19 +6,10 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { SubmitButton } from '@/components/submit-button';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { FormDialogForm } from '@/components/form-dialog';
 import { useAccountSubmit } from '@/hooks/use-account-submit';
 import { useResendActivation, useUpdateAccount } from '@/lib/api/accounts';
 import { isEmail } from '@/lib/validation/is-email';
@@ -106,20 +97,16 @@ export function ChangeActivationEmailDialog({
         <Mail aria-hidden="true" className="size-4" /> Cambiar correo
       </DialogTrigger>
       <DialogContent showCloseButton={!busy}>
-        <form
-          className="space-y-4"
-          noValidate
+        <FormDialogForm
+          description="Se envía un enlace nuevo a este correo. El enlace anterior deja de servir."
+          error={failure}
+          isSaving={busy}
           onSubmit={(event) => {
             void form.handleSubmit(submit)(event);
           }}
+          submitLabel="Guardar y reenviar"
+          title="Cambiar correo de activación"
         >
-          <DialogHeader>
-            <DialogTitle>Cambiar correo de activación</DialogTitle>
-            <DialogDescription>
-              Se envía un enlace nuevo a este correo. El enlace anterior deja de
-              servir.
-            </DialogDescription>
-          </DialogHeader>
           <TextField
             disabled={busy}
             error={errors.email?.message}
@@ -128,24 +115,7 @@ export function ChangeActivationEmailDialog({
             type="email"
             {...register('email')}
           />
-          {failure && (
-            <p className="text-sm font-bold text-err" role="alert">
-              {failure}
-            </p>
-          )}
-          <DialogFooter>
-            <DialogClose disabled={busy} render={<Button variant="outline" />}>
-              Cancelar
-            </DialogClose>
-            <SubmitButton
-              className="sm:w-auto"
-              pending={busy}
-              pendingLabel="Guardando…"
-            >
-              Guardar y reenviar
-            </SubmitButton>
-          </DialogFooter>
-        </form>
+        </FormDialogForm>
       </DialogContent>
     </Dialog>
   );

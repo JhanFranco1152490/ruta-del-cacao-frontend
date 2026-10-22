@@ -1,18 +1,8 @@
 'use client';
 
 import { SearchSelect } from '@/components/search-select';
-import { SubmitButton } from '@/components/submit-button';
+import { FormDialog } from '@/components/form-dialog';
 import { TextField } from '@/components/text-field';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { useSession } from '@/hooks/use-session';
 import { todayInBogota } from '@/lib/format/dates';
 
@@ -63,83 +53,56 @@ export function InputMovementDialog({
   );
 
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open && !isSaving) onClose();
-      }}
-      open
+    <FormDialog
+      description={text.description}
+      error={movement.general}
+      isSaving={isSaving}
+      onClose={onClose}
+      onSubmit={movement.onSubmit}
+      submitLabel={text.title}
+      title={`${text.title}: ${input.name}`}
     >
-      <DialogContent className="sm:max-w-lg" showCloseButton={!isSaving}>
-        <form className="space-y-4" noValidate onSubmit={movement.onSubmit}>
-          <DialogHeader>
-            <DialogTitle>
-              {text.title}: {input.name}
-            </DialogTitle>
-            <DialogDescription>{text.description}</DialogDescription>
-          </DialogHeader>
-          {movement.general && (
-            <p className="text-sm font-bold text-err" role="alert">
-              {movement.general}
-            </p>
-          )}
-          <SearchSelect
-            disabled={isSaving}
-            error={movement.farmError}
-            label="Finca"
-            onChange={(option) => movement.chooseFarm(option?.id ?? null)}
-            options={farmOptions}
-            placeholder="Elige una finca"
-            value={farmOptions.find(({ id }) => id === farmId) ?? null}
-          />
-          {kind === 'count' && farmId && (
-            <MovementCountSummary
-              form={form}
-              input={input}
-              isLoading={stocks.isPending}
-              quantity={currentStock?.quantity ?? null}
-            />
-          )}
-          <TextField
-            disabled={isSaving}
-            error={errors.occurred_on?.message}
-            label="Fecha"
-            max={todayInBogota()}
-            type="date"
-            {...form.register('occurred_on')}
-          />
-          <MovementAmountField
-            disabled={isSaving}
-            error={errors.amount?.message}
-            form={form}
-            inputPackage={inputPackage}
-            label={text.amount}
-            unit={input.unit}
-          />
-          <TextField
-            disabled={isSaving}
-            error={errors.note?.message}
-            label="Nota (opcional)"
-            maxLength={NOTE_MAX_LENGTH}
-            placeholder={text.notePlaceholder}
-            {...form.register('note')}
-          />
-          <DialogFooter>
-            <DialogClose
-              disabled={isSaving}
-              render={<Button variant="outline" />}
-            >
-              Cancelar
-            </DialogClose>
-            <SubmitButton
-              className="sm:w-auto"
-              pending={isSaving}
-              pendingLabel="Guardando…"
-            >
-              {text.title}
-            </SubmitButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <SearchSelect
+        disabled={isSaving}
+        error={movement.farmError}
+        label="Finca"
+        onChange={(option) => movement.chooseFarm(option?.id ?? null)}
+        options={farmOptions}
+        placeholder="Elige una finca"
+        value={farmOptions.find(({ id }) => id === farmId) ?? null}
+      />
+      {kind === 'count' && farmId && (
+        <MovementCountSummary
+          form={form}
+          input={input}
+          isLoading={stocks.isPending}
+          quantity={currentStock?.quantity ?? null}
+        />
+      )}
+      <TextField
+        disabled={isSaving}
+        error={errors.occurred_on?.message}
+        label="Fecha"
+        max={todayInBogota()}
+        type="date"
+        {...form.register('occurred_on')}
+      />
+      <MovementAmountField
+        disabled={isSaving}
+        error={errors.amount?.message}
+        form={form}
+        inputPackage={inputPackage}
+        label={text.amount}
+        unit={input.unit}
+      />
+      <TextField
+        disabled={isSaving}
+        error={errors.note?.message}
+        label="Nota (opcional)"
+        maxLength={NOTE_MAX_LENGTH}
+        placeholder={text.notePlaceholder}
+        {...form.register('note')}
+      />
+    </FormDialog>
   );
 }

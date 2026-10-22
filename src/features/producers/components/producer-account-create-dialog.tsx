@@ -6,19 +6,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { SubmitButton } from '@/components/submit-button';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { FormDialogForm } from '@/components/form-dialog';
 import { useCreateAccount, type AccountCreated } from '@/lib/api/accounts';
 import { isEmail } from '@/lib/validation/is-email';
 import { useAccountSubmit } from '@/hooks/use-account-submit';
@@ -87,19 +78,17 @@ export function ProducerAccountCreateDialog({
         acceso
       </DialogTrigger>
       <DialogContent showCloseButton={!busy}>
-        <form
-          className="space-y-4"
+        <FormDialogForm
+          description="Se enviará un enlace a este correo para que el productor elija su contraseña. El documento y los nombres se toman del expediente."
+          error={failure}
+          isSaving={busy}
           onSubmit={(event) => {
             void form.handleSubmit(submit)(event);
           }}
+          pendingLabel="Creando…"
+          submitLabel="Crear cuenta"
+          title="Crear cuenta de acceso"
         >
-          <DialogHeader>
-            <DialogTitle>Crear cuenta de acceso</DialogTitle>
-            <DialogDescription>
-              Se enviará un enlace a este correo para que el productor elija su
-              contraseña. El documento y los nombres se toman del expediente.
-            </DialogDescription>
-          </DialogHeader>
           <TextField
             label="Correo"
             type="email"
@@ -108,26 +97,7 @@ export function ProducerAccountCreateDialog({
             error={errors.email?.message}
             {...register('email')}
           />
-          {failure && (
-            <p role="alert" className="text-sm font-bold text-err">
-              {failure}
-            </p>
-          )}
-          <DialogFooter>
-            <DialogClose disabled={busy} render={<Button variant="outline" />}>
-              Cancelar
-            </DialogClose>
-            {/* sm:w-auto: el pie va en fila desde `sm` y, a todo el ancho, empujaba a Cancelar fuera del
-                diálogo. */}
-            <SubmitButton
-              className="sm:w-auto"
-              pending={busy}
-              pendingLabel="Creando…"
-            >
-              Crear cuenta
-            </SubmitButton>
-          </DialogFooter>
-        </form>
+        </FormDialogForm>
       </DialogContent>
     </Dialog>
   );

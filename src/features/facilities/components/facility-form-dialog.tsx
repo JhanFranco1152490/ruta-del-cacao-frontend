@@ -5,18 +5,8 @@ import { useCallback, useMemo } from 'react';
 import { type FieldErrors, useForm } from 'react-hook-form';
 
 import { DuplicateNotice } from '@/components/duplicate-notice';
-import { SubmitButton } from '@/components/submit-button';
+import { FormDialog } from '@/components/form-dialog';
 import { TextField } from '@/components/text-field';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import type { FarmOption } from '@/lib/api/farm-options';
 import { agreeWith, FACILITY_TYPES } from '@/lib/facility-labels';
 import {
@@ -115,105 +105,74 @@ export function FacilityFormDialog({
 
   const type = facility && FACILITY_TYPES[facility.facility_type];
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open && !isSaving) onClose();
+    <FormDialog
+      contentClassName="max-sm:h-dvh max-sm:max-w-none max-sm:rounded-none sm:max-w-lg"
+      description={
+        facility
+          ? 'El cambio no altera los procesos en los que ya se usó.'
+          : 'Quedará Disponible para iniciar fermentaciones o secados, según su tipo.'
+      }
+      error={submission.summary}
+      isSaving={isSaving}
+      onClose={onClose}
+      onSubmit={(event) => {
+        void form.handleSubmit(submission.submit, reportInvalid)(event);
       }}
-      open
+      submitLabel={facility ? 'Guardar cambios' : 'Guardar'}
+      title={
+        facility
+          ? `Editar ${type?.noun} ${facility.name}`
+          : 'Registrar elemento'
+      }
     >
-      <DialogContent
-        className="max-sm:h-dvh max-sm:max-w-none max-sm:rounded-none sm:max-w-lg"
-        showCloseButton={!isSaving}
-      >
-        <form
-          className="space-y-4"
-          noValidate
-          onSubmit={(event) => {
-            void form.handleSubmit(submission.submit, reportInvalid)(event);
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>
-              {facility
-                ? `Editar ${type?.noun} ${facility.name}`
-                : 'Registrar elemento'}
-            </DialogTitle>
-            <DialogDescription>
-              {facility
-                ? 'El cambio no altera los procesos en los que ya se usó.'
-                : 'Quedará Disponible para iniciar fermentaciones o secados, según su tipo.'}
-            </DialogDescription>
-          </DialogHeader>
-          {submission.summary && (
-            <p className="text-sm font-bold text-err" role="alert">
-              {submission.summary}
-            </p>
-          )}
-          <FacilityTypeField
-            disabled={isSaving}
-            error={errors.facility_type?.message}
-            field={form.register('facility_type')}
-            lockedHint={submission.typeLocked ? TYPE_LOCKED_HINT : undefined}
-          />
-          <TextField
-            disabled={isSaving}
-            error={errors.name?.message}
-            hint={
-              nameIsSuggested
-                ? 'Nombre sugerido. Cámbialo si en la finca lo llaman distinto.'
-                : 'Como lo identifican en la finca. Único en la finca.'
-            }
-            label="Nombre o código"
-            maxLength={FACILITY_NAME_MAX_LENGTH}
-            // Con el nombre sugerido seleccionado, escribir uno propio lo reemplaza.
-            onFocus={(event) => {
-              if (nameIsSuggested) event.target.select();
-            }}
-            placeholder="Ej.: C-04"
-            {...form.register('name')}
-          />
-          {existing && (
-            <DuplicateNotice
-              active={existing.is_active}
-              disabled={isSaving}
-              inactiveText={`${existing.name} está ${agreeWith(existing.facility_type, 'inactiv')}.`}
-              onActivate={() => void activateExisting(existing)}
-              onShow={() => onShowExisting(existing.id)}
-              showLabel="Ver el elemento"
-            />
-          )}
-          <FacilityFarmField
-            disabled={isSaving}
-            error={errors.farm_id?.message}
-            farms={farms}
-            fixedFarm={facility?.farm}
-            form={form}
-          />
-          <TextField
-            disabled={isSaving}
-            error={errors.capacity_kg?.message}
-            inputMode="decimal"
-            label="Capacidad (kg de cacao en baba)"
-            placeholder="Ej.: 600"
-            {...form.register('capacity_kg')}
-          />
-          <DialogFooter>
-            <DialogClose
-              disabled={isSaving}
-              render={<Button variant="outline" />}
-            >
-              Cancelar
-            </DialogClose>
-            <SubmitButton
-              className="sm:w-auto"
-              pending={isSaving}
-              pendingLabel="Guardando…"
-            >
-              {facility ? 'Guardar cambios' : 'Guardar'}
-            </SubmitButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <FacilityTypeField
+        disabled={isSaving}
+        error={errors.facility_type?.message}
+        field={form.register('facility_type')}
+        lockedHint={submission.typeLocked ? TYPE_LOCKED_HINT : undefined}
+      />
+      <TextField
+        disabled={isSaving}
+        error={errors.name?.message}
+        hint={
+          nameIsSuggested
+            ? 'Nombre sugerido. Cámbialo si en la finca lo llaman distinto.'
+            : 'Como lo identifican en la finca. Único en la finca.'
+        }
+        label="Nombre o código"
+        maxLength={FACILITY_NAME_MAX_LENGTH}
+        // Con el nombre sugerido seleccionado, escribir uno propio lo reemplaza.
+        onFocus={(event) => {
+          if (nameIsSuggested) event.target.select();
+        }}
+        placeholder="Ej.: C-04"
+        {...form.register('name')}
+      />
+      {existing && (
+        <DuplicateNotice
+          active={existing.is_active}
+          disabled={isSaving}
+          inactiveText={`${existing.name} está ${agreeWith(existing.facility_type, 'inactiv')}.`}
+          onActivate={() => void activateExisting(existing)}
+          onShow={() => onShowExisting(existing.id)}
+          showLabel="Ver el elemento"
+        />
+      )}
+      <FacilityFarmField
+        disabled={isSaving}
+        error={errors.farm_id?.message}
+        farms={farms}
+        fixedFarm={facility?.farm}
+        form={form}
+      />
+      <TextField
+        disabled={isSaving}
+        error={errors.capacity_kg?.message}
+        inputMode="decimal"
+        label="Capacidad (kg de cacao en baba)"
+        placeholder="Ej.: 600"
+        {...form.register('capacity_kg')}
+      />
+    </FormDialog>
   );
 }
