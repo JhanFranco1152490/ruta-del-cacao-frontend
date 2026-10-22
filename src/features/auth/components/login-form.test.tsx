@@ -220,14 +220,41 @@ describe('LoginForm', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows both demo accounts with their shared password', () => {
+  it('keeps the demo accounts folded until they are opened', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<LoginForm />);
+    const toggle = screen.getByRole('button', {
+      name: 'Cuentas de demostración',
+    });
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('CacaoDemo2026')).not.toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('CacaoDemo2026')).toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(screen.queryByText('CacaoDemo2026')).not.toBeInTheDocument();
+  });
+
+  it('shows the demo accounts, the foreman among them, with their shared password', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<LoginForm />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Cuentas de demostración' }),
+    );
 
     const banner = screen.getByRole('region', {
       name: 'Cuentas de demostración',
     });
     expect(banner).toHaveTextContent('administrador@example.com');
     expect(banner).toHaveTextContent('productor@example.com');
+    expect(banner).toHaveTextContent('capataz@example.com');
+    expect(banner).toHaveTextContent('operario@example.com');
     expect(banner).toHaveTextContent('CacaoDemo2026');
   });
 
@@ -243,6 +270,9 @@ describe('LoginForm', () => {
     renderWithProviders(<LoginForm />);
     await user.selectOptions(screen.getByLabelText('Ingresar con'), 'document');
 
+    await user.click(
+      screen.getByRole('button', { name: 'Cuentas de demostración' }),
+    );
     await user.click(
       screen.getByRole('button', { name: 'Usar la cuenta Productor' }),
     );
