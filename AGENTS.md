@@ -499,6 +499,15 @@ src/
   como referencia: si crece, se parte.
 - **No duplicar.** La segunda vez que aparece algo se extrae: a `components/` si es
   visual y no depende de un dominio, a `lib/` si es lógica.
+- **Una pantalla se compone, no se calcula.** Lo que lee y decide va en un hook del dominio
+  (`use-<pantalla>.ts`, que devuelve datos ya resueltos); cada decisión (qué acciones aplican, de qué
+  finca se ven las existencias, qué muestra el calendario con los filtros) es una función pura con
+  nombre y con su test, nunca un ternario anidado en el JSX; cargando, vacío, error y avisos son
+  componentes propios; y la pantalla solo compone. Es la forma de `useInputList`/`resolveStockFarm`,
+  `plotActions`, `filterCalendar` o `accountActions`. Señales para partir (referencia, no regla
+  automática): una función de más de 150 líneas o de complejidad ciclomática mayor de 25. Se mide al
+  cerrar cada sprint con
+  `pnpm exec eslint src --ignore-pattern "**/*.test.*" --rule '{"max-lines-per-function":["warn",{"max":150,"skipBlankLines":true,"skipComments":true}],"complexity":["warn",25]}'`.
 - **Leer la cola y seguirla: `useLiveRead`** (`hooks/use-live-read.ts`), con una clave que nombra a
   la persona y lo que se pide: mientras llega una lectura nueva no devuelve la de otra persona que
   usó el equipo. No se escribe otra suscripción con `liveQuery` a mano (las de actividades,
@@ -533,6 +542,18 @@ src/
   `vi.mock('next/navigation', ...)`), `factories` (`buildSession`, `buildProducer`,
   `buildPage`, `apiError`, `sessionExpired`...), `handlers` (`apiUrl`, `csrfHandler`,
   `municipalitiesHandler`) y `expectVisibleFocusOutline`.
+- **El test espera lo que lee.** Bajo carga (la suite completa) una tabla o un aviso puede no estar
+  cuando el test lo busca: `findBy*`/`waitFor`, y esperar la tabla además del aviso en un test de
+  «sin conexión». No se arregla alargando tiempos.
+- **jsdom no es un celular ni un navegador completo:** no tiene `matchMedia` y la pantalla que simula
+  es la de un celular (`stubWideScreen()` de `src/test/screen-size.ts` para las pruebas de escritorio).
+- **Nada deja un temporizador vivo más allá de su componente sin comprobar que su entorno sigue
+  ahí.** Un `setTimeout` que usa `window` cuando vence debe tolerar que ya no exista
+  (`typeof window === 'undefined'`): el entorno de pruebas se desmonta antes y Vitest sale con código
+  1 por un error no capturado aunque todas las pruebas pasen.
+- Cada función pura extraída de una pantalla lleva su test, y un caso negativo por flujo.
+- Al cerrar un sprint se corre la suite **completa** (`pnpm test`), no solo lo relacionado con lo
+  que cambió, y se anota el resultado en el PR.
 - Datos inventados (`@example.com`, documentos ficticios): nunca datos personales reales.
   La salida de los tests no debe mostrar advertencias.
 
@@ -566,6 +587,12 @@ El agente corre y deja en verde, y si algo falla lo corrige o lo dice en el PR:
   montar (la consulta del editor usa `staleTime: Infinity`) y no adopta lecturas posteriores,
   porque guardar la versión nueva con los valores viejos haría que el servidor aceptara el
   cambio y pisara lo que otra persona guardó (bloqueo optimista por `version`).
+- **Un host externo nuevo necesita permiso de seguridad.** El Service Worker pide los mapas con
+  `fetch`, así que la política de seguridad (`connect-src` en `src/config/security-headers.ts`) tiene
+  que admitir su host; se agrega en el mismo PR que lo introduce y se prueba con el mapa real.
+- **Una animación con `transform` en un contenedor de barras fijas** vuelve a ese contenedor el
+  bloque de contención de lo fijo mientras dura: la barra se desplaza. El fundido de pantalla usa solo
+  opacidad, y las entradas usan `backwards` (no `forwards`) para no dejar `transform` al terminar.
 - `pnpm dlx shadcn@latest add` escribe `import { cn } from '@/lib/utils'` (así lo dicta
   `components.json`), pero aquí no existe `src/lib/utils.ts`: `cn` viene del paquete `cn`
   (`import { cn } from 'cn'`). Corrige el import del archivo generado.
@@ -628,6 +655,23 @@ referencia en `docs/ui/ref/*.html`.
     celdas que comparten fila llevan `max-md:col-span-1!` (con `!`) y la fila tiene fondo de tarjeta,
     para distinguirse del fondo crema de la página. Una tarjeta con un enlace principal se abre
     tocándola en cualquier parte (`stretched-link-class`).
+- **Ilustraciones.** Cada módulo tiene la suya en `components/illustrations/`, dibujada con las piezas
+  de `components/brand/cacao-parts.tsx` y la paleta del sistema (SVG plano de 160 × 140, decorativo,
+  `aria-hidden`). Sale en todo estado vacío, también el que dejan los filtros, y en los avisos de
+  pantalla completa, pasada con `illustration` a `EmptyState`/`PageNotice`; la mata de cacao queda para
+  lo que no es de un módulo y las páginas de error. Nunca en encabezados, tarjetas, tablas,
+  formularios, avisos flotantes ni errores. Un módulo nuevo agrega la suya.
+- **Movimiento.** Solo CSS, con `motion-fade` (el contenido al navegar, solo opacidad), `motion-rise`
+  (los bloques que entran con la pantalla), `motion-pop` (la ilustración de un vacío) y
+  `motion-stagger` (los hijos de una lista o grilla de tarjetas; las filas de `TableBody` ya lo
+  traen). Menos de 300 ms, curva `--ease-out`, nada se repite ni se anima solo, y con «reducir
+  movimiento» todo pasa de inmediato (regla global). Detalle en el sistema de diseño, «Movimiento».
+- **Una pantalla nueva nace con todo esto** (la definición de terminado de su parte visual): el
+  encabezado, el ancho y los filtros de arriba; formularios con `FormDialog` y error arriba; los seis
+  estados cada uno con su pieza (vacío con la ilustración del módulo, `LoadingBlock`, `ErrorState`,
+  `OfflineCloud` sin conexión, `SyncRejectedNotice`, `notify.success`); movimiento con las utilidades
+  `motion-*`; revisada a 390 y 360 px y en escritorio, con contraste, foco y etiquetas; y sin piezas
+  escritas a mano que ya existen (ver «Piezas comunes antes que copiar»).
 - **Toda ficha termina con «Volver» abajo a la izquierda** (`DetailFooter`; las acciones de la
   ficha, si tiene, van a su derecha). Volver lleva a la pantalla desde la que se abrió la ficha, con
   sus filtros (`readOrigin`; los enlaces que abren una ficha usan `EditorLink`), o a la lista de la

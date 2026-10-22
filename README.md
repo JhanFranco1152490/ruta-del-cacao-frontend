@@ -4,7 +4,38 @@ Aplicación Next.js (App Router) del sistema de trazabilidad de la producción d
 de Santander. Se conecta al backend Django por HTTP. La estructura del código, la capa de API y
 las reglas de trabajo están en `AGENTS.md`.
 
-## Qué hace hoy (primer sprint)
+## Qué hace hoy
+
+### Sprint 2 (05/10 – 22/10/2026)
+
+- **Insumos e inventario:** catálogo de insumos de cada productor y sus existencias por finca
+  (entradas, conteos y salidas), con el historial de movimientos.
+- **Actividades y calendario:** programar, reprogramar y registrar la realización con los insumos
+  usados; cinco vistas (Mes, Semana, Lista, Por parcela y Pendientes) con recuento por estado, filtros
+  en la URL y programar desde un día. Retrasada y vencida salen de la fecha.
+- **Alcance por finca:** cada empleado trabaja en una o varias fincas, o en todas, y solo alcanza lo
+  de ellas; el Capataz/Operario es de una.
+- **Sanidad:** monitoreo con las unidades evaluadas y la incidencia de cada plaga o enfermedad (o sin
+  presencia), control fitosanitario programado o registrado desde una detección, historial de todas
+  las parcelas, detecciones que esperan control y fotos de evidencia. Catálogo de plagas y
+  enfermedades que administra la asociación.
+- **Alertas:** campana con bandeja (actividad próxima, retrasada o vencida; control pendiente) y
+  notificaciones push.
+- **Cosechas y lotes:** registrar una cosecha (también sin conexión), consultarla por mes, corregirla
+  y formar su lote con el código de trazabilidad.
+- **Infraestructura de poscosecha:** cajones de fermentación y marquesinas de secado de cada finca,
+  con su capacidad y su estado.
+- **Experiencia:** el menú agrupado por tarea; avisos flotantes al guardar y vuelta a la pantalla de
+  origen con sus filtros; «atrás» cierra el modal en el celular; abrir una finca en Google Maps;
+  una **pasada de diseño** (encabezados de color por tipo de pantalla, cifras, secciones, filtros
+  unificados, tablas que pasan a tarjetas en celular), **ilustraciones** por módulo en los estados
+  vacíos y **animaciones** cortas que respetan «reducir movimiento».
+- **Demostración:** el inicio de sesión trae un menú plegable de cuentas de demostración (ver abajo).
+
+Las reglas de diseño y de código que salieron de esa pasada están en `docs/ui/design-system.md` y en
+`AGENTS.md` (sección «Interfaz» y «Reglas de diseño del código»).
+
+### Sprint 1 (14/09 – 04/10/2026)
 
 - **Sesión:** inicio con correo o documento, activación de la cuenta y recuperación de la
   contraseña por correo, cierre de sesión y bloqueo tras varios intentos fallidos.
@@ -87,13 +118,18 @@ dispositivo y se envía solo al volver la red.
 - **Sin conexión sí se puede:** abrir la app mientras el último inicio de sesión confirmado por el
   servidor sea de menos de 7 días; ver fincas y parcelas ya abiertas ("Datos guardados el …");
   registrar y editar fincas, parcelas (contorno por mapa o GPS, con las revisiones de área,
-  superposición y distancia en el dispositivo) y fichas de caracterización; y **cerrar sesión**
-  (se cierra en el dispositivo y el servidor se entera al volver la red).
+  superposición y distancia en el dispositivo) y fichas de caracterización; **registrar la
+  realización de una actividad**, un **monitoreo** (con su control y sus fotos) y una **cosecha**,
+  y formar un lote con ella (recibe su código al llegar al servidor); consultar insumos y
+  existencias, el calendario, el historial de sanidad, los cajones y marquesinas y las
+  notificaciones con la última copia guardada; y **cerrar sesión** (se cierra en el dispositivo y el
+  servidor se entera al volver la red).
 - **Qué falta enviar:** el encabezado muestra la conexión y los registros pendientes. Si el
   servidor rechaza uno, cae en la bandeja del dispositivo con el motivo, y se puede **Corregir** o
   **Descartar**. Los pendientes se conservan al cerrar sesión.
 - **Sin conexión no se puede:** ver los mapas base (los polígonos y el GPS sí); abrir Productores,
   Usuarios, Roles ni Variedades; activar, desactivar o eliminar; ver el historial de una ficha;
+  programar, reprogramar o eliminar actividades; registrar o editar insumos, cajones y marquesinas;
   "Mi cuenta" ni cambiar la contraseña; ni abrir una finca o parcela que nunca se abrió con red.
   **Guardar** se deshabilita tras 7 días sin que el servidor confirme la sesión.
 - **Cómo probarlo:** con conexión, preparar el dispositivo como arriba y luego cortar la red
