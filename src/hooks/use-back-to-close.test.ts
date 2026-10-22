@@ -67,6 +67,25 @@ describe('useBackToClose', () => {
     settleOwnBack();
   });
 
+  it('does nothing when the window is gone by the time the wait is over', () => {
+    vi.useFakeTimers();
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    const { rerender } = renderHook(
+      ({ open }) => useBackToClose(open, vi.fn(), userDismissed()),
+      { initialProps: { open: true } },
+    );
+    rerender({ open: false });
+
+    vi.stubGlobal('window', undefined);
+    try {
+      expect(() => vi.advanceTimersByTime(1000)).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(back).not.toHaveBeenCalled();
+  });
+
   it('leaves the history alone when a navigation already left another entry on top', () => {
     vi.useFakeTimers();
     const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
