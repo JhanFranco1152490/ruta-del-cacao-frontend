@@ -72,6 +72,9 @@ export function useBackToClose(
       const index = stack.indexOf(id);
       if (index !== -1) stack.splice(index, 1);
       const giveBack = () => {
+        // La espera sobrevive al modal: si la ventana ya no existe cuando vence (la página se
+        // descartó o terminó el entorno que la simulaba), no hay historial que devolver.
+        if (typeof window === 'undefined') return;
         if (window.history.state?.__modalEntry !== marker) return;
         ownBacks += 1;
         window.history.back();
