@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import { UnavailablePage } from '@/components/unavailable-page';
 import { CircleOff } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,23 +29,11 @@ export function PlotUnavailable({
   backHref: string;
 }) {
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-8">
-      <CircleOff aria-hidden="true" className="mx-auto size-10 text-err" />
-      <h1 className="mt-4 text-3xl text-selva">
-        No fue posible abrir la parcela
-      </h1>
-      <p className="mt-3 text-muted-foreground" role="alert">
-        {message}
-      </p>
-      <Link
-        className={buttonVariants({
-          size: 'office',
-          className: cn(CAPTURE_BUTTON_CLASS, 'mt-6'),
-        })}
-        href={backHref}
-      >
-        Volver a la finca
-      </Link>
-    </div>
+    <UnavailablePage
+      backHref={backHref}
+      backLabel="Volver a la finca"
+      message={message}
+      title="No fue posible abrir la parcela"
+    />
   );
 }
