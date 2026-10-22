@@ -64,7 +64,7 @@ export function FacilityTable({
               data-state={facility.id === selectedId ? 'selected' : undefined}
               key={facility.id}
             >
-              <TableCell className="font-bold text-selva max-md:order-1 max-md:col-span-1">
+              <TableCell className="font-bold text-selva max-md:order-1 max-md:col-span-1!">
                 {facility.name}
                 <button
                   aria-label={`Ver ${facility.name}`}
@@ -75,16 +75,16 @@ export function FacilityTable({
                   <ChevronRight aria-hidden="true" className="size-5" />
                 </button>
               </TableCell>
-              <TableCell className="max-md:order-3 max-md:col-span-1">
+              <TableCell className="max-md:order-3 max-md:col-span-1!">
                 <span className="inline-flex items-center gap-2">
                   <type.Icon aria-hidden="true" className="size-4" />
                   {type.label}
                 </span>
               </TableCell>
-              <TableCell className="text-right tabular-nums max-md:order-4 max-md:col-span-1 max-md:justify-self-end">
+              <TableCell className="text-right tabular-nums max-md:order-4 max-md:col-span-1! max-md:justify-self-end">
                 {capacityText(facility.capacity_kg)}
               </TableCell>
-              <TableCell className="max-md:order-2 max-md:col-span-1 max-md:justify-self-end">
+              <TableCell className="max-md:order-2 max-md:col-span-1! max-md:justify-self-end">
                 <StatusBadge icon={status.Icon} tone={status.tone}>
                   {status.label}
                 </StatusBadge>

@@ -6,7 +6,10 @@ import {
   type StatusChangeAction,
   StatusChangeDialog,
 } from '@/components/status-change-dialog';
-import { useConfirmAction } from '@/hooks/use-confirm-action';
+import {
+  type ConfirmControl,
+  useConfirmAction,
+} from '@/hooks/use-confirm-action';
 import { getErrorMessage } from '@/lib/api/errors';
 import { notify } from '@/lib/notify';
 
@@ -17,8 +20,11 @@ import { useNoControlNeeded } from '../use-control-actions';
 // aviso de detecciones que esperan un control y queda registrado quién lo decidió.
 export function NoControlNeededDialog({
   detection,
+  control,
 }: {
   detection: Pick<Detection, 'id' | 'pest_disease' | 'other_description'>;
+  // Si lo abre un menú de acciones, quien lo monta lleva su estado y el diálogo no trae botón.
+  control?: ConfirmControl;
 }) {
   const decide = useNoControlNeeded();
   const action: StatusChangeAction = {
@@ -41,7 +47,14 @@ export function NoControlNeededDialog({
         error,
         'No fue posible guardar la decisión. Revisa tu conexión e inténtalo nuevamente.',
       ),
+    control,
   );
 
-  return <StatusChangeDialog action={action} trigger={action} {...dialog} />;
+  return (
+    <StatusChangeDialog
+      action={action}
+      trigger={control ? undefined : action}
+      {...dialog}
+    />
+  );
 }

@@ -7,7 +7,7 @@ import { SegmentedControl } from '@/components/segmented-control';
 import { ACTIVITY_VIEW_OPTIONS, type ActivityView } from '../activity-view';
 
 // El cambio de vista del calendario. En una pantalla angosta las cinco no caben juntas: se
-// desplazan en horizontal, llegan hasta el borde para que se vea que hay más a la derecha, y la
+// desplazan en horizontal, llegan hasta el borde y se desvanecen en él para que se vea que hay más a la derecha, y la
 // vista elegida se trae a la vista (con `?vista=pendientes` la última no queda escondida).
 export function ActivityViewSwitch({
   value,
@@ -26,7 +26,7 @@ export function ActivityViewSwitch({
 
   return (
     <div
-      className="-mx-4 max-w-[100vw] overflow-x-auto px-4 sm:mx-0 sm:max-w-full sm:px-0"
+      className="-mx-4 max-w-[100vw] overflow-x-auto [mask-image:linear-gradient(to_right,#000_calc(100%-24px),transparent)] px-4 sm:mx-0 sm:max-w-full sm:[mask-image:none] sm:px-0"
       ref={scroller}
     >
       <SegmentedControl

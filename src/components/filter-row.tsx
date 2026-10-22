@@ -44,7 +44,9 @@ export function FilterRow({
 
   return (
     <div className="flex flex-wrap items-start gap-3">
-      {leading && <div className="max-sm:order-last">{leading}</div>}
+      {leading && (
+        <div className="max-sm:order-last max-sm:w-full">{leading}</div>
+      )}
       {search}
       {(children || more) && (
         <Button

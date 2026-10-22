@@ -179,6 +179,18 @@ describe('PointsMapPanel', () => {
     expect(screen.getByText('Total: 3')).toBeVisible();
   });
 
+  it('puts the toolbar inside the hidden-map strip instead of on its own row', async () => {
+    renderPanel([POINT], loadFakePointsMap, [], 'Total: 3');
+    await screen.findByRole('region', { name: 'Mapa de mis fincas' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
+
+    const strip = screen
+      .getByText('Mapa oculto')
+      .closest('[data-slot=map-hidden]');
+    expect(strip).toHaveTextContent('Total: 3');
+  });
+
   it('offers the satellite base layer', async () => {
     renderPanel([POINT]);
     await screen.findByRole('region', { name: 'Mapa de mis fincas' });

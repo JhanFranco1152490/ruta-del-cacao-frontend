@@ -33,7 +33,13 @@ export function PageHeader({
           <p className="mt-3 max-w-2xl text-muted-foreground">{description}</p>
         )}
       </div>
-      {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
+      {actions && (
+        // Gap más corto en celular para que dos acciones quepan en una fila: cada fila de botones que
+        // se evita ahorra alto de pantalla.
+        <div className="flex flex-wrap gap-2 sm:gap-3 max-sm:[&>*]:px-3">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }
