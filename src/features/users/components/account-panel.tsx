@@ -1,4 +1,5 @@
 'use client';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { useRef, useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import {
@@ -30,6 +31,7 @@ export function AccountPanel({
   onCreated: (account: AccountCreated) => void;
   receipt?: { id: string; sent: boolean };
 }) {
+  const isDesktop = useIsDesktop();
   const [busy, setBusy] = useState(false);
   const association = !user.producer_id;
   // La cuenta técnica elige primero el tipo de cuenta (y el productor, si es de un empleado); el
@@ -46,6 +48,7 @@ export function AccountPanel({
   }
   return (
     <Sheet
+      closeOnBack={false}
       open
       onOpenChange={(open) => {
         if (!open && !lock.current) close();
@@ -55,7 +58,7 @@ export function AccountPanel({
           nueva usa la franja común de las hojas laterales. */}
       <SheetContent
         className={SIDE_PANEL_CLASS}
-        side="right"
+        side={isDesktop ? 'right' : 'bottom'}
         showCloseButton={!busy}
       >
         <SidePanelHeader

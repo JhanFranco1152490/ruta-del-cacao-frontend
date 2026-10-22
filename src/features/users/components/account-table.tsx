@@ -96,7 +96,7 @@ export function AccountTable({
               </TableCell>
             )}
             <TableCell className="max-md:order-2 max-md:col-span-1! max-md:justify-self-end">
-              <AccountStatusBadge account={account} />
+              <AccountStatusBadge account={account} shortOnPhone />
             </TableCell>
             <TableCell className="max-md:order-7">
               <Button

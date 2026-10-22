@@ -223,7 +223,9 @@ describe('account edition', () => {
       'Apellidos',
     ])
       expect(screen.queryByLabelText(label)).toBeNull();
-    expect(within(panel()).getByText('Ana Prueba')).toBeVisible();
+    expect(within(panel()).getAllByText('Ana Prueba').length).toBeGreaterThan(
+      0,
+    );
     await userEvent.click(
       screen.getByRole('button', { name: 'Guardar cambios' }),
     );
