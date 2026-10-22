@@ -102,11 +102,13 @@ dispositivo y se envía solo al volver la red.
 
 ## Cuentas de demostración
 
-La pantalla de inicio de sesión muestra dos cuentas públicas, una del **Administrador de la
-asociación** y otra de un **Productor**, con un botón que llena el formulario. Existen para que
-quien evalúa la aplicación entre sin pedir una cuenta, y solo funcionan donde el backend corrió
-su comando `seed_demo_data`, que las crea con los mismos correos y contraseña. Los datos que las
-acompañan (productores, fincas, parcelas y fichas) son inventados.
+La pantalla de inicio de sesión tiene un menú plegable, «Cuentas de demostración», con cuatro
+cuentas públicas: el **Administrador de la asociación**, un **Productor**, el **Capataz de La
+Esperanza** y un **Operario de El Mirador**, cada una con un botón que llena el formulario. Existen
+para que quien evalúa la aplicación entre sin pedir una cuenta, y solo funcionan donde el backend
+corrió su comando `seed_demo_data`, que las crea con los mismos correos y contraseña. Los datos que
+las acompañan (productores, fincas, parcelas, fichas y, en La Esperanza, insumos, infraestructura,
+labores, monitoreos, cosechas y lotes) son inventados.
 
 Los correos y la contraseña están en `src/features/auth/components/demo-accounts.tsx`; si
 cambian en el backend, cambian ahí. El banner se retira (ese archivo y su uso en
