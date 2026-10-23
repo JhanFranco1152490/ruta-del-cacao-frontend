@@ -206,3 +206,21 @@ export function useFinishFermentation(lotId: string) {
     onSuccess: () => invalidate(),
   });
 }
+
+// La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP. Solo
+// en línea, como corregir.
+export function useDeleteTurn(lotId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({ turnId, version }: { turnId: string; version: number }) =>
+      apiFetch<void>(
+        apiPath(`/api/fermentation/${lotId}/turns/${turnId}`, {
+          expected_version: version,
+        }),
+        { method: 'DELETE' },
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.fermentation.all() }),
+  });
+}

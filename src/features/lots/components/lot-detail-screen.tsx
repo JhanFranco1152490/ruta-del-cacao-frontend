@@ -2,6 +2,7 @@
 
 import { Copy } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { DetailFooter } from '@/components/detail-footer';
@@ -33,17 +34,20 @@ async function copyCode(code: string) {
   }
 }
 
-// La ficha de un lote: su código, cómo se lee, su estado y su origen. Fermentación y secado
-// agregarán aquí sus secciones. Los enlaces a la cosecha y a la ficha de la parcela los da quien
+// La ficha de un lote: su código, cómo se lee, su estado y su origen. Fermentación y secado son de
+// otros dominios: sus secciones, y los enlaces a la cosecha y a la ficha de la parcela, los da quien
 // monta la pantalla.
 export function LotDetailScreen({
   lotId,
   harvestHref,
   historyHref,
+  renderSections,
 }: {
   lotId: string;
   harvestHref?: (lot: Lot) => string;
   historyHref?: (lot: Lot) => string;
+  // Lo que va después del origen, en el orden del proceso.
+  renderSections?: (lot: Lot) => ReactNode;
 }) {
   const { data: user } = useSession();
   const read = useLot(lotId);
@@ -120,6 +124,7 @@ export function LotDetailScreen({
         historyHref={historyHref?.(lot)}
         lot={lot}
       />
+      {renderSections?.(lot)}
       <DetailFooter backHref={origin ?? LOTS_PATH}>
         {canDelete && <LotDeleteDialog lot={lot} />}
       </DetailFooter>
