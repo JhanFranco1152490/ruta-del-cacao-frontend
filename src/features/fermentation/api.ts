@@ -1,0 +1,92 @@
+import { useQuery } from '@tanstack/react-query';
+
+import { apiFetch } from '@/lib/api/client';
+import { apiPath } from '@/lib/api/path';
+import { queryKeys } from '@/lib/api/query-keys';
+import type { components } from '@/lib/api/schema';
+import { readThroughCache } from '@/lib/offline/cached-read';
+
+type Schemas = components['schemas'];
+
+export type Fermentation = Schemas['FermentationProcess'];
+export type FermentationTurn = Schemas['FermentationTurn'];
+export type ReadyLot = Schemas['Lot'];
+
+// La cuenta técnica guarda aparte lo de cada productor que eligió.
+export const fermentationsCacheKey = (producer: string | null) =>
+  producer ? `fermentation:producer:${producer}` : 'fermentation';
+
+// Las fermentaciones en curso del productor, con sus volteos y el origen de cada lote, sin
+// paginar: son pocas, y la finca se filtra en el dispositivo, también sin conexión. Con esta copia
+// se abre la ficha de un lote en fermentación sin red. `producer` solo lo envía la cuenta técnica.
+export async function fetchFermentations(
+  producer: string | null,
+  signal?: AbortSignal,
+): Promise<Fermentation[]> {
+  const { results } = await apiFetch<Schemas['FermentationList']>(
+    apiPath('/api/fermentation', { producer }),
+    { signal },
+  );
+  return results;
+}
+
+export const useFermentations = (
+  userId: string | undefined,
+  producer: string | null,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.fermentation.list(producer),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, fermentationsCacheKey(producer), () =>
+        fetchFermentations(producer, signal),
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
+  });
+
+// El tope de página que acepta la API.
+const READY_PAGE_SIZE = 100;
+
+// Todos los lotes Generado del productor, página tras página: la pestaña los muestra juntos y los
+// filtra por finca en el dispositivo. Solo con conexión, porque iniciar también la necesita.
+export async function fetchReadyLots(
+  producer: string | null,
+  signal?: AbortSignal,
+): Promise<ReadyLot[]> {
+  const lots: ReadyLot[] = [];
+  for (let page = 1, pages = 1; page <= pages; page++) {
+    const result = await apiFetch<Schemas['PaginatedLotList']>(
+      apiPath('/api/lots', {
+        status: 'generated',
+        producer,
+        page: page === 1 ? undefined : page,
+        page_size: READY_PAGE_SIZE,
+      }),
+      { signal },
+    );
+    lots.push(...result.results);
+    pages = Math.ceil(result.count / READY_PAGE_SIZE);
+  }
+  return lots;
+}
+
+export const useReadyLots = (
+  producer: string | null,
+  { enabled = true } = {},
+) =>
+  useQuery({
+    queryKey: queryKeys.fermentation.ready(producer),
+    queryFn: ({ signal }) => fetchReadyLots(producer, signal),
+    enabled,
+  });
+
+// La fermentación de un lote, en curso o terminada, para su ficha. Solo con conexión: la ficha sin
+// red se arma con la copia de la lista.
+export const useFermentation = (lotId: string, { enabled = true } = {}) =>
+  useQuery({
+    queryKey: queryKeys.fermentation.detail(lotId),
+    queryFn: ({ signal }) =>
+      apiFetch<Fermentation>(`/api/fermentation/${lotId}`, { signal }),
+    enabled,
+  });
