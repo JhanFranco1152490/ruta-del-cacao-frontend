@@ -14,7 +14,8 @@ export const DUPLICATE_ERROR = 'duplicate';
 
 const TURN_FIELDS = ['turned_at', 'temperature_c', 'ph', 'notes'];
 
-function correctionErrorMessage(error: unknown) {
+// Por qué no se corrigió o no se eliminó un volteo del servidor.
+export function correctionErrorMessage(error: unknown) {
   if (!isApiError(error)) {
     return 'No fue posible corregir el volteo. Revisa tu conexión e inténtalo nuevamente.';
   }

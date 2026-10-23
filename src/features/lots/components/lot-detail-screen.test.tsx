@@ -87,6 +87,24 @@ describe('LotDetailScreen', () => {
     );
   });
 
+  // Fermentación y secado son de otros dominios: la ficha muestra lo que le entregan, después del
+  // origen.
+  it('shows the sections that other modules give it, after the origin', async () => {
+    renderScreen(ALL, {
+      renderSections: (lot) => (
+        <section aria-label="Fermentación">Sección de {lot.code}</section>
+      ),
+    });
+
+    const section = await screen.findByRole('region', { name: 'Fermentación' });
+    expect(section).toHaveTextContent('Sección de 000123-F02-P05-261014-1');
+    expect(
+      screen
+        .getByRole('region', { name: 'Origen' })
+        .compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('offers to go back to where the lot was formed', async () => {
     mockLocation.search = new URLSearchParams({
       id: 'l1',

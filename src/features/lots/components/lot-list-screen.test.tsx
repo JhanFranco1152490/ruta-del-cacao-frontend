@@ -30,6 +30,11 @@ const fermenting = buildLot({
   id: 'l2',
   code: '000123-F02-P05-261012-1',
   status: 'fermenting',
+  fermentation: {
+    started_at: '2026-10-15T07:00:00-05:00',
+    ended_at: null,
+    facility: 'C-02',
+  },
 });
 
 let userId: string;
@@ -92,6 +97,7 @@ describe('LotListScreen', () => {
     expect(rows[0]).toHaveTextContent('P05 · Lote del río');
     expect(rows[0]).toHaveTextContent('Generado');
     expect(rows[1]).toHaveTextContent('En fermentación');
+    expect(rows[1]).toHaveTextContent('En C-02');
     expect(
       screen.getByRole('link', { name: 'Ver el lote 000123-F02-P05-261014-1' }),
     ).toHaveAttribute(
