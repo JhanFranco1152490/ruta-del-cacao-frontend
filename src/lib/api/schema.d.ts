@@ -477,6 +477,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/fermentation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las fermentaciones en curso de las fincas que alcanza la sesión, con sus volteos, sin paginar: el dispositivo las guarda todas para trabajar sin conexión. De la más antigua a la más reciente. */
+        get: operations["fermentation_list"];
+        put?: never;
+        /** @description Inicia la fermentación de un lote Generado en un cajón libre de su finca: el lote pasa a En fermentación y el cajón a Ocupado, en una sola transacción. Si el lote pesa más que la capacidad del cajón, 422 `lot_exceeds_capacity` con `capacity_kg` y `green_weight_kg`, salvo con `confirm_over_capacity`. El inicio no puede ser futuro ni anterior al día de la cosecha. */
+        post: operations["fermentation_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fermentation/{lot_id}/turns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registra un volteo de una fermentación en curso; llega desde la cola del dispositivo. El `id` lo genera el cliente: reenviar el mismo con los mismos datos responde 200 con el que ya existe, y con otros datos 409 `turn_id_conflict`. La hora se guarda sin segundos, y dos volteos de la misma fermentación en el mismo minuto son el mismo: 409 `duplicate_turn_time` con el existente en `existing`. El número es su posición por hora. */
+        post: operations["fermentation_turns_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fermentation/{lot_id}/turns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Elimina un volteo registrado por error mientras la fermentación sigue en curso. Requiere `expected_version` en la URL. Los siguientes cambian de número. */
+        delete: operations["fermentation_turns_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Corrige un volteo mientras la fermentación sigue en curso. Requiere `expected_version`; si cambió, 409 `stale_version` con el vigente en `current`. Con la fermentación terminada, 409 `fermentation_not_in_progress`. */
+        patch: operations["fermentation_turns_partial_update"];
+        trace?: never;
+    };
+    "/api/fermentation/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La fermentación de un lote, en curso o terminada. Se busca por el lote. */
+        get: operations["fermentation_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Corrige el inicio de una fermentación sin volteos: el cajón, la hora y el responsable. Cambiar de cajón libera el anterior y ocupa el nuevo. Requiere `expected_version`; si cambió, 409 `stale_version` con la vigente en `current`. Con volteos, 409 `fermentation_has_turns`. */
+        patch: operations["fermentation_partial_update"];
+        trace?: never;
+    };
+    "/api/fermentation/{id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Finaliza una fermentación en curso: el lote pasa a Fermentado y el cajón queda Disponible, en una sola transacción. Necesita al menos un volteo (409 `fermentation_without_turns`); el fin no puede ser anterior al último volteo ni futuro. Requiere `expected_version`; si cambió, 409 `stale_version` con la vigente en `current`. */
+        post: operations["fermentation_finish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fermentation/start-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lo que necesita el formulario de iniciar la fermentación de un lote Generado, o de corregir el inicio de una sin volteos: los cajones libres de la finca del lote (al corregir, también el que ya ocupa), quién puede ser responsable, el peso del lote y desde cuándo puede empezar (el día de su cosecha). Si el lote está en otro estado, 409 `lot_invalid_status` con `current_status`. */
+        get: operations["fermentation_start_options_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/harvests": {
         parameters: {
             query?: never;
@@ -1476,6 +1581,17 @@ export interface components {
         CacaoVarietyList: {
             results: components["schemas"]["CacaoVariety"][];
         };
+        CapacityError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            /** Format: decimal */
+            capacity_kg?: string;
+            /** Format: decimal */
+            green_weight_kg?: string;
+        };
         CatalogInput: {
             /** Format: uuid */
             readonly id: string;
@@ -1639,6 +1755,11 @@ export interface components {
          * @enum {string}
          */
         DocumentTypeEnum: "CC" | "CE" | "PPT" | "NIT";
+        DuplicateTurn: {
+            /** Format: uuid */
+            id: string;
+            number: number;
+        };
         Evidence: {
             /** Format: uuid */
             id: string;
@@ -1767,6 +1888,121 @@ export interface components {
          * @enum {string}
          */
         FarmScopeEnum: "all" | "one" | "many";
+        FermentationBox: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: decimal */
+            capacity_kg: string;
+        };
+        FermentationConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["FermentationProcess"];
+            current_status?: string;
+        };
+        FermentationFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        FermentationFinishRequest: {
+            expected_version: number;
+            /** Format: date-time */
+            ended_at: string;
+            notes?: string;
+        };
+        FermentationList: {
+            results: components["schemas"]["FermentationProcess"][];
+        };
+        FermentationLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+            /** Format: decimal */
+            green_weight_kg: string;
+            harvest: components["schemas"]["HarvestRepresentation"];
+        };
+        FermentationPerson: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+        };
+        FermentationProcess: {
+            lot: components["schemas"]["FermentationLot"];
+            farm: components["schemas"]["FermentationFarm"];
+            facility: components["schemas"]["FermentationBox"];
+            /** Format: date-time */
+            started_at: string;
+            over_capacity: boolean;
+            readonly responsible: components["schemas"]["FermentationPerson"];
+            /** Format: decimal */
+            readonly elapsed_hours: string;
+            /** Format: date-time */
+            readonly next_turn_due_at: string | null;
+            readonly turns: components["schemas"]["FermentationTurn"][];
+            readonly result: components["schemas"]["FermentationResult"] | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        FermentationResult: {
+            /** Format: date-time */
+            ended_at: string;
+            /** Format: decimal */
+            duration_hours: string;
+            turn_count: number;
+            notes: string;
+        };
+        FermentationStartRequest: {
+            /** Format: uuid */
+            lot_id: string;
+            /** Format: uuid */
+            facility_id: string;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: uuid */
+            responsible_id: string;
+            /** @default false */
+            confirm_over_capacity: boolean;
+        };
+        FermentationTurn: {
+            /** Format: uuid */
+            id: string;
+            number: number;
+            /** Format: date-time */
+            turned_at: string;
+            /** Format: decimal */
+            hours_since_start: string;
+            /** Format: decimal */
+            temperature_c: string;
+            /** Format: decimal */
+            ph: string;
+            notes: string;
+            recorded_by: components["schemas"]["HarvestRecorder"];
+            version: number;
+        };
+        FermentationTurnCreateRequest: {
+            /** Format: decimal */
+            temperature_c: string;
+            /** Format: decimal */
+            ph: string;
+            notes?: string;
+            /** Format: date-time */
+            turned_at: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
         Harvest: {
             /** Format: uuid */
             id: string;
@@ -1992,6 +2228,7 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+            readonly fermentation: components["schemas"]["LotFermentation"] | null;
         };
         LotConflictError: {
             detail: string;
@@ -2007,6 +2244,13 @@ export interface components {
             id?: string;
             /** Format: uuid */
             harvest_id: string;
+        };
+        LotFermentation: {
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string | null;
+            facility: string;
         };
         LotProducer: {
             /** Format: uuid */
@@ -2363,6 +2607,26 @@ export interface components {
             longitude?: string;
             is_active?: boolean;
             expected_version: number;
+        };
+        PatchedFermentationStartUpdateRequest: {
+            /** Format: uuid */
+            facility_id?: string;
+            /** Format: date-time */
+            started_at?: string;
+            /** Format: uuid */
+            responsible_id?: string;
+            confirm_over_capacity?: boolean;
+            expected_version?: number;
+        };
+        PatchedFermentationTurnUpdateRequest: {
+            /** Format: decimal */
+            temperature_c?: string;
+            /** Format: decimal */
+            ph?: string;
+            notes?: string;
+            /** Format: date-time */
+            turned_at?: string;
+            expected_version?: number;
         };
         PatchedHarvestUpdateRequest: {
             /** Format: date */
@@ -2903,6 +3167,21 @@ export interface components {
             };
             current: components["schemas"]["PlotCharacterization"] | null;
         };
+        StartOptionPerson: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+            assignable: boolean;
+        };
+        StartOptions: {
+            facilities: components["schemas"]["FermentationBox"][];
+            responsibles: components["schemas"]["StartOptionPerson"][];
+            /** Format: decimal */
+            green_weight_kg: string;
+            /** Format: date-time */
+            earliest_start_at: string;
+        };
         /**
          * @description * `scheduled` - Programada
          *     * `delayed` - Retrasada
@@ -2920,6 +3199,15 @@ export interface components {
         TerritoryReference: {
             id: string;
             name: string;
+        };
+        TurnConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            existing?: components["schemas"]["DuplicateTurn"];
+            current?: components["schemas"]["FermentationTurn"];
         };
         /**
          * @description * `kg` - Kilogramos
@@ -5091,6 +5379,572 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    fermentation_list: {
+        parameters: {
+            query?: {
+                /** @description Solo las de esta finca. */
+                farm?: string;
+                /** @description Solo la cuenta técnica: el productor cuyas fermentaciones se ve. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    fermentation_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FermentationStartRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationProcess"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CapacityError"];
+                };
+            };
+        };
+    };
+    fermentation_turns_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FermentationTurnCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationTurn"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationTurn"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnConflictError"];
+                };
+            };
+        };
+    };
+    fermentation_turns_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` del volteo que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnConflictError"];
+                };
+            };
+        };
+    };
+    fermentation_turns_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFermentationTurnUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationTurn"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnConflictError"];
+                };
+            };
+        };
+    };
+    fermentation_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationProcess"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    fermentation_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFermentationStartUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationProcess"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CapacityError"];
+                };
+            };
+        };
+    };
+    fermentation_finish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FermentationFinishRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationProcess"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FermentationConflictError"];
+                };
+            };
+        };
+    };
+    fermentation_start_options_retrieve: {
+        parameters: {
+            query: {
+                lot: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartOptions"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

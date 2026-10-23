@@ -381,6 +381,52 @@ export const buildLot = (
     version: 1,
     created_at: '2026-10-14T16:00:00Z',
     updated_at: '2026-10-14T16:00:00Z',
+    fermentation: null,
+    ...overrides,
+  };
+};
+
+export const buildFermentationTurn = (
+  overrides: Partial<Schemas['FermentationTurn']> = {},
+): Schemas['FermentationTurn'] => ({
+  id: 'ft1',
+  number: 1,
+  turned_at: '2026-10-17T07:30:00-05:00',
+  hours_since_start: '48.5',
+  temperature_c: '45.0',
+  ph: '4.90',
+  notes: '',
+  recorded_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  version: 1,
+  ...overrides,
+});
+
+// Una fermentación en curso en C-01, iniciada el 15 oct. a las 07:00 y todavía sin volteos: el
+// primero toca a las 48 h.
+export const buildFermentation = (
+  overrides: Partial<Schemas['FermentationProcess']> = {},
+): Schemas['FermentationProcess'] => {
+  const lot = buildLot({ status: 'fermenting' });
+  return {
+    lot: {
+      id: lot.id,
+      code: lot.code,
+      status: lot.status,
+      green_weight_kg: lot.green_weight_kg,
+      harvest: lot.harvest,
+    },
+    farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+    facility: { id: 'fc1', name: 'C-01', capacity_kg: '600.0' },
+    started_at: '2026-10-15T07:00:00-05:00',
+    over_capacity: false,
+    responsible: { id: 'u1', full_name: 'Cuenta de prueba', is_active: true },
+    elapsed_hours: '24.0',
+    next_turn_due_at: '2026-10-17T07:00:00-05:00',
+    turns: [],
+    result: null,
+    version: 1,
+    created_at: '2026-10-15T12:10:00Z',
+    updated_at: '2026-10-15T12:10:00Z',
     ...overrides,
   };
 };
