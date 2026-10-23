@@ -91,13 +91,14 @@ src/
     (app)/             con sesión (lo garantiza SessionGuard en su layout): / (puerta de
                        entrada: lleva a la primera sección permitida), /productores,
                        /fincas, /actividades, /sanidad, /plagas-enfermedades, /cosechas, /lotes,
-                       /usuarios, /roles y sus pantallas hijas. El
+                       /fermentacion, /infraestructura, /usuarios, /roles y sus pantallas hijas. El
                        permiso y la conexión de cada sección se comprueban en el shell a
                        partir de config/navigation.ts: una sección nueva solo se suma ahí,
                        con su `group` (el menú agrupa por tarea; ver el sistema de diseño)
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       health, notifications, harvests, lots, users y roles): api.ts, schemas.ts, hooks propios
+                       health, notifications, harvests, lots, fermentation, facilities, users y
+                       roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
                        los dos vive en la raíz
@@ -129,13 +130,15 @@ src/
   pantalla compone y obtiene los datos de los hooks de `features/<dominio>/api.ts`.
 - **Piezas comunes antes que copiar** (se usan en vez de escribir lo mismo a mano):
   - formularios: `FormDialog` (diálogo siempre abierto que no se cierra mientras guarda) y
-    `FormDialogForm` (el formulario dentro de un diálogo con su botón); `CatalogItemDialog` con
+    `FormDialogForm` (el formulario dentro de un diálogo con su botón), con `submitDisabled` cuando
+    todavía no hay nada que guardar (faltan las opciones que el formulario necesita); `CatalogItemDialog` con
     `useCatalogItemForm` para los catálogos de la asociación; `SaveConfirmDialog` para confirmar lo
     que no se corrige después; `InlineError` (error de una línea) y `FormMessage` (en caja);
     `serverErrorSummary` para lo que el servidor rechaza y no cae en un campo;
   - pantallas: `LoadingBlock` (esqueleto con su etiqueta), `UnavailablePage` («No fue posible
     abrir…» con el camino de vuelta), `SyncRejectedNotice` y `syncFailureText` (lo que el servidor
-    rechazó de la cola), `CollapsibleGroupList` con `groupInOrder` (listas en grupos plegables),
+    rechazó de la cola), `OfflineCopyNotice` («Sin conexión: estás viendo la copia del…», con lo que
+    no se puede hacer así), `CollapsibleGroupList` con `groupInOrder` (listas en grupos plegables),
     `mapPlaceholder` (el mapa mientras carga o si no cargó);
   - API: `apiPath` (ruta con su consulta, sin los vacíos) e `isNotFound` (404);
   - cola sin conexión: `rejectionConflict` y `VALIDATION_ERROR_CODE` en `lib/offline/adapters.ts`.
@@ -169,7 +172,11 @@ src/
   lote); las fichas de varias parcelas (`lib/api/plot-characterizations.ts`) y el catálogo de
   variedades (`lib/api/cacao-varieties.ts`); los estados del lote y cómo se lee su código
   (`lib/lot-status.ts`, `lib/format/lot-code.ts`); y los ids de la cola que otro dominio necesita
-  como padre (`lib/offline/queue-ids.ts`: la ficha y la cosecha). El dominio dueño los usa desde ahí.
+  como padre (`lib/offline/queue-ids.ts`: la ficha y la cosecha). Desde fermentación: los campos de
+  fecha y hora (`toBogotaLocal`, `fromBogotaLocal`, `formatTime` y `formatShortDateTime` en
+  `lib/format/dates.ts`: un `datetime-local` guarda `yyyy-MM-ddTHH:mm` en la hora de Bogotá) y la
+  ficha de un lote sin conexión (`lib/offline/postharvest-copies.ts`, ver Lotes). El dominio dueño
+  los usa desde ahí.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
   en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
@@ -221,7 +228,15 @@ src/
   pantallas reciben `renderFormLot` con un `HarvestLotSource`, y `app/(app)/cosechas/form-lot.tsx` los
   une. La cosecha de la cola guarda su `lotSource` (nombres de parcela, finca y variedad): con él se
   puede conformar su lote sin conexión desde la lista, mientras la cosecha sigue en el teléfono.
-- **Lotes (`features/lots/`).** La lista y la ficha son en línea, sin copia. **Conformar** también
+- **Lotes (`features/lots/`).** La lista es en línea, sin copia; bajo el estado de un lote en
+  fermentación dice su cajón (el campo `fermentation` de `Lot`). La ficha también es en línea, salvo la
+  de un lote que está en la copia de una lista de poscosecha: `useLot` lee con
+  `readWithPostharvestCopy` (`lib/offline/postharvest-copies.ts`) y, sin respuesta del servidor, arma
+  el lote con esa copia (`lotFromCopy`), con su aviso. La copia no guarda el código de socio ni quién
+  conformó el lote: el origen dice **Productor —** y no se muestra **Conformado por…**. Esa función es
+  la única que busca en las copias de poscosecha: el secado suma la suya en `COPIES`. La ficha no
+  importa de los procesos: recibe sus secciones con `renderSections(lot)`, que pinta después del
+  origen y que la página (`lot-detail-from-query.tsx`) llena en el orden del proceso. **Conformar** también
   funciona sin conexión: el lote nace en el dispositivo con su `id` (`form-lot-dialog.tsx` lo genera
   una vez por diálogo) y pasa por la cola (`lot-queue.ts`, `sync-adapter.ts`) con la cosecha como
   padre (`harvestQueueId`, en `lib/offline/queue-ids.ts` porque un dominio no importa de otro). El
@@ -248,6 +263,33 @@ src/
   de lotes, el lote se nombra pero no se enlaza. El aviso de nombre repetido es `DuplicateNotice`
   (`components/`), compartido con insumos, y `isNeverLoaded` (`lib/offline/paused-read.ts`) dice que
   una lectura nunca cargó por falta de red.
+
+- **Fermentación (`features/fermentation/`).** `/fermentacion` es la lista de trabajo del día: dos
+  pestañas (**En fermentación** y, con `manage_fermentation`, **Listos para fermentar**), la finca en la
+  URL (`use-fermentation-filters.ts`) y las cifras. Las fermentaciones en curso se leen todas, sin
+  paginar y con copia (`fermentation`, o `fermentation:producer:{id}` para la cuenta técnica); la finca
+  se filtra en el dispositivo. Los listos son `GET /api/lots?status=generated`, todas las páginas y
+  solo en línea (`useReadyLots`).
+  - **Las horas y el próximo volteo se calculan en el dispositivo** (`fermentation-time.ts`,
+    `next-turn.ts`, `fermentation-list.ts`), no se toman de la copia, que puede ser de ayer: el primer
+    volteo a las 48 h y luego cada 24 h, las mismas constantes que el servidor. El número de un volteo
+    es su posición por hora, también con los de la cola (`turn-rules.ts`), y las horas se comparan por
+    minuto (`minuteOf`): el servidor no acepta dos volteos en el mismo minuto (`duplicate-turn.ts`
+    avisa antes de guardar).
+  - **Registrar un volteo pasa siempre por la cola** (`turn-queue.ts`, `sync-adapter.ts`,
+    `queue-view.tsx`), sin padre: la fermentación se inicia solo en línea. La pantalla de campo es
+    `/fermentacion/volteo?lote=` (precargada), que también corrige lo que la bandeja rechazó
+    (`&pendiente=`) y, en línea, un volteo del servidor (`&id=`). Saca la fermentación de la copia de la
+    lista o, si el lote no está en ella, del servidor (`use-turn-fermentation.ts`).
+  - **Iniciar, corregir el inicio, finalizar, corregir y eliminar un volteo son solo en línea.** Iniciar
+    pide `start-options` (los cajones libres de la finca del lote y los responsables) y, si el lote pesa
+    más que el cajón, la confirmación (`use-start-submit.ts`, con las cifras del servidor si el `422` lo
+    dice). Finalizar se deshabilita con su motivo (`finishBlockedReason`: sin volteos, con volteos en la
+    cola o sin conexión).
+  - **La sección de la ficha del lote** (`fermentation-section.tsx`) la monta la página de lotes: un lote
+    Generado ofrece iniciar; uno en fermentación o más adelante muestra sus datos, sus acciones y la
+    tabla de volteos (`turn-rows.ts`, con los de la cola como «Pendiente de enviar»). Sin conexión se
+    lee con la misma copia de la lista y lo que escribe en línea se deshabilita.
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
