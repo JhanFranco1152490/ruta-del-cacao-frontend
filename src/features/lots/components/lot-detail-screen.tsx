@@ -1,6 +1,6 @@
 'use client';
 
-import { CloudOff, Copy } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 
@@ -8,11 +8,12 @@ import { Breadcrumb } from '@/components/breadcrumb';
 import { DetailFooter } from '@/components/detail-footer';
 import { ErrorState } from '@/components/error-state';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
+import { OfflineCopyNotice } from '@/components/offline-copy-notice';
 import { PageNotice } from '@/components/page-notice';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { isNotFound } from '@/lib/api/errors';
-import { formatDateTime, formatTimestamp } from '@/lib/format/dates';
+import { formatDateTime } from '@/lib/format/dates';
 import { readLotCode } from '@/lib/format/lot-code';
 import { readOrigin } from '@/lib/navigation/origin';
 import { notify } from '@/lib/notify';
@@ -134,15 +135,7 @@ export function LotDetailScreen({
           </p>
         )}
       </section>
-      {fromCopy && (
-        <p
-          className="flex gap-3 rounded-lg border border-border bg-card p-4 text-sm font-bold"
-          role="status"
-        >
-          <CloudOff aria-hidden="true" className="size-5 shrink-0" />
-          Sin conexión: estás viendo la copia del {formatTimestamp(savedAt)}.
-        </p>
-      )}
+      {fromCopy && <OfflineCopyNotice savedAt={savedAt} />}
       <LotOrigin
         harvestHref={harvestHref?.(lot)}
         historyHref={historyHref?.(lot)}

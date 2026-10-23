@@ -11,6 +11,7 @@ import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
 import type { Fermentation } from './api';
 import { exceedsCapacity } from './capacity';
+import { minuteOf } from './fermentation-time';
 import { FUTURE_MOMENT_MESSAGE, isLocalDateTime } from './turn-form';
 
 type Schemas = components['schemas'];
@@ -24,8 +25,6 @@ export type StartFormInput = {
   responsible_id: string;
 };
 
-const MINUTE_MS = 60 * 1000;
-const minuteOf = (date: Date) => Math.floor(date.getTime() / MINUTE_MS);
 const kilos = (value: string) => `${formatDecimal(value, 1)} kg`;
 
 // No se fermenta cacao que no se ha recolectado: el inicio cae entre el día de la cosecha y ahora.
@@ -44,8 +43,8 @@ export function createStartFormSchema({
       const issue = (message: string) =>
         context.addIssue({ code: 'custom', message });
       if (!isLocalDateTime(local)) return issue(REQUIRED_FIELD_MESSAGE);
-      const minute = minuteOf(new Date(fromBogotaLocal(local)));
-      if (minute < minuteOf(new Date(earliestStartAt))) {
+      const minute = minuteOf(fromBogotaLocal(local));
+      if (minute < minuteOf(earliestStartAt)) {
         return issue(
           `No puede ser anterior a la cosecha (${formatShortDayMonth(earliestStartAt)}.).`,
         );
@@ -128,8 +127,7 @@ export function startChanges(
     ...(values.facility_id !== fermentation.facility.id && {
       facility_id: values.facility_id,
     }),
-    ...(minuteOf(new Date(startedAt)) !==
-      minuteOf(new Date(fermentation.started_at)) && {
+    ...(minuteOf(startedAt) !== minuteOf(fermentation.started_at) && {
       started_at: startedAt,
     }),
     ...(values.responsible_id !== fermentation.responsible.id && {

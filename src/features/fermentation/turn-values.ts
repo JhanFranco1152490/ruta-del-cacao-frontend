@@ -1,6 +1,7 @@
 import type { components } from '@/lib/api/schema';
 import { fromBogotaLocal, toBogotaLocal } from '@/lib/format/dates';
 
+import { minuteOf } from './fermentation-time';
 import type { TurnFormInput, TurnFormValues } from './turn-form';
 
 type TurnUpdate = Omit<
@@ -33,10 +34,6 @@ export const formOfTurn = (turn: TurnContent): TurnFormInput => ({
   notes: turn.notes ?? '',
 });
 
-const sameMinute = (a: string, b: string) =>
-  Math.floor(new Date(a).getTime() / 60_000) ===
-  Math.floor(new Date(b).getTime() / 60_000);
-
 // Al corregir un volteo del servidor se envía solo lo que cambió: «45» y «45.0» son lo mismo.
 export function turnChanges(
   values: TurnFormValues,
@@ -44,7 +41,9 @@ export function turnChanges(
 ): TurnUpdate {
   const turnedAt = fromBogotaLocal(values.turned_at);
   const changes: TurnUpdate = {};
-  if (!sameMinute(turnedAt, turn.turned_at)) changes.turned_at = turnedAt;
+  if (minuteOf(turnedAt) !== minuteOf(turn.turned_at)) {
+    changes.turned_at = turnedAt;
+  }
   if (Number(values.temperature_c) !== Number(turn.temperature_c)) {
     changes.temperature_c = values.temperature_c;
   }

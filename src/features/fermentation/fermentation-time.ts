@@ -1,5 +1,13 @@
 import { formatDecimal } from '@/lib/format/decimal';
 
+// El minuto de un instante: el servidor guarda las horas de la fermentación sin segundos, así que
+// dos horas del mismo minuto son la misma y se comparan por minuto.
+export const minuteOf = (moment: string | Date) =>
+  Math.floor(new Date(moment).getTime() / 60_000);
+
+export const turnsText = (count: number) =>
+  count === 1 ? '1 volteo' : `${count} volteos`;
+
 // Las horas entre dos momentos con un decimal, la mitad hacia arriba y sin contar las fracciones de
 // segundo, como las cuenta el servidor: 2 h 3 min son 2,1 h.
 export function hoursBetween(fromIso: string, toIso: string) {

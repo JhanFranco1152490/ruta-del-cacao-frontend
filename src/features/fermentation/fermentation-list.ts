@@ -6,7 +6,7 @@ import {
 import { formatDecimal } from '@/lib/format/decimal';
 
 import type { Fermentation, ReadyLot } from './api';
-import { hoursBetween } from './fermentation-time';
+import { hoursBetween, turnsText } from './fermentation-time';
 import { isTurnOverdue, nextTurnDueAt } from './next-turn';
 import { pendingTurnsOf, type QueuedTurn } from './turn-queue';
 import { lastTurnedAt, numberTurns } from './turn-rules';
@@ -55,9 +55,6 @@ export const countOverdue = (
   fermentations.filter((item) =>
     isTurnOverdue(dueAt(item, shownTurns(item, queued)), now),
   ).length;
-
-const turnsText = (count: number) =>
-  count === 1 ? '1 volteo' : `${count} volteos`;
 
 function nextTurnText(due: string, now: Date) {
   if (!isTurnOverdue(due, now)) {

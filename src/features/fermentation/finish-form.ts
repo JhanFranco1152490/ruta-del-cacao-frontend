@@ -8,7 +8,7 @@ import {
 } from '@/lib/format/dates';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
-import { durationText, hoursBetween } from './fermentation-time';
+import { durationText, hoursBetween, minuteOf } from './fermentation-time';
 import {
   FUTURE_MOMENT_MESSAGE,
   isLocalDateTime,
@@ -20,9 +20,6 @@ type Schemas = components['schemas'];
 
 // El fin es lo que guarda un campo de fecha y hora (yyyy-MM-ddTHH:mm), en la hora de Bogotá.
 export type FinishFormInput = { ended_at: string; notes: string };
-
-const MINUTE_MS = 60 * 1000;
-const minuteOf = (date: Date) => Math.floor(date.getTime() / MINUTE_MS);
 
 // El fin cae entre el último volteo (puede ser el mismo minuto) y ahora, y siempre después del
 // inicio, como lo exige el servidor. `now` se recibe para poder probarlo.
@@ -40,13 +37,13 @@ export function createFinishFormSchema({
       const issue = (message: string) =>
         context.addIssue({ code: 'custom', message });
       if (!isLocalDateTime(local)) return issue(REQUIRED_FIELD_MESSAGE);
-      const minute = minuteOf(new Date(fromBogotaLocal(local)));
-      if (lastTurnedAt && minute < minuteOf(new Date(lastTurnedAt))) {
+      const minute = minuteOf(fromBogotaLocal(local));
+      if (lastTurnedAt && minute < minuteOf(lastTurnedAt)) {
         return issue(
           `No puede ser anterior al último volteo (${formatShortDateTime(lastTurnedAt)}).`,
         );
       }
-      if (minute <= minuteOf(new Date(startedAt))) {
+      if (minute <= minuteOf(startedAt)) {
         return issue('Debe ser posterior al inicio de la fermentación.');
       }
       if (minute > minuteOf(now())) issue(FUTURE_MOMENT_MESSAGE);
