@@ -127,6 +127,9 @@ export const queryKeys = {
     // Los cajones libres y los responsables para iniciar o corregir el inicio: solo con conexión.
     startOptions: (lotId: string) =>
       ['fermentation', 'start-options', lotId] as const,
+    // Un volteo que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, turnId: string) =>
+      ['fermentation', 'queued', userId, turnId] as const,
   },
   facilities: {
     // Lo que invalida registrar, editar, activar, desactivar o eliminar un cajón o una marquesina.

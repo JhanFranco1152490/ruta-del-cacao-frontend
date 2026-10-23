@@ -12,6 +12,12 @@ export type Fermentation = Schemas['FermentationProcess'];
 export type FermentationTurn = Schemas['FermentationTurn'];
 export type ReadyLot = Schemas['Lot'];
 
+export const FERMENTATION_ERROR = {
+  duplicateTurnTime: 'duplicate_turn_time',
+  notInProgress: 'fermentation_not_in_progress',
+  turnIdConflict: 'turn_id_conflict',
+} as const;
+
 // La cuenta técnica guarda aparte lo de cada productor que eligió.
 export const fermentationsCacheKey = (producer: string | null) =>
   producer ? `fermentation:producer:${producer}` : 'fermentation';
@@ -89,4 +95,15 @@ export const useFermentation = (lotId: string, { enabled = true } = {}) =>
     queryFn: ({ signal }) =>
       apiFetch<Fermentation>(`/api/fermentation/${lotId}`, { signal }),
     enabled,
+  });
+
+// El `id` lo genera el dispositivo: un reenvío desde la cola devuelve el volteo ya guardado en vez
+// de registrarlo dos veces.
+export const postTurn = (
+  lotId: string,
+  body: Schemas['FermentationTurnCreateRequest'],
+) =>
+  apiFetch<FermentationTurn>(`/api/fermentation/${lotId}/turns`, {
+    method: 'POST',
+    body,
   });

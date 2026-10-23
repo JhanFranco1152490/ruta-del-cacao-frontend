@@ -30,6 +30,7 @@ vi.mock(
   async () => (await import('@/test/router')).navigation,
 );
 
+import { enqueueTurn } from '../turn-queue';
 import { FermentationScreen } from './fermentation-screen';
 
 const NOW = new Date('2026-10-17T09:00:00-05:00');
@@ -171,6 +172,32 @@ describe('FermentationScreen', () => {
     await waitFor(() =>
       expect(summaryValue('Listos para fermentar')).toHaveTextContent('1'),
     );
+  });
+
+  it('shows a turn saved on the phone as waiting to be sent, and it is no longer overdue', async () => {
+    await enqueueTurn(userId, {
+      lotId: 'l1',
+      request: {
+        id: 'q1',
+        turned_at: '2026-10-17T08:00:00-05:00',
+        temperature_c: '44.5',
+        ph: '4.95',
+        notes: '',
+        captured_at: '2026-10-17T13:01:00.000Z',
+      },
+      label: '000123-F02-P05-261014-1 · volteo 1 · 17 oct. 08:00',
+    });
+    renderScreen();
+
+    await waitFor(async () =>
+      expect((await cards())[0]).toHaveTextContent(
+        'Volteo 1 · 44,5 °C · pH 4,95 · 17 oct. 08:00 · Pendiente de enviar',
+      ),
+    );
+    expect((await cards())[0]).toHaveTextContent(
+      'Próximo volteo: 18 oct. 08:00',
+    );
+    expect(summaryValue('Volteo pendiente')).toHaveTextContent('0');
   });
 
   it('filters by farm from the URL and says when nothing matches', async () => {

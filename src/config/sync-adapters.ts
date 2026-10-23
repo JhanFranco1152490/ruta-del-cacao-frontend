@@ -1,6 +1,7 @@
 import { completionSyncAdapter } from '@/features/activities/sync-adapter';
 import { characterizationSyncAdapter } from '@/features/crops/sync-adapter';
 import { farmSyncAdapter } from '@/features/farms/sync-adapter';
+import { turnSyncAdapter } from '@/features/fermentation/sync-adapter';
 import { controlSyncAdapter } from '@/features/health/control-sync-adapter';
 import { evidenceSyncAdapter } from '@/features/health/evidence-sync-adapter';
 import { monitoringSyncAdapter } from '@/features/health/monitoring-sync-adapter';
@@ -21,4 +22,5 @@ export const SYNC_ADAPTERS: readonly SyncAdapter[] = [
   evidenceSyncAdapter,
   harvestSyncAdapter,
   lotSyncAdapter,
+  turnSyncAdapter,
 ];

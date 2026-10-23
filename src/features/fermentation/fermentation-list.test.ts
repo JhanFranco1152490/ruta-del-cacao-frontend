@@ -13,6 +13,7 @@ import {
   fermentationsOfFarm,
   readyLotsOfFarm,
 } from './fermentation-list';
+import type { QueuedTurn } from './turn-queue';
 
 // Iniciada el 15 oct. a las 07:00: sin volteos, el primero toca el 17 a las 07:00.
 const STARTED = '2026-10-15T07:00:00-05:00';
@@ -131,5 +132,71 @@ describe('cardFacts', () => {
       overdue: true,
       text: 'Volteo pendiente desde el 17 oct. 07:00',
     });
+  });
+});
+
+describe('the turns still on the device', () => {
+  const queuedTurn = (
+    turned_at: string,
+    overrides: Partial<QueuedTurn> = {},
+  ): QueuedTurn => ({
+    id: `q-${turned_at}`,
+    lotId: 'l1',
+    request: {
+      id: `q-${turned_at}`,
+      turned_at,
+      temperature_c: '46.0',
+      ph: '4.80',
+      notes: '',
+      captured_at: null,
+    },
+    label: '',
+    status: 'pending',
+    ...overrides,
+  });
+
+  it('count as turns, numbered by their time and marked as waiting to be sent', () => {
+    const facts = cardFacts(
+      buildFermentation({
+        started_at: STARTED,
+        turns: [
+          buildFermentationTurn({ turned_at: '2026-10-17T07:30:00-05:00' }),
+        ],
+      }),
+      at('2026-10-18T09:00:00-05:00'),
+      [
+        queuedTurn('2026-10-18T08:00:00-05:00'),
+        queuedTurn('2026-10-18T08:30:00-05:00', { lotId: 'l2' }),
+      ],
+    );
+
+    expect(facts.elapsed).toBe('74 h de fermentación · 2 volteos');
+    expect(facts.lastTurn).toBe(
+      'Volteo 2 · 46 °C · pH 4,8 · 18 oct. 08:00 · Pendiente de enviar',
+    );
+    expect(facts.next).toEqual({
+      overdue: false,
+      text: 'Próximo volteo: 19 oct. 08:00',
+    });
+  });
+
+  it('move the next turn, so a turn saved on the phone is no longer overdue', () => {
+    const list = [buildFermentation({ started_at: STARTED })];
+    const now = at('2026-10-17T09:00:00-05:00');
+
+    expect(countOverdue(list, now)).toBe(1);
+    expect(
+      countOverdue(list, now, [queuedTurn('2026-10-17T08:00:00-05:00')]),
+    ).toBe(0);
+  });
+
+  it('leave out a turn the server rejected', () => {
+    const facts = cardFacts(
+      buildFermentation({ started_at: STARTED }),
+      at('2026-10-17T09:00:00-05:00'),
+      [queuedTurn('2026-10-17T08:00:00-05:00', { status: 'error' })],
+    );
+
+    expect(facts.lastTurn).toBeNull();
   });
 });

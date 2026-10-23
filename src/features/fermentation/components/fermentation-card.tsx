@@ -7,20 +7,24 @@ import { farmLabel } from '@/lib/format/place-label';
 
 import type { Fermentation } from '../api';
 import { cardFacts } from '../fermentation-list';
+import type { QueuedTurn } from '../turn-queue';
 
 // Un lote en fermentación: dónde está, cuánto lleva, su último volteo y cuándo toca el siguiente.
 // Un volteo atrasado lleva ícono y texto además del color.
 export function FermentationCard({
   fermentation,
   now,
+  queued,
   lotHref,
 }: {
   fermentation: Fermentation;
   now: Date;
+  // Los volteos que siguen en la cola del teléfono, de cualquier lote.
+  queued: readonly QueuedTurn[];
   lotHref: (id: string) => string;
 }) {
   const { lot, farm, facility } = fermentation;
-  const facts = cardFacts(fermentation, now);
+  const facts = cardFacts(fermentation, now, queued);
   const NextIcon = facts.next.overdue ? TriangleAlert : CalendarClock;
 
   return (
