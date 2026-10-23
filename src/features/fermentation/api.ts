@@ -17,6 +17,11 @@ export const FERMENTATION_ERROR = {
   notInProgress: 'fermentation_not_in_progress',
   turnIdConflict: 'turn_id_conflict',
   staleVersion: 'stale_version',
+  exceedsCapacity: 'lot_exceeds_capacity',
+  facilityUnavailable: 'facility_unavailable',
+  lotInvalidStatus: 'lot_invalid_status',
+  responsibleNotAvailable: 'responsible_not_available',
+  hasTurns: 'fermentation_has_turns',
 } as const;
 
 // La cuenta técnica guarda aparte lo de cada productor que eligió.
@@ -137,5 +142,51 @@ export function useUpdateTurn(lotId: string) {
     }) => patchTurn(lotId, turnId, body),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.fermentation.all() }),
+  });
+}
+
+// Los cajones disponibles de la finca del lote y quién puede responder, para iniciar o corregir el
+// inicio. Solo con conexión: quien decide si un cajón sigue libre es el servidor.
+export const useStartOptions = (lotId: string) =>
+  useQuery({
+    queryKey: queryKeys.fermentation.startOptions(lotId),
+    queryFn: ({ signal }) =>
+      apiFetch<Schemas['StartOptions']>(
+        apiPath('/api/fermentation/start-options', { lot: lotId }),
+        { signal },
+      ),
+  });
+
+// Iniciar ocupa un cajón y cambia el estado del lote: al terminar se vuelven a leer la fermentación
+// y los lotes. Solo en línea, como corregir un volteo.
+function useInvalidateAfterStart() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.fermentation.all() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.lots.all() }),
+    ]);
+}
+
+export function useStartFermentation() {
+  const invalidate = useInvalidateAfterStart();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (body: Schemas['FermentationStartRequest']) =>
+      apiFetch<Fermentation>('/api/fermentation', { method: 'POST', body }),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useCorrectStart(lotId: string) {
+  const invalidate = useInvalidateAfterStart();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (body: Schemas['PatchedFermentationStartUpdateRequest']) =>
+      apiFetch<Fermentation>(`/api/fermentation/${lotId}`, {
+        method: 'PATCH',
+        body,
+      }),
+    onSuccess: () => invalidate(),
   });
 }

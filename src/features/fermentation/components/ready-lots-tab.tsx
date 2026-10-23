@@ -1,3 +1,5 @@
+import { Thermometer } from 'lucide-react';
+
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { DryingShed } from '@/components/illustrations/drying-shed';
@@ -19,6 +21,7 @@ export function ReadyLotsTab({
   isError,
   onRetry,
   onClear,
+  onStart,
 }: {
   lots: readonly ReadyLot[];
   farmName: string | null;
@@ -27,6 +30,7 @@ export function ReadyLotsTab({
   isError: boolean;
   onRetry: () => void;
   onClear: () => void;
+  onStart: (lot: ReadyLot) => void;
 }) {
   if (offline) {
     return (
@@ -72,14 +76,25 @@ export function ReadyLotsTab({
     >
       {lots.map((lot) => (
         <li
-          className="space-y-1 rounded-[var(--radius-card)] bg-card p-4 shadow-card"
+          className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-card p-4 shadow-card"
           key={lot.id}
         >
-          <p className="font-mono font-bold break-all">{lot.code}</p>
-          <p className="text-sm text-muted-foreground">
-            {farmLabel(lot.harvest.plot.farm)} ·{' '}
-            {formatDecimal(lot.green_weight_kg, 1)} kg en baba
-          </p>
+          <div className="space-y-1">
+            <p className="font-mono font-bold break-all">{lot.code}</p>
+            <p className="text-sm text-muted-foreground">
+              {farmLabel(lot.harvest.plot.farm)} ·{' '}
+              {formatDecimal(lot.green_weight_kg, 1)} kg en baba
+            </p>
+          </div>
+          <Button
+            aria-label={`Iniciar fermentación de ${lot.code}`}
+            className="mt-auto self-start max-sm:w-full"
+            onClick={() => onStart(lot)}
+            size="office"
+          >
+            <Thermometer aria-hidden="true" className="size-4" /> Iniciar
+            fermentación
+          </Button>
         </li>
       ))}
     </ul>

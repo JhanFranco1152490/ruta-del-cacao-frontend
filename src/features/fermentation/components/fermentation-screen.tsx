@@ -1,15 +1,14 @@
 'use client';
 
+import { useState } from 'react';
+
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { FILTER_CONTROLS_CLASS } from '@/components/filter-row';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { LoadingBlock } from '@/components/loading-block';
 import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
-import { SearchSelect } from '@/components/search-select';
-import { SegmentedControl } from '@/components/segmented-control';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { useFarmOptions } from '@/lib/api/farm-options';
@@ -18,7 +17,7 @@ import { farmLabel } from '@/lib/format/place-label';
 import { isNeverLoaded } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { useFermentations, useReadyLots } from '../api';
+import { type ReadyLot, useFermentations, useReadyLots } from '../api';
 import {
   countOverdue,
   fermentationsOfFarm,
@@ -33,6 +32,8 @@ import { FermentationOfflineNotice } from './fermentation-offline-notice';
 import { FermentationSummary } from './fermentation-summary';
 import { InProgressTab } from './in-progress-tab';
 import { ReadyLotsTab } from './ready-lots-tab';
+import { FermentationToolbar } from './fermentation-toolbar';
+import { StartReadyLot } from './start-ready-lot';
 
 const NEEDS_CONNECTION =
   'Necesitas conexión una vez para cargar los lotes en fermentación.';
@@ -43,9 +44,13 @@ const NEEDS_CONNECTION =
 // lote es de otro dominio: su ruta la entrega quien monta la pantalla.
 export function FermentationScreen({
   lotHref,
+  facilitiesHref,
 }: {
   lotHref: (id: string) => string;
+  // La infraestructura de una finca, para cuando no hay cajones libres al iniciar.
+  facilitiesHref: (farmId: string) => string;
 }) {
+  const [starting, setStarting] = useState<ReadyLot>();
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;
   const hasConnection = useHasConnection();
@@ -76,6 +81,10 @@ export function FermentationScreen({
   }));
   const chosenFarm = farmOptions.find(({ id }) => id === state.farm);
   const farmName = state.farm ? (chosenFarm?.name ?? 'esta finca') : null;
+  // La finca del filtro, aunque todavía no esté entre las opciones cargadas.
+  const farmChoice = state.farm
+    ? (chosenFarm ?? { id: state.farm, label: farmName ?? '' })
+    : null;
   const now = new Date();
   const shown = fermentationsOfFarm(read.data?.data ?? [], state.farm);
   const readyShown =
@@ -101,6 +110,7 @@ export function FermentationScreen({
           offline={offline}
           onClear={state.clear}
           onRetry={() => void ready.refetch()}
+          onStart={setStarting}
         />
       );
     }
@@ -161,43 +171,30 @@ export function FermentationScreen({
         />
       )}
       {!needsProducer && (
-        <div
-          className={`flex flex-wrap items-start gap-3 ${FILTER_CONTROLS_CLASS}`}
-        >
-          {canManage && (
-            <SegmentedControl<FermentationView>
-              fullWidth
-              label="Vista de fermentación"
-              onChange={(next) => void state.setView(next)}
-              options={[
-                { value: 'en-curso', label: 'En fermentación' },
-                { value: 'listos', label: 'Listos para fermentar' },
-              ]}
-              value={view}
-            />
-          )}
-          {farmOptions.length > 1 && (
-            <SearchSelect
-              allLabel="Todas las fincas"
-              className="w-full sm:w-72"
-              compact
-              hideLabel
-              label="Finca"
-              onChange={(option) => void state.setFarm(option?.id ?? null)}
-              options={farmOptions}
-              value={
-                state.farm
-                  ? (chosenFarm ?? { id: state.farm, label: farmName ?? '' })
-                  : null
-              }
-            />
-          )}
-        </div>
+        <FermentationToolbar
+          farm={farmChoice}
+          farmOptions={farmOptions}
+          onFarm={(farm) => void state.setFarm(farm)}
+          onView={canManage ? (next) => void state.setView(next) : undefined}
+          view={view}
+        />
       )}
       {read.isSuccess && offline && (
         <FermentationOfflineNotice savedAt={read.data.savedAt} />
       )}
       {body()}
+      {starting && (
+        <StartReadyLot
+          facilitiesHref={
+            hasPermission(user, PERMISSIONS.FACILITIES_VIEW)
+              ? facilitiesHref
+              : undefined
+          }
+          lot={starting}
+          lotHref={lotHref}
+          onClose={() => setStarting(undefined)}
+        />
+      )}
     </div>
   );
 }
