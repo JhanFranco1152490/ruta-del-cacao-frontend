@@ -22,6 +22,7 @@ export const FERMENTATION_ERROR = {
   lotInvalidStatus: 'lot_invalid_status',
   responsibleNotAvailable: 'responsible_not_available',
   hasTurns: 'fermentation_has_turns',
+  withoutTurns: 'fermentation_without_turns',
 } as const;
 
 // La cuenta técnica guarda aparte lo de cada productor que eligió.
@@ -157,9 +158,9 @@ export const useStartOptions = (lotId: string) =>
       ),
   });
 
-// Iniciar ocupa un cajón y cambia el estado del lote: al terminar se vuelven a leer la fermentación
-// y los lotes. Solo en línea, como corregir un volteo.
-function useInvalidateAfterStart() {
+// Iniciar, corregir el inicio y finalizar ocupan o liberan un cajón y cambian el estado del lote: al
+// terminar se vuelven a leer la fermentación y los lotes. Solo en línea, como corregir un volteo.
+function useInvalidateAfterProcessChange() {
   const queryClient = useQueryClient();
   return () =>
     Promise.all([
@@ -169,7 +170,7 @@ function useInvalidateAfterStart() {
 }
 
 export function useStartFermentation() {
-  const invalidate = useInvalidateAfterStart();
+  const invalidate = useInvalidateAfterProcessChange();
   return useMutation({
     networkMode: 'always',
     mutationFn: (body: Schemas['FermentationStartRequest']) =>
@@ -179,12 +180,27 @@ export function useStartFermentation() {
 }
 
 export function useCorrectStart(lotId: string) {
-  const invalidate = useInvalidateAfterStart();
+  const invalidate = useInvalidateAfterProcessChange();
   return useMutation({
     networkMode: 'always',
     mutationFn: (body: Schemas['PatchedFermentationStartUpdateRequest']) =>
       apiFetch<Fermentation>(`/api/fermentation/${lotId}`, {
         method: 'PATCH',
+        body,
+      }),
+    onSuccess: () => invalidate(),
+  });
+}
+
+// Finalizar libera el cajón y deja el lote Fermentado: al terminar se vuelven a leer la
+// fermentación y los lotes. Solo en línea.
+export function useFinishFermentation(lotId: string) {
+  const invalidate = useInvalidateAfterProcessChange();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (body: Schemas['FermentationFinishRequest']) =>
+      apiFetch<Fermentation>(`/api/fermentation/${lotId}/finish`, {
+        method: 'POST',
         body,
       }),
     onSuccess: () => invalidate(),
