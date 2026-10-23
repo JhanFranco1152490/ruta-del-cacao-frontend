@@ -118,6 +118,10 @@ export const queryKeys = {
     // cuenta técnica elige el productor; las demás cuentas pasan `null`.
     list: (producer: string | null) =>
       ['fermentation', 'list', producer ?? ''] as const,
+    // Los lotes Generado, listos para iniciar su fermentación: solo con conexión. Cuelga de
+    // `fermentation` porque iniciar una los saca de la lista.
+    ready: (producer: string | null) =>
+      ['fermentation', 'ready', producer ?? ''] as const,
     // La fermentación de un lote, en curso o terminada.
     detail: (lotId: string) => ['fermentation', 'detail', lotId] as const,
     // Los cajones libres y los responsables para iniciar o corregir el inicio: solo con conexión.
