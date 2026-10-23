@@ -2,10 +2,13 @@
 
 import { Copy } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { DetailFooter } from '@/components/detail-footer';
 import { ErrorState } from '@/components/error-state';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
+import { OfflineCopyNotice } from '@/components/offline-copy-notice';
 import { PageNotice } from '@/components/page-notice';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
@@ -14,6 +17,7 @@ import { formatDateTime } from '@/lib/format/dates';
 import { readLotCode } from '@/lib/format/lot-code';
 import { readOrigin } from '@/lib/navigation/origin';
 import { notify } from '@/lib/notify';
+import { isNeverLoaded } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Lot, useLot } from '../api';
@@ -33,24 +37,36 @@ async function copyCode(code: string) {
   }
 }
 
-// La ficha de un lote: su código, cómo se lee, su estado y su origen. Fermentación y secado
-// agregarán aquí sus secciones. Los enlaces a la cosecha y a la ficha de la parcela los da quien
+// La ficha de un lote: su código, cómo se lee, su estado y su origen. Fermentación y secado son de
+// otros dominios: sus secciones, y los enlaces a la cosecha y a la ficha de la parcela, los da quien
 // monta la pantalla.
 export function LotDetailScreen({
   lotId,
   harvestHref,
   historyHref,
+  renderSections,
 }: {
   lotId: string;
   harvestHref?: (lot: Lot) => string;
   historyHref?: (lot: Lot) => string;
+  // Lo que va después del origen, en el orden del proceso.
+  renderSections?: (lot: Lot) => ReactNode;
 }) {
   const { data: user } = useSession();
-  const read = useLot(lotId);
+  const read = useLot(lotId, user?.id);
   // Volver lleva a la pantalla desde la que se abrió (la de Cosechas si se acaba de conformar),
   // con sus filtros, o a la lista de lotes.
   const origin = readOrigin(useSearchParams());
 
+  if (isNeverLoaded(read)) {
+    return (
+      <PageNotice
+        description="Sin conexión solo se abren los lotes en fermentación, si abriste Fermentación antes con conexión."
+        illustration={OfflineCloud}
+        title="Ver este lote necesita conexión."
+      />
+    );
+  }
   if (read.isError) {
     return isNotFound(read.error) ? (
       <PageNotice title="Este lote ya no existe." />
@@ -71,7 +87,8 @@ export function LotDetailScreen({
     );
   }
 
-  const lot = read.data;
+  const { data: lot, savedAt } = read.data;
+  const fromCopy = savedAt !== undefined;
   const { plot } = lot.harvest;
   const reading = readLotCode(lot.code, {
     farmName: plot.farm.name,
@@ -110,16 +127,21 @@ export function LotDetailScreen({
             <p>{reading}</p>
           </div>
         )}
-        <p className="text-sm text-white/80">
-          Conformado por {lot.created_by?.full_name ?? 'una cuenta eliminada'}{' '}
-          el {formatDateTime(lot.created_at)}.
-        </p>
+        {/* La copia de poscosecha no guarda quién conformó el lote ni cuándo. */}
+        {!fromCopy && (
+          <p className="text-sm text-white/80">
+            Conformado por {lot.created_by?.full_name ?? 'una cuenta eliminada'}{' '}
+            el {formatDateTime(lot.created_at)}.
+          </p>
+        )}
       </section>
+      {fromCopy && <OfflineCopyNotice savedAt={savedAt} />}
       <LotOrigin
         harvestHref={harvestHref?.(lot)}
         historyHref={historyHref?.(lot)}
         lot={lot}
       />
+      {renderSections?.(lot)}
       <DetailFooter backHref={origin ?? LOTS_PATH}>
         {canDelete && <LotDeleteDialog lot={lot} />}
       </DetailFooter>

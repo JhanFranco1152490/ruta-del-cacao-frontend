@@ -23,6 +23,8 @@ type FormDialogFormProps = {
   error?: ReactNode;
   submitLabel: ReactNode;
   pendingLabel?: string;
+  // No hay nada que guardar todavía (falta lo que el formulario necesita); los campos dicen por qué.
+  submitDisabled?: boolean;
   children: ReactNode;
 };
 
@@ -36,6 +38,7 @@ export function FormDialogForm({
   error,
   submitLabel,
   pendingLabel = 'Guardando…',
+  submitDisabled = false,
   children,
 }: FormDialogFormProps) {
   return (
@@ -54,6 +57,7 @@ export function FormDialogForm({
             del diálogo. */}
         <SubmitButton
           className="sm:w-auto"
+          disabled={submitDisabled}
           pending={isSaving}
           pendingLabel={pendingLabel}
         >

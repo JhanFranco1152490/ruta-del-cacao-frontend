@@ -4,6 +4,8 @@ import { useSearchParams } from 'next/navigation';
 
 import { ErrorState } from '@/components/error-state';
 import { characterizationHistoryPath } from '@/features/crops/characterization-paths';
+import { FACILITIES_PATH } from '@/features/facilities/facility-paths';
+import { FermentationSection } from '@/features/fermentation/components/fermentation-section';
 import { harvestDetailPath } from '@/features/harvests/harvest-paths';
 import { LotDetailScreen } from '@/features/lots/components/lot-detail-screen';
 import { useSession } from '@/hooks/use-session';
@@ -18,6 +20,7 @@ export function LotDetailFromQuery() {
   const canSeeHarvest = hasPermission(user, PERMISSIONS.HARVESTS_VIEW);
   // El historial de la ficha se consulta desde la parcela: solo quien puede ver parcelas.
   const canSeeHistory = hasPermission(user, PERMISSIONS.PLOTS_VIEW);
+  const canSeeFacilities = hasPermission(user, PERMISSIONS.FACILITIES_VIEW);
   return (
     <LotDetailScreen
       harvestHref={
@@ -34,6 +37,26 @@ export function LotDetailFromQuery() {
       }
       key={lotId}
       lotId={lotId}
+      // El proceso del lote en su orden: la fermentación va antes que el secado.
+      renderSections={(lot) => {
+        const { farm } = lot.harvest.plot;
+        return (
+          <FermentationSection
+            facilitiesHref={
+              canSeeFacilities
+                ? `${FACILITIES_PATH}?${new URLSearchParams({ finca: farm.id })}`
+                : undefined
+            }
+            lot={{
+              id: lot.id,
+              code: lot.code,
+              status: lot.status,
+              greenWeightKg: lot.green_weight_kg,
+              farm,
+            }}
+          />
+        );
+      }}
     />
   );
 }

@@ -177,6 +177,25 @@ describe('lot query keys', () => {
   });
 });
 
+describe('fermentation query keys', () => {
+  it('hangs every read from the key that writes invalidate', () => {
+    const { all, list, ready, detail, startOptions } = queryKeys.fermentation;
+    expect(startsWith(list(null), all())).toBe(true);
+    expect(startsWith(ready(null), all())).toBe(true);
+    expect(startsWith(detail('l1'), all())).toBe(true);
+    expect(startsWith(startOptions('l1'), all())).toBe(true);
+  });
+
+  it('keeps each producer and each lot apart', () => {
+    const { list, ready, detail, startOptions } = queryKeys.fermentation;
+    expect(list(null)).not.toEqual(list('p-1'));
+    expect(ready(null)).not.toEqual(ready('p-1'));
+    expect(list(null)).not.toEqual(ready(null));
+    expect(detail('l1')).not.toEqual(detail('l2'));
+    expect(detail('l1')).not.toEqual(startOptions('l1'));
+  });
+});
+
 describe('post-harvest facility query keys', () => {
   it('hangs the list from the key that writes invalidate', () => {
     const all = queryKeys.facilities.all();
