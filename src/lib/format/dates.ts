@@ -179,3 +179,7 @@ export const fromBogotaLocal = (localDateTime: string) =>
   format(parseISO(localDateTime, { in: BOGOTA }), "yyyy-MM-dd'T'HH:mm:ssXXX", {
     in: BOGOTA,
   });
+
+// El día, el mes abreviado y la hora de Bogotá de un momento exacto: "17 oct. 08:00".
+export const formatShortDateTime = (isoDateTime: string) =>
+  `${formatShortDayMonth(isoDateTime)}. ${formatTime(isoDateTime)}`;

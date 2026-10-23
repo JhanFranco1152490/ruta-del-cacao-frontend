@@ -9,6 +9,7 @@ import {
   formatShortDayMonth,
   formatLongDate,
   formatMonthYear,
+  formatShortDateTime,
   formatTime,
   formatTimestamp,
   fromBogotaLocal,
@@ -350,5 +351,12 @@ describe('date and time in Bogota', () => {
     expect(fromBogotaLocal(toBogotaLocal('2026-10-15T12:00:00Z'))).toMatch(
       /^2026-10-15T07:00:00/,
     );
+  });
+});
+
+describe('formatShortDateTime', () => {
+  it('shows the day, the short month and the hour of Bogota', () => {
+    expect(formatShortDateTime('2026-10-17T13:00:00Z')).toBe('17 oct. 08:00');
+    expect(formatShortDateTime('2026-10-18T02:30:00Z')).toBe('17 oct. 21:30');
   });
 });
