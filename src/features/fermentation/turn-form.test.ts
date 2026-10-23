@@ -58,6 +58,12 @@ describe('turn form', () => {
   });
 
   describe('time', () => {
+    it('asks for a whole date and time', () => {
+      expect(errorsOf({ turned_at: '2026-10-17' })).toEqual({
+        turned_at: REQUIRED_FIELD_MESSAGE,
+      });
+    });
+
     it('accepts the minute of the start and the current minute', () => {
       expect(errorsOf({ turned_at: '2026-10-15T07:00' })).toEqual({});
       expect(errorsOf({ turned_at: '2026-10-17T08:05' })).toEqual({});

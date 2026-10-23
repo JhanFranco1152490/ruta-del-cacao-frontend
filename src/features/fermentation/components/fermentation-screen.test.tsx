@@ -161,6 +161,12 @@ describe('FermentationScreen', () => {
       'href',
       expect.stringMatching(/^\/lotes\/detalle\?id=l1/),
     );
+    expect(
+      within(first).getByRole('link', { name: 'Registrar volteo' }),
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/fermentacion\/volteo\?lote=l1&origen=/),
+    );
   });
 
   it('sums up the lots in fermentation, the overdue turns and the lots ready', async () => {

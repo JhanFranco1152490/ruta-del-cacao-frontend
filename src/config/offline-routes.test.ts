@@ -51,8 +51,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/infraestructura');
   });
 
-  it('saves the fermentation work list, read from the device copy', () => {
-    expect(OFFLINE_PRECACHE_ROUTES).toContain('/fermentacion');
+  it('saves the fermentation work list and its field screen for the turns', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toEqual(
+      expect.arrayContaining(['/fermentacion', '/fermentacion/volteo']),
+    );
   });
 
   it('no longer saves the page of the retired section', () => {

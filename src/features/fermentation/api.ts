@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { apiPath } from '@/lib/api/path';
@@ -16,6 +16,7 @@ export const FERMENTATION_ERROR = {
   duplicateTurnTime: 'duplicate_turn_time',
   notInProgress: 'fermentation_not_in_progress',
   turnIdConflict: 'turn_id_conflict',
+  staleVersion: 'stale_version',
 } as const;
 
 // La cuenta técnica guarda aparte lo de cada productor que eligió.
@@ -107,3 +108,34 @@ export const postTurn = (
     method: 'POST',
     body,
   });
+
+type TurnUpdateRequest = Schemas['PatchedFermentationTurnUpdateRequest'];
+
+export const patchTurn = (
+  lotId: string,
+  turnId: string,
+  body: TurnUpdateRequest,
+) =>
+  apiFetch<FermentationTurn>(`/api/fermentation/${lotId}/turns/${turnId}`, {
+    method: 'PATCH',
+    body,
+  });
+
+// Corregir un volteo del servidor es solo en línea: sin red falla en el acto, en vez de quedar en
+// pausa y aplicarse solo al volver la red, cuando ya nadie lo está pidiendo. Al terminar se vuelve
+// a leer la lista, que también renueva su copia.
+export function useUpdateTurn(lotId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: ({
+      turnId,
+      body,
+    }: {
+      turnId: string;
+      body: TurnUpdateRequest;
+    }) => patchTurn(lotId, turnId, body),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.fermentation.all() }),
+  });
+}
