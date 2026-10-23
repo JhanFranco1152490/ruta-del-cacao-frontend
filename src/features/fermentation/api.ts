@@ -5,6 +5,7 @@ import { apiPath } from '@/lib/api/path';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
+import { readWithPostharvestCopy } from '@/lib/offline/postharvest-copies';
 
 type Schemas = components['schemas'];
 
@@ -94,14 +95,24 @@ export const useReadyLots = (
     enabled,
   });
 
-// La fermentación de un lote, en curso o terminada, para su ficha. Solo con conexión: la ficha sin
-// red se arma con la copia de la lista.
-export const useFermentation = (lotId: string, { enabled = true } = {}) =>
+// La fermentación de un lote, en curso o terminada, para su ficha. Sin conexión, la de un lote en
+// fermentación se toma de la copia de la lista (la misma con la que se arma la ficha del lote).
+export const useFermentation = (
+  lotId: string,
+  userId: string | undefined,
+  { enabled = true } = {},
+) =>
   useQuery({
     queryKey: queryKeys.fermentation.detail(lotId),
     queryFn: ({ signal }) =>
-      apiFetch<Fermentation>(`/api/fermentation/${lotId}`, { signal }),
-    enabled,
+      readWithPostharvestCopy(
+        userId!,
+        lotId,
+        () => apiFetch<Fermentation>(`/api/fermentation/${lotId}`, { signal }),
+        ({ process }) => process,
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
   });
 
 // El `id` lo genera el dispositivo: un reenvío desde la cola devuelve el volteo ya guardado en vez

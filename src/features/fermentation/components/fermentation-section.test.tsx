@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
+import { getOfflineDb } from '@/lib/offline/db';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   buildFermentation,
@@ -234,6 +235,33 @@ describe('FermentationSection', () => {
     expect(
       within(card).queryByRole('button', { name: 'Finalizar fermentación' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('shows the fermentation from the copy without a connection, with what writes disabled', async () => {
+    await getOfflineDb(userId).cache.put({
+      key: 'fermentation',
+      value: [withTurns],
+      fetchedAt: 1_760_000_000_000,
+    });
+    server.use(
+      http.get(apiUrl('/api/fermentation/l1'), () => HttpResponse.error()),
+    );
+    renderSection();
+
+    const card = await section();
+    await within(card).findByText('C-01 · Superó la capacidad');
+    expect(
+      within(card).getByRole('link', { name: /Registrar volteo/ }),
+    ).toBeInTheDocument();
+    expect(
+      within(card).getByRole('button', { name: 'Finalizar fermentación' }),
+    ).toBeDisabled();
+    expect(
+      within(card).getByText('Finalizar la fermentación necesita conexión.'),
+    ).toBeInTheDocument();
+    expect(
+      within(card).getByRole('button', { name: 'Eliminar el volteo 1' }),
+    ).toBeDisabled();
   });
 
   it('deletes a turn after confirming, with the version it read', async () => {

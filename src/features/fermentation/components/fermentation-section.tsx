@@ -88,7 +88,7 @@ export function FermentationSection({
   const canManage = hasPermission(user, PERMISSIONS.FERMENTATION_MANAGE);
   const canLogTurns = hasPermission(user, PERMISSIONS.FERMENTATION_LOG_TURNS);
   const generated = lot.status === 'generated';
-  const read = useFermentation(lot.id, { enabled: !generated });
+  const read = useFermentation(lot.id, user?.id, { enabled: !generated });
   const queued = useQueuedTurns(user?.id);
 
   if (generated) {
@@ -112,7 +112,10 @@ export function FermentationSection({
         />
       );
     }
-    const fermentation = read.data;
+    const fermentation = read.data.data;
+    // Con la copia del dispositivo, lo que escribe en línea se deshabilita aunque el navegador
+    // diga tener red: el servidor no respondió.
+    const writable = online && read.data.savedAt === undefined;
     const inProgress = !fermentation.result;
     const rows = turnRows(fermentation, inProgress ? queued : []);
     return (
@@ -129,7 +132,7 @@ export function FermentationSection({
             facilitiesHref={facilitiesHref}
             fermentation={fermentation}
             lot={lot}
-            online={online}
+            online={writable}
             queued={queued}
           />
         )}
@@ -139,7 +142,7 @@ export function FermentationSection({
           <TurnsTable
             editable={inProgress && canLogTurns}
             lotId={lot.id}
-            online={online}
+            online={writable}
             rows={rows}
           />
         )}

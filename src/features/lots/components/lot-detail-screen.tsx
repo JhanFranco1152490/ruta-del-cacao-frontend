@@ -1,20 +1,22 @@
 'use client';
 
-import { Copy } from 'lucide-react';
+import { CloudOff, Copy } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { DetailFooter } from '@/components/detail-footer';
 import { ErrorState } from '@/components/error-state';
+import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageNotice } from '@/components/page-notice';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { isNotFound } from '@/lib/api/errors';
-import { formatDateTime } from '@/lib/format/dates';
+import { formatDateTime, formatTimestamp } from '@/lib/format/dates';
 import { readLotCode } from '@/lib/format/lot-code';
 import { readOrigin } from '@/lib/navigation/origin';
 import { notify } from '@/lib/notify';
+import { isNeverLoaded } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Lot, useLot } from '../api';
@@ -50,11 +52,20 @@ export function LotDetailScreen({
   renderSections?: (lot: Lot) => ReactNode;
 }) {
   const { data: user } = useSession();
-  const read = useLot(lotId);
+  const read = useLot(lotId, user?.id);
   // Volver lleva a la pantalla desde la que se abrió (la de Cosechas si se acaba de conformar),
   // con sus filtros, o a la lista de lotes.
   const origin = readOrigin(useSearchParams());
 
+  if (isNeverLoaded(read)) {
+    return (
+      <PageNotice
+        description="Sin conexión solo se abren los lotes en fermentación, si abriste Fermentación antes con conexión."
+        illustration={OfflineCloud}
+        title="Ver este lote necesita conexión."
+      />
+    );
+  }
   if (read.isError) {
     return isNotFound(read.error) ? (
       <PageNotice title="Este lote ya no existe." />
@@ -75,7 +86,8 @@ export function LotDetailScreen({
     );
   }
 
-  const lot = read.data;
+  const { data: lot, savedAt } = read.data;
+  const fromCopy = savedAt !== undefined;
   const { plot } = lot.harvest;
   const reading = readLotCode(lot.code, {
     farmName: plot.farm.name,
@@ -114,11 +126,23 @@ export function LotDetailScreen({
             <p>{reading}</p>
           </div>
         )}
-        <p className="text-sm text-white/80">
-          Conformado por {lot.created_by?.full_name ?? 'una cuenta eliminada'}{' '}
-          el {formatDateTime(lot.created_at)}.
-        </p>
+        {/* La copia de poscosecha no guarda quién conformó el lote ni cuándo. */}
+        {!fromCopy && (
+          <p className="text-sm text-white/80">
+            Conformado por {lot.created_by?.full_name ?? 'una cuenta eliminada'}{' '}
+            el {formatDateTime(lot.created_at)}.
+          </p>
+        )}
       </section>
+      {fromCopy && (
+        <p
+          className="flex gap-3 rounded-lg border border-border bg-card p-4 text-sm font-bold"
+          role="status"
+        >
+          <CloudOff aria-hidden="true" className="size-5 shrink-0" />
+          Sin conexión: estás viendo la copia del {formatTimestamp(savedAt)}.
+        </p>
+      )}
       <LotOrigin
         harvestHref={harvestHref?.(lot)}
         historyHref={historyHref?.(lot)}

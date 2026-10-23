@@ -169,14 +169,34 @@ describe('useFermentation', () => {
       ),
     );
 
-    const { result } = render(() => useFermentation('l1'));
+    const { result } = render(() => useFermentation('l1', newUser()));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.facility.name).toBe('C-01');
+    expect(result.current.data?.data.facility.name).toBe('C-01');
+    expect(result.current.data?.savedAt).toBeUndefined();
+  });
+
+  it('takes it from the copy of the list without a connection', async () => {
+    const userId = newUser();
+    await getOfflineDb(userId).cache.put({
+      key: 'fermentation',
+      value: [buildFermentation()],
+      fetchedAt: 1_760_000_000_000,
+    });
+    server.use(
+      http.get(apiUrl('/api/fermentation/l1'), () => HttpResponse.error()),
+    );
+
+    const { result } = render(() => useFermentation('l1', userId));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.savedAt).toBe(1_760_000_000_000);
   });
 
   it('does not ask when the lot has no fermentation', () => {
-    const { result } = render(() => useFermentation('l1', { enabled: false }));
+    const { result } = render(() =>
+      useFermentation('l1', newUser(), { enabled: false }),
+    );
 
     expect(result.current.fetchStatus).toBe('idle');
   });

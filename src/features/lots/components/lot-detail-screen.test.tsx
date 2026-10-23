@@ -5,7 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { PERMISSIONS } from '@/lib/permissions';
-import { apiError, buildLot, buildSession } from '@/test/factories';
+import { getOfflineDb } from '@/lib/offline/db';
+import {
+  apiError,
+  buildFermentation,
+  buildLot,
+  buildSession,
+} from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { mockLocation, resetLocation, router } from '@/test/router';
@@ -21,6 +27,7 @@ import { LotDetailScreen } from './lot-detail-screen';
 const ALL = [PERMISSIONS.LOTS_VIEW, PERMISSIONS.LOTS_DELETE];
 
 let deletes: string[];
+let userId: string;
 
 const serve = (lot: ReturnType<typeof buildLot>) =>
   server.use(
@@ -29,6 +36,7 @@ const serve = (lot: ReturnType<typeof buildLot>) =>
 
 beforeEach(() => {
   deletes = [];
+  userId = `lot-detail-${crypto.randomUUID()}`;
   vi.clearAllMocks();
   resetLocation();
   serve(buildLot());
@@ -41,13 +49,14 @@ afterEach(() => {
 function renderScreen(
   permissions: string[] = ALL,
   props: Partial<Parameters<typeof LotDetailScreen>[0]> = {},
+  lotId = 'l1',
 ) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
-    buildSession({ id: 'u1', permissions }),
+    buildSession({ id: userId, permissions }),
   );
-  renderWithProviders(<LotDetailScreen lotId="l1" {...props} />, {
+  renderWithProviders(<LotDetailScreen lotId={lotId} {...props} />, {
     queryClient,
   });
 }
@@ -204,6 +213,49 @@ describe('LotDetailScreen', () => {
       ),
     ).toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  // Sin conexión, un lote en fermentación se abre con la copia de la lista de Fermentación.
+  it('opens a lot in fermentation from the copy without a connection', async () => {
+    await getOfflineDb(userId).cache.put({
+      key: 'fermentation',
+      value: [buildFermentation()],
+      fetchedAt: 1_760_000_000_000,
+    });
+    server.use(http.get(apiUrl('/api/lots/l1'), () => HttpResponse.error()));
+    renderScreen(ALL, {
+      renderSections: (lot) => (
+        <section aria-label="Fermentación">
+          {lot.fermentation?.facility}
+        </section>
+      ),
+    });
+
+    expect(
+      await screen.findByRole('heading', { name: '000123-F02-P05-261014-1' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Sin conexión: estás viendo la copia del/),
+    ).toBeInTheDocument();
+    expect(screen.getByText('En fermentación')).toBeInTheDocument();
+    const origin = screen.getByRole('region', { name: 'Origen' });
+    expect(origin).toHaveTextContent('Lote del río');
+    expect(origin).toHaveTextContent('Productor—');
+    expect(screen.queryByText(/Conformado por/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Fermentación' }),
+    ).toHaveTextContent('C-01');
+  });
+
+  it('asks for a connection for a lot that is in no copy', async () => {
+    server.use(http.get(apiUrl('/api/lots/l9'), () => HttpResponse.error()));
+    renderScreen(ALL, {}, 'l9');
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Ver este lote necesita conexión.',
+      }),
+    ).toBeInTheDocument();
   });
 
   it('says when the lot no longer exists', async () => {
