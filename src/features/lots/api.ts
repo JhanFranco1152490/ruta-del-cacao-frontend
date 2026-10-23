@@ -10,6 +10,10 @@ import { isApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components, operations } from '@/lib/api/schema';
 import { apiPath } from '@/lib/api/path';
+import {
+  type CopiedProcess,
+  readWithPostharvestCopy,
+} from '@/lib/offline/postharvest-copies';
 
 type Schemas = components['schemas'];
 export type Lot = Schemas['Lot'];
@@ -91,11 +95,44 @@ export const useLotSummary = (query: LotSummaryQuery) =>
     placeholderData: keepPreviousData,
   });
 
-export const useLot = (id: string) =>
+// El lote como lo guarda la copia de una lista de poscosecha: con su origen y su proceso, pero sin
+// el código de socio del productor ni quién lo conformó y cuándo. Esos quedan vacíos y la ficha
+// sin conexión no los muestra.
+export function lotFromCopy({ process }: CopiedProcess): Lot {
+  const { lot } = process;
+  return {
+    id: lot.id,
+    code: lot.code,
+    status: lot.status,
+    harvest: lot.harvest,
+    producer: { id: lot.harvest.producer_id, member_code: '' },
+    green_weight_kg: lot.green_weight_kg,
+    created_by: null,
+    version: 0,
+    created_at: '',
+    updated_at: '',
+    fermentation: {
+      started_at: process.started_at,
+      ended_at: process.result?.ended_at ?? null,
+      facility: process.facility.name,
+    },
+  };
+}
+
+// La ficha de un lote se lee con conexión; sin ella, la de un lote que está en una copia de
+// poscosecha (en fermentación) se arma con esa copia.
+export const useLot = (id: string, userId: string | undefined) =>
   useQuery({
     queryKey: queryKeys.lots.detail(id),
-    queryFn: ({ signal }) => apiFetch<Lot>(`/api/lots/${id}`, { signal }),
-    enabled: !!id,
+    queryFn: ({ signal }) =>
+      readWithPostharvestCopy(
+        userId!,
+        id,
+        () => apiFetch<Lot>(`/api/lots/${id}`, { signal }),
+        lotFromCopy,
+      ),
+    enabled: !!id && !!userId,
+    networkMode: 'offlineFirst',
   });
 
 // La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP.

@@ -25,16 +25,17 @@ export function useTurnFermentation(lotId: string): TurnFermentation {
   const list = useFermentations(user?.id, null, { enabled: !superuser });
   const inList = list.data?.data.find((item) => item.lot.id === lotId);
   const listSettled = superuser || !list.isPending;
-  const detail = useFermentation(lotId, {
+  const detail = useFermentation(lotId, user?.id, {
     enabled: !!user && listSettled && !inList,
   });
 
   if (inList) return { kind: 'ready', fermentation: inList };
   if (!user || !listSettled) return { kind: 'loading' };
   if (detail.data) {
-    return detail.data.result
+    const fermentation = detail.data.data;
+    return fermentation.result
       ? { kind: 'finished' }
-      : { kind: 'ready', fermentation: detail.data };
+      : { kind: 'ready', fermentation };
   }
   if (isNeverLoaded(detail)) return { kind: 'unreachable' };
   if (detail.isError) {

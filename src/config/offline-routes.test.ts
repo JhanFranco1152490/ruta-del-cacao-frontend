@@ -51,9 +51,13 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/infraestructura');
   });
 
-  it('saves the fermentation work list and its field screen for the turns', () => {
+  it('saves the fermentation work list, its field screen and the lot detail', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toEqual(
-      expect.arrayContaining(['/fermentacion', '/fermentacion/volteo']),
+      expect.arrayContaining([
+        '/fermentacion',
+        '/fermentacion/volteo',
+        '/lotes/detalle',
+      ]),
     );
   });
 
