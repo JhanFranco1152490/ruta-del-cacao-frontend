@@ -8,9 +8,11 @@ export function SubmitButton({
   pending,
   children,
   pendingLabel = 'Procesando…',
+  disabled = false,
   className,
 }: {
   pending: boolean;
+  disabled?: boolean;
   children: ReactNode;
   pendingLabel?: string;
   className?: string;
@@ -18,7 +20,7 @@ export function SubmitButton({
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className={cn(
         'h-12 w-full gap-3 rounded-md px-5 text-base font-bold disabled:cursor-not-allowed disabled:opacity-70',
         FOCUS_OUTLINE_CLASS,

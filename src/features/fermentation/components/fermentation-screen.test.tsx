@@ -17,12 +17,13 @@ import {
 } from '@/test/factories';
 import {
   apiUrl,
+  csrfHandler,
   farmsHandler,
   fermentationsHandler,
   lotsHandler,
 } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
-import { resetLocation } from '@/test/router';
+import { resetLocation, router } from '@/test/router';
 import { server } from '@/test/server';
 
 vi.mock(
@@ -122,11 +123,17 @@ function renderScreen({
     queryKeys.session(),
     buildSession({ id: userId, is_superuser: superuser, permissions }),
   );
-  return renderWithProviders(<FermentationScreen lotHref={lotHref} />, {
-    queryClient,
-    searchParams,
-    onUrlUpdate,
-  });
+  return renderWithProviders(
+    <FermentationScreen
+      facilitiesHref={(farmId) => `/infraestructura?finca=${farmId}`}
+      lotHref={lotHref}
+    />,
+    {
+      queryClient,
+      searchParams,
+      onUrlUpdate,
+    },
+  );
 }
 
 const cards = async () =>
@@ -270,6 +277,58 @@ describe('FermentationScreen', () => {
     expect(lot).toHaveTextContent('F02 · La Esperanza');
     expect(lot).toHaveTextContent('186 kg en baba');
     expect(requests[0].get('status')).toBe('generated');
+  });
+
+  it('starts the fermentation of a ready lot and opens its detail', async () => {
+    server.use(
+      csrfHandler,
+      http.get(apiUrl('/api/fermentation/start-options'), () =>
+        HttpResponse.json({
+          facilities: [{ id: 'fc1', name: 'C-01', capacity_kg: '600.0' }],
+          responsibles: [
+            {
+              id: userId,
+              full_name: 'Quien registra',
+              is_active: true,
+              assignable: true,
+            },
+          ],
+          green_weight_kg: '186.0',
+          earliest_start_at: '2026-10-16T00:00:00-05:00',
+        }),
+      ),
+      http.post(apiUrl('/api/fermentation'), () =>
+        HttpResponse.json(buildFermentation(), { status: 201 }),
+      ),
+    );
+    renderScreen({
+      searchParams: '?vista=listos',
+      permissions: [...MANAGE, PERMISSIONS.FACILITIES_VIEW],
+    });
+
+    await userEvent.click(
+      await screen.findByRole('button', {
+        name: 'Iniciar fermentación de 000123-F02-P05-261016-1',
+      }),
+    );
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Iniciar fermentación · 000123-F02-P05-261016-1',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('186 kg en baba · F02 · La Esperanza'),
+    ).toBeInTheDocument();
+
+    await screen.findByLabelText('Fecha y hora de inicio');
+    await userEvent.click(screen.getByRole('button', { name: 'Iniciar' }));
+
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith('/lotes/detalle?id=l9'),
+    );
+    expect(
+      await screen.findByText('Fermentación iniciada'),
+    ).toBeInTheDocument();
   });
 
   it('says when no lot is ready to ferment', async () => {
