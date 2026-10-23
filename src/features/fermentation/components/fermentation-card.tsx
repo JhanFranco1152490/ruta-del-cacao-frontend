@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import { CalendarClock, TriangleAlert } from 'lucide-react';
+import { CalendarClock, RotateCw, TriangleAlert } from 'lucide-react';
 
 import { EditorLink } from '@/components/editor-link';
 import { buttonVariants } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { farmLabel } from '@/lib/format/place-label';
 
 import type { Fermentation } from '../api';
 import { cardFacts } from '../fermentation-list';
+import { turnPath } from '../fermentation-paths';
 import type { QueuedTurn } from '../turn-queue';
 
 // Un lote en fermentación: dónde está, cuánto lleva, su último volteo y cuándo toca el siguiente.
@@ -48,15 +49,24 @@ export function FermentationCard({
           {facts.next.text}
         </p>
       </div>
-      <EditorLink
-        className={cn(
-          buttonVariants({ variant: 'action', size: 'office' }),
-          'mt-auto self-start',
-        )}
-        href={lotHref(lot.id)}
-      >
-        Ver el lote
-      </EditorLink>
+      {/* Registrar volteo es lo principal: a lo ancho en el celular, junto al cajón. */}
+      <div className="mt-auto flex flex-wrap gap-2">
+        <EditorLink
+          className={cn(buttonVariants({ size: 'office' }), 'max-sm:w-full')}
+          href={turnPath(lot.id)}
+        >
+          <RotateCw aria-hidden="true" className="size-4" /> Registrar volteo
+        </EditorLink>
+        <EditorLink
+          className={cn(
+            buttonVariants({ variant: 'action', size: 'office' }),
+            'max-sm:w-full',
+          )}
+          href={lotHref(lot.id)}
+        >
+          Ver el lote
+        </EditorLink>
+      </div>
     </li>
   );
 }
