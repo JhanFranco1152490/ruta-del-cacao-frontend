@@ -19,12 +19,9 @@ import {
   finishedMessage,
   toFinishRequest,
 } from '../finish-form';
-import { hoursBetween } from '../fermentation-time';
+import { hoursBetween, turnsText } from '../fermentation-time';
 import { NOTES_MAX_LENGTH } from '../turn-form';
 import { lastTurnedAt } from '../turn-rules';
-
-const turnsText = (count: number) =>
-  count === 1 ? '1 volteo' : `${count} volteos`;
 
 // Finalizar la fermentación de un lote: libera el cajón y deja el lote listo para el secado. Solo
 // se abre con al menos un volteo, sin volteos en la cola y con conexión; quien lo abre lo decide

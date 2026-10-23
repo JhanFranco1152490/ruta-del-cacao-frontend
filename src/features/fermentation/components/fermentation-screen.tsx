@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { LoadingBlock } from '@/components/loading-block';
+import { OfflineCopyNotice } from '@/components/offline-copy-notice';
 import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
@@ -28,7 +29,6 @@ import {
   useFermentationFilters,
 } from '../use-fermentation-filters';
 import { useQueuedTurns } from '../use-turn-queue';
-import { FermentationOfflineNotice } from './fermentation-offline-notice';
 import { FermentationSummary } from './fermentation-summary';
 import { InProgressTab } from './in-progress-tab';
 import { ReadyLotsTab } from './ready-lots-tab';
@@ -180,7 +180,10 @@ export function FermentationScreen({
         />
       )}
       {read.isSuccess && offline && (
-        <FermentationOfflineNotice savedAt={read.data.savedAt} />
+        <OfflineCopyNotice
+          consequence="Iniciar o finalizar una fermentación necesita conexión."
+          savedAt={read.data.savedAt}
+        />
       )}
       {body()}
       {starting && (

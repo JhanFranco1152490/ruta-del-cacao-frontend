@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { durationText, hoursBetween, hoursText } from './fermentation-time';
+import {
+  durationText,
+  hoursBetween,
+  hoursText,
+  minuteOf,
+  turnsText,
+} from './fermentation-time';
 
 describe('hoursBetween', () => {
   it('counts the hours between two moments', () => {
@@ -44,5 +50,23 @@ describe('durationText', () => {
 
   it('rounds to the nearest hour', () => {
     expect(durationText(121.6)).toBe('5 días y 2 h');
+  });
+});
+
+describe('minuteOf', () => {
+  it('is the same for two moments of the same minute, whatever their offset', () => {
+    expect(minuteOf('2026-10-17T08:00:59-05:00')).toBe(
+      minuteOf(new Date('2026-10-17T13:00:00Z')),
+    );
+    expect(minuteOf('2026-10-17T08:01:00-05:00')).toBe(
+      minuteOf('2026-10-17T08:00:00-05:00') + 1,
+    );
+  });
+});
+
+describe('turnsText', () => {
+  it('counts the turns in singular and plural', () => {
+    expect(turnsText(1)).toBe('1 volteo');
+    expect(turnsText(3)).toBe('3 volteos');
   });
 });

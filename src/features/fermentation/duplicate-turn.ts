@@ -1,10 +1,7 @@
 import { formatTime } from '@/lib/format/dates';
 
+import { minuteOf } from './fermentation-time';
 import type { TimedTurn } from './turn-rules';
-
-const MINUTE_MS = 60 * 1000;
-const minuteOf = (isoDateTime: string) =>
-  Math.floor(new Date(isoDateTime).getTime() / MINUTE_MS);
 
 // El servidor guarda la hora de un volteo sin segundos y no acepta dos en el mismo minuto: así el
 // mismo volteo registrado desde dos teléfonos no cuenta dos veces. Aquí se avisa antes de guardar

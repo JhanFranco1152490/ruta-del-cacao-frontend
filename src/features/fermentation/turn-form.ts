@@ -9,6 +9,8 @@ import {
 } from '@/lib/validation/decimal';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
+import { minuteOf } from './fermentation-time';
+
 type Schemas = components['schemas'];
 
 // Los mismos topes y decimales que guarda el servidor. Una masa en fermentación anda entre 25 y
@@ -39,13 +41,9 @@ export type TurnFormInput = {
 // Los decimales con punto («45.5»), como los espera la API.
 export type TurnFormValues = TurnFormInput;
 
-const MINUTE_MS = 60 * 1000;
-
 // Lo que entrega un campo de fecha y hora completo; vacío o a medias no es una hora.
 export const isLocalDateTime = (value: string) =>
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
-
-const minuteOf = (date: Date) => Math.floor(date.getTime() / MINUTE_MS);
 
 const temperatureField = decimalText().superRefine((text, context) => {
   const issue = (message: string) =>
@@ -84,8 +82,8 @@ export function createTurnFormSchema({
       const issue = (message: string) =>
         context.addIssue({ code: 'custom', message });
       if (!isLocalDateTime(local)) return issue(REQUIRED_FIELD_MESSAGE);
-      const minute = minuteOf(new Date(fromBogotaLocal(local)));
-      if (minute < minuteOf(new Date(startedAt))) {
+      const minute = minuteOf(fromBogotaLocal(local));
+      if (minute < minuteOf(startedAt)) {
         return issue(BEFORE_START_MESSAGE);
       }
       if (minute > minuteOf(now())) issue(FUTURE_MOMENT_MESSAGE);
