@@ -3,6 +3,7 @@ import { DryingShed } from '@/components/illustrations/drying-shed';
 import { Button } from '@/components/ui/button';
 
 import type { Fermentation } from '../api';
+import type { QueuedTurn } from '../turn-queue';
 import { FermentationCard } from './fermentation-card';
 
 // La pestaña En fermentación, ya filtrada por finca, del lote que empezó primero al más reciente.
@@ -10,6 +11,7 @@ export function InProgressTab({
   fermentations,
   farmName,
   now,
+  queued,
   lotHref,
   onClear,
   onShowReady,
@@ -18,6 +20,7 @@ export function InProgressTab({
   // La finca del filtro, si hay una puesta.
   farmName: string | null;
   now: Date;
+  queued: readonly QueuedTurn[];
   lotHref: (id: string) => string;
   onClear: () => void;
   // Lleva a los lotes listos; falta si no hay ninguno o la cuenta no puede iniciar.
@@ -62,6 +65,7 @@ export function InProgressTab({
           key={fermentation.lot.id}
           lotHref={lotHref}
           now={now}
+          queued={queued}
         />
       ))}
     </ul>

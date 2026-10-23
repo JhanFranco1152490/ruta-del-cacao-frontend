@@ -8,6 +8,7 @@ import { formatDecimal } from '@/lib/format/decimal';
 import type { Fermentation, ReadyLot } from './api';
 import { hoursBetween } from './fermentation-time';
 import { isTurnOverdue, nextTurnDueAt } from './next-turn';
+import { pendingTurnsOf, type QueuedTurn } from './turn-queue';
 import { lastTurnedAt, numberTurns } from './turn-rules';
 
 export const fermentationsOfFarm = (
@@ -21,15 +22,39 @@ export const readyLotsOfFarm = (
   farm: string | null,
 ) => (farm ? lots.filter((lot) => lot.harvest.plot.farm.id === farm) : lots);
 
+// Un volteo como se muestra: los del servidor y los que esperan en la cola del teléfono, juntos.
+type ShownTurn = {
+  id: string;
+  turned_at: string;
+  temperature_c: string;
+  ph: string;
+  pending: boolean;
+};
+
+const shownTurns = (
+  fermentation: Fermentation,
+  queued: readonly QueuedTurn[],
+): ShownTurn[] => [
+  ...fermentation.turns.map((turn) => ({ ...turn, pending: false })),
+  ...pendingTurnsOf(queued, fermentation.lot.id).map(({ request }) => ({
+    ...request,
+    pending: true,
+  })),
+];
+
 // El próximo volteo se calcula aquí y no se toma de la copia: la copia puede ser de ayer, y los
 // volteos que esperan en la cola del teléfono también cuentan.
-const dueAt = (fermentation: Fermentation) =>
-  nextTurnDueAt(fermentation.started_at, lastTurnedAt(fermentation.turns));
+const dueAt = (fermentation: Fermentation, turns: readonly ShownTurn[]) =>
+  nextTurnDueAt(fermentation.started_at, lastTurnedAt(turns));
 
 export const countOverdue = (
   fermentations: readonly Fermentation[],
   now: Date,
-) => fermentations.filter((item) => isTurnOverdue(dueAt(item), now)).length;
+  queued: readonly QueuedTurn[] = [],
+) =>
+  fermentations.filter((item) =>
+    isTurnOverdue(dueAt(item, shownTurns(item, queued)), now),
+  ).length;
 
 const turnsText = (count: number) =>
   count === 1 ? '1 volteo' : `${count} volteos`;
@@ -53,11 +78,17 @@ function nextTurnText(due: string, now: Date) {
 
 // Lo que dice la tarjeta de un lote en fermentación: «52 h de fermentación · 2 volteos», el
 // último volteo y el próximo. Las horas se cuentan con el reloj del dispositivo, en horas enteras.
-export function cardFacts(fermentation: Fermentation, now: Date) {
+// Los volteos que esperan en la cola cuentan con el número que tendrían.
+export function cardFacts(
+  fermentation: Fermentation,
+  now: Date,
+  queued: readonly QueuedTurn[] = [],
+) {
   const hours = Math.floor(
     hoursBetween(fermentation.started_at, now.toISOString()),
   );
-  const numbered = numberTurns(fermentation.turns);
+  const turns = shownTurns(fermentation, queued);
+  const numbered = numberTurns(turns);
   const last = numbered.at(-1);
   return {
     elapsed:
@@ -70,8 +101,9 @@ export function cardFacts(fermentation: Fermentation, now: Date) {
           `${formatDecimal(last.turn.temperature_c, 1)} °C`,
           `pH ${formatDecimal(last.turn.ph, 2)}`,
           formatShortDateTime(last.turn.turned_at),
+          ...(last.turn.pending ? ['Pendiente de enviar'] : []),
         ].join(' · ')
       : null,
-    next: nextTurnText(dueAt(fermentation), now),
+    next: nextTurnText(dueAt(fermentation, turns), now),
   };
 }

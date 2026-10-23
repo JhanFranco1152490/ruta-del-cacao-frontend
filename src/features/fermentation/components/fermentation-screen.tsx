@@ -28,6 +28,7 @@ import {
   type FermentationView,
   useFermentationFilters,
 } from '../use-fermentation-filters';
+import { useQueuedTurns } from '../use-turn-queue';
 import { FermentationOfflineNotice } from './fermentation-offline-notice';
 import { FermentationSummary } from './fermentation-summary';
 import { InProgressTab } from './in-progress-tab';
@@ -66,6 +67,7 @@ export function FermentationScreen({
     enabled: !needsProducer,
   });
   const selectedProducer = useProducerSummary(producer ?? undefined);
+  const queued = useQueuedTurns(user?.id);
 
   const farmOptions = (farms.data?.data.options ?? []).map((farm) => ({
     id: farm.id,
@@ -125,6 +127,7 @@ export function FermentationScreen({
         lotHref={lotHref}
         now={now}
         onClear={state.clear}
+        queued={queued}
         onShowReady={
           readyShown?.length ? () => void state.setView('listos') : undefined
         }
@@ -153,7 +156,7 @@ export function FermentationScreen({
       {read.data && (
         <FermentationSummary
           inProgress={shown.length}
-          overdue={countOverdue(shown, now)}
+          overdue={countOverdue(shown, now, queued)}
           ready={readyShown?.length}
         />
       )}
