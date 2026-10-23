@@ -51,6 +51,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/infraestructura');
   });
 
+  it('saves the fermentation work list, read from the device copy', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/fermentacion');
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });
