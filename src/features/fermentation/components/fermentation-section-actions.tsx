@@ -10,9 +10,8 @@ import { notify } from '@/lib/notify';
 
 import type { Fermentation } from '../api';
 import { turnPath } from '../fermentation-paths';
-import { finishBlockedReason } from '../finish-form';
 import { pendingTurnsOf, type QueuedTurn } from '../turn-queue';
-import { FinishFermentationDialog } from './finish-fermentation-dialog';
+import { FinishFermentationButton } from './finish-fermentation-button';
 import {
   StartFermentationDialog,
   type StartLot,
@@ -38,10 +37,9 @@ export function FermentationSectionActions({
   online: boolean;
   facilitiesHref?: string;
 }) {
-  const [open, setOpen] = useState<'correct' | 'finish'>();
+  const [correcting, setCorrecting] = useState(false);
   const queuedCount = pendingTurnsOf(queued, lot.id).length;
   const turnCount = fermentation.turns.length;
-  const blocked = finishBlockedReason({ turnCount, queuedCount, online });
   const canCorrectStart = turnCount + queuedCount === 0;
 
   return (
@@ -58,7 +56,7 @@ export function FermentationSectionActions({
         {canManage && canCorrectStart && (
           <Button
             disabled={!online}
-            onClick={() => setOpen('correct')}
+            onClick={() => setCorrecting(true)}
             size="office"
             variant="action"
           >
@@ -66,41 +64,23 @@ export function FermentationSectionActions({
           </Button>
         )}
         {canManage && (
-          <Button
-            aria-describedby={blocked ? 'finish-blocked' : undefined}
-            disabled={!!blocked}
-            onClick={() => setOpen('finish')}
-            size="office"
-            variant="action"
-          >
-            Finalizar fermentación
-          </Button>
+          <FinishFermentationButton
+            className="max-sm:basis-full"
+            fermentation={fermentation}
+            online={online}
+            queued={queued}
+          />
         )}
       </div>
-      {canManage && blocked && (
-        <p className="text-sm font-bold text-warn" id="finish-blocked">
-          {blocked}
-        </p>
-      )}
-      {open === 'correct' && (
+      {correcting && (
         <StartFermentationDialog
           facilitiesHref={facilitiesHref}
           fermentation={fermentation}
           lot={lot}
-          onClose={() => setOpen(undefined)}
+          onClose={() => setCorrecting(false)}
           onSaved={() => {
-            setOpen(undefined);
+            setCorrecting(false);
             notify.success('Inicio corregido');
-          }}
-        />
-      )}
-      {open === 'finish' && (
-        <FinishFermentationDialog
-          fermentation={fermentation}
-          onClose={() => setOpen(undefined)}
-          onSaved={(message) => {
-            setOpen(undefined);
-            notify.success(message);
           }}
         />
       )}

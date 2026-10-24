@@ -15,6 +15,8 @@ export function InProgressTab({
   lotHref,
   onClear,
   onShowReady,
+  canManage,
+  online,
 }: {
   fermentations: readonly Fermentation[];
   // La finca del filtro, si hay una puesta.
@@ -25,6 +27,8 @@ export function InProgressTab({
   onClear: () => void;
   // Lleva a los lotes listos; falta si no hay ninguno o la cuenta no puede iniciar.
   onShowReady?: () => void;
+  canManage: boolean;
+  online: boolean;
 }) {
   if (fermentations.length === 0 && farmName) {
     return (
@@ -61,10 +65,12 @@ export function InProgressTab({
     >
       {fermentations.map((fermentation) => (
         <FermentationCard
+          canManage={canManage}
           fermentation={fermentation}
           key={fermentation.lot.id}
           lotHref={lotHref}
           now={now}
+          online={online}
           queued={queued}
         />
       ))}

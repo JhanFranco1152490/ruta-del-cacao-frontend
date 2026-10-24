@@ -22,7 +22,7 @@ export function FermentationSummary({
   ready: number | undefined;
 }) {
   return (
-    <SummaryStrip label="Resumen de fermentación">
+    <SummaryStrip compact label="Resumen de fermentación">
       <SummaryValue title="En fermentación" value={String(inProgress)} />
       <SummaryValue title="Volteo pendiente" value={String(overdue)} />
       <SummaryValue

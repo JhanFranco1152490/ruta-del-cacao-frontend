@@ -159,11 +159,13 @@ describe('FermentationScreen', () => {
     expect(second).toHaveTextContent('F03 · El Diviso · C-02');
     expect(second).toHaveTextContent('48 h de fermentación · 1 volteo');
     expect(second).toHaveTextContent(
-      'Volteo 1 · 46 °C · pH 4,85 · 17 oct. 08:30',
+      'Volteo 1 · 46,0 °C · pH 4,85 · 17 oct. 08:30',
     );
     expect(second).toHaveTextContent('Próximo volteo: 18 oct. 08:30');
     expect(
-      within(first).getByRole('link', { name: 'Ver el lote' }),
+      within(first).getByRole('link', {
+        name: 'Ver el lote 000123-F02-P05-261014-1',
+      }),
     ).toHaveAttribute(
       'href',
       expect.stringMatching(/^\/lotes\/detalle\?id=l1/),
@@ -174,6 +176,33 @@ describe('FermentationScreen', () => {
       'href',
       expect.stringMatching(/^\/fermentacion\/volteo\?lote=l1&origen=/),
     );
+  });
+
+  it('finishes a lot from its card, and says why it cannot yet', async () => {
+    renderScreen();
+
+    const [first, second] = await cards();
+    expect(
+      within(first).getByRole('button', { name: 'Finalizar fermentación' }),
+    ).toBeDisabled();
+    expect(
+      within(first).getByText('Registre al menos un volteo para finalizar'),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      within(second).getByRole('button', { name: 'Finalizar fermentación' }),
+    );
+    expect(
+      await screen.findByRole('dialog', { name: /Finalizar fermentación/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not offer to finish to whom only records turns', async () => {
+    renderScreen({ permissions: [PERMISSIONS.FERMENTATION_LOG_TURNS] });
+
+    const [first] = await cards();
+    expect(
+      within(first).queryByRole('button', { name: 'Finalizar fermentación' }),
+    ).not.toBeInTheDocument();
   });
 
   it('sums up the lots in fermentation, the overdue turns and the lots ready', async () => {

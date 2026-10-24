@@ -65,11 +65,13 @@ export function FermentationBody({
   }
   return (
     <InProgressTab
+      canManage={screen.canManage}
       farmName={screen.farm.name}
       fermentations={screen.shown}
       lotHref={lotHref}
       now={now}
       onClear={filters.clear}
+      online={!screen.offline}
       queued={screen.queued}
       onShowReady={
         readyShown?.length ? () => void filters.setView('listos') : undefined
