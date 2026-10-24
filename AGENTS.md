@@ -170,8 +170,9 @@ src/
   con el código que el servidor dio a lo creado en el dispositivo (`assigned-code-notice.ts`,
   `hooks/use-notify-assigned-codes.ts`, que escucha `assignedCode` de cada adapter: finca, parcela y
   lote); las fichas de varias parcelas (`lib/api/plot-characterizations.ts`) y el catálogo de
-  variedades (`lib/api/cacao-varieties.ts`); los estados del lote y cómo se lee su código
-  (`lib/lot-status.ts`, `lib/format/lot-code.ts`); y los ids de la cola que otro dominio necesita
+  variedades (`lib/api/cacao-varieties.ts`); los estados del lote y su código partido en pedazos con su nombre
+  (`lib/lot-status.ts`, `lib/format/lot-code.ts`) y lo que se hace con un lote en cada etapa
+  (`lib/lot-actions.ts`: el tipo `LotAction`); y los ids de la cola que otro dominio necesita
   como padre (`lib/offline/queue-ids.ts`: la ficha y la cosecha). Desde fermentación: los campos de
   fecha y hora (`toBogotaLocal`, `fromBogotaLocal`, `formatTime` y `formatShortDateTime` en
   `lib/format/dates.ts`: un `datetime-local` guarda `yyyy-MM-ddTHH:mm` en la hora de Bogotá) y la
@@ -235,8 +236,17 @@ src/
   el lote con esa copia (`lotFromCopy`), con su aviso. La copia no guarda el código de socio ni quién
   conformó el lote: el origen dice **Productor —** y no se muestra **Conformado por…**. Esa función es
   la única que busca en las copias de poscosecha: el secado suma la suya en `COPIES`. La ficha no
-  importa de los procesos: recibe sus secciones con `renderSections(lot)`, que pinta después del
-  origen y que la página (`lot-detail-from-query.tsx`) llena en el orden del proceso. **Conformar** también
+  importa de los procesos: recibe sus secciones con `renderSections(lot)`, que pinta junto al
+  origen (a su derecha en pantallas anchas, antes que él en celular, donde lo que se viene a hacer
+  es la etapa) y que la página (`lot-detail-from-query.tsx`) llena en el orden del proceso. La ficha
+  es ancha (`wide`) porque las etapas traen tablas: encabezado `bosque` con el código en pedazos
+  (`LotCodeSegments`, dentro del título con `titleVisual`), franja de cifras, indicador de etapas
+  (`lot-stages.ts`) y el origen en una `SectionCard`. **El «⋯» de cada fila de la lista** ofrece las
+  acciones de la etapa del lote: cada módulo del proceso exporta las suyas (`lot-actions.ts`, p. ej.
+  `fermentationLotActions`) y la página (`app/(app)/lotes/lot-list.tsx`) las junta; cada opción es
+  un enlace a la pantalla donde se hace, nunca un formulario dentro de Lotes. Registrar un volteo va
+  directo a su pantalla de campo; iniciar y finalizar abren su formulario al llegar a Fermentación
+  (`?iniciar=` y `?finalizar=`). Al sumar el secado se agregan sus acciones ahí. **Conformar** también
   funciona sin conexión: el lote nace en el dispositivo con su `id` (`form-lot-dialog.tsx` lo genera
   una vez por diálogo) y pasa por la cola (`lot-queue.ts`, `sync-adapter.ts`) con la cosecha como
   padre (`harvestQueueId`, en `lib/offline/queue-ids.ts` porque un dominio no importa de otro). El

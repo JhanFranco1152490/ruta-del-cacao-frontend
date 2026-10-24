@@ -163,7 +163,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `SummaryStrip` / `SummaryItem` | Los totales de arriba de una lista: una franja blanca con una línea entre uno y otro (apilados en celular; con `compact`, en una sola fila también ahí, para tres cifras cortas) | Cosechas, Lotes, Infraestructura |
 | `DetailHero` / `HeroChip` | El banner de una pantalla: tono `selva`, `bosque` o `claro`, categoría, título, marca opcional, chips y acciones. Lo dibuja `PageHeader` cuando recibe `tone` | Listas y detalles |
 | `StatStrip` / `StatCell` | Las cifras de un detalle: franja blanca de celdas pegadas, con ícono en el tinte del acento y una barra opcional | Ficha del productor, detalle de finca |
-| `SectionCard` / `KeyValues` | Sección con filete del acento, título y contador; datos en dos niveles | Detalles, Sanidad |
+| `SectionCard` / `KeyValues` | Sección con filete del acento, título y contador; datos en dos niveles (`single`: una columna, para una tarjeta angosta) | Detalles, Sanidad |
 | `SectionLabel` | Etiqueta cobre en versalitas | Todas |
 | `MapFrame` | El recuadro del mapa con sus controles encima, arriba a la derecha (mapa base, ocultar, ir a la finca, ir a mi ubicación), una leyenda opcional abajo a la izquierda y la franja «Mapa oculto» cuando se oculta. Los cuatro paneles de mapa lo usan | Todos los mapas |
 | `MapPanel` | Mapa con controles propios, capas, escala y lectura de coordenadas | Finca, parcela |
@@ -271,11 +271,13 @@ a una app que se usa en celulares modestos y sin conexión. Las utilidades está
   `DetailHero`), con su tono según la pantalla:
   - **`selva`** (verde muy oscuro) en las pantallas de trabajo diario: Actividades, Sanidad,
     Cosechas, Lotes, Infraestructura, Insumos, Fincas y Parcelas;
-  - **`bosque`** (`--selva-2`) en los detalles del campo: finca, cosecha, lote, historial de la ficha;
+  - **`bosque`** (degradado de `--selva` a `--selva-barra`, el verde de la barra lateral) en los
+    detalles del campo: finca, cosecha, lote, historial de la ficha. Antes era un verde medio liso
+    (`--selva-2`), más claro y saturado que la barra que queda pegada a él, y se veía plano;
   - **`claro`** (blanco con un filete del acento del módulo a la izquierda) en administración y
     catálogos: Productores y su ficha, Usuarios, Roles, Variedades, Plagas.
-  Sobre los oscuros el texto va en blanco (13:1 en selva, 7.9:1 en bosque) y la categoría en un
-  dorado claro (`#e8c873`, 8.1:1 y 4.8:1): el `--oro` no alcanza en bosque. Los botones del banner se
+  Sobre los oscuros el texto va en blanco (13:1 en selva, 9,9:1 en el extremo más claro de bosque) y
+  la categoría en un dorado claro (`--oro-claro`, 8,1:1 y 6,1:1): el `--oro` no alcanza en bosque. Los botones del banner se
   adaptan solos por su variante (el principal a blanco, los de contorno a contorno claro, los que
   piden confirmación a fondo sólido). Los **formularios no llevan banner**: conservan el título con
   el subrayado `--cobre` de 48 × 4 px, porque ahí la atención va a los campos. Un detalle con un
@@ -294,6 +296,18 @@ a una app que se usa en celulares modestos y sin conexión. Las utilidades está
   plaga); la tarjeta única de una lista no lo lleva, porque ya va bajo un banner de color.
 - **Datos de un registro** (`KeyValues` / `KeyValue`): la etiqueta pequeña y tenue, el valor firme;
   nunca los dos en negrita.
+- **Ancho de un detalle:** `narrow` (896 px) si es una columna de datos (cosecha, historial de la
+  ficha); `wide` si lleva una tabla, un mapa o columnas (finca, lote, productor).
+- **Una tabla cabe sin desplazarse de lado** a 1280 px dentro de su contenedor, y a 390 px pasa a
+  tarjetas. Hasta unas 6 columnas: lo que va junto se une en una celda con segunda línea (la fecha
+  con las horas desde el inicio) y las acciones de una fila son botones de solo icono con
+  `aria-label`. Si aun así no cabe, la pantalla pasa a `wide` o se quita una columna; el
+  desplazamiento horizontal no es una solución, porque deja las acciones fuera de la vista.
+- **El código de un lote** se muestra partido en sus pedazos, cada uno con su nombre y lo que dice
+  hoy (`LotCodeSegments`): productor, finca, parcela, cosecha y consecutivo. Reemplaza al párrafo
+  «Cómo se lee este código». El título sigue diciendo el código completo al lector de pantalla.
+- **Las etapas de un lote** (`LotStages`): cinco tramos con el actual resaltado; en celular, una
+  línea «Etapa 2 de 5». Un lote solo avanza, así que lo hecho se marca con un visto.
 - **Filtros de una lista:** todos blancos y de 40 px con texto de 14 px (`FILTER_CONTROLS_CLASS`), en
   este orden: el filtro principal (el que queda a la vista en celular), el productor, el lugar
   (finca, parcela o municipio), los atributos (tipo, rol, plaga, responsable), el estado, el periodo
