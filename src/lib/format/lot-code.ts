@@ -38,28 +38,50 @@ const ORDINALS = [
   'Décimo',
 ];
 
-// En la lectura el nombre va tras una coma: el punto medio ya separa las partes del código.
-const codeAndName = (code: string, name?: string | null) =>
-  [code, name?.trim()].filter(Boolean).join(', ');
-
 const sequenceText = (sequence: number) =>
   sequence <= ORDINALS.length
     ? `${ORDINALS[sequence - 1]} lote de ese día`
     : `Lote ${sequence} de ese día`;
 
-// «Cómo se lee este código»: cada parte del código con el nombre que tiene hoy la finca y la
-// parcela. El código no cambia aunque cambien los nombres; la lectura sí los muestra al día.
-export function readLotCode(
+export type LotCodeSegment = {
+  value: string;
+  label: string;
+  // Lo que ese pedazo del código dice hoy: el nombre de la finca, la fecha completa…
+  note: string;
+};
+
+// El código partido en sus pedazos, cada uno con su nombre y lo que significa: así se lee de un
+// vistazo y no hace falta un párrafo que lo explique. El código no cambia aunque cambien los
+// nombres de la finca y la parcela; la nota sí los muestra al día.
+export function lotCodeSegments(
   code: string,
   names: { farmName?: string | null; plotName?: string | null } = {},
-): string | null {
+): LotCodeSegment[] | null {
   const parts = parseLotCode(code);
   if (!parts) return null;
+  const [producer] = code.split('-');
+  const [, , , dateSegment] = code.split('-');
   return [
-    `Productor ${parts.producer}`,
-    `Finca ${codeAndName(parts.farmCode, names.farmName)}`,
-    `Parcela ${codeAndName(parts.plotCode, names.plotName)}`,
-    `Cosecha del ${formatLongDate(parts.harvestDate)}`,
-    sequenceText(parts.sequence),
-  ].join(' · ');
+    { value: producer, label: 'Productor', note: parts.producer },
+    {
+      value: parts.farmCode,
+      label: 'Finca',
+      note: names.farmName?.trim() || parts.farmCode,
+    },
+    {
+      value: parts.plotCode,
+      label: 'Parcela',
+      note: names.plotName?.trim() || parts.plotCode,
+    },
+    {
+      value: dateSegment,
+      label: 'Cosecha',
+      note: formatLongDate(parts.harvestDate),
+    },
+    {
+      value: String(parts.sequence),
+      label: 'Consecutivo',
+      note: sequenceText(parts.sequence),
+    },
+  ];
 }
