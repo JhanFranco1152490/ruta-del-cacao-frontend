@@ -1,5 +1,5 @@
 import { EmptyState } from '@/components/empty-state';
-import { DryingShed } from '@/components/illustrations/drying-shed';
+import { FermentationBox } from '@/components/illustrations/fermentation-box';
 import { Button } from '@/components/ui/button';
 
 import type { Fermentation } from '../api';
@@ -34,7 +34,7 @@ export function InProgressTab({
             Limpiar filtros
           </Button>
         }
-        illustration={DryingShed}
+        illustration={FermentationBox}
         title={`Ningún lote en fermentación en ${farmName}.`}
       />
     );
@@ -49,7 +49,7 @@ export function InProgressTab({
             </Button>
           )
         }
-        illustration={DryingShed}
+        illustration={FermentationBox}
         title="No hay lotes en fermentación."
       />
     );

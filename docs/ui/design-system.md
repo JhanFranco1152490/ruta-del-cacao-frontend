@@ -206,6 +206,7 @@ poscosecha cobre, calidad azul). Nunca emojis.
   | `HarvestBasket` (canasto de mazorcas) | Cosechas |
   | `BeanSack` (costal de grano) | Lotes |
   | `DryingShed` (cajón y marquesina) | Infraestructura |
+  | `FermentationBox` (cajón con la masa, vapor y termómetro) | Fermentación |
   | `InputSupplies` (abono y aspersora) | Insumos |
   | `PodVarieties` (tres mazorcas) | Variedades |
   | `FarmerHat` (sombrero con rama) | Productores, usuarios y roles |

@@ -2,7 +2,7 @@ import { Thermometer } from 'lucide-react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { DryingShed } from '@/components/illustrations/drying-shed';
+import { FermentationBox } from '@/components/illustrations/fermentation-box';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { LoadingBlock } from '@/components/loading-block';
 import { Button } from '@/components/ui/button';
@@ -59,12 +59,12 @@ export function ReadyLotsTab({
             Limpiar filtros
           </Button>
         }
-        illustration={DryingShed}
+        illustration={FermentationBox}
         title={`Ningún lote listo para fermentar en ${farmName}.`}
       />
     ) : (
       <EmptyState
-        illustration={DryingShed}
+        illustration={FermentationBox}
         title="No hay lotes listos para fermentar."
       />
     );
