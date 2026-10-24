@@ -152,11 +152,11 @@ describe('FermentationSection', () => {
       .slice(1);
     expect(rows[0]).toHaveTextContent('Volteo 1');
     expect(rows[0]).toHaveTextContent('17 oct. 07:30');
-    expect(rows[0]).toHaveTextContent('48,5 h');
-    expect(rows[0]).toHaveTextContent('45 °C');
-    expect(rows[0]).toHaveTextContent('4,9');
+    expect(rows[0]).toHaveTextContent('48,5 h desde el inicio');
+    expect(rows[0]).toHaveTextContent('45,0 °C');
+    expect(rows[0]).toHaveTextContent('4,90');
     expect(rows[0]).toHaveTextContent('Masa caliente');
-    expect(rows[0]).toHaveTextContent('Cuenta de prueba');
+    expect(rows[0]).toHaveTextContent('Registró Cuenta de prueba');
     expect(
       within(rows[0]).getByRole('link', { name: 'Corregir el volteo 1' }),
     ).toHaveAttribute(

@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -23,6 +24,7 @@ export function TurnDeleteDialog({
   number,
   isOnly,
   disabled,
+  className,
 }: {
   lotId: string;
   turn: FermentationTurn;
@@ -30,6 +32,8 @@ export function TurnDeleteDialog({
   // Es el único: sin él la fermentación no se puede finalizar.
   isOnly: boolean;
   disabled: boolean;
+  // El tamaño del botón lo decide quien lo pone: en la tabla es de solo icono en escritorio.
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const remove = useDeleteTurn(lotId);
@@ -57,13 +61,14 @@ export function TurnDeleteDialog({
     <>
       <Button
         aria-label={`Eliminar el volteo ${number}`}
-        className="h-10"
+        className={cn('h-10', className)}
         disabled={disabled}
         onClick={() => setOpen(true)}
         size="office"
         variant="outline"
       >
-        <Trash2 aria-hidden="true" className="size-4" /> Eliminar
+        <Trash2 aria-hidden="true" className="size-4" />
+        <span className={className ? 'md:sr-only' : undefined}>Eliminar</span>
       </Button>
       <StatusChangeDialog action={action} {...dialog} />
     </>
