@@ -10,6 +10,7 @@ import { ProducerFilter } from '@/components/producer-filter';
 import type { ReadyLot } from '../api';
 import { countOverdue } from '../fermentation-list';
 import { useFermentationScreen } from '../use-fermentation-screen';
+import { useStartFromLink } from '../use-start-from-link';
 import { FermentationBody } from './fermentation-body';
 import { FermentationSummary } from './fermentation-summary';
 import { FermentationToolbar } from './fermentation-toolbar';
@@ -29,6 +30,12 @@ export function FermentationScreen({
   const screen = useFermentationScreen();
   const { filters, read } = screen;
   const now = new Date();
+  useStartFromLink({
+    lotId: filters.startLotId,
+    readyLots: screen.ready.data,
+    onFound: setStarting,
+    onDone: filters.clearStart,
+  });
 
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>

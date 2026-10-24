@@ -17,6 +17,8 @@ export function InProgressTab({
   onShowReady,
   canManage,
   online,
+  finishLotId,
+  onFinishHandled,
 }: {
   fermentations: readonly Fermentation[];
   // La finca del filtro, si hay una puesta.
@@ -29,6 +31,9 @@ export function InProgressTab({
   onShowReady?: () => void;
   canManage: boolean;
   online: boolean;
+  // El lote cuyo formulario de finalizar se abre al llegar desde Lotes.
+  finishLotId: string | null;
+  onFinishHandled: () => void;
 }) {
   if (fermentations.length === 0 && farmName) {
     return (
@@ -65,11 +70,13 @@ export function InProgressTab({
     >
       {fermentations.map((fermentation) => (
         <FermentationCard
+          autoFinish={finishLotId === fermentation.lot.id}
           canManage={canManage}
           fermentation={fermentation}
           key={fermentation.lot.id}
           lotHref={lotHref}
           now={now}
+          onAutoFinished={onFinishHandled}
           online={online}
           queued={queued}
         />

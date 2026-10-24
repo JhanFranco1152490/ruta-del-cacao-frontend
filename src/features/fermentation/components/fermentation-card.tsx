@@ -21,6 +21,8 @@ export function FermentationCard({
   lotHref,
   canManage,
   online,
+  autoFinish = false,
+  onAutoFinished,
 }: {
   fermentation: Fermentation;
   now: Date;
@@ -30,6 +32,9 @@ export function FermentationCard({
   // Finalizar es de quien responde por la fermentación y necesita conexión: libera el cajón.
   canManage: boolean;
   online: boolean;
+  // Se llegó con el enlace «Finalizar fermentación» de Lotes para este lote.
+  autoFinish?: boolean;
+  onAutoFinished?: () => void;
 }) {
   const details = cardDetails(fermentation, now, queued);
   const { hours, turnCount, last, next } = details;
@@ -55,9 +60,11 @@ export function FermentationCard({
         <NextTurnLine next={next} />
       </div>
       <FermentationCardActions
+        autoFinish={autoFinish}
         canManage={canManage}
         fermentation={fermentation}
         lotHref={lotHref}
+        onAutoFinished={onAutoFinished}
         online={online}
         queued={queued}
       />

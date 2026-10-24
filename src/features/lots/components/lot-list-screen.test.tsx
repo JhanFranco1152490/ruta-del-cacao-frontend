@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http } from 'msw';
+import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
@@ -22,6 +23,8 @@ vi.mock(
   'next/navigation',
   async () => (await import('@/test/router')).navigation,
 );
+
+import { Play, RotateCw } from 'lucide-react';
 
 import { LotListScreen } from './lot-list-screen';
 
@@ -68,17 +71,25 @@ beforeEach(() => {
 function renderScreen({
   searchParams = '',
   permissions = [PERMISSIONS.LOTS_VIEW, PERMISSIONS.LOTS_ADD],
-}: { searchParams?: string; permissions?: string[] } = {}) {
+  lotActions,
+}: {
+  searchParams?: string;
+  permissions?: string[];
+  lotActions?: ComponentProps<typeof LotListScreen>['lotActions'];
+} = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: userId, permissions }),
   );
-  renderWithProviders(<LotListScreen formLotHref="/cosechas?lote=sin" />, {
-    queryClient,
-    searchParams,
-    onUrlUpdate: ({ queryString }) => urls.push(queryString),
-  });
+  renderWithProviders(
+    <LotListScreen formLotHref="/cosechas?lote=sin" lotActions={lotActions} />,
+    {
+      queryClient,
+      searchParams,
+      onUrlUpdate: ({ queryString }) => urls.push(queryString),
+    },
+  );
 }
 
 const table = () => screen.findByRole('table', { name: 'Lotes' });
@@ -105,6 +116,58 @@ describe('LotListScreen', () => {
       expect.stringMatching(/^\/lotes\/detalle\?id=l1&origen=/),
     );
     expect(requests[0].get('page_size')).toBe('20');
+  });
+
+  it('offers each lot the actions of its stage in a menu, and none when it has none', async () => {
+    renderScreen({
+      lotActions: (lot) =>
+        lot.status === 'generated'
+          ? [
+              {
+                id: 'start',
+                label: 'Iniciar fermentación',
+                href: '/fermentacion?vista=listos&iniciar=l1',
+                icon: Play,
+              },
+            ]
+          : lot.status === 'fermenting'
+            ? [
+                {
+                  id: 'turn',
+                  label: 'Registrar volteo',
+                  href: '/fermentacion/volteo?lote=l2',
+                  icon: RotateCw,
+                },
+              ]
+            : [],
+    });
+
+    await table();
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: 'Más acciones del lote 000123-F02-P05-261014-1',
+      }),
+    );
+    expect(
+      await screen.findByRole('menuitem', { name: 'Iniciar fermentación' }),
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/fermentacion\?vista=listos&iniciar=l1/),
+    );
+    expect(
+      screen.getByRole('button', {
+        name: 'Más acciones del lote 000123-F02-P05-261012-1',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows no menu when the screen gives no actions', async () => {
+    renderScreen();
+
+    await table();
+    expect(
+      screen.queryByRole('button', { name: /Más acciones del lote/ }),
+    ).not.toBeInTheDocument();
   });
 
   it('filters by status and writes it in the address', async () => {

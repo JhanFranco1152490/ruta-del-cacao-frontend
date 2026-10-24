@@ -13,9 +13,10 @@ import { ProducerFilter } from '@/components/producer-filter';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { useProducerSummary } from '@/lib/api/producer-options';
+import type { LotAction } from '@/lib/lot-actions';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { LOT_PAGE_SIZE, useLots, useLotSummary } from '../api';
+import { type Lot, LOT_PAGE_SIZE, useLots, useLotSummary } from '../api';
 import { useLotFilters } from '../use-lot-filters';
 import { LotFiltersBar } from './lot-filters-bar';
 import { LotStatusCards } from './lot-status-cards';
@@ -26,7 +27,14 @@ import { LoadingBlock } from '@/components/loading-block';
 // Los lotes de las fincas que la cuenta alcanza, del más reciente al más antiguo. Solo con
 // conexión. Un lote se conforma desde su cosecha: `formLotHref` lleva a las que todavía no tienen
 // lote, y lo da quien monta la pantalla porque las cosechas son de otro dominio.
-export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
+export function LotListScreen({
+  formLotHref,
+  lotActions,
+}: {
+  formLotHref?: string;
+  // Lo que se hace con un lote en su etapa (el «⋯» de cada fila): lo da quien monta la pantalla.
+  lotActions?: (lot: Lot) => readonly LotAction[];
+}) {
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;
   const filters = useLotFilters();
@@ -61,7 +69,7 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
     if (list.data.results.length > 0) {
       return (
         <>
-          <LotTable lots={list.data.results} />
+          <LotTable lotActions={lotActions} lots={list.data.results} />
           <Pagination
             label="lotes"
             onPageChange={(page) => void filters.setPage(page)}
