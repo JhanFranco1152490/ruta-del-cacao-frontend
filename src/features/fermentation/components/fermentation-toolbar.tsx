@@ -26,10 +26,11 @@ export function FermentationToolbar({
 }) {
   return (
     <div
-      className={`flex flex-wrap items-start gap-3 ${FILTER_CONTROLS_CLASS}`}
+      className={`flex flex-wrap items-center gap-3 ${FILTER_CONTROLS_CLASS}`}
     >
       {onView && (
         <SegmentedControl<FermentationView>
+          compact
           fullWidth
           label="Vista de fermentación"
           onChange={onView}

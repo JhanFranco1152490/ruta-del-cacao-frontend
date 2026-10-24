@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import { useId, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -17,11 +18,15 @@ export function FinishFermentationButton({
   queued,
   online,
   className,
+  inRow = false,
 }: {
   fermentation: Fermentation;
   queued: readonly QueuedTurn[];
   online: boolean;
   className?: string;
+  // Va en una fila de botones de una tarjeta: el botón dice solo «Finalizar», reparte el ancho con
+  // los demás y el motivo, si lo hay, pasa a su propia línea debajo de toda la fila.
+  inRow?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const reasonId = useId();
@@ -32,19 +37,26 @@ export function FinishFermentationButton({
   });
 
   return (
-    <div className={className}>
+    <div className={cn(inRow && 'contents', className)}>
       <Button
         aria-describedby={blocked ? reasonId : undefined}
-        className="max-sm:w-full"
+        aria-label={inRow ? 'Finalizar fermentación' : undefined}
+        className={inRow ? 'max-sm:flex-1 max-sm:px-3' : 'max-sm:w-full'}
         disabled={!!blocked}
         onClick={() => setOpen(true)}
         size="office"
         variant="action"
       >
-        Finalizar fermentación
+        {inRow ? 'Finalizar' : 'Finalizar fermentación'}
       </Button>
       {blocked && (
-        <p className="mt-1 text-sm font-bold text-warn" id={reasonId}>
+        <p
+          className={cn(
+            'mt-1 text-sm font-bold text-warn',
+            inRow && 'order-last basis-full',
+          )}
+          id={reasonId}
+        >
           {blocked}
         </p>
       )}

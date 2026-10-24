@@ -55,19 +55,24 @@ export function FermentationCard({
           {facts.next.text}
         </p>
       </div>
-      {/* Registrar volteo es lo principal: a lo ancho en el celular, junto al cajón. Finalizar se
-          hace una vez por lote, pero desde aquí y no desde su ficha; ver el lote es un atajo de icono. */}
-      <div className="mt-auto flex flex-wrap items-start gap-2">
+      {/* Registrar volteo es lo principal; Finalizar se hace una vez por lote, pero desde aquí y no
+          desde su ficha; ver el lote es un atajo de icono. Los tres en una sola fila, también en
+          celular. */}
+      <div className="mt-auto flex flex-wrap items-center gap-2">
         <EditorLink
-          className={cn(buttonVariants({ size: 'office' }), 'max-sm:flex-1')}
+          className={cn(
+            buttonVariants({ size: 'office' }),
+            'max-sm:flex-1 max-sm:px-3',
+          )}
           href={turnPath(lot.id)}
         >
-          <RotateCw aria-hidden="true" className="size-4" /> Registrar volteo
+          <RotateCw aria-hidden="true" className="size-4 max-[400px]:hidden" />{' '}
+          Registrar volteo
         </EditorLink>
         {canManage && (
           <FinishFermentationButton
-            className="max-sm:order-3 max-sm:basis-full"
             fermentation={fermentation}
+            inRow
             online={online}
             queued={queued}
           />
@@ -76,7 +81,7 @@ export function FermentationCard({
           aria-label={`Ver el lote ${lot.code}`}
           className={cn(
             buttonVariants({ variant: 'action', size: 'office' }),
-            'px-3 max-sm:order-2',
+            'px-3',
           )}
           href={lotHref(lot.id)}
         >
