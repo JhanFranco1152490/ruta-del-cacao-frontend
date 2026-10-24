@@ -93,18 +93,16 @@ describe('TurnScreen', () => {
     renderScreen();
 
     expect(
-      await screen.findByRole('heading', { name: `Volteo 1 · ${CODE}` }),
+      await screen.findByRole('heading', { name: 'Volteo 1' }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        'C-01 · F02 · La Esperanza · inició el 15 oct. a las 07:00',
+        `${CODE} · C-01 · F02 · La Esperanza · inició el 15 oct. a las 07:00`,
       ),
     ).toBeInTheDocument();
     expect(field('Fecha y hora del volteo')).toHaveValue('2026-10-17T09:00');
     expect(screen.getByText('50 h desde el inicio')).toBeInTheDocument();
-    expect(
-      screen.getByText('La temperatura de la masa, en el centro del cajón.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('En el centro de la masa.')).toBeInTheDocument();
   });
 
   it('saves the turn on the device, goes back and says which turn it was', async () => {
@@ -115,7 +113,7 @@ describe('TurnScreen', () => {
       '45,5',
     );
     await userEvent.type(field('pH'), '4,85');
-    await userEvent.type(field('Observaciones'), 'Masa caliente');
+    await userEvent.type(field('Observaciones (opcional)'), 'Masa caliente');
     await save();
 
     await waitFor(() =>
@@ -155,7 +153,7 @@ describe('TurnScreen', () => {
     renderScreen();
 
     expect(
-      await screen.findByRole('heading', { name: `Volteo 3 · ${CODE}` }),
+      await screen.findByRole('heading', { name: 'Volteo 3' }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -165,7 +163,7 @@ describe('TurnScreen', () => {
 
     setTime('2026-10-17T07:45');
     expect(
-      await screen.findByRole('heading', { name: `Volteo 2 · ${CODE}` }),
+      await screen.findByRole('heading', { name: 'Volteo 2' }),
     ).toBeInTheDocument();
   });
 
@@ -192,7 +190,7 @@ describe('TurnScreen', () => {
     server.use(fermentationsHandler([withTurn]));
     renderScreen();
 
-    await screen.findByRole('heading', { name: `Volteo 2 · ${CODE}` });
+    await screen.findByRole('heading', { name: 'Volteo 2' });
     setTime('2026-10-17T07:30');
     await userEvent.type(field('Temperatura (°C)'), '45');
     await userEvent.type(field('pH'), '4,9');

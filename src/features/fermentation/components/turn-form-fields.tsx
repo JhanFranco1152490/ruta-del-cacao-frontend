@@ -24,6 +24,10 @@ import {
   type TurnFormValues,
 } from '../turn-form';
 
+// Lo que se mide va en grande y centrado: se lee a un brazo de distancia, con el medidor en la otra
+// mano.
+const MEASURE_FIELD_CLASS = `${CAPTURE_FIELD_CLASS} text-center text-xl font-bold tabular-nums`;
+
 // La pantalla de campo del volteo: se llena junto al cajón, con el termómetro y el medidor de pH en
 // la mano. El título dice qué volteo será según la hora elegida.
 export function TurnFormFields({
@@ -77,7 +81,7 @@ export function TurnFormFields({
 
   return (
     <form
-      className="space-y-6"
+      className="space-y-4"
       noValidate
       onSubmit={(event) =>
         void handleSubmit((values) => onSubmit(values, setError))(event)
@@ -90,8 +94,10 @@ export function TurnFormFields({
       />
       {notices}
       {formError && <FormMessage>{formError}</FormMessage>}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="space-y-2 sm:col-span-2">
+      {/* Los campos juntos en una tarjeta, con temperatura y pH lado a lado también en celular: la
+          pantalla se llena de pie junto al cajón y así cabe sin desplazarse tanto. */}
+      <div className="grid grid-cols-2 gap-4 rounded-[var(--radius-card)] bg-card p-4 shadow-card sm:p-5">
+        <div className="col-span-2 space-y-2">
           <TextField
             className={CAPTURE_FIELD_CLASS}
             disabled={isSaving}
@@ -114,16 +120,16 @@ export function TurnFormFields({
           )}
         </div>
         <TextField
-          className={CAPTURE_FIELD_CLASS}
+          className={MEASURE_FIELD_CLASS}
           disabled={isSaving}
           error={errors.temperature_c?.message}
-          hint="La temperatura de la masa, en el centro del cajón."
+          hint="En el centro de la masa."
           inputMode="decimal"
           label="Temperatura (°C)"
           {...register('temperature_c')}
         />
         <TextField
-          className={CAPTURE_FIELD_CLASS}
+          className={MEASURE_FIELD_CLASS}
           disabled={isSaving}
           error={errors.ph?.message}
           inputMode="decimal"
@@ -133,9 +139,11 @@ export function TurnFormFields({
         <TextAreaField
           disabled={isSaving}
           error={errors.notes?.message}
-          hint={`Opcional, hasta ${NOTES_MAX_LENGTH} caracteres.`}
-          label="Observaciones"
-          wrapperClassName="sm:col-span-2"
+          className="min-h-16"
+          label="Observaciones (opcional)"
+          placeholder={`Hasta ${NOTES_MAX_LENGTH} caracteres`}
+          rows={2}
+          wrapperClassName="col-span-2"
           {...register('notes')}
         />
       </div>

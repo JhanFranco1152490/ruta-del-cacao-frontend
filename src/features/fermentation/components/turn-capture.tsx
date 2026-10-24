@@ -87,7 +87,7 @@ export function TurnCapture({
     const at = isLocalDateTime(localTime)
       ? fromBogotaLocal(localTime)
       : new Date().toISOString();
-    return `Volteo ${numberAt(at)} · ${lot.code}`;
+    return `Volteo ${numberAt(at)}`;
   };
 
   const defaultValues: TurnFormInput = serverTurn
@@ -155,7 +155,7 @@ export function TurnCapture({
     <TurnFormFields
       cancelHref={returnPath}
       defaultValues={defaultValues}
-      description={`${facility.name} · ${farmLabel(farm)} · inició el ${formatShortDayMonth(fermentation.started_at)}. a las ${formatTime(fermentation.started_at)}`}
+      description={`${lot.code} · ${facility.name} · ${farmLabel(farm)} · inició el ${formatShortDayMonth(fermentation.started_at)}. a las ${formatTime(fermentation.started_at)}`}
       disabledMessage={
         serverTurn && !isOnline
           ? 'Corregir un volteo necesita conexión.'
