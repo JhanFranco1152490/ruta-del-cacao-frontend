@@ -3,10 +3,10 @@ import {
   formatShortDateTime,
   formatTime,
 } from '@/lib/format/dates';
-import { formatDecimal } from '@/lib/format/decimal';
 
 import type { Fermentation, ReadyLot } from './api';
 import { hoursBetween, turnsText } from './fermentation-time';
+import { phText, temperatureText } from './measure-text';
 import { isTurnOverdue, nextTurnDueAt } from './next-turn';
 import { pendingTurnsOf, type QueuedTurn } from './turn-queue';
 import { lastTurnedAt, numberTurns } from './turn-rules';
@@ -95,8 +95,8 @@ export function cardFacts(
     lastTurn: last
       ? [
           `Volteo ${last.number}`,
-          `${formatDecimal(last.turn.temperature_c, 1)} °C`,
-          `pH ${formatDecimal(last.turn.ph, 2)}`,
+          temperatureText(last.turn.temperature_c),
+          `pH ${phText(last.turn.ph)}`,
           formatShortDateTime(last.turn.turned_at),
           ...(last.turn.pending ? ['Pendiente de enviar'] : []),
         ].join(' · ')

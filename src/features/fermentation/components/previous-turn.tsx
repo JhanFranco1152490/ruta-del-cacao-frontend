@@ -1,5 +1,6 @@
 import { formatShortDateTime } from '@/lib/format/dates';
-import { formatDecimal } from '@/lib/format/decimal';
+
+import { phText, temperatureText } from '../measure-text';
 
 // El volteo anterior, arriba del formulario: para comparar en el momento lo que se acaba de medir.
 export function PreviousTurn({
@@ -14,8 +15,8 @@ export function PreviousTurn({
       {[
         `Volteo anterior: ${number}`,
         formatShortDateTime(turn.turned_at),
-        `${formatDecimal(turn.temperature_c, 1)} °C`,
-        `pH ${formatDecimal(turn.ph, 2)}`,
+        temperatureText(turn.temperature_c),
+        `pH ${phText(turn.ph)}`,
       ].join(' · ')}
     </p>
   );

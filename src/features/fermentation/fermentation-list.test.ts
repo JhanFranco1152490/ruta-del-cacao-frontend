@@ -172,7 +172,7 @@ describe('the turns still on the device', () => {
 
     expect(facts.elapsed).toBe('74 h de fermentación · 2 volteos');
     expect(facts.lastTurn).toBe(
-      'Volteo 2 · 46 °C · pH 4,8 · 18 oct. 08:00 · Pendiente de enviar',
+      'Volteo 2 · 46,0 °C · pH 4,80 · 18 oct. 08:00 · Pendiente de enviar',
     );
     expect(facts.next).toEqual({
       overdue: false,

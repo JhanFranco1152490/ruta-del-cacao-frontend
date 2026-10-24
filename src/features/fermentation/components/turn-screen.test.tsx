@@ -158,7 +158,9 @@ describe('TurnScreen', () => {
       await screen.findByRole('heading', { name: `Volteo 3 · ${CODE}` }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Volteo anterior: 2 · 17 oct. 08:00 · 46 °C · pH 4,8'),
+      screen.getByText(
+        'Volteo anterior: 2 · 17 oct. 08:00 · 46,0 °C · pH 4,80',
+      ),
     ).toBeInTheDocument();
 
     setTime('2026-10-17T07:45');
