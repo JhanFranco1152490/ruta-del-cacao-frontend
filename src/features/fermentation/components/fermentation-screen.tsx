@@ -2,46 +2,21 @@
 
 import { useState } from 'react';
 
-import { EmptyState } from '@/components/empty-state';
-import { ErrorState } from '@/components/error-state';
-import { OfflineCloud } from '@/components/illustrations/offline-cloud';
-import { LoadingBlock } from '@/components/loading-block';
 import { OfflineCopyNotice } from '@/components/offline-copy-notice';
 import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
-import { useHasConnection } from '@/hooks/use-has-connection';
-import { useSession } from '@/hooks/use-session';
-import { useFarmOptions } from '@/lib/api/farm-options';
-import { useProducerSummary } from '@/lib/api/producer-options';
-import { farmLabel } from '@/lib/format/place-label';
-import { isNeverLoaded } from '@/lib/offline/paused-read';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { type ReadyLot, useFermentations, useReadyLots } from '../api';
-import {
-  countOverdue,
-  fermentationsOfFarm,
-  readyLotsOfFarm,
-} from '../fermentation-list';
-import {
-  type FermentationView,
-  useFermentationFilters,
-} from '../use-fermentation-filters';
-import { useQueuedTurns } from '../use-turn-queue';
+import type { ReadyLot } from '../api';
+import { countOverdue } from '../fermentation-list';
+import { useFermentationScreen } from '../use-fermentation-screen';
+import { FermentationBody } from './fermentation-body';
 import { FermentationSummary } from './fermentation-summary';
-import { InProgressTab } from './in-progress-tab';
-import { ReadyLotsTab } from './ready-lots-tab';
 import { FermentationToolbar } from './fermentation-toolbar';
 import { StartReadyLot } from './start-ready-lot';
 
-const NEEDS_CONNECTION =
-  'Necesitas conexión una vez para cargar los lotes en fermentación.';
-
-// Fermentación: el trabajo del día de quien fermenta. Los lotes en fermentación se ven también sin
-// conexión, con la copia del dispositivo; los listos para fermentar, y la pestaña que los muestra,
-// solo con conexión y para quien puede iniciar. La finca se filtra en el dispositivo. La ficha del
-// lote es de otro dominio: su ruta la entrega quien monta la pantalla.
+// Fermentación: el trabajo del día de quien fermenta. La ficha del lote es de otro dominio: su ruta
+// la entrega quien monta la pantalla.
 export function FermentationScreen({
   lotHref,
   facilitiesHref,
@@ -51,99 +26,9 @@ export function FermentationScreen({
   facilitiesHref: (farmId: string) => string;
 }) {
   const [starting, setStarting] = useState<ReadyLot>();
-  const { data: user } = useSession();
-  const superuser = user?.is_superuser === true;
-  const hasConnection = useHasConnection();
-  const state = useFermentationFilters();
-  // La cuenta técnica elige el productor; las demás ven el suyo.
-  const producer = superuser ? state.producer : null;
-  const needsProducer = superuser && !producer;
-  const canManage = hasPermission(user, PERMISSIONS.FERMENTATION_MANAGE);
-  const view: FermentationView = canManage ? state.view : 'en-curso';
-
-  const read = useFermentations(user?.id, producer, {
-    enabled: !needsProducer,
-  });
-  const offline = !hasConnection || read.data?.savedAt !== undefined;
-  const ready = useReadyLots(producer, {
-    enabled: canManage && !needsProducer && !offline,
-  });
-  const farms = useFarmOptions(user?.id, producer ?? undefined, {
-    enabled: !needsProducer,
-  });
-  const selectedProducer = useProducerSummary(producer ?? undefined);
-  const queued = useQueuedTurns(user?.id);
-
-  const farmOptions = (farms.data?.data.options ?? []).map((farm) => ({
-    id: farm.id,
-    label: farmLabel(farm),
-    name: farm.name,
-  }));
-  const chosenFarm = farmOptions.find(({ id }) => id === state.farm);
-  const farmName = state.farm ? (chosenFarm?.name ?? 'esta finca') : null;
-  // La finca del filtro, aunque todavía no esté entre las opciones cargadas.
-  const farmChoice = state.farm
-    ? (chosenFarm ?? { id: state.farm, label: farmName ?? '' })
-    : null;
+  const screen = useFermentationScreen();
+  const { filters, read } = screen;
   const now = new Date();
-  const shown = fermentationsOfFarm(read.data?.data ?? [], state.farm);
-  const readyShown =
-    canManage && !offline && ready.data
-      ? readyLotsOfFarm(ready.data, state.farm)
-      : undefined;
-
-  const body = () => {
-    if (needsProducer) {
-      return (
-        <p className="text-muted-foreground">
-          Elige un productor para ver sus lotes en fermentación.
-        </p>
-      );
-    }
-    if (view === 'listos') {
-      return (
-        <ReadyLotsTab
-          farmName={farmName}
-          isError={ready.isError}
-          isPending={ready.isPending}
-          lots={readyShown ?? []}
-          offline={offline}
-          onClear={state.clear}
-          onRetry={() => void ready.refetch()}
-          onStart={setStarting}
-        />
-      );
-    }
-    if (isNeverLoaded(read)) {
-      return (
-        <EmptyState illustration={OfflineCloud} title={NEEDS_CONNECTION} />
-      );
-    }
-    if (read.isPending) {
-      return <LoadingBlock label="Cargando fermentaciones" shapes={['h-40']} />;
-    }
-    if (!read.data) {
-      return (
-        <ErrorState
-          message="No fue posible cargar los lotes en fermentación."
-          onRetry={() => void read.refetch()}
-        />
-      );
-    }
-    return (
-      <InProgressTab
-        farmName={farmName}
-        fermentations={shown}
-        lotHref={lotHref}
-        now={now}
-        onClear={state.clear}
-        queued={queued}
-        onShowReady={
-          readyShown?.length ? () => void state.setView('listos') : undefined
-        }
-      />
-    );
-  };
 
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>
@@ -154,45 +39,48 @@ export function FermentationScreen({
         eyebrow="Poscosecha"
         title="Fermentación"
       />
-      {superuser && (
+      {screen.superuser && (
         <ProducerFilter
           className="max-w-md"
-          onClear={() => void state.setProducer(null)}
-          onSelect={(id) => void state.setProducer(id)}
-          producer={producer ?? undefined}
-          selected={selectedProducer}
+          onClear={() => void filters.setProducer(null)}
+          onSelect={(id) => void filters.setProducer(id)}
+          producer={screen.producer ?? undefined}
+          selected={screen.selectedProducer}
         />
       )}
       {read.data && (
         <FermentationSummary
-          inProgress={shown.length}
-          overdue={countOverdue(shown, now, queued)}
-          ready={readyShown?.length}
+          inProgress={screen.shown.length}
+          overdue={countOverdue(screen.shown, now, screen.queued)}
+          ready={screen.readyShown?.length}
         />
       )}
-      {!needsProducer && (
+      {!screen.needsProducer && (
         <FermentationToolbar
-          farm={farmChoice}
-          farmOptions={farmOptions}
-          onFarm={(farm) => void state.setFarm(farm)}
-          onView={canManage ? (next) => void state.setView(next) : undefined}
-          view={view}
+          farm={screen.farm.choice}
+          farmOptions={screen.farmOptions}
+          onFarm={(farm) => void filters.setFarm(farm)}
+          onView={
+            screen.canManage ? (next) => void filters.setView(next) : undefined
+          }
+          view={screen.view}
         />
       )}
-      {read.isSuccess && offline && (
+      {read.isSuccess && screen.offline && (
         <OfflineCopyNotice
           consequence="Iniciar o finalizar una fermentación necesita conexión."
           savedAt={read.data.savedAt}
         />
       )}
-      {body()}
+      <FermentationBody
+        lotHref={lotHref}
+        now={now}
+        onStart={setStarting}
+        screen={screen}
+      />
       {starting && (
         <StartReadyLot
-          facilitiesHref={
-            hasPermission(user, PERMISSIONS.FACILITIES_VIEW)
-              ? facilitiesHref
-              : undefined
-          }
+          facilitiesHref={screen.canSeeFacilities ? facilitiesHref : undefined}
           lot={starting}
           lotHref={lotHref}
           onClose={() => setStarting(undefined)}
