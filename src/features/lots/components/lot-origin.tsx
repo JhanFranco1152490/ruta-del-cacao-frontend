@@ -1,9 +1,11 @@
-import { KeyValue } from '@/components/page-blocks/section-card';
 import { EditorLink } from '@/components/editor-link';
-
-import { formatDecimal } from '@/lib/format/decimal';
+import {
+  KeyValue,
+  KeyValues,
+  SectionCard,
+} from '@/components/page-blocks/section-card';
 import { formatLongDate } from '@/lib/format/dates';
-import { farmLabel, plotLabel } from '@/lib/format/place-label';
+import { farmLabel } from '@/lib/format/place-label';
 
 import type { Lot } from '../api';
 
@@ -16,9 +18,10 @@ const linkOrText = (href: string | undefined, text: string) =>
     text
   );
 
-// De dónde sale el lote: su cosecha, con la parcela, la finca, el productor y la versión de la
-// ficha que tenía la parcela ese día. Los enlaces a la cosecha y a la ficha son de otros dominios:
-// los da quien monta la pantalla, y sin ellos se muestra solo el texto.
+// De dónde sale el lote: su cosecha, la finca, el productor, quién recolectó y la versión de la
+// ficha que tenía la parcela ese día. Lo que ya dice la franja de cifras (peso, variedad, parcela)
+// no se repite. Los enlaces a la cosecha y a la ficha son de otros dominios: los da quien monta la
+// pantalla, y sin ellos se muestra solo el texto.
 export function LotOrigin({
   lot,
   harvestHref,
@@ -30,22 +33,14 @@ export function LotOrigin({
 }) {
   const { harvest } = lot;
   return (
-    <section aria-labelledby="lot-origin-title" className="space-y-3">
-      <h2 className="text-lg font-bold" id="lot-origin-title">
-        Origen
-      </h2>
-      <dl className="grid grid-cols-1 gap-4 rounded-(--radius) border bg-card p-5 sm:grid-cols-2">
+    <SectionCard accent="cobre" id="lot-origin" title="Origen">
+      <KeyValues single>
         <KeyValue label="Cosecha">
           {linkOrText(harvestHref, formatLongDate(harvest.harvest_date))}
         </KeyValue>
-        <KeyValue label="Peso en verde">
-          {formatDecimal(lot.green_weight_kg, 1)} kg
-        </KeyValue>
-        <KeyValue label="Parcela">{plotLabel(harvest.plot)}</KeyValue>
         <KeyValue label="Finca">{farmLabel(harvest.plot.farm)}</KeyValue>
         {/* Sin conexión, la copia de poscosecha no trae el código de socio. */}
         <KeyValue label="Productor">{lot.producer.member_code || '—'}</KeyValue>
-        <KeyValue label="Variedad">{harvest.variety.name}</KeyValue>
         <KeyValue label="Recolector">
           {harvest.collector.full_name}
           {!harvest.collector.is_active && ' · Cuenta inactiva'}
@@ -56,7 +51,7 @@ export function LotOrigin({
             `Versión ${harvest.characterization_version}`,
           )}
         </KeyValue>
-      </dl>
-    </section>
+      </KeyValues>
+    </SectionCard>
   );
 }

@@ -66,11 +66,13 @@ export function FermentationBody({
   return (
     <InProgressTab
       canManage={screen.canManage}
+      finishLotId={filters.finishLotId}
       farmName={screen.farm.name}
       fermentations={screen.shown}
       lotHref={lotHref}
       now={now}
       onClear={filters.clear}
+      onFinishHandled={filters.clearFinish}
       online={!screen.offline}
       queued={screen.queued}
       onShowReady={

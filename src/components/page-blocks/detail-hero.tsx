@@ -5,8 +5,10 @@ import { type ModuleAccent, accentStyle } from './accent';
 
 // El fondo de la cabecera de cada pantalla: un bloque de color que hace notar el título. El equipo
 // eligió tres (2026-10-22): `selva` (verde muy oscuro), `bosque` (verde medio oscuro) y `claro`
-// (blanco con un filete del acento del módulo). Contraste del texto (WCAG): blanco 13:1 en selva
-// y 7.9:1 en bosque; el antetítulo en dorado claro (8.1:1 y 4.8:1).
+// (blanco con un filete del acento del módulo). `bosque` va en degradado de `selva` al verde de la
+// barra lateral (2026-10-24): el verde medio liso era más claro y saturado que la barra, que queda
+// pegada a él, y se veía plano. Contraste del texto (WCAG): blanco 13:1 en selva y 9,9:1 en
+// bosque (en su extremo más claro); el antetítulo en dorado claro (8,1:1 y 6,1:1).
 export type HeroTone = 'selva' | 'bosque' | 'claro';
 
 const TONES: Record<HeroTone, { box: string; dark: boolean; eyebrow: string }> =
@@ -14,12 +16,12 @@ const TONES: Record<HeroTone, { box: string; dark: boolean; eyebrow: string }> =
     selva: {
       box: 'bg-selva text-white',
       dark: true,
-      eyebrow: 'text-[#e8c873]',
+      eyebrow: 'text-[var(--oro-claro)]',
     },
     bosque: {
-      box: 'bg-selva-2 text-white',
+      box: 'bg-[linear-gradient(135deg,var(--selva)_0%,var(--selva-barra)_100%)] text-white',
       dark: true,
-      eyebrow: 'text-[#e8c873]',
+      eyebrow: 'text-[var(--oro-claro)]',
     },
     claro: {
       box: 'bg-card shadow-card before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-[var(--mod)]',
@@ -52,6 +54,7 @@ export function DetailHero({
   mark,
   eyebrow,
   title,
+  titleVisual,
   description,
   chips,
   actions,
@@ -62,6 +65,9 @@ export function DetailHero({
   mark?: string;
   eyebrow?: string;
   title: string;
+  // Cómo se dibuja el título cuando no es un texto corrido (el código de un lote, partido en sus
+  // pedazos). `title` sigue siendo lo que lee un lector de pantalla.
+  titleVisual?: ReactNode;
   description?: string;
   chips?: ReactNode;
   actions?: ReactNode;
@@ -119,7 +125,14 @@ export function DetailHero({
                   <span className="sr-only">{mark} ·</span>{' '}
                 </>
               )}
-              {title}
+              {titleVisual ? (
+                <>
+                  <span className="sr-only">{title}</span>
+                  <span aria-hidden="true">{titleVisual}</span>
+                </>
+              ) : (
+                title
+              )}
             </h1>
             {description && (
               <p

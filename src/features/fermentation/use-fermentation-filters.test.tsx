@@ -85,4 +85,15 @@ describe('useFermentationFilters', () => {
 
     expect(lastQuery(onUrlUpdate)).toBe('?productor=p2');
   });
+
+  it('reads the lot a link from Lotes asks to start or finish, and clears it', async () => {
+    const { result, onUrlUpdate } = setup('?iniciar=l1&finalizar=l2');
+
+    expect(result.current.startLotId).toBe('l1');
+    expect(result.current.finishLotId).toBe('l2');
+    await act(() => result.current.clearStart());
+    expect(lastQuery(onUrlUpdate)).toBe('?finalizar=l2');
+    await act(() => result.current.clearFinish());
+    expect(lastQuery(onUrlUpdate)).toBe('');
+  });
 });

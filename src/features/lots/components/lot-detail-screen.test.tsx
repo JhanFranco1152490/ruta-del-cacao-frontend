@@ -63,8 +63,11 @@ function renderScreen(
 
 const deleteButton = () => screen.queryByRole('button', { name: /Eliminar/ });
 
+// El estado se dice en la insignia y también en la etapa resaltada.
+const BADGE = '[data-slot="badge"]';
+
 describe('LotDetailScreen', () => {
-  it('shows the code, how to read it, its status and its origin', async () => {
+  it('shows the code in named pieces, its figures, its status and its origin', async () => {
     renderScreen(ALL, {
       harvestHref: (lot) => `/cosechas/detalle?id=${lot.harvest.id}`,
       historyHref: () => '/ficha/historial?id=pl1',
@@ -73,14 +76,21 @@ describe('LotDetailScreen', () => {
     expect(
       await screen.findByRole('heading', { name: '000123-F02-P05-261014-1' }),
     ).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).toHaveTextContent('000123');
+    expect(heading).toHaveTextContent('La Esperanza');
+    expect(heading).toHaveTextContent('Lote del río');
+    expect(heading).toHaveTextContent('14 de octubre de 2026');
+    expect(heading).toHaveTextContent('Primer lote de ese día');
     expect(
-      screen.getByText(
-        'Productor PROD-000123 · Finca F02, La Esperanza · Parcela P05, Lote del río · Cosecha del 14 de octubre de 2026 · Primer lote de ese día',
-      ),
+      screen.getByText('Generado', { selector: BADGE }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Generado')).toBeInTheDocument();
+    const figures = screen.getByRole('region', { name: 'Resumen del lote' });
+    expect(figures).toHaveTextContent('120,5 kg');
+    expect(figures).toHaveTextContent('14 oct.');
+    expect(figures).toHaveTextContent('CCN-51');
+    expect(figures).toHaveTextContent('P05');
     const origin = screen.getByRole('region', { name: 'Origen' });
-    expect(origin).toHaveTextContent('120,5 kg');
     expect(origin).toHaveTextContent('PROD-000123');
     expect(
       within(origin).getByRole('link', { name: '14 de octubre de 2026' }),
@@ -96,9 +106,29 @@ describe('LotDetailScreen', () => {
     );
   });
 
-  // Fermentación y secado son de otros dominios: la ficha muestra lo que le entregan, después del
+  it('says in which stage the lot is', async () => {
+    serve(buildLot({ status: 'fermenting' }));
+    renderScreen();
+
+    const stages = await screen.findByRole('region', {
+      name: 'Etapas del lote',
+    });
+    expect(
+      within(stages).getByRole('listitem', { current: 'step' }),
+    ).toHaveTextContent('En fermentación');
+    expect(within(stages).getAllByRole('listitem')).toHaveLength(5);
+  });
+
+  it('ends who formed the lot with a single full stop', async () => {
+    renderScreen();
+
+    const description = await screen.findByText(/^Conformado por/);
+    expect(description.textContent).toMatch(/[ap]\.m\.$/);
+  });
+
+  // Fermentación y secado son de otros dominios: la ficha muestra lo que le entregan, junto al
   // origen.
-  it('shows the sections that other modules give it, after the origin', async () => {
+  it('shows the sections that other modules give it, next to the origin', async () => {
     renderScreen(ALL, {
       renderSections: (lot) => (
         <section aria-label="Fermentación">Sección de {lot.code}</section>
@@ -107,11 +137,7 @@ describe('LotDetailScreen', () => {
 
     const section = await screen.findByRole('region', { name: 'Fermentación' });
     expect(section).toHaveTextContent('Sección de 000123-F02-P05-261014-1');
-    expect(
-      screen
-        .getByRole('region', { name: 'Origen' })
-        .compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Origen' })).toBeInTheDocument();
   });
 
   it('offers to go back to where the lot was formed', async () => {
@@ -163,7 +189,7 @@ describe('LotDetailScreen', () => {
     serve(buildLot({ status: 'fermenting' }));
     renderScreen();
 
-    await screen.findByText('En fermentación');
+    await screen.findByText('En fermentación', { selector: BADGE });
     expect(deleteButton()).toBeNull();
   });
 
@@ -237,9 +263,13 @@ describe('LotDetailScreen', () => {
     expect(
       screen.getByText(/Sin conexión: estás viendo la copia del/),
     ).toBeInTheDocument();
-    expect(screen.getByText('En fermentación')).toBeInTheDocument();
+    expect(
+      screen.getByText('En fermentación', { selector: BADGE }),
+    ).toBeInTheDocument();
     const origin = screen.getByRole('region', { name: 'Origen' });
-    expect(origin).toHaveTextContent('Lote del río');
+    expect(
+      screen.getByRole('region', { name: 'Resumen del lote' }),
+    ).toHaveTextContent('Lote del río');
     expect(origin).toHaveTextContent('Productor—');
     expect(screen.queryByText(/Conformado por/)).not.toBeInTheDocument();
     expect(

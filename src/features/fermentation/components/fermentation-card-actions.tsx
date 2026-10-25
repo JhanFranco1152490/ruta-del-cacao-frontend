@@ -18,6 +18,8 @@ export function FermentationCardActions({
   lotHref,
   canManage,
   online,
+  autoFinish = false,
+  onAutoFinished,
 }: {
   fermentation: Fermentation;
   queued: readonly QueuedTurn[];
@@ -25,6 +27,8 @@ export function FermentationCardActions({
   // Finalizar es de quien responde por la fermentación y necesita conexión: libera el cajón.
   canManage: boolean;
   online: boolean;
+  autoFinish?: boolean;
+  onAutoFinished?: () => void;
 }) {
   const { lot } = fermentation;
   return (
@@ -41,8 +45,10 @@ export function FermentationCardActions({
       </EditorLink>
       {canManage && (
         <FinishFermentationButton
+          autoOpen={autoFinish}
           fermentation={fermentation}
           inRow
+          onAutoOpened={onAutoFinished}
           online={online}
           queued={queued}
         />

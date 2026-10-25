@@ -403,6 +403,71 @@ describe('FermentationScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('opens the start form of the lot a link from Lotes points to, and clears the link', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+    server.use(
+      csrfHandler,
+      http.get(apiUrl('/api/fermentation/start-options'), () =>
+        HttpResponse.json({
+          facilities: [{ id: 'fc1', name: 'C-01', capacity_kg: '600.0' }],
+          responsibles: [],
+          green_weight_kg: '186.0',
+          earliest_start_at: '2026-10-16T00:00:00-05:00',
+        }),
+      ),
+    );
+    renderScreen({
+      searchParams: '?vista=listos&iniciar=l9',
+      onUrlUpdate,
+    });
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Iniciar fermentación · 000123-F02-P05-261016-1',
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(onUrlUpdate.mock.lastCall?.[0].queryString).not.toContain(
+        'iniciar',
+      ),
+    );
+  });
+
+  it('warns when the lot of the link is no longer ready to ferment', async () => {
+    renderScreen({ searchParams: '?vista=listos&iniciar=l-otro' });
+
+    expect(
+      await screen.findByText('Este lote ya no está listo para fermentar.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /Iniciar fermentación/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens the finish form of the lot a link from Lotes points to, and clears the link when it closes', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+    renderScreen({ searchParams: '?finalizar=l2', onUrlUpdate });
+
+    expect(
+      await screen.findByRole('dialog', { name: /Finalizar fermentación/ }),
+    ).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(onUrlUpdate.mock.lastCall?.[0].queryString).not.toContain(
+        'finalizar',
+      ),
+    );
+  });
+
+  it('only shows why a lot cannot be finished yet when the link points to it', async () => {
+    renderScreen({ searchParams: '?finalizar=l1' });
+
+    expect(
+      await screen.findByText('Registre al menos un volteo para finalizar'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('says when no lot is ready to ferment', async () => {
     server.use(lotsHandler([]));
     renderScreen({ searchParams: '?vista=listos' });
