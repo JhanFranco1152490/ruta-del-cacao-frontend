@@ -559,3 +559,35 @@ export const buildNotification = (
   activity: buildAgriculturalActivity(),
   ...overrides,
 });
+
+const PARAMETER_BASELINE: Schemas['DryingValues'] = {
+  entry_moisture_min_pct: '55.0',
+  entry_moisture_max_pct: '60.0',
+  target_moisture_min_pct: '6.5',
+  target_moisture_max_pct: '7.5',
+  estimated_days_min: 5,
+  estimated_days_max: 7,
+  slow_stall_window_hours: 48,
+  slow_stall_min_drop_pct: '4.0',
+  slow_duration_day: 8,
+  slow_duration_moisture_pct: '10.0',
+  accelerated_day: 3,
+  accelerated_moisture_pct: '15.0',
+  near_target_min_pct: '7.6',
+  near_target_max_pct: '8.5',
+  overdried_moisture_pct: '6.0',
+};
+
+// Los parámetros de un productor que nunca guardó nada: la línea base, versión 0.
+export const buildParameters = (
+  overrides: Partial<Schemas['PostharvestParameters']> = {},
+): Schemas['PostharvestParameters'] => ({
+  producer_id: 'p1',
+  is_default: true,
+  values: { ...PARAMETER_BASELINE },
+  baseline: { ...PARAMETER_BASELINE },
+  version: 0,
+  updated_at: null,
+  updated_by: null,
+  ...overrides,
+});

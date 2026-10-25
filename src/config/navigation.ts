@@ -8,6 +8,7 @@ import {
   Package,
   ShieldCheck,
   ShieldPlus,
+  SlidersHorizontal,
   Sprout,
   Sun,
   Thermometer,
@@ -117,6 +118,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     group: 'postharvest',
     icon: Warehouse,
     permission: PERMISSIONS.FACILITIES_VIEW,
+  },
+  // Los valores con los que se evalúa el secado: de oficina, pero se consultan sin conexión con la
+  // copia del dispositivo.
+  {
+    href: '/parametros-poscosecha',
+    label: 'Parámetros',
+    group: 'postharvest',
+    icon: SlidersHorizontal,
+    permission: PERMISSIONS.PARAMETERS_VIEW,
   },
   {
     href: '/variedades',

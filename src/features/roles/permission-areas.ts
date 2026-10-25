@@ -20,6 +20,7 @@ const AREAS = [
   { area: 'fermentation', label: 'Fermentación' },
   { area: 'drying', label: 'Secado' },
   { area: 'facilities', label: 'Infraestructura' },
+  { area: 'postharvest_parameters', label: 'Parámetros de poscosecha' },
   { area: 'users', label: 'Cuentas' },
   { area: 'roles', label: 'Roles' },
 ] as const;
