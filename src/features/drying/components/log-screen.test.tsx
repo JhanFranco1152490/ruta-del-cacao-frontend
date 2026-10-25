@@ -99,24 +99,20 @@ async function fillDay() {
 }
 
 describe('LogScreen', () => {
-  it('names the day it will be, the dryer and the start, and counts the hours since the start', async () => {
+  it('names the day it will be and the dryer, and counts the hours since the start', async () => {
     renderScreen();
 
     expect(
       await screen.findByRole('heading', { name: 'Bitácora del día 3' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        `${CODE} · M-01 · F02 · La Esperanza · inició el 22 oct. a las 14:00`,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(`${CODE} · M-01`)).toBeInTheDocument();
     expect(field('Fecha y hora de la medición')).toHaveValue(
       '2026-10-24T10:00',
     );
     expect(
       screen.getByText('Día 3 de secado · 44 h desde el inicio'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Meta: 6,5–7,5 %')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Meta: 6,5–7,5 %')).toBeInTheDocument();
   });
 
   it('saves the log on the device, goes back and says which day it was', async () => {
@@ -154,7 +150,9 @@ describe('LogScreen', () => {
     renderScreen();
 
     await screen.findByRole('heading', { name: 'Bitácora del día 3' });
-    expect(screen.queryByLabelText('Frecuencia (h)')).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Cada cuántas horas (h)'),
+    ).not.toBeInTheDocument();
     await userEvent.type(field('Humedad (%)'), '12,4');
     await userEvent.type(field('Horas al sol'), '6');
     await userEvent.type(field('Volteos del día'), '2');
@@ -164,7 +162,7 @@ describe('LogScreen', () => {
     expect(
       await screen.findByText(FREQUENCY_REQUIRED_MESSAGE),
     ).toBeInTheDocument();
-    await userEvent.type(field('Frecuencia (h)'), '3');
+    await userEvent.type(field('Cada cuántas horas (h)'), '3');
     await save();
 
     await waitFor(async () =>
@@ -216,7 +214,7 @@ describe('LogScreen', () => {
     await fillDay();
     await userEvent.clear(field('Horas al sol'));
     await userEvent.type(field('Horas al sol'), '8');
-    await userEvent.type(field('Horas a la sombra (opcional)'), '4');
+    await userEvent.type(field('Horas a la sombra'), '4');
     await save();
 
     // El error ocupa el lugar de la pista del campo.

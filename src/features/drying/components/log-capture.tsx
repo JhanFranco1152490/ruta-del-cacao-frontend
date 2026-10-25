@@ -7,12 +7,7 @@ import type { UseFormSetError } from 'react-hook-form';
 import { OfflineBanner } from '@/components/offline-banner';
 import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 import type { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
-import {
-  formatShortDayMonth,
-  formatTime,
-  fromBogotaLocal,
-} from '@/lib/format/dates';
-import { farmLabel } from '@/lib/format/place-label';
+import { fromBogotaLocal } from '@/lib/format/dates';
 import { isLocalDateTime } from '@/lib/validation/moment';
 
 import { type Drying, type DryingLog, useUpdateLog } from '../api';
@@ -64,7 +59,7 @@ export function LogCapture({
   const [id] = useState(
     () => rejected?.id ?? serverLog?.id ?? crypto.randomUUID(),
   );
-  const { lot, farm, facility } = drying;
+  const { lot, facility } = drying;
   const isOnline = sync.status.isOnline;
 
   // Las bitácoras con las que se compara la fecha: las del servidor y las que van camino a él desde
@@ -157,7 +152,7 @@ export function LogCapture({
     <LogFormFields
       cancelHref={returnPath}
       defaultValues={defaultValues}
-      description={`${lot.code} · ${facility.name} · ${farmLabel(farm)} · inició el ${formatShortDayMonth(drying.started_at)}. a las ${formatTime(drying.started_at)}`}
+      description={`${lot.code} · ${facility.name}`}
       disabledMessage={
         serverLog && !isOnline
           ? 'Corregir una bitácora necesita conexión.'

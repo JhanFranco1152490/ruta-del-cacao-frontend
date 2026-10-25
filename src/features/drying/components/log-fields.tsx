@@ -86,17 +86,15 @@ export function LogFields({
         className={MEASURE_FIELD_CLASS}
         disabled={isSaving}
         error={errors.moisture_pct?.message}
-        hint={`Meta: ${rangeText(targetMoisture)}`}
         inputMode="decimal"
         label="Humedad (%)"
-        wrapperClassName="col-span-2"
+        placeholder={`Meta: ${rangeText(targetMoisture)}`}
         {...register('moisture_pct')}
       />
       <TextField
         className={MEASURE_FIELD_CLASS}
         disabled={isSaving}
         error={errors.sun_hours?.message}
-        hint="Si estuvo nublado o llovió todo el día, escribe 0."
         inputMode="decimal"
         label="Horas al sol"
         {...register('sun_hours')}
@@ -105,9 +103,9 @@ export function LogFields({
         className={MEASURE_FIELD_CLASS}
         disabled={isSaving}
         error={errors.shade_hours?.message}
-        hint="Las horas que el grano estuvo cubierto o guardado."
         inputMode="decimal"
-        label="Horas a la sombra (opcional)"
+        label="Horas a la sombra"
+        placeholder="Opcional"
         {...register('shade_hours')}
       />
       <TextField
@@ -116,7 +114,6 @@ export function LogFields({
         error={errors.turn_count?.message}
         inputMode="numeric"
         label="Volteos del día"
-        wrapperClassName={withTurns ? undefined : 'col-span-2'}
         {...register('turn_count')}
       />
       {withTurns && (
@@ -124,9 +121,9 @@ export function LogFields({
           className={MEASURE_FIELD_CLASS}
           disabled={isSaving}
           error={errors.turn_frequency_hours?.message}
-          hint="Cada cuántas horas."
           inputMode="decimal"
-          label="Frecuencia (h)"
+          label="Cada cuántas horas (h)"
+          wrapperClassName="col-span-2"
           {...register('turn_frequency_hours')}
         />
       )}
