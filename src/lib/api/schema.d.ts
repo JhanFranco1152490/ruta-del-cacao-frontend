@@ -1239,6 +1239,41 @@ export interface paths {
         patch: operations["postharvest_facilities_partial_update"];
         trace?: never;
     };
+    "/api/postharvest-parameters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los parámetros de secado vigentes del productor de la sesión, con la línea base al lado. Si nunca los cambió, `is_default` es verdadero, `values` es la línea base y `version` es 0. */
+        get: operations["postharvest_parameters_retrieve"];
+        /** @description Guarda los quince valores juntos. Requiere `expected_version` (0 si el productor usa la línea base); si cambiaron entretanto, 409 `stale_version` con los vigentes en `current`. Cada error va en `fields.{campo}`; el de un mínimo mayor que su máximo, en el mínimo. La cuenta técnica nombra el productor en `producer`. */
+        put: operations["postharvest_parameters_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/postharvest-parameters/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Vuelve a la línea base: los parámetros guardados se borran y `is_default` queda verdadero. Requiere `expected_version`; si cambiaron entretanto, 409 `stale_version` con los vigentes en `current`. Si ya estaba en la línea base, responde igual sin registrar nada. */
+        post: operations["postharvest_parameters_reset_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/producers": {
         parameters: {
             query?: never;
@@ -2247,6 +2282,23 @@ export interface components {
             green_weight_kg: string;
             harvest: components["schemas"]["HarvestRepresentation"];
         };
+        /**
+         * @description Lo que el productor configuró para fermentar: cuándo toca cada volteo y la temperatura y el
+         *     pH de referencia. Viajan con cada fermentación para que el teléfono calcule el próximo volteo
+         *     sin conexión y muestre la referencia al registrar uno.
+         */
+        FermentationParameters: {
+            first_turn_hours: number;
+            next_turn_hours: number;
+            /** Format: decimal */
+            temperature_min_c: string;
+            /** Format: decimal */
+            temperature_max_c: string;
+            /** Format: decimal */
+            ph_min: string;
+            /** Format: decimal */
+            ph_max: string;
+        };
         FermentationPerson: {
             /** Format: uuid */
             id: string;
@@ -2265,6 +2317,7 @@ export interface components {
             readonly elapsed_hours: string;
             /** Format: date-time */
             readonly next_turn_due_at: string | null;
+            readonly parameters: components["schemas"]["FermentationParameters"];
             readonly turns: components["schemas"]["FermentationTurn"][];
             readonly result: components["schemas"]["FermentationResult"] | null;
             version: number;
@@ -2876,6 +2929,11 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Role"][];
         };
+        ParametersAuthor: {
+            /** Format: uuid */
+            id: string;
+            readonly full_name: string;
+        };
         PasswordResetConfirmRequest: {
             new_password: string;
             new_password_confirmation: string;
@@ -3290,6 +3348,102 @@ export interface components {
          * @enum {string}
          */
         PostharvestFacilityStatusEnum: "available" | "occupied" | "inactive";
+        PostharvestParameters: {
+            /** Format: uuid */
+            producer_id: string;
+            is_default: boolean;
+            values: components["schemas"]["PostharvestValues"];
+            baseline: components["schemas"]["PostharvestValues"];
+            version: number;
+            /** Format: date-time */
+            updated_at: string | null;
+            updated_by: components["schemas"]["ParametersAuthor"] | null;
+        };
+        PostharvestParametersResetRequest: {
+            /** Format: uuid */
+            producer?: string;
+            expected_version: number;
+        };
+        PostharvestParametersSaveRequest: {
+            /** Format: uuid */
+            producer?: string;
+            expected_version: number;
+            values: components["schemas"]["PostharvestValuesInputRequest"];
+        };
+        PostharvestValues: {
+            /** Format: decimal */
+            entry_moisture_min_pct: string;
+            /** Format: decimal */
+            entry_moisture_max_pct: string;
+            /** Format: decimal */
+            target_moisture_min_pct: string;
+            /** Format: decimal */
+            target_moisture_max_pct: string;
+            estimated_days_min: number;
+            estimated_days_max: number;
+            slow_stall_window_hours: number;
+            /** Format: decimal */
+            slow_stall_min_drop_pct: string;
+            slow_duration_day: number;
+            /** Format: decimal */
+            slow_duration_moisture_pct: string;
+            accelerated_day: number;
+            /** Format: decimal */
+            accelerated_moisture_pct: string;
+            /** Format: decimal */
+            near_target_min_pct: string;
+            /** Format: decimal */
+            near_target_max_pct: string;
+            /** Format: decimal */
+            overdried_moisture_pct: string;
+            first_turn_hours: number;
+            next_turn_hours: number;
+            /** Format: decimal */
+            temperature_min_c: string;
+            /** Format: decimal */
+            temperature_max_c: string;
+            /** Format: decimal */
+            ph_min: string;
+            /** Format: decimal */
+            ph_max: string;
+        };
+        PostharvestValuesInputRequest: {
+            /** Format: decimal */
+            entry_moisture_min_pct: string;
+            /** Format: decimal */
+            entry_moisture_max_pct: string;
+            /** Format: decimal */
+            target_moisture_min_pct: string;
+            /** Format: decimal */
+            target_moisture_max_pct: string;
+            estimated_days_min: number;
+            estimated_days_max: number;
+            slow_stall_window_hours: number;
+            /** Format: decimal */
+            slow_stall_min_drop_pct: string;
+            slow_duration_day: number;
+            /** Format: decimal */
+            slow_duration_moisture_pct: string;
+            accelerated_day: number;
+            /** Format: decimal */
+            accelerated_moisture_pct: string;
+            /** Format: decimal */
+            near_target_min_pct: string;
+            /** Format: decimal */
+            near_target_max_pct: string;
+            /** Format: decimal */
+            overdried_moisture_pct: string;
+            first_turn_hours: number;
+            next_turn_hours: number;
+            /** Format: decimal */
+            temperature_min_c: string;
+            /** Format: decimal */
+            temperature_max_c: string;
+            /** Format: decimal */
+            ph_min: string;
+            /** Format: decimal */
+            ph_max: string;
+        };
         ProducerAccount: {
             /** Format: uuid */
             id: string;
@@ -9404,6 +9558,186 @@ export interface operations {
                 };
             };
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_parameters_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Solo la cuenta técnica, y para ella obligatorio: el productor cuyos parámetros se quiere ver. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestParameters"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_parameters_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostharvestParametersSaveRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestParameters"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_parameters_reset_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostharvestParametersResetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestParameters"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

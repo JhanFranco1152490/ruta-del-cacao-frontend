@@ -151,6 +151,15 @@ export function TurnCapture({
     );
   };
 
+  const { parameters } = fermentation;
+  const reference = parameters && {
+    temperature: {
+      min: parameters.temperature_min_c,
+      max: parameters.temperature_max_c,
+    },
+    ph: { min: parameters.ph_min, max: parameters.ph_max },
+  };
+
   return (
     <TurnFormFields
       cancelHref={returnPath}
@@ -178,6 +187,7 @@ export function TurnCapture({
         </>
       }
       onSubmit={submit}
+      reference={reference}
       startedAt={fermentation.started_at}
       submitLabel={
         serverTurn || isOnline ? 'Guardar' : 'Guardar en el teléfono'

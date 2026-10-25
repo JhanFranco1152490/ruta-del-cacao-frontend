@@ -97,7 +97,8 @@ src/
                        con su `group` (el menú agrupa por tarea; ver el sistema de diseño)
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       health, notifications, harvests, lots, fermentation, drying, facilities, users y
+                       health, notifications, harvests, lots, fermentation, drying, facilities,
+                       postharvest-parameters, users y
                        roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
@@ -286,7 +287,9 @@ src/
   solo en línea (`useReadyLots`).
   - **Las horas y el próximo volteo se calculan en el dispositivo** (`fermentation-time.ts`,
     `next-turn.ts`, `fermentation-list.ts`), no se toman de la copia, que puede ser de ayer: el primer
-    volteo a las 48 h y luego cada 24 h, las mismas constantes que el servidor. El número de un volteo
+    volteo a las 48 h y luego cada 24 h en la línea base, o las horas que el productor configuró
+    (`parameters` de cada fermentación, que el servidor entrega para que el teléfono calcule lo mismo,
+    también sin conexión; una copia anterior usa la línea base). El número de un volteo
     es su posición por hora, también con los de la cola (`turn-rules.ts`), y las horas se comparan por
     minuto (`minuteOf`): el servidor no acepta dos volteos en el mismo minuto (`duplicate-turn.ts`
     avisa antes de guardar).
@@ -312,7 +315,8 @@ src/
     pH 4,90), no con los ceros quitados.
   - **La pantalla de campo del volteo** es una tarjeta con temperatura y pH lado a lado, también en
     celular, en grande y centrados; el título es solo «Volteo 4» y el código del lote va en la línea de
-    debajo, para que quepa en una pantalla de celular sin desplazarse.
+    debajo, para que quepa en una pantalla de celular sin desplazarse. Bajo cada campo dice la temperatura y el pH de referencia del
+    productor (`reference-hint.ts`); una lectura fuera de ese rango lo dice, sin impedir guardarla.
   - **La sección de la ficha del lote** (`fermentation-section.tsx`) la monta la página de lotes: un lote
     Generado ofrece iniciar; uno en fermentación o más adelante muestra sus datos, sus acciones y la
     tabla de volteos (`turn-rows.ts`, con los de la cola como «Pendiente de enviar»). Sin conexión se
@@ -352,6 +356,27 @@ src/
     Infraestructura. La sección de la ficha del lote (`drying-section.tsx`) muestra los datos y la
     bitácora día por día (`log-rows.ts`, con los días sin registro como fila tenue) en una tabla que
     cabe sin desplazarse a 1280 px.
+
+- **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un
+  formulario de página (sin banner, `narrow`) con los 21 valores con los que se evalúan el secado y
+  la fermentación, en tres tarjetas, **Secado**, **Alertas del secado** y **Fermentación** (cuándo toca
+  cada volteo y la temperatura y el pH de referencia), que se ven de una en una con pestañas (`?seccion=`,
+  `use-parameters-section.ts`): juntas eran demasiado altas, sobre todo en celular. Si guardar falla,
+  se abre la pestaña con el primer error y la otra dice cuántos valores hay por revisar. Los
+  parámetros son del productor, no de una
+  finca. La respuesta trae la línea base (`baseline`), así que el frontend no tiene copia de ella.
+  - **Las reglas son funciones puras** (`parameters-form.ts`, con los campos y topes en
+    `parameter-fields.ts`): los porcentajes de 0 a 100 con un decimal (`lib/validation/percent.ts`,
+    compartido con el secado), los días y las horas enteros y mayores que cero con sus topes (60 días,
+    240 horas), el mínimo de cada rango no mayor que el máximo (el error va en el campo **Mínimo**),
+    qué campos son **Cambiado** (contra la línea base) y si hay cambios sin guardar (contra lo
+    cargado). Los textos de lo que hace cada parámetro están en `parameter-rows.ts`.
+  - **Se cambia solo en línea:** guardar reemplaza los 21 valores con `expected_version`;
+    **Restablecer línea base** pide confirmar y avisa que los cambios sin guardar se pierden;
+    `stale_version` carga los valores vigentes. La lectura tiene copia en el dispositivo
+    (`postharvest-parameters`, o `postharvest-parameters:producer:{id}` para la cuenta técnica): sin
+    conexión, o con permiso solo de consulta, los valores se ven como datos
+    (`parameters-readonly.tsx`). La cuenta técnica elige el productor con `?productor=`.
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni

@@ -36,6 +36,8 @@ export const PERMISSIONS = {
   FACILITIES_ADD: 'facilities.add_postharvestfacility',
   FACILITIES_CHANGE: 'facilities.change_postharvestfacility',
   FACILITIES_DELETE: 'facilities.delete_postharvestfacility',
+  PARAMETERS_VIEW: 'postharvest_parameters.view_postharvestparameters',
+  PARAMETERS_CHANGE: 'postharvest_parameters.change_postharvestparameters',
   HEALTH_MANAGE_PEST_DISEASE: 'health.manage_pestdisease',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',

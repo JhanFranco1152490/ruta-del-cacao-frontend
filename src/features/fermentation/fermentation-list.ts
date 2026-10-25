@@ -8,7 +8,11 @@ import type { Fermentation } from './api';
 import { turnsText } from './fermentation-time';
 import { hoursBetween } from '@/lib/format/hours';
 import { phText, temperatureText } from './measure-text';
-import { isTurnOverdue, nextTurnDueAt } from './next-turn';
+import {
+  BASELINE_TURN_SCHEDULE,
+  isTurnOverdue,
+  nextTurnDueAt,
+} from './next-turn';
 import { pendingTurnsOf, type QueuedTurn } from './turn-queue';
 import { lastTurnedAt, numberTurns } from './turn-rules';
 
@@ -37,7 +41,13 @@ export const shownTurns = (
 export const dueAt = (
   fermentation: Fermentation,
   turns: readonly ShownTurn[],
-) => nextTurnDueAt(fermentation.started_at, lastTurnedAt(turns));
+) =>
+  nextTurnDueAt(
+    fermentation.started_at,
+    lastTurnedAt(turns),
+    // Una copia anterior a los parámetros no los trae: la línea base los reemplaza.
+    fermentation.parameters ?? BASELINE_TURN_SCHEDULE,
+  );
 
 export const countOverdue = (
   fermentations: readonly Fermentation[],

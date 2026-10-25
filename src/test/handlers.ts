@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, type JsonBodyType } from 'msw';
 
 import { API_URL } from '@/lib/env';
 
@@ -271,3 +271,13 @@ export const defaultHandlers = [
   municipalitiesHandler(),
   activityAssigneesHandler(),
 ];
+
+// Responde los parámetros de poscosecha y guarda las búsquedas recibidas.
+export const parametersHandler = (
+  parameters: JsonBodyType,
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/postharvest-parameters'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(parameters);
+  });

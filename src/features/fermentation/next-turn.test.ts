@@ -19,6 +19,22 @@ describe('nextTurnDueAt', () => {
   });
 });
 
+describe('nextTurnDueAt with the hours of the producer', () => {
+  const own = { first_turn_hours: 36, next_turn_hours: 12 };
+
+  it('waits the configured hours for the first turn', () => {
+    expect(instant(nextTurnDueAt(STARTED, null, own))).toBe(
+      instant('2026-10-16T19:00:00-05:00'),
+    );
+  });
+
+  it('waits the configured hours after the last turn', () => {
+    expect(
+      instant(nextTurnDueAt(STARTED, '2026-10-17T07:30:00-05:00', own)),
+    ).toBe(instant('2026-10-17T19:30:00-05:00'));
+  });
+});
+
 describe('isTurnOverdue', () => {
   const due = '2026-10-17T07:00:00-05:00';
 
