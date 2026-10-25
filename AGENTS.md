@@ -356,7 +356,10 @@ src/
 
 - **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un
   formulario de página (sin banner, `narrow`) con los 15 valores con los que se evalúa el secado, en
-  dos tarjetas: **Secado** y **Alertas del secado**. Los parámetros son del productor, no de una
+  dos tarjetas, **Secado** y **Alertas del secado**, que se ven de una en una con pestañas (`?seccion=`,
+  `use-parameters-section.ts`): juntas eran demasiado altas, sobre todo en celular. Si guardar falla,
+  se abre la pestaña con el primer error y la otra dice cuántos valores hay por revisar. Los
+  parámetros son del productor, no de una
   finca. La respuesta trae la línea base (`baseline`), así que el frontend no tiene copia de ella.
   - **Las reglas son funciones puras** (`parameters-form.ts`, con los campos y topes en
     `parameter-fields.ts`): los porcentajes de 0 a 100 con un decimal (`lib/validation/percent.ts`,

@@ -52,10 +52,29 @@ function renderScreen({
   });
 }
 
+const ALERT_TITLES = [
+  'Secado lento · por estancamiento',
+  'Secado lento · por duración',
+  'Secado acelerado',
+  'Próximo a meta',
+  'Sobresecado',
+];
+
+// Los parámetros están en dos pestañas: abre la que tiene el parámetro.
+async function openTabOf(title: string) {
+  const name = ALERT_TITLES.includes(title) ? 'Alertas del secado' : 'Secado';
+  const tab = await screen.findByRole('button', {
+    name: new RegExp(`^${name}`),
+  });
+  if (tab.getAttribute('aria-pressed') !== 'true') await userEvent.click(tab);
+}
+
 // La fila de un parámetro, por su nombre.
-const rowOf = async (title: string) =>
-  (await screen.findByRole('heading', { name: title })).parentElement!
+const rowOf = async (title: string) => {
+  await openTabOf(title);
+  return (await screen.findByRole('heading', { name: title })).parentElement!
     .parentElement!;
+};
 
 describe('ParametersScreen', () => {
   it('shows the 15 values of the baseline with their units, and nothing changed', async () => {
@@ -75,7 +94,10 @@ describe('ParametersScreen', () => {
         'En (horas)',
       ),
     ).toHaveValue('48');
-    expect(screen.getAllByRole('textbox')).toHaveLength(15);
+    await openTabOf('Humedad de entrada');
+    expect(screen.getAllByRole('textbox')).toHaveLength(6);
+    await openTabOf('Sobresecado');
+    expect(screen.getAllByRole('textbox')).toHaveLength(9);
     expect(screen.queryByText('Cambiado')).not.toBeInTheDocument();
     expect(screen.getByText('Usas la línea base.')).toBeInTheDocument();
     expect(
@@ -332,6 +354,7 @@ describe('ParametersScreen', () => {
     );
     renderScreen({ permissions: [PERMISSIONS.PARAMETERS_VIEW] });
 
+    await openTabOf('Secado lento · por duración');
     await screen.findByText('Secado lento · por duración');
     expect(screen.getAllByText('Cambiado')).toHaveLength(1);
     expect(screen.getByText('9 días')).toBeInTheDocument();
@@ -403,5 +426,47 @@ describe('ParametersScreen', () => {
 
     await rowOf('Humedad de entrada');
     expect(requests[0].get('producer')).toBe('p2');
+  });
+
+  it('shows one card at a time, and keeps the choice in the address', async () => {
+    renderScreen({ searchParams: '?seccion=alertas' });
+
+    expect(
+      await screen.findByRole('heading', { name: 'Sobresecado' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Humedad de entrada' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens the card with the wrong value when saving fails, and counts them in the other tab', async () => {
+    renderScreen();
+
+    const day = within(await rowOf('Secado acelerado')).getByLabelText(
+      'Hasta el día (días)',
+    );
+    await userEvent.clear(day);
+    await userEvent.type(day, '0');
+    await userEvent.click(screen.getByRole('button', { name: /^Secado$/ }));
+    expect(
+      screen.queryByRole('heading', { name: 'Secado acelerado' }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Secado acelerado' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Debe ser un número entero mayor que cero.'),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /^Secado$/ }));
+    expect(
+      screen.getByRole('button', {
+        name: 'Alertas del secado (1 por revisar)',
+      }),
+    ).toBeInTheDocument();
   });
 });

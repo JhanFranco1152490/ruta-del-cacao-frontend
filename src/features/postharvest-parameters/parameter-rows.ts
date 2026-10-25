@@ -10,8 +10,10 @@ export type ParameterRowConfig = {
   fields: readonly ParameterRowField[];
 };
 
+export type SectionId = 'secado' | 'alertas';
+
 export type ParameterSectionConfig = {
-  id: string;
+  id: SectionId;
   title: string;
   rows: readonly ParameterRowConfig[];
 };
@@ -25,7 +27,7 @@ const MIN_MAX = (min: ParameterKey, max: ParameterKey) =>
 // Los 15 valores, en dos tarjetas y en el orden en que se explican.
 export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
   {
-    id: 'drying',
+    id: 'secado',
     title: 'Secado',
     rows: [
       {
@@ -50,7 +52,7 @@ export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
     ],
   },
   {
-    id: 'alerts',
+    id: 'alertas',
     title: 'Alertas del secado',
     rows: [
       {
@@ -98,3 +100,10 @@ export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
     ],
   },
 ];
+
+// En qué tarjeta se edita un parámetro: con los campos repartidos en pestañas, un error en la que no
+// se ve se señala en su pestaña.
+export const sectionOfKey = (key: ParameterKey): SectionId =>
+  PARAMETER_SECTIONS.find(({ rows }) =>
+    rows.some(({ fields }) => fields.some((field) => field.key === key)),
+  )!.id;

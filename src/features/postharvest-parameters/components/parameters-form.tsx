@@ -12,7 +12,14 @@ import { notify } from '@/lib/notify';
 
 import { type PostharvestParameters, useSaveParameters } from '../api';
 import type { ParametersFormInput } from '../parameter-fields';
-import { PARAMETER_SECTIONS } from '../parameter-rows';
+import {
+  PARAMETER_SECTIONS,
+  type SectionId,
+  sectionOfKey,
+} from '../parameter-rows';
+import { useParametersSection } from '../use-parameters-section';
+import { ParametersTabs } from './parameters-tabs';
+import type { ParameterKey } from '../parameter-fields';
 import { saveFailureSummary } from '../parameters-errors';
 import {
   baselineText,
@@ -43,8 +50,17 @@ export function ParametersForm({
   });
   const save = useSaveParameters(producer);
   const [summary, setSummary] = useState<string>();
+  const [section, setSection] = useParametersSection();
   const current = useWatch({ control: form.control }) as ParametersFormInput;
   const { errors } = form.formState;
+  const errorKeys = Object.keys(errors) as ParameterKey[];
+  const errorCounts = errorKeys.reduce<Partial<Record<SectionId, number>>>(
+    (counts, key) => {
+      const id = sectionOfKey(key);
+      return { ...counts, [id]: (counts[id] ?? 0) + 1 };
+    },
+    {},
+  );
   const unsaved = hasUnsavedChanges(current, loaded);
   const changed = new Set(changedKeys(current, parameters.baseline));
 
@@ -74,15 +90,22 @@ export function ParametersForm({
       className="space-y-4"
       noValidate
       onSubmit={(event) =>
-        void form.handleSubmit(submit, () =>
-          setSummary('Revisa los valores marcados.'),
-        )(event)
+        void form.handleSubmit(submit, (invalid) => {
+          setSummary('Revisa los valores marcados.');
+          const first = Object.keys(invalid)[0] as ParameterKey | undefined;
+          if (first) void setSection(sectionOfKey(first));
+        })(event)
       }
     >
       {summary && <FormMessage>{summary}</FormMessage>}
-      {PARAMETER_SECTIONS.map((section) => (
-        <SectionCard accent="cobre" key={section.id} title={section.title}>
-          {section.rows.map((row) => (
+      <ParametersTabs
+        errorCounts={errorCounts}
+        onSection={(next) => void setSection(next)}
+        section={section}
+      />
+      {PARAMETER_SECTIONS.filter(({ id }) => id === section).map((shown) => (
+        <SectionCard accent="cobre" key={shown.id} title={shown.title}>
+          {shown.rows.map((row) => (
             <ParameterRow
               description={row.description}
               key={row.id}
