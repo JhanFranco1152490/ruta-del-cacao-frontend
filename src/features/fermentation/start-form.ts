@@ -12,7 +12,10 @@ import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 import type { Fermentation } from './api';
 import { exceedsCapacity } from './capacity';
 import { minuteOf } from '@/lib/format/hours';
-import { FUTURE_MOMENT_MESSAGE, isLocalDateTime } from './turn-form';
+import {
+  FUTURE_MOMENT_MESSAGE,
+  isLocalDateTime,
+} from '@/lib/validation/moment';
 
 type Schemas = components['schemas'];
 export type StartOptions = Schemas['StartOptions'];
@@ -134,26 +137,4 @@ export function startChanges(
       responsible_id: values.responsible_id,
     }),
   };
-}
-
-// Los responsables que se ofrecen. Al corregir, el actual se conserva aunque ya no pueda serlo
-// (desactivado), marcado, para no perderlo al corregir otra cosa.
-export function responsibleOptions(
-  options: StartOptions,
-  fermentation: Fermentation | undefined,
-) {
-  const offered = options.responsibles
-    .filter(({ assignable }) => assignable)
-    .map(({ id, full_name }) => ({ id, label: full_name }));
-  const current = fermentation?.responsible;
-  if (!current || offered.some(({ id }) => id === current.id)) return offered;
-  return [
-    ...offered,
-    {
-      id: current.id,
-      label: current.is_active
-        ? current.full_name
-        : `${current.full_name} (Cuenta inactiva)`,
-    },
-  ];
 }

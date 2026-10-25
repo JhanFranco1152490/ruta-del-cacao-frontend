@@ -21,7 +21,7 @@ import {
 } from '../finish-form';
 import { turnsText } from '../fermentation-time';
 import { hoursBetween } from '@/lib/format/hours';
-import { NOTES_MAX_LENGTH } from '../turn-form';
+import { NOTES_MAX_LENGTH } from '@/lib/validation/moment';
 import { lastTurnedAt } from '../turn-rules';
 
 // Finalizar la fermentación de un lote: libera el cajón y deja el lote listo para el secado. Solo

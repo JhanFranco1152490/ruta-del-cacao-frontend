@@ -11,12 +11,12 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { useSession } from '@/hooks/use-session';
 import { toBogotaLocal } from '@/lib/format/dates';
+import { responsibleOptions } from '@/lib/responsible-options';
 
 import type { Fermentation } from '../api';
 import {
   createStartFormSchema,
   facilityOptionLabel,
-  responsibleOptions,
   startFormOf,
   type StartFormInput,
   type StartOptions,
@@ -76,7 +76,10 @@ export function StartFermentationForm({
     onSaved,
     onClose,
   });
-  const people = responsibleOptions(options, fermentation);
+  const people = responsibleOptions(
+    options.responsibles,
+    fermentation?.responsible,
+  );
   const noBoxes = options.facilities.length === 0;
 
   return (

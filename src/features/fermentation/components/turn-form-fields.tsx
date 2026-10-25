@@ -18,11 +18,10 @@ import { hoursBetween } from '@/lib/format/hours';
 import { DUPLICATE_ERROR } from '../turn-errors';
 import {
   createTurnFormSchema,
-  isLocalDateTime,
-  NOTES_MAX_LENGTH,
   type TurnFormInput,
   type TurnFormValues,
 } from '../turn-form';
+import { isLocalDateTime, NOTES_MAX_LENGTH } from '@/lib/validation/moment';
 
 // Lo que se mide va en grande y centrado: se lee a un brazo de distancia, con el medidor en la otra
 // mano.

@@ -14,7 +14,7 @@ import {
   isLocalDateTime,
   NOTES_MAX_LENGTH,
   NOTES_TOO_LONG_MESSAGE,
-} from './turn-form';
+} from '@/lib/validation/moment';
 
 type Schemas = components['schemas'];
 

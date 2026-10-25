@@ -21,11 +21,11 @@ import {
 } from '../api';
 import { duplicateTurnMessage, sameMinuteTurn } from '../duplicate-turn';
 import {
-  isLocalDateTime,
   type TurnFormInput,
   type TurnFormValues,
   toTurnCreateRequest,
 } from '../turn-form';
+import { isLocalDateTime } from '@/lib/validation/moment';
 import { pendingTurnsOf, type QueuedTurn, turnQueueLabel } from '../turn-queue';
 import {
   correctionError,
