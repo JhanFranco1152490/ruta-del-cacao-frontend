@@ -19,7 +19,9 @@ export function ParameterRow({
         </h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:w-72">{children}</div>
+      <div className="grid grid-cols-2 gap-3 sm:w-[22rem] [&>*:only-child]:col-span-2">
+        {children}
+      </div>
     </div>
   );
 }

@@ -252,16 +252,16 @@ describe('changedKeys and hasUnsavedChanges', () => {
 describe('baselineText', () => {
   it('says the baseline of a value with its unit', () => {
     expect(baselineText('entry_moisture_min_pct', baseline)).toBe(
-      'Línea base: 55 %',
+      'Predeterminado: 55 %',
     );
     expect(baselineText('target_moisture_min_pct', baseline)).toBe(
-      'Línea base: 6,5 %',
+      'Predeterminado: 6,5 %',
     );
     expect(baselineText('estimated_days_min', baseline)).toBe(
-      'Línea base: 5 días',
+      'Predeterminado: 5 días',
     );
     expect(baselineText('slow_stall_window_hours', baseline)).toBe(
-      'Línea base: 48 horas',
+      'Predeterminado: 48 horas',
     );
   });
 });
@@ -277,7 +277,9 @@ describe('valueText', () => {
 
 describe('originLine', () => {
   it('says the baseline is in use when nothing was saved', () => {
-    expect(originLine(buildParameters())).toBe('Usas la línea base.');
+    expect(originLine(buildParameters())).toBe(
+      'Usas los valores predeterminados.',
+    );
   });
 
   it('says who changed them and when', () => {

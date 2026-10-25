@@ -7,8 +7,8 @@ import { TextField } from '@/components/text-field';
 import { type ParameterKey, unitOf } from '../parameter-fields';
 import { ChangedMark } from './changed-mark';
 
-// Un campo de parámetro: la etiqueta con su unidad, la línea base debajo como referencia y la marca
-// «Cambiado» si ya no es la línea base. Los porcentajes y las horas aceptan coma o punto.
+// Un campo de parámetro: la etiqueta con su unidad, el valor predeterminado debajo como referencia y la marca
+// «Cambiado» si ya no es el predeterminado. Los porcentajes y las horas aceptan coma o punto.
 export function ParameterInput({
   name,
   label,

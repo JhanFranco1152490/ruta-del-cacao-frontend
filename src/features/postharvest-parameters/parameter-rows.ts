@@ -29,6 +29,40 @@ const MIN_MAX = (min: ParameterKey, max: ParameterKey) =>
 // Los 21 valores, en dos tarjetas y en el orden en que se explican.
 export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
   {
+    id: 'fermentacion',
+    title: 'Fermentación',
+    tab: 'Fermentación',
+    rows: [
+      {
+        id: 'first-turn',
+        title: 'Primer volteo',
+        description:
+          'Horas desde el inicio de la fermentación hasta que toca el primer volteo.',
+        fields: [{ key: 'first_turn_hours', label: 'A las' }],
+      },
+      {
+        id: 'next-turns',
+        title: 'Volteos siguientes',
+        description: 'Horas entre un volteo y el siguiente.',
+        fields: [{ key: 'next_turn_hours', label: 'Cada' }],
+      },
+      {
+        id: 'temperature',
+        title: 'Temperatura de referencia',
+        description:
+          'Rango esperado en el centro de la masa. Se muestra al registrar un volteo; no lo bloquea.',
+        fields: MIN_MAX('temperature_min_c', 'temperature_max_c'),
+      },
+      {
+        id: 'ph',
+        title: 'pH de referencia',
+        description:
+          'Rango esperado. Se muestra al registrar un volteo; no lo bloquea.',
+        fields: MIN_MAX('ph_min', 'ph_max'),
+      },
+    ],
+  },
+  {
     id: 'secado',
     title: 'Secado',
     tab: 'Secado',
@@ -100,40 +134,6 @@ export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
         description:
           'La alerta crítica: se muestra destacada sobre las demás notificaciones.',
         fields: [{ key: 'overdried_moisture_pct', label: 'Por debajo de' }],
-      },
-    ],
-  },
-  {
-    id: 'fermentacion',
-    title: 'Fermentación',
-    tab: 'Fermentación',
-    rows: [
-      {
-        id: 'first-turn',
-        title: 'Primer volteo',
-        description:
-          'Horas desde el inicio de la fermentación hasta que toca el primer volteo.',
-        fields: [{ key: 'first_turn_hours', label: 'A las' }],
-      },
-      {
-        id: 'next-turns',
-        title: 'Volteos siguientes',
-        description: 'Horas entre un volteo y el siguiente.',
-        fields: [{ key: 'next_turn_hours', label: 'Cada' }],
-      },
-      {
-        id: 'temperature',
-        title: 'Temperatura de referencia',
-        description:
-          'Rango esperado en el centro de la masa. Se muestra al registrar un volteo; no lo bloquea.',
-        fields: MIN_MAX('temperature_min_c', 'temperature_max_c'),
-      },
-      {
-        id: 'ph',
-        title: 'pH de referencia',
-        description:
-          'Rango esperado. Se muestra al registrar un volteo; no lo bloquea.',
-        fields: MIN_MAX('ph_min', 'ph_max'),
       },
     ],
   },

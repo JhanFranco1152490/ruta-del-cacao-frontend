@@ -168,7 +168,7 @@ export function toParameterValues(
 const sameNumber = (a: string, b: string) =>
   Number(decimalText().parse(a)) === Number(decimalText().parse(b));
 
-// Los parámetros que no son los de la línea base: llevan la marca «Cambiado».
+// Los parámetros que no son los predeterminados: llevan la marca «Cambiado».
 export const changedKeys = (
   form: ParametersFormInput,
   baseline: ParameterValues,
@@ -193,18 +193,18 @@ export function valueText(key: ParameterKey, value: string | number) {
   return unit === 'pH' ? text : `${text} ${unit}`;
 }
 
-// «Línea base: 55 %», «Línea base: 5 días».
+// «Predeterminado: 55 %», «Predeterminado: 5 días».
 export const baselineText = (key: ParameterKey, baseline: ParameterValues) =>
-  `Línea base: ${valueText(key, baseline[key])}`;
+  `Predeterminado: ${valueText(key, baseline[key])}`;
 
-// De dónde salen los valores: la línea base o lo que cambió alguien, con la fecha y quién.
+// De dónde salen los valores: los predeterminados o lo que cambió alguien, con la fecha y quién.
 export function originLine(parameters: {
   is_default: boolean;
   updated_at: string | null;
   updated_by: { full_name: string } | null;
 }) {
   if (parameters.is_default || !parameters.updated_at) {
-    return 'Usas la línea base.';
+    return 'Usas los valores predeterminados.';
   }
   const when = formatShortDayMonth(parameters.updated_at);
   const who = parameters.updated_by

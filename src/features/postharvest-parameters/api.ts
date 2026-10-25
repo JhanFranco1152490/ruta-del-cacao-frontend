@@ -6,6 +6,8 @@ import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
 
+import { FERMENTATION_DEFAULTS } from './parameter-fields';
+
 type Schemas = components['schemas'];
 
 export type PostharvestParameters = Schemas['PostharvestParameters'];
@@ -31,6 +33,16 @@ export const fetchParameters = (
     { signal },
   );
 
+// Completa con los predeterminados lo que falte de fermentación: una respuesta o una copia del
+// dispositivo guardada antes de que existieran esos valores no los trae.
+export const withFermentationDefaults = (
+  parameters: PostharvestParameters,
+): PostharvestParameters => ({
+  ...parameters,
+  values: { ...FERMENTATION_DEFAULTS, ...parameters.values },
+  baseline: { ...FERMENTATION_DEFAULTS, ...parameters.baseline },
+});
+
 export const useParameters = (
   userId: string | undefined,
   producer: string | null,
@@ -42,6 +54,7 @@ export const useParameters = (
       readThroughCache(userId!, parametersCacheKey(producer), () =>
         fetchParameters(producer, signal),
       ),
+    select: (read) => ({ ...read, data: withFermentationDefaults(read.data) }),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
   });

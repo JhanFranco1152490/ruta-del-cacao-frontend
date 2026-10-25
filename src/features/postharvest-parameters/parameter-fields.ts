@@ -30,6 +30,15 @@ export const HOUR_KEYS = [
   'slow_stall_window_hours',
 ] as const satisfies readonly ParameterKey[];
 
+export const FERMENTATION_KEYS = [
+  'first_turn_hours',
+  'next_turn_hours',
+  'temperature_min_c',
+  'temperature_max_c',
+  'ph_min',
+  'ph_max',
+] as const satisfies readonly ParameterKey[];
+
 // Las horas que espera un volteo de la fermentación.
 export const TURN_HOUR_KEYS = [
   'first_turn_hours',
@@ -87,6 +96,21 @@ export const PARAMETER_KEYS: readonly ParameterKey[] = [
   'ph_min',
   'ph_max',
 ];
+
+// Los valores predeterminados de fermentación. El servidor los entrega siempre con la línea base; esta
+// copia solo completa una respuesta o una copia del dispositivo anterior a los parámetros de
+// fermentación, para que la pantalla no muestre «undefined» ni «NaN».
+export const FERMENTATION_DEFAULTS: Pick<
+  ParameterValues,
+  (typeof FERMENTATION_KEYS)[number]
+> = {
+  first_turn_hours: 48,
+  next_turn_hours: 24,
+  temperature_min_c: '40.0',
+  temperature_max_c: '50.0',
+  ph_min: '4.00',
+  ph_max: '5.50',
+};
 
 export type ParameterUnit = '%' | 'días' | 'horas' | '°C' | 'pH';
 

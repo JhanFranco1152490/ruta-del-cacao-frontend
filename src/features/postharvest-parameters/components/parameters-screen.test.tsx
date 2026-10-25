@@ -81,6 +81,8 @@ async function openTabOf(title: string) {
 }
 
 // La fila de un parámetro, por su nombre.
+// El botón de restablecer está dos veces (en la barra de escritorio y debajo del formulario en
+// celular) y el CSS deja ver una sola; aquí no hay CSS, así que se toma la primera.
 const rowOf = async (title: string) => {
   await openTabOf(title);
   return (await screen.findByRole('heading', { name: title })).parentElement!
@@ -96,7 +98,9 @@ describe('ParametersScreen', () => {
     expect(min).toHaveValue('55,0');
     expect(max).toHaveValue('60,0');
     expect(within(entry).getByLabelText('Mínimo (%)')).toBe(min);
-    expect(within(entry).getAllByText(/Línea base: (55|60) %/)).toHaveLength(2);
+    expect(
+      within(entry).getAllByText(/Predeterminado: (55|60) %/),
+    ).toHaveLength(2);
     expect(
       within(await rowOf('Días estimados')).getByLabelText('Máximo (días)'),
     ).toHaveValue('7');
@@ -112,7 +116,9 @@ describe('ParametersScreen', () => {
     await openTabOf('Primer volteo');
     expect(screen.getAllByRole('textbox')).toHaveLength(6);
     expect(screen.queryByText('Cambiado')).not.toBeInTheDocument();
-    expect(screen.getByText('Usas la línea base.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Usas los valores predeterminados.'),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/Se aplican a todas tus fincas/),
     ).toBeInTheDocument();
@@ -120,7 +126,7 @@ describe('ParametersScreen', () => {
       screen.getByRole('button', { name: 'Guardar cambios' }),
     ).toBeDisabled();
     expect(
-      screen.queryByRole('button', { name: 'Restablecer línea base' }),
+      screen.queryByRole('button', { name: 'Restablecer predeterminados' }),
     ).not.toBeInTheDocument();
   });
 
@@ -192,7 +198,7 @@ describe('ParametersScreen', () => {
       within(await rowOf('Secado lento · por duración')).getByText('Cambiado'),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Restablecer línea base' }),
+      screen.getAllByRole('button', { name: 'Restablecer predeterminados' })[0],
     ).toBeInTheDocument();
   });
 
@@ -322,11 +328,13 @@ describe('ParametersScreen', () => {
       await userEvent.clear(day);
       await userEvent.type(day, '4');
       await userEvent.click(
-        screen.getByRole('button', { name: 'Restablecer línea base' }),
+        screen.getAllByRole('button', {
+          name: 'Restablecer predeterminados',
+        })[0],
       );
 
       expect(
-        await screen.findByText('¿Restablecer la línea base?'),
+        await screen.findByText('¿Restablecer los parámetros predeterminados?'),
       ).toBeInTheDocument();
       expect(
         screen.getByText('Los cambios sin guardar se pierden.'),
@@ -336,7 +344,7 @@ describe('ParametersScreen', () => {
       );
 
       expect(
-        await screen.findByText('Valores restablecidos a la línea base'),
+        await screen.findByText('Valores predeterminados restablecidos'),
       ).toBeInTheDocument();
       expect(bodies).toEqual([{ expected_version: 3 }]);
     });
@@ -354,7 +362,7 @@ describe('ParametersScreen', () => {
     expect(
       screen.queryByRole('button', { name: 'Guardar cambios' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText('Humedad de entrada')).toBeInTheDocument();
+    expect(screen.getByText('Primer volteo')).toBeInTheDocument();
   });
 
   it('marks in the read only view what is not the baseline', async () => {
@@ -498,8 +506,8 @@ describe('ParametersScreen', () => {
     expect(
       within(await rowOf('pH de referencia')).getByLabelText('Máximo (pH)'),
     ).toHaveValue('5,50');
-    expect(screen.getByText('Línea base: 4,00')).toBeInTheDocument();
-    expect(screen.getByText('Línea base: 40,0 °C')).toBeInTheDocument();
+    expect(screen.getByText('Predeterminado: 4,00')).toBeInTheDocument();
+    expect(screen.getByText('Predeterminado: 40,0 °C')).toBeInTheDocument();
   });
 
   it('saves the turn times as numbers and the pH as text', async () => {

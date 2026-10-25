@@ -9,7 +9,7 @@ import { ChangedMark } from './changed-mark';
 import { ParametersTabs } from './parameters-tabs';
 
 // Los parámetros como datos, para quien solo consulta o no tiene conexión: cada parámetro con su
-// valor y su unidad, y la marca «Cambiado» si no es la línea base.
+// valor y su unidad, y la marca «Cambiado» si no es el predeterminado.
 export function ParametersReadonly({
   values,
   baseline,

@@ -34,7 +34,7 @@ import { ParameterRow } from './parameter-row';
 import { ParametersResetDialog } from './parameters-reset-dialog';
 
 // Los 21 valores como campos. Guardar se habilita con cambios y reemplaza los 15 a la vez; restablecer
-// vuelve a la línea base. Cuando llegan valores nuevos (se guardó o los cambió otra persona), los
+// vuelve a los predeterminados. Cuando llegan valores nuevos (se guardó o los cambió otra persona), los
 // campos se cargan con ellos.
 export function ParametersForm({
   parameters,
@@ -149,13 +149,24 @@ export function ParametersForm({
         >
           Descartar
         </Button>
+        {!parameters.is_default && (
+          <div className="max-lg:hidden lg:ml-auto">
+            <ParametersResetDialog
+              hasUnsavedChanges={unsaved}
+              producer={producer}
+              version={version}
+            />
+          </div>
+        )}
       </MobileActionBar>
       {!parameters.is_default && (
-        <ParametersResetDialog
-          hasUnsavedChanges={unsaved}
-          producer={producer}
-          version={version}
-        />
+        <div className="lg:hidden">
+          <ParametersResetDialog
+            hasUnsavedChanges={unsaved}
+            producer={producer}
+            version={version}
+          />
+        </div>
       )}
     </form>
   );

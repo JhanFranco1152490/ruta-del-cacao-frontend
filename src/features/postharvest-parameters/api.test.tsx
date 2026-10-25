@@ -107,6 +107,62 @@ describe('useParameters', () => {
   });
 });
 
+describe('parameters saved before the fermentation values existed', () => {
+  const withoutFermentation = () => {
+    const parameters = buildParameters();
+    for (const key of [
+      'first_turn_hours',
+      'next_turn_hours',
+      'temperature_min_c',
+      'temperature_max_c',
+      'ph_min',
+      'ph_max',
+    ] as const) {
+      delete (parameters.values as Partial<typeof parameters.values>)[key];
+      delete (parameters.baseline as Partial<typeof parameters.baseline>)[key];
+    }
+    return parameters;
+  };
+
+  it('completes the fermentation values with the defaults, in the values and in the baseline', async () => {
+    const userId = newUser();
+    await getOfflineDb(userId).cache.put({
+      key: 'postharvest-parameters',
+      value: withoutFermentation(),
+      fetchedAt: 1_700_000_000_000,
+    });
+    server.use(http.get(apiUrl(PATH), () => HttpResponse.error()));
+
+    const { result } = render(() => useParameters(userId, null));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const { values, baseline } = result.current.data!.data;
+    expect(values).toMatchObject({
+      first_turn_hours: 48,
+      next_turn_hours: 24,
+      temperature_min_c: '40.0',
+      ph_max: '5.50',
+    });
+    expect(baseline.first_turn_hours).toBe(48);
+  });
+
+  it('keeps the fermentation values the server did send', async () => {
+    const userId = newUser();
+    server.use(
+      parametersHandler(
+        buildParameters({
+          values: { ...buildParameters().values, first_turn_hours: 36 },
+        }),
+      ),
+    );
+
+    const { result } = render(() => useParameters(userId, null));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data!.data.values.first_turn_hours).toBe(36);
+  });
+});
+
 describe('useSaveParameters', () => {
   const values = toParameterValues(parametersFormOf(buildParameters().values));
 

@@ -5,18 +5,19 @@ import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import type { SectionId } from './parameter-rows';
 
 const SECTIONS = [
+  'fermentacion',
   'secado',
   'alertas',
-  'fermentacion',
 ] as const satisfies readonly SectionId[];
 
 // La tarjeta que se ve, en la dirección (`?seccion=`): la pantalla trae 21 valores y juntos eran
-// demasiado alto. Una dirección malformada cae en la primera.
+// demasiado alto. Una dirección malformada cae en la primera:
+// la fermentación, que va primero en el proceso.
 export function useParametersSection() {
   return useQueryState(
     'seccion',
     parseAsStringLiteral(SECTIONS)
-      .withDefault('secado')
+      .withDefault('fermentacion')
       .withOptions({ clearOnDefault: true }),
   );
 }

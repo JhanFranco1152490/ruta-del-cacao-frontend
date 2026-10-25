@@ -23,7 +23,7 @@ const LOADING = (
   />
 );
 
-// Parámetros de secado: los valores con los que se evalúa el secado y se decide cuándo avisar. Es
+// Parámetros de poscosecha: los valores con los que se evalúa la fermentación y el secado y se decide cuándo avisar. Es
 // un formulario de página: se cambia en línea y quien solo consulta, o no tiene conexión, ve los
 // mismos valores como datos.
 export function ParametersScreen() {
@@ -41,11 +41,13 @@ export function ParametersScreen() {
   const parameters = read.data?.data;
 
   return (
-    <div className={pageContainerClass('narrow', 'space-y-4')}>
+    <div className={pageContainerClass('wide', 'space-y-4')}>
       <PageHeader
+        accent="cobre"
         description={parameters ? originLine(parameters) : undefined}
         eyebrow="Poscosecha"
-        title="Parámetros de secado"
+        title="Parámetros de poscosecha"
+        tone="claro"
       />
       {screen.superuser && (
         <ProducerFilter
