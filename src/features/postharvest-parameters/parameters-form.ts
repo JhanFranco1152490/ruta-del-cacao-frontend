@@ -8,7 +8,6 @@ import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 import { percentField } from '@/lib/validation/percent';
 
 import {
-  DAY_KEYS,
   HOUR_KEYS,
   MAX_DAYS,
   MAX_HOURS,
@@ -53,7 +52,10 @@ const dropField = percentField.refine(
   POSITIVE_DROP_MESSAGE,
 );
 
-const FIELD_SCHEMAS: Record<ParameterKey, z.ZodType> = Object.fromEntries(
+const FIELD_SCHEMAS: Record<
+  ParameterKey,
+  z.ZodType<unknown, string>
+> = Object.fromEntries(
   PARAMETER_KEYS.map((key) => {
     if (key === 'slow_stall_min_drop_pct') return [key, dropField];
     if ((PERCENT_KEYS as readonly string[]).includes(key)) {
@@ -63,7 +65,7 @@ const FIELD_SCHEMAS: Record<ParameterKey, z.ZodType> = Object.fromEntries(
       ? [key, wholeNumberField(MAX_HOURS, MAX_HOURS_MESSAGE)]
       : [key, wholeNumberField(MAX_DAYS, MAX_DAYS_MESSAGE)];
   }),
-) as Record<ParameterKey, z.ZodType>;
+) as Record<ParameterKey, z.ZodType<unknown, string>>;
 
 // El valor de un campo ya revisado, o NaN si está vacío o mal escrito.
 const numericValue = (value: unknown) =>
