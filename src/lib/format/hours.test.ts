@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { durationText, hoursBetween, hoursText, minuteOf } from './hours';
+import {
+  durationLine,
+  durationText,
+  hoursBetween,
+  hoursText,
+  minuteOf,
+} from './hours';
 
 describe('hoursBetween', () => {
   it('counts the hours between two moments', () => {
@@ -55,5 +61,19 @@ describe('minuteOf', () => {
     expect(minuteOf('2026-10-17T08:01:00-05:00')).toBe(
       minuteOf('2026-10-17T08:00:00-05:00') + 1,
     );
+  });
+});
+
+const STARTED = '2026-10-15T07:00:00-05:00';
+
+describe('durationLine', () => {
+  it('says the duration that the chosen end gives', () => {
+    expect(durationLine(STARTED, '2026-10-20T09:00')).toBe(
+      'Duración: 5 días y 2 h (122 h)',
+    );
+  });
+
+  it('says nothing without a whole date and time', () => {
+    expect(durationLine(STARTED, '')).toBeNull();
   });
 });

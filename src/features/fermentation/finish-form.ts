@@ -8,7 +8,7 @@ import {
 } from '@/lib/format/dates';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
-import { durationText, hoursBetween, minuteOf } from '@/lib/format/hours';
+import { durationText, minuteOf } from '@/lib/format/hours';
 import {
   FUTURE_MOMENT_MESSAGE,
   isLocalDateTime,
@@ -56,14 +56,6 @@ export const finishFormOf = (now: Date): FinishFormInput => ({
   ended_at: toBogotaLocal(now.toISOString()),
   notes: '',
 });
-
-// «Duración: 5 días y 2 h (122 h)», con el fin que tiene el campo.
-export function durationLine(startedAt: string, localEnd: string) {
-  if (!isLocalDateTime(localEnd)) return null;
-  const hours = hoursBetween(startedAt, fromBogotaLocal(localEnd));
-  if (hours <= 0) return null;
-  return `Duración: ${durationText(hours)} (${Math.round(hours)} h)`;
-}
 
 // Por qué no se puede finalizar todavía. Los volteos que esperan en la cola del teléfono cuentan:
 // finalizar antes de que lleguen los dejaría rechazados.

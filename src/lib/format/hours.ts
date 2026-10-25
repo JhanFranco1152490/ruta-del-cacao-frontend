@@ -1,4 +1,6 @@
+import { fromBogotaLocal } from './dates';
 import { formatDecimal } from './decimal';
+import { isLocalDateTime } from '@/lib/validation/moment';
 
 // El minuto de un instante: el servidor guarda las horas de un registro de campo sin segundos, así
 // que dos horas del mismo minuto son la misma y se comparan por minuto.
@@ -26,4 +28,12 @@ export function durationText(hours: string | number) {
   if (days === 0) return `${whole} h`;
   const daysText = days === 1 ? '1 día' : `${days} días`;
   return rest === 0 ? daysText : `${daysText} y ${rest} h`;
+}
+
+// «Duración: 5 días y 2 h (122 h)», con el fin que tiene el campo.
+export function durationLine(startedAt: string, localEnd: string) {
+  if (!isLocalDateTime(localEnd)) return null;
+  const hours = hoursBetween(startedAt, fromBogotaLocal(localEnd));
+  if (hours <= 0) return null;
+  return `Duración: ${durationText(hours)} (${Math.round(hours)} h)`;
 }
