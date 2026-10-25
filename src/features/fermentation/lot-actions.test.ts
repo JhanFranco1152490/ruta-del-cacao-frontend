@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { fermentationLotActions } from './lot-actions';
+import { fermentationLotActions, fermentationStageAction } from './lot-actions';
 
 const BOTH = { logTurns: true, manage: true };
 
@@ -51,5 +51,31 @@ describe('fermentationLotActions', () => {
     for (const status of ['fermented', 'drying', 'dried'] as const) {
       expect(fermentationLotActions({ id: 'l1', status }, BOTH)).toEqual([]);
     }
+  });
+});
+
+describe('fermentationStageAction', () => {
+  it('leads the generated lots to the ones ready to ferment', () => {
+    expect(fermentationStageAction('generated', BOTH)).toMatchObject({
+      label: 'Iniciar fermentación',
+      href: '/fermentacion?vista=listos',
+    });
+  });
+
+  it('leads the lots in fermentation to the Fermentación screen', () => {
+    expect(fermentationStageAction('fermenting', BOTH)).toMatchObject({
+      label: 'Ir a Fermentación',
+      href: '/fermentacion',
+    });
+  });
+
+  it('offers nothing for the other stages or without the permission', () => {
+    expect(fermentationStageAction('fermented', BOTH)).toBeNull();
+    expect(
+      fermentationStageAction('generated', { logTurns: true, manage: false }),
+    ).toBeNull();
+    expect(
+      fermentationStageAction('fermenting', { logTurns: false, manage: false }),
+    ).toBeNull();
   });
 });

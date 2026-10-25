@@ -14,6 +14,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { useProducerSummary } from '@/lib/api/producer-options';
 import type { LotAction } from '@/lib/lot-actions';
+import type { LotStatus } from '@/lib/lot-status';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Lot, LOT_PAGE_SIZE, useLots, useLotSummary } from '../api';
@@ -30,10 +31,15 @@ import { LoadingBlock } from '@/components/loading-block';
 export function LotListScreen({
   formLotHref,
   lotActions,
+  stageAction,
 }: {
   formLotHref?: string;
   // Lo que se hace con un lote en su etapa (el «⋯» de cada fila): lo da quien monta la pantalla.
   lotActions?: (lot: Lot) => readonly LotAction[];
+  // El botón de la cabecera cuando se mira un estado: lleva a donde se trabaja ese estado. Lo da
+  // quien monta la pantalla; «Cosechas sin lote» sigue a su lado, porque conformar lotes es de todos
+  // los días.
+  stageAction?: (status: LotStatus) => LotAction | null;
 }) {
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;
@@ -45,9 +51,26 @@ export function LotListScreen({
   );
   const canForm = hasPermission(user, PERMISSIONS.LOTS_ADD);
 
-  const formLot = canForm && formLotHref && (
+  const stage = filters.query.status
+    ? stageAction?.(filters.query.status)
+    : null;
+  const stageLink = stage && (
     <Link
       className={cn(buttonVariants({ size: 'office' }), 'h-11')}
+      href={stage.href}
+    >
+      <stage.icon aria-hidden="true" className="size-4" /> {stage.label}
+    </Link>
+  );
+  const formLot = canForm && formLotHref && (
+    <Link
+      className={cn(
+        buttonVariants({
+          size: 'office',
+          variant: stageLink ? 'action' : 'default',
+        }),
+        'h-11',
+      )}
       href={formLotHref}
     >
       <Wheat aria-hidden="true" className="size-4" /> Cosechas sin lote
@@ -109,7 +132,14 @@ export function LotListScreen({
       <PageHeader
         tone="selva"
         accent="cobre"
-        actions={formLot}
+        actions={
+          (stageLink || formLot) && (
+            <>
+              {stageLink}
+              {formLot}
+            </>
+          )
+        }
         description="Cada lote nace de una cosecha completa y lleva su código de trazabilidad hasta el grano seco."
         eyebrow="Poscosecha"
         title="Lotes"

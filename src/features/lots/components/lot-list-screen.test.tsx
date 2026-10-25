@@ -72,10 +72,12 @@ function renderScreen({
   searchParams = '',
   permissions = [PERMISSIONS.LOTS_VIEW, PERMISSIONS.LOTS_ADD],
   lotActions,
+  stageAction,
 }: {
   searchParams?: string;
   permissions?: string[];
   lotActions?: ComponentProps<typeof LotListScreen>['lotActions'];
+  stageAction?: ComponentProps<typeof LotListScreen>['stageAction'];
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -83,7 +85,11 @@ function renderScreen({
     buildSession({ id: userId, permissions }),
   );
   renderWithProviders(
-    <LotListScreen formLotHref="/cosechas?lote=sin" lotActions={lotActions} />,
+    <LotListScreen
+      formLotHref="/cosechas?lote=sin"
+      lotActions={lotActions}
+      stageAction={stageAction}
+    />,
     {
       queryClient,
       searchParams,
@@ -159,6 +165,59 @@ describe('LotListScreen', () => {
         name: 'Más acciones del lote 000123-F02-P05-261012-1',
       }),
     ).toBeInTheDocument();
+  });
+
+  it('leads the header button to where the chosen status is worked, and keeps the harvests next to it', async () => {
+    renderScreen({
+      searchParams: '?estado=fermenting',
+      stageAction: (status) =>
+        status === 'fermenting'
+          ? {
+              id: 'go',
+              label: 'Ir a Fermentación',
+              href: '/fermentacion',
+              icon: Play,
+            }
+          : null,
+    });
+
+    const stage = await screen.findByRole('link', {
+      name: 'Ir a Fermentación',
+    });
+    expect(stage).toHaveAttribute('href', '/fermentacion');
+    expect(
+      screen.getByRole('link', { name: 'Cosechas sin lote' }),
+    ).toHaveAttribute('href', '/cosechas?lote=sin');
+  });
+
+  it('keeps the harvests as the main button when the status has nowhere to lead', async () => {
+    renderScreen({
+      searchParams: '?estado=fermented',
+      stageAction: () => null,
+    });
+
+    expect(
+      await screen.findByRole('link', { name: 'Cosechas sin lote' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Ir a Fermentación' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not lead anywhere from the list of every status', async () => {
+    renderScreen({
+      stageAction: () => ({
+        id: 'go',
+        label: 'Ir a Fermentación',
+        href: '/fermentacion',
+        icon: Play,
+      }),
+    });
+
+    await screen.findByRole('link', { name: 'Cosechas sin lote' });
+    expect(
+      screen.queryByRole('link', { name: 'Ir a Fermentación' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows no menu when the screen gives no actions', async () => {

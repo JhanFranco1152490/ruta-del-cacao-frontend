@@ -246,7 +246,10 @@ src/
   `fermentationLotActions`) y la página (`app/(app)/lotes/lot-list.tsx`) las junta; cada opción es
   un enlace a la pantalla donde se hace, nunca un formulario dentro de Lotes. Registrar un volteo va
   directo a su pantalla de campo; iniciar y finalizar abren su formulario al llegar a Fermentación
-  (`?iniciar=` y `?finalizar=`). Al sumar el secado se agregan sus acciones ahí. **Conformar** también
+  (`?iniciar=` y `?finalizar=`). **El botón de la cabecera** sigue al estado elegido
+  (`fermentationStageAction`: Generado → «Iniciar fermentación», En fermentación → «Ir a
+  Fermentación»; con otro estado o sin el permiso, «Cosechas sin lote» queda como principal) y
+  «Cosechas sin lote» pasa a secundario cuando hay uno. Al sumar el secado se agregan sus acciones ahí. **Conformar** también
   funciona sin conexión: el lote nace en el dispositivo con su `id` (`form-lot-dialog.tsx` lo genera
   una vez por diálogo) y pasa por la cola (`lot-queue.ts`, `sync-adapter.ts`) con la cosecha como
   padre (`harvestQueueId`, en `lib/offline/queue-ids.ts` porque un dominio no importa de otro). El
