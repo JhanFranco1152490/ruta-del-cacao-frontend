@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { FormDialog } from '@/components/form-dialog';
+import { StartWarning } from '@/components/start-warning';
 import { SearchSelect } from '@/components/search-select';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
@@ -21,7 +22,6 @@ import {
   type StartFormInput,
   type StartOptions,
 } from '../start-form';
-import { CapacityWarning } from './capacity-warning';
 import { useStartSubmit } from '../use-start-submit';
 import type { StartLot } from './start-fermentation-dialog';
 
@@ -99,7 +99,7 @@ export function StartFermentationForm({
       title={title}
     >
       {submission.warning && (
-        <CapacityWarning
+        <StartWarning
           disabled={submission.isSaving}
           message={submission.warning}
           onConfirm={() =>
