@@ -9,6 +9,7 @@ import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
 import { FormMessage } from '@/components/form-message';
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { PageHeader } from '@/components/page-header';
+import { TurnMeasureFields } from './turn-measure-fields';
 import { TextAreaField } from '@/components/text-area-field';
 import { TextField } from '@/components/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -22,15 +23,7 @@ import {
   type TurnFormValues,
 } from '../turn-form';
 import { isLocalDateTime, NOTES_MAX_LENGTH } from '@/lib/validation/moment';
-import {
-  phHint,
-  type ReferenceRange,
-  temperatureHint,
-} from '../reference-hint';
-
-// Lo que se mide va en grande y centrado: se lee a un brazo de distancia, con el medidor en la otra
-// mano.
-const MEASURE_FIELD_CLASS = `${CAPTURE_FIELD_CLASS} text-center text-xl font-bold tabular-nums`;
+import type { ReferenceRange } from '../reference-hint';
 
 // La pantalla de campo del volteo: se llena junto al cajón, con el termómetro y el medidor de pH en
 // la mano. El título dice qué volteo será según la hora elegida.
@@ -83,10 +76,6 @@ export function TurnFormFields({
   >({ resolver, defaultValues });
   const { errors } = formState;
   const localTime = useWatch({ control, name: 'turned_at' });
-  const [temperature, ph] = useWatch({
-    control,
-    name: ['temperature_c', 'ph'],
-  });
   const sinceStart = isLocalDateTime(localTime)
     ? Math.floor(hoursBetween(startedAt, fromBogotaLocal(localTime)))
     : null;
@@ -131,27 +120,12 @@ export function TurnFormFields({
             </Link>
           )}
         </div>
-        <TextField
-          className={MEASURE_FIELD_CLASS}
-          disabled={isSaving}
-          error={errors.temperature_c?.message}
-          hint={
-            reference
-              ? temperatureHint(temperature, reference.temperature)
-              : 'En el centro de la masa.'
-          }
-          inputMode="decimal"
-          label="Temperatura (°C)"
-          {...register('temperature_c')}
-        />
-        <TextField
-          className={MEASURE_FIELD_CLASS}
-          disabled={isSaving}
-          error={errors.ph?.message}
-          hint={reference ? phHint(ph, reference.ph) : undefined}
-          inputMode="decimal"
-          label="pH"
-          {...register('ph')}
+        <TurnMeasureFields
+          control={control}
+          errors={errors}
+          isSaving={isSaving}
+          reference={reference}
+          register={register}
         />
         <TextAreaField
           disabled={isSaving}
