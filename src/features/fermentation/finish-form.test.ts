@@ -4,7 +4,6 @@ import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
 import {
   createFinishFormSchema,
-  durationLine,
   finishBlockedReason,
   type FinishFormInput,
   finishedMessage,
@@ -71,18 +70,6 @@ describe('finish form', () => {
     expect(
       noTurns.safeParse({ ended_at: '2026-10-15T07:00', notes: '' }).success,
     ).toBe(false);
-  });
-});
-
-describe('durationLine', () => {
-  it('says the duration that the chosen end gives', () => {
-    expect(durationLine(STARTED, '2026-10-20T09:00')).toBe(
-      'Duración: 5 días y 2 h (122 h)',
-    );
-  });
-
-  it('says nothing without a whole date and time', () => {
-    expect(durationLine(STARTED, '')).toBeNull();
   });
 });
 

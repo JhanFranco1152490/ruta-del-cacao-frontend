@@ -17,7 +17,7 @@ import {
 import { formatShortDateTime } from '@/lib/format/dates';
 
 import { turnCorrectionPath } from '../fermentation-paths';
-import { hoursText } from '../fermentation-time';
+import { hoursText } from '@/lib/format/hours';
 import { phText, temperatureText } from '../measure-text';
 import type { TurnRow } from '../turn-rows';
 import { TurnDeleteDialog } from './turn-delete-dialog';

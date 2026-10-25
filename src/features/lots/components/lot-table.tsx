@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDecimal } from '@/lib/format/decimal';
+import { formatDecimal, formatFixedDecimal } from '@/lib/format/decimal';
 import { formatAbbreviatedDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
 import type { LotAction } from '@/lib/lot-actions';
@@ -78,6 +78,12 @@ export function LotTable({
               {lot.fermentation && !lot.fermentation.ended_at && (
                 <span className="block text-sm text-muted-foreground">
                   En {lot.fermentation.facility}
+                </span>
+              )}
+              {/* Lo que dio el secado: lo primero que se busca de un lote Seco. */}
+              {lot.drying?.yield_pct && (
+                <span className="block text-sm text-muted-foreground">
+                  Rendimiento {formatFixedDecimal(lot.drying.yield_pct, 1)} %
                 </span>
               )}
             </TableCell>

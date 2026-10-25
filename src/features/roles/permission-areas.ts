@@ -18,6 +18,7 @@ const AREAS = [
   { area: 'harvests', label: 'Cosechas' },
   { area: 'lots', label: 'Lotes' },
   { area: 'fermentation', label: 'Fermentación' },
+  { area: 'drying', label: 'Secado' },
   { area: 'facilities', label: 'Infraestructura' },
   { area: 'users', label: 'Cuentas' },
   { area: 'roles', label: 'Roles' },

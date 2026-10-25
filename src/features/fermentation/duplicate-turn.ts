@@ -1,6 +1,6 @@
 import { formatTime } from '@/lib/format/dates';
 
-import { minuteOf } from './fermentation-time';
+import { minuteOf } from '@/lib/format/hours';
 import type { TimedTurn } from './turn-rules';
 
 // El servidor guarda la hora de un volteo sin segundos y no acepta dos en el mismo minuto: así el

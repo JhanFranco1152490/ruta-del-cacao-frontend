@@ -13,14 +13,14 @@ import { type Fermentation, useFinishFermentation } from '../api';
 import { finishFailureOf } from '../finish-errors';
 import {
   createFinishFormSchema,
-  durationLine,
   type FinishFormInput,
   finishFormOf,
   finishedMessage,
   toFinishRequest,
 } from '../finish-form';
-import { hoursBetween, turnsText } from '../fermentation-time';
-import { NOTES_MAX_LENGTH } from '../turn-form';
+import { turnsText } from '../fermentation-time';
+import { durationLine, hoursBetween } from '@/lib/format/hours';
+import { NOTES_MAX_LENGTH } from '@/lib/validation/moment';
 import { lastTurnedAt } from '../turn-rules';
 
 // Finalizar la fermentación de un lote: libera el cajón y deja el lote listo para el secado. Solo

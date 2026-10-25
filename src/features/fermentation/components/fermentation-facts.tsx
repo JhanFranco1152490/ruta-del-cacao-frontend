@@ -6,7 +6,7 @@ import { formatShortDateTime } from '@/lib/format/dates';
 
 import type { Fermentation } from '../api';
 import { cardFacts } from '../fermentation-list';
-import { durationText } from '../fermentation-time';
+import { durationText } from '@/lib/format/hours';
 import type { QueuedTurn } from '../turn-queue';
 
 // Los datos de la fermentación en la ficha del lote: en curso, cuánto lleva y cuándo toca el

@@ -97,7 +97,7 @@ src/
                        con su `group` (el menú agrupa por tarea; ver el sistema de diseño)
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       health, notifications, harvests, lots, fermentation, facilities, users y
+                       health, notifications, harvests, lots, fermentation, drying, facilities, users y
                        roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
@@ -243,13 +243,14 @@ src/
   (`LotCodeSegments`, dentro del título con `titleVisual`), franja de cifras, indicador de etapas
   (`lot-stages.ts`) y el origen en una `SectionCard`. **El «⋯» de cada fila de la lista** ofrece las
   acciones de la etapa del lote: cada módulo del proceso exporta las suyas (`lot-actions.ts`, p. ej.
-  `fermentationLotActions`) y la página (`app/(app)/lotes/lot-list.tsx`) las junta; cada opción es
+  `fermentationLotActions` y `dryingLotActions`) y la página (`app/(app)/lotes/lot-list.tsx`) las junta; cada opción es
   un enlace a la pantalla donde se hace, nunca un formulario dentro de Lotes. Registrar un volteo va
   directo a su pantalla de campo; iniciar y finalizar abren su formulario al llegar a Fermentación
   (`?iniciar=` y `?finalizar=`). **El botón de la cabecera** sigue al estado elegido
-  (`fermentationStageAction`: Generado → «Iniciar fermentación», En fermentación → «Ir a
-  Fermentación»; con otro estado o sin el permiso, «Cosechas sin lote» queda como principal) y
-  «Cosechas sin lote» pasa a secundario cuando hay uno. Al sumar el secado se agregan sus acciones ahí. **Conformar** también
+  (`fermentationStageAction` y `dryingStageAction`: Generado → «Iniciar fermentación», En
+  fermentación → «Ir a Fermentación», Fermentado → «Iniciar secado», En secado → «Ir a Secado»; con
+  otro estado o sin el permiso, «Cosechas sin lote» queda como principal) y «Cosechas sin lote» pasa a
+  secundario cuando hay uno. La tarjeta de un lote Seco dice su rendimiento. **Conformar** también
   funciona sin conexión: el lote nace en el dispositivo con su `id` (`form-lot-dialog.tsx` lo genera
   una vez por diálogo) y pasa por la cola (`lot-queue.ts`, `sync-adapter.ts`) con la cosecha como
   padre (`harvestQueueId`, en `lib/offline/queue-ids.ts` porque un dominio no importa de otro). El
@@ -316,6 +317,41 @@ src/
     Generado ofrece iniciar; uno en fermentación o más adelante muestra sus datos, sus acciones y la
     tabla de volteos (`turn-rows.ts`, con los de la cola como «Pendiente de enviar»). Sin conexión se
     lee con la misma copia de la lista y lo que escribe en línea se deshabilita.
+
+- **Secado (`features/drying/`).** `/secado` es la lista de trabajo del día y sigue la forma de
+  Fermentación: dos pestañas (**En secado** y, con `manage_drying`, **Listos para secar**), la finca en
+  la URL (`use-drying-filters.ts`), las cifras (incluye las bitácoras de hoy que faltan) y la lectura
+  con copia (`drying`, o `drying:producer:{id}`); los listos son `GET /api/lots?status=fermented`, solo
+  en línea. **Lo que comparte con Fermentación vive en `lib/` y `components/`, no se copia:**
+  `lib/offline/record-queue.ts` y `hooks/use-record-queue.ts` (la cola de un registro de campo de un
+  lote: un volteo, una bitácora), `lib/api/lots-by-status.ts`, `lib/farm-filter.ts`,
+  `components/process-toolbar.tsx` (pestañas y finca), `components/finish-process-button.tsx`,
+  `components/start-warning.tsx` y `hooks/use-start-from-link.ts`. La copia de la lista se suma a
+  `lib/offline/postharvest-copies.ts`, que arma la ficha de un lote sin conexión.
+  - **Las reglas que comparten pantalla y servidor son funciones puras con las mismas constantes que
+    el backend:** el día de secado (el día 1 es la fecha del inicio en la hora de Bogotá,
+    `drying-days.ts`), las horas disponibles de un día (el día 1 cuenta desde la hora de inicio; hoy,
+    hasta ahora) para el tope de horas al sol y a la sombra, y el rendimiento (peso seco sobre peso
+    en verde, con el mismo redondeo, `yield.ts`). Lo de hoy se calcula en el dispositivo
+    (`drying-list.ts`), con las bitácoras de la cola incluidas.
+  - **Registrar una bitácora pasa siempre por la cola** (`log-queue.ts`, `log-sync-adapter.ts`,
+    `queue-view.tsx`; recurso `drying-logs`, sin padre). La pantalla de campo es
+    `/secado/bitacora?lote=` (precargada), que también corrige lo que la bandeja rechazó
+    (`&pendiente=`) y, en línea, una bitácora del servidor (`&id=`): ocho campos, el clima con cuatro
+    opciones grandes, y la frecuencia de volteo solo se pide si hubo volteos. **Una bitácora por
+    fecha:** el formulario avisa con lo que conoce el dispositivo (`duplicate-log.ts`) y el servidor
+    decide.
+  - **Iniciar, corregir el inicio, finalizar, corregir y eliminar una bitácora son solo en línea.**
+    Iniciar pide `start-options` y, si la humedad de entrada cae fuera del rango, la confirmación
+    (`use-start-submit.ts`). Finalizar calcula el rendimiento mientras se escribe el peso seco y se
+    deshabilita con su motivo (`finishBlockedReason`: sin bitácoras, con bitácoras en la cola o sin
+    conexión). La humedad se escribe con un decimal fijo.
+  - **La tarjeta de cada lote** dibuja un punto por día de secado (`day-timeline.tsx`): lleno con
+    bitácora, punteado sin ella, y hoy con un halo; cada punto dice su fecha y su humedad en un
+    tooltip y como `aria-label`. La ilustración de los vacíos es propia (`SunDryingTray`), no la de
+    Infraestructura. La sección de la ficha del lote (`drying-section.tsx`) muestra los datos y la
+    bitácora día por día (`log-rows.ts`, con los días sin registro como fila tenue) en una tabla que
+    cabe sin desplazarse a 1280 px.
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni

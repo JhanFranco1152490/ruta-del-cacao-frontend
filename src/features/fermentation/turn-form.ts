@@ -8,8 +8,14 @@ import {
   isDecimal,
 } from '@/lib/validation/decimal';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
+import {
+  FUTURE_MOMENT_MESSAGE,
+  isLocalDateTime,
+  NOTES_MAX_LENGTH,
+  NOTES_TOO_LONG_MESSAGE,
+} from '@/lib/validation/moment';
 
-import { minuteOf } from './fermentation-time';
+import { minuteOf } from '@/lib/format/hours';
 
 type Schemas = components['schemas'];
 
@@ -20,15 +26,12 @@ export const MAX_TEMPERATURE_C = 80;
 export const TEMPERATURE_DECIMALS = 1;
 export const MAX_PH = 14;
 export const PH_DECIMALS = 2;
-export const NOTES_MAX_LENGTH = 500;
 
 export const TEMPERATURE_MESSAGE =
   'La temperatura debe ser mayor que 0 °C y hasta 80 °C.';
 export const PH_MESSAGE = 'pH válido entre 0 y 14';
-export const FUTURE_MOMENT_MESSAGE = 'No puede ser una fecha futura.';
 export const BEFORE_START_MESSAGE =
   'No puede ser anterior al inicio de la fermentación.';
-export const NOTES_TOO_LONG_MESSAGE = `Máximo ${NOTES_MAX_LENGTH} caracteres.`;
 
 // La hora del volteo es la de un campo de fecha y hora (yyyy-MM-ddTHH:mm), en la hora de Bogotá.
 export type TurnFormInput = {
@@ -40,10 +43,6 @@ export type TurnFormInput = {
 
 // Los decimales con punto («45.5»), como los espera la API.
 export type TurnFormValues = TurnFormInput;
-
-// Lo que entrega un campo de fecha y hora completo; vacío o a medias no es una hora.
-export const isLocalDateTime = (value: string) =>
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
 
 const temperatureField = decimalText().superRefine((text, context) => {
   const issue = (message: string) =>

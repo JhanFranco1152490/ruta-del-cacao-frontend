@@ -34,6 +34,8 @@ describe('isFieldPermission', () => {
     expect(isFieldPermission(PERMISSIONS.LOTS_VIEW)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FERMENTATION_LOG_TURNS)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FERMENTATION_MANAGE)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.DRYING_LOG)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.DRYING_MANAGE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FACILITIES_VIEW)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FACILITIES_DELETE)).toBe(true);
   });

@@ -101,6 +101,32 @@ function renderScreen({
 const table = () => screen.findByRole('table', { name: 'Lotes' });
 
 describe('LotListScreen', () => {
+  it('shows the yield of a dried lot under its status', async () => {
+    server.use(
+      lotsHandler([
+        buildLot({
+          id: 'l3',
+          code: '000123-F02-P05-261010-1',
+          status: 'dried',
+          drying: {
+            started_at: '2026-10-20T14:00:00-05:00',
+            ended_at: '2026-10-25T10:00:00-05:00',
+            final_moisture_pct: '7.0',
+            dry_weight_kg: '60.0',
+            yield_pct: '49.8',
+          },
+        }),
+      ]),
+    );
+    renderScreen();
+
+    const [row] = within(await table())
+      .getAllByRole('row')
+      .slice(1);
+    expect(row).toHaveTextContent('Seco');
+    expect(row).toHaveTextContent('Rendimiento 49,8 %');
+  });
+
   it('lists the lots with their code, origin and status', async () => {
     renderScreen();
 

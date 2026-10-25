@@ -1,5 +1,5 @@
 import { dueAt, nextTurnText, shownTurns } from './fermentation-list';
-import { hoursBetween } from './fermentation-time';
+import { hoursBetween } from '@/lib/format/hours';
 import { isTurnOverdue } from './next-turn';
 import type { QueuedTurn } from './turn-queue';
 import { numberTurns } from './turn-rules';

@@ -4,12 +4,15 @@ import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import { useFarmOptions } from '@/lib/api/farm-options';
 import { useProducerSummary } from '@/lib/api/producer-options';
+import {
+  lotsOfFarm,
+  processesOfFarm,
+  resolveFarmFilter,
+} from '@/lib/farm-filter';
 import { farmLabel } from '@/lib/format/place-label';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useFermentations, useReadyLots } from './api';
-import { resolveFarmFilter } from './fermentation-farm';
-import { fermentationsOfFarm, readyLotsOfFarm } from './fermentation-list';
 import {
   type FermentationView,
   useFermentationFilters,
@@ -52,7 +55,7 @@ export function useFermentationScreen() {
   }));
   const readyShown =
     canManage && !offline && ready.data
-      ? readyLotsOfFarm(ready.data, filters.farm)
+      ? lotsOfFarm(ready.data, filters.farm)
       : undefined;
 
   return {
@@ -70,7 +73,7 @@ export function useFermentationScreen() {
     queued,
     farmOptions,
     farm: resolveFarmFilter(farmOptions, filters.farm),
-    shown: fermentationsOfFarm(read.data?.data ?? [], filters.farm),
+    shown: processesOfFarm(read.data?.data ?? [], filters.farm),
     readyShown,
   };
 }

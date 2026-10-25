@@ -4,23 +4,13 @@ import {
   formatTime,
 } from '@/lib/format/dates';
 
-import type { Fermentation, ReadyLot } from './api';
-import { hoursBetween, turnsText } from './fermentation-time';
+import type { Fermentation } from './api';
+import { turnsText } from './fermentation-time';
+import { hoursBetween } from '@/lib/format/hours';
 import { phText, temperatureText } from './measure-text';
 import { isTurnOverdue, nextTurnDueAt } from './next-turn';
 import { pendingTurnsOf, type QueuedTurn } from './turn-queue';
 import { lastTurnedAt, numberTurns } from './turn-rules';
-
-export const fermentationsOfFarm = (
-  fermentations: readonly Fermentation[],
-  farm: string | null,
-) =>
-  farm ? fermentations.filter((item) => item.farm.id === farm) : fermentations;
-
-export const readyLotsOfFarm = (
-  lots: readonly ReadyLot[],
-  farm: string | null,
-) => (farm ? lots.filter((lot) => lot.harvest.plot.farm.id === farm) : lots);
 
 // Un volteo como se muestra: los del servidor y los que esperan en la cola del teléfono, juntos.
 type ShownTurn = {

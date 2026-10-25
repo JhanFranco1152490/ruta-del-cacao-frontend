@@ -1,5 +1,5 @@
 import type { Fermentation, FermentationTurn } from './api';
-import { hoursBetween } from './fermentation-time';
+import { hoursBetween } from '@/lib/format/hours';
 import { pendingTurnsOf, type QueuedTurn } from './turn-queue';
 import { numberTurns } from './turn-rules';
 

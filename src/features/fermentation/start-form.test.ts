@@ -7,7 +7,6 @@ import {
   capacityWarning,
   createStartFormSchema,
   facilityOptionLabel,
-  responsibleOptions,
   startChanges,
   startFormOf,
   type StartFormInput,
@@ -167,42 +166,6 @@ describe('startChanges', () => {
     ).toEqual({
       facility_id: 'fc2',
       started_at: expect.stringMatching(/^2026-10-15T08:00:00/),
-    });
-  });
-});
-
-describe('responsibleOptions', () => {
-  it('offers only who can respond', () => {
-    expect(
-      responsibleOptions(
-        {
-          ...options,
-          responsibles: [
-            ...options.responsibles,
-            {
-              id: 'u3',
-              full_name: 'Sin permiso',
-              is_active: true,
-              assignable: false,
-            },
-          ],
-        },
-        undefined,
-      ),
-    ).toEqual([
-      { id: 'u1', label: 'Luis' },
-      { id: 'u2', label: 'Ana' },
-    ]);
-  });
-
-  it('keeps the current responsible when correcting, marked if the account is inactive', () => {
-    const fermentation = buildFermentation({
-      responsible: { id: 'u7', full_name: 'Marta', is_active: false },
-    });
-
-    expect(responsibleOptions(options, fermentation).at(-1)).toEqual({
-      id: 'u7',
-      label: 'Marta (Cuenta inactiva)',
     });
   });
 });

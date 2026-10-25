@@ -5,12 +5,12 @@ import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 import {
   BEFORE_START_MESSAGE,
   createTurnFormSchema,
-  FUTURE_MOMENT_MESSAGE,
   PH_MESSAGE,
   TEMPERATURE_MESSAGE,
   toTurnCreateRequest,
   type TurnFormInput,
 } from './turn-form';
+import { FUTURE_MOMENT_MESSAGE } from '@/lib/validation/moment';
 
 const STARTED = '2026-10-15T07:00:00-05:00';
 const NOW = new Date('2026-10-17T08:05:30-05:00');

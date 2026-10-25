@@ -159,11 +159,14 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `StageFlow` | Cadena de etapas cosecha → venta | Dashboard, página QR |
 | `PageHeader` | Categoría en versalitas, H1 en serif de 30 px, subrayado, descripción y acciones. Un solo tamaño y la misma separación de arriba en todas las pantallas | Todas las de oficina |
 | `pageContainerClass` | El ancho y los márgenes de una pantalla: `wide` (1440 px) para listas, calendarios y lo que lleva mapa o tabla; `narrow` (896 px, centrado) para formularios y fichas de una columna. Arriba y a los lados no cambian de una pantalla a otra | Todas |
-| `Tooltip` (`components/ui/tooltip.tsx`) | Un recuadro pequeño con un dato extra al pasar el mouse o enfocar. El que lo dispara es focalizable (`tabIndex={0}`) y lleva su `aria-label`: el dato nunca vive solo en el recuadro, porque en el celular no hay mouse | Línea de tiempo de la fermentación |
+| `Tooltip` (`components/ui/tooltip.tsx`) | Un recuadro pequeño con un dato extra al pasar el mouse o enfocar. El que lo dispara es focalizable (`tabIndex={0}`) y lleva su `aria-label`: el dato nunca vive solo en el recuadro, porque en el celular no hay mouse | Línea de tiempo de la fermentación y días del secado |
 | `SummaryStrip` / `SummaryItem` | Los totales de arriba de una lista: una franja blanca con una línea entre uno y otro (apilados en celular; con `compact`, en una sola fila también ahí, para tres cifras cortas) | Cosechas, Lotes, Infraestructura |
+| `ProcessToolbar` (`components/process-toolbar.tsx`) | Las pestañas de una pantalla de poscosecha (solo para quien puede iniciar) y el filtro de finca (solo con varias), en una fila alineada | Fermentación, Secado |
+| `FinishProcessButton` (`components/finish-process-button.tsx`) | «Finalizar …» con el motivo debajo si no se puede, y su formulario; en una tarjeta va en una fila con las demás acciones | Fermentación, Secado |
+| `StartWarning` (`components/start-warning.tsx`) | Un aviso que no impide iniciar el proceso de un lote pero se confirma antes (el lote pesa más que el cajón, la humedad de entrada fuera del rango) | Fermentación, Secado |
 | `DetailHero` / `HeroChip` | El banner de una pantalla: tono `selva`, `bosque` o `claro`, categoría, título, marca opcional, chips y acciones. Lo dibuja `PageHeader` cuando recibe `tone` | Listas y detalles |
 | `StatStrip` / `StatCell` | Las cifras de un detalle: franja blanca de celdas pegadas, con ícono en el tinte del acento y una barra opcional | Ficha del productor, detalle de finca |
-| `Tooltip` (`components/ui/tooltip.tsx`) | Un recuadro pequeño con un dato extra al pasar el mouse o enfocar. El que lo dispara es focalizable (`tabIndex={0}`) y lleva su `aria-label`: el dato nunca vive solo en el recuadro, porque en el celular no hay mouse | Línea de tiempo de la fermentación |
+| `Tooltip` (`components/ui/tooltip.tsx`) | Un recuadro pequeño con un dato extra al pasar el mouse o enfocar. El que lo dispara es focalizable (`tabIndex={0}`) y lleva su `aria-label`: el dato nunca vive solo en el recuadro, porque en el celular no hay mouse | Línea de tiempo de la fermentación y días del secado |
 | `SectionCard` / `KeyValues` | Sección con filete del acento, título y contador; datos en dos niveles (`single`: una columna, para una tarjeta angosta) | Detalles, Sanidad |
 | `SectionLabel` | Etiqueta cobre en versalitas | Todas |
 | `MapFrame` | El recuadro del mapa con sus controles encima, arriba a la derecha (mapa base, ocultar, ir a la finca, ir a mi ubicación), una leyenda opcional abajo a la izquierda y la franja «Mapa oculto» cuando se oculta. Los cuatro paneles de mapa lo usan | Todos los mapas |
@@ -209,6 +212,7 @@ poscosecha cobre, calidad azul). Nunca emojis.
   | `BeanSack` (costal de grano) | Lotes |
   | `DryingShed` (cajón y marquesina) | Infraestructura |
   | `FermentationBox` (cajón con la masa, vapor y termómetro) | Fermentación |
+  | `SunDryingTray` (bandeja con el grano extendido, rastrillo y sol) | Secado |
   | `InputSupplies` (abono y aspersora) | Insumos |
   | `PodVarieties` (tres mazorcas) | Variedades |
   | `FarmerHat` (sombrero con rama) | Productores, usuarios y roles |

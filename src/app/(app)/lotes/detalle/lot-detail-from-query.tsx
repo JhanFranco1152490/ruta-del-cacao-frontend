@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 
 import { ErrorState } from '@/components/error-state';
 import { characterizationHistoryPath } from '@/features/crops/characterization-paths';
+import { DryingSection } from '@/features/drying/components/drying-section';
 import { FACILITIES_PATH } from '@/features/facilities/facility-paths';
 import { FermentationSection } from '@/features/fermentation/components/fermentation-section';
 import { harvestDetailPath } from '@/features/harvests/harvest-paths';
@@ -40,21 +41,24 @@ export function LotDetailFromQuery() {
       // El proceso del lote en su orden: la fermentación va antes que el secado.
       renderSections={(lot) => {
         const { farm } = lot.harvest.plot;
+        const facilitiesHref = canSeeFacilities
+          ? `${FACILITIES_PATH}?${new URLSearchParams({ finca: farm.id })}`
+          : undefined;
+        const section = {
+          id: lot.id,
+          code: lot.code,
+          status: lot.status,
+          greenWeightKg: lot.green_weight_kg,
+          farm,
+        };
         return (
-          <FermentationSection
-            facilitiesHref={
-              canSeeFacilities
-                ? `${FACILITIES_PATH}?${new URLSearchParams({ finca: farm.id })}`
-                : undefined
-            }
-            lot={{
-              id: lot.id,
-              code: lot.code,
-              status: lot.status,
-              greenWeightKg: lot.green_weight_kg,
-              farm,
-            }}
-          />
+          <>
+            <FermentationSection
+              facilitiesHref={facilitiesHref}
+              lot={section}
+            />
+            <DryingSection facilitiesHref={facilitiesHref} lot={section} />
+          </>
         );
       }}
     />
