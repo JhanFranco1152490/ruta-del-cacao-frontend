@@ -182,6 +182,7 @@ export function LogCapture({
       }
       onSubmit={submit}
       startedAt={drying.started_at}
+      targetMoisture={drying.target_moisture}
       submitLabel={serverLog || isOnline ? 'Guardar' : 'Guardar en el teléfono'}
     />
   );

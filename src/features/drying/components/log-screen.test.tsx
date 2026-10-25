@@ -99,7 +99,7 @@ async function fillDay() {
 }
 
 describe('LogScreen', () => {
-  it('names the day it will be, the dryer and the start, and tells the hours of the day', async () => {
+  it('names the day it will be, the dryer and the start, and counts the hours since the start', async () => {
     renderScreen();
 
     expect(
@@ -114,8 +114,9 @@ describe('LogScreen', () => {
       '2026-10-24T10:00',
     );
     expect(
-      screen.getByText('Ese día el secado tuvo 10,0 horas.'),
+      screen.getByText('Día 3 de secado · 44 h desde el inicio'),
     ).toBeInTheDocument();
+    expect(screen.getByText('Meta: 6,5–7,5 %')).toBeInTheDocument();
   });
 
   it('saves the log on the device, goes back and says which day it was', async () => {

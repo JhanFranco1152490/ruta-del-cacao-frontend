@@ -65,7 +65,7 @@ export function ReadyLotsTab({
     ) : (
       <EmptyState
         illustration={SunDryingTray}
-        title="No hay lotes listos para secar."
+        title="No hay lotes fermentados listos para secar."
       />
     );
   }

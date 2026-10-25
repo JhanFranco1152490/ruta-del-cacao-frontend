@@ -21,6 +21,7 @@ import { LogFormActions } from './log-form-actions';
 export function LogFormFields({
   defaultValues,
   startedAt,
+  targetMoisture,
   heading,
   description,
   notices,
@@ -34,6 +35,8 @@ export function LogFormFields({
 }: {
   defaultValues: LogFormInput;
   startedAt: string;
+  // La meta de humedad del productor, como referencia al medir.
+  targetMoisture: { min: string; max: string };
   // El título según la fecha que tiene el campo (`yyyy-MM-ddTHH:mm`, o vacío).
   heading: (localTime: string) => string;
   description: string;
@@ -87,6 +90,7 @@ export function LogFormFields({
         logsHref={logsHref}
         register={register}
         startedAt={startedAt}
+        targetMoisture={targetMoisture}
         withTurns={turnFrequencyVisible(turnCount)}
       />
       <LogFormActions

@@ -348,7 +348,7 @@ describe('DryingScreen', () => {
     ).toBeInTheDocument();
     await userEvent.click(
       await screen.findByRole('button', {
-        name: 'Inicia el secado de un lote.',
+        name: 'Inicia el secado de un lote fermentado.',
       }),
     );
     expect(onUrlUpdate.mock.lastCall?.[0].queryString).toBe('?vista=listos');
@@ -445,7 +445,7 @@ describe('DryingScreen', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'No hay lotes listos para secar.',
+        name: 'No hay lotes fermentados listos para secar.',
       }),
     ).toBeInTheDocument();
   });

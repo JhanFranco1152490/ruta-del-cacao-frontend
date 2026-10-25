@@ -54,7 +54,7 @@ export function InProgressTab({
         action={
           onShowReady && (
             <Button onClick={onShowReady} size="office" variant="outline">
-              Inicia el secado de un lote.
+              Inicia el secado de un lote fermentado.
             </Button>
           )
         }
