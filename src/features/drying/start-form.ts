@@ -8,19 +8,14 @@ import {
 } from '@/lib/format/dates';
 import { formatDecimal } from '@/lib/format/decimal';
 import { minuteOf } from '@/lib/format/hours';
-import {
-  decimalPattern,
-  decimalText,
-  isDecimal,
-} from '@/lib/validation/decimal';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
+import { percentField } from '@/lib/validation/percent';
 import {
   FUTURE_MOMENT_MESSAGE,
   isLocalDateTime,
 } from '@/lib/validation/moment';
 
 import type { Drying, StartOptions } from './api';
-import { MAX_PERCENT, ONE_DECIMAL_MESSAGE, PERCENT_MESSAGE } from './log-form';
 
 type Schemas = components['schemas'];
 type Dryer = Schemas['DryingDryer'];
@@ -58,15 +53,7 @@ export function createStartFormSchema({
       }
       if (minute > minuteOf(now())) issue(FUTURE_MOMENT_MESSAGE);
     }),
-    entry_moisture_pct: decimalText().superRefine((text, context) => {
-      const issue = (message: string) =>
-        context.addIssue({ code: 'custom', message });
-      if (!text) return issue(REQUIRED_FIELD_MESSAGE);
-      if (!isDecimal(text) || Number(text) < 0 || Number(text) > MAX_PERCENT) {
-        return issue(PERCENT_MESSAGE);
-      }
-      if (!decimalPattern(1).test(text)) issue(ONE_DECIMAL_MESSAGE);
-    }),
+    entry_moisture_pct: percentField,
     responsible_id: required,
   });
 }

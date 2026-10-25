@@ -10,6 +10,7 @@ import {
   isDecimal,
 } from '@/lib/validation/decimal';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
+import { ONE_DECIMAL_MESSAGE, percentField } from '@/lib/validation/percent';
 import {
   FUTURE_MOMENT_MESSAGE,
   isLocalDateTime,
@@ -23,19 +24,16 @@ import { availableHours, logDateOf } from './drying-days';
 type Schemas = components['schemas'];
 
 // Los mismos topes y decimales que guarda el servidor.
-export const MAX_PERCENT = 100;
 export const MAX_DAY_HOURS = 24;
 export const MIN_TURN_FREQUENCY_HOURS = 0.5;
 export const MAX_TURNS_PER_DAY = 48;
 
-export const PERCENT_MESSAGE = 'Debe estar entre 0 % y 100 %.';
 export const DAY_HOURS_MESSAGE = 'Debe estar entre 0 y 24 horas.';
 export const FREQUENCY_MESSAGE = 'Debe estar entre 0,5 y 24 horas.';
 export const FREQUENCY_REQUIRED_MESSAGE =
   'Indica cada cuántas horas se volteó.';
 export const BEFORE_START_MESSAGE =
   'No puede ser anterior al inicio del secado.';
-export const ONE_DECIMAL_MESSAGE = 'Usa máximo 1 decimal.';
 
 export const WEATHERS: readonly { value: Weather; label: string }[] = [
   { value: 'sunny', label: 'Soleado' },
@@ -62,15 +60,6 @@ export type LogFormValues = LogFormInput;
 
 const issueOn = (context: z.RefinementCtx) => (message: string) =>
   context.addIssue({ code: 'custom', message });
-
-export const percentField = decimalText().superRefine((text, context) => {
-  const issue = issueOn(context);
-  if (!text) return issue(REQUIRED_FIELD_MESSAGE);
-  if (!isDecimal(text) || Number(text) < 0 || Number(text) > MAX_PERCENT) {
-    return issue(PERCENT_MESSAGE);
-  }
-  if (!decimalPattern(1).test(text)) issue(ONE_DECIMAL_MESSAGE);
-});
 
 const dayHoursField = (required: boolean) =>
   decimalText().superRefine((text, context) => {

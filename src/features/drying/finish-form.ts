@@ -14,12 +14,12 @@ import {
   isDecimal,
 } from '@/lib/validation/decimal';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
+import { ONE_DECIMAL_MESSAGE, percentField } from '@/lib/validation/percent';
 import {
   FUTURE_MOMENT_MESSAGE,
   isLocalDateTime,
 } from '@/lib/validation/moment';
 
-import { ONE_DECIMAL_MESSAGE, percentField } from './log-form';
 import { computeYield, yieldText } from './yield';
 
 type Schemas = components['schemas'];
