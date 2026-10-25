@@ -382,6 +382,7 @@ export const buildLot = (
     created_at: '2026-10-14T16:00:00Z',
     updated_at: '2026-10-14T16:00:00Z',
     fermentation: null,
+    drying: null,
     ...overrides,
   };
 };
@@ -427,6 +428,57 @@ export const buildFermentation = (
     version: 1,
     created_at: '2026-10-15T12:10:00Z',
     updated_at: '2026-10-15T12:10:00Z',
+    ...overrides,
+  };
+};
+
+export const buildDryingLog = (
+  overrides: Partial<Schemas['DryingLog']> = {},
+): Schemas['DryingLog'] => ({
+  id: 'dl1',
+  measured_at: '2026-10-23T16:00:00-05:00',
+  log_date: '2026-10-23',
+  day_number: 2,
+  moisture_pct: '12.4',
+  sun_hours: '6.0',
+  shade_hours: null,
+  turn_count: 2,
+  turn_frequency_hours: '3.0',
+  weather: 'sunny',
+  notes: '',
+  recorded_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  version: 1,
+  ...overrides,
+});
+
+// Un secado en curso en M-01, iniciado el 22 oct. a las 14:00 y todavía sin bitácora.
+export const buildDrying = (
+  overrides: Partial<Schemas['DryingProcess']> = {},
+): Schemas['DryingProcess'] => {
+  const lot = buildLot({ status: 'drying' });
+  return {
+    lot: {
+      id: lot.id,
+      code: lot.code,
+      status: lot.status,
+      green_weight_kg: lot.green_weight_kg,
+      harvest: lot.harvest,
+    },
+    farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+    facility: { id: 'fc1', name: 'M-01', capacity_kg: '600.0' },
+    started_at: '2026-10-22T14:00:00-05:00',
+    entry_moisture_pct: '57.0',
+    entry_moisture_out_of_range: false,
+    responsible: { id: 'u1', full_name: 'Cuenta de prueba', is_active: true },
+    estimated_days: { min: 5, max: 7 },
+    target_moisture: { min: '6.5', max: '7.5' },
+    current_day: 2,
+    elapsed_hours: '24.0',
+    logs: [],
+    result: null,
+    version: 1,
+    created_at: '2026-10-22T19:10:00Z',
+    updated_at: '2026-10-22T19:10:00Z',
     ...overrides,
   };
 };

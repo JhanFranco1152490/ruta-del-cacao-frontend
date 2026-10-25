@@ -61,6 +61,12 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
+  it('saves the drying work list and its field screen', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toEqual(
+      expect.arrayContaining(['/secado', '/secado/bitacora']),
+    );
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });

@@ -131,6 +131,26 @@ export const queryKeys = {
     queued: (userId: string, turnId: string) =>
       ['fermentation', 'queued', userId, turnId] as const,
   },
+  drying: {
+    // Lo que invalida iniciar, corregir el inicio, finalizar o cambiar una bitácora.
+    all: () => ['drying'] as const,
+    // Los secados en curso de un productor, sin paginar y con copia en el dispositivo. La cuenta
+    // técnica elige el productor; las demás cuentas pasan `null`.
+    list: (producer: string | null) =>
+      ['drying', 'list', producer ?? ''] as const,
+    // Los lotes Fermentado, listos para iniciar su secado: solo con conexión. Cuelga de `drying`
+    // porque iniciar uno los saca de la lista.
+    ready: (producer: string | null) =>
+      ['drying', 'ready', producer ?? ''] as const,
+    // El secado de un lote, en curso o terminado.
+    detail: (lotId: string) => ['drying', 'detail', lotId] as const,
+    // Las marquesinas libres y los responsables para iniciar o corregir el inicio: solo con conexión.
+    startOptions: (lotId: string) =>
+      ['drying', 'start-options', lotId] as const,
+    // Una bitácora que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, logId: string) =>
+      ['drying', 'queued', userId, logId] as const,
+  },
   facilities: {
     // Lo que invalida registrar, editar, activar, desactivar o eliminar un cajón o una marquesina.
     all: () => ['facilities'] as const,

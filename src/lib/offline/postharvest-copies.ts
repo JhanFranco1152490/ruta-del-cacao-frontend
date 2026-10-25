@@ -4,19 +4,24 @@ import type { components } from '@/lib/api/schema';
 import type { CachedRead } from './cached-read';
 import { getOfflineDb } from './db';
 
-type FermentationProcess = components['schemas']['FermentationProcess'];
+type Schemas = components['schemas'];
+type FermentationProcess = Schemas['FermentationProcess'];
+type DryingProcess = Schemas['DryingProcess'];
 
 // Un lote encontrado en la copia de una lista de poscosecha, con su proceso y la fecha de la copia.
-export type CopiedProcess = {
-  kind: 'fermentation';
-  process: FermentationProcess;
-  savedAt: number;
-};
+export type CopiedProcess =
+  | { kind: 'fermentation'; process: FermentationProcess; savedAt: number }
+  | { kind: 'drying'; process: DryingProcess; savedAt: number };
+
+type CopiedItem = FermentationProcess | DryingProcess;
 
 // Las listas de poscosecha guardan cada lote con su origen, así que con ellas se arma la ficha de un
-// lote sin conexión. La cuenta técnica guarda una copia por productor (`{clave}:producer:{id}`). El
-// secado sumará aquí la suya.
-const COPIES = [{ kind: 'fermentation', key: 'fermentation' }] as const;
+// lote sin conexión. La cuenta técnica guarda una copia por productor (`{clave}:producer:{id}`). Un
+// lote está en una sola etapa a la vez; se busca primero en la más reciente del proceso.
+const COPIES = [
+  { kind: 'drying', key: 'drying' },
+  { kind: 'fermentation', key: 'fermentation' },
+] as const;
 
 const isCopyOf = (entryKey: string, key: string) =>
   entryKey === key || entryKey.startsWith(`${key}:producer:`);
@@ -31,10 +36,12 @@ export async function findLotInPostharvestCopies(
   for (const { kind, key } of COPIES) {
     for (const entry of entries) {
       if (!isCopyOf(entry.key, key)) continue;
-      const process = (entry.value as FermentationProcess[]).find(
+      const process = (entry.value as CopiedItem[]).find(
         (item) => item.lot.id === lotId,
       );
-      if (process) return { kind, process, savedAt: entry.fetchedAt };
+      if (process) {
+        return { kind, process, savedAt: entry.fetchedAt } as CopiedProcess;
+      }
     }
   }
   return null;

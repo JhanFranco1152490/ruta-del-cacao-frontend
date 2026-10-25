@@ -97,9 +97,9 @@ export const useLotSummary = (query: LotSummaryQuery) =>
 
 // El lote como lo guarda la copia de una lista de poscosecha: con su origen y su proceso, pero sin
 // el código de socio del productor ni quién lo conformó y cuándo. Esos quedan vacíos y la ficha
-// sin conexión no los muestra.
-export function lotFromCopy({ process }: CopiedProcess): Lot {
-  const { lot } = process;
+// sin conexión no los muestra. De un lote en secado la copia no trae su fermentación.
+export function lotFromCopy(copied: CopiedProcess): Lot {
+  const { lot } = copied.process;
   return {
     id: lot.id,
     code: lot.code,
@@ -111,11 +111,25 @@ export function lotFromCopy({ process }: CopiedProcess): Lot {
     version: 0,
     created_at: '',
     updated_at: '',
-    fermentation: {
-      started_at: process.started_at,
-      ended_at: process.result?.ended_at ?? null,
-      facility: process.facility.name,
-    },
+    fermentation:
+      copied.kind === 'fermentation'
+        ? {
+            started_at: copied.process.started_at,
+            ended_at: copied.process.result?.ended_at ?? null,
+            facility: copied.process.facility.name,
+          }
+        : null,
+    drying:
+      copied.kind === 'drying'
+        ? {
+            started_at: copied.process.started_at,
+            ended_at: copied.process.result?.ended_at ?? null,
+            final_moisture_pct:
+              copied.process.result?.final_moisture_pct ?? null,
+            dry_weight_kg: copied.process.result?.dry_weight_kg ?? null,
+            yield_pct: copied.process.result?.yield_pct ?? null,
+          }
+        : null,
   };
 }
 

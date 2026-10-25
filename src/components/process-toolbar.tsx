@@ -7,19 +7,22 @@ import {
 } from '@/components/search-select';
 import { SegmentedControl } from '@/components/segmented-control';
 
-import type { FermentationView } from '../use-fermentation-filters';
-
-// Las pestañas (solo para quien puede iniciar) y la finca (solo con varias), en una fila.
-export function FermentationToolbar({
+// Las pestañas (solo para quien puede iniciar) y la finca (solo con varias) de una pantalla de
+// poscosecha, en una fila.
+export function ProcessToolbar<View extends string>({
+  viewLabel,
+  views,
   view,
   onView,
   farm,
   farmOptions,
   onFarm,
 }: {
-  view: FermentationView;
-  // Falta para quien solo registra volteos: no ve la pestaña de listos.
-  onView?: (view: FermentationView) => void;
+  viewLabel: string;
+  views: readonly { value: View; label: string }[];
+  view: View;
+  // Falta para quien solo registra: no ve la pestaña de listos.
+  onView?: (view: View) => void;
   farm: SearchSelectOption | null;
   farmOptions: readonly SearchSelectOption[];
   onFarm: (farm: string | null) => void;
@@ -29,15 +32,12 @@ export function FermentationToolbar({
       className={`flex flex-wrap items-center gap-3 ${FILTER_CONTROLS_CLASS}`}
     >
       {onView && (
-        <SegmentedControl<FermentationView>
+        <SegmentedControl<View>
           compact
           fullWidth
-          label="Vista de fermentación"
+          label={viewLabel}
           onChange={onView}
-          options={[
-            { value: 'en-curso', label: 'En fermentación' },
-            { value: 'listos', label: 'Listos para fermentar' },
-          ]}
+          options={views}
           value={view}
         />
       )}

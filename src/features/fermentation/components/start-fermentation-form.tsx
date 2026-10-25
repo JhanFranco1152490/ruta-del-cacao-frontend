@@ -6,22 +6,22 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { FormDialog } from '@/components/form-dialog';
+import { StartWarning } from '@/components/start-warning';
 import { SearchSelect } from '@/components/search-select';
 import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { useSession } from '@/hooks/use-session';
 import { toBogotaLocal } from '@/lib/format/dates';
+import { responsibleOptions } from '@/lib/responsible-options';
 
 import type { Fermentation } from '../api';
 import {
   createStartFormSchema,
   facilityOptionLabel,
-  responsibleOptions,
   startFormOf,
   type StartFormInput,
   type StartOptions,
 } from '../start-form';
-import { CapacityWarning } from './capacity-warning';
 import { useStartSubmit } from '../use-start-submit';
 import type { StartLot } from './start-fermentation-dialog';
 
@@ -76,7 +76,10 @@ export function StartFermentationForm({
     onSaved,
     onClose,
   });
-  const people = responsibleOptions(options, fermentation);
+  const people = responsibleOptions(
+    options.responsibles,
+    fermentation?.responsible,
+  );
   const noBoxes = options.facilities.length === 0;
 
   return (
@@ -96,7 +99,7 @@ export function StartFermentationForm({
       title={title}
     >
       {submission.warning && (
-        <CapacityWarning
+        <StartWarning
           disabled={submission.isSaving}
           message={submission.warning}
           onConfirm={() =>

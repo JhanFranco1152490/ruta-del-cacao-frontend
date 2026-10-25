@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ShieldPlus,
   Sprout,
+  Sun,
   Thermometer,
   Users,
   Warehouse,
@@ -99,6 +100,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
     group: 'postharvest',
     icon: Thermometer,
     permission: PERMISSIONS.FERMENTATION_LOG_TURNS,
+  },
+  // Y después de la fermentación, el secado. También se consulta sin conexión.
+  {
+    href: '/secado',
+    label: 'Secado',
+    group: 'postharvest',
+    icon: Sun,
+    permission: PERMISSIONS.DRYING_LOG,
   },
   // Los cajones y marquesinas donde los lotes fermentan y se secan: lo que se prepara para el
   // proceso, por eso va al final del grupo. Se consulta sin conexión.

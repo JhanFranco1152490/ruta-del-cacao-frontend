@@ -1,7 +1,7 @@
 import type { components } from '@/lib/api/schema';
 import { fromBogotaLocal, toBogotaLocal } from '@/lib/format/dates';
 
-import { minuteOf } from './fermentation-time';
+import { minuteOf } from '@/lib/format/hours';
 import type { TurnFormInput, TurnFormValues } from './turn-form';
 
 type TurnUpdate = Omit<
