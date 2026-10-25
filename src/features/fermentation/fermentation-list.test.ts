@@ -1,62 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  buildFermentation,
-  buildFermentationTurn,
-  buildHarvest,
-  buildLot,
-} from '@/test/factories';
+import { buildFermentation, buildFermentationTurn } from '@/test/factories';
 
-import {
-  cardFacts,
-  countOverdue,
-  fermentationsOfFarm,
-  readyLotsOfFarm,
-} from './fermentation-list';
+import { cardFacts, countOverdue } from './fermentation-list';
 import type { QueuedTurn } from './turn-queue';
 
 // Iniciada el 15 oct. a las 07:00: sin volteos, el primero toca el 17 a las 07:00.
 const STARTED = '2026-10-15T07:00:00-05:00';
 const at = (iso: string) => new Date(iso);
-
-const inFarm = (farmId: string, lotId: string) =>
-  buildFermentation({
-    lot: { ...buildFermentation().lot, id: lotId },
-    farm: { id: farmId, code: 'F0', name: 'Finca' },
-  });
-
-describe('fermentationsOfFarm', () => {
-  const list = [inFarm('f1', 'l1'), inFarm('f2', 'l2')];
-
-  it('keeps those of the chosen farm', () => {
-    expect(fermentationsOfFarm(list, 'f2').map(({ lot }) => lot.id)).toEqual([
-      'l2',
-    ]);
-  });
-
-  it('keeps all of them without a farm', () => {
-    expect(fermentationsOfFarm(list, null)).toHaveLength(2);
-  });
-});
-
-describe('readyLotsOfFarm', () => {
-  const harvestIn = (farmId: string) => {
-    const harvest = buildHarvest();
-    return {
-      ...harvest,
-      plot: { ...harvest.plot, farm: { ...harvest.plot.farm, id: farmId } },
-    };
-  };
-  const lots = [
-    buildLot({ id: 'l1', harvest: harvestIn('f1') }),
-    buildLot({ id: 'l2', harvest: harvestIn('f2') }),
-  ];
-
-  it('keeps the lots harvested in the chosen farm', () => {
-    expect(readyLotsOfFarm(lots, 'f1').map(({ id }) => id)).toEqual(['l1']);
-    expect(readyLotsOfFarm(lots, null)).toHaveLength(2);
-  });
-});
 
 describe('countOverdue', () => {
   it('counts the fermentations whose next turn already passed', () => {

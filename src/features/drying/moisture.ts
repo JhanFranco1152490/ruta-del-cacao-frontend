@@ -1,4 +1,4 @@
-import { formatDecimal } from '@/lib/format/decimal';
+import { formatDecimal, formatFixedDecimal } from '@/lib/format/decimal';
 
 type Range = { min: string; max: string };
 
@@ -11,7 +11,7 @@ export const isOutsideRange = (value: string | number, range: Range) =>
 
 // La advertencia de la humedad de entrada fuera del rango del productor: no bloquea, pide confirmar.
 export const entryMoistureWarning = (value: string, range: Range) =>
-  `La humedad de entrada (${formatDecimal(value, 1)} %) está fuera del rango esperado (${rangeText(range)}). ¿Iniciar de todos modos?`;
+  `La humedad de entrada (${formatFixedDecimal(value, 1)} %) está fuera del rango esperado (${rangeText(range)}). ¿Iniciar de todos modos?`;
 
 // La línea informativa de la humedad final fuera de la meta: no bloquea, la HU no lo pide.
 export const outOfTargetLine = (range: Range) =>

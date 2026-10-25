@@ -25,7 +25,7 @@ describe('moisture ranges', () => {
 
   it('says what is out of range, and asks to confirm', () => {
     expect(entryMoistureWarning('48', entry)).toBe(
-      'La humedad de entrada (48 %) está fuera del rango esperado (55–60 %). ¿Iniciar de todos modos?',
+      'La humedad de entrada (48,0 %) está fuera del rango esperado (55–60 %). ¿Iniciar de todos modos?',
     );
     expect(outOfTargetLine(target)).toBe('Fuera de la meta (6,5–7,5 %).');
   });

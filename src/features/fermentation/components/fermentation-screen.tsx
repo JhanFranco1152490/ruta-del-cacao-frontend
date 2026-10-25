@@ -5,16 +5,21 @@ import { useState } from 'react';
 import { OfflineCopyNotice } from '@/components/offline-copy-notice';
 import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
+import { ProcessToolbar } from '@/components/process-toolbar';
 import { ProducerFilter } from '@/components/producer-filter';
+import { useStartFromLink } from '@/hooks/use-start-from-link';
 
 import type { ReadyLot } from '../api';
 import { countOverdue } from '../fermentation-list';
 import { useFermentationScreen } from '../use-fermentation-screen';
-import { useStartFromLink } from '../use-start-from-link';
 import { FermentationBody } from './fermentation-body';
 import { FermentationSummary } from './fermentation-summary';
-import { FermentationToolbar } from './fermentation-toolbar';
 import { StartReadyLot } from './start-ready-lot';
+
+const FERMENTATION_VIEW_OPTIONS = [
+  { value: 'en-curso', label: 'En fermentación' },
+  { value: 'listos', label: 'Listos para fermentar' },
+] as const;
 
 // Fermentación: el trabajo del día de quien fermenta. La ficha del lote es de otro dominio: su ruta
 // la entrega quien monta la pantalla.
@@ -33,6 +38,7 @@ export function FermentationScreen({
   useStartFromLink({
     lotId: filters.startLotId,
     readyLots: screen.ready.data,
+    missingMessage: 'Este lote ya no está listo para fermentar.',
     onFound: setStarting,
     onDone: filters.clearStart,
   });
@@ -63,7 +69,7 @@ export function FermentationScreen({
         />
       )}
       {!screen.needsProducer && (
-        <FermentationToolbar
+        <ProcessToolbar
           farm={screen.farm.choice}
           farmOptions={screen.farmOptions}
           onFarm={(farm) => void filters.setFarm(farm)}
@@ -71,6 +77,8 @@ export function FermentationScreen({
             screen.canManage ? (next) => void filters.setView(next) : undefined
           }
           view={screen.view}
+          viewLabel="Vista de fermentación"
+          views={FERMENTATION_VIEW_OPTIONS}
         />
       )}
       {read.isSuccess && screen.offline && (
