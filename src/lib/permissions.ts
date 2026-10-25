@@ -28,6 +28,8 @@ export const PERMISSIONS = {
   LOTS_VIEW: 'lots.view_lot',
   LOTS_ADD: 'lots.add_lot',
   LOTS_DELETE: 'lots.delete_lot',
+  FERMENTATION_LOG_TURNS: 'fermentation.log_turns',
+  FERMENTATION_MANAGE: 'fermentation.manage_fermentation',
   FACILITIES_VIEW: 'facilities.view_postharvestfacility',
   FACILITIES_ADD: 'facilities.add_postharvestfacility',
   FACILITIES_CHANGE: 'facilities.change_postharvestfacility',
@@ -55,6 +57,7 @@ const FIELD_AREAS = [
   'activities.',
   'harvests.',
   'lots.',
+  'fermentation.',
   'facilities.',
 ];
 export const isFieldPermission = (code: string) =>

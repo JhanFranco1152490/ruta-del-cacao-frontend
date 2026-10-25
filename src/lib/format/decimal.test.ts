@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDecimal } from './decimal';
+import { formatDecimal, formatFixedDecimal } from './decimal';
 
 describe('formatDecimal', () => {
   it('reads an api decimal with a comma and without trailing zeros', () => {
@@ -13,5 +13,17 @@ describe('formatDecimal', () => {
     expect(formatDecimal('3.785')).toBe('3,79');
     expect(formatDecimal('3.785', 3)).toBe('3,785');
     expect(formatDecimal('2.46', 1)).toBe('2,5');
+  });
+});
+
+describe('formatFixedDecimal', () => {
+  it('keeps the trailing zeros of a measurement', () => {
+    expect(formatFixedDecimal('45.00', 1)).toBe('45,0');
+    expect(formatFixedDecimal('5', 2)).toBe('5,00');
+    expect(formatFixedDecimal('4.9', 2)).toBe('4,90');
+  });
+
+  it('rounds to the given decimals', () => {
+    expect(formatFixedDecimal('46.55', 1)).toBe('46,6');
   });
 });

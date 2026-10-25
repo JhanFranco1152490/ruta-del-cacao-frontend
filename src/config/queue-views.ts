@@ -1,6 +1,7 @@
 import type { QueueView } from '@/components/sync-tray/queue-view';
 import { completionQueueView } from '@/features/activities/queue-view';
 import { farmQueueView } from '@/features/farms/queue-view';
+import { turnQueueView } from '@/features/fermentation/queue-view';
 import { controlQueueView } from '@/features/health/control-queue-view';
 import { evidenceQueueView } from '@/features/health/evidence-queue-view';
 import { monitoringQueueView } from '@/features/health/monitoring-queue-view';
@@ -17,4 +18,5 @@ export const QUEUE_VIEWS: readonly QueueView[] = [
   evidenceQueueView,
   harvestQueueView,
   lotQueueView,
+  turnQueueView,
 ];

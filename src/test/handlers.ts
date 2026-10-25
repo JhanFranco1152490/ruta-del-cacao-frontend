@@ -172,6 +172,16 @@ export const lotSummaryHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde las fermentaciones en curso, sin paginar, y guarda las búsquedas recibidas.
+export const fermentationsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/fermentation'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
 // Responde los cajones y marquesinas de un productor, sin paginar, y guarda las búsquedas
 // recibidas.
 export const facilitiesHandler = (
