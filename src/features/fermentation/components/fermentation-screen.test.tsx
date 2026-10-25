@@ -136,10 +136,14 @@ function renderScreen({
   );
 }
 
+// Cada tarjeta tiene además su propia línea de tiempo, que es otra lista: solo se cuentan las
+// tarjetas, los hijos directos de la lista.
 const cards = async () =>
-  within(
-    await screen.findByRole('list', { name: 'Lotes en fermentación' }),
-  ).getAllByRole('listitem');
+  Array.from(
+    (
+      await screen.findByRole('list', { name: 'Lotes en fermentación' })
+    ).querySelectorAll<HTMLElement>(':scope > li'),
+  );
 
 const summaryValue = (title: string) =>
   within(screen.getByRole('region', { name: 'Resumen de fermentación' }))
@@ -158,9 +162,8 @@ describe('FermentationScreen', () => {
     expect(first).toHaveTextContent('Volteo pendiente desde las 07:00');
     expect(second).toHaveTextContent('F03 · El Diviso · C-02');
     expect(second).toHaveTextContent('48 h de fermentación · 1 volteo');
-    expect(second).toHaveTextContent(
-      'Volteo 1 · 46,0 °C · pH 4,85 · 17 oct. 08:30',
-    );
+    expect(second).toHaveTextContent('46,0 °C · pH 4,85');
+    expect(second).toHaveTextContent('Volteo 1 · 17 oct. 08:30');
     expect(second).toHaveTextContent('Próximo volteo: 18 oct. 08:30');
     expect(
       within(first).getByRole('link', {
@@ -205,6 +208,45 @@ describe('FermentationScreen', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('draws the timeline of each lot, naming every point for whoever cannot hover', async () => {
+    renderScreen();
+
+    const [, second] = await cards();
+    const timeline = within(second).getByRole('list', {
+      name: 'Línea de tiempo de la fermentación',
+    });
+    expect(
+      within(timeline).getByLabelText(/^Inicio · 15 oct\. 09:00/),
+    ).toBeInTheDocument();
+    expect(
+      within(timeline).getByLabelText(
+        'Volteo 1 · 17 oct. 08:30 · 46,0 °C · pH 4,85',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(timeline).getByLabelText('Próximo volteo: 18 oct. 08:30'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the date of a point of the timeline when hovering it', async () => {
+    renderScreen();
+
+    const [, second] = await cards();
+    await userEvent.hover(
+      within(second).getByLabelText(
+        'Volteo 1 · 17 oct. 08:30 · 46,0 °C · pH 4,85',
+      ),
+    );
+
+    expect(
+      (
+        await screen.findAllByText(
+          'Volteo 1 · 17 oct. 08:30 · 46,0 °C · pH 4,85',
+        )
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+
   it('sums up the lots in fermentation, the overdue turns and the lots ready', async () => {
     renderScreen();
 
@@ -233,9 +275,10 @@ describe('FermentationScreen', () => {
 
     await waitFor(async () =>
       expect((await cards())[0]).toHaveTextContent(
-        'Volteo 1 · 44,5 °C · pH 4,95 · 17 oct. 08:00 · Pendiente de enviar',
+        'Volteo 1 · 17 oct. 08:00 · Pendiente de enviar',
       ),
     );
+    expect((await cards())[0]).toHaveTextContent('44,5 °C · pH 4,95');
     expect((await cards())[0]).toHaveTextContent(
       'Próximo volteo: 18 oct. 08:00',
     );

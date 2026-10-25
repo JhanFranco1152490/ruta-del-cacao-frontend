@@ -31,7 +31,7 @@ type ShownTurn = {
   pending: boolean;
 };
 
-const shownTurns = (
+export const shownTurns = (
   fermentation: Fermentation,
   queued: readonly QueuedTurn[],
 ): ShownTurn[] => [
@@ -44,8 +44,10 @@ const shownTurns = (
 
 // El próximo volteo se calcula aquí y no se toma de la copia: la copia puede ser de ayer, y los
 // volteos que esperan en la cola del teléfono también cuentan.
-const dueAt = (fermentation: Fermentation, turns: readonly ShownTurn[]) =>
-  nextTurnDueAt(fermentation.started_at, lastTurnedAt(turns));
+export const dueAt = (
+  fermentation: Fermentation,
+  turns: readonly ShownTurn[],
+) => nextTurnDueAt(fermentation.started_at, lastTurnedAt(turns));
 
 export const countOverdue = (
   fermentations: readonly Fermentation[],
@@ -56,7 +58,7 @@ export const countOverdue = (
     isTurnOverdue(dueAt(item, shownTurns(item, queued)), now),
   ).length;
 
-function nextTurnText(due: string, now: Date) {
+export function nextTurnText(due: string, now: Date) {
   if (!isTurnOverdue(due, now)) {
     return {
       overdue: false,

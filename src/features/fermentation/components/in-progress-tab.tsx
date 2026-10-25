@@ -61,7 +61,7 @@ export function InProgressTab({
   return (
     <ul
       aria-label="Lotes en fermentación"
-      className="motion-stagger grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
+      className="motion-stagger grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3"
     >
       {fermentations.map((fermentation) => (
         <FermentationCard
