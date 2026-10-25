@@ -97,7 +97,8 @@ src/
                        con su `group` (el menú agrupa por tarea; ver el sistema de diseño)
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       health, notifications, harvests, lots, fermentation, drying, facilities, users y
+                       health, notifications, harvests, lots, fermentation, drying, facilities,
+                       postharvest-parameters, users y
                        roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
@@ -352,6 +353,23 @@ src/
     Infraestructura. La sección de la ficha del lote (`drying-section.tsx`) muestra los datos y la
     bitácora día por día (`log-rows.ts`, con los días sin registro como fila tenue) en una tabla que
     cabe sin desplazarse a 1280 px.
+
+- **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un
+  formulario de página (sin banner, `narrow`) con los 15 valores con los que se evalúa el secado, en
+  dos tarjetas: **Secado** y **Alertas del secado**. Los parámetros son del productor, no de una
+  finca. La respuesta trae la línea base (`baseline`), así que el frontend no tiene copia de ella.
+  - **Las reglas son funciones puras** (`parameters-form.ts`, con los campos y topes en
+    `parameter-fields.ts`): los porcentajes de 0 a 100 con un decimal (`lib/validation/percent.ts`,
+    compartido con el secado), los días y las horas enteros y mayores que cero con sus topes (60 días,
+    240 horas), el mínimo de cada rango no mayor que el máximo (el error va en el campo **Mínimo**),
+    qué campos son **Cambiado** (contra la línea base) y si hay cambios sin guardar (contra lo
+    cargado). Los textos de lo que hace cada parámetro están en `parameter-rows.ts`.
+  - **Se cambia solo en línea:** guardar reemplaza los 15 valores con `expected_version`;
+    **Restablecer línea base** pide confirmar y avisa que los cambios sin guardar se pierden;
+    `stale_version` carga los valores vigentes. La lectura tiene copia en el dispositivo
+    (`postharvest-parameters`, o `postharvest-parameters:producer:{id}` para la cuenta técnica): sin
+    conexión, o con permiso solo de consulta, los valores se ven como datos
+    (`parameters-readonly.tsx`). La cuenta técnica elige el productor con `?productor=`.
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
