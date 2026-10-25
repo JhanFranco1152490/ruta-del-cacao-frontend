@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { components } from '@/lib/api/schema';
 import { formatTime, fromBogotaLocal } from '@/lib/format/dates';
-import { formatDecimal } from '@/lib/format/decimal';
+import { formatFixedDecimal } from '@/lib/format/decimal';
 import { minuteOf } from '@/lib/format/hours';
 import {
   decimalPattern,
@@ -53,7 +53,7 @@ export type LogFormInput = {
   shade_hours: string;
   turn_count: string;
   turn_frequency_hours: string;
-  weather: Weather | '';
+  weather: string;
   notes: string;
 };
 
@@ -119,7 +119,7 @@ export function hoursMessage(
   startedAt: string,
   logDate: string,
 ) {
-  const hours = `${formatDecimal(available, 1)} horas`;
+  const hours = `${formatFixedDecimal(available, 1)} horas`;
   return logDateOf(startedAt) === logDate
     ? `Ese día el secado tuvo ${hours} (empezó a las ${formatTime(startedAt)}).`
     : `Ese día el secado tuvo ${hours}.`;

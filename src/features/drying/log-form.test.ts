@@ -102,10 +102,10 @@ describe('createLogFormSchema', () => {
   });
 
   it('does not let the day exceed the hours the drying had, saying when it started', () => {
-    // Iniciado a las 14:00: ese día tuvo 10 horas.
+    // Iniciado a las 14:00: ese día tuvo 10,0 horas.
     expect(
       errorsOf({ measured_at: '2026-10-22T20:00', sun_hours: '12' }).sun_hours,
-    ).toBe('Ese día el secado tuvo 10 horas (empezó a las 14:00).');
+    ).toBe('Ese día el secado tuvo 10,0 horas (empezó a las 14:00).');
     expect(
       errorsOf({
         measured_at: '2026-10-22T20:00',
@@ -122,7 +122,7 @@ describe('createLogFormSchema', () => {
         sun_hours: '20',
         shade_hours: '5',
       }).sun_hours,
-    ).toBe('Ese día el secado tuvo 24 horas.');
+    ).toBe('Ese día el secado tuvo 24,0 horas.');
     // Hoy son las 9 de la mañana.
     expect(
       errorsOf({
@@ -130,7 +130,7 @@ describe('createLogFormSchema', () => {
         sun_hours: '10',
         turn_count: '0',
       }).sun_hours,
-    ).toBe('Ese día el secado tuvo 9 horas.');
+    ).toBe('Ese día el secado tuvo 9,0 horas.');
   });
 
   it('limits the notes', () => {
