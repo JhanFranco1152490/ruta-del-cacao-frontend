@@ -5,7 +5,8 @@ import {
 } from '@/lib/format/dates';
 
 import type { Fermentation, ReadyLot } from './api';
-import { hoursBetween, turnsText } from './fermentation-time';
+import { turnsText } from './fermentation-time';
+import { hoursBetween } from '@/lib/format/hours';
 import { phText, temperatureText } from './measure-text';
 import { isTurnOverdue, nextTurnDueAt } from './next-turn';
 import { pendingTurnsOf, type QueuedTurn } from './turn-queue';

@@ -19,7 +19,8 @@ import {
   finishedMessage,
   toFinishRequest,
 } from '../finish-form';
-import { hoursBetween, turnsText } from '../fermentation-time';
+import { turnsText } from '../fermentation-time';
+import { hoursBetween } from '@/lib/format/hours';
 import { NOTES_MAX_LENGTH } from '../turn-form';
 import { lastTurnedAt } from '../turn-rules';
 

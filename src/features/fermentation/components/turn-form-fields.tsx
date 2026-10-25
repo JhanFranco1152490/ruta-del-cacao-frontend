@@ -14,7 +14,7 @@ import { TextField } from '@/components/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { fromBogotaLocal, toBogotaLocal } from '@/lib/format/dates';
 
-import { hoursBetween } from '../fermentation-time';
+import { hoursBetween } from '@/lib/format/hours';
 import { DUPLICATE_ERROR } from '../turn-errors';
 import {
   createTurnFormSchema,

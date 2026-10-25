@@ -8,7 +8,7 @@ import {
 } from '@/lib/format/dates';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
-import { durationText, hoursBetween, minuteOf } from './fermentation-time';
+import { durationText, hoursBetween, minuteOf } from '@/lib/format/hours';
 import {
   FUTURE_MOMENT_MESSAGE,
   isLocalDateTime,

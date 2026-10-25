@@ -11,7 +11,7 @@ import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
 import type { Fermentation } from './api';
 import { exceedsCapacity } from './capacity';
-import { minuteOf } from './fermentation-time';
+import { minuteOf } from '@/lib/format/hours';
 import { FUTURE_MOMENT_MESSAGE, isLocalDateTime } from './turn-form';
 
 type Schemas = components['schemas'];

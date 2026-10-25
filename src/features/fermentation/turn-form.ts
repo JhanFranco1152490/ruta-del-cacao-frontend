@@ -9,7 +9,7 @@ import {
 } from '@/lib/validation/decimal';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
-import { minuteOf } from './fermentation-time';
+import { minuteOf } from '@/lib/format/hours';
 
 type Schemas = components['schemas'];
 
