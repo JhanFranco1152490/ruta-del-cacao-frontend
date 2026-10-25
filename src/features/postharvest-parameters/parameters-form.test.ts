@@ -8,6 +8,10 @@ import {
   hasUnsavedChanges,
   MAX_DAYS_MESSAGE,
   MAX_HOURS_MESSAGE,
+  MAX_TURN_HOURS_MESSAGE,
+  PH_MESSAGE,
+  TEMPERATURE_MESSAGE,
+  TWO_DECIMALS_MESSAGE,
   MIN_ABOVE_MAX_MESSAGE,
   originLine,
   parametersFormOf,
@@ -15,6 +19,7 @@ import {
   POSITIVE_DROP_MESSAGE,
   POSITIVE_INTEGER_MESSAGE,
   toParameterValues,
+  valueText,
 } from './parameters-form';
 
 const baseline = buildParameters().values;
@@ -149,6 +154,71 @@ describe('parametersSchema', () => {
     ).toEqual({ entry_moisture_max_pct: 'Campo obligatorio' });
   });
 
+  describe('the fermentation values', () => {
+    it.each(['0', '2,5', 'abc', '-1'])(
+      'asks for whole hours above zero in the turn times (%s)',
+      (value) => {
+        expect(errorsOf({ first_turn_hours: value }).first_turn_hours).toBe(
+          POSITIVE_INTEGER_MESSAGE,
+        );
+        expect(errorsOf({ next_turn_hours: value }).next_turn_hours).toBe(
+          POSITIVE_INTEGER_MESSAGE,
+        );
+      },
+    );
+
+    it('catches an extra zero in the turn times', () => {
+      expect(errorsOf({ first_turn_hours: '241' }).first_turn_hours).toBe(
+        MAX_TURN_HOURS_MESSAGE,
+      );
+      expect(errorsOf({ next_turn_hours: '240' })).toEqual({});
+    });
+
+    it('keeps the temperature between 0 and 80 with one decimal', () => {
+      expect(errorsOf({ temperature_max_c: '81' }).temperature_max_c).toBe(
+        TEMPERATURE_MESSAGE,
+      );
+      expect(errorsOf({ temperature_min_c: '-1' }).temperature_min_c).toBe(
+        TEMPERATURE_MESSAGE,
+      );
+      expect(errorsOf({ temperature_min_c: '40,55' }).temperature_min_c).toBe(
+        'Usa máximo 1 decimal.',
+      );
+      expect(errorsOf({ temperature_min_c: '38,5' })).toEqual({});
+    });
+
+    it('keeps the pH between 0 and 14 with two decimals', () => {
+      expect(errorsOf({ ph_max: '14,5' }).ph_max).toBe(PH_MESSAGE);
+      expect(errorsOf({ ph_min: '4,123' }).ph_min).toBe(TWO_DECIMALS_MESSAGE);
+      expect(errorsOf({ ph_min: '3,8', ph_max: '5,8' })).toEqual({});
+    });
+
+    it('points to the minimum when the temperature or the pH range is upside down', () => {
+      expect(
+        errorsOf({ temperature_min_c: '55', temperature_max_c: '50' }),
+      ).toEqual({ temperature_min_c: MIN_ABOVE_MAX_MESSAGE });
+      expect(errorsOf({ ph_min: '6', ph_max: '5,5' })).toEqual({
+        ph_min: MIN_ABOVE_MAX_MESSAGE,
+      });
+    });
+
+    it('sends the temperature and the pH as text and the turn times as numbers', () => {
+      const values = toParameterValues({
+        ...valid(),
+        ph_min: '3,8',
+        first_turn_hours: '36',
+      });
+
+      expect(values).toMatchObject({
+        first_turn_hours: 36,
+        next_turn_hours: 24,
+        temperature_min_c: '40.0',
+        ph_min: '3.8',
+        ph_max: '5.50',
+      });
+    });
+  });
+
   it('does not ask for the consistency between groups', () => {
     expect(errorsOf({ overdried_moisture_pct: '9' })).toEqual({});
   });
@@ -193,6 +263,15 @@ describe('baselineText', () => {
     expect(baselineText('slow_stall_window_hours', baseline)).toBe(
       'Línea base: 48 horas',
     );
+  });
+});
+
+describe('valueText', () => {
+  it('writes each value with its unit and its fixed decimals', () => {
+    expect(valueText('temperature_min_c', '40.0')).toBe('40,0 °C');
+    expect(valueText('ph_min', '4.00')).toBe('4,00');
+    expect(valueText('first_turn_hours', 48)).toBe('48 horas');
+    expect(valueText('overdried_moisture_pct', '6.0')).toBe('6 %');
   });
 });
 

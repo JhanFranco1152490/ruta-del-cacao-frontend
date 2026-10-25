@@ -2088,60 +2088,6 @@ export interface components {
             /** @default false */
             confirm_entry_moisture: boolean;
         };
-        DryingValues: {
-            /** Format: decimal */
-            entry_moisture_min_pct: string;
-            /** Format: decimal */
-            entry_moisture_max_pct: string;
-            /** Format: decimal */
-            target_moisture_min_pct: string;
-            /** Format: decimal */
-            target_moisture_max_pct: string;
-            estimated_days_min: number;
-            estimated_days_max: number;
-            slow_stall_window_hours: number;
-            /** Format: decimal */
-            slow_stall_min_drop_pct: string;
-            slow_duration_day: number;
-            /** Format: decimal */
-            slow_duration_moisture_pct: string;
-            accelerated_day: number;
-            /** Format: decimal */
-            accelerated_moisture_pct: string;
-            /** Format: decimal */
-            near_target_min_pct: string;
-            /** Format: decimal */
-            near_target_max_pct: string;
-            /** Format: decimal */
-            overdried_moisture_pct: string;
-        };
-        DryingValuesInputRequest: {
-            /** Format: decimal */
-            entry_moisture_min_pct: string;
-            /** Format: decimal */
-            entry_moisture_max_pct: string;
-            /** Format: decimal */
-            target_moisture_min_pct: string;
-            /** Format: decimal */
-            target_moisture_max_pct: string;
-            estimated_days_min: number;
-            estimated_days_max: number;
-            slow_stall_window_hours: number;
-            /** Format: decimal */
-            slow_stall_min_drop_pct: string;
-            slow_duration_day: number;
-            /** Format: decimal */
-            slow_duration_moisture_pct: string;
-            accelerated_day: number;
-            /** Format: decimal */
-            accelerated_moisture_pct: string;
-            /** Format: decimal */
-            near_target_min_pct: string;
-            /** Format: decimal */
-            near_target_max_pct: string;
-            /** Format: decimal */
-            overdried_moisture_pct: string;
-        };
         /**
          * @description * `sunny` - Soleado
          *     * `partly_cloudy` - Parcialmente nublado
@@ -2336,6 +2282,23 @@ export interface components {
             green_weight_kg: string;
             harvest: components["schemas"]["HarvestRepresentation"];
         };
+        /**
+         * @description Lo que el productor configuró para fermentar: cuándo toca cada volteo y la temperatura y el
+         *     pH de referencia. Viajan con cada fermentación para que el teléfono calcule el próximo volteo
+         *     sin conexión y muestre la referencia al registrar uno.
+         */
+        FermentationParameters: {
+            first_turn_hours: number;
+            next_turn_hours: number;
+            /** Format: decimal */
+            temperature_min_c: string;
+            /** Format: decimal */
+            temperature_max_c: string;
+            /** Format: decimal */
+            ph_min: string;
+            /** Format: decimal */
+            ph_max: string;
+        };
         FermentationPerson: {
             /** Format: uuid */
             id: string;
@@ -2354,6 +2317,7 @@ export interface components {
             readonly elapsed_hours: string;
             /** Format: date-time */
             readonly next_turn_due_at: string | null;
+            readonly parameters: components["schemas"]["FermentationParameters"];
             readonly turns: components["schemas"]["FermentationTurn"][];
             readonly result: components["schemas"]["FermentationResult"] | null;
             version: number;
@@ -3388,8 +3352,8 @@ export interface components {
             /** Format: uuid */
             producer_id: string;
             is_default: boolean;
-            values: components["schemas"]["DryingValues"];
-            baseline: components["schemas"]["DryingValues"];
+            values: components["schemas"]["PostharvestValues"];
+            baseline: components["schemas"]["PostharvestValues"];
             version: number;
             /** Format: date-time */
             updated_at: string | null;
@@ -3404,7 +3368,81 @@ export interface components {
             /** Format: uuid */
             producer?: string;
             expected_version: number;
-            values: components["schemas"]["DryingValuesInputRequest"];
+            values: components["schemas"]["PostharvestValuesInputRequest"];
+        };
+        PostharvestValues: {
+            /** Format: decimal */
+            entry_moisture_min_pct: string;
+            /** Format: decimal */
+            entry_moisture_max_pct: string;
+            /** Format: decimal */
+            target_moisture_min_pct: string;
+            /** Format: decimal */
+            target_moisture_max_pct: string;
+            estimated_days_min: number;
+            estimated_days_max: number;
+            slow_stall_window_hours: number;
+            /** Format: decimal */
+            slow_stall_min_drop_pct: string;
+            slow_duration_day: number;
+            /** Format: decimal */
+            slow_duration_moisture_pct: string;
+            accelerated_day: number;
+            /** Format: decimal */
+            accelerated_moisture_pct: string;
+            /** Format: decimal */
+            near_target_min_pct: string;
+            /** Format: decimal */
+            near_target_max_pct: string;
+            /** Format: decimal */
+            overdried_moisture_pct: string;
+            first_turn_hours: number;
+            next_turn_hours: number;
+            /** Format: decimal */
+            temperature_min_c: string;
+            /** Format: decimal */
+            temperature_max_c: string;
+            /** Format: decimal */
+            ph_min: string;
+            /** Format: decimal */
+            ph_max: string;
+        };
+        PostharvestValuesInputRequest: {
+            /** Format: decimal */
+            entry_moisture_min_pct: string;
+            /** Format: decimal */
+            entry_moisture_max_pct: string;
+            /** Format: decimal */
+            target_moisture_min_pct: string;
+            /** Format: decimal */
+            target_moisture_max_pct: string;
+            estimated_days_min: number;
+            estimated_days_max: number;
+            slow_stall_window_hours: number;
+            /** Format: decimal */
+            slow_stall_min_drop_pct: string;
+            slow_duration_day: number;
+            /** Format: decimal */
+            slow_duration_moisture_pct: string;
+            accelerated_day: number;
+            /** Format: decimal */
+            accelerated_moisture_pct: string;
+            /** Format: decimal */
+            near_target_min_pct: string;
+            /** Format: decimal */
+            near_target_max_pct: string;
+            /** Format: decimal */
+            overdried_moisture_pct: string;
+            first_turn_hours: number;
+            next_turn_hours: number;
+            /** Format: decimal */
+            temperature_min_c: string;
+            /** Format: decimal */
+            temperature_max_c: string;
+            /** Format: decimal */
+            ph_min: string;
+            /** Format: decimal */
+            ph_max: string;
         };
         ProducerAccount: {
             /** Format: uuid */

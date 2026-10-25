@@ -22,6 +22,11 @@ import {
   type TurnFormValues,
 } from '../turn-form';
 import { isLocalDateTime, NOTES_MAX_LENGTH } from '@/lib/validation/moment';
+import {
+  phHint,
+  type ReferenceRange,
+  temperatureHint,
+} from '../reference-hint';
 
 // Lo que se mide va en grande y centrado: se lee a un brazo de distancia, con el medidor en la otra
 // mano.
@@ -39,6 +44,7 @@ export function TurnFormFields({
   isSaving,
   disabledMessage,
   formError,
+  reference,
   turnsHref,
   cancelHref,
   onSubmit,
@@ -55,6 +61,9 @@ export function TurnFormFields({
   // Por qué no se puede guardar ahora (sin conexión al corregir, la sesión vencida).
   disabledMessage?: string | null;
   formError?: string;
+  // La temperatura y el pH que el productor tiene como referencia; faltan en una copia anterior a
+  // los parámetros.
+  reference?: { temperature: ReferenceRange; ph: ReferenceRange };
   // La ficha del lote, con sus volteos.
   turnsHref: string;
   cancelHref: string;
@@ -74,6 +83,10 @@ export function TurnFormFields({
   >({ resolver, defaultValues });
   const { errors } = formState;
   const localTime = useWatch({ control, name: 'turned_at' });
+  const [temperature, ph] = useWatch({
+    control,
+    name: ['temperature_c', 'ph'],
+  });
   const sinceStart = isLocalDateTime(localTime)
     ? Math.floor(hoursBetween(startedAt, fromBogotaLocal(localTime)))
     : null;
@@ -122,7 +135,11 @@ export function TurnFormFields({
           className={MEASURE_FIELD_CLASS}
           disabled={isSaving}
           error={errors.temperature_c?.message}
-          hint="En el centro de la masa."
+          hint={
+            reference
+              ? temperatureHint(temperature, reference.temperature)
+              : 'En el centro de la masa.'
+          }
           inputMode="decimal"
           label="Temperatura (°C)"
           {...register('temperature_c')}
@@ -131,6 +148,7 @@ export function TurnFormFields({
           className={MEASURE_FIELD_CLASS}
           disabled={isSaving}
           error={errors.ph?.message}
+          hint={reference ? phHint(ph, reference.ph) : undefined}
           inputMode="decimal"
           label="pH"
           {...register('ph')}

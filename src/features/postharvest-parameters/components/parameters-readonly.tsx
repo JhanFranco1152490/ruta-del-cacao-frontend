@@ -1,10 +1,8 @@
 import { KeyValue, KeyValues } from '@/components/page-blocks/section-card';
-import { formatDecimal } from '@/lib/format/decimal';
 
-import { unitOf } from '../parameter-fields';
 import type { ParameterValues } from '../parameter-fields';
 import { PARAMETER_SECTIONS } from '../parameter-rows';
-import { changedKeys, parametersFormOf } from '../parameters-form';
+import { changedKeys, parametersFormOf, valueText } from '../parameters-form';
 import { SectionCard } from '@/components/page-blocks/section-card';
 import { useParametersSection } from '../use-parameters-section';
 import { ChangedMark } from './changed-mark';
@@ -38,7 +36,7 @@ export function ParametersReadonly({
                       <span className="font-normal text-muted-foreground">
                         {label}
                       </span>
-                      {formatDecimal(values[key], 1)} {unitOf(key)}
+                      {valueText(key, values[key])}
                       {changed.has(key) && <ChangedMark />}
                     </span>
                   ))}

@@ -102,7 +102,32 @@ describe('TurnScreen', () => {
     ).toBeInTheDocument();
     expect(field('Fecha y hora del volteo')).toHaveValue('2026-10-17T09:00');
     expect(screen.getByText('50 h desde el inicio')).toBeInTheDocument();
-    expect(screen.getByText('En el centro de la masa.')).toBeInTheDocument();
+    expect(screen.getByText('Referencia: 40,0–50,0 °C.')).toBeInTheDocument();
+    expect(screen.getByText('Referencia: 4,00–5,50.')).toBeInTheDocument();
+  });
+
+  it('says a reading outside the reference of the producer is outside, and still saves it', async () => {
+    renderScreen();
+
+    await userEvent.type(
+      await screen.findByLabelText('Temperatura (°C)'),
+      '55',
+    );
+    await userEvent.type(field('pH'), '6,2');
+
+    expect(
+      screen.getByText('Fuera de la referencia (40,0–50,0 °C).'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Fuera de la referencia (4,00–5,50).'),
+    ).toBeInTheDocument();
+    await save();
+    await waitFor(async () =>
+      expect((await listQueuedTurns(userId))[0]?.request).toMatchObject({
+        temperature_c: '55',
+        ph: '6.2',
+      }),
+    );
   });
 
   it('saves the turn on the device, goes back and says which turn it was', async () => {

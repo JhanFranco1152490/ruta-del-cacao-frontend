@@ -110,7 +110,7 @@ describe('useParameters', () => {
 describe('useSaveParameters', () => {
   const values = toParameterValues(parametersFormOf(buildParameters().values));
 
-  it('sends the 15 values with the version read, and refreshes the copy', async () => {
+  it('sends the 21 values with the version read, and refreshes the copy', async () => {
     const bodies: unknown[] = [];
     server.use(
       csrfHandler,

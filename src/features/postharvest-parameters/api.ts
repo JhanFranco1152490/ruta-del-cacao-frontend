@@ -65,7 +65,7 @@ export function useSaveParameters(producer: string | null) {
       values,
     }: {
       expectedVersion: number;
-      values: Schemas['DryingValuesInputRequest'];
+      values: Schemas['PostharvestValuesInputRequest'];
     }) =>
       apiFetch<PostharvestParameters>('/api/postharvest-parameters', {
         method: 'PUT',

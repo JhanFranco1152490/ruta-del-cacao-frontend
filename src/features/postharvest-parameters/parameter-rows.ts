@@ -10,11 +10,13 @@ export type ParameterRowConfig = {
   fields: readonly ParameterRowField[];
 };
 
-export type SectionId = 'secado' | 'alertas';
+export type SectionId = 'secado' | 'alertas' | 'fermentacion';
 
 export type ParameterSectionConfig = {
   id: SectionId;
   title: string;
+  // El nombre corto de su pestaña.
+  tab: string;
   rows: readonly ParameterRowConfig[];
 };
 
@@ -24,11 +26,12 @@ const MIN_MAX = (min: ParameterKey, max: ParameterKey) =>
     { key: max, label: 'Máximo' },
   ] as const;
 
-// Los 15 valores, en dos tarjetas y en el orden en que se explican.
+// Los 21 valores, en dos tarjetas y en el orden en que se explican.
 export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
   {
     id: 'secado',
     title: 'Secado',
+    tab: 'Secado',
     rows: [
       {
         id: 'entry-moisture',
@@ -54,6 +57,7 @@ export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
   {
     id: 'alertas',
     title: 'Alertas del secado',
+    tab: 'Alertas',
     rows: [
       {
         id: 'slow-stall',
@@ -96,6 +100,40 @@ export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
         description:
           'La alerta crítica: se muestra destacada sobre las demás notificaciones.',
         fields: [{ key: 'overdried_moisture_pct', label: 'Por debajo de' }],
+      },
+    ],
+  },
+  {
+    id: 'fermentacion',
+    title: 'Fermentación',
+    tab: 'Fermentación',
+    rows: [
+      {
+        id: 'first-turn',
+        title: 'Primer volteo',
+        description:
+          'Horas desde el inicio de la fermentación hasta que toca el primer volteo.',
+        fields: [{ key: 'first_turn_hours', label: 'A las' }],
+      },
+      {
+        id: 'next-turns',
+        title: 'Volteos siguientes',
+        description: 'Horas entre un volteo y el siguiente.',
+        fields: [{ key: 'next_turn_hours', label: 'Cada' }],
+      },
+      {
+        id: 'temperature',
+        title: 'Temperatura de referencia',
+        description:
+          'Rango esperado en el centro de la masa. Se muestra al registrar un volteo; no lo bloquea.',
+        fields: MIN_MAX('temperature_min_c', 'temperature_max_c'),
+      },
+      {
+        id: 'ph',
+        title: 'pH de referencia',
+        description:
+          'Rango esperado. Se muestra al registrar un volteo; no lo bloquea.',
+        fields: MIN_MAX('ph_min', 'ph_max'),
       },
     ],
   },

@@ -13,7 +13,7 @@ import { notify } from '@/lib/notify';
 import { useResetParameters } from '../api';
 import { saveErrorMessage } from '../parameters-errors';
 
-// Restablecer vuelve los 15 valores a la línea base. No es destructivo (se deshace escribiendo los
+// Restablecer vuelve los 21 valores a la línea base. No es destructivo (se deshace escribiendo los
 // valores otra vez), así que usa el botón principal. Si hay cambios sin guardar, el diálogo avisa
 // que se pierden.
 export function ParametersResetDialog({
@@ -39,7 +39,7 @@ export function ParametersResetDialog({
     trigger: 'Restablecer línea base',
     title: '¿Restablecer la línea base?',
     description:
-      'Los 15 valores vuelven a los de la línea base. Se aplican desde el siguiente registro.',
+      'Los 21 valores vuelven a los de la línea base. Se aplican desde el siguiente registro.',
     confirm: 'Restablecer',
     pending: 'Restableciendo…',
     Icon: RotateCcw,

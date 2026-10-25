@@ -423,6 +423,14 @@ export const buildFermentation = (
     responsible: { id: 'u1', full_name: 'Cuenta de prueba', is_active: true },
     elapsed_hours: '24.0',
     next_turn_due_at: '2026-10-17T07:00:00-05:00',
+    parameters: {
+      first_turn_hours: 48,
+      next_turn_hours: 24,
+      temperature_min_c: '40.0',
+      temperature_max_c: '50.0',
+      ph_min: '4.00',
+      ph_max: '5.50',
+    },
     turns: [],
     result: null,
     version: 1,
@@ -560,7 +568,7 @@ export const buildNotification = (
   ...overrides,
 });
 
-const PARAMETER_BASELINE: Schemas['DryingValues'] = {
+const PARAMETER_BASELINE: Schemas['PostharvestValues'] = {
   entry_moisture_min_pct: '55.0',
   entry_moisture_max_pct: '60.0',
   target_moisture_min_pct: '6.5',
@@ -576,6 +584,12 @@ const PARAMETER_BASELINE: Schemas['DryingValues'] = {
   near_target_min_pct: '7.6',
   near_target_max_pct: '8.5',
   overdried_moisture_pct: '6.0',
+  first_turn_hours: 48,
+  next_turn_hours: 24,
+  temperature_min_c: '40.0',
+  temperature_max_c: '50.0',
+  ph_min: '4.00',
+  ph_max: '5.50',
 };
 
 // Los parámetros de un productor que nunca guardó nada: la línea base, versión 0.

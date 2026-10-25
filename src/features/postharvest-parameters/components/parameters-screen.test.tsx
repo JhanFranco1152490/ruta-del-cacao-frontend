@@ -61,10 +61,21 @@ const ALERT_TITLES = [
 ];
 
 // Los parámetros están en dos pestañas: abre la que tiene el parámetro.
+const FERMENTATION_TITLES = [
+  'Primer volteo',
+  'Volteos siguientes',
+  'Temperatura de referencia',
+  'pH de referencia',
+];
+
 async function openTabOf(title: string) {
-  const name = ALERT_TITLES.includes(title) ? 'Alertas del secado' : 'Secado';
+  const name = ALERT_TITLES.includes(title)
+    ? 'Alertas'
+    : FERMENTATION_TITLES.includes(title)
+      ? 'Fermentación'
+      : 'Secado';
   const tab = await screen.findByRole('button', {
-    name: new RegExp(`^${name}`),
+    name: new RegExp(`^${name}( \\(\\d+\\))?$`),
   });
   if (tab.getAttribute('aria-pressed') !== 'true') await userEvent.click(tab);
 }
@@ -77,7 +88,7 @@ const rowOf = async (title: string) => {
 };
 
 describe('ParametersScreen', () => {
-  it('shows the 15 values of the baseline with their units, and nothing changed', async () => {
+  it('shows the 21 values of the baseline with their units, and nothing changed', async () => {
     renderScreen();
 
     const entry = await rowOf('Humedad de entrada');
@@ -98,6 +109,8 @@ describe('ParametersScreen', () => {
     expect(screen.getAllByRole('textbox')).toHaveLength(6);
     await openTabOf('Sobresecado');
     expect(screen.getAllByRole('textbox')).toHaveLength(9);
+    await openTabOf('Primer volteo');
+    expect(screen.getAllByRole('textbox')).toHaveLength(6);
     expect(screen.queryByText('Cambiado')).not.toBeInTheDocument();
     expect(screen.getByText('Usas la línea base.')).toBeInTheDocument();
     expect(
@@ -129,7 +142,7 @@ describe('ParametersScreen', () => {
     expect(screen.queryByText('Cambiado')).not.toBeInTheDocument();
   });
 
-  it('saves the 15 values with the version read, says so and shows them as custom', async () => {
+  it('saves the 21 values with the version read, says so and shows them as custom', async () => {
     const bodies: Record<string, unknown>[] = [];
     let saved = false;
     server.use(
@@ -465,8 +478,76 @@ describe('ParametersScreen', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Secado$/ }));
     expect(
       screen.getByRole('button', {
-        name: 'Alertas del secado (1 por revisar)',
+        name: 'Alertas (1)',
       }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the fermentation values with their units and the baseline beside each', async () => {
+    renderScreen({ searchParams: '?seccion=fermentacion' });
+
+    const first = within(await rowOf('Primer volteo')).getByLabelText(
+      'A las (horas)',
+    );
+    expect(first).toHaveValue('48');
+    expect(
+      within(await rowOf('Temperatura de referencia')).getByLabelText(
+        'Mínimo (°C)',
+      ),
+    ).toHaveValue('40,0');
+    expect(
+      within(await rowOf('pH de referencia')).getByLabelText('Máximo (pH)'),
+    ).toHaveValue('5,50');
+    expect(screen.getByText('Línea base: 4,00')).toBeInTheDocument();
+    expect(screen.getByText('Línea base: 40,0 °C')).toBeInTheDocument();
+  });
+
+  it('saves the turn times as numbers and the pH as text', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      http.put(apiUrl(PATH), async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json(custom());
+      }),
+    );
+    renderScreen({ searchParams: '?seccion=fermentacion' });
+
+    const first = within(await rowOf('Primer volteo')).getByLabelText(
+      'A las (horas)',
+    );
+    await userEvent.clear(first);
+    await userEvent.type(first, '36');
+    const max = within(await rowOf('pH de referencia')).getByLabelText(
+      'Máximo (pH)',
+    );
+    await userEvent.clear(max);
+    await userEvent.type(max, '5,8');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    expect(bodies[0]).toMatchObject({
+      expected_version: 0,
+      values: { first_turn_hours: 36, ph_max: '5.8', ph_min: '4.00' },
+    });
+  });
+
+  it('puts the temperature range error next to the minimum', async () => {
+    renderScreen({ searchParams: '?seccion=fermentacion' });
+
+    const row = await rowOf('Temperatura de referencia');
+    const min = within(row).getByLabelText('Mínimo (°C)');
+    await userEvent.clear(min);
+    await userEvent.type(min, '55');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    expect(
+      await within(row).findByText(
+        'El mínimo no puede ser mayor que el máximo',
+      ),
     ).toBeInTheDocument();
   });
 });
