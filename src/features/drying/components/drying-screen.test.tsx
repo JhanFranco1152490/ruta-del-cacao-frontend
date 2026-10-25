@@ -213,6 +213,59 @@ describe('DryingScreen', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('finishes a lot from its card, and says why it cannot yet', async () => {
+    renderScreen();
+
+    const [first, second] = await cards();
+    expect(
+      within(second).getByRole('button', { name: 'Finalizar secado' }),
+    ).toBeDisabled();
+    expect(
+      within(second).getByText(
+        'Registra al menos una bitácora para finalizar.',
+      ),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      within(first).getByRole('button', { name: 'Finalizar secado' }),
+    );
+    expect(
+      await screen.findByRole('dialog', { name: /Finalizar secado/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not offer to finish to whom only records logs', async () => {
+    renderScreen({ permissions: [PERMISSIONS.DRYING_LOG] });
+
+    const [first] = await cards();
+    expect(
+      within(first).queryByRole('button', { name: 'Finalizar secado' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens the finish form of the lot a link from Lotes points to, and clears the link when it closes', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+    renderScreen({ searchParams: '?finalizar=l1', onUrlUpdate });
+
+    expect(
+      await screen.findByRole('dialog', { name: /Finalizar secado/ }),
+    ).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(onUrlUpdate.mock.lastCall?.[0].queryString).not.toContain(
+        'finalizar',
+      ),
+    );
+  });
+
+  it('only shows why a lot cannot be finished yet when the link points to it', async () => {
+    renderScreen({ searchParams: '?finalizar=l2' });
+
+    expect(
+      await screen.findByText('Registra al menos una bitácora para finalizar.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('sums up the lots in drying, the logs missing today and the lots ready', async () => {
     renderScreen();
 

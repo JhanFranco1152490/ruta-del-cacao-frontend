@@ -16,12 +16,21 @@ export function DryingCard({
   now,
   queued,
   lotHref,
+  canManage,
+  online,
+  autoFinish = false,
+  onAutoFinished,
 }: {
   drying: Drying;
   now: Date;
   // Las bitácoras que siguen en la cola del teléfono, de cualquier lote.
   queued: readonly QueuedLog[];
   lotHref: (id: string) => string;
+  canManage: boolean;
+  online: boolean;
+  // Se llegó con el enlace «Finalizar secado» de Lotes para este lote.
+  autoFinish?: boolean;
+  onAutoFinished?: () => void;
 }) {
   const { lot, farm, facility } = drying;
   const details = cardDetails(drying, now, queued);
@@ -60,7 +69,15 @@ export function DryingCard({
           {missingToday ? 'Falta la bitácora de hoy' : 'Bitácora de hoy al día'}
         </p>
       </div>
-      <DryingCardActions drying={drying} lotHref={lotHref} />
+      <DryingCardActions
+        autoFinish={autoFinish}
+        canManage={canManage}
+        drying={drying}
+        lotHref={lotHref}
+        onAutoFinished={onAutoFinished}
+        online={online}
+        queued={queued}
+      />
     </li>
   );
 }

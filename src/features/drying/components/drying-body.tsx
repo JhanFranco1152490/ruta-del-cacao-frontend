@@ -65,11 +65,15 @@ export function DryingBody({
   }
   return (
     <InProgressTab
+      canManage={screen.canManage}
       dryings={screen.shown}
       farmName={screen.farm.name}
+      finishLotId={filters.finishLotId}
       lotHref={lotHref}
       now={now}
       onClear={filters.clear}
+      onFinishHandled={filters.clearFinish}
+      online={!screen.offline}
       onShowReady={
         readyShown?.length ? () => void filters.setView('listos') : undefined
       }

@@ -15,6 +15,10 @@ export function InProgressTab({
   lotHref,
   onClear,
   onShowReady,
+  canManage,
+  online,
+  finishLotId,
+  onFinishHandled,
 }: {
   dryings: readonly Drying[];
   // La finca del filtro, si hay una puesta.
@@ -25,6 +29,11 @@ export function InProgressTab({
   onClear: () => void;
   // Lleva a los lotes listos; falta si no hay ninguno o la cuenta no puede iniciar.
   onShowReady?: () => void;
+  canManage: boolean;
+  online: boolean;
+  // El lote cuyo formulario de finalizar se abre al llegar desde Lotes.
+  finishLotId: string | null;
+  onFinishHandled: () => void;
 }) {
   if (dryings.length === 0 && farmName) {
     return (
@@ -61,10 +70,14 @@ export function InProgressTab({
     >
       {dryings.map((drying) => (
         <DryingCard
+          autoFinish={finishLotId === drying.lot.id}
+          canManage={canManage}
           drying={drying}
           key={drying.lot.id}
           lotHref={lotHref}
           now={now}
+          onAutoFinished={onFinishHandled}
+          online={online}
           queued={queued}
         />
       ))}
