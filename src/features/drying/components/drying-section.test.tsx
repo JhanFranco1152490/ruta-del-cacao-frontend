@@ -135,9 +135,8 @@ describe('DryingSection', () => {
     expect(card).toHaveTextContent('57,0 % · Fuera del rango esperado');
     expect(card).toHaveTextContent('Cuenta de prueba');
     expect(card).toHaveTextContent('Día 3 · 1 día y 20 h');
-    expect(card).toHaveTextContent(
-      '6,5–7,5 % · Se espera entre el día 5 y el 7',
-    );
+    expect(card).toHaveTextContent('6,5–7,5 %');
+    expect(card).toHaveTextContent('Entre el día 5 y el 7');
     expect(card).toHaveTextContent('Falta registrarla');
   });
 

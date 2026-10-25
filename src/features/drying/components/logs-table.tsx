@@ -80,10 +80,9 @@ export function LogsTable({
       <TableHeader>
         <TableRow>
           <TableHead>Día</TableHead>
-          <TableHead>Humedad</TableHead>
+          <TableHead>Humedad y clima</TableHead>
           <TableHead>Horas</TableHead>
           <TableHead>Volteos</TableHead>
-          <TableHead>Clima</TableHead>
           <TableHead>Observaciones</TableHead>
           {editable && (
             <TableHead>
@@ -104,7 +103,7 @@ export function LogsTable({
             {row.empty ? (
               <TableCell
                 className="text-muted-foreground max-md:col-span-1! max-md:justify-self-end max-md:text-right"
-                colSpan={editable ? 6 : 5}
+                colSpan={editable ? 5 : 4}
               >
                 Sin bitácora
               </TableCell>
@@ -112,6 +111,9 @@ export function LogsTable({
               <>
                 <TableCell className="font-bold tabular-nums max-md:col-span-1! max-md:justify-self-end">
                   {formatFixedDecimal(row.moisture ?? 0, 1)} %
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {weatherLabel(row)}
+                  </span>
                 </TableCell>
                 <TableCell className="max-md:col-span-1!">
                   <SunShade row={row} />
@@ -119,10 +121,7 @@ export function LogsTable({
                 <TableCell className="max-md:col-span-1! max-md:justify-self-end">
                   <Turns row={row} />
                 </TableCell>
-                <TableCell className="max-md:col-span-1!">
-                  {weatherLabel(row)}
-                </TableCell>
-                <TableCell className="max-w-56 break-words whitespace-normal">
+                <TableCell className="max-w-52 break-words whitespace-normal">
                   {row.notes && <span className="block">{row.notes}</span>}
                   {row.pending ? (
                     <span className="flex items-center gap-1 text-xs font-bold text-warn">

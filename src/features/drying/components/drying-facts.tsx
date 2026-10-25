@@ -7,7 +7,7 @@ import { formatFixedDecimal } from '@/lib/format/decimal';
 import { durationText } from '@/lib/format/hours';
 
 import type { Drying } from '../api';
-import { cardDetails, expectedDaysText } from '../drying-list';
+import { cardDetails, expectedWhen } from '../drying-list';
 import type { QueuedLog } from '../log-queue';
 import { rangeText } from '../moisture';
 import { yieldText } from '../yield';
@@ -71,8 +71,10 @@ export function DryingFacts({
             Día {details.day} · {details.elapsed}
           </KeyValue>
           <KeyValue label="Meta de humedad">
-            {rangeText(drying.target_moisture)} ·{' '}
-            {expectedDaysText(drying.estimated_days)}
+            {rangeText(drying.target_moisture)}
+          </KeyValue>
+          <KeyValue label="Fin esperado">
+            {expectedWhen(drying.estimated_days)}
           </KeyValue>
           <KeyValue label="Bitácora de hoy">
             <span

@@ -142,10 +142,11 @@ export function cardDetails(
 }
 
 // Cuándo se espera que termine, según los días que el productor estima.
-export const expectedDaysText = ({ min, max }: Drying['estimated_days']) =>
-  min === max
-    ? `Se espera el día ${min}`
-    : `Se espera entre el día ${min} y el ${max}`;
+export const expectedWhen = ({ min, max }: Drying['estimated_days']) =>
+  min === max ? `El día ${min}` : `Entre el día ${min} y el ${max}`;
+
+export const expectedDaysText = (days: Drying['estimated_days']) =>
+  `Se espera ${expectedWhen(days).replace(/^E/, 'e')}`;
 
 // «Última humedad: 12,4 % · día 2 · 23 oct».
 export const lastLogLine = (
