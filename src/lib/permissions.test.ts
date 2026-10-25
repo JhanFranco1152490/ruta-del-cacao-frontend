@@ -26,12 +26,14 @@ describe('hasPermission', () => {
 });
 
 describe('isFieldPermission', () => {
-  it('counts what hangs from a farm, harvests, lots and facilities included', () => {
+  it('counts what hangs from a farm, harvests, lots, fermentation and facilities included', () => {
     expect(isFieldPermission(PERMISSIONS.FARMS_VIEW)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.ACTIVITIES_COMPLETE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.CROPS_CHARACTERIZE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.HARVESTS_ADD)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.LOTS_VIEW)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.FERMENTATION_LOG_TURNS)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.FERMENTATION_MANAGE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FACILITIES_VIEW)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FACILITIES_DELETE)).toBe(true);
   });

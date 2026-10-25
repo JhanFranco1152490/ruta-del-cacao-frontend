@@ -164,3 +164,22 @@ export function monthDates(isoMonth: string) {
 // El día de la semana de una fecha sin hora: 0 es lunes y 6 es domingo.
 export const weekdayIndex = (isoDate: string) =>
   daysBetween(weekStart(isoDate), isoDate);
+
+// La hora de Bogotá de un momento exacto, en 24 horas: "08:00".
+export const formatTime = (isoDateTime: string) =>
+  format(parseISO(isoDateTime), 'HH:mm', { in: BOGOTA });
+
+// Un momento exacto como lo guarda un campo de fecha y hora (yyyy-MM-ddTHH:mm), en la hora de
+// Bogotá y sin segundos.
+export const toBogotaLocal = (isoDateTime: string) =>
+  format(parseISO(isoDateTime), "yyyy-MM-dd'T'HH:mm", { in: BOGOTA });
+
+// Lo que guarda un campo de fecha y hora, leído en la hora de Bogotá, como ISO con su zona.
+export const fromBogotaLocal = (localDateTime: string) =>
+  format(parseISO(localDateTime, { in: BOGOTA }), "yyyy-MM-dd'T'HH:mm:ssXXX", {
+    in: BOGOTA,
+  });
+
+// El día, el mes abreviado y la hora de Bogotá de un momento exacto: "17 oct. 08:00".
+export const formatShortDateTime = (isoDateTime: string) =>
+  `${formatShortDayMonth(isoDateTime)}. ${formatTime(isoDateTime)}`;

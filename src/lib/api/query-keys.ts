@@ -111,6 +111,26 @@ export const queryKeys = {
     summary: (query: object) => ['lots', 'summary', query] as const,
     detail: (id: string) => ['lots', 'detail', id] as const,
   },
+  fermentation: {
+    // Lo que invalida iniciar, corregir el inicio, finalizar o cambiar un volteo.
+    all: () => ['fermentation'] as const,
+    // Las fermentaciones en curso de un productor, sin paginar y con copia en el dispositivo. La
+    // cuenta técnica elige el productor; las demás cuentas pasan `null`.
+    list: (producer: string | null) =>
+      ['fermentation', 'list', producer ?? ''] as const,
+    // Los lotes Generado, listos para iniciar su fermentación: solo con conexión. Cuelga de
+    // `fermentation` porque iniciar una los saca de la lista.
+    ready: (producer: string | null) =>
+      ['fermentation', 'ready', producer ?? ''] as const,
+    // La fermentación de un lote, en curso o terminada.
+    detail: (lotId: string) => ['fermentation', 'detail', lotId] as const,
+    // Los cajones libres y los responsables para iniciar o corregir el inicio: solo con conexión.
+    startOptions: (lotId: string) =>
+      ['fermentation', 'start-options', lotId] as const,
+    // Un volteo que sigue en la cola del dispositivo de esta persona.
+    queued: (userId: string, turnId: string) =>
+      ['fermentation', 'queued', userId, turnId] as const,
+  },
   facilities: {
     // Lo que invalida registrar, editar, activar, desactivar o eliminar un cajón o una marquesina.
     all: () => ['facilities'] as const,

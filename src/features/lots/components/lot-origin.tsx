@@ -43,7 +43,8 @@ export function LotOrigin({
         </KeyValue>
         <KeyValue label="Parcela">{plotLabel(harvest.plot)}</KeyValue>
         <KeyValue label="Finca">{farmLabel(harvest.plot.farm)}</KeyValue>
-        <KeyValue label="Productor">{lot.producer.member_code}</KeyValue>
+        {/* Sin conexión, la copia de poscosecha no trae el código de socio. */}
+        <KeyValue label="Productor">{lot.producer.member_code || '—'}</KeyValue>
         <KeyValue label="Variedad">{harvest.variety.name}</KeyValue>
         <KeyValue label="Recolector">
           {harvest.collector.full_name}

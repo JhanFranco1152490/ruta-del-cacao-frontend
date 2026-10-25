@@ -9,7 +9,11 @@ import {
   formatShortDayMonth,
   formatLongDate,
   formatMonthYear,
+  formatShortDateTime,
+  formatTime,
   formatTimestamp,
+  fromBogotaLocal,
+  toBogotaLocal,
   formatWeekdayDate,
   formatShortWeekdayDate,
   formatWeekdayLongDate,
@@ -325,5 +329,34 @@ describe('weekdayIndex', () => {
     expect(weekdayIndex('2026-10-19')).toBe(0);
     expect(weekdayIndex('2026-10-22')).toBe(3);
     expect(weekdayIndex('2026-10-25')).toBe(6);
+  });
+});
+
+describe('date and time in Bogota', () => {
+  it('shows the hour of Bogota in 24 hours', () => {
+    expect(formatTime('2026-10-17T13:05:00Z')).toBe('08:05');
+    expect(formatTime('2026-10-17T20:00:00-05:00')).toBe('20:00');
+  });
+
+  it('writes a moment the way a date and time field holds it', () => {
+    expect(toBogotaLocal('2026-10-17T13:05:30Z')).toBe('2026-10-17T08:05');
+    // Cerca de la medianoche UTC el día de Bogotá aún es el anterior.
+    expect(toBogotaLocal('2026-10-18T02:00:00Z')).toBe('2026-10-17T21:00');
+  });
+
+  it('reads what a date and time field holds as a moment in Bogota', () => {
+    expect(new Date(fromBogotaLocal('2026-10-17T08:05')).toISOString()).toBe(
+      '2026-10-17T13:05:00.000Z',
+    );
+    expect(fromBogotaLocal(toBogotaLocal('2026-10-15T12:00:00Z'))).toMatch(
+      /^2026-10-15T07:00:00/,
+    );
+  });
+});
+
+describe('formatShortDateTime', () => {
+  it('shows the day, the short month and the hour of Bogota', () => {
+    expect(formatShortDateTime('2026-10-17T13:00:00Z')).toBe('17 oct. 08:00');
+    expect(formatShortDateTime('2026-10-18T02:30:00Z')).toBe('17 oct. 21:30');
   });
 });

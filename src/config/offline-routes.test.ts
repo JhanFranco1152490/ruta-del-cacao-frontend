@@ -51,6 +51,16 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/infraestructura');
   });
 
+  it('saves the fermentation work list, its field screen and the lot detail', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toEqual(
+      expect.arrayContaining([
+        '/fermentacion',
+        '/fermentacion/volteo',
+        '/lotes/detalle',
+      ]),
+    );
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });

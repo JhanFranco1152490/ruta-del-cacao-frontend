@@ -65,6 +65,12 @@ export function LotTable({ lots }: { lots: readonly Lot[] }) {
             </TableCell>
             <TableCell className="max-md:order-6 max-md:col-span-1! max-md:justify-self-end">
               <LotStatusBadge status={lot.status} />
+              {/* Dónde fermenta: lo que se busca al recorrer los cajones. */}
+              {lot.fermentation && !lot.fermentation.ended_at && (
+                <span className="block text-sm text-muted-foreground">
+                  En {lot.fermentation.facility}
+                </span>
+              )}
             </TableCell>
             <TableCell className="max-md:order-7">
               <EditorLink

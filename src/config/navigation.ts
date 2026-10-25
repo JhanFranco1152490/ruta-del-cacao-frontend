@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ShieldPlus,
   Sprout,
+  Thermometer,
   Users,
   Warehouse,
   Wheat,
@@ -91,7 +92,16 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: PERMISSIONS.LOTS_VIEW,
     needsConnection: true,
   },
-  // Los cajones y marquesinas donde los lotes fermentan y se secan. Se consulta sin conexión.
+  // Después de los lotes sigue su proceso. Se consulta sin conexión, con la copia del dispositivo.
+  {
+    href: '/fermentacion',
+    label: 'Fermentación',
+    group: 'postharvest',
+    icon: Thermometer,
+    permission: PERMISSIONS.FERMENTATION_LOG_TURNS,
+  },
+  // Los cajones y marquesinas donde los lotes fermentan y se secan: lo que se prepara para el
+  // proceso, por eso va al final del grupo. Se consulta sin conexión.
   {
     href: '/infraestructura',
     label: 'Infraestructura',
