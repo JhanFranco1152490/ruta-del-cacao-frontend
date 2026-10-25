@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { apiPath } from '@/lib/api/path';
+import { fetchLotsByStatus } from '@/lib/api/lots-by-status';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
@@ -59,31 +60,10 @@ export const useFermentations = (
     networkMode: 'offlineFirst',
   });
 
-// El tope de página que acepta la API.
-const READY_PAGE_SIZE = 100;
-
-// Todos los lotes Generado del productor, página tras página: la pestaña los muestra juntos y los
-// filtra por finca en el dispositivo. Solo con conexión, porque iniciar también la necesita.
-export async function fetchReadyLots(
-  producer: string | null,
-  signal?: AbortSignal,
-): Promise<ReadyLot[]> {
-  const lots: ReadyLot[] = [];
-  for (let page = 1, pages = 1; page <= pages; page++) {
-    const result = await apiFetch<Schemas['PaginatedLotList']>(
-      apiPath('/api/lots', {
-        status: 'generated',
-        producer,
-        page: page === 1 ? undefined : page,
-        page_size: READY_PAGE_SIZE,
-      }),
-      { signal },
-    );
-    lots.push(...result.results);
-    pages = Math.ceil(result.count / READY_PAGE_SIZE);
-  }
-  return lots;
-}
+// Los lotes Generado del productor, todos: la pestaña los filtra por finca en el dispositivo. Solo
+// con conexión, porque iniciar también la necesita.
+export const fetchReadyLots = (producer: string | null, signal?: AbortSignal) =>
+  fetchLotsByStatus('generated', producer, signal);
 
 export const useReadyLots = (
   producer: string | null,
@@ -109,7 +89,7 @@ export const useFermentation = (
         userId!,
         lotId,
         () => apiFetch<Fermentation>(`/api/fermentation/${lotId}`, { signal }),
-        ({ process }) => process,
+        (copied) => copied.process as Fermentation,
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',

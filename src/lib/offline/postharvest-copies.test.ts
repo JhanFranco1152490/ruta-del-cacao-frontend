@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api/errors';
-import { buildFermentation } from '@/test/factories';
+import { buildDrying, buildFermentation } from '@/test/factories';
 
 import { getOfflineDb } from './db';
 import {
@@ -28,6 +28,18 @@ describe('findLotInPostharvestCopies', () => {
     expect(await findLotInPostharvestCopies(userId, 'l2')).toEqual({
       kind: 'fermentation',
       process: inLot('l2'),
+      savedAt: 1_760_000_000_000,
+    });
+  });
+
+  it('finds a lot that is drying in the copy of the dryings', async () => {
+    const drying = buildDrying();
+    await save('fermentation', [inLot('l1')]);
+    await save('drying', [drying]);
+
+    expect(await findLotInPostharvestCopies(userId, drying.lot.id)).toEqual({
+      kind: 'drying',
+      process: drying,
       savedAt: 1_760_000_000_000,
     });
   });
