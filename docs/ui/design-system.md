@@ -159,7 +159,8 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `StageFlow` | Cadena de etapas cosecha → venta | Dashboard, página QR |
 | `PageHeader` | Categoría en versalitas, H1 en serif de 30 px, subrayado, descripción y acciones. Un solo tamaño y la misma separación de arriba en todas las pantallas | Todas las de oficina |
 | `pageContainerClass` | El ancho y los márgenes de una pantalla: `wide` (1440 px) para listas, calendarios y lo que lleva mapa o tabla; `narrow` (896 px, centrado) para formularios y fichas de una columna. Arriba y a los lados no cambian de una pantalla a otra | Todas |
-| `SummaryStrip` / `SummaryItem` | Los totales de arriba de una lista: una franja blanca con una línea entre uno y otro (apilados en celular) | Cosechas, Lotes, Infraestructura |
+| `Tooltip` (`components/ui/tooltip.tsx`) | Un recuadro pequeño con un dato extra al pasar el mouse o enfocar. El que lo dispara es focalizable (`tabIndex={0}`) y lleva su `aria-label`: el dato nunca vive solo en el recuadro, porque en el celular no hay mouse | Línea de tiempo de la fermentación |
+| `SummaryStrip` / `SummaryItem` | Los totales de arriba de una lista: una franja blanca con una línea entre uno y otro (apilados en celular; con `compact`, en una sola fila también ahí, para tres cifras cortas) | Cosechas, Lotes, Infraestructura |
 | `DetailHero` / `HeroChip` | El banner de una pantalla: tono `selva`, `bosque` o `claro`, categoría, título, marca opcional, chips y acciones. Lo dibuja `PageHeader` cuando recibe `tone` | Listas y detalles |
 | `StatStrip` / `StatCell` | Las cifras de un detalle: franja blanca de celdas pegadas, con ícono en el tinte del acento y una barra opcional | Ficha del productor, detalle de finca |
 | `SectionCard` / `KeyValues` | Sección con filete del acento, título y contador; datos en dos niveles | Detalles, Sanidad |

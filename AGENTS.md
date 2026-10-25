@@ -286,6 +286,19 @@ src/
     más que el cajón, la confirmación (`use-start-submit.ts`, con las cifras del servidor si el `422` lo
     dice). Finalizar se deshabilita con su motivo (`finishBlockedReason`: sin volteos, con volteos en la
     cola o sin conexión).
+  - **La tarjeta de cada lote** cuenta la fermentación como una **línea de tiempo** (`card-timeline.tsx`,
+    con los datos resueltos de `card-details.ts`) en dos colores: verde lo que ya pasó (la barra hasta
+    ahora y los volteos hechos) y cobre lo que falta o se atrasó (el próximo volteo y, si venció, el
+    tramo de atraso). Cada punto dice su fecha y su medición al pasar el mouse o enfocarlo
+    (`components/ui/tooltip.tsx`) y lleva el mismo dato como `aria-label`, porque en el celular no hay
+    mouse; el texto de la tarjeta repite lo esencial. **Finalizar** también está en la tarjeta
+    (`finish-fermentation-button.tsx`, el mismo botón de la ficha): se hace una vez por lote, pero
+    desde donde se trabaja; con Registrar volteo y el ojo que lleva a la ficha quedan en una sola fila,
+    también en celular. Las mediciones se escriben con decimales fijos (`measure-text.ts`: 45,0 °C y
+    pH 4,90), no con los ceros quitados.
+  - **La pantalla de campo del volteo** es una tarjeta con temperatura y pH lado a lado, también en
+    celular, en grande y centrados; el título es solo «Volteo 4» y el código del lote va en la línea de
+    debajo, para que quepa en una pantalla de celular sin desplazarse.
   - **La sección de la ficha del lote** (`fermentation-section.tsx`) la monta la página de lotes: un lote
     Generado ofrece iniciar; uno en fermentación o más adelante muestra sus datos, sus acciones y la
     tabla de volteos (`turn-rows.ts`, con los de la cola como «Pendiente de enviar»). Sin conexión se
