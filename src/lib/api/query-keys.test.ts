@@ -227,3 +227,17 @@ describe('post-harvest facility query keys', () => {
     expect(list('p-1')).not.toEqual(list('p-2'));
   });
 });
+
+describe('postharvest parameter query keys', () => {
+  it('hangs the parameters of each producer from the key that writes invalidate', () => {
+    const all = queryKeys.parameters.all();
+    expect(startsWith(queryKeys.parameters.detail(null), all)).toBe(true);
+    expect(startsWith(queryKeys.parameters.detail('p-1'), all)).toBe(true);
+  });
+
+  it('keeps the parameters of each producer apart', () => {
+    const { detail } = queryKeys.parameters;
+    expect(detail(null)).not.toEqual(detail('p-1'));
+    expect(detail('p-1')).not.toEqual(detail('p-2'));
+  });
+});

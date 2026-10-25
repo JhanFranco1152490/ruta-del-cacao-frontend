@@ -23,6 +23,7 @@ describe('groupPermissionsByArea', () => {
       labelsOf([
         'roles',
         'users',
+        'postharvest_parameters',
         'facilities',
         'fermentation',
         'drying',
@@ -49,6 +50,7 @@ describe('groupPermissionsByArea', () => {
       'Fermentación',
       'Secado',
       'Infraestructura',
+      'Parámetros de poscosecha',
       'Cuentas',
       'Roles',
     ]);
@@ -68,6 +70,7 @@ describe('groupPermissionsByArea', () => {
       'fermentation',
       'drying',
       'facilities',
+      'postharvest_parameters',
       'users',
       'roles',
     ];

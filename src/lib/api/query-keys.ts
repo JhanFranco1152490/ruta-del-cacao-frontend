@@ -160,6 +160,13 @@ export const queryKeys = {
     list: (producer: string | null) =>
       ['facilities', 'list', producer ?? ''] as const,
   },
+  parameters: {
+    // Lo que invalida guardar o restablecer los parámetros. La cuenta técnica elige el productor;
+    // las demás cuentas ven el suyo y pasan `null`.
+    all: () => ['postharvest-parameters'] as const,
+    detail: (producer: string | null) =>
+      ['postharvest-parameters', producer ?? ''] as const,
+  },
   health: {
     // Lo que invalida registrar un monitoreo, crear un control, decidir que una detección no lo
     // requiere o adjuntar una foto.

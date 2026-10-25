@@ -1,15 +1,31 @@
-// El protocolo de campo voltea la masa a las 48 horas del inicio y después cada 24 horas. Son las
-// mismas horas con las que el servidor avisa de un volteo pendiente: si cambian, cambian en los dos.
-export const FIRST_TURN_AFTER_HOURS = 48;
-export const NEXT_TURN_AFTER_HOURS = 24;
+// Cuándo toca cada volteo lo decide el productor (parámetros de poscosecha): en la línea base, a las
+// 48 horas del inicio y después cada 24. El servidor entrega esas horas con cada fermentación, así
+// que el teléfono calcula lo mismo que él, también sin conexión.
+export type TurnSchedule = {
+  first_turn_hours: number;
+  next_turn_hours: number;
+};
+
+// Una copia guardada antes de que el servidor enviara los parámetros no los trae: mientras se
+// renueva, se usan las horas de la línea base.
+export const BASELINE_TURN_SCHEDULE: TurnSchedule = {
+  first_turn_hours: 48,
+  next_turn_hours: 24,
+};
 
 const HOUR_MS = 60 * 60 * 1000;
 
 // Cuándo toca el siguiente volteo. Es una guía, no una regla: un volteo se registra a la hora en
 // que se hizo, antes o después.
-export function nextTurnDueAt(startedAt: string, lastTurnedAt: string | null) {
+export function nextTurnDueAt(
+  startedAt: string,
+  lastTurnedAt: string | null,
+  schedule: TurnSchedule = BASELINE_TURN_SCHEDULE,
+) {
   const from = lastTurnedAt ?? startedAt;
-  const after = lastTurnedAt ? NEXT_TURN_AFTER_HOURS : FIRST_TURN_AFTER_HOURS;
+  const after = lastTurnedAt
+    ? schedule.next_turn_hours
+    : schedule.first_turn_hours;
   return new Date(new Date(from).getTime() + after * HOUR_MS).toISOString();
 }
 

@@ -51,6 +51,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/infraestructura');
   });
 
+  it('saves the postharvest parameters, read from the device copy', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/parametros-poscosecha');
+  });
+
   it('saves the fermentation work list, its field screen and the lot detail', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toEqual(
       expect.arrayContaining([
