@@ -18,15 +18,24 @@ import {
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatAbbreviatedDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
+import type { LotAction } from '@/lib/lot-actions';
 
 import type { Lot } from '../api';
 import { lotDetailPath } from '../lot-paths';
+import { LotActionsMenu } from './lot-actions-menu';
 import { LotStatusBadge } from './lot-status-badge';
 
 // Los lotes de una página: una tabla en escritorio y tarjetas compactas en celular. El código va
 // completo, como se imprime en el costal. En celular, cuatro líneas con los datos alineados en dos
 // columnas: el código; el origen; la fecha y el peso; la variedad y el estado.
-export function LotTable({ lots }: { lots: readonly Lot[] }) {
+export function LotTable({
+  lots,
+  lotActions,
+}: {
+  lots: readonly Lot[];
+  // Lo que se hace con un lote en su etapa: lo da quien monta la pantalla.
+  lotActions?: (lot: Lot) => readonly LotAction[];
+}) {
   return (
     <Table aria-label="Lotes" className={COMPACT_TABLE_CLASS}>
       <TableHeader>
@@ -73,18 +82,31 @@ export function LotTable({ lots }: { lots: readonly Lot[] }) {
               )}
             </TableCell>
             <TableCell className="max-md:order-7">
-              <EditorLink
-                aria-label={`Ver el lote ${lot.code}`}
-                className={cn(
-                  buttonVariants({ size: 'office', variant: 'action' }),
-                  ROW_LINK_CLASS,
-                )}
-                href={lotDetailPath(lot.id)}
-              >
-                <Eye aria-hidden="true" className="size-4 max-md:hidden" />
-                <span className="max-md:sr-only">Ver</span>
-                <ChevronRight aria-hidden="true" className="md:hidden" />
-              </EditorLink>
+              <div className="flex items-center justify-end gap-2">
+                <EditorLink
+                  aria-label={`Ver el lote ${lot.code}`}
+                  className={cn(
+                    buttonVariants({ size: 'office', variant: 'action' }),
+                    ROW_LINK_CLASS,
+                  )}
+                  href={lotDetailPath(lot.id)}
+                >
+                  <Eye aria-hidden="true" className="size-4 max-md:hidden" />
+                  <span className="max-md:sr-only">Ver</span>
+                  <ChevronRight aria-hidden="true" className="md:hidden" />
+                </EditorLink>
+                {/* En celular la tarjeta entera es el enlace: el menú queda arriba a la derecha,
+                    por encima de él. */}
+                <LotActionsMenu
+                  actions={lotActions?.(lot) ?? []}
+                  className="max-md:absolute max-md:top-1.5 max-md:right-1.5 max-md:z-10 max-md:h-9"
+                  code={lot.code}
+                  // Sin acciones en esta etapa, el hueco del «⋯» se conserva: así el «Ver» de
+                  // todas las filas queda alineado.
+                  placeholderClassName="max-md:hidden"
+                  reserveSpace={lotActions !== undefined}
+                />
+              </div>
             </TableCell>
           </TableRow>
         ))}

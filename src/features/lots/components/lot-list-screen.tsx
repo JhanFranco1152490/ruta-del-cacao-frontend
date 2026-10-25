@@ -13,9 +13,11 @@ import { ProducerFilter } from '@/components/producer-filter';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { useProducerSummary } from '@/lib/api/producer-options';
+import type { LotAction } from '@/lib/lot-actions';
+import type { LotStatus } from '@/lib/lot-status';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-import { LOT_PAGE_SIZE, useLots, useLotSummary } from '../api';
+import { type Lot, LOT_PAGE_SIZE, useLots, useLotSummary } from '../api';
 import { useLotFilters } from '../use-lot-filters';
 import { LotFiltersBar } from './lot-filters-bar';
 import { LotStatusCards } from './lot-status-cards';
@@ -26,7 +28,19 @@ import { LoadingBlock } from '@/components/loading-block';
 // Los lotes de las fincas que la cuenta alcanza, del más reciente al más antiguo. Solo con
 // conexión. Un lote se conforma desde su cosecha: `formLotHref` lleva a las que todavía no tienen
 // lote, y lo da quien monta la pantalla porque las cosechas son de otro dominio.
-export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
+export function LotListScreen({
+  formLotHref,
+  lotActions,
+  stageAction,
+}: {
+  formLotHref?: string;
+  // Lo que se hace con un lote en su etapa (el «⋯» de cada fila): lo da quien monta la pantalla.
+  lotActions?: (lot: Lot) => readonly LotAction[];
+  // El botón de la cabecera cuando se mira un estado: lleva a donde se trabaja ese estado. Lo da
+  // quien monta la pantalla; «Cosechas sin lote» sigue a su lado, porque conformar lotes es de todos
+  // los días.
+  stageAction?: (status: LotStatus) => LotAction | null;
+}) {
   const { data: user } = useSession();
   const superuser = user?.is_superuser === true;
   const filters = useLotFilters();
@@ -37,9 +51,26 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
   );
   const canForm = hasPermission(user, PERMISSIONS.LOTS_ADD);
 
-  const formLot = canForm && formLotHref && (
+  const stage = filters.query.status
+    ? stageAction?.(filters.query.status)
+    : null;
+  const stageLink = stage && (
     <Link
       className={cn(buttonVariants({ size: 'office' }), 'h-11')}
+      href={stage.href}
+    >
+      <stage.icon aria-hidden="true" className="size-4" /> {stage.label}
+    </Link>
+  );
+  const formLot = canForm && formLotHref && (
+    <Link
+      className={cn(
+        buttonVariants({
+          size: 'office',
+          variant: stageLink ? 'action' : 'default',
+        }),
+        'h-11',
+      )}
       href={formLotHref}
     >
       <Wheat aria-hidden="true" className="size-4" /> Cosechas sin lote
@@ -61,7 +92,7 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
     if (list.data.results.length > 0) {
       return (
         <>
-          <LotTable lots={list.data.results} />
+          <LotTable lotActions={lotActions} lots={list.data.results} />
           <Pagination
             label="lotes"
             onPageChange={(page) => void filters.setPage(page)}
@@ -101,7 +132,14 @@ export function LotListScreen({ formLotHref }: { formLotHref?: string }) {
       <PageHeader
         tone="selva"
         accent="cobre"
-        actions={formLot}
+        actions={
+          (stageLink || formLot) && (
+            <>
+              {stageLink}
+              {formLot}
+            </>
+          )
+        }
         description="Cada lote nace de una cosecha completa y lleva su código de trazabilidad hasta el grano seco."
         eyebrow="Poscosecha"
         title="Lotes"

@@ -54,9 +54,21 @@ export function SectionCard({
 }
 
 // Datos de un registro en dos niveles: la etiqueta pequeña y tenue, el valor firme.
-export function KeyValues({ children }: { children: ReactNode }) {
+export function KeyValues({
+  children,
+  single = false,
+}: {
+  children: ReactNode;
+  // Una sola columna: para una tarjeta angosta, donde dos partirían los valores largos.
+  single?: boolean;
+}) {
   return (
-    <dl className="grid grid-cols-1 gap-x-5 gap-y-3 min-[420px]:grid-cols-2">
+    <dl
+      className={cn(
+        'grid grid-cols-1 gap-x-5 gap-y-3',
+        !single && 'min-[420px]:grid-cols-2',
+      )}
+    >
       {children}
     </dl>
   );

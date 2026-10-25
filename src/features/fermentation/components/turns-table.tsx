@@ -77,9 +77,7 @@ export function TurnsTable({
               {phText(row.ph)}
             </TableCell>
             <TableCell className="max-w-56 break-words whitespace-normal">
-              <span className={cn(!row.notes && 'max-md:hidden')}>
-                {row.notes || '—'}
-              </span>
+              {row.notes && <span className="block">{row.notes}</span>}
               {row.pending ? (
                 <span className="flex items-center gap-1 text-xs font-bold text-warn">
                   <CloudUpload aria-hidden="true" className="size-4" />

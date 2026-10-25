@@ -18,6 +18,7 @@
   --selva-barra: #1d4b3b; /* barra lateral y menú móvil: un tono más suave que el encabezado */
   --cobre: #9a5220;
   --oro: #c9a24b; /* solo ornamento sobre fondo oscuro, nunca texto en claro */
+  --oro-claro: #e8c873; /* texto pequeño sobre los encabezados oscuros: 6:1 o más */
   --crema: #f7f2ea;
   --ink: #231812;
 
