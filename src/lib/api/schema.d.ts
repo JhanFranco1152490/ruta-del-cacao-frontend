@@ -374,6 +374,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/drying": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los secados en curso de las fincas que alcanza la sesión, con su bitácora, sin paginar: el dispositivo los guarda todos para trabajar sin conexión, y con ellos arma también la ficha de un lote en secado. Del más antiguo al más reciente. */
+        get: operations["drying_list"];
+        put?: never;
+        /** @description Inicia el secado de un lote Fermentado en una marquesina libre de su finca: el lote pasa a En secado y la marquesina a Ocupada, en una sola transacción. Si la humedad de entrada sale del rango que espera el productor, 422 `entry_moisture_out_of_range` con `range`, salvo con `confirm_entry_moisture`. El inicio no puede ser futuro ni anterior al fin de la fermentación. */
+        post: operations["drying_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/drying/{lot_id}/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registra la bitácora de un día de un secado en curso; llega desde la cola del dispositivo. El `id` lo genera el cliente: reenviar la misma con los mismos datos responde 200 con la que ya existe, y con otros datos 409 `drying_log_id_conflict`. Una por fecha (la local de `measured_at`): otra el mismo día es 409 `duplicate_drying_log_date` con la existente en `existing`. El día de secado se cuenta desde la fecha de inicio. Las horas al sol y a la sombra no pasan de las que ese día estuvo en secado (400 en `fields.sun_hours`, con `available_hours`). */
+        post: operations["drying_logs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/drying/{lot_id}/logs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Elimina una bitácora registrada por error mientras el secado sigue en curso. Requiere `expected_version` en la URL. */
+        delete: operations["drying_logs_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Corrige una bitácora mientras el secado sigue en curso; cambiar la hora de la medición puede cambiar su fecha y su día. Requiere `expected_version`; si cambió, 409 `stale_version` con la vigente en `current`. Con el secado terminado, 409 `drying_not_in_progress`. */
+        patch: operations["drying_logs_partial_update"];
+        trace?: never;
+    };
+    "/api/drying/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El secado de un lote, en curso o terminado. Se busca por el lote. */
+        get: operations["drying_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Corrige el inicio de un secado sin bitácora: la marquesina, la hora, la humedad de entrada y el responsable. Cambiar de marquesina libera la anterior y ocupa la nueva. Requiere `expected_version`; si cambió, 409 `stale_version` con el vigente en `current`. Con bitácora, 409 `drying_has_logs`. */
+        patch: operations["drying_partial_update"];
+        trace?: never;
+    };
+    "/api/drying/{id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Finaliza un secado en curso: guarda la humedad final, el peso seco y el rendimiento (peso seco sobre peso en verde), el lote pasa a Seco y la marquesina queda Disponible, en una sola transacción. Necesita al menos una bitácora (409 `drying_without_logs`); el fin no puede ser anterior a la última medición ni futuro, y el peso seco no puede pasar del peso en verde (400 con `green_weight_kg`). Requiere `expected_version`; si cambió, 409 `stale_version` con el vigente en `current`. */
+        post: operations["drying_finish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/drying/start-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lo que necesita el formulario de iniciar el secado de un lote Fermentado, o de corregir el inicio de uno sin bitácora: las marquesinas libres de la finca del lote (al corregir, también la que ya ocupa), quién puede ser responsable, el rango esperado de la humedad de entrada y desde cuándo puede empezar (el fin de la fermentación). Si el lote está en otro estado, 409 `lot_invalid_status` con `current_status`. */
+        get: operations["drying_start_options_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/evidence/{id}": {
         parameters: {
             query?: never;
@@ -1134,6 +1239,41 @@ export interface paths {
         patch: operations["postharvest_facilities_partial_update"];
         trace?: never;
     };
+    "/api/postharvest-parameters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los parámetros de secado vigentes del productor de la sesión, con la línea base al lado. Si nunca los cambió, `is_default` es verdadero, `values` es la línea base y `version` es 0. */
+        get: operations["postharvest_parameters_retrieve"];
+        /** @description Guarda los quince valores juntos. Requiere `expected_version` (0 si el productor usa la línea base); si cambiaron entretanto, 409 `stale_version` con los vigentes en `current`. Cada error va en `fields.{campo}`; el de un mínimo mayor que su máximo, en el mínimo. La cuenta técnica nombra el productor en `producer`. */
+        put: operations["postharvest_parameters_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/postharvest-parameters/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Vuelve a la línea base: los parámetros guardados se borran y `is_default` queda verdadero. Requiere `expected_version`; si cambiaron entretanto, 409 `stale_version` con los vigentes en `current`. Si ya estaba en la línea base, responde igual sin registrar nada. */
+        post: operations["postharvest_parameters_reset_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/producers": {
         parameters: {
             query?: never;
@@ -1755,10 +1895,278 @@ export interface components {
          * @enum {string}
          */
         DocumentTypeEnum: "CC" | "CE" | "PPT" | "NIT";
+        DryWeightError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            /** Format: decimal */
+            green_weight_kg?: string;
+        };
+        DryingConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["DryingProcess"];
+            current_status?: string;
+        };
+        DryingDays: {
+            min: number;
+            max: number;
+        };
+        DryingDryer: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: decimal */
+            capacity_kg: string;
+        };
+        DryingFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        DryingFinishRequest: {
+            expected_version: number;
+            /** Format: date-time */
+            ended_at: string;
+            /** Format: decimal */
+            final_moisture_pct: string;
+            /** Format: decimal */
+            dry_weight_kg: string;
+        };
+        DryingHoursError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            /** Format: decimal */
+            available_hours?: string;
+        };
+        DryingList: {
+            results: components["schemas"]["DryingProcess"][];
+        };
+        DryingLog: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            measured_at: string;
+            /** Format: date */
+            log_date: string;
+            day_number: number;
+            /** Format: decimal */
+            moisture_pct: string;
+            /** Format: decimal */
+            sun_hours: string;
+            /** Format: decimal */
+            shade_hours: string | null;
+            turn_count: number;
+            /** Format: decimal */
+            turn_frequency_hours: string | null;
+            weather: components["schemas"]["DryingWeatherEnum"];
+            notes: string;
+            readonly recorded_by: components["schemas"]["HarvestRecorder"];
+            version: number;
+        };
+        DryingLogConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            existing?: components["schemas"]["DuplicateDryingLog"];
+            current?: components["schemas"]["DryingLog"];
+        };
+        DryingLogCreateRequest: {
+            /** Format: date-time */
+            measured_at: string;
+            /** Format: decimal */
+            moisture_pct: string;
+            /** Format: decimal */
+            sun_hours: string;
+            /** Format: decimal */
+            shade_hours?: string | null;
+            turn_count: number;
+            /** Format: decimal */
+            turn_frequency_hours?: string | null;
+            weather: components["schemas"]["DryingWeatherEnum"];
+            notes?: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            captured_at?: string | null;
+        };
+        DryingLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+            /** Format: decimal */
+            green_weight_kg: string;
+            harvest: components["schemas"]["HarvestRepresentation"];
+        };
+        DryingPerson: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+        };
+        DryingProcess: {
+            lot: components["schemas"]["DryingLot"];
+            farm: components["schemas"]["DryingFarm"];
+            facility: components["schemas"]["DryingDryer"];
+            /** Format: date-time */
+            started_at: string;
+            /** Format: decimal */
+            entry_moisture_pct: string;
+            entry_moisture_out_of_range: boolean;
+            readonly responsible: components["schemas"]["DryingPerson"];
+            readonly estimated_days: components["schemas"]["DryingDays"];
+            readonly target_moisture: components["schemas"]["DryingRange"];
+            readonly current_day: number;
+            /** Format: decimal */
+            readonly elapsed_hours: string;
+            logs: components["schemas"]["DryingLog"][];
+            readonly result: components["schemas"]["DryingResult"] | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        DryingRange: {
+            /** Format: decimal */
+            min: string;
+            /** Format: decimal */
+            max: string;
+        };
+        DryingResult: {
+            /** Format: date-time */
+            ended_at: string;
+            /** Format: decimal */
+            duration_hours: string;
+            days: number;
+            /** Format: decimal */
+            total_sun_hours: string;
+            /** Format: decimal */
+            final_moisture_pct: string;
+            /** Format: decimal */
+            dry_weight_kg: string;
+            /** Format: decimal */
+            yield_pct: string;
+        };
+        DryingStartOptionPerson: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+            assignable: boolean;
+        };
+        DryingStartOptions: {
+            facilities: components["schemas"]["DryingDryer"][];
+            responsibles: components["schemas"]["DryingStartOptionPerson"][];
+            entry_moisture_range: components["schemas"]["DryingRange"];
+            /** Format: date-time */
+            earliest_start_at: string;
+        };
+        DryingStartRequest: {
+            /** Format: uuid */
+            lot_id: string;
+            /** Format: uuid */
+            facility_id: string;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: decimal */
+            entry_moisture_pct: string;
+            /** Format: uuid */
+            responsible_id: string;
+            /** @default false */
+            confirm_entry_moisture: boolean;
+        };
+        DryingValues: {
+            /** Format: decimal */
+            entry_moisture_min_pct: string;
+            /** Format: decimal */
+            entry_moisture_max_pct: string;
+            /** Format: decimal */
+            target_moisture_min_pct: string;
+            /** Format: decimal */
+            target_moisture_max_pct: string;
+            estimated_days_min: number;
+            estimated_days_max: number;
+            slow_stall_window_hours: number;
+            /** Format: decimal */
+            slow_stall_min_drop_pct: string;
+            slow_duration_day: number;
+            /** Format: decimal */
+            slow_duration_moisture_pct: string;
+            accelerated_day: number;
+            /** Format: decimal */
+            accelerated_moisture_pct: string;
+            /** Format: decimal */
+            near_target_min_pct: string;
+            /** Format: decimal */
+            near_target_max_pct: string;
+            /** Format: decimal */
+            overdried_moisture_pct: string;
+        };
+        DryingValuesInputRequest: {
+            /** Format: decimal */
+            entry_moisture_min_pct: string;
+            /** Format: decimal */
+            entry_moisture_max_pct: string;
+            /** Format: decimal */
+            target_moisture_min_pct: string;
+            /** Format: decimal */
+            target_moisture_max_pct: string;
+            estimated_days_min: number;
+            estimated_days_max: number;
+            slow_stall_window_hours: number;
+            /** Format: decimal */
+            slow_stall_min_drop_pct: string;
+            slow_duration_day: number;
+            /** Format: decimal */
+            slow_duration_moisture_pct: string;
+            accelerated_day: number;
+            /** Format: decimal */
+            accelerated_moisture_pct: string;
+            /** Format: decimal */
+            near_target_min_pct: string;
+            /** Format: decimal */
+            near_target_max_pct: string;
+            /** Format: decimal */
+            overdried_moisture_pct: string;
+        };
+        /**
+         * @description * `sunny` - Soleado
+         *     * `partly_cloudy` - Parcialmente nublado
+         *     * `cloudy` - Nublado
+         *     * `rainy` - Lluvioso
+         * @enum {string}
+         */
+        DryingWeatherEnum: "sunny" | "partly_cloudy" | "cloudy" | "rainy";
+        DuplicateDryingLog: {
+            /** Format: uuid */
+            id: string;
+            day_number: number;
+        };
         DuplicateTurn: {
             /** Format: uuid */
             id: string;
             number: number;
+        };
+        EntryMoistureError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            range?: components["schemas"]["DryingRange"];
         };
         Evidence: {
             /** Format: uuid */
@@ -2229,6 +2637,7 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
             readonly fermentation: components["schemas"]["LotFermentation"] | null;
+            readonly drying: components["schemas"]["LotDrying"] | null;
         };
         LotConflictError: {
             detail: string;
@@ -2244,6 +2653,18 @@ export interface components {
             id?: string;
             /** Format: uuid */
             harvest_id: string;
+        };
+        LotDrying: {
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string | null;
+            /** Format: decimal */
+            final_moisture_pct: string | null;
+            /** Format: decimal */
+            dry_weight_kg: string | null;
+            /** Format: decimal */
+            yield_pct: string | null;
         };
         LotFermentation: {
             /** Format: date-time */
@@ -2544,6 +2965,11 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Role"][];
         };
+        ParametersAuthor: {
+            /** Format: uuid */
+            id: string;
+            readonly full_name: string;
+        };
         PasswordResetConfirmRequest: {
             new_password: string;
             new_password_confirmation: string;
@@ -2592,6 +3018,34 @@ export interface components {
             common_names?: string[];
             description?: string;
             is_active?: boolean;
+        };
+        PatchedDryingLogUpdateRequest: {
+            /** Format: date-time */
+            measured_at?: string;
+            /** Format: decimal */
+            moisture_pct?: string;
+            /** Format: decimal */
+            sun_hours?: string;
+            /** Format: decimal */
+            shade_hours?: string | null;
+            turn_count?: number;
+            /** Format: decimal */
+            turn_frequency_hours?: string | null;
+            weather?: components["schemas"]["DryingWeatherEnum"];
+            notes?: string;
+            expected_version?: number;
+        };
+        PatchedDryingStartUpdateRequest: {
+            /** Format: uuid */
+            facility_id?: string;
+            /** Format: date-time */
+            started_at?: string;
+            /** Format: decimal */
+            entry_moisture_pct?: string;
+            /** Format: uuid */
+            responsible_id?: string;
+            confirm_entry_moisture?: boolean;
+            expected_version?: number;
         };
         PatchedFarmUpdateRequest: {
             name?: string;
@@ -2930,6 +3384,28 @@ export interface components {
          * @enum {string}
          */
         PostharvestFacilityStatusEnum: "available" | "occupied" | "inactive";
+        PostharvestParameters: {
+            /** Format: uuid */
+            producer_id: string;
+            is_default: boolean;
+            values: components["schemas"]["DryingValues"];
+            baseline: components["schemas"]["DryingValues"];
+            version: number;
+            /** Format: date-time */
+            updated_at: string | null;
+            updated_by: components["schemas"]["ParametersAuthor"] | null;
+        };
+        PostharvestParametersResetRequest: {
+            /** Format: uuid */
+            producer?: string;
+            expected_version: number;
+        };
+        PostharvestParametersSaveRequest: {
+            /** Format: uuid */
+            producer?: string;
+            expected_version: number;
+            values: components["schemas"]["DryingValuesInputRequest"];
+        };
         ProducerAccount: {
             /** Format: uuid */
             id: string;
@@ -4867,6 +5343,572 @@ export interface operations {
                 };
             };
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    drying_list: {
+        parameters: {
+            query?: {
+                /** @description Solo los de esta finca. */
+                farm?: string;
+                /** @description Solo la cuenta técnica: el productor cuyos secados se ve. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    drying_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DryingStartRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingProcess"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryMoistureError"];
+                };
+            };
+        };
+    };
+    drying_logs_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DryingLogCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingLog"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingLog"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingHoursError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingLogConflictError"];
+                };
+            };
+        };
+    };
+    drying_logs_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` de la bitácora que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingLogConflictError"];
+                };
+            };
+        };
+    };
+    drying_logs_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDryingLogUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingLog"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingHoursError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingLogConflictError"];
+                };
+            };
+        };
+    };
+    drying_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingProcess"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    drying_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDryingStartUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingProcess"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryMoistureError"];
+                };
+            };
+        };
+    };
+    drying_finish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DryingFinishRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingProcess"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryWeightError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingConflictError"];
+                };
+            };
+        };
+    };
+    drying_start_options_retrieve: {
+        parameters: {
+            query: {
+                lot: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryingStartOptions"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8478,6 +9520,186 @@ export interface operations {
                 };
             };
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_parameters_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Solo la cuenta técnica, y para ella obligatorio: el productor cuyos parámetros se quiere ver. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestParameters"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_parameters_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostharvestParametersSaveRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestParameters"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    postharvest_parameters_reset_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostharvestParametersResetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostharvestParameters"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

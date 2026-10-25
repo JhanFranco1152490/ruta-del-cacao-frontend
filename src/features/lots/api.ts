@@ -116,6 +116,7 @@ export function lotFromCopy({ process }: CopiedProcess): Lot {
       ended_at: process.result?.ended_at ?? null,
       facility: process.facility.name,
     },
+    drying: null,
   };
 }
 
