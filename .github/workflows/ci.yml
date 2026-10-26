@@ -4,10 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [dev, main]
-    paths-ignore: ["**.md"]
+    paths-ignore: ['**.md']
   push:
     branches: [dev, main]
-    paths-ignore: ["**.md"]
+    paths-ignore: ['**.md']
   workflow_dispatch:
 
 # Un push nuevo a un PR cancela la corrida anterior de ese mismo PR. En dev y main no se
