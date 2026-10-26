@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [dev, main]
+    paths-ignore: ['**.md']
+  push:
+    branches: [dev, main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+# Un push nuevo a un PR cancela la corrida anterior de ese mismo PR. En dev y main no se
+# cancela: cada integración conserva su resultado.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  NEXT_PUBLIC_API_URL: http://localhost:8000
+
+jobs:
+  checks:
+    # Un PR en borrador no gasta minutos hasta que se marca como listo.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm exec prettier --check .
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+
+  tests:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm test
