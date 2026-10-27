@@ -1,6 +1,6 @@
 import { formatShortDateTime } from '@/lib/format/dates';
 
-import { phText, temperatureText } from '../measure-text';
+import { phText, temperatureText } from '@/lib/postharvest/measure-text';
 
 // El volteo anterior, arriba del formulario: para comparar en el momento lo que se acaba de medir.
 export function PreviousTurn({

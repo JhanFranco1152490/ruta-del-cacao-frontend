@@ -11,7 +11,7 @@ import {
   formatShortDateTime,
 } from '@/lib/format/dates';
 
-import { phText, temperatureText } from '../measure-text';
+import { phText, temperatureText } from '@/lib/postharvest/measure-text';
 import type { CardDetails } from './card-parts';
 
 // Cada hito de la línea: un punto sobre la barra, con su dato al pasar el mouse o enfocarlo, y el

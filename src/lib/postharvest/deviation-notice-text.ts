@@ -6,12 +6,10 @@ import {
   POSTHARVEST_ALERT_TITLES,
   type PostharvestAlertKind,
 } from './alert-kinds';
+import { moistureText, phText, temperatureText } from './measure-text';
 
 type Deviation = components['schemas']['Deviation'];
 
-const moisture = (value: string) => `${formatFixedDecimal(value, 1)} %`;
-const temperature = (value: string) => `${formatFixedDecimal(value, 1)} °C`;
-const ph = (value: string) => formatFixedDecimal(value, 2);
 const points = (value: string) => formatFixedDecimal(value, 1);
 
 type Measure = (value: string, limit: string) => string;
@@ -20,25 +18,25 @@ type Measure = (value: string, limit: string) => string;
 // lo que bajó la humedad, en puntos; en el próximo a meta el límite es un rango «7.6-8.5».
 const MEASURES: Partial<Record<PostharvestAlertKind, Measure>> = {
   drying_overdried: (value, limit) =>
-    `${moisture(value)} (por debajo de ${moisture(limit)})`,
+    `${moistureText(value)} (por debajo de ${moistureText(limit)})`,
   drying_accelerated: (value, limit) =>
-    `${moisture(value)} (por debajo de ${moisture(limit)})`,
+    `${moistureText(value)} (por debajo de ${moistureText(limit)})`,
   drying_slow_duration: (value, limit) =>
-    `${moisture(value)} (por encima de ${moisture(limit)})`,
+    `${moistureText(value)} (por encima de ${moistureText(limit)})`,
   drying_slow_stalled: (value, limit) =>
     `bajó ${points(value)} puntos (menos de ${points(limit)})`,
   drying_near_target: (value, limit) => {
     const [min, max] = limit.split('-');
-    return `${moisture(value)} (entre ${points(min)} y ${moisture(max)})`;
+    return `${moistureText(value)} (entre ${points(min)} y ${moistureText(max)})`;
   },
   fermentation_temperature_low: (value, limit) =>
-    `${temperature(value)} (por debajo de ${temperature(limit)})`,
+    `${temperatureText(value)} (por debajo de ${temperatureText(limit)})`,
   fermentation_temperature_high: (value, limit) =>
-    `${temperature(value)} (por encima de ${temperature(limit)})`,
+    `${temperatureText(value)} (por encima de ${temperatureText(limit)})`,
   fermentation_ph_low: (value, limit) =>
-    `pH ${ph(value)} (por debajo de ${ph(limit)})`,
+    `pH ${phText(value)} (por debajo de ${phText(limit)})`,
   fermentation_ph_high: (value, limit) =>
-    `pH ${ph(value)} (por encima de ${ph(limit)})`,
+    `pH ${phText(value)} (por encima de ${phText(limit)})`,
 };
 
 // Un desvío en una línea: «Sobresecado: 5,8 % (por debajo de 6,0 %)». Un tipo que esta versión no

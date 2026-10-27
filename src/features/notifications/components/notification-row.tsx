@@ -2,8 +2,10 @@ import { cn } from 'cn';
 import {
   Bell,
   Clock,
+  Gauge,
   Hourglass,
   ShieldAlert,
+  Timer,
   TriangleAlert,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +21,8 @@ const LOOK: Record<NotificationLook, { Icon: typeof Bell; className: string }> =
     delayed: { Icon: Hourglass, className: 'text-warn' },
     overdue: { Icon: TriangleAlert, className: 'text-err' },
     control: { Icon: ShieldAlert, className: 'text-warn' },
+    pending: { Icon: Timer, className: 'text-warn' },
+    deviation: { Icon: Gauge, className: 'text-warn' },
     generic: { Icon: Bell, className: 'text-muted-foreground' },
   };
 
