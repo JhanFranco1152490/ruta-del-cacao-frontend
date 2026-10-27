@@ -50,14 +50,14 @@ export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
         id: 'temperature',
         title: 'Temperatura de referencia',
         description:
-          'Rango esperado en el centro de la masa. Se muestra al registrar un volteo; no lo bloquea.',
+          'Rango esperado en el centro de la masa. Se muestra al registrar un volteo. Fuera de él, se avisa sin bloquear el registro.',
         fields: MIN_MAX('temperature_min_c', 'temperature_max_c'),
       },
       {
         id: 'ph',
         title: 'pH de referencia',
         description:
-          'Rango esperado del pH del grano (no de la pulpa). Se muestra al registrar un volteo; no lo bloquea.',
+          'Rango esperado del pH del grano (no de la pulpa). Se muestra al registrar un volteo. Fuera de él, se avisa sin bloquear el registro.',
         fields: MIN_MAX('ph_min', 'ph_max'),
       },
     ],

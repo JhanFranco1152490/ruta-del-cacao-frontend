@@ -508,7 +508,7 @@ describe('ParametersScreen', () => {
     ).toHaveValue('5,50');
     expect(
       within(await rowOf('pH de referencia')).getByText(
-        'Rango esperado del pH del grano (no de la pulpa). Se muestra al registrar un volteo; no lo bloquea.',
+        'Rango esperado del pH del grano (no de la pulpa). Se muestra al registrar un volteo. Fuera de él, se avisa sin bloquear el registro.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByText('Predeterminado: 4,00')).toBeInTheDocument();
