@@ -9,6 +9,7 @@ import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   apiError,
+  buildDeviation,
   buildFermentation,
   buildFermentationTurn,
   buildSession,
@@ -342,6 +343,41 @@ describe('TurnScreen', () => {
   describe('correcting a turn of the server', () => {
     beforeEach(() => {
       server.use(fermentationsHandler([withTurn]));
+    });
+
+    it('warns about the deviation the corrected turn still has, instead of confirming', async () => {
+      server.use(
+        csrfHandler,
+        http.patch(apiUrl('/api/fermentation/l1/turns/ft1'), () =>
+          HttpResponse.json({
+            ...buildFermentationTurn({ id: 'ft1', ph: '3.90' }),
+            alerts: [
+              buildDeviation({
+                kind: 'fermentation_ph_low',
+                severity: 'normal',
+                value: '3.90',
+                limit: '4.00',
+              }),
+            ],
+          }),
+        ),
+      );
+      renderScreen({ turnId: 'ft1' });
+
+      await screen.findByRole('heading', { name: 'Corregir volteo 1' });
+      await userEvent.clear(field('pH'));
+      await userEvent.type(field('pH'), '3,90');
+      await save();
+
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith('/fermentacion'),
+      );
+      expect(
+        await screen.findByText(
+          'Volteo 1 corregido · Grano demasiado ácido: pH 3,90 (por debajo de 4,00)',
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('Volteo 1 corregido')).not.toBeInTheDocument();
     });
 
     it('sends only what changed, with the version it read', async () => {

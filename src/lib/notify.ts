@@ -62,3 +62,14 @@ export const notify = {
     add('error', title, options),
   dismiss: (id?: string) => toastManager.close(id),
 };
+
+// Lo que el servidor encontró en algo que se acaba de guardar (un desvío en una medición): una
+// advertencia, que no se cierra sola si pide actuar ya.
+export type Finding = {
+  title: string;
+  description?: string;
+  critical: boolean;
+};
+
+export const notifyFinding = ({ title, description, critical }: Finding) =>
+  notify.warning(title, { description, persistent: critical });

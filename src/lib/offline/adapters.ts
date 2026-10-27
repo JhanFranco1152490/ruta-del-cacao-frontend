@@ -1,4 +1,5 @@
 import type { ApiError } from '@/lib/api/errors';
+import type { Finding } from '@/lib/notify';
 
 import type { QueueItem, QueueOperation } from './db';
 
@@ -24,14 +25,6 @@ export interface AssignedCode {
   name?: string | null;
 }
 
-// Lo que el servidor encontró en un registro al recibirlo y quien lo capturó tiene que saber (un
-// desvío en una medición). Persistente si pide actuar ya.
-export interface SyncNotice {
-  title: string;
-  description?: string;
-  critical: boolean;
-}
-
 // Cada dominio (fincas, parcelas...) implementa uno y lo registra con `registerAdapter`.
 // `payload` llega tal como lo guardó `enqueue`: cada adapter conoce y valida la forma que le
 // corresponde a su propio recurso.
@@ -51,9 +44,9 @@ export interface SyncAdapter {
   // Opcional: el código que el servidor asignó al registro, si es de los que lo reciben al
   // llegar. Lee `response`, lo que devolvió `send`.
   assignedCode?(item: QueueItem, response: unknown): AssignedCode | null;
-  // Opcional: el aviso que sale cuando el registro llega, si el servidor encontró algo en él. Lee
-  // `response`, lo que devolvió `send`.
-  syncNotice?(item: QueueItem, response: unknown): SyncNotice | null;
+  // Opcional: lo que el servidor encontró en el registro al recibirlo y quien lo capturó tiene que
+  // saber (un desvío en una medición). Lee `response`, lo que devolvió `send`.
+  syncNotice?(item: QueueItem, response: unknown): Finding | null;
 }
 
 // Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se

@@ -39,7 +39,7 @@ export const logSyncAdapter: SyncAdapter = {
   // Los desvíos de la humedad los evalúa el servidor al recibirla, también en un reenvío.
   syncNotice(item, response) {
     const { label } = item.payload as LogPayload;
-    return deviationNoticeText((response as SavedLog).alerts ?? [], label);
+    return deviationNoticeText((response as SavedLog).alerts, label);
   },
 
   send(item) {

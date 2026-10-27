@@ -95,6 +95,7 @@ describe('deviationNoticeText', () => {
 
   it('says nothing when the record has no deviations', () => {
     expect(deviationNoticeText([], subject)).toBeNull();
+    expect(deviationNoticeText(undefined, subject)).toBeNull();
   });
 
   it('puts a single deviation in the title after the subject', () => {

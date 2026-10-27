@@ -39,7 +39,7 @@ export const turnSyncAdapter: SyncAdapter = {
   // Los desvíos de temperatura y pH los evalúa el servidor al recibirlo, también en un reenvío.
   syncNotice(item, response) {
     const { label } = item.payload as TurnPayload;
-    return deviationNoticeText((response as SavedTurn).alerts ?? [], label);
+    return deviationNoticeText((response as SavedTurn).alerts, label);
   },
 
   send(item) {

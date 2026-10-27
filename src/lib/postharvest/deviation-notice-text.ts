@@ -49,12 +49,13 @@ export function deviationLine({ kind, value, limit }: Deviation) {
 
 // El aviso de quien acaba de guardar un registro con desvíos: el más importante en el título, junto
 // a lo que se guardó, y el resto uno por línea. El crítico va primero aunque el servidor no lo
-// ponga primero, y hace que el aviso no se cierre solo.
+// ponga primero, y hace que el aviso no se cierre solo. Sin `alerts` (un servidor que no los
+// evalúa) no hay nada que avisar.
 export function deviationNoticeText(
-  alerts: readonly Deviation[],
+  alerts: readonly Deviation[] | undefined,
   subject: string,
 ) {
-  if (!alerts.length) return null;
+  if (!alerts?.length) return null;
   const ordered = [
     ...alerts.filter(({ severity }) => severity === 'critical'),
     ...alerts.filter(({ severity }) => severity !== 'critical'),

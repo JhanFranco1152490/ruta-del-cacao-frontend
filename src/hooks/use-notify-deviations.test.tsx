@@ -1,8 +1,8 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { notify } from '@/lib/notify';
-import type { SyncAdapter, SyncNotice } from '@/lib/offline/adapters';
+import { type Finding, notify } from '@/lib/notify';
+import type { SyncAdapter } from '@/lib/offline/adapters';
 import type { QueueItem } from '@/lib/offline/db';
 import { onItemSynced } from '@/lib/offline/sync-queue';
 
@@ -17,7 +17,7 @@ let emit: (adapter: SyncAdapter) => void;
 const stop = vi.fn();
 const item = { id: 'x', operation: 'create' } as QueueItem;
 
-const adapterGiving = (notice?: SyncNotice | null) =>
+const adapterGiving = (notice?: Finding | null) =>
   ({
     syncNotice: notice === undefined ? undefined : () => notice,
   }) as unknown as SyncAdapter;

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { notify } from '@/lib/notify';
+import { notifyFinding } from '@/lib/notify';
 import { onItemSynced } from '@/lib/offline/sync-queue';
 
 // Avisa de los desvíos que el servidor encontró en un registro de campo (un volteo, una bitácora)
@@ -12,12 +12,8 @@ export function useNotifyDeviations() {
   useEffect(
     () =>
       onItemSynced((item, adapter, response) => {
-        const notice = adapter.syncNotice?.(item, response);
-        if (!notice) return;
-        notify.warning(notice.title, {
-          description: notice.description,
-          persistent: notice.critical,
-        });
+        const finding = adapter.syncNotice?.(item, response);
+        if (finding) notifyFinding(finding);
       }),
     [],
   );
