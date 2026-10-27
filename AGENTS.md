@@ -309,9 +309,11 @@ src/
     dice). Finalizar se deshabilita con su motivo (`finishBlockedReason`: sin volteos, con volteos en la
     cola o sin conexión).
   - **La tarjeta de cada lote** cuenta la fermentación como una **línea de tiempo** (`card-timeline.tsx`,
-    con los datos resueltos de `card-details.ts`) en dos colores: verde lo que ya pasó (la barra hasta
-    ahora y los volteos hechos) y cobre lo que falta o se atrasó (el próximo volteo y, si venció, el
-    tramo de atraso). Cada punto dice su fecha y su medición al pasar el mouse o enfocarlo
+    con los datos resueltos de `card-details.ts`): la barra hasta ahora en amarillo mazorca y los
+    hitos en cobre: lleno lo que ya está (los volteos hechos y el próximo si venció, con el tramo de
+    atraso) y punteado lo que falta (el próximo volteo y los que esperan en la cola). La barra y los
+    puntos en verde oscuro pesaban demasiado en la tarjeta; por lo mismo, **Registrar volteo** usa el
+    botón `action`, como **Finalizar**. Cada punto dice su fecha y su medición al pasar el mouse o enfocarlo
     (`components/ui/tooltip.tsx`) y lleva el mismo dato como `aria-label`, porque en el celular no hay
     mouse; el texto de la tarjeta repite lo esencial. **Finalizar** también está en la tarjeta
     (`finish-fermentation-button.tsx`, el mismo botón de la ficha): se hace una vez por lote, pero

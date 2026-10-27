@@ -131,7 +131,7 @@ export function ParametersForm({
         <Button
           className="w-full sm:w-auto"
           disabled={!unsaved || save.isPending}
-          size="field"
+          size="office"
           type="submit"
         >
           {save.isPending ? 'Guardando…' : 'Guardar cambios'}
@@ -143,7 +143,7 @@ export function ParametersForm({
             form.reset(loaded);
             setSummary(undefined);
           }}
-          size="field"
+          size="office"
           type="button"
           variant="outline"
         >
