@@ -124,6 +124,7 @@ export function lotFromCopy(copied: CopiedProcess): Lot {
         ? {
             started_at: copied.process.started_at,
             ended_at: copied.process.result?.ended_at ?? null,
+            facility: copied.process.facility.name,
             final_moisture_pct:
               copied.process.result?.final_moisture_pct ?? null,
             dry_weight_kg: copied.process.result?.dry_weight_kg ?? null,
