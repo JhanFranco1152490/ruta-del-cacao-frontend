@@ -6,8 +6,9 @@ import {
   type SyncAdapter,
   VALIDATION_ERROR_CODE,
 } from '@/lib/offline/adapters';
+import { deviationNoticeText } from '@/lib/postharvest/deviation-notice-text';
 
-import { DRYING_ERROR, postLog } from './api';
+import { DRYING_ERROR, postLog, type SavedLog } from './api';
 import { LOG_RESOURCE, type LogPayload } from './log-queue';
 
 export const DRYING_GONE_MESSAGE =
@@ -34,6 +35,12 @@ export const logSyncAdapter: SyncAdapter = {
 
   // Una bitácora nueva cambia la lista de Secado y el secado de la ficha del lote.
   refreshAfterSync: () => [queryKeys.drying.all()],
+
+  // Los desvíos de la humedad los evalúa el servidor al recibirla, también en un reenvío.
+  syncNotice(item, response) {
+    const { label } = item.payload as LogPayload;
+    return deviationNoticeText((response as SavedLog).alerts ?? [], label);
+  },
 
   send(item) {
     const { lotId, request } = item.payload as LogPayload;

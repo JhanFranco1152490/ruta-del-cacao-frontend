@@ -6,8 +6,9 @@ import {
   type SyncAdapter,
   VALIDATION_ERROR_CODE,
 } from '@/lib/offline/adapters';
+import { deviationNoticeText } from '@/lib/postharvest/deviation-notice-text';
 
-import { FERMENTATION_ERROR, postTurn } from './api';
+import { FERMENTATION_ERROR, postTurn, type SavedTurn } from './api';
 import { TURN_RESOURCE, type TurnPayload } from './turn-queue';
 
 export const FERMENTATION_GONE_MESSAGE =
@@ -34,6 +35,12 @@ export const turnSyncAdapter: SyncAdapter = {
 
   // Un volteo nuevo cambia la lista de Fermentación y la fermentación de la ficha del lote.
   refreshAfterSync: () => [queryKeys.fermentation.all()],
+
+  // Los desvíos de temperatura y pH los evalúa el servidor al recibirlo, también en un reenvío.
+  syncNotice(item, response) {
+    const { label } = item.payload as TurnPayload;
+    return deviationNoticeText((response as SavedTurn).alerts ?? [], label);
+  },
 
   send(item) {
     const { lotId, request } = item.payload as TurnPayload;
