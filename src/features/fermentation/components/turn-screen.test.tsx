@@ -114,7 +114,7 @@ describe('TurnScreen', () => {
       await screen.findByLabelText('Temperatura (°C)'),
       '55',
     );
-    await userEvent.type(field('pH'), '6,2');
+    await userEvent.type(field('pH del grano'), '6,2');
 
     expect(
       screen.getByText('Fuera de la referencia (40,0–50,0 °C).'),
@@ -138,7 +138,7 @@ describe('TurnScreen', () => {
       await screen.findByLabelText('Temperatura (°C)'),
       '45,5',
     );
-    await userEvent.type(field('pH'), '4,85');
+    await userEvent.type(field('pH del grano'), '4,85');
     await userEvent.type(field('Observaciones (opcional)'), 'Masa caliente');
     await save();
 
@@ -200,7 +200,7 @@ describe('TurnScreen', () => {
     expect(await screen.findAllByText('Campo obligatorio')).toHaveLength(2);
 
     await userEvent.type(field('Temperatura (°C)'), '81');
-    await userEvent.type(field('pH'), '15');
+    await userEvent.type(field('pH del grano'), '15');
     await save();
 
     expect(
@@ -219,7 +219,7 @@ describe('TurnScreen', () => {
     await screen.findByRole('heading', { name: 'Volteo 2' });
     setTime('2026-10-17T07:30');
     await userEvent.type(field('Temperatura (°C)'), '45');
-    await userEvent.type(field('pH'), '4,9');
+    await userEvent.type(field('pH del grano'), '4,9');
     await save();
 
     expect(
@@ -365,8 +365,8 @@ describe('TurnScreen', () => {
       renderScreen({ turnId: 'ft1' });
 
       await screen.findByRole('heading', { name: 'Corregir volteo 1' });
-      await userEvent.clear(field('pH'));
-      await userEvent.type(field('pH'), '3,90');
+      await userEvent.clear(field('pH del grano'));
+      await userEvent.type(field('pH del grano'), '3,90');
       await save();
 
       await waitFor(() =>
@@ -399,9 +399,9 @@ describe('TurnScreen', () => {
       expect(
         await screen.findByRole('heading', { name: 'Corregir volteo 1' }),
       ).toBeInTheDocument();
-      expect(field('pH')).toHaveValue('4,90');
-      await userEvent.clear(field('pH'));
-      await userEvent.type(field('pH'), '4,85');
+      expect(field('pH del grano')).toHaveValue('4,90');
+      await userEvent.clear(field('pH del grano'));
+      await userEvent.type(field('pH del grano'), '4,85');
       await save();
 
       await waitFor(() =>

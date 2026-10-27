@@ -57,7 +57,7 @@ export const PARAMETER_SECTIONS: readonly ParameterSectionConfig[] = [
         id: 'ph',
         title: 'pH de referencia',
         description:
-          'Rango esperado. Se muestra al registrar un volteo; no lo bloquea.',
+          'Rango esperado del pH del grano (no de la pulpa). Se muestra al registrar un volteo; no lo bloquea.',
         fields: MIN_MAX('ph_min', 'ph_max'),
       },
     ],

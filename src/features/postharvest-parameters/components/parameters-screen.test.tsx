@@ -506,6 +506,11 @@ describe('ParametersScreen', () => {
     expect(
       within(await rowOf('pH de referencia')).getByLabelText('Máximo (pH)'),
     ).toHaveValue('5,50');
+    expect(
+      within(await rowOf('pH de referencia')).getByText(
+        'Rango esperado del pH del grano (no de la pulpa). Se muestra al registrar un volteo; no lo bloquea.',
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText('Predeterminado: 4,00')).toBeInTheDocument();
     expect(screen.getByText('Predeterminado: 40,0 °C')).toBeInTheDocument();
   });
