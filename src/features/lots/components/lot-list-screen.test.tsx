@@ -111,6 +111,7 @@ describe('LotListScreen', () => {
           drying: {
             started_at: '2026-10-20T14:00:00-05:00',
             ended_at: '2026-10-25T10:00:00-05:00',
+            facility: 'M-01',
             final_moisture_pct: '7.0',
             dry_weight_kg: '60.0',
             yield_pct: '49.8',

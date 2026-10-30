@@ -4,7 +4,12 @@ import { useRouter } from 'next/navigation';
 
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useReturnPath } from '@/hooks/use-return-path';
-import { notify, type NoticeOptions } from '@/lib/notify';
+import {
+  type Finding,
+  notify,
+  notifyFinding,
+  type NoticeOptions,
+} from '@/lib/notify';
 
 // Lo que hace un editor o un formulario de alta al guardar bien: vuelve a la pantalla desde la que se abrió (con sus
 // filtros y su página) o a `fallback`, y avisa. Si no hay conexión, el cambio quedó en el
@@ -16,8 +21,20 @@ export function useFinishSave(fallback: string) {
 
   // `action` es el siguiente paso probable («Registrar otra parcela»): el aviso lo ofrece unos
   // segundos, así que quien captura varios seguidos no tiene que volver a abrir el formulario.
-  const finish = (title: string, options?: Pick<NoticeOptions, 'action'>) => {
+  // `finding` es lo que el servidor encontró en lo guardado (un desvío): sale esa advertencia en
+  // lugar de la confirmación, que ya va en su título.
+  const finish = (
+    title: string,
+    {
+      finding,
+      ...options
+    }: Pick<NoticeOptions, 'action'> & { finding?: Finding | null } = {},
+  ) => {
     router.replace(returnPath);
+    if (finding) {
+      notifyFinding(finding);
+      return;
+    }
     notify.success(title, {
       ...options,
       ...(!isOnline && { description: 'Se enviará cuando haya conexión.' }),

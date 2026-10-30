@@ -1,12 +1,10 @@
-export const FERMENTATION_PATH = '/fermentacion';
+import { TURN_PATH } from '@/lib/paths/fermentation';
 
-// La pantalla de campo del volteo. Ruta fija con parámetros: una sola página guardada sirve para
-// registrar y corregir, también sin conexión.
-export const TURN_PATH = `${FERMENTATION_PATH}/volteo`;
-
-// Registrar un volteo del lote.
-export const turnPath = (lotId: string) =>
-  `${TURN_PATH}?${new URLSearchParams({ lote: lotId })}`;
+export {
+  FERMENTATION_PATH,
+  TURN_PATH,
+  turnPath,
+} from '@/lib/paths/fermentation';
 
 // Corregir en línea un volteo que ya está en el servidor.
 export const turnCorrectionPath = (lotId: string, turnId: string) =>

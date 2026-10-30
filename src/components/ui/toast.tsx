@@ -74,7 +74,10 @@ export function ToastDescription({
 }: ToastPrimitive.Description.Props) {
   return (
     <ToastPrimitive.Description
-      className={cn('mt-0.5 text-sm text-muted-foreground', className)}
+      className={cn(
+        'mt-0.5 text-sm whitespace-pre-line text-muted-foreground',
+        className,
+      )}
       data-slot="toast-description"
       {...props}
     />

@@ -20,6 +20,7 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { useQueueItems } from '@/hooks/use-queue-items';
 import { useNotifyAfterSync } from '@/hooks/use-notify-after-sync';
 import { useNotifyAssignedCodes } from '@/hooks/use-notify-assigned-codes';
+import { useNotifyDeviations } from '@/hooks/use-notify-deviations';
 import { useNotifyRejected } from '@/hooks/use-notify-rejected';
 import { useRefreshAfterSync } from '@/hooks/use-refresh-after-sync';
 import { useSyncStatus } from '@/hooks/use-sync-status';
@@ -61,6 +62,7 @@ export function SessionShell({
   useRefreshAfterSync();
   useNotifyAfterSync();
   useNotifyAssignedCodes();
+  useNotifyDeviations();
   useNotifyRejected(queueViews, () => setTrayOpen(true));
 
   // Toca el reloj de sesión y guarda la copia del dispositivo cada vez que el servidor confirma

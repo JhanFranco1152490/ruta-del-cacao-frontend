@@ -57,7 +57,7 @@ export function TurnMeasureFields({
         error={errors.ph?.message}
         hint={reference ? phHint(ph, reference.ph) : undefined}
         inputMode="decimal"
-        label="pH"
+        label="pH del grano"
         {...register('ph')}
       />
     </>

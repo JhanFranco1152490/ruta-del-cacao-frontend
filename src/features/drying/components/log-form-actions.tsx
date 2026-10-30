@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { CAPTURE_BUTTON_CLASS } from '@/components/capture-field-class';
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { Button, buttonVariants } from '@/components/ui/button';
 
@@ -28,18 +29,18 @@ export function LogFormActions({
       <MobileActionBar>
         <Button
           aria-describedby={disabledMessage ? 'log-save-blocked' : undefined}
-          className="w-full sm:w-auto"
+          className={CAPTURE_BUTTON_CLASS}
           disabled={isSaving || !!disabledMessage}
-          size="field"
+          size="office"
           type="submit"
         >
           {isSaving ? 'Guardando…' : submitLabel}
         </Button>
         <Link
           className={buttonVariants({
-            size: 'field',
+            size: 'office',
             variant: 'outline',
-            className: 'w-full sm:w-auto',
+            className: CAPTURE_BUTTON_CLASS,
           })}
           href={cancelHref}
         >

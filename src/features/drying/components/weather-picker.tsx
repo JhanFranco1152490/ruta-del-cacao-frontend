@@ -57,7 +57,9 @@ export function WeatherPicker({
                 value={option}
               />
               <Icon aria-hidden="true" className="size-5 shrink-0" />
-              {label}
+              {/* Un nombre que se parte en dos líneas ocuparía todo el ancho y dejaría el ícono contra
+                  el borde: medido a su palabra más larga, queda pegado al ícono como los demás. */}
+              <span className="w-min">{label}</span>
             </label>
           );
         })}

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { QueueItem } from '@/lib/offline/db';
-import { buildDryingLog } from '@/test/factories';
+import { buildDeviation, buildDryingLog } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
@@ -154,5 +154,24 @@ describe('logSyncAdapter.refreshAfterSync', () => {
     expect(logSyncAdapter.refreshAfterSync?.(item)).toEqual([
       queryKeys.drying.all(),
     ]);
+  });
+});
+
+describe('logSyncAdapter.syncNotice', () => {
+  const answered = (alerts: unknown) =>
+    logSyncAdapter.syncNotice!(item, { ...buildDryingLog(), alerts });
+
+  it('warns about the deviations of the log, naming it as the queue does', () => {
+    expect(answered([buildDeviation()])).toEqual({
+      title:
+        '000123-F02-P05-261014-1 · bitácora del día 2 · 23 oct · Sobresecado: 5,8 % (por debajo de 6,0 %)',
+      description: undefined,
+      critical: true,
+    });
+  });
+
+  it('says nothing without deviations, or from a server that does not send them', () => {
+    expect(answered([])).toBeNull();
+    expect(logSyncAdapter.syncNotice!(item, buildDryingLog())).toBeNull();
   });
 });

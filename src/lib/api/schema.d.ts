@@ -401,7 +401,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Registra la bitácora de un día de un secado en curso; llega desde la cola del dispositivo. El `id` lo genera el cliente: reenviar la misma con los mismos datos responde 200 con la que ya existe, y con otros datos 409 `drying_log_id_conflict`. Una por fecha (la local de `measured_at`): otra el mismo día es 409 `duplicate_drying_log_date` con la existente en `existing`. El día de secado se cuenta desde la fecha de inicio. Las horas al sol y a la sombra no pasan de las que ese día estuvo en secado (400 en `fields.sun_hours`, con `available_hours`). */
+        /** @description Registra la bitácora de un día de un secado en curso; llega desde la cola del dispositivo. El `id` lo genera el cliente: reenviar la misma con los mismos datos responde 200 con la que ya existe, y con otros datos 409 `drying_log_id_conflict`. Una por fecha (la local de `measured_at`): otra el mismo día es 409 `duplicate_drying_log_date` con la existente en `existing`. El día de secado se cuenta desde la fecha de inicio. Las horas al sol y a la sombra no pasan de las que ese día estuvo en secado (400 en `fields.sun_hours`, con `available_hours`). `alerts` trae los desvíos de la bitácora (también en un reenvío); un desvío nunca impide guardarla. */
         post: operations["drying_logs_create"];
         delete?: never;
         options?: never;
@@ -423,7 +423,7 @@ export interface paths {
         delete: operations["drying_logs_destroy"];
         options?: never;
         head?: never;
-        /** @description Corrige una bitácora mientras el secado sigue en curso; cambiar la hora de la medición puede cambiar su fecha y su día. Requiere `expected_version`; si cambió, 409 `stale_version` con la vigente en `current`. Con el secado terminado, 409 `drying_not_in_progress`. */
+        /** @description Corrige una bitácora mientras el secado sigue en curso; cambiar la hora de la medición puede cambiar su fecha y su día. Requiere `expected_version`; si cambió, 409 `stale_version` con la vigente en `current`. Con el secado terminado, 409 `drying_not_in_progress`. `alerts` trae los desvíos que la bitácora cumple tras corregirla; los avisos de los que ya no cumple se retiran. */
         patch: operations["drying_logs_partial_update"];
         trace?: never;
     };
@@ -609,7 +609,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Registra un volteo de una fermentación en curso; llega desde la cola del dispositivo. El `id` lo genera el cliente: reenviar el mismo con los mismos datos responde 200 con el que ya existe, y con otros datos 409 `turn_id_conflict`. La hora se guarda sin segundos, y dos volteos de la misma fermentación en el mismo minuto son el mismo: 409 `duplicate_turn_time` con el existente en `existing`. El número es su posición por hora. */
+        /** @description Registra un volteo de una fermentación en curso; llega desde la cola del dispositivo. El `id` lo genera el cliente: reenviar el mismo con los mismos datos responde 200 con el que ya existe, y con otros datos 409 `turn_id_conflict`. La hora se guarda sin segundos, y dos volteos de la misma fermentación en el mismo minuto son el mismo: 409 `duplicate_turn_time` con el existente en `existing`. El número es su posición por hora. `alerts` trae los desvíos de temperatura y de pH del grano (también en un reenvío); un desvío nunca impide guardarlo. */
         post: operations["fermentation_turns_create"];
         delete?: never;
         options?: never;
@@ -631,7 +631,7 @@ export interface paths {
         delete: operations["fermentation_turns_destroy"];
         options?: never;
         head?: never;
-        /** @description Corrige un volteo mientras la fermentación sigue en curso. Requiere `expected_version`; si cambió, 409 `stale_version` con el vigente en `current`. Con la fermentación terminada, 409 `fermentation_not_in_progress`. */
+        /** @description Corrige un volteo mientras la fermentación sigue en curso. Requiere `expected_version`; si cambió, 409 `stale_version` con el vigente en `current`. Con la fermentación terminada, 409 `fermentation_not_in_progress`. `alerts` trae los desvíos que el volteo cumple tras corregirlo; los avisos de los que ya no cumple se retiran. */
         patch: operations["fermentation_turns_partial_update"];
         trace?: never;
     };
@@ -1884,6 +1884,18 @@ export interface components {
             /** @default false */
             control_requested: boolean;
         };
+        Deviation: {
+            kind: string;
+            severity: components["schemas"]["DeviationSeverityEnum"];
+            value: string;
+            limit: string;
+        };
+        /**
+         * @description * `normal` - normal
+         *     * `critical` - critical
+         * @enum {string}
+         */
+        DeviationSeverityEnum: "normal" | "critical";
         DismissedCount: {
             dismissed: number;
         };
@@ -2000,6 +2012,29 @@ export interface components {
             id: string;
             /** Format: date-time */
             captured_at?: string | null;
+        };
+        DryingLogSaved: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            measured_at: string;
+            /** Format: date */
+            log_date: string;
+            day_number: number;
+            /** Format: decimal */
+            moisture_pct: string;
+            /** Format: decimal */
+            sun_hours: string;
+            /** Format: decimal */
+            shade_hours: string | null;
+            turn_count: number;
+            /** Format: decimal */
+            turn_frequency_hours: string | null;
+            weather: components["schemas"]["DryingWeatherEnum"];
+            notes: string;
+            readonly recorded_by: components["schemas"]["HarvestRecorder"];
+            version: number;
+            alerts: components["schemas"]["Deviation"][];
         };
         DryingLot: {
             /** Format: uuid */
@@ -2282,11 +2317,6 @@ export interface components {
             green_weight_kg: string;
             harvest: components["schemas"]["HarvestRepresentation"];
         };
-        /**
-         * @description Lo que el productor configuró para fermentar: cuándo toca cada volteo y la temperatura y el
-         *     pH de referencia. Viajan con cada fermentación para que el teléfono calcule el próximo volteo
-         *     sin conexión y muestre la referencia al registrar uno.
-         */
         FermentationParameters: {
             first_turn_hours: number;
             next_turn_hours: number;
@@ -2374,6 +2404,23 @@ export interface components {
             id: string;
             /** Format: date-time */
             captured_at?: string | null;
+        };
+        FermentationTurnSaved: {
+            /** Format: uuid */
+            id: string;
+            number: number;
+            /** Format: date-time */
+            turned_at: string;
+            /** Format: decimal */
+            hours_since_start: string;
+            /** Format: decimal */
+            temperature_c: string;
+            /** Format: decimal */
+            ph: string;
+            notes: string;
+            recorded_by: components["schemas"]["HarvestRecorder"];
+            version: number;
+            alerts: components["schemas"]["Deviation"][];
         };
         Harvest: {
             /** Format: uuid */
@@ -2603,6 +2650,15 @@ export interface components {
             readonly fermentation: components["schemas"]["LotFermentation"] | null;
             readonly drying: components["schemas"]["LotDrying"] | null;
         };
+        LotBrief: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+            farm: components["schemas"]["LotFarm"];
+            readonly fermentation: components["schemas"]["LotFermentation"] | null;
+            readonly drying: components["schemas"]["LotDrying"] | null;
+        };
         LotConflictError: {
             detail: string;
             code: string;
@@ -2623,12 +2679,18 @@ export interface components {
             started_at: string;
             /** Format: date-time */
             ended_at: string | null;
+            facility: string;
             /** Format: decimal */
             final_moisture_pct: string | null;
             /** Format: decimal */
             dry_weight_kg: string | null;
             /** Format: decimal */
             yield_pct: string | null;
+        };
+        LotFarm: {
+            /** Format: uuid */
+            id: string;
+            name: string;
         };
         LotFermentation: {
             /** Format: date-time */
@@ -2692,25 +2754,70 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             readonly kind: components["schemas"]["NotificationKindEnum"];
-            readonly severity: components["schemas"]["SeverityEnum"];
+            readonly severity: components["schemas"]["NotificationSeverityEnum"];
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
             readonly read_at: string | null;
             /** Format: date */
             readonly condition_date: string | null;
+            /** Format: date-time */
+            readonly condition_at: string | null;
+            /** Format: date-time */
+            readonly resolved_at: string | null;
             /** Format: uuid */
             readonly detection_id: string | null;
+            readonly fermentation_turn: components["schemas"]["NotificationTurn"] | null;
+            readonly drying_log: components["schemas"]["NotificationDryingLog"] | null;
             readonly activity: components["schemas"]["AgriculturalActivity"] | null;
+            readonly lot: components["schemas"]["LotBrief"] | null;
+        };
+        NotificationDryingLog: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly day_number: number;
+            /** Format: date-time */
+            readonly measured_at: string;
+            /** Format: decimal */
+            readonly moisture_pct: string;
         };
         /**
          * @description * `activity_upcoming` - Actividad próxima
          *     * `activity_delayed` - Actividad retrasada
          *     * `activity_overdue` - Actividad vencida
          *     * `detection_control_pending` - Control pendiente
+         *     * `fermentation_first_turn_due` - Primer volteo próximo
+         *     * `fermentation_turn_due` - Volteo pendiente
+         *     * `drying_log_due` - Bitácora de secado pendiente
+         *     * `fermentation_temperature_low` - Temperatura baja
+         *     * `fermentation_temperature_high` - Temperatura alta
+         *     * `fermentation_ph_low` - Grano demasiado ácido
+         *     * `fermentation_ph_high` - Fermentación que no avanza
+         *     * `drying_slow_stalled` - Secado lento por estancamiento
+         *     * `drying_slow_duration` - Secado lento por duración
+         *     * `drying_accelerated` - Secado acelerado
+         *     * `drying_near_target` - Próximo a meta
+         *     * `drying_overdried` - Sobresecado
          * @enum {string}
          */
-        NotificationKindEnum: "activity_upcoming" | "activity_delayed" | "activity_overdue" | "detection_control_pending";
+        NotificationKindEnum: "activity_upcoming" | "activity_delayed" | "activity_overdue" | "detection_control_pending" | "fermentation_first_turn_due" | "fermentation_turn_due" | "drying_log_due" | "fermentation_temperature_low" | "fermentation_temperature_high" | "fermentation_ph_low" | "fermentation_ph_high" | "drying_slow_stalled" | "drying_slow_duration" | "drying_accelerated" | "drying_near_target" | "drying_overdried";
+        /**
+         * @description * `normal` - Normal
+         *     * `critical` - Crítica
+         * @enum {string}
+         */
+        NotificationSeverityEnum: "normal" | "critical";
+        NotificationTurn: {
+            /** Format: uuid */
+            readonly id: string;
+            number: number;
+            /** Format: date-time */
+            readonly turned_at: string;
+            /** Format: decimal */
+            readonly temperature_c: string;
+            /** Format: decimal */
+            readonly ph: string;
+        };
         /** @enum {unknown} */
         NullEnum: null;
         OccupiedBy: {
@@ -3635,12 +3742,6 @@ export interface components {
             readonly farms: components["schemas"]["AccountFarm"][];
             readonly all_farms: boolean;
         };
-        /**
-         * @description * `normal` - Normal
-         *     * `critical` - Crítica
-         * @enum {string}
-         */
-        SeverityEnum: "normal" | "critical";
         /**
          * @description * `none` - A plena exposición
          *     * `temporary` - Sombra temporal
@@ -5529,7 +5630,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DryingLog"];
+                    "application/json": components["schemas"]["DryingLogSaved"];
                 };
             };
             201: {
@@ -5537,7 +5638,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DryingLog"];
+                    "application/json": components["schemas"]["DryingLogSaved"];
                 };
             };
             400: {
@@ -5667,7 +5768,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DryingLog"];
+                    "application/json": components["schemas"]["DryingLogSaved"];
                 };
             };
             400: {
@@ -6607,7 +6708,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FermentationTurn"];
+                    "application/json": components["schemas"]["FermentationTurnSaved"];
                 };
             };
             201: {
@@ -6615,7 +6716,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FermentationTurn"];
+                    "application/json": components["schemas"]["FermentationTurnSaved"];
                 };
             };
             400: {
@@ -6745,7 +6846,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FermentationTurn"];
+                    "application/json": components["schemas"]["FermentationTurnSaved"];
                 };
             };
             400: {
