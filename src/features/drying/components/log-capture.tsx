@@ -8,6 +8,8 @@ import { OfflineBanner } from '@/components/offline-banner';
 import { SyncRejectedNotice } from '@/components/sync-rejected-notice';
 import type { useCaptureSyncStatus } from '@/hooks/use-capture-sync-status';
 import { fromBogotaLocal } from '@/lib/format/dates';
+import type { Finding } from '@/lib/notify';
+import { deviationNoticeText } from '@/lib/postharvest/deviation-notice-text';
 import { isLocalDateTime } from '@/lib/validation/moment';
 
 import { type Drying, type DryingLog, useUpdateLog } from '../api';
@@ -49,7 +51,7 @@ export function LogCapture({
   serverLog?: DryingLog;
   sync: ReturnType<typeof useCaptureSyncStatus>;
   returnPath: string;
-  finish: (title: string) => void;
+  finish: (title: string, options?: { finding?: Finding | null }) => void;
   logsHref: string;
 }) {
   const router = useRouter();
@@ -117,7 +119,12 @@ export function LogCapture({
           body: { ...changes, expected_version: serverLog.version },
         },
         {
-          onSuccess: () => finish(`Bitácora del día ${day} corregida`),
+          // Corregir un registro vuelve a evaluar sus desvíos: si sigue con alguno, se avisa en vez
+          // de confirmar.
+          onSuccess: ({ alerts }) => {
+            const title = `Bitácora del día ${day} corregida`;
+            finish(title, { finding: deviationNoticeText(alerts, title) });
+          },
           onError: (error) => setFormError(correctionError(error, setError)),
         },
       );

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { phText, temperatureText } from './measure-text';
+import { moistureText, phText, temperatureText } from './measure-text';
 
 describe('measure text', () => {
   it('writes the temperature with one decimal', () => {
@@ -11,5 +11,10 @@ describe('measure text', () => {
   it('writes the ph with two decimals', () => {
     expect(phText('4.90')).toBe('4,90');
     expect(phText('5')).toBe('5,00');
+  });
+
+  it('writes the moisture with one decimal', () => {
+    expect(moistureText('5.80')).toBe('5,8 %');
+    expect(moistureText('52')).toBe('52,0 %');
   });
 });

@@ -35,7 +35,7 @@ export function FermentationCardActions({
     <div className="mt-auto flex flex-wrap items-center gap-2">
       <EditorLink
         className={cn(
-          buttonVariants({ size: 'office' }),
+          buttonVariants({ variant: 'action', size: 'office' }),
           'max-sm:flex-1 max-sm:px-3',
         )}
         href={turnPath(lot.id)}

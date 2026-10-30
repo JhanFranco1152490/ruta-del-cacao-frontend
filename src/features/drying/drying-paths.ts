@@ -1,12 +1,6 @@
-export const DRYING_PATH = '/secado';
+import { LOG_PATH } from '@/lib/paths/drying';
 
-// La pantalla de campo de la bitácora. Ruta fija con parámetros: una sola página guardada sirve para
-// registrar y corregir, también sin conexión.
-export const LOG_PATH = `${DRYING_PATH}/bitacora`;
-
-// Registrar la bitácora de un día del lote.
-export const logPath = (lotId: string) =>
-  `${LOG_PATH}?${new URLSearchParams({ lote: lotId })}`;
+export { DRYING_PATH, LOG_PATH, logPath } from '@/lib/paths/drying';
 
 // Corregir en línea una bitácora que ya está en el servidor.
 export const logCorrectionPath = (lotId: string, logId: string) =>

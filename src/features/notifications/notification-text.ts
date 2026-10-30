@@ -1,8 +1,10 @@
 import type { components } from '@/lib/api/schema';
+import { isPostharvestAlertKind } from '@/lib/postharvest/alert-kinds';
 
 import { describeActivityNotice, isActivityKind } from './activity-notice-text';
 import { describeControlPending } from './control-notice-text';
 import type { NotificationView } from './notice-parts';
+import { describePostharvestNotice } from './postharvest-notice-text';
 
 export type { NotificationLook, NotificationView } from './notice-parts';
 
@@ -24,7 +26,10 @@ export function describeNotification(
   notification: Notification,
   context: { userId: string | undefined; today: string },
 ): NotificationView {
-  const { kind, activity } = notification;
+  const { kind, activity, lot } = notification;
+  if (isPostharvestAlertKind(kind)) {
+    return lot ? describePostharvestNotice(notification, kind, lot) : GENERIC;
+  }
   if (!activity) return GENERIC;
   if (isActivityKind(kind)) {
     return describeActivityNotice(notification, kind, activity, context);

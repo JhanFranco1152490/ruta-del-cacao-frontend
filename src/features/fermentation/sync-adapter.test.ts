@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { QueueItem } from '@/lib/offline/db';
-import { buildFermentationTurn } from '@/test/factories';
+import { buildDeviation, buildFermentationTurn } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
@@ -154,5 +154,41 @@ describe('turnSyncAdapter.refreshAfterSync', () => {
     expect(turnSyncAdapter.refreshAfterSync?.(item)).toEqual([
       queryKeys.fermentation.all(),
     ]);
+  });
+});
+
+describe('turnSyncAdapter.syncNotice', () => {
+  const answered = (alerts: unknown) =>
+    turnSyncAdapter.syncNotice!(item, { ...buildFermentationTurn(), alerts });
+
+  it('warns about the deviations of the turn, naming it as the queue does', () => {
+    expect(
+      answered([
+        buildDeviation({
+          kind: 'fermentation_temperature_high',
+          severity: 'normal',
+          value: '53.0',
+          limit: '50.0',
+        }),
+        buildDeviation({
+          kind: 'fermentation_ph_low',
+          severity: 'normal',
+          value: '3.90',
+          limit: '4.00',
+        }),
+      ]),
+    ).toEqual({
+      title:
+        '000123-F02-P05-261014-1 · volteo 1 · 17 oct. 07:30 · Temperatura por encima del rango: 53,0 °C (por encima de 50,0 °C)',
+      description: 'Grano demasiado ácido: pH 3,90 (por debajo de 4,00)',
+      critical: false,
+    });
+  });
+
+  it('says nothing without deviations, or from a server that does not send them', () => {
+    expect(answered([])).toBeNull();
+    expect(
+      turnSyncAdapter.syncNotice!(item, buildFermentationTurn()),
+    ).toBeNull();
   });
 });

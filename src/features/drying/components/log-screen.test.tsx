@@ -9,6 +9,7 @@ import { recordLogin } from '@/lib/offline/session-clock';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   apiError,
+  buildDeviation,
   buildDrying,
   buildDryingLog,
   buildSession,
@@ -365,6 +366,33 @@ describe('LogScreen', () => {
   describe('correcting a log of the server', () => {
     beforeEach(() => {
       server.use(dryingsHandler([withLog]));
+    });
+
+    it('warns about the deviation the corrected log still has, instead of confirming', async () => {
+      server.use(
+        csrfHandler,
+        http.patch(apiUrl('/api/drying/l1/logs/dl1'), () =>
+          HttpResponse.json({
+            ...buildDryingLog({ id: 'dl1', moisture_pct: '5.8' }),
+            alerts: [buildDeviation()],
+          }),
+        ),
+      );
+      renderScreen({ logId: 'dl1' });
+
+      await screen.findByRole('heading', {
+        name: 'Corregir bitácora del día 2',
+      });
+      await userEvent.clear(field('Humedad (%)'));
+      await userEvent.type(field('Humedad (%)'), '5,8');
+      await save();
+
+      await waitFor(() =>
+        expect(router.replace).toHaveBeenCalledWith('/secado'),
+      );
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Bitácora del día 2 corregida · Sobresecado: 5,8 % (por debajo de 6,0 %)',
+      );
     });
 
     it('sends only what changed, with the version it read', async () => {

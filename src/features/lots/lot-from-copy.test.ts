@@ -33,6 +33,7 @@ describe('lotFromCopy', () => {
     expect(lot.drying).toEqual({
       started_at: process.started_at,
       ended_at: null,
+      facility: process.facility.name,
       final_moisture_pct: null,
       dry_weight_kg: null,
       yield_pct: null,

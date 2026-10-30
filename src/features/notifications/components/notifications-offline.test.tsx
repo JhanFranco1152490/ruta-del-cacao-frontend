@@ -6,7 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { PERMISSIONS } from '@/lib/permissions';
-import { buildNotification, buildSession } from '@/test/factories';
+import {
+  buildLotBrief,
+  buildNotification,
+  buildSession,
+} from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
@@ -44,7 +48,12 @@ beforeEach(() => {
 
 afterEach(() => vi.restoreAllMocks());
 
-async function saveCopy() {
+async function saveCopy(
+  results = [
+    buildNotification({ id: 'n1' }),
+    buildNotification({ id: 'n2', read_at: '2026-10-17T12:00:00Z' }),
+  ],
+) {
   const db = getOfflineDb(userId);
   await db.cache.put({
     key: UNREAD_COUNT_CACHE_KEY,
@@ -56,10 +65,7 @@ async function saveCopy() {
     value: {
       count: 2,
       next: null,
-      results: [
-        buildNotification({ id: 'n1' }),
-        buildNotification({ id: 'n2', read_at: '2026-10-17T12:00:00Z' }),
-      ],
+      results,
     },
     fetchedAt: 1,
   });
@@ -123,6 +129,26 @@ describe('the notifications without a connection', () => {
       ).not.toBeInTheDocument(),
     );
     expect(sent).toEqual([]);
+  });
+
+  it('shows the lot notices of the copy, with the action to record what is missing', async () => {
+    await saveCopy([
+      buildNotification({
+        id: 'n3',
+        kind: 'fermentation_turn_due',
+        activity: null,
+        condition_date: null,
+        condition_at: '2026-10-21T13:00:00Z',
+        lot: buildLotBrief(),
+      }),
+    ]);
+    const panel = await openPanel();
+
+    const [row] = await within(panel).findAllByRole('listitem');
+    expect(row).toHaveTextContent('Volteo pendiente');
+    expect(
+      within(row).getByRole('link', { name: 'Registrar volteo' }),
+    ).toHaveAttribute('href', '/fermentacion/volteo?lote=l1');
   });
 
   it('says that nothing was saved in this device', async () => {

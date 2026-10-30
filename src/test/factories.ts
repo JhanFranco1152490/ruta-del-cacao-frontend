@@ -563,8 +563,41 @@ export const buildNotification = (
   created_at: '2026-10-18T06:05:00-05:00',
   read_at: null,
   condition_date: '2026-10-20',
+  condition_at: null,
+  resolved_at: null,
   detection_id: null,
   activity: buildAgriculturalActivity(),
+  lot: null,
+  fermentation_turn: null,
+  drying_log: null,
+  ...overrides,
+});
+
+// El lote como viene en un aviso de poscosecha: en fermentación en C-02 desde el 19 oct. a las 8:00.
+export const buildLotBrief = (
+  overrides: Partial<Schemas['LotBrief']> = {},
+): Schemas['LotBrief'] => ({
+  id: 'l1',
+  code: '000123-F02-P05-261014-1',
+  status: 'fermenting',
+  farm: { id: 'f1', name: 'La Esperanza' },
+  fermentation: {
+    started_at: '2026-10-19T08:00:00-05:00',
+    ended_at: null,
+    facility: 'C-02',
+  },
+  drying: null,
+  ...overrides,
+});
+
+// Un desvío como lo devuelve el registro de un volteo o una bitácora.
+export const buildDeviation = (
+  overrides: Partial<Schemas['Deviation']> = {},
+): Schemas['Deviation'] => ({
+  kind: 'drying_overdried',
+  severity: 'critical',
+  value: '5.8',
+  limit: '6.0',
   ...overrides,
 });
 

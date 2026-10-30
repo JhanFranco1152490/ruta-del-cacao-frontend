@@ -103,6 +103,26 @@ describe('Toaster', () => {
     );
   });
 
+  it('keeps a persistent warning until it is closed, and announces it as an alert', async () => {
+    fire(() =>
+      notify.warning('Bitácora guardada · Sobresecado', { persistent: true }),
+    );
+
+    await advance(10 * 60 * 1000);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Bitácora guardada · Sobresecado',
+    );
+  });
+
+  it('keeps the line breaks of a description', () => {
+    fire(() =>
+      notify.warning('Volteo 3 guardado', { description: 'Uno\nDos' }),
+    );
+
+    expect(screen.getByText(/Uno/)).toHaveClass('whitespace-pre-line');
+  });
+
   it('announces an error as an alert, apart from the notice', () => {
     fire(() => notify.error('No se pudo desactivar'));
 

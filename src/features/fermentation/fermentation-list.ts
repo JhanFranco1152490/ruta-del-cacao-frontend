@@ -7,7 +7,7 @@ import {
 import type { Fermentation } from './api';
 import { turnsText } from './fermentation-time';
 import { hoursBetween } from '@/lib/format/hours';
-import { phText, temperatureText } from './measure-text';
+import { phText, temperatureText } from '@/lib/postharvest/measure-text';
 import {
   BASELINE_TURN_SCHEDULE,
   isTurnOverdue,

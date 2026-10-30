@@ -5,7 +5,13 @@ type Activity = components['schemas']['AgriculturalActivity'];
 
 // Cómo se ve cada tipo: el ícono y el color los pone la fila, el texto siempre va escrito.
 export type NotificationLook =
-  'upcoming' | 'delayed' | 'overdue' | 'control' | 'generic';
+  | 'upcoming'
+  | 'delayed'
+  | 'overdue'
+  | 'control'
+  | 'pending'
+  | 'deviation'
+  | 'generic';
 
 export type NotificationView = {
   look: NotificationLook;
@@ -17,6 +23,10 @@ export type NotificationView = {
   // La condición del aviso ya no se cumple: se ve atenuada y no pide atención.
   stale: boolean;
   href: string | null;
+  // De dónde viene el aviso cuando la bandeja tiene más de un origen («Fermentación», «Secado»).
+  origin?: string;
+  // Lo que resuelve el aviso, aparte del enlace de la fila: «Registrar volteo».
+  action?: { label: string; href: string };
 };
 
 // Al calendario en el mes de la actividad, con su detalle abierto.

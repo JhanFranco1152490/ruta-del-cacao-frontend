@@ -11,7 +11,7 @@ import {
   formatShortDateTime,
 } from '@/lib/format/dates';
 
-import { phText, temperatureText } from '../measure-text';
+import { phText, temperatureText } from '@/lib/postharvest/measure-text';
 import type { CardDetails } from './card-parts';
 
 // Cada hito de la línea: un punto sobre la barra, con su dato al pasar el mouse o enfocarlo, y el
@@ -66,7 +66,7 @@ export function CardTimeline({ details }: { details: CardDetails }) {
         />
         <span
           aria-hidden="true"
-          className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full bg-selva"
+          className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full bg-(--amarillo-mazorca)"
           style={{ width: `${nowPercent}%` }}
         />
         {next.overdue ? (
@@ -90,7 +90,7 @@ export function CardTimeline({ details }: { details: CardDetails }) {
         )}
         <Marker
           at={0}
-          className="size-4 bg-selva"
+          className="size-4 bg-(--amarillo-mazorca)"
           label={`Inicio · ${formatShortDateTime(startedAt)}`}
         />
         {timeline.points.map((point) => (
@@ -100,7 +100,7 @@ export function CardTimeline({ details }: { details: CardDetails }) {
               'size-7 text-xs font-bold',
               point.pending
                 ? 'border-2 border-dashed border-cobre bg-card text-cobre'
-                : 'bg-selva text-white',
+                : 'bg-cobre text-white',
             )}
             key={point.number}
             label={[

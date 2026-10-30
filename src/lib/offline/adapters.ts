@@ -1,4 +1,5 @@
 import type { ApiError } from '@/lib/api/errors';
+import type { Finding } from '@/lib/notify';
 
 import type { QueueItem, QueueOperation } from './db';
 
@@ -43,6 +44,9 @@ export interface SyncAdapter {
   // Opcional: el código que el servidor asignó al registro, si es de los que lo reciben al
   // llegar. Lee `response`, lo que devolvió `send`.
   assignedCode?(item: QueueItem, response: unknown): AssignedCode | null;
+  // Opcional: lo que el servidor encontró en el registro al recibirlo y quien lo capturó tiene que
+  // saber (un desvío en una medición). Lee `response`, lo que devolvió `send`.
+  syncNotice?(item: QueueItem, response: unknown): Finding | null;
 }
 
 // Respuestas que pueden salir bien más adelante sin que nadie corrija nada: la sesión se

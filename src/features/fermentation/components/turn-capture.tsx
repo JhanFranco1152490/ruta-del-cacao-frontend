@@ -13,6 +13,8 @@ import {
   fromBogotaLocal,
 } from '@/lib/format/dates';
 import { farmLabel } from '@/lib/format/place-label';
+import type { Finding } from '@/lib/notify';
+import { deviationNoticeText } from '@/lib/postharvest/deviation-notice-text';
 
 import {
   type Fermentation,
@@ -57,7 +59,7 @@ export function TurnCapture({
   serverTurn?: FermentationTurn;
   sync: ReturnType<typeof useCaptureSyncStatus>;
   returnPath: string;
-  finish: (title: string) => void;
+  finish: (title: string, options?: { finding?: Finding | null }) => void;
   turnsHref: string;
 }) {
   const router = useRouter();
@@ -124,7 +126,12 @@ export function TurnCapture({
           body: { ...changes, expected_version: serverTurn.version },
         },
         {
-          onSuccess: () => finish(`Volteo ${number} corregido`),
+          // Corregir un registro vuelve a evaluar sus desvíos: si sigue con alguno, se avisa en vez
+          // de confirmar.
+          onSuccess: ({ alerts }) => {
+            const title = `Volteo ${number} corregido`;
+            finish(title, { finding: deviationNoticeText(alerts, title) });
+          },
           onError: (error) => setFormError(correctionError(error, setError)),
         },
       );

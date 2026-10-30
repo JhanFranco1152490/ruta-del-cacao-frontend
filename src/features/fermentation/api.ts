@@ -12,6 +12,8 @@ type Schemas = components['schemas'];
 
 export type Fermentation = Schemas['FermentationProcess'];
 export type FermentationTurn = Schemas['FermentationTurn'];
+// El volteo recién registrado o corregido, con los desvíos que cumple.
+export type SavedTurn = Schemas['FermentationTurnSaved'];
 export type ReadyLot = Schemas['Lot'];
 
 export const FERMENTATION_ERROR = {
@@ -101,7 +103,7 @@ export const postTurn = (
   lotId: string,
   body: Schemas['FermentationTurnCreateRequest'],
 ) =>
-  apiFetch<FermentationTurn>(`/api/fermentation/${lotId}/turns`, {
+  apiFetch<SavedTurn>(`/api/fermentation/${lotId}/turns`, {
     method: 'POST',
     body,
   });
@@ -113,7 +115,7 @@ export const patchTurn = (
   turnId: string,
   body: TurnUpdateRequest,
 ) =>
-  apiFetch<FermentationTurn>(`/api/fermentation/${lotId}/turns/${turnId}`, {
+  apiFetch<SavedTurn>(`/api/fermentation/${lotId}/turns/${turnId}`, {
     method: 'PATCH',
     body,
   });

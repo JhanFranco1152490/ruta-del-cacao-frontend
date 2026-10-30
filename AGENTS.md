@@ -177,7 +177,12 @@ src/
   como padre (`lib/offline/queue-ids.ts`: la ficha y la cosecha). Desde fermentación: los campos de
   fecha y hora (`toBogotaLocal`, `fromBogotaLocal`, `formatTime` y `formatShortDateTime` en
   `lib/format/dates.ts`: un `datetime-local` guarda `yyyy-MM-ddTHH:mm` en la hora de Bogotá) y la
-  ficha de un lote sin conexión (`lib/offline/postharvest-copies.ts`, ver Lotes). El dominio dueño
+  ficha de un lote sin conexión (`lib/offline/postharvest-copies.ts`, ver Lotes). Desde las alertas
+  de poscosecha: `lib/postharvest/` (el nombre de cada aviso en `alert-kinds.ts`, el texto de los
+  desvíos al guardar en `deviation-notice-text.ts`, las mediciones con decimales fijos en
+  `measure-text.ts` y el día de secado en `drying-day.ts`) y las rutas de fermentación, secado y
+  lotes en `lib/paths/`, como las de actividades, insumos y productores (cada dominio las reexporta
+  desde su `*-paths.ts`, así que dentro del dominio se siguen importando de ahí). El dominio dueño
   los usa desde ahí.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
@@ -304,19 +309,22 @@ src/
     dice). Finalizar se deshabilita con su motivo (`finishBlockedReason`: sin volteos, con volteos en la
     cola o sin conexión).
   - **La tarjeta de cada lote** cuenta la fermentación como una **línea de tiempo** (`card-timeline.tsx`,
-    con los datos resueltos de `card-details.ts`) en dos colores: verde lo que ya pasó (la barra hasta
-    ahora y los volteos hechos) y cobre lo que falta o se atrasó (el próximo volteo y, si venció, el
-    tramo de atraso). Cada punto dice su fecha y su medición al pasar el mouse o enfocarlo
+    con los datos resueltos de `card-details.ts`): la barra hasta ahora en amarillo mazorca y los
+    hitos en cobre: lleno lo que ya está (los volteos hechos y el próximo si venció, con el tramo de
+    atraso) y punteado lo que falta (el próximo volteo y los que esperan en la cola). La barra y los
+    puntos en verde oscuro pesaban demasiado en la tarjeta; por lo mismo, **Registrar volteo** usa el
+    botón `action`, como **Finalizar**. Cada punto dice su fecha y su medición al pasar el mouse o enfocarlo
     (`components/ui/tooltip.tsx`) y lleva el mismo dato como `aria-label`, porque en el celular no hay
     mouse; el texto de la tarjeta repite lo esencial. **Finalizar** también está en la tarjeta
     (`finish-fermentation-button.tsx`, el mismo botón de la ficha): se hace una vez por lote, pero
     desde donde se trabaja; con Registrar volteo y el ojo que lleva a la ficha quedan en una sola fila,
-    también en celular. Las mediciones se escriben con decimales fijos (`measure-text.ts`: 45,0 °C y
-    pH 4,90), no con los ceros quitados.
+    también en celular. Las mediciones se escriben con decimales fijos (`lib/postharvest/measure-text.ts`:
+    45,0 °C y pH 4,90), no con los ceros quitados.
   - **La pantalla de campo del volteo** es una tarjeta con temperatura y pH lado a lado, también en
     celular, en grande y centrados; el título es solo «Volteo 4» y el código del lote va en la línea de
     debajo, para que quepa en una pantalla de celular sin desplazarse. Bajo cada campo dice la temperatura y el pH de referencia del
-    productor (`reference-hint.ts`); una lectura fuera de ese rango lo dice, sin impedir guardarla.
+    productor (`reference-hint.ts`); una lectura fuera de ese rango lo dice, sin impedir guardarla. El
+    campo es **pH del grano**: se mide en el cotiledón, no en la pulpa.
   - **La sección de la ficha del lote** (`fermentation-section.tsx`) la monta la página de lotes: un lote
     Generado ofrece iniciar; uno en fermentación o más adelante muestra sus datos, sus acciones y la
     tabla de volteos (`turn-rows.ts`, con los de la cola como «Pendiente de enviar»). Sin conexión se
@@ -334,7 +342,7 @@ src/
   `lib/offline/postharvest-copies.ts`, que arma la ficha de un lote sin conexión.
   - **Las reglas que comparten pantalla y servidor son funciones puras con las mismas constantes que
     el backend:** el día de secado (el día 1 es la fecha del inicio en la hora de Bogotá,
-    `drying-days.ts`), las horas disponibles de un día (el día 1 cuenta desde la hora de inicio; hoy,
+    `lib/postharvest/drying-day.ts`, que `drying-days.ts` reexporta), las horas disponibles de un día (el día 1 cuenta desde la hora de inicio; hoy,
     hasta ahora) para el tope de horas al sol y a la sombra, y el rendimiento (peso seco sobre peso
     en verde, con el mismo redondeo, `yield.ts`). Lo de hoy se calcula en el dispositivo
     (`drying-list.ts`), con las bitácoras de la cola incluidas.
@@ -456,13 +464,22 @@ src/
 - **Notificaciones (`features/notifications/`).** La campana de la cabecera y su panel. La
   cabecera la arma `SessionShell` (de `auth`): la página `app/(app)/layout.tsx` le entrega la campana
   como `headerActions`, igual que las vistas de la bandeja (`queueViews`), y va entre la bandeja y la
-  cuenta. Solo la ven las cuentas de un productor que ven actividades (no la cuenta técnica ni la
+  cuenta. Solo la ven las cuentas de un productor que ven actividades o lotes, los dos
+  permisos con que la bandeja del servidor deja ver cada grupo de avisos (no la cuenta técnica ni la
   asociación).
   - **Lo que dice cada aviso** son funciones puras (`notification-text.ts` y sus partes): el
     título cambia si quien lee es el responsable, los días de retraso son los **de hoy** (la copia
     del dispositivo puede ser de ayer), y si la actividad ya no está en la condición del aviso
     (realizada, reprogramada, el control ya programado) lo dice y se ve atenuado. Un tipo que esta
     versión no conoce dice **Aviso** y no lleva enlace, en vez de fallar.
+  - **Los avisos de poscosecha** (`postharvest-notice-text.ts`) son de un lote, no de una actividad:
+    dicen su origen (**Fermentación** o **Secado**) sobre el título, el lote como
+    `código · finca · cajón C-02` y llevan a su ficha. Los **pendientes** (primer volteo, volteo,
+    bitácora) suman un segundo enlace, **Registrar volteo** o **Registrar bitácora**, debajo de la
+    fila y dentro del mismo marco (un enlace dentro de otro no es válido); se atenúan y pierden la
+    acción cuando el servidor los da por resueltos (`resolved_at`) o el lote salió de la etapa. Los
+    **desvíos** muestran la medición como está ahora (el volteo o la bitácora corregidos) y nunca se
+    atenúan: ya pasaron.
   - **La bandeja** pide la lista solo con el panel abierto, de a 20 (`useInfiniteQuery`), y el número
     cada 2 minutos. Las dos tienen copia en el dispositivo (solo la primera página). Sin conexión
     se ven las guardadas, abrir una no la marca como leída, y marcar y eliminar quedan deshabilitados
@@ -595,6 +612,13 @@ src/
   confirmación **antes**, y avisan al terminar. Cada diálogo avisa en la rama que corresponde (un 404
   al borrar algo que ya no existe no es un éxito). Con la cola, `useNotifyAfterSync` da un solo aviso
   («Se enviaron N registros») cuando termina de enviar lo que esperó sin conexión.
+- **Lo que el servidor encontró en lo guardado es una advertencia, no un éxito** (`Finding` y
+  `notifyFinding` en `lib/notify.ts`): un volteo o una bitácora con desvíos. Si es crítica (el
+  sobresecado), va con `persistent`: no se cierra sola y se anuncia con urgencia, como un error.
+  Al llegar desde la cola la da `useNotifyDeviations` (montado en `SessionShell`), que escucha el
+  `syncNotice` opcional de cada adapter; al corregir en línea, `finish(título, { finding })` de
+  `useFinishSave` la muestra en lugar de la confirmación. El texto (`deviationNoticeText`) pone el
+  desvío crítico primero y el resto uno por línea en la descripción.
 - **Un editor de página completa vuelve a donde se abrió.** El enlace que lo abre lleva
   `?origen=<ruta con sus filtros>` (`EditorLink` lo agrega solo; `withOrigin` si hace falta a mano);
   al guardar o cancelar, `useFinishSave(destinoDeSiempre)` (o `useReturnPath` para solo el destino)

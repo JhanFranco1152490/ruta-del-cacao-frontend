@@ -12,6 +12,8 @@ type Schemas = components['schemas'];
 
 export type Drying = Schemas['DryingProcess'];
 export type DryingLog = Schemas['DryingLog'];
+// La bitácora recién registrada o corregida, con los desvíos que cumple.
+export type SavedLog = Schemas['DryingLogSaved'];
 export type DryingResult = Schemas['DryingResult'];
 export type StartOptions = Schemas['DryingStartOptions'];
 export type Weather = Schemas['DryingWeatherEnum'];
@@ -100,7 +102,7 @@ export const useDrying = (
 export const postLog = (
   lotId: string,
   body: Schemas['DryingLogCreateRequest'],
-) => apiFetch<DryingLog>(`/api/drying/${lotId}/logs`, { method: 'POST', body });
+) => apiFetch<SavedLog>(`/api/drying/${lotId}/logs`, { method: 'POST', body });
 
 type LogUpdateRequest = Schemas['PatchedDryingLogUpdateRequest'];
 
@@ -109,7 +111,7 @@ export const patchLog = (
   logId: string,
   body: LogUpdateRequest,
 ) =>
-  apiFetch<DryingLog>(`/api/drying/${lotId}/logs/${logId}`, {
+  apiFetch<SavedLog>(`/api/drying/${lotId}/logs/${logId}`, {
     method: 'PATCH',
     body,
   });

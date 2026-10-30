@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { type ReactNode, useMemo } from 'react';
 import { type UseFormSetError, useForm, useWatch } from 'react-hook-form';
 
-import { CAPTURE_FIELD_CLASS } from '@/components/capture-field-class';
+import {
+  CAPTURE_BUTTON_CLASS,
+  CAPTURE_FIELD_CLASS,
+} from '@/components/capture-field-class';
 import { FormMessage } from '@/components/form-message';
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { PageHeader } from '@/components/page-header';
@@ -147,18 +150,18 @@ export function TurnFormFields({
         <MobileActionBar>
           <Button
             aria-describedby={disabledMessage ? 'turn-save-blocked' : undefined}
-            className="w-full sm:w-auto"
+            className={CAPTURE_BUTTON_CLASS}
             disabled={isSaving || !!disabledMessage}
-            size="field"
+            size="office"
             type="submit"
           >
             {isSaving ? 'Guardando…' : submitLabel}
           </Button>
           <Link
             className={buttonVariants({
-              size: 'field',
+              size: 'office',
               variant: 'outline',
-              className: 'w-full sm:w-auto',
+              className: CAPTURE_BUTTON_CLASS,
             })}
             href={cancelHref}
           >

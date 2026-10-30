@@ -7,7 +7,7 @@ import { farmLabel } from '@/lib/format/place-label';
 
 import type { Fermentation } from '../api';
 import type { cardDetails } from '../card-details';
-import { phText, temperatureText } from '../measure-text';
+import { phText, temperatureText } from '@/lib/postharvest/measure-text';
 
 export type CardDetails = ReturnType<typeof cardDetails>;
 
