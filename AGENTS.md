@@ -464,7 +464,8 @@ src/
 - **Notificaciones (`features/notifications/`).** La campana de la cabecera y su panel. La
   cabecera la arma `SessionShell` (de `auth`): la página `app/(app)/layout.tsx` le entrega la campana
   como `headerActions`, igual que las vistas de la bandeja (`queueViews`), y va entre la bandeja y la
-  cuenta. Solo la ven las cuentas de un productor que ven actividades (no la cuenta técnica ni la
+  cuenta. Solo la ven las cuentas de un productor que ven actividades o lotes, los dos
+  permisos con que la bandeja del servidor deja ver cada grupo de avisos (no la cuenta técnica ni la
   asociación).
   - **Lo que dice cada aviso** son funciones puras (`notification-text.ts` y sus partes): el
     título cambia si quien lee es el responsable, los días de retraso son los **de hoy** (la copia
