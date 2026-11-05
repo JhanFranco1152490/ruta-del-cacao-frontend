@@ -51,3 +51,25 @@ export function SummaryItem({
     </div>
   );
 }
+
+// Una cifra de la franja, con una línea pequeña debajo si hace falta («187,5 kg»).
+export function SummaryValue({
+  title,
+  value,
+  detail,
+}: {
+  title: string;
+  value: string;
+  detail?: string;
+}) {
+  return (
+    <SummaryItem title={title}>
+      <p className="text-xl font-bold text-selva tabular-nums sm:text-2xl">
+        {value}
+      </p>
+      {detail && (
+        <p className="text-xs text-muted-foreground tabular-nums">{detail}</p>
+      )}
+    </SummaryItem>
+  );
+}
