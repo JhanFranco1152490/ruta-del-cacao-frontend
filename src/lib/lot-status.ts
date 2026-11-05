@@ -31,9 +31,12 @@ export const LOT_STATUSES: Record<LotStatus, LotStatusInfo> = {
   discarded: { label: 'Descartado', tone: 'err', Icon: Ban },
 };
 
+// Todos los estados, también Descartado: los que acepta un filtro.
+export const LOT_STATUS_VALUES = Object.keys(LOT_STATUSES) as LotStatus[];
+
 // La cadena principal, sin Descartado: es la salida de la bifurcación, no un paso más.
-export const LOT_STATUS_ORDER: LotStatus[] = (
-  Object.keys(LOT_STATUSES) as LotStatus[]
-).filter((status) => status !== 'discarded');
+export const LOT_STATUS_ORDER = LOT_STATUS_VALUES.filter(
+  (status) => status !== 'discarded',
+);
 
 export const lotStatusLabel = (status: LotStatus) => LOT_STATUSES[status].label;

@@ -33,6 +33,26 @@ describe('lotStages', () => {
   });
 });
 
+describe('lotStages of a discarded lot', () => {
+  it('ends in Descartado after the evaluation', () => {
+    expect(
+      lotStages('discarded').map(({ status, state }) => [status, state]),
+    ).toEqual([
+      ['generated', 'done'],
+      ['fermenting', 'done'],
+      ['fermented', 'done'],
+      ['drying', 'done'],
+      ['dried', 'done'],
+      ['evaluated', 'done'],
+      ['discarded', 'current'],
+    ]);
+  });
+
+  it('counts Descartado as the last stage', () => {
+    expect(stagePosition('discarded')).toEqual({ position: 7, total: 7 });
+  });
+});
+
 describe('stagePosition', () => {
   it('counts the stage from one', () => {
     expect(stagePosition('generated')).toEqual({ position: 1, total: 7 });
