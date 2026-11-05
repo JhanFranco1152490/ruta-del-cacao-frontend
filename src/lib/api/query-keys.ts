@@ -1,3 +1,12 @@
+// Los filtros de la pantalla Calidad que cambian lo que se pide. La cuenta técnica elige el
+// productor; las demás cuentas pasan `null`.
+export type QualityFilters = {
+  producer: string | null;
+  farm: string | null;
+  search: string;
+  page: number;
+};
+
 export const queryKeys = {
   accounts: {
     all: () => ['accounts'] as const,
@@ -150,6 +159,19 @@ export const queryKeys = {
     // Una bitácora que sigue en la cola del dispositivo de esta persona.
     queued: (userId: string, logId: string) =>
       ['drying', 'queued', userId, logId] as const,
+  },
+  quality: {
+    // Lo que invalida evaluar, corregir, clasificar o descartar un lote.
+    all: () => ['quality'] as const,
+    // Una página de una pestaña de Calidad, con sus filtros. La primera de cada pestaña tiene copia
+    // en el dispositivo.
+    list: (view: string, filters: QualityFilters) =>
+      ['quality', 'list', view, filters] as const,
+    // Las cifras de la franja, con los mismos filtros menos la pestaña y la página.
+    summary: (filters: Omit<QualityFilters, 'page'>) =>
+      ['quality', 'summary', filters] as const,
+    // La calidad de un lote seco o posterior, con quién evaluó o clasificó: solo con conexión.
+    detail: (lotId: string) => ['quality', 'detail', lotId] as const,
   },
   facilities: {
     // Lo que invalida registrar, editar, activar, desactivar o eliminar un cajón o una marquesina.

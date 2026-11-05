@@ -116,7 +116,7 @@ describe('LotDetailScreen', () => {
     expect(
       within(stages).getByRole('listitem', { current: 'step' }),
     ).toHaveTextContent('En fermentación');
-    expect(within(stages).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(stages).getAllByRole('listitem')).toHaveLength(7);
   });
 
   it('ends who formed the lot with a single full stop', async () => {

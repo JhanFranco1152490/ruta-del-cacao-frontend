@@ -383,9 +383,79 @@ export const buildLot = (
     updated_at: '2026-10-14T16:00:00Z',
     fermentation: null,
     drying: null,
+    quality: null,
     ...overrides,
   };
 };
+
+// Un lote Seco de La Esperanza esperando su evaluación: 62,5 kg secos al 7,0 %.
+export const buildLotQuality = (
+  overrides: Partial<Schemas['LotQuality']> = {},
+): Schemas['LotQuality'] => ({
+  lot: {
+    id: 'l1',
+    code: '000123-F02-P05-261014-1',
+    status: 'dried',
+    version: 4,
+  },
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+  dry_weight_kg: '62.5',
+  final_moisture_pct: '7.0',
+  drying_ended_at: '2026-10-29T16:00:00-05:00',
+  evaluation: null,
+  classification: null,
+  discard: null,
+  ...overrides,
+});
+
+export const buildQualityEvaluation = (
+  overrides: Partial<Schemas['QualityEvaluation']> = {},
+): Schemas['QualityEvaluation'] => ({
+  well_fermented_pct: '85.0',
+  moldy_pct: '2.0',
+  other_defects_pct: '5.0',
+  notes: '',
+  evaluated_at: '2026-10-30T09:00:00-05:00',
+  evaluated_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  corrected_at: null,
+  corrected_by: null,
+  version: 1,
+  ...overrides,
+});
+
+// Los 62,5 kg secos repartidos sin descarte.
+export const buildQualityClassification = (
+  overrides: Partial<Schemas['QualityClassification']> = {},
+): Schemas['QualityClassification'] => ({
+  g1_kg: '50.0',
+  g2_kg: '12.5',
+  discard_kg: '0.0',
+  discard_reason: '',
+  discard_detail: '',
+  classified_at: '2026-10-30T10:00:00-05:00',
+  classified_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  ...overrides,
+});
+
+export const buildQualityDiscard = (
+  overrides: Partial<Schemas['QualityDiscard']> = {},
+): Schemas['QualityDiscard'] => ({
+  reason: 'mold',
+  detail: '',
+  discarded_at: '2026-10-30T10:00:00-05:00',
+  discarded_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  ...overrides,
+});
+
+export const buildQualitySummary = (
+  overrides: Partial<Schemas['QualitySummary']> = {},
+): Schemas['QualitySummary'] => ({
+  to_evaluate: 1,
+  to_evaluate_kg: '62.5',
+  evaluated: 0,
+  discarded_this_month: 0,
+  ...overrides,
+});
 
 export const buildFermentationTurn = (
   overrides: Partial<Schemas['FermentationTurn']> = {},
@@ -587,6 +657,7 @@ export const buildLotBrief = (
     facility: 'C-02',
   },
   drying: null,
+  quality: null,
   ...overrides,
 });
 

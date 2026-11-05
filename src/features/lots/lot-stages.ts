@@ -20,7 +20,7 @@ export function lotStages(current: LotStatus): LotStage[] {
   }));
 }
 
-// «Etapa 2 de 5»: para el celular, donde las cinco etiquetas no caben.
+// «Etapa 2 de 7»: para el celular, donde las siete etiquetas no caben.
 export const stagePosition = (current: LotStatus) => ({
   position: LOT_STATUS_ORDER.indexOf(current) + 1,
   total: LOT_STATUS_ORDER.length,

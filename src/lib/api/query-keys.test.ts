@@ -214,6 +214,29 @@ describe('drying query keys', () => {
   });
 });
 
+describe('quality query keys', () => {
+  const filters = { producer: null, farm: null, search: '', page: 1 };
+
+  it('hangs every read from the key that writes invalidate', () => {
+    const { all, list, summary, detail } = queryKeys.quality;
+    expect(startsWith(list('to_evaluate', filters), all())).toBe(true);
+    expect(startsWith(summary(filters), all())).toBe(true);
+    expect(startsWith(detail('l1'), all())).toBe(true);
+  });
+
+  it('keeps each tab, each filter and each lot apart', () => {
+    const { list, summary, detail } = queryKeys.quality;
+    expect(list('to_evaluate', filters)).not.toEqual(
+      list('evaluated', filters),
+    );
+    expect(list('to_evaluate', filters)).not.toEqual(
+      list('to_evaluate', { ...filters, page: 2 }),
+    );
+    expect(summary(filters)).not.toEqual(summary({ ...filters, farm: 'f-1' }));
+    expect(detail('l1')).not.toEqual(detail('l2'));
+  });
+});
+
 describe('post-harvest facility query keys', () => {
   it('hangs the list from the key that writes invalidate', () => {
     const all = queryKeys.facilities.all();

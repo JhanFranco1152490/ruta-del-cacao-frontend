@@ -7,6 +7,7 @@ import {
   buildMunicipalities,
   buildPage,
   buildProfile,
+  buildQualitySummary,
 } from './factories';
 
 export const apiUrl = (path: string) => `${API_URL}${path}`;
@@ -191,6 +192,46 @@ export const dryingsHandler = (
     requests.push(new URL(request.url).searchParams);
     return HttpResponse.json({ results });
   });
+
+// Responde una página de lotes de calidad y guarda las búsquedas recibidas (la pestaña va en `view`).
+export const qualityListHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/quality'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(buildPage(results));
+  });
+
+export const qualitySummaryHandler = (
+  summary: JsonBodyType = buildQualitySummary(),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/quality/summary'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(summary);
+  });
+
+export const qualityDetailHandler = (detail: JsonBodyType) =>
+  http.get(apiUrl('/api/quality/:id'), () => HttpResponse.json(detail));
+
+// Registrar o corregir la evaluación, clasificar y descartar: responde `response` (un
+// HttpResponse para los errores) o el lote con 201/200, y guarda los cuerpos recibidos.
+export const qualityWriteHandler = (
+  action: 'evaluation' | 'evaluation-correction' | 'classification' | 'discard',
+  response: JsonBodyType | Response,
+  bodies: unknown[] = [],
+) => {
+  const method = action === 'evaluation-correction' ? http.patch : http.post;
+  const segment = action === 'evaluation-correction' ? 'evaluation' : action;
+  return method(apiUrl(`/api/quality/:id/${segment}`), async ({ request }) => {
+    bodies.push(await request.json());
+    if (response instanceof Response) return response;
+    return HttpResponse.json(response, {
+      status: method === http.post ? 201 : 200,
+    });
+  });
+};
 
 // Responde los cajones y marquesinas de un productor, sin paginar, y guarda las búsquedas
 // recibidas.
