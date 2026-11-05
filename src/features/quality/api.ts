@@ -157,3 +157,16 @@ export function useCorrectEvaluation(lotId: string) {
     onSuccess: () => invalidate(),
   });
 }
+
+export function useClassifyLot(lotId: string) {
+  const invalidate = useInvalidateAfterQualityChange();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (body: ClassificationInput) =>
+      apiFetch<LotQuality>(
+        `/api/quality/${encodeURIComponent(lotId)}/classification`,
+        { method: 'POST', body },
+      ),
+    onSuccess: () => invalidate(),
+  });
+}

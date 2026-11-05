@@ -1,4 +1,21 @@
+import { z } from 'zod';
+
 import type { DiscardReason } from './api';
+
+const DISCARD_REASONS = [
+  'mold',
+  'under_fermented',
+  'over_fermented',
+  'insect_damage',
+  'contamination',
+  'other',
+] as const satisfies readonly DiscardReason[];
+
+// El motivo elegido en un select, o vacío mientras no se elige.
+export const discardReasonField = z.union([
+  z.literal(''),
+  z.enum(DISCARD_REASONS),
+]);
 
 export const DISCARD_REASON_LABELS: Record<DiscardReason, string> = {
   mold: 'Moho',

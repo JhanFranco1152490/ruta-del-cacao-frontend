@@ -7,6 +7,7 @@ import { notify } from '@/lib/notify';
 import type { QualityAction } from '@/lib/paths/quality';
 
 import type { LotQuality } from '../api';
+import { ClassificationDialog } from './classification-dialog';
 import { EvaluationDialog, NO_CHANGES } from './evaluation-dialog';
 
 export type OpenQualityAction = { lot: LotQuality; action: QualityAction };
@@ -38,6 +39,15 @@ export function QualityActionDialog({
       return (
         <EvaluationDialog
           correcting={open.action === 'corregir'}
+          lot={open.lot}
+          onClose={onClose}
+          onSaved={saved}
+          onStatusChanged={statusChanged}
+        />
+      );
+    case 'clasificar':
+      return (
+        <ClassificationDialog
           lot={open.lot}
           onClose={onClose}
           onSaved={saved}

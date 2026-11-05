@@ -1,13 +1,17 @@
 import { z } from 'zod';
 
 import type { DiscardInput, DiscardReason } from './api';
-import { DETAIL_MAX_LENGTH, discardReasonIssue } from './discard-reasons';
+import {
+  DETAIL_MAX_LENGTH,
+  discardReasonField,
+  discardReasonIssue,
+} from './discard-reasons';
 
 export type DiscardFormInput = { reason: DiscardReason | ''; detail: string };
 
 export const discardFormSchema = z
   .object({
-    reason: z.string(),
+    reason: discardReasonField,
     detail: z
       .string()
       .trim()

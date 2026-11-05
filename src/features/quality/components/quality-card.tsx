@@ -10,23 +10,10 @@ import {
   dryLine,
   evaluatedByLine,
   evaluationFacts,
-  type Fact,
 } from '../quality-card-facts';
 import type { QualityActionOffer } from '../quality-actions';
 import { QualityCardActions } from './quality-card-actions';
-
-function Facts({ label, facts }: { label: string; facts: readonly Fact[] }) {
-  return (
-    <dl aria-label={label} className="grid grid-cols-3 gap-2">
-      {facts.map((fact) => (
-        <div className="flex flex-col justify-between" key={fact.label}>
-          <dt className="text-xs text-muted-foreground">{fact.label}</dt>
-          <dd className="font-bold text-selva tabular-nums">{fact.value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
+import { QualityFacts } from './quality-facts';
 
 // Un lote en Calidad. Lo que muestra depende de dónde va: seco por evaluar (peso, humedad y fin del
 // secado), evaluado (los tres porcentajes y quién evaluó) o cerrado (la clasificación o el motivo
@@ -59,10 +46,10 @@ export function QualityCard({
       )}
       {status === 'dried' && <p className="text-sm">{dryLine(lot)}</p>}
       {status === 'evaluated' && (
-        <Facts facts={evaluationFacts(lot)} label="Evaluación" />
+        <QualityFacts facts={evaluationFacts(lot)} label="Evaluación" />
       )}
       {lot.classification && (
-        <Facts
+        <QualityFacts
           facts={classificationFacts(lot.classification)}
           label="Clasificación"
         />

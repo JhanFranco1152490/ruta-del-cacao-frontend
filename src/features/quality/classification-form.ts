@@ -10,7 +10,11 @@ import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 import { ONE_DECIMAL_MESSAGE } from '@/lib/validation/percent';
 
 import type { ClassificationInput, DiscardReason } from './api';
-import { DETAIL_MAX_LENGTH, discardReasonIssue } from './discard-reasons';
+import {
+  DETAIL_MAX_LENGTH,
+  discardReasonField,
+  discardReasonIssue,
+} from './discard-reasons';
 import { fromTenths, sumTenths, toTenths } from './tenths';
 
 export const NEGATIVE_KILOS_MESSAGE = 'No puede ser negativo.';
@@ -42,7 +46,7 @@ export const classificationFormSchema = z
     g1_kg: kilosField,
     g2_kg: kilosField,
     discard_kg: kilosField,
-    discard_reason: z.string(),
+    discard_reason: discardReasonField,
     discard_detail: z
       .string()
       .trim()
