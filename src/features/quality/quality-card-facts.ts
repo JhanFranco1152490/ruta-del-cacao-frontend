@@ -11,6 +11,10 @@ const percent = (value: string) => `${formatFixedDecimal(value, 1)} %`;
 export const dryLine = (lot: LotQuality) =>
   `${kilos(lot.dry_weight_kg)} secos · ${percent(lot.final_moisture_pct)} de humedad · secado el ${formatShortDayMonth(lot.drying_ended_at)}`;
 
+// «62,5 kg secos · humedad final 7,0 %»: la referencia en los formularios de calidad.
+export const lotBrief = (lot: LotQuality) =>
+  `${kilos(lot.dry_weight_kg)} secos · humedad final ${percent(lot.final_moisture_pct)}`;
+
 export type Fact = { label: string; value: string };
 
 // Los tres porcentajes de la evaluación, cada uno con su nombre.

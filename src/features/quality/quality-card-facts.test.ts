@@ -11,6 +11,7 @@ import {
   classificationFacts,
   discardLine,
   dryLine,
+  lotBrief,
   evaluatedByLine,
   evaluationFacts,
 } from './quality-card-facts';
@@ -19,6 +20,12 @@ describe('quality card facts', () => {
   it('reads the dry lot with fixed decimals', () => {
     expect(dryLine(buildLotQuality({ dry_weight_kg: '62' }))).toBe(
       '62,0 kg secos · 7,0 % de humedad · secado el 29 oct',
+    );
+  });
+
+  it('sums up the lot for the forms', () => {
+    expect(lotBrief(buildLotQuality())).toBe(
+      '62,5 kg secos · humedad final 7,0 %',
     );
   });
 

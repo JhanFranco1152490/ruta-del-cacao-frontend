@@ -1,4 +1,9 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { apiPath } from '@/lib/api/path';
@@ -118,3 +123,37 @@ export const useQualityLot = (lotId: string, enabled: boolean) =>
       }),
     enabled: enabled && !!lotId,
   });
+
+// Evaluar, corregir, clasificar o descartar cambian el estado del lote: se vuelven a leer Calidad y
+// Lotes.
+function useInvalidateAfterQualityChange() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.quality.all() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.lots.all() }),
+    ]);
+}
+
+const evaluationPath = (lotId: string) =>
+  `/api/quality/${encodeURIComponent(lotId)}/evaluation`;
+
+export function useRecordEvaluation(lotId: string) {
+  const invalidate = useInvalidateAfterQualityChange();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (body: EvaluationInput) =>
+      apiFetch<LotQuality>(evaluationPath(lotId), { method: 'POST', body }),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useCorrectEvaluation(lotId: string) {
+  const invalidate = useInvalidateAfterQualityChange();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (body: EvaluationCorrection) =>
+      apiFetch<LotQuality>(evaluationPath(lotId), { method: 'PATCH', body }),
+    onSuccess: () => invalidate(),
+  });
+}

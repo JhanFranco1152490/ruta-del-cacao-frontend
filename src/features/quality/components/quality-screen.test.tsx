@@ -85,13 +85,11 @@ function renderScreen({
   superuser = false,
   permissions = ALL,
   onUrlUpdate,
-  onAction,
 }: {
   searchParams?: string;
   superuser?: boolean;
   permissions?: string[];
   onUrlUpdate?: OnUrlUpdateFunction;
-  onAction?: Parameters<typeof QualityScreen>[0]['onAction'];
 } = {}) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -99,10 +97,7 @@ function renderScreen({
     buildSession({ id: userId, is_superuser: superuser, permissions }),
   );
   return renderWithProviders(
-    <QualityScreen
-      lotHref={(id) => `/lotes/detalle?id=${id}`}
-      onAction={onAction}
-    />,
+    <QualityScreen lotHref={(id) => `/lotes/detalle?id=${id}`} />,
     { queryClient, searchParams, onUrlUpdate },
   );
 }
@@ -128,8 +123,7 @@ describe('QualityScreen', () => {
   });
 
   it('lists the dry lots to evaluate with their weight, humidity and the end of the drying', async () => {
-    const onAction = vi.fn();
-    renderScreen({ onAction });
+    renderScreen();
 
     const [card] = await cards('Lotes por evaluar');
     expect(requests[0].get('view')).toBe('to_evaluate');
@@ -148,10 +142,11 @@ describe('QualityScreen', () => {
         name: 'Evaluar el lote 000123-F02-P05-26101-1',
       }),
     );
-    expect(onAction).toHaveBeenCalledWith(
-      expect.objectContaining({ lot: expect.objectContaining({ id: 'l1' }) }),
-      'evaluar',
-    );
+    expect(
+      await screen.findByRole('dialog', {
+        name: 'Evaluar · 000123-F02-P05-26101-1',
+      }),
+    ).toHaveTextContent('62,5 kg secos · humedad final 7,0 %');
   });
 
   it('shows the evaluation and offers to classify first, the rest in the menu', async () => {

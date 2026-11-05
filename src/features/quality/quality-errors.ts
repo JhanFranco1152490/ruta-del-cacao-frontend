@@ -39,7 +39,10 @@ export const STALE_MESSAGE =
   'Otra persona corrigió esta evaluación. Se cargaron sus valores actuales; revísalos antes de guardar.';
 
 // «El lote ya está evaluado.»; al corregir, «El lote ya fue clasificado y no se puede corregir.».
-function statusMessage(action: QualityAction, currentStatus: unknown) {
+export function statusChangedMessage(
+  action: QualityAction,
+  currentStatus: unknown,
+) {
   if (!isLotStatus(currentStatus)) return 'El lote cambió de estado.';
   const label = lotStatusLabel(currentStatus).toLowerCase();
   if (
@@ -71,7 +74,7 @@ export function qualityFailureOf(
     case QUALITY_ERROR.lotInvalidStatus:
       return {
         kind: 'status',
-        message: statusMessage(action, error.body.current_status),
+        message: statusChangedMessage(action, error.body.current_status),
       };
     case QUALITY_ERROR.staleVersion:
       return {

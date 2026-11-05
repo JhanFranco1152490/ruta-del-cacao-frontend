@@ -1,14 +1,19 @@
 'use client';
 
+import { useState } from 'react';
+
 import { OfflineCopyNotice } from '@/components/offline-copy-notice';
 import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
-import type { QualityAction } from '@/lib/paths/quality';
 
-import type { LotQuality } from '../api';
 import { OFFLINE_QUALITY_REASON } from '../quality-actions';
+import { useActionFromLink } from '../use-action-from-link';
 import { useQualityScreen } from '../use-quality-screen';
+import {
+  type OpenQualityAction,
+  QualityActionDialog,
+} from './quality-action-dialog';
 import { QualityBody } from './quality-body';
 import { QualityFiltersBar } from './quality-filters-bar';
 import { QualitySummary } from './quality-summary';
@@ -17,13 +22,23 @@ import { QualitySummary } from './quality-summary';
 // La ficha del lote es de otro dominio: su ruta la entrega quien monta la pantalla.
 export function QualityScreen({
   lotHref,
-  onAction = () => {},
 }: {
   lotHref: (id: string) => string;
-  onAction?: (lot: LotQuality, action: QualityAction) => void;
 }) {
   const screen = useQualityScreen();
   const { filters, list } = screen;
+  const [open, setOpen] = useState<OpenQualityAction>();
+  const openAction = (
+    lot: OpenQualityAction['lot'],
+    action: OpenQualityAction['action'],
+  ) => setOpen({ lot, action });
+  useActionFromLink({
+    pending: filters.pendingAction,
+    online: !screen.offline,
+    can: screen.can,
+    onOpen: openAction,
+    onDone: filters.clearAction,
+  });
 
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>
@@ -55,7 +70,10 @@ export function QualityScreen({
           savedAt={list.data.savedAt}
         />
       )}
-      <QualityBody lotHref={lotHref} onAction={onAction} screen={screen} />
+      <QualityBody lotHref={lotHref} onAction={openAction} screen={screen} />
+      {open && (
+        <QualityActionDialog onClose={() => setOpen(undefined)} open={open} />
+      )}
     </div>
   );
 }
