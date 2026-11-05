@@ -39,4 +39,8 @@ export const LOT_STATUS_ORDER = LOT_STATUS_VALUES.filter(
   (status) => status !== 'discarded',
 );
 
+// Un estado que llega como dato suelto (el `current_status` de un 409) antes de usarlo como estado.
+export const isLotStatus = (value: unknown): value is LotStatus =>
+  typeof value === 'string' && Object.hasOwn(LOT_STATUSES, value);
+
 export const lotStatusLabel = (status: LotStatus) => LOT_STATUSES[status].label;
