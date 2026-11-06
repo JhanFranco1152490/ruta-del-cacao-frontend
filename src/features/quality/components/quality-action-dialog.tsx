@@ -8,6 +8,7 @@ import type { QualityAction } from '@/lib/paths/quality';
 
 import type { LotQuality } from '../api';
 import { ClassificationDialog } from './classification-dialog';
+import { DiscardDialog } from './discard-dialog';
 import { EvaluationDialog, NO_CHANGES } from './evaluation-dialog';
 
 export type OpenQualityAction = { lot: LotQuality; action: QualityAction };
@@ -54,7 +55,14 @@ export function QualityActionDialog({
           onStatusChanged={statusChanged}
         />
       );
-    default:
-      return null;
+    case 'descartar':
+      return (
+        <DiscardDialog
+          lot={open.lot}
+          onClose={onClose}
+          onSaved={saved}
+          onStatusChanged={statusChanged}
+        />
+      );
   }
 }

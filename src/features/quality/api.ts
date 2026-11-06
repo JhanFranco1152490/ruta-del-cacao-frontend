@@ -170,3 +170,16 @@ export function useClassifyLot(lotId: string) {
     onSuccess: () => invalidate(),
   });
 }
+
+export function useDiscardLot(lotId: string) {
+  const invalidate = useInvalidateAfterQualityChange();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (body: DiscardInput) =>
+      apiFetch<LotQuality>(
+        `/api/quality/${encodeURIComponent(lotId)}/discard`,
+        { method: 'POST', body },
+      ),
+    onSuccess: () => invalidate(),
+  });
+}

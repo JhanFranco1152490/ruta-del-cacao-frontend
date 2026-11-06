@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  discardConfirmMessage,
+  DISCARD_CONFIRM_DESCRIPTION,
+  discardConfirmTitle,
   discardFormSchema,
   toDiscardRequest,
 } from './discard-form';
@@ -56,8 +57,11 @@ describe('discard texts', () => {
   });
 
   it('asks to confirm with the code of the lot', () => {
-    expect(discardConfirmMessage('000123-F02-P05-261014-1')).toBe(
-      '¿Descartar el lote 000123-F02-P05-261014-1? Esta acción no se puede deshacer. El lote no podrá clasificarse, ingresar a bodega ni venderse.',
+    expect(discardConfirmTitle('000123-F02-P05-261014-1')).toBe(
+      '¿Descartar el lote 000123-F02-P05-261014-1?',
+    );
+    expect(DISCARD_CONFIRM_DESCRIPTION).toBe(
+      'Esta acción no se puede deshacer. El lote no podrá clasificarse, ingresar a bodega ni venderse.',
     );
   });
 

@@ -42,5 +42,8 @@ export const toDiscardRequest = (
   detail: values.detail,
 });
 
-export const discardConfirmMessage = (code: string) =>
-  `¿Descartar el lote ${code}? Esta acción no se puede deshacer. El lote no podrá clasificarse, ingresar a bodega ni venderse.`;
+export const discardConfirmTitle = (code: string) =>
+  `¿Descartar el lote ${code}?`;
+
+export const DISCARD_CONFIRM_DESCRIPTION =
+  'Esta acción no se puede deshacer. El lote no podrá clasificarse, ingresar a bodega ni venderse.';
