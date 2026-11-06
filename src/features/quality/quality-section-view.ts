@@ -1,8 +1,9 @@
 import { formatShortDayMonth } from '@/lib/format/dates';
+import { discardReasonText } from '@/lib/discard-reasons';
 import { formatFixedDecimal } from '@/lib/format/decimal';
 
 import type { LotQuality, LotQualityDetail } from './api';
-import { discardReasonText } from './discard-reasons';
+
 import { evaluatedByLine, type Fact } from './quality-card-facts';
 import { fromTenths, sumTenths, toTenths } from './tenths';
 

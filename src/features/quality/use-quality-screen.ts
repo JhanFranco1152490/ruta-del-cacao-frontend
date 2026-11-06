@@ -6,10 +6,9 @@ import { useFarmOptions } from '@/lib/api/farm-options';
 import { useProducerSummary } from '@/lib/api/producer-options';
 import { resolveFarmFilter } from '@/lib/farm-filter';
 import { farmLabel } from '@/lib/format/place-label';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useQualityLots, useQualitySummary } from './api';
-import type { QualityPermissions } from './quality-actions';
+import { qualityPermissionsOf } from './quality-actions';
 import { useQualityFilters } from './use-quality-filters';
 
 export type QualityScreenState = ReturnType<typeof useQualityScreen>;
@@ -38,11 +37,7 @@ export function useQualityScreen() {
     label: farmLabel(farm),
     name: farm.name,
   }));
-  const can: QualityPermissions = {
-    evaluate: hasPermission(user, PERMISSIONS.QUALITY_EVALUATE),
-    classify: hasPermission(user, PERMISSIONS.QUALITY_CLASSIFY),
-    discard: hasPermission(user, PERMISSIONS.QUALITY_DISCARD),
-  };
+  const can = qualityPermissionsOf(user);
 
   return {
     filters,

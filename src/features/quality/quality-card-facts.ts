@@ -1,8 +1,8 @@
 import { formatShortDayMonth } from '@/lib/format/dates';
+import { discardReasonText } from '@/lib/discard-reasons';
 import { formatFixedDecimal } from '@/lib/format/decimal';
 
 import type { LotQuality, QualityClassification } from './api';
-import { discardReasonText } from './discard-reasons';
 
 const kilos = (value: string) => `${formatFixedDecimal(value, 1)} kg`;
 const percent = (value: string) => `${formatFixedDecimal(value, 1)} %`;

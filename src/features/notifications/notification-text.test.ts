@@ -4,6 +4,7 @@ import type { components } from '@/lib/api/schema';
 import {
   buildAgriculturalActivity,
   buildAssignee,
+  buildLotBrief,
   buildNotification,
 } from '@/test/factories';
 
@@ -263,6 +264,56 @@ describe('describeNotification · control pending', () => {
       detail: 'No requiere control',
       stale: true,
     });
+  });
+});
+
+describe('describeNotification · lot discarded', () => {
+  const discarded = (reason: 'mold' | 'other' | null) =>
+    buildNotification({
+      kind: 'lot_discarded',
+      activity: null,
+      lot: buildLotBrief({
+        status: 'discarded',
+        fermentation: null,
+        quality: {
+          well_fermented_pct: '40.0',
+          moldy_pct: '22.0',
+          other_defects_pct: '10.0',
+          evaluated_at: '2026-10-30T09:00:00-05:00',
+          g1_kg: null,
+          g2_kg: null,
+          discard_kg: null,
+          discard_reason: reason,
+          discarded_at: reason ? '2026-10-31T10:00:00-05:00' : null,
+        },
+      }),
+    });
+
+  it('says which lot was discarded and why, and leads to its detail', () => {
+    expect(describeFor(discarded('mold'), '2026-10-31')).toEqual({
+      look: 'discarded',
+      title: 'Lote descartado',
+      subject: 'Lote 000123-F02-P05-261014-1 descartado: Moho.',
+      detail: 'La Esperanza',
+      stale: false,
+      href: '/lotes/detalle?id=l1',
+      origin: 'Calidad',
+    });
+  });
+
+  it('reads Otro as such: the detail stays in the lot', () => {
+    expect(describeFor(discarded('other'), '2026-10-31').subject).toBe(
+      'Lote 000123-F02-P05-261014-1 descartado: Otro.',
+    );
+  });
+
+  it('shows a generic notice without its lot', () => {
+    expect(
+      describeFor(
+        buildNotification({ kind: 'lot_discarded', activity: null, lot: null }),
+        '2026-10-31',
+      ).look,
+    ).toBe('generic');
   });
 });
 

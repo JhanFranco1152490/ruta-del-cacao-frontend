@@ -11,6 +11,7 @@ export type NotificationLook =
   | 'control'
   | 'pending'
   | 'deviation'
+  | 'discarded'
   | 'generic';
 
 export type NotificationView = {

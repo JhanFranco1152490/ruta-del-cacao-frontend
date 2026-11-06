@@ -14,11 +14,14 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
 import type { LotStatus } from '@/lib/lot-status';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { type QualityAction, qualityActionPath } from '@/lib/paths/quality';
 
 import { type LotQualityDetail, useQualityLot } from '../api';
-import { qualityActions, type QualityActionOffer } from '../quality-actions';
+import {
+  qualityActions,
+  type QualityActionOffer,
+  qualityPermissionsOf,
+} from '../quality-actions';
 import { qualitySectionView } from '../quality-section-view';
 
 export type QualitySectionLot = {
@@ -80,11 +83,7 @@ function SectionActions({ offers }: { offers: readonly LinkedOffer[] }) {
 export function QualitySection({ lot }: { lot: QualitySectionLot }) {
   const { data: user } = useSession();
   const online = useHasConnection();
-  const can = {
-    evaluate: hasPermission(user, PERMISSIONS.QUALITY_EVALUATE),
-    classify: hasPermission(user, PERMISSIONS.QUALITY_CLASSIFY),
-    discard: hasPermission(user, PERMISSIONS.QUALITY_DISCARD),
-  };
+  const can = qualityPermissionsOf(user);
   const reachesQuality = lot.status === 'dried' || lot.quality !== null;
   const full = useQualityLot(lot.id, reachesQuality && can.evaluate && online);
   if (!reachesQuality) return null;

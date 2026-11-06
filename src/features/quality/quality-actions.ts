@@ -1,4 +1,5 @@
 import type { LotStatus } from '@/lib/lot-status';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { QualityAction } from '@/lib/paths/quality';
 
 export type QualityPermissions = {
@@ -6,6 +7,15 @@ export type QualityPermissions = {
   classify: boolean;
   discard: boolean;
 };
+
+// Lo que la cuenta puede hacer en calidad, leído de sus permisos.
+export const qualityPermissionsOf = (
+  user: Parameters<typeof hasPermission>[0],
+): QualityPermissions => ({
+  evaluate: hasPermission(user, PERMISSIONS.QUALITY_EVALUATE),
+  classify: hasPermission(user, PERMISSIONS.QUALITY_CLASSIFY),
+  discard: hasPermission(user, PERMISSIONS.QUALITY_DISCARD),
+});
 
 export type QualityActionOffer = {
   action: QualityAction;

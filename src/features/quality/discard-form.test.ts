@@ -6,7 +6,9 @@ import {
   discardFormSchema,
   toDiscardRequest,
 } from './discard-form';
-import { DISCARD_REASON_OPTIONS, discardReasonText } from './discard-reasons';
+import { discardReasonText } from '@/lib/discard-reasons';
+
+import { DISCARD_REASON_OPTIONS } from './discard-reasons';
 
 const errorsOf = (reason: string, detail = '') => {
   const result = discardFormSchema.safeParse({ reason, detail });
