@@ -1,0 +1,165 @@
+import { describe, expect, it } from 'vitest';
+
+import type { LotStatus } from '@/lib/lot-status';
+import { PERMISSIONS } from '@/lib/permissions';
+
+import {
+  exitVoidOffer,
+  lotStockActions,
+  OFFLINE_WAREHOUSE_REASON,
+  resolveWarehouseView,
+  type WarehousePermissions,
+  warehouseItemActions,
+  warehousePermissionsOf,
+  warehouseViews,
+} from './warehouse-actions';
+
+const ALL: WarehousePermissions = {
+  view: true,
+  entry: true,
+  exit: true,
+  manage: true,
+  viewLot: true,
+};
+const VIEW_ONLY: WarehousePermissions = {
+  view: true,
+  entry: false,
+  exit: false,
+  manage: false,
+  viewLot: false,
+};
+
+const labels = (offers: { label: string }[]) =>
+  offers.map(({ label }) => label);
+
+describe('warehousePermissionsOf', () => {
+  it('reads the four warehouse permissions and the lot view', () => {
+    expect(
+      warehousePermissionsOf({
+        permissions: [
+          PERMISSIONS.WAREHOUSE_VIEW_STOCK,
+          PERMISSIONS.WAREHOUSE_REGISTER_EXIT,
+        ],
+      }),
+    ).toEqual({
+      view: true,
+      entry: false,
+      exit: true,
+      manage: false,
+      viewLot: false,
+    });
+  });
+});
+
+describe('warehouseViews', () => {
+  it('shows the lots to store only to whom can store them', () => {
+    expect(warehouseViews(ALL)).toEqual([
+      'existencias',
+      'por-ingresar',
+      'bodegas',
+    ]);
+    expect(warehouseViews(VIEW_ONLY)).toEqual(['existencias', 'bodegas']);
+  });
+
+  it('falls back to the stock when the address asks for a tab not shown', () => {
+    expect(resolveWarehouseView('por-ingresar', VIEW_ONLY)).toBe('existencias');
+    expect(resolveWarehouseView('bodegas', VIEW_ONLY)).toBe('bodegas');
+    expect(resolveWarehouseView(null, ALL)).toBe('existencias');
+  });
+});
+
+describe('lotStockActions', () => {
+  const offered = (
+    status: LotStatus,
+    {
+      canCorrect = true,
+      hasStock = true,
+      online = true,
+      can = ALL,
+    }: Partial<{
+      canCorrect: boolean;
+      hasStock: boolean;
+      online: boolean;
+      can: WarehousePermissions;
+    }> = {},
+  ) => lotStockActions({ status, canCorrect, hasStock, online, can });
+
+  it('stores a classified lot', () => {
+    expect(labels(offered('classified'))).toEqual(['Ingresar a bodega']);
+    expect(offered('classified', { can: VIEW_ONLY })).toEqual([]);
+  });
+
+  it('takes out and corrects a lot in the warehouse', () => {
+    expect(labels(offered('in_warehouse'))).toEqual([
+      'Registrar salida',
+      'Corregir ingreso',
+    ]);
+  });
+
+  it('does not correct once cacao left, nor take out of an empty lot', () => {
+    expect(labels(offered('in_warehouse', { canCorrect: false }))).toEqual([
+      'Registrar salida',
+    ]);
+    expect(labels(offered('in_warehouse', { hasStock: false }))).toEqual([
+      'Corregir ingreso',
+    ]);
+  });
+
+  it('offers nothing before the classification nor to whom only reads', () => {
+    expect(offered('evaluated')).toEqual([]);
+    expect(offered('discarded')).toEqual([]);
+    expect(offered('in_warehouse', { can: VIEW_ONLY })).toEqual([]);
+  });
+
+  it('shows the actions offline, disabled with the reason', () => {
+    expect(
+      offered('in_warehouse', { online: false }).map(
+        ({ disabledReason }) => disabledReason,
+      ),
+    ).toEqual([OFFLINE_WAREHOUSE_REASON, OFFLINE_WAREHOUSE_REASON]);
+  });
+});
+
+describe('exitVoidOffer', () => {
+  it('voids a manual exit still in force, as a danger action', () => {
+    expect(exitVoidOffer({ can_void: true }, true, ALL)).toMatchObject({
+      label: 'Anular',
+      danger: true,
+      disabledReason: null,
+    });
+  });
+
+  it('does not void a sale, a voided exit, or without the permission', () => {
+    expect(exitVoidOffer({ can_void: false }, true, ALL)).toBeNull();
+    expect(exitVoidOffer({ can_void: true }, true, VIEW_ONLY)).toBeNull();
+  });
+});
+
+describe('warehouseItemActions', () => {
+  it('edits, deactivates and deletes a warehouse never used', () => {
+    expect(
+      labels(
+        warehouseItemActions({ is_active: true, in_use: false }, true, ALL),
+      ),
+    ).toEqual(['Editar', 'Desactivar', 'Eliminar']);
+  });
+
+  it('only deactivates or activates a warehouse that received entries', () => {
+    expect(
+      labels(
+        warehouseItemActions({ is_active: true, in_use: true }, true, ALL),
+      ),
+    ).toEqual(['Editar', 'Desactivar']);
+    expect(
+      labels(
+        warehouseItemActions({ is_active: false, in_use: true }, true, ALL),
+      ),
+    ).toEqual(['Editar', 'Activar']);
+  });
+
+  it('offers nothing to whom only reads', () => {
+    expect(
+      warehouseItemActions({ is_active: true, in_use: false }, true, VIEW_ONLY),
+    ).toEqual([]);
+  });
+});
