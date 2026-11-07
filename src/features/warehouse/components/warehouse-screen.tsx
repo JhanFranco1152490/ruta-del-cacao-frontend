@@ -8,10 +8,12 @@ import { PageHeader } from '@/components/page-header';
 import { ProducerFilter } from '@/components/producer-filter';
 
 import type { DialogRequest } from '../dialog-request';
+import { useRequestFromLink } from '../use-request-from-link';
 import { useWarehouseScreen } from '../use-warehouse-screen';
 import { OFFLINE_WAREHOUSE_REASON } from '../warehouse-actions';
 import { PendingEntryBody } from './pending-entry-body';
 import { StockBody } from './stock-body';
+import { WarehouseActionDialog } from './warehouse-action-dialog';
 import { WarehouseFiltersBar } from './warehouse-filters-bar';
 import { WarehouseSummary } from './warehouse-summary';
 import { WarehousesBody } from './warehouses-body';
@@ -25,8 +27,13 @@ export function WarehouseScreen({
 }) {
   const screen = useWarehouseScreen();
   const { filters } = screen;
-  // El formulario pedido: lo abren el ingreso y la salida cuando existan sus diálogos.
-  const [, setRequest] = useState<DialogRequest>();
+  const [request, setRequest] = useState<DialogRequest>();
+  useRequestFromLink({
+    pending: filters.pendingAction,
+    online: !screen.offline,
+    onRequest: setRequest,
+    onDone: filters.clearAction,
+  });
 
   return (
     <div className={pageContainerClass('wide', 'space-y-5')}>
@@ -69,6 +76,12 @@ export function WarehouseScreen({
         />
       )}
       {screen.view === 'bodegas' && <WarehousesBody screen={screen} />}
+      {request && (
+        <WarehouseActionDialog
+          onClose={() => setRequest(undefined)}
+          request={request}
+        />
+      )}
     </div>
   );
 }

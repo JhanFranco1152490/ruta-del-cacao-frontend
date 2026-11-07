@@ -278,8 +278,15 @@ export const stockLocationsHandler = (
     return HttpResponse.json({ results: locations });
   });
 
+// `/api/stock/:id` también calza con las rutas fijas de existencias: esas siguen a su propio
+// handler.
+const STOCK_FIXED_PATHS = ['summary', 'locations', 'pending-entry'];
+
 export const lotStockHandler = (stock: JsonBodyType) =>
-  http.get(apiUrl('/api/stock/:id'), () => HttpResponse.json(stock));
+  http.get(apiUrl('/api/stock/:id'), ({ params }) => {
+    if (STOCK_FIXED_PATHS.includes(String(params.id))) return undefined;
+    return HttpResponse.json(stock);
+  });
 
 // Las escrituras de Bodega sobre un lote: responden `response` (un HttpResponse para los errores) o
 // el lote con 201 (ingreso y salida) o 200 (corrección y anulación), y guardan los cuerpos recibidos.
