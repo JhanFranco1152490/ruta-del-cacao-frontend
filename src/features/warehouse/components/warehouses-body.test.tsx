@@ -68,7 +68,10 @@ function renderTab({
   );
 }
 
+// Primero la pantalla montada y después la lista: bajo carga, el primer montaje (en frío) y la
+// lectura de las bodegas no caben juntos en una sola espera.
 const card = async (name: string) => {
+  await screen.findByRole('region', { name: 'Resumen de bodega' });
   const list = await screen.findByRole('list', { name: 'Bodegas' });
   const found = within(list)
     .getAllByRole('listitem')
