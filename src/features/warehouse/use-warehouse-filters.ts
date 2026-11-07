@@ -6,6 +6,7 @@ import {
   parseAsStringLiteral,
   useQueryStates,
 } from 'nuqs';
+import { useCallback } from 'react';
 
 import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import type {
@@ -78,6 +79,13 @@ export function useWarehouseFilters(can: WarehousePermissions) {
     clearOnDefault: true,
   });
   const search = usePaginatedSearch(params.search, setParams);
+  // La ubicación se escribe como la búsqueda: se espera a que se deje de teclear.
+  const setLocationParams = useCallback(
+    ({ search: value, page }: { search: string | null; page: number }) =>
+      setParams({ location: value, page }),
+    [setParams],
+  );
+  const location = usePaginatedSearch(params.location, setLocationParams);
   const page = Math.max(1, params.page);
   // Vacíos en la URL son «todas» y «sin elegir».
   const producer = params.producer || null;
@@ -121,6 +129,8 @@ export function useWarehouseFilters(can: WarehousePermissions) {
       !!summaryFilters.location ||
       !!summaryFilters.search,
     ...search,
+    locationInput: location.searchInput,
+    setLocationInput: location.setSearchInput,
     // Solo con las dos: un lote sin acción no abre nada.
     pendingAction:
       params.lot && params.action
@@ -136,8 +146,6 @@ export function useWarehouseFilters(can: WarehousePermissions) {
     setWarehouse: (value: string | null) =>
       setParams({ warehouse: value, location: null, page: 1 }),
     setGrade: (value: Grade | null) => setParams({ grade: value, page: 1 }),
-    setLocation: (value: string | null) =>
-      setParams({ location: value || null, page: 1 }),
     setOrdering: (value: StockOrdering | null) =>
       setParams({ ordering: value, page: 1 }),
     setPage: (value: number) => setParams({ page: value }),
