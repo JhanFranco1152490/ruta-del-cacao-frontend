@@ -10,6 +10,11 @@ import {
 } from '@/features/fermentation/lot-actions';
 import { HARVESTS_PATH } from '@/features/harvests/harvest-paths';
 import { LotListScreen } from '@/features/lots/components/lot-list-screen';
+import {
+  qualityLotActions,
+  qualityStageAction,
+} from '@/features/quality/lot-actions';
+import { qualityPermissionsOf } from '@/features/quality/quality-actions';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -27,16 +32,19 @@ export function LotList() {
     logLogs: hasPermission(user, PERMISSIONS.DRYING_LOG),
     manage: hasPermission(user, PERMISSIONS.DRYING_MANAGE),
   };
+  const qualityCan = qualityPermissionsOf(user);
   return (
     <LotListScreen
       formLotHref={`${HARVESTS_PATH}?lote=sin`}
       lotActions={(lot) => [
         ...fermentationLotActions(lot, fermentationCan),
         ...dryingLotActions(lot, dryingCan),
+        ...qualityLotActions(lot, qualityCan),
       ]}
       stageAction={(status) =>
         fermentationStageAction(status, fermentationCan) ??
-        dryingStageAction(status, dryingCan)
+        dryingStageAction(status, dryingCan) ??
+        qualityStageAction(status, qualityCan)
       }
     />
   );

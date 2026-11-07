@@ -97,7 +97,8 @@ export const useLotSummary = (query: LotSummaryQuery) =>
 
 // El lote como lo guarda la copia de una lista de poscosecha: con su origen y su proceso, pero sin
 // el código de socio del productor ni quién lo conformó y cuándo. Esos quedan vacíos y la ficha
-// sin conexión no los muestra. De un lote en secado la copia no trae su fermentación.
+// sin conexión no los muestra. De un lote en secado la copia no trae su fermentación, y ningún lote
+// en fermentación o en secado tiene calidad todavía.
 export function lotFromCopy(copied: CopiedProcess): Lot {
   const { lot } = copied.process;
   return {
@@ -131,6 +132,7 @@ export function lotFromCopy(copied: CopiedProcess): Lot {
             yield_pct: copied.process.result?.yield_pct ?? null,
           }
         : null,
+    quality: null,
   };
 }
 

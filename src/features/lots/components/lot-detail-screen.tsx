@@ -39,7 +39,7 @@ import { harvestAgeText } from '../lot-age';
 import { LotCodeSegments } from './lot-code-segments';
 import { LotOrigin } from './lot-origin';
 import { LotStages } from './lot-stages';
-import { LotStatusBadge } from './lot-status-badge';
+import { LotStatusBadge } from '@/components/lot-status-badge';
 import { pageContainerClass } from '@/components/page-container';
 import { LoadingBlock } from '@/components/loading-block';
 

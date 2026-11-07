@@ -3,6 +3,7 @@ import { isPostharvestAlertKind } from '@/lib/postharvest/alert-kinds';
 
 import { describeActivityNotice, isActivityKind } from './activity-notice-text';
 import { describeControlPending } from './control-notice-text';
+import { describeDiscardNotice } from './discard-notice-text';
 import type { NotificationView } from './notice-parts';
 import { describePostharvestNotice } from './postharvest-notice-text';
 
@@ -29,6 +30,9 @@ export function describeNotification(
   const { kind, activity, lot } = notification;
   if (isPostharvestAlertKind(kind)) {
     return lot ? describePostharvestNotice(notification, kind, lot) : GENERIC;
+  }
+  if (kind === 'lot_discarded') {
+    return lot ? describeDiscardNotice(lot) : GENERIC;
   }
   if (!activity) return GENERIC;
   if (isActivityKind(kind)) {

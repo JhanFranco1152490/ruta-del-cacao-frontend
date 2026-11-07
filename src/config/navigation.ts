@@ -1,6 +1,7 @@
 import {
   Bug,
   CalendarDays,
+  ClipboardCheck,
   FlaskConical,
   LandPlot,
   Leaf,
@@ -109,6 +110,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     group: 'postharvest',
     icon: Sun,
     permission: PERMISSIONS.DRYING_LOG,
+  },
+  // Lo que se hace con el lote seco: evaluarlo y clasificarlo o descartarlo. Se registra con conexión,
+  // pero la lista se consulta sin ella, con la copia del dispositivo.
+  {
+    href: '/calidad',
+    label: 'Calidad',
+    group: 'postharvest',
+    icon: ClipboardCheck,
+    permission: PERMISSIONS.QUALITY_EVALUATE,
   },
   // Los cajones y marquesinas donde los lotes fermentan y se secan: lo que se prepara para el
   // proceso, por eso va al final del grupo. Se consulta sin conexión.

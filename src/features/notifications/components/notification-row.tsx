@@ -1,5 +1,6 @@
 import { cn } from 'cn';
 import {
+  Ban,
   Bell,
   Clock,
   Gauge,
@@ -25,6 +26,7 @@ const LOOK: Record<NotificationLook, { Icon: typeof Bell; className: string }> =
     control: { Icon: ShieldAlert, className: 'text-warn' },
     pending: { Icon: Timer, className: 'text-warn' },
     deviation: { Icon: Gauge, className: 'text-warn' },
+    discarded: { Icon: Ban, className: 'text-err' },
     generic: { Icon: Bell, className: 'text-muted-foreground' },
   };
 
