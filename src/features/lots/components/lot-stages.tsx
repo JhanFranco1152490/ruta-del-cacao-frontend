@@ -8,8 +8,8 @@ import { type LotStatus } from '@/lib/lot-status';
 import { lotStages, stagePosition } from '../lot-stages';
 
 // Dónde va el lote en su recorrido, de un vistazo: un tramo por etapa, el actual resaltado (en rojo
-// si el lote se descartó). Por debajo de una pantalla ancha las siete etiquetas no caben y se dice en
-// una línea («Etapa 2 de 7»); el lector de pantalla las oye todas.
+// si el lote se descartó). Por debajo de una pantalla ancha las ocho etiquetas no caben y se dice en
+// una línea («Etapa 2 de 8»); el lector de pantalla las oye todas.
 export function LotStages({ status }: { status: LotStatus }) {
   const stages = lotStages(status);
   const { position, total } = stagePosition(status);

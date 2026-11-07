@@ -323,6 +323,17 @@ describe('LotListScreen', () => {
     );
   });
 
+  it('filters the lots in the warehouse, at the end of the chain', async () => {
+    renderScreen({ searchParams: '?estado=in_warehouse' });
+    await table();
+
+    expect(requests[0].get('status')).toBe('in_warehouse');
+    expect(screen.getByRole('button', { name: /^En bodega/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
   it('sends what the address says to the server, ignoring a malformed date', async () => {
     renderScreen({
       searchParams: '?buscar=F02-P05&finca=f1&desde=2026-10-01&hasta=ayer',
