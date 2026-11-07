@@ -15,6 +15,11 @@ import {
   qualityStageAction,
 } from '@/features/quality/lot-actions';
 import { qualityPermissionsOf } from '@/features/quality/quality-actions';
+import {
+  warehouseLotActions,
+  warehouseStageAction,
+} from '@/features/warehouse/lot-actions';
+import { warehousePermissionsOf } from '@/features/warehouse/warehouse-actions';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -33,6 +38,7 @@ export function LotList() {
     manage: hasPermission(user, PERMISSIONS.DRYING_MANAGE),
   };
   const qualityCan = qualityPermissionsOf(user);
+  const warehouseCan = warehousePermissionsOf(user);
   return (
     <LotListScreen
       formLotHref={`${HARVESTS_PATH}?lote=sin`}
@@ -40,11 +46,13 @@ export function LotList() {
         ...fermentationLotActions(lot, fermentationCan),
         ...dryingLotActions(lot, dryingCan),
         ...qualityLotActions(lot, qualityCan),
+        ...warehouseLotActions(lot, warehouseCan),
       ]}
       stageAction={(status) =>
         fermentationStageAction(status, fermentationCan) ??
         dryingStageAction(status, dryingCan) ??
-        qualityStageAction(status, qualityCan)
+        qualityStageAction(status, qualityCan) ??
+        warehouseStageAction(status, warehouseCan)
       }
     />
   );
