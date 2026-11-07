@@ -13,6 +13,7 @@ import { warehousePermissionsOf } from '../warehouse-actions';
 import { NO_CHANGES } from '../warehouse-form';
 import { EntryDialog } from './entry-dialog';
 import { ExitDialog } from './exit-dialog';
+import { VoidExitDialog } from './void-exit-dialog';
 
 export const LOT_UNAVAILABLE_MESSAGE =
   'Este lote ya no está disponible en Bodega.';
@@ -94,7 +95,18 @@ export function WarehouseActionDialog({
           stock={stock.data}
         />
       );
-    default:
-      return null;
+    case 'anular': {
+      // `requestOutcome` ya comprobó que la salida existe y se puede anular.
+      const exit = stock.data.exits.find(({ id }) => id === request.exitId)!;
+      return (
+        <VoidExitDialog
+          exit={exit}
+          lotId={request.lotId}
+          onClose={onClose}
+          onSaved={saved}
+          onStatusChanged={statusChanged}
+        />
+      );
+    }
   }
 }
