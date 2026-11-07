@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -53,6 +53,8 @@ const G2_ROW = buildStockRow({ grade: 'g2', quantity_kg: '55.2' });
 let userId: string;
 let stockRequests: URLSearchParams[];
 let summaryRequests: URLSearchParams[];
+
+afterEach(() => vi.restoreAllMocks());
 
 beforeEach(() => {
   userId = `warehouse-screen-${crypto.randomUUID()}`;
@@ -243,6 +245,7 @@ describe('WarehouseScreen', () => {
       fetchedAt: 1_760_000_000_000,
     });
     server.use(http.get(apiUrl('/api/stock'), () => HttpResponse.error()));
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     renderScreen();
 
     expect(
@@ -254,6 +257,11 @@ describe('WarehouseScreen', () => {
     expect(
       within(g1).getByRole('button', { name: /^Registrar salida/ }),
     ).toBeDisabled();
+    // La ficha del lote no tiene copia de los lotes de bodega: el ojo no lleva a una página vacía.
+    expect(
+      within(g1).getByRole('button', { name: /^Ver el lote/ }),
+    ).toBeDisabled();
+    expect(within(g1).queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('asks for a connection once when there is no copy', async () => {

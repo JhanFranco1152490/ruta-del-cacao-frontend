@@ -27,6 +27,9 @@ export const warehousePermissionsOf = (
 export const OFFLINE_WAREHOUSE_REASON =
   'Necesitas conexión para registrar movimientos de bodega.';
 
+// La ficha del lote no guarda copia de los lotes de bodega: sin conexión no se abre.
+export const OFFLINE_LOT_REASON = 'Ver el lote necesita conexión.';
+
 // Una acción que se ve: sin conexión no se puede usar y se dice por qué.
 export type Offer<A extends string> = {
   action: A;

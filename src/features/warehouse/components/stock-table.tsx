@@ -1,12 +1,10 @@
 'use client';
 
-import { cn } from 'cn';
-import { Eye, PackageMinus } from 'lucide-react';
+import { PackageMinus } from 'lucide-react';
 
 import { COMPACT_TABLE_CLASS } from '@/components/compact-table-class';
-import { EditorLink } from '@/components/editor-link';
 import { SortableTableHead } from '@/components/sortable-table-head';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -22,6 +20,7 @@ import type { StockRow } from '../api';
 import type { DialogRequest } from '../dialog-request';
 import { GRADE_LABELS, kilosText } from '../exit-quantity';
 import type { Offer } from '../warehouse-actions';
+import { LotEyeLink } from './lot-eye-link';
 
 // Las existencias: una fila por lote y calibre. En celular cada fila es una tarjeta: el código y
 // el calibre arriba, la finca, la bodega con su ubicación y los kilos, la fecha de ingreso, y las
@@ -136,18 +135,7 @@ function StockRowActions({
           Registrar salida
         </Button>
       )}
-      {lotHref && (
-        <EditorLink
-          aria-label={`Ver el lote ${code}`}
-          className={cn(
-            buttonVariants({ size: 'office', variant: 'action' }),
-            'px-3',
-          )}
-          href={lotHref(row.lot.id)}
-        >
-          <Eye aria-hidden="true" className="size-4" />
-        </EditorLink>
-      )}
+      {lotHref && <LotEyeLink code={code} href={lotHref(row.lot.id)} />}
     </div>
   );
 }

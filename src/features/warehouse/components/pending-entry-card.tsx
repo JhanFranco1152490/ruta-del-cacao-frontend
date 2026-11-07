@@ -1,10 +1,8 @@
 'use client';
 
-import { cn } from 'cn';
-import { Eye, PackagePlus } from 'lucide-react';
+import { PackagePlus } from 'lucide-react';
 
-import { EditorLink } from '@/components/editor-link';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { formatShortDayMonth } from '@/lib/format/dates';
 import { farmLabel } from '@/lib/format/place-label';
 
@@ -12,6 +10,7 @@ import type { PendingEntry } from '../api';
 import type { DialogRequest } from '../dialog-request';
 import { kilosText } from '../exit-quantity';
 import type { Offer } from '../warehouse-actions';
+import { LotEyeLink } from './lot-eye-link';
 
 // «G1 250,0 kg · G2 55,2 kg · clasificado el 29 oct»: lo que va a entrar a la bodega.
 export const pendingEntryLine = (lot: PendingEntry) =>
@@ -51,18 +50,7 @@ export function PendingEntryCard({
             {entryOffer.label}
           </Button>
         )}
-        {lotHref && (
-          <EditorLink
-            aria-label={`Ver el lote ${code}`}
-            className={cn(
-              buttonVariants({ variant: 'action', size: 'office' }),
-              'px-3',
-            )}
-            href={lotHref(lot.lot.id)}
-          >
-            <Eye aria-hidden="true" className="size-4" />
-          </EditorLink>
-        )}
+        {lotHref && <LotEyeLink code={code} href={lotHref(lot.lot.id)} />}
       </div>
     </li>
   );

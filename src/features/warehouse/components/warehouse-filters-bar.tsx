@@ -137,9 +137,9 @@ function StockFilters({ screen }: { screen: WarehouseScreenState }) {
       <TextField
         className="h-10 text-sm"
         hideLabel
-        label="Ubicación"
+        label="Estante o zona dentro de la bodega"
         onChange={(event) => filters.setLocationInput(event.target.value)}
-        placeholder="Ubicación"
+        placeholder="Estante o zona"
         type="search"
         value={filters.locationInput}
         wrapperClassName="w-full sm:w-40"
