@@ -7,7 +7,9 @@ import {
   exitVoidOffer,
   lotStockActions,
   OFFLINE_WAREHOUSE_REASON,
+  pendingEntryOffer,
   resolveWarehouseView,
+  stockExitOffer,
   type WarehousePermissions,
   warehouseItemActions,
   warehousePermissionsOf,
@@ -117,6 +119,23 @@ describe('lotStockActions', () => {
         ({ disabledReason }) => disabledReason,
       ),
     ).toEqual([OFFLINE_WAREHOUSE_REASON, OFFLINE_WAREHOUSE_REASON]);
+  });
+});
+
+describe('pendingEntryOffer', () => {
+  it('offers the entry of a classified lot only with the permission', () => {
+    expect(pendingEntryOffer(true, ALL)?.label).toBe('Ingresar a bodega');
+    expect(pendingEntryOffer(true, VIEW_ONLY)).toBeNull();
+  });
+});
+
+describe('stockExitOffer', () => {
+  it('offers the exit of a stock row only with the permission', () => {
+    expect(stockExitOffer(true, ALL)?.label).toBe('Registrar salida');
+    expect(stockExitOffer(false, ALL)?.disabledReason).toBe(
+      OFFLINE_WAREHOUSE_REASON,
+    );
+    expect(stockExitOffer(true, VIEW_ONLY)).toBeNull();
   });
 });
 

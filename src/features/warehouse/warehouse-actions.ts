@@ -92,6 +92,22 @@ export function lotStockActions({
     .map(([action, label]) => offer(action, label, online));
 }
 
+// Ingresar un lote de la lista Por ingresar: todos están Clasificado, así que solo depende del
+// permiso.
+export const pendingEntryOffer = (
+  online: boolean,
+  can: WarehousePermissions,
+): Offer<'ingresar'> | null =>
+  can.entry ? offer('ingresar', 'Ingresar a bodega', online) : null;
+
+// Registrar una salida desde una fila de existencias: toda fila es de un lote En bodega con kilos,
+// así que solo depende del permiso.
+export const stockExitOffer = (
+  online: boolean,
+  can: WarehousePermissions,
+): Offer<'salida'> | null =>
+  can.exit ? offer('salida', 'Registrar salida', online) : null;
+
 // Anular una salida: solo una manual que sigue vigente, y con el permiso de registrar salidas.
 export const exitVoidOffer = (
   exit: Pick<StockExit, 'can_void'>,
