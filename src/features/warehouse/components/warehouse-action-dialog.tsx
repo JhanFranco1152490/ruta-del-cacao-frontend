@@ -12,6 +12,7 @@ import { useLotStock } from '../queries';
 import { warehousePermissionsOf } from '../warehouse-actions';
 import { NO_CHANGES } from '../warehouse-form';
 import { EntryDialog } from './entry-dialog';
+import { ExitDialog } from './exit-dialog';
 
 export const LOT_UNAVAILABLE_MESSAGE =
   'Este lote ya no está disponible en Bodega.';
@@ -80,6 +81,16 @@ export function WarehouseActionDialog({
           onSaved={saved}
           onStale={stale}
           onStatusChanged={statusChanged}
+          stock={stock.data}
+        />
+      );
+    case 'salida':
+      return (
+        <ExitDialog
+          onClose={onClose}
+          onSaved={saved}
+          onStatusChanged={statusChanged}
+          proposedGrade={request.grade}
           stock={stock.data}
         />
       );
