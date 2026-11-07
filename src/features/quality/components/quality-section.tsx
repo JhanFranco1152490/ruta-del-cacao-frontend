@@ -5,11 +5,7 @@ import { Ban, ClipboardCheck, Medal, PencilLine } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { EditorLink } from '@/components/editor-link';
-import {
-  KeyValue,
-  KeyValues,
-  SectionCard,
-} from '@/components/page-blocks/section-card';
+import { SectionCard } from '@/components/page-blocks/section-card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
@@ -23,6 +19,11 @@ import {
   qualityPermissionsOf,
 } from '../quality-actions';
 import { qualitySectionView } from '../quality-section-view';
+import {
+  ClassificationBlock,
+  EvaluationBlock,
+  ResponsibleLines,
+} from './quality-section-parts';
 
 export type QualitySectionLot = {
   id: string;
@@ -119,41 +120,19 @@ export function QualitySection({ lot }: { lot: QualitySectionLot }) {
             {view.discardedNotice}
           </p>
         )}
-        <KeyValues>
-          {view.evaluation.map(({ label, value }) => (
-            <KeyValue key={label} label={label}>
-              {value}
-            </KeyValue>
-          ))}
-          {view.notes && (
-            <KeyValue label="Observaciones">{view.notes}</KeyValue>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <EvaluationBlock facts={view.evaluation} notes={view.notes} />
+          {view.classification.length > 0 && (
+            <ClassificationBlock
+              discardReason={view.discardReason}
+              facts={view.classification}
+            />
           )}
-        </KeyValues>
-        {view.evaluatedBy && (
-          <p className="text-sm text-muted-foreground">{view.evaluatedBy}</p>
-        )}
-        {view.classification.length > 0 && (
-          <>
-            <h3 className="font-bold text-selva">Clasificación</h3>
-            <KeyValues>
-              {view.classification.map(({ label, value }) => (
-                <KeyValue key={label} label={label}>
-                  {value}
-                </KeyValue>
-              ))}
-              {view.discardReason && (
-                <KeyValue label="Motivo del descarte">
-                  {view.discardReason}
-                </KeyValue>
-              )}
-            </KeyValues>
-            {view.classifiedBy && (
-              <p className="text-sm text-muted-foreground">
-                {view.classifiedBy}
-              </p>
-            )}
-          </>
-        )}
+        </div>
+        <ResponsibleLines
+          classifiedBy={view.classifiedBy}
+          evaluatedBy={view.evaluatedBy}
+        />
         <SectionActions offers={offers} />
       </div>
     </SectionCard>

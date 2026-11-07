@@ -9,6 +9,8 @@ import {
 
 import {
   classificationFacts,
+  closedByLine,
+  gradeShares,
   discardLine,
   dryLine,
   lotBrief,
@@ -42,7 +44,7 @@ describe('quality card facts', () => {
     ]);
   });
 
-  it('says who evaluated, or who corrected last', () => {
+  it('says who evaluated and, if corrected, who corrected', () => {
     expect(evaluatedByLine(buildLotQuality())).toBeNull();
     expect(
       evaluatedByLine(
@@ -58,7 +60,9 @@ describe('quality card facts', () => {
           }),
         }),
       ),
-    ).toBe('Corregido por Otra cuenta el 31 oct');
+    ).toBe(
+      'Evaluado por Cuenta de prueba el 30 oct · Corregido por Otra cuenta el 31 oct',
+    );
   });
 
   it('lists the grades in kilos', () => {
@@ -89,5 +93,45 @@ describe('quality card facts', () => {
         buildLotQuality({ classification: buildQualityClassification() }),
       ),
     ).toBeNull();
+  });
+
+  it('says who closed the lot and when', () => {
+    expect(
+      closedByLine(
+        buildLotQuality({ classification: buildQualityClassification() }),
+      ),
+    ).toBe('Clasificado por Cuenta de prueba el 30 oct');
+    expect(
+      closedByLine(buildLotQuality({ discard: buildQualityDiscard() })),
+    ).toBe('Descartado por Cuenta de prueba el 30 oct');
+    expect(closedByLine(buildLotQuality())).toBeNull();
+  });
+
+  it('splits the grades into shares of what was distributed', () => {
+    expect(
+      gradeShares(
+        buildQualityClassification({
+          g1_kg: '50.0',
+          g2_kg: '40.0',
+          discard_kg: '10.0',
+        }),
+      ),
+    ).toEqual([
+      { label: 'G1', width: 50, tone: 'ok' },
+      { label: 'G2', width: 40, tone: 'info' },
+      { label: 'Descarte', width: 10, tone: 'err' },
+    ]);
+  });
+
+  it('draws nothing when no kilos were distributed', () => {
+    expect(
+      gradeShares(
+        buildQualityClassification({
+          g1_kg: '0.0',
+          g2_kg: '0.0',
+          discard_kg: '0.0',
+        }),
+      ),
+    ).toEqual([]);
   });
 });

@@ -1330,7 +1330,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Los lotes de calidad de las fincas que la cuenta alcanza, paginados. `view` elige cuáles: `to_evaluate` (por defecto, los Seco, del que se secó primero), `evaluated` (del que se evaluó primero) o `closed` (Clasificado y Descartado, del más reciente). `search` busca una parte del código, sin distinguir mayúsculas. */
+        /** @description Los lotes de calidad de las fincas que la cuenta alcanza, paginados. `view` elige cuáles: `to_evaluate` (por defecto, los Seco, del que se secó primero), `evaluated` (del que se evaluó primero) o `closed` (Clasificado y Descartado, del más reciente). `search` busca una parte del código, sin distinguir mayúsculas. En `closed`, `result` (`classified` o `discarded`) y el periodo de cierre (`closed_from` y `closed_to`, días incluidos) acotan la lista. */
         get: operations["quality_list"];
         put?: never;
         post?: never;
@@ -1407,6 +1407,23 @@ export interface paths {
         head?: never;
         /** @description Corrige la evaluación de un lote Evaluado y guarda quién corrigió y cuándo. Requiere `expected_version` de la evaluación; si cambió, 409 `stale_version` con el vigente en `current`. Un lote Clasificado o Descartado responde 409 `lot_invalid_status` con `current_status`. */
         patch: operations["quality_evaluation_partial_update"];
+        trace?: never;
+    };
+    "/api/quality/closed-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lo que dejó el periodo de cierre: lotes clasificados y descartados, kilos de G1 y G2 y kilos que quedaron fuera. Con los filtros de la lista de Cerrados (`farm`, `search`, `closed_from` y `closed_to`). */
+        get: operations["quality_closed_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/quality/summary": {
@@ -1872,6 +1889,16 @@ export interface components {
             expected_kg?: string;
             received_kg?: string;
             difference_kg?: string;
+        };
+        ClosedSummary: {
+            classified: number;
+            discarded: number;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discarded_kg: string;
         };
         CollectorList: {
             results: components["schemas"]["CollectorOption"][];
@@ -10508,6 +10535,8 @@ export interface operations {
     quality_list: {
         parameters: {
             query?: {
+                closed_from?: string;
+                closed_to?: string;
                 farm?: string;
                 /** @description Un número de página dentro del conjunto de resultados paginado. */
                 page?: number;
@@ -10515,6 +10544,11 @@ export interface operations {
                 page_size?: number;
                 /** @description Solo para la cuenta técnica. */
                 producer?: string;
+                /**
+                 * @description * `classified` - classified
+                 *     * `discarded` - discarded
+                 */
+                result?: "classified" | "discarded";
                 search?: string;
                 /**
                  * @description * `to_evaluate` - to_evaluate
@@ -10872,6 +10906,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QualityConflictError"];
+                };
+            };
+        };
+    };
+    quality_closed_summary_retrieve: {
+        parameters: {
+            query?: {
+                closed_from?: string;
+                closed_to?: string;
+                farm?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosedSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

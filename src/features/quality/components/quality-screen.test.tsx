@@ -9,6 +9,7 @@ import type { LotStatus } from '@/lib/lot-status';
 import { getOfflineDb } from '@/lib/offline/db';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
+  buildClosedSummary,
   buildFarm,
   buildLotQuality,
   buildQualityClassification,
@@ -19,6 +20,7 @@ import {
 } from '@/test/factories';
 import {
   apiUrl,
+  closedSummaryHandler,
   farmsHandler,
   qualityListHandler,
   qualitySummaryHandler,
@@ -69,6 +71,7 @@ beforeEach(() => {
   server.use(
     farmsHandler([buildFarm({ ...esperanza }), buildFarm({ ...diviso })]),
     qualityListHandler([lotOf('l1', 'dried')], requests),
+    closedSummaryHandler(),
     qualitySummaryHandler(
       buildQualitySummary({
         to_evaluate: 3,
@@ -224,7 +227,9 @@ describe('QualityScreen', () => {
     );
     renderScreen({ searchParams: '?vista=cerrados' });
 
-    const [classified, discarded] = await cards('Lotes cerrados');
+    const [classified, discarded] = await cards(
+      'Lotes cerrados en octubre de 2026',
+    );
     expect(classified).toHaveTextContent('Clasificado');
     expect(classified).toHaveTextContent('G150,0 kg');
     expect(classified).toHaveTextContent('Descarte6,0 kg');
@@ -232,6 +237,12 @@ describe('QualityScreen', () => {
     expect(discarded).toHaveTextContent('Descartado');
     expect(discarded).toHaveTextContent('Motivo: Granos germinados');
     expect(within(discarded).queryAllByRole('button')).toHaveLength(0);
+    expect(
+      within(classified).getByRole('link', { name: /^Ver el lote/ }),
+    ).toHaveAttribute('href', expect.stringMatching(/id=l3/));
+    expect(
+      within(discarded).getByRole('link', { name: /^Ver el lote/ }),
+    ).toHaveAttribute('href', expect.stringMatching(/id=l4/));
   });
 
   it('writes the tab in the URL and sends the filters', async () => {
@@ -316,5 +327,142 @@ describe('QualityScreen', () => {
         'Elige un productor para ver sus lotes de calidad.',
       ),
     ).toBeInTheDocument();
+  });
+
+  describe('closed lots', () => {
+    const closedLots = () => [
+      lotOf('l3', 'classified', {
+        evaluation: buildQualityEvaluation(),
+        classification: buildQualityClassification({
+          classified_at: '2026-11-03T10:00:00-05:00',
+        }),
+      }),
+      lotOf('l4', 'discarded', {
+        evaluation: buildQualityEvaluation(),
+        discard: buildQualityDiscard({
+          discarded_at: '2026-10-30T10:00:00-05:00',
+        }),
+      }),
+    ];
+
+    it('shows what the period left instead of the daily figures', async () => {
+      server.use(
+        qualityListHandler(closedLots(), requests),
+        closedSummaryHandler(
+          buildClosedSummary({
+            classified: 7,
+            g1_kg: '1250.5',
+            g2_kg: '300.0',
+            discarded: 2,
+            discarded_kg: '88.0',
+          }),
+        ),
+      );
+      renderScreen({ searchParams: '?vista=cerrados' });
+
+      const strip = await screen.findByRole('region', {
+        name: 'Resumen de lotes cerrados',
+      });
+      await waitFor(() => expect(strip).toHaveTextContent('Clasificados7'));
+      expect(strip).toHaveTextContent('G1');
+      expect(strip).toHaveTextContent('G11250,5 kg');
+      expect(strip).toHaveTextContent('Descartados2');
+      expect(strip).toHaveTextContent('88,0 kg fuera');
+      expect(
+        screen.queryByRole('region', { name: 'Resumen de calidad' }),
+      ).toBeNull();
+    });
+
+    it('groups the cards by closing month, newest first', async () => {
+      server.use(qualityListHandler(closedLots()));
+      renderScreen({ searchParams: '?vista=cerrados' });
+
+      expect(await cards('Lotes cerrados en noviembre de 2026')).toHaveLength(
+        1,
+      );
+      expect(await cards('Lotes cerrados en octubre de 2026')).toHaveLength(1);
+      expect(
+        screen
+          .getAllByRole('heading', { level: 3 })
+          .map((heading) => heading.textContent),
+      ).toEqual(['noviembre de 20261 lote', 'octubre de 20261 lote']);
+    });
+
+    it('says who closed each lot and when', async () => {
+      server.use(qualityListHandler(closedLots()));
+      renderScreen({ searchParams: '?vista=cerrados' });
+
+      const [classified] = await cards('Lotes cerrados en noviembre de 2026');
+      expect(classified).toHaveTextContent(
+        'Clasificado por Cuenta de prueba el 3 nov',
+      );
+    });
+
+    it('sends the result and the period of the URL', async () => {
+      server.use(qualityListHandler(closedLots(), requests));
+      renderScreen({
+        searchParams:
+          '?vista=cerrados&resultado=descartados&desde=2026-10-01&hasta=2026-10-31',
+      });
+
+      await cards('Lotes cerrados en noviembre de 2026');
+      expect(requests[0].get('view')).toBe('closed');
+      expect(requests[0].get('result')).toBe('discarded');
+      expect(requests[0].get('closed_from')).toBe('2026-10-01');
+      expect(requests[0].get('closed_to')).toBe('2026-10-31');
+    });
+
+    it('offers the result and the period only on the closed tab', async () => {
+      renderScreen();
+
+      await cards('Lotes por evaluar');
+      expect(screen.queryByLabelText('Resultado')).toBeNull();
+      expect(screen.queryByLabelText('Cerrados desde')).toBeNull();
+    });
+
+    it('filters by result and writes it in the URL', async () => {
+      const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+      server.use(qualityListHandler(closedLots(), requests));
+      renderScreen({ searchParams: '?vista=cerrados', onUrlUpdate });
+
+      await cards('Lotes cerrados en noviembre de 2026');
+      await userEvent.selectOptions(
+        screen.getByLabelText('Resultado'),
+        'Descartados',
+      );
+
+      await waitFor(() =>
+        expect(onUrlUpdate.mock.calls.at(-1)?.[0].queryString).toContain(
+          'resultado=descartados',
+        ),
+      );
+    });
+
+    it('does not ask the server for a period that ends before it starts', async () => {
+      server.use(qualityListHandler(closedLots(), requests));
+      renderScreen({
+        searchParams: '?vista=cerrados&desde=2026-11-05&hasta=2026-11-04',
+      });
+
+      expect(
+        await screen.findByText(
+          'La fecha final no puede ser anterior a la inicial.',
+        ),
+      ).toBeInTheDocument();
+      await cards('Lotes cerrados en noviembre de 2026');
+      expect(requests.every((query) => !query.has('closed_from'))).toBe(true);
+    });
+
+    it('says nothing matches when the filters leave no closed lots', async () => {
+      server.use(qualityListHandler([]));
+      renderScreen({ searchParams: '?vista=cerrados&resultado=descartados' });
+
+      expect(
+        await screen.findByText('Ningún lote coincide con los filtros.'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByRole('button', { name: 'Limpiar filtros' }),
+      ).not.toHaveLength(0);
+    });
   });
 });

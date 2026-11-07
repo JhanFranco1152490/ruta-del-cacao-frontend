@@ -216,23 +216,31 @@ describe('drying query keys', () => {
 
 describe('quality query keys', () => {
   const filters = { producer: null, farm: null, search: '', page: 1 };
+  const closed = { result: null, from: null, to: null };
 
   it('hangs every read from the key that writes invalidate', () => {
-    const { all, list, summary, detail } = queryKeys.quality;
-    expect(startsWith(list('to_evaluate', filters), all())).toBe(true);
+    const { all, list, summary, closedSummary, detail } = queryKeys.quality;
+    expect(startsWith(list('to_evaluate', filters, closed), all())).toBe(true);
     expect(startsWith(summary(filters), all())).toBe(true);
+    expect(startsWith(closedSummary(filters, closed), all())).toBe(true);
     expect(startsWith(detail('l1'), all())).toBe(true);
   });
 
   it('keeps each tab, each filter and each lot apart', () => {
-    const { list, summary, detail } = queryKeys.quality;
-    expect(list('to_evaluate', filters)).not.toEqual(
-      list('evaluated', filters),
+    const { list, summary, closedSummary, detail } = queryKeys.quality;
+    expect(list('to_evaluate', filters, closed)).not.toEqual(
+      list('evaluated', filters, closed),
     );
-    expect(list('to_evaluate', filters)).not.toEqual(
-      list('to_evaluate', { ...filters, page: 2 }),
+    expect(list('to_evaluate', filters, closed)).not.toEqual(
+      list('to_evaluate', { ...filters, page: 2 }, closed),
+    );
+    expect(list('closed', filters, closed)).not.toEqual(
+      list('closed', filters, { ...closed, result: 'discarded' }),
     );
     expect(summary(filters)).not.toEqual(summary({ ...filters, farm: 'f-1' }));
+    expect(closedSummary(filters, closed)).not.toEqual(
+      closedSummary(filters, { ...closed, from: '2026-11-01' }),
+    );
     expect(detail('l1')).not.toEqual(detail('l2'));
   });
 });

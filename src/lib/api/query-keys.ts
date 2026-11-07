@@ -7,6 +7,13 @@ export type QualityFilters = {
   page: number;
 };
 
+// Lo que solo filtra la pestaña Cerrados: el resultado y el periodo de cierre (yyyy-MM-dd).
+export type QualityClosedFilters = {
+  result: 'classified' | 'discarded' | null;
+  from: string | null;
+  to: string | null;
+};
+
 export const queryKeys = {
   accounts: {
     all: () => ['accounts'] as const,
@@ -165,11 +172,19 @@ export const queryKeys = {
     all: () => ['quality'] as const,
     // Una página de una pestaña de Calidad, con sus filtros. La primera de cada pestaña tiene copia
     // en el dispositivo.
-    list: (view: string, filters: QualityFilters) =>
-      ['quality', 'list', view, filters] as const,
+    list: (
+      view: string,
+      filters: QualityFilters,
+      closed: QualityClosedFilters,
+    ) => ['quality', 'list', view, filters, closed] as const,
     // Las cifras de la franja, con los mismos filtros menos la pestaña y la página.
     summary: (filters: Omit<QualityFilters, 'page'>) =>
       ['quality', 'summary', filters] as const,
+    // Lo que dejó el periodo de cierre, con los filtros de la pestaña Cerrados menos la página.
+    closedSummary: (
+      filters: Omit<QualityFilters, 'page'>,
+      closed: QualityClosedFilters,
+    ) => ['quality', 'closed-summary', filters, closed] as const,
     // La calidad de un lote seco o posterior, con quién evaluó o clasificó: solo con conexión.
     detail: (lotId: string) => ['quality', 'detail', lotId] as const,
   },

@@ -16,6 +16,7 @@ import {
 } from './quality-action-dialog';
 import { QualityBody } from './quality-body';
 import { QualityFiltersBar } from './quality-filters-bar';
+import { QualityClosedSummary } from './quality-closed-summary';
 import { QualitySummary } from './quality-summary';
 
 // Calidad: los lotes secos por evaluar, los evaluados por clasificar o descartar, y los cerrados.
@@ -60,7 +61,11 @@ export function QualityScreen({
       )}
       {!screen.needsProducer && (
         <>
-          <QualitySummary summary={screen.summary.data?.data} />
+          {filters.view === 'cerrados' ? (
+            <QualityClosedSummary summary={screen.closedSummary.data?.data} />
+          ) : (
+            <QualitySummary summary={screen.summary.data?.data} />
+          )}
           <QualityFiltersBar screen={screen} />
         </>
       )}

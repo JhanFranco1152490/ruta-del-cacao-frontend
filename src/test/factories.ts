@@ -457,6 +457,17 @@ export const buildQualitySummary = (
   ...overrides,
 });
 
+export const buildClosedSummary = (
+  overrides: Partial<Schemas['ClosedSummary']> = {},
+): Schemas['ClosedSummary'] => ({
+  classified: 2,
+  discarded: 1,
+  g1_kg: '300.0',
+  g2_kg: '60.5',
+  discarded_kg: '321.2',
+  ...overrides,
+});
+
 export const buildFermentationTurn = (
   overrides: Partial<Schemas['FermentationTurn']> = {},
 ): Schemas['FermentationTurn'] => ({

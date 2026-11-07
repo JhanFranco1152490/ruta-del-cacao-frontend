@@ -48,8 +48,15 @@ export function useActionFromLink({
     if (!detail.data) return;
     handled.current = key;
     const outcome = linkedActionOutcome(detail.data, pending.action, can);
-    if (outcome.open) onOpen(detail.data, pending.action);
-    else notify.warning(outcome.message);
+    if (outcome.open) {
+      onOpen(detail.data, pending.action);
+      // Los parámetros salen después de abrir: el formulario agrega al historial una entrada con la
+      // dirección de ese momento, y si los parámetros salen antes el enrutador la restituye con ellos
+      // y recargar o volver atrás repite la acción.
+      setTimeout(onDone, 0);
+      return;
+    }
+    notify.warning(outcome.message);
     onDone();
   }, [pending, online, can, detail.data, detail.isError, onOpen, onDone]);
 }

@@ -4,26 +4,41 @@ import { formatFixedDecimal } from '@/lib/format/decimal';
 
 import type { LotQuality, LotQualityDetail } from './api';
 
-import { evaluatedByLine, type Fact } from './quality-card-facts';
+import { type BarTone, evaluatedByLine, type Fact } from './quality-card-facts';
 import { fromTenths, sumTenths, toTenths } from './tenths';
 
 const percent = (value: string | number) => `${formatFixedDecimal(value, 1)} %`;
 
+// Un dato de la sección; con `bar`, además se dibuja como parte de un total de 100.
+export type SectionFact = Fact & { bar?: { width: number; tone: BarTone } };
+
+const clampPercent = (value: number) => Math.min(100, Math.max(0, value));
+
 // «50,0 kg · 80,0 %»: los kilos de un calibre y lo que son del peso seco.
-function gradeValue(kilos: string, dryWeightKg: string | null) {
+function gradeFact(
+  label: string,
+  kilos: string,
+  dryWeightKg: string | null,
+  tone: BarTone,
+): SectionFact {
   const text = `${formatFixedDecimal(kilos, 1)} kg`;
   const dry = dryWeightKg ? toTenths(dryWeightKg) : null;
   const part = toTenths(kilos);
-  if (!dry || part === null) return text;
-  return `${text} · ${percent((part / dry) * 100)}`;
+  if (!dry || part === null) return { label, value: text };
+  const share = (part / dry) * 100;
+  return {
+    label,
+    value: `${text} · ${percent(share)}`,
+    bar: { width: clampPercent(share), tone },
+  };
 }
 
 export type QualitySectionView = {
-  evaluation: Fact[];
+  evaluation: SectionFact[];
   // Quién evaluó o corrigió, y las observaciones: solo con el detalle completo.
   evaluatedBy: string | null;
   notes: string | null;
-  classification: Fact[];
+  classification: SectionFact[];
   classifiedBy: string | null;
   discardReason: string | null;
   discardedNotice: string | null;
@@ -37,11 +52,15 @@ export function qualitySectionView(
   full: LotQuality | undefined,
   dryWeightKg: string | null,
 ): QualitySectionView {
-  const evaluation = [
-    ['Bien fermentados', summary.well_fermented_pct],
-    ['Con moho', summary.moldy_pct],
-    ['Otros defectos', summary.other_defects_pct],
-  ].map(([label, value]) => ({ label, value: percent(value) }));
+  const evaluation: SectionFact[] = [
+    ['Bien fermentados', summary.well_fermented_pct, 'ok'],
+    ['Con moho', summary.moldy_pct, 'err'],
+    ['Otros defectos', summary.other_defects_pct, 'warn'],
+  ].map(([label, value, tone]) => ({
+    label,
+    value: percent(value),
+    bar: { width: clampPercent(Number(value)), tone: tone as BarTone },
+  }));
   const total = sumTenths([
     summary.well_fermented_pct,
     summary.moldy_pct,
@@ -49,17 +68,14 @@ export function qualitySectionView(
   ]);
   evaluation.push({ label: 'Suma', value: percent(fromTenths(total)) });
 
-  const classification =
+  const classification: SectionFact[] =
     summary.g1_kg !== null &&
     summary.g2_kg !== null &&
     summary.discard_kg !== null
       ? [
-          { label: 'G1', value: gradeValue(summary.g1_kg, dryWeightKg) },
-          { label: 'G2', value: gradeValue(summary.g2_kg, dryWeightKg) },
-          {
-            label: 'Descarte',
-            value: gradeValue(summary.discard_kg, dryWeightKg),
-          },
+          gradeFact('G1', summary.g1_kg, dryWeightKg, 'ok'),
+          gradeFact('G2', summary.g2_kg, dryWeightKg, 'info'),
+          gradeFact('Descarte', summary.discard_kg, dryWeightKg, 'err'),
         ]
       : [];
 

@@ -8,10 +8,19 @@ import {
 } from 'nuqs';
 
 import { usePaginatedSearch } from '@/hooks/use-paginated-search';
-import type { QualityFilters } from '@/lib/api/query-keys';
+import { parseAsIsoDate } from '@/lib/navigation/iso-date-parser';
+import type {
+  QualityClosedFilters,
+  QualityFilters,
+} from '@/lib/api/query-keys';
 import { QUALITY_ACTIONS } from '@/lib/paths/quality';
 
-import type { QualityApiView } from './api';
+import { NO_CLOSED_FILTERS, type QualityApiView } from './api';
+import {
+  effectiveClosedFilters,
+  hasClosedFilters,
+  periodError,
+} from './closed-filters';
 
 export const QUALITY_VIEWS = ['por-evaluar', 'evaluados', 'cerrados'] as const;
 export type QualityView = (typeof QUALITY_VIEWS)[number];
@@ -22,6 +31,14 @@ export const API_VIEW: Record<QualityView, QualityApiView> = {
   cerrados: 'closed',
 };
 
+export const CLOSED_RESULTS = ['clasificados', 'descartados'] as const;
+export type ClosedResultParam = (typeof CLOSED_RESULTS)[number];
+
+const API_RESULT: Record<ClosedResultParam, 'classified' | 'discarded'> = {
+  clasificados: 'classified',
+  descartados: 'discarded',
+};
+
 // Una pestaña o una acción malformadas (?vista=todas, ?accion=borrar) cuentan como la primera
 // pestaña y como ninguna acción.
 const parsers = {
@@ -30,6 +47,10 @@ const parsers = {
   search: parseAsString.withDefault(''),
   producer: parseAsString,
   page: parseAsInteger.withDefault(1),
+  // Solo de la pestaña Cerrados: el resultado y el periodo de cierre.
+  result: parseAsStringLiteral(CLOSED_RESULTS),
+  from: parseAsIsoDate,
+  to: parseAsIsoDate,
   // Los enlaces desde Lotes y la ficha: el lote y el formulario que se abre al llegar.
   lot: parseAsString,
   action: parseAsStringLiteral(QUALITY_ACTIONS),
@@ -42,6 +63,9 @@ const urlKeys = {
   search: 'buscar',
   producer: 'productor',
   page: 'pagina',
+  result: 'resultado',
+  from: 'desde',
+  to: 'hasta',
   lot: 'lote',
   action: 'accion',
 };
@@ -63,12 +87,30 @@ export function useQualityFilters() {
     page: Math.max(1, params.page),
   };
 
+  const onClosedTab = params.view === 'cerrados';
+  // Lo de Cerrados no sale a las otras pestañas: sus listas y su copia no cambian por ello.
+  const closedInputs: QualityClosedFilters = {
+    result: params.result ? API_RESULT[params.result] : null,
+    from: params.from,
+    to: params.to,
+  };
+  const closed = onClosedTab
+    ? effectiveClosedFilters(closedInputs)
+    : NO_CLOSED_FILTERS;
+
   return {
     view: params.view,
     apiView: API_VIEW[params.view],
     filters,
     summaryFilters,
-    hasFilters: !!filters.farm || !!filters.search,
+    // Lo que se escribió en los campos de Cerrados, aunque el periodo esté al revés.
+    closedInputs,
+    closed,
+    periodError: onClosedTab ? periodError(params.from, params.to) : null,
+    hasFilters:
+      !!filters.farm ||
+      !!filters.search ||
+      (onClosedTab && hasClosedFilters(closedInputs)),
     ...search,
     // Solo con las dos: un lote sin acción no abre nada.
     pendingAction:
@@ -79,10 +121,23 @@ export function useQualityFilters() {
     // Cambiar de pestaña conserva la finca y la búsqueda: se mira lo mismo en la otra lista.
     setView: (view: QualityView) => setParams({ view, page: 1 }),
     setFarm: (farm: string | null) => setParams({ farm, page: 1 }),
+    setResult: (result: ClosedResultParam | null) =>
+      setParams({ result, page: 1 }),
+    setFrom: (from: string | null) =>
+      setParams({ from: from || null, page: 1 }),
+    setTo: (to: string | null) => setParams({ to: to || null, page: 1 }),
     setPage: (page: number) => setParams({ page }),
     // La finca elegida era de otro productor.
     setProducer: (producer: string | null) =>
       setParams({ producer, farm: null, page: 1 }),
-    clear: () => setParams({ farm: null, search: null, page: 1 }),
+    clear: () =>
+      setParams({
+        farm: null,
+        search: null,
+        result: null,
+        from: null,
+        to: null,
+        page: 1,
+      }),
   };
 }

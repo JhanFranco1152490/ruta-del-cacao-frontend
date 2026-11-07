@@ -7,6 +7,7 @@ import {
   buildMunicipalities,
   buildPage,
   buildProfile,
+  buildClosedSummary,
   buildQualitySummary,
 } from './factories';
 
@@ -208,6 +209,15 @@ export const qualitySummaryHandler = (
   requests: URLSearchParams[] = [],
 ) =>
   http.get(apiUrl('/api/quality/summary'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(summary);
+  });
+
+export const closedSummaryHandler = (
+  summary: JsonBodyType = buildClosedSummary(),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/quality/closed-summary'), ({ request }) => {
     requests.push(new URL(request.url).searchParams);
     return HttpResponse.json(summary);
   });

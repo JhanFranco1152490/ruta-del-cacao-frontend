@@ -76,6 +76,41 @@ describe('qualitySectionView', () => {
     );
   });
 
+  it('draws each percentage and each grade as a bar of the total', () => {
+    const view = qualitySectionView(
+      summary({ g1_kg: '50.0', g2_kg: '6.5', discard_kg: '6.0' }),
+      undefined,
+      '62.5',
+    );
+
+    expect(view.evaluation.map(({ bar }) => bar)).toEqual([
+      { width: 85, tone: 'ok' },
+      { width: 2, tone: 'err' },
+      { width: 5, tone: 'warn' },
+      undefined,
+    ]);
+    expect(view.classification.map(({ bar }) => bar?.tone)).toEqual([
+      'ok',
+      'info',
+      'err',
+    ]);
+    expect(view.classification[0].bar?.width).toBeCloseTo(80);
+  });
+
+  it('draws no grade bar without the dry weight to compare against', () => {
+    const view = qualitySectionView(
+      summary({ g1_kg: '50.0', g2_kg: '6.5', discard_kg: '6.0' }),
+      undefined,
+      null,
+    );
+
+    expect(view.classification.map(({ bar }) => bar)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
   it('says when and why a whole lot was discarded', () => {
     const discarded = summary({
       discard_reason: 'other',

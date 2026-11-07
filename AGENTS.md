@@ -394,7 +394,18 @@ src/
     lote para cualquiera que lo vea, y con `GET /api/quality/{id}` (que pide `evaluate_lot`) suma
     quién evaluó o clasificó, las observaciones, el detalle de «Otro» y las acciones, que llevan a
     Calidad. La clasificación va en kg y en % del peso seco; el lote descartado, con un aviso rojo.
-    La ilustración de los vacíos es propia (`CutTest`). Los motivos de descarte viven en
+    La ilustración de los vacíos es propia (`CutTest`).
+  - **Cerrados con filtros, meses y totales.** La pestaña Cerrados filtra por **resultado**
+    (`?resultado=clasificados|descartados`) y por **periodo de cierre** (`?desde=&hasta=`, días
+    incluidos; un periodo al revés se dice en el campo y no se pregunta al servidor,
+    `closed-filters.ts`). Solo cuentan en esa pestaña: las otras no los mandan ni parten su copia. Los
+    lotes de la página se agrupan por **mes de cierre** (`closed-groups.ts`, en la hora de Bogotá), con
+    cuántos lotes trae cada mes, y la franja de arriba cambia a lo que dejó el periodo
+    (`GET /api/quality/closed-summary`: clasificados, G1, G2, descartados y los kilos que quedaron
+    fuera). Cada tarjeta dice quién cerró el lote y cuándo, y la clasificación trae su barra de reparto
+    (`quality-grade-bar.tsx`, compartida con la ficha). La sección de Calidad de la ficha dibuja la
+    evaluación en barras (`quality-section-parts.tsx`) y dice quién evaluó y, si se corrigió, quién
+    corrigió. Los motivos de descarte viven en
     `lib/discard-reasons.ts`, porque también los usan las notificaciones.
 
 - **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un

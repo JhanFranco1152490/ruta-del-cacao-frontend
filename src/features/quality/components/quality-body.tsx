@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { CutTest } from '@/components/illustrations/cut-test';
@@ -7,10 +9,12 @@ import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { LoadingBlock } from '@/components/loading-block';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
+import { formatMonthYear } from '@/lib/format/dates';
 import { isNeverLoaded } from '@/lib/offline/paused-read';
 import type { QualityAction } from '@/lib/paths/quality';
 
 import type { LotQuality } from '../api';
+import { groupByClosingMonth } from '../closed-groups';
 import { qualityActions } from '../quality-actions';
 import type { QualityView } from '../use-quality-filters';
 import type { QualityScreenState } from '../use-quality-screen';
@@ -30,6 +34,43 @@ const LIST_LABEL: Record<QualityView, string> = {
   evaluados: 'Lotes evaluados',
   cerrados: 'Lotes cerrados',
 };
+
+const CARD_GRID_CLASS =
+  'motion-stagger grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3';
+
+// Los cerrados de la página, en secciones por mes de cierre: con el tiempo son muchos y el mes dice
+// dónde se está en la lista.
+function ClosedMonths({
+  lots,
+  renderCard,
+}: {
+  lots: readonly LotQuality[];
+  renderCard: (lot: LotQuality) => ReactNode;
+}) {
+  return (
+    <div className="space-y-5">
+      {groupByClosingMonth(lots).map(({ month, lots: monthLots }) => (
+        <section aria-label={monthTitle(month)} key={month || 'sin-fecha'}>
+          <h3 className="mb-2 text-sm font-bold text-selva first-letter:uppercase">
+            {monthTitle(month)}
+            <span className="ml-2 font-normal text-muted-foreground">
+              {monthLots.length === 1 ? '1 lote' : `${monthLots.length} lotes`}
+            </span>
+          </h3>
+          <ul
+            aria-label={`Lotes cerrados en ${monthTitle(month)}`}
+            className={CARD_GRID_CLASS}
+          >
+            {monthLots.map(renderCard)}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+const monthTitle = (month: string) =>
+  month ? formatMonthYear(month) : 'Sin fecha';
 
 // La pestaña elegida de Calidad, o el estado que la reemplaza mientras no hay qué mostrar.
 export function QualityBody({
@@ -89,26 +130,28 @@ export function QualityBody({
       <EmptyState illustration={CutTest} title={EMPTY[filters.view]} />
     );
   }
+  const card = (lot: LotQuality) => (
+    <QualityCard
+      key={lot.lot.id}
+      lot={lot}
+      lotHref={lotHref}
+      offers={qualityActions({
+        status: lot.lot.status,
+        online: !screen.offline,
+        can: screen.can,
+      })}
+      onAction={onAction}
+    />
+  );
   return (
     <>
-      <ul
-        aria-label={LIST_LABEL[filters.view]}
-        className="motion-stagger grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
-      >
-        {page.results.map((lot) => (
-          <QualityCard
-            key={lot.lot.id}
-            lot={lot}
-            lotHref={lotHref}
-            offers={qualityActions({
-              status: lot.lot.status,
-              online: !screen.offline,
-              can: screen.can,
-            })}
-            onAction={onAction}
-          />
-        ))}
-      </ul>
+      {filters.view === 'cerrados' ? (
+        <ClosedMonths lots={page.results} renderCard={card} />
+      ) : (
+        <ul aria-label={LIST_LABEL[filters.view]} className={CARD_GRID_CLASS}>
+          {page.results.map(card)}
+        </ul>
+      )}
       {!screen.offline && (
         <Pagination
           label="lotes"

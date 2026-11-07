@@ -7,7 +7,7 @@ import { useProducerSummary } from '@/lib/api/producer-options';
 import { resolveFarmFilter } from '@/lib/farm-filter';
 import { farmLabel } from '@/lib/format/place-label';
 
-import { useQualityLots, useQualitySummary } from './api';
+import { useClosedSummary, useQualityLots, useQualitySummary } from './api';
 import { qualityPermissionsOf } from './quality-actions';
 import { useQualityFilters } from './use-quality-filters';
 
@@ -25,8 +25,19 @@ export function useQualityScreen() {
   const needsProducer = superuser && !producer;
   const userId = needsProducer ? undefined : user?.id;
 
-  const list = useQualityLots(userId, filters.apiView, filters.filters);
+  const list = useQualityLots(
+    userId,
+    filters.apiView,
+    filters.filters,
+    filters.closed,
+  );
   const summary = useQualitySummary(userId, filters.summaryFilters);
+  const closedSummary = useClosedSummary(
+    userId,
+    filters.summaryFilters,
+    filters.closed,
+    filters.apiView === 'closed',
+  );
   const farms = useFarmOptions(user?.id, producer ?? undefined, {
     enabled: !needsProducer,
   });
@@ -47,6 +58,7 @@ export function useQualityScreen() {
     needsProducer,
     list,
     summary,
+    closedSummary,
     offline: !hasConnection || list.data?.savedAt !== undefined,
     can,
     farmOptions,
