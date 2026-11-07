@@ -53,11 +53,17 @@ export function useWarehouseScreen() {
   });
   const selectedProducer = useProducerSummary(producer ?? undefined);
 
-  const farmOptions = (farms.data?.data.options ?? []).map((farm) => ({
+  const farmList = farms.data?.data.options ?? [];
+  const toOption = (farm: (typeof farmList)[number]) => ({
     id: farm.id,
     label: farmLabel(farm),
     name: farm.name,
-  }));
+  });
+  const farmOptions = farmList.map(toOption);
+  // Donde se puede registrar una bodega: una finca inactiva no la recibe.
+  const activeFarmOptions = farmList
+    .filter((farm) => farm.isActive)
+    .map(toOption);
   const warehouseOptions = (warehouses.data?.data.results ?? []).map(
     (warehouse) => ({
       id: warehouse.id,
@@ -93,6 +99,7 @@ export function useWarehouseScreen() {
     savedAt,
     can,
     farmOptions,
+    activeFarmOptions,
     farm: resolveFarmFilter(farmOptions, filters.stockFilters.farm),
     warehouseOptions,
     ordering: filters.stockFilters.ordering ?? DEFAULT_STOCK_ORDERING,

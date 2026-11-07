@@ -14,6 +14,7 @@ import { PendingEntryBody } from './pending-entry-body';
 import { StockBody } from './stock-body';
 import { WarehouseFiltersBar } from './warehouse-filters-bar';
 import { WarehouseSummary } from './warehouse-summary';
+import { WarehousesBody } from './warehouses-body';
 
 // Bodega: el cacao seco que hay de cada calibre, los lotes clasificados por ingresar y las bodegas
 // de cada finca. La ficha del lote es de otro dominio: su ruta la entrega quien monta la pantalla.
@@ -67,6 +68,7 @@ export function WarehouseScreen({
           screen={screen}
         />
       )}
+      {screen.view === 'bodegas' && <WarehousesBody screen={screen} />}
     </div>
   );
 }
