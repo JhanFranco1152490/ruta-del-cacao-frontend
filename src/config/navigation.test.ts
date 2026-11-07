@@ -96,6 +96,7 @@ describe('NAV_ITEMS', () => {
       '/lotes',
       '/fermentacion',
       '/secado',
+      '/calidad',
       '/infraestructura',
       '/parametros-poscosecha',
       '/variedades',
@@ -115,6 +116,7 @@ describe('NAV_ITEMS', () => {
       'farm',
       'agriculture',
       'agriculture',
+      'postharvest',
       'postharvest',
       'postharvest',
       'postharvest',
@@ -147,6 +149,7 @@ describe('NAV_ITEMS', () => {
       PERMISSIONS.FERMENTATION_LOG_TURNS,
     );
     expect(byHref['/secado'].permission).toBe(PERMISSIONS.DRYING_LOG);
+    expect(byHref['/calidad'].permission).toBe(PERMISSIONS.QUALITY_EVALUATE);
     expect(byHref['/infraestructura'].permission).toBe(
       PERMISSIONS.FACILITIES_VIEW,
     );

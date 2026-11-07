@@ -1323,6 +1323,126 @@ export interface paths {
         patch: operations["producers_status_partial_update"];
         trace?: never;
     };
+    "/api/quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los lotes de calidad de las fincas que la cuenta alcanza, paginados. `view` elige cuáles: `to_evaluate` (por defecto, los Seco, del que se secó primero), `evaluated` (del que se evaluó primero) o `closed` (Clasificado y Descartado, del más reciente). `search` busca una parte del código, sin distinguir mayúsculas. En `closed`, `result` (`classified` o `discarded`) y el periodo de cierre (`closed_from` y `closed_to`, días incluidos) acotan la lista. */
+        get: operations["quality_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quality/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La calidad de un lote Seco o posterior. Un lote anterior a Seco es 404. */
+        get: operations["quality_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quality/{id}/classification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Clasifica un lote Evaluado: reparte su peso seco entre G1, G2 y descarte. La suma debe ser exactamente el peso seco; si no, 400 `classification_sum_mismatch` con lo que falta o sobra. Con kilos de descarte, `discard_reason` es obligatorio (y con `other`, `discard_detail`). El lote pasa a Clasificado. Requiere `expected_lot_version`; en otro estado, 409 `lot_invalid_status`. */
+        post: operations["quality_classification_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quality/{id}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Descarta un lote Evaluado completo, con su motivo (y con `other`, su detalle). Es irreversible: el lote queda Descartado y no se clasifica, no entra a bodega ni se vende. Avisa a las cuentas que trabajan la calidad en la finca del lote, menos a quien descarta. La confirmación la pide el cliente. Requiere `expected_lot_version`; en otro estado, 409 `lot_invalid_status`. */
+        post: operations["quality_discard_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quality/{id}/evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registra la evaluación física de un lote Seco: los porcentajes de granos bien fermentados, con moho y con otros defectos de la muestra, de 0 a 100 cada uno y hasta 100 entre los tres (si no, 400 `quality_sum_exceeds_100` con `total_pct`). El lote pasa a Evaluado. Requiere `expected_lot_version`; en otro estado, 409 `lot_invalid_status` con `current_status`. */
+        post: operations["quality_evaluation_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Corrige la evaluación de un lote Evaluado y guarda quién corrigió y cuándo. Requiere `expected_version` de la evaluación; si cambió, 409 `stale_version` con el vigente en `current`. Un lote Clasificado o Descartado responde 409 `lot_invalid_status` con `current_status`. */
+        patch: operations["quality_evaluation_partial_update"];
+        trace?: never;
+    };
+    "/api/quality/closed-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lo que dejó el periodo de cierre: lotes clasificados y descartados, kilos de G1 y G2 y kilos que quedaron fuera. Con los filtros de la lista de Cerrados (`farm`, `search`, `closed_from` y `closed_to`). */
+        get: operations["quality_closed_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quality/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las cifras de la pantalla de calidad: cuántos lotes y kilos secos esperan su evaluación, cuántos esperan clasificarse y cuántos se descartaron este mes. Con los mismos filtros de la lista menos `view`. */
+        get: operations["quality_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles": {
         parameters: {
             query?: never;
@@ -1705,6 +1825,8 @@ export interface components {
             all_farms: boolean;
             assignable: boolean;
         };
+        /** @enum {unknown} */
+        BlankEnum: "";
         CacaoVariety: {
             /** Format: uuid */
             readonly id: string;
@@ -1744,6 +1866,39 @@ export interface components {
         };
         CatalogInputList: {
             results: components["schemas"]["CatalogInput"][];
+        };
+        ClassificationCreateRequest: {
+            expected_lot_version: number;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discard_kg: string;
+            /** @default  */
+            discard_reason: components["schemas"]["QualityDiscardReasonEnum"] | components["schemas"]["BlankEnum"];
+            /** @default  */
+            discard_detail: string;
+        };
+        ClassificationSumError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            expected_kg?: string;
+            received_kg?: string;
+            difference_kg?: string;
+        };
+        ClosedSummary: {
+            classified: number;
+            discarded: number;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discarded_kg: string;
         };
         CollectorList: {
             results: components["schemas"]["CollectorOption"][];
@@ -1896,6 +2051,13 @@ export interface components {
          * @enum {string}
          */
         DeviationSeverityEnum: "normal" | "critical";
+        DiscardCreateRequest: {
+            expected_lot_version: number;
+            /** @default  */
+            reason: components["schemas"]["QualityDiscardReasonEnum"] | components["schemas"]["BlankEnum"];
+            /** @default  */
+            detail: string;
+        };
         DismissedCount: {
             dismissed: number;
         };
@@ -2148,6 +2310,17 @@ export interface components {
                 [key: string]: string[];
             };
             range?: components["schemas"]["DryingRange"];
+        };
+        EvaluationCreateRequest: {
+            expected_lot_version: number;
+            /** Format: decimal */
+            well_fermented_pct: string;
+            /** Format: decimal */
+            moldy_pct: string;
+            /** Format: decimal */
+            other_defects_pct: string;
+            /** @default  */
+            notes: string;
         };
         Evidence: {
             /** Format: uuid */
@@ -2649,6 +2822,7 @@ export interface components {
             updated_at: string;
             readonly fermentation: components["schemas"]["LotFermentation"] | null;
             readonly drying: components["schemas"]["LotDrying"] | null;
+            readonly quality: components["schemas"]["LotQualityDetail"] | null;
         };
         LotBrief: {
             /** Format: uuid */
@@ -2658,6 +2832,7 @@ export interface components {
             farm: components["schemas"]["LotFarm"];
             readonly fermentation: components["schemas"]["LotFermentation"] | null;
             readonly drying: components["schemas"]["LotDrying"] | null;
+            readonly quality: components["schemas"]["LotQualityDetail"] | null;
         };
         LotConflictError: {
             detail: string;
@@ -2704,15 +2879,50 @@ export interface components {
             id: string;
             member_code: string;
         };
+        LotQuality: {
+            lot: components["schemas"]["QualityLot"];
+            farm: components["schemas"]["QualityFarm"];
+            /** Format: decimal */
+            dry_weight_kg: string;
+            /** Format: decimal */
+            final_moisture_pct: string;
+            /** Format: date-time */
+            drying_ended_at: string;
+            evaluation: components["schemas"]["QualityEvaluation"] | null;
+            classification: components["schemas"]["QualityClassification"] | null;
+            discard: components["schemas"]["QualityDiscard"] | null;
+        };
+        LotQualityDetail: {
+            /** Format: decimal */
+            well_fermented_pct: string;
+            /** Format: decimal */
+            moldy_pct: string;
+            /** Format: decimal */
+            other_defects_pct: string;
+            /** Format: date-time */
+            evaluated_at: string;
+            /** Format: decimal */
+            g1_kg: string | null;
+            /** Format: decimal */
+            g2_kg: string | null;
+            /** Format: decimal */
+            discard_kg: string | null;
+            discard_reason: (components["schemas"]["QualityDiscardReasonEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: date-time */
+            discarded_at: string | null;
+        };
         /**
          * @description * `generated` - Generado
          *     * `fermenting` - En fermentación
          *     * `fermented` - Fermentado
          *     * `drying` - En secado
          *     * `dried` - Seco
+         *     * `evaluated` - Evaluado
+         *     * `classified` - Clasificado
+         *     * `discarded` - Descartado
          * @enum {string}
          */
-        LotStatusEnum: "generated" | "fermenting" | "fermented" | "drying" | "dried";
+        LotStatusEnum: "generated" | "fermenting" | "fermented" | "drying" | "dried" | "evaluated" | "classified" | "discarded";
         LotStatusTotal: {
             status: components["schemas"]["LotStatusEnum"];
             count: number;
@@ -2798,9 +3008,10 @@ export interface components {
          *     * `drying_accelerated` - Secado acelerado
          *     * `drying_near_target` - Próximo a meta
          *     * `drying_overdried` - Sobresecado
+         *     * `lot_discarded` - Lote descartado
          * @enum {string}
          */
-        NotificationKindEnum: "activity_upcoming" | "activity_delayed" | "activity_overdue" | "detection_control_pending" | "fermentation_first_turn_due" | "fermentation_turn_due" | "drying_log_due" | "fermentation_temperature_low" | "fermentation_temperature_high" | "fermentation_ph_low" | "fermentation_ph_high" | "drying_slow_stalled" | "drying_slow_duration" | "drying_accelerated" | "drying_near_target" | "drying_overdried";
+        NotificationKindEnum: "activity_upcoming" | "activity_delayed" | "activity_overdue" | "detection_control_pending" | "fermentation_first_turn_due" | "fermentation_turn_due" | "drying_log_due" | "fermentation_temperature_low" | "fermentation_temperature_high" | "fermentation_ph_low" | "fermentation_ph_high" | "drying_slow_stalled" | "drying_slow_duration" | "drying_accelerated" | "drying_near_target" | "drying_overdried" | "lot_discarded";
         /**
          * @description * `normal` - Normal
          *     * `critical` - Crítica
@@ -2956,6 +3167,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Lot"][];
+        };
+        PaginatedLotQualityList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["LotQuality"][];
         };
         PaginatedNotificationList: {
             /** @example 123 */
@@ -3116,6 +3342,16 @@ export interface components {
             /** Format: uuid */
             responsible_id?: string;
             confirm_entry_moisture?: boolean;
+            expected_version?: number;
+        };
+        PatchedEvaluationUpdateRequest: {
+            /** Format: decimal */
+            well_fermented_pct?: string;
+            /** Format: decimal */
+            moldy_pct?: string;
+            /** Format: decimal */
+            other_defects_pct?: string;
+            notes?: string;
             expected_version?: number;
         };
         PatchedFarmUpdateRequest: {
@@ -3660,6 +3896,94 @@ export interface components {
         };
         PushSubscriptionRemoveRequest: {
             endpoint: string;
+        };
+        QualityClassification: {
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discard_kg: string;
+            discard_reason: components["schemas"]["QualityDiscardReasonEnum"] | components["schemas"]["BlankEnum"];
+            discard_detail: string;
+            /** Format: date-time */
+            classified_at: string;
+            classified_by: components["schemas"]["QualityPerson"];
+        };
+        QualityConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["LotQuality"];
+            current_status?: string;
+        };
+        QualityDiscard: {
+            reason: components["schemas"]["QualityDiscardReasonEnum"];
+            detail: string;
+            /** Format: date-time */
+            discarded_at: string;
+            discarded_by: components["schemas"]["QualityPerson"];
+        };
+        /**
+         * @description * `mold` - Moho
+         *     * `under_fermented` - Fermentación insuficiente
+         *     * `over_fermented` - Sobrefermentado
+         *     * `insect_damage` - Daño por insectos
+         *     * `contamination` - Contaminación (humo, olores, químicos)
+         *     * `other` - Otro
+         * @enum {string}
+         */
+        QualityDiscardReasonEnum: "mold" | "under_fermented" | "over_fermented" | "insect_damage" | "contamination" | "other";
+        QualityEvaluation: {
+            /** Format: decimal */
+            well_fermented_pct: string;
+            /** Format: decimal */
+            moldy_pct: string;
+            /** Format: decimal */
+            other_defects_pct: string;
+            notes: string;
+            /** Format: date-time */
+            evaluated_at: string;
+            evaluated_by: components["schemas"]["QualityPerson"];
+            /** Format: date-time */
+            corrected_at: string | null;
+            corrected_by: components["schemas"]["QualityPerson"] | null;
+            version: number;
+        };
+        QualityFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        QualityLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+            version: number;
+        };
+        QualityPerson: {
+            /** Format: uuid */
+            id: string;
+            readonly full_name: string;
+        };
+        QualitySumError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            total_pct?: string;
+        };
+        QualitySummary: {
+            to_evaluate: number;
+            /** Format: decimal */
+            to_evaluate_kg: string;
+            evaluated: number;
+            discarded_this_month: number;
         };
         Recorder: {
             /** Format: uuid */
@@ -7697,8 +8021,11 @@ export interface operations {
                  *     * `fermented` - Fermentado
                  *     * `drying` - En secado
                  *     * `dried` - Seco
+                 *     * `evaluated` - Evaluado
+                 *     * `classified` - Clasificado
+                 *     * `discarded` - Descartado
                  */
-                status?: "generated" | "fermenting" | "fermented" | "drying" | "dried";
+                status?: "generated" | "fermenting" | "fermented" | "drying" | "dried" | "evaluated" | "classified" | "discarded";
                 to?: string;
                 variety?: string;
             };
@@ -10196,6 +10523,482 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    quality_list: {
+        parameters: {
+            query?: {
+                closed_from?: string;
+                closed_to?: string;
+                farm?: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /**
+                 * @description * `classified` - classified
+                 *     * `discarded` - discarded
+                 */
+                result?: "classified" | "discarded";
+                search?: string;
+                /**
+                 * @description * `to_evaluate` - to_evaluate
+                 *     * `evaluated` - evaluated
+                 *     * `closed` - closed
+                 */
+                view?: "to_evaluate" | "evaluated" | "closed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedLotQualityList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    quality_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotQuality"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    quality_classification_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassificationCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotQuality"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassificationSumError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityConflictError"];
+                };
+            };
+        };
+    };
+    quality_discard_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscardCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotQuality"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityConflictError"];
+                };
+            };
+        };
+    };
+    quality_evaluation_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotQuality"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySumError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityConflictError"];
+                };
+            };
+        };
+    };
+    quality_evaluation_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEvaluationUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotQuality"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySumError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityConflictError"];
+                };
+            };
+        };
+    };
+    quality_closed_summary_retrieve: {
+        parameters: {
+            query?: {
+                closed_from?: string;
+                closed_to?: string;
+                farm?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosedSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    quality_summary_retrieve: {
+        parameters: {
+            query?: {
+                farm?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

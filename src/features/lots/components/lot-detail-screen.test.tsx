@@ -116,7 +116,20 @@ describe('LotDetailScreen', () => {
     expect(
       within(stages).getByRole('listitem', { current: 'step' }),
     ).toHaveTextContent('En fermentación');
-    expect(within(stages).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(stages).getAllByRole('listitem')).toHaveLength(7);
+  });
+
+  it('ends the stages of a discarded lot in Descartado', async () => {
+    serve(buildLot({ status: 'discarded' }));
+    renderScreen();
+
+    const stages = await screen.findByRole('region', {
+      name: 'Etapas del lote',
+    });
+    expect(
+      within(stages).getByRole('listitem', { current: 'step' }),
+    ).toHaveTextContent('Descartado');
+    expect(within(stages).queryByText('Clasificado')).not.toBeInTheDocument();
   });
 
   it('ends who formed the lot with a single full stop', async () => {

@@ -65,6 +65,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     );
   });
 
+  it('saves the quality work list, read from the device copy', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/calidad');
+  });
+
   it('saves the drying work list and its field screen', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toEqual(
       expect.arrayContaining(['/secado', '/secado/bitacora']),

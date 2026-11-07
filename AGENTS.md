@@ -97,8 +97,8 @@ src/
                        con su `group` (el menú agrupa por tarea; ver el sistema de diseño)
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
-                       health, notifications, harvests, lots, fermentation, drying, facilities,
-                       postharvest-parameters, users y
+                       health, notifications, harvests, lots, fermentation, drying, quality,
+                       facilities, postharvest-parameters, users y
                        roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
@@ -180,8 +180,8 @@ src/
   ficha de un lote sin conexión (`lib/offline/postharvest-copies.ts`, ver Lotes). Desde las alertas
   de poscosecha: `lib/postharvest/` (el nombre de cada aviso en `alert-kinds.ts`, el texto de los
   desvíos al guardar en `deviation-notice-text.ts`, las mediciones con decimales fijos en
-  `measure-text.ts` y el día de secado en `drying-day.ts`) y las rutas de fermentación, secado y
-  lotes en `lib/paths/`, como las de actividades, insumos y productores (cada dominio las reexporta
+  `measure-text.ts` y el día de secado en `drying-day.ts`) y las rutas de fermentación, secado,
+  calidad y lotes en `lib/paths/`, como las de actividades, insumos y productores (cada dominio las reexporta
   desde su `*-paths.ts`, así que dentro del dominio se siguen importando de ahí). El dominio dueño
   los usa desde ahí.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
@@ -252,9 +252,11 @@ src/
   `fermentationLotActions` y `dryingLotActions`) y la página (`app/(app)/lotes/lot-list.tsx`) las junta; cada opción es
   un enlace a la pantalla donde se hace, nunca un formulario dentro de Lotes. Registrar un volteo va
   directo a su pantalla de campo; iniciar y finalizar abren su formulario al llegar a Fermentación
-  (`?iniciar=` y `?finalizar=`). **El botón de la cabecera** sigue al estado elegido
+  (`?iniciar=` y `?finalizar=`), y evaluar, clasificar y descartar, al llegar a Calidad
+  (`?lote=&accion=`). **El botón de la cabecera** sigue al estado elegido
   (`fermentationStageAction` y `dryingStageAction`: Generado → «Iniciar fermentación», En
-  fermentación → «Ir a Fermentación», Fermentado → «Iniciar secado», En secado → «Ir a Secado»; con
+  fermentación → «Ir a Fermentación», Fermentado → «Iniciar secado», En secado → «Ir a Secado», Seco y
+  Evaluado → «Ir a Calidad» (`qualityStageAction`); con
   otro estado o sin el permiso, «Cosechas sin lote» queda como principal) y «Cosechas sin lote» pasa a
   secundario cuando hay uno. La tarjeta de un lote Seco dice su rendimiento. **Conformar** también
   funciona sin conexión: el lote nace en el dispositivo con su `id` (`form-lot-dialog.tsx` lo genera
@@ -364,6 +366,47 @@ src/
     Infraestructura. La sección de la ficha del lote (`drying-section.tsx`) muestra los datos y la
     bitácora día por día (`log-rows.ts`, con los días sin registro como fila tenue) en una tabla que
     cabe sin desplazarse a 1280 px.
+
+- **Calidad (`features/quality/`).** `/calidad` (precargada, solo con `quality.evaluate_lot`) es la
+  lista de trabajo de quien evalúa el grano seco: tres pestañas en la URL (`?vista=`: **Por evaluar**,
+  los Seco; **Evaluados**; **Cerrados**, los Clasificado y Descartado), la finca y la búsqueda por
+  código (`use-quality-filters.ts`), las cifras (`GET /api/quality/summary`) y la paginación del
+  servidor, de a 20. **Se registra solo en línea; se consulta sin conexión:** la primera página de
+  cada pestaña con sus filtros y las cifras se guardan en `cache` (`readThroughCache`); sin
+  conexión no se pagina y las acciones se ven deshabilitadas con su motivo. Los estados nuevos del
+  lote (**Evaluado**, **Clasificado** y **Descartado**) están en `lib/lot-status.ts`; Descartado no
+  entra en `LOT_STATUS_ORDER`: es la salida de la bifurcación, y sus etapas terminan en él.
+  - **Las reglas que comparten pantalla y servidor son funciones puras:** la suma de los tres
+    porcentajes hasta 100 (`evaluation-sum.ts`), lo repartido contra el peso seco
+    (`classification-form.ts`) y cuándo se piden el motivo y el detalle de un descarte
+    (`discard-reasons.ts`). Kilos y porcentajes se suman en **décimas enteras** (`tenths.ts`), no
+    con flotantes. Qué acciones se ofrecen (`quality-actions.ts`: Seco → Evaluar; Evaluado →
+    Clasificar, Corregir evaluación y Descartar lote, cada una con su permiso) y la traducción de
+    los errores del servidor (`quality-errors.ts`: `lot_invalid_status` cierra el formulario, avisa
+    y refresca; `stale_version` carga lo vigente de `current`; `quality_sum_exceeds_100` va en
+    **Otros defectos**; `classification_sum_mismatch` dice la diferencia del servidor).
+  - **Los formularios** (`evaluation-dialog.tsx`, que también corrige y no envía sin cambios;
+    `classification-dialog.tsx`; `discard-dialog.tsx`, que confirma con `useConfirmAction` y el
+    botón de peligro de `FormDialog`, `destructive`) los elige `quality-action-dialog.tsx`. Llegar
+    con `?lote=&accion=` lee el lote (`GET /api/quality/{id}`, porque puede estar en otra pestaña) y
+    abre el formulario si la acción todavía aplica, o dice por qué no (`linked-action.ts`).
+  - **La sección de la ficha del lote** (`quality-section.tsx`) se arma con el campo `quality` del
+    lote para cualquiera que lo vea, y con `GET /api/quality/{id}` (que pide `evaluate_lot`) suma
+    quién evaluó o clasificó, las observaciones, el detalle de «Otro» y las acciones, que llevan a
+    Calidad. La clasificación va en kg y en % del peso seco; el lote descartado, con un aviso rojo.
+    La ilustración de los vacíos es propia (`CutTest`).
+  - **Cerrados con filtros, meses y totales.** La pestaña Cerrados filtra por **resultado**
+    (`?resultado=clasificados|descartados`) y por **periodo de cierre** (`?desde=&hasta=`, días
+    incluidos; un periodo al revés se dice en el campo y no se pregunta al servidor,
+    `closed-filters.ts`). Solo cuentan en esa pestaña: las otras no los mandan ni parten su copia. Los
+    lotes de la página se agrupan por **mes de cierre** (`closed-groups.ts`, en la hora de Bogotá), con
+    cuántos lotes trae cada mes, y la franja de arriba cambia a lo que dejó el periodo
+    (`GET /api/quality/closed-summary`: clasificados, G1, G2, descartados y los kilos que quedaron
+    fuera). Cada tarjeta dice quién cerró el lote y cuándo, y la clasificación trae su barra de reparto
+    (`quality-grade-bar.tsx`, compartida con la ficha). La sección de Calidad de la ficha dibuja la
+    evaluación en barras (`quality-section-parts.tsx`) y dice quién evaluó y, si se corrigió, quién
+    corrigió. Los motivos de descarte viven en
+    `lib/discard-reasons.ts`, porque también los usan las notificaciones.
 
 - **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un
   formulario de página (sin banner, `narrow`) con los 21 valores con los que se evalúan el secado y
@@ -479,7 +522,9 @@ src/
     fila y dentro del mismo marco (un enlace dentro de otro no es válido); se atenúan y pierden la
     acción cuando el servidor los da por resueltos (`resolved_at`) o el lote salió de la etapa. Los
     **desvíos** muestran la medición como está ahora (el volteo o la bitácora corregidos) y nunca se
-    atenúan: ya pasaron.
+    atenúan: ya pasaron. **Lote descartado** (`discard-notice-text.ts`) dice **Lote {código}
+    descartado: {motivo}.** con el origen **Calidad** y lleva a la ficha; con **Otro** dice «Otro»,
+    porque el detalle escrito no viaja con el aviso.
   - **La bandeja** pide la lista solo con el panel abierto, de a 20 (`useInfiniteQuery`), y el número
     cada 2 minutos. Las dos tienen copia en el dispositivo (solo la primera página). Sin conexión
     se ven las guardadas, abrir una no la marca como leída, y marcar y eliminar quedan deshabilitados
@@ -793,7 +838,7 @@ referencia en `docs/ui/ref/*.html`.
   `narrow` (centrado) para formularios y fichas de una columna. No se escribe un `max-w-*` ni un
   `py-*` propio en una pantalla. Toda `grid` con columnas desde un punto de corte lleva `grid-cols-1`
   de base, o una tarjeta con texto largo ensancha la columna y se sale de la pantalla en el celular.
-  Los totales de arriba de una lista usan `SummaryStrip`. Una lista con mapa usa `MapBesideList`, y
+  Los totales de arriba de una lista usan `SummaryStrip`, cada cifra con `SummaryValue`. Una lista con mapa usa `MapBesideList`, y
   las hojas laterales (cuentas, roles) comparten `SidePanelHeader`/`SidePanelSection`/
   `SidePanelActions`. Qué es modal, hoja o página está en el sistema de diseño.
   - **Modales y hojas en celular.** El botón de cerrar (`ModalClose`) va pegado arriba mientras el

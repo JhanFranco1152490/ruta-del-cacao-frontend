@@ -9,10 +9,13 @@ export function SubmitButton({
   children,
   pendingLabel = 'Procesando…',
   disabled = false,
+  destructive = false,
   className,
 }: {
   pending: boolean;
   disabled?: boolean;
+  // Una acción que no se deshace (descartar, eliminar): el botón de peligro.
+  destructive?: boolean;
   children: ReactNode;
   pendingLabel?: string;
   className?: string;
@@ -21,6 +24,7 @@ export function SubmitButton({
     <Button
       type="submit"
       disabled={pending || disabled}
+      variant={destructive ? 'destructive' : 'default'}
       className={cn(
         'h-12 w-full gap-3 rounded-md px-5 text-base font-bold disabled:cursor-not-allowed disabled:opacity-70',
         FOCUS_OUTLINE_CLASS,

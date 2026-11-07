@@ -9,7 +9,7 @@ import {
 
 import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import { isIsoDate } from '@/lib/format/dates';
-import { LOT_STATUS_ORDER, type LotStatus } from '@/lib/lot-status';
+import { LOT_STATUS_VALUES, type LotStatus } from '@/lib/lot-status';
 
 import type { LotQuery, LotSummaryQuery } from './api';
 
@@ -17,7 +17,7 @@ import type { LotQuery, LotSummaryQuery } from './api';
 // (?estado=zzz, ?desde=ayer) cuenta como "sin filtro".
 const parsers = {
   search: parseAsString.withDefault(''),
-  status: parseAsStringLiteral(LOT_STATUS_ORDER),
+  status: parseAsStringLiteral(LOT_STATUS_VALUES),
   farm: parseAsString,
   plot: parseAsString,
   variety: parseAsString,

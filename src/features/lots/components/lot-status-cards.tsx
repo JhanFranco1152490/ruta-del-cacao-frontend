@@ -5,7 +5,7 @@ import { Layers } from 'lucide-react';
 
 import { formatDecimal } from '@/lib/format/decimal';
 import {
-  LOT_STATUS_ORDER,
+  LOT_STATUS_VALUES,
   LOT_STATUSES,
   type LotStatus,
 } from '@/lib/lot-status';
@@ -47,7 +47,7 @@ export function LotStatusCards({
           ? undefined
           : totalsText(allCount, allKilos ?? 0),
     },
-    ...LOT_STATUS_ORDER.map((status) => {
+    ...LOT_STATUS_VALUES.map((status) => {
       const total = byStatus.get(status);
       return {
         key: status,
@@ -64,7 +64,7 @@ export function LotStatusCards({
   return (
     <div
       aria-label="Estado"
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6"
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5"
       role="group"
     >
       {cards.map(({ key, label, Icon, detail }) => {

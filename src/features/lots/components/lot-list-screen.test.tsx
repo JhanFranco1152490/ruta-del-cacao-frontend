@@ -312,6 +312,17 @@ describe('LotListScreen', () => {
     await waitFor(() => expect(urls.at(-1)).toContain('estado=dried'));
   });
 
+  it('filters the discarded lots too, outside the main chain', async () => {
+    renderScreen({ searchParams: '?estado=discarded' });
+    await table();
+
+    expect(requests[0].get('status')).toBe('discarded');
+    expect(screen.getByRole('button', { name: /^Descartado/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
   it('sends what the address says to the server, ignoring a malformed date', async () => {
     renderScreen({
       searchParams: '?buscar=F02-P05&finca=f1&desde=2026-10-01&hasta=ayer',

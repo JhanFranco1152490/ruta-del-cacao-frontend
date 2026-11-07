@@ -9,6 +9,7 @@ import { FACILITIES_PATH } from '@/features/facilities/facility-paths';
 import { FermentationSection } from '@/features/fermentation/components/fermentation-section';
 import { harvestDetailPath } from '@/features/harvests/harvest-paths';
 import { LotDetailScreen } from '@/features/lots/components/lot-detail-screen';
+import { QualitySection } from '@/features/quality/components/quality-section';
 import { useSession } from '@/hooks/use-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -38,7 +39,7 @@ export function LotDetailFromQuery() {
       }
       key={lotId}
       lotId={lotId}
-      // El proceso del lote en su orden: la fermentación va antes que el secado.
+      // El proceso del lote en su orden: fermentación, secado y calidad.
       renderSections={(lot) => {
         const { farm } = lot.harvest.plot;
         const facilitiesHref = canSeeFacilities
@@ -58,6 +59,13 @@ export function LotDetailFromQuery() {
               lot={section}
             />
             <DryingSection facilitiesHref={facilitiesHref} lot={section} />
+            <QualitySection
+              lot={{
+                ...section,
+                quality: lot.quality,
+                dryWeightKg: lot.drying?.dry_weight_kg ?? null,
+              }}
+            />
           </>
         );
       }}

@@ -23,7 +23,7 @@ import type { LotAction } from '@/lib/lot-actions';
 import type { Lot } from '../api';
 import { lotDetailPath } from '../lot-paths';
 import { LotActionsMenu } from './lot-actions-menu';
-import { LotStatusBadge } from './lot-status-badge';
+import { LotStatusBadge } from '@/components/lot-status-badge';
 
 // Los lotes de una página: una tabla en escritorio y tarjetas compactas en celular. El código va
 // completo, como se imprime en el costal. En celular, cuatro líneas con los datos alineados en dos
