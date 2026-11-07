@@ -1,5 +1,6 @@
 import { HttpResponse } from 'msw';
 
+import type { LotStock, StockExit } from '@/features/warehouse/api';
 import type { components } from '@/lib/api/schema';
 
 type Schemas = components['schemas'];
@@ -384,6 +385,7 @@ export const buildLot = (
     fermentation: null,
     drying: null,
     quality: null,
+    warehouse: null,
     ...overrides,
   };
 };
@@ -465,6 +467,121 @@ export const buildClosedSummary = (
   g1_kg: '300.0',
   g2_kg: '60.5',
   discarded_kg: '321.2',
+  ...overrides,
+});
+
+// La Bodega principal de La Esperanza, activa y sin usar.
+export const buildWarehouse = (
+  overrides: Partial<Schemas['Warehouse']> = {},
+): Schemas['Warehouse'] => ({
+  id: 'w1',
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+  name: 'Bodega principal',
+  is_active: true,
+  in_use: false,
+  version: 1,
+  ...overrides,
+});
+
+// Un lote Clasificado de La Esperanza, con 250,0 kg de G1 y 55,2 de G2, todavía sin ingresar.
+export const buildLotStock = (overrides: Partial<LotStock> = {}): LotStock => ({
+  lot: {
+    id: 'l1',
+    code: '000123-F02-P05-261014-1',
+    status: 'classified',
+    version: 10,
+  },
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+  classified: {
+    g1_kg: '250.0',
+    g2_kg: '55.2',
+    classified_at: '2026-10-29T15:00:00-05:00',
+  },
+  entry: null,
+  balances: [],
+  exits: [],
+  ...overrides,
+});
+
+// El ingreso del lote de `buildLotStock` a la Bodega principal, sin salidas todavía.
+export const buildStockEntry = (
+  overrides: Partial<Schemas['StockEntry']> = {},
+): Schemas['StockEntry'] => ({
+  entry_date: '2026-10-30',
+  warehouse: { id: 'w1', name: 'Bodega principal' },
+  location: 'Estante 3',
+  g1_kg: '250.0',
+  g2_kg: '55.2',
+  entered_at: '2026-10-30T08:40:00-05:00',
+  entered_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  corrected_at: null,
+  corrected_by: null,
+  can_correct: true,
+  version: 1,
+  ...overrides,
+});
+
+// Una muestra de 5,0 kg de G1, vigente.
+export const buildStockExit = (
+  overrides: Partial<StockExit> = {},
+): StockExit => ({
+  id: 'e1',
+  grade: 'g1',
+  quantity_kg: '5.0',
+  exit_date: '2026-10-31',
+  reason: 'sample',
+  detail: '',
+  created_at: '2026-10-31T10:05:00-05:00',
+  created_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  voided: null,
+  can_void: true,
+  ...overrides,
+});
+
+export const buildStockRow = (
+  overrides: Partial<Schemas['StockRow']> = {},
+): Schemas['StockRow'] => ({
+  lot: { id: 'l1', code: '000123-F02-P05-261014-1' },
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+  grade: 'g1',
+  quantity_kg: '250.0',
+  warehouse: { id: 'w1', name: 'Bodega principal' },
+  location: 'Estante 3',
+  entry_date: '2026-10-30',
+  ...overrides,
+});
+
+export const buildStockSummary = (
+  overrides: Partial<Schemas['StockSummary']> = {},
+): Schemas['StockSummary'] => ({
+  g1_kg: '250.0',
+  g2_kg: '55.2',
+  lots: 1,
+  ...overrides,
+});
+
+export const buildPendingEntry = (
+  overrides: Partial<Schemas['PendingEntry']> = {},
+): Schemas['PendingEntry'] => ({
+  lot: { id: 'l1', code: '000123-F02-P05-261014-1' },
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+  g1_kg: '250.0',
+  g2_kg: '55.2',
+  classified_at: '2026-10-29T15:00:00-05:00',
+  ...overrides,
+});
+
+// El campo `warehouse` de un lote En bodega, con 5,0 kg de G1 ya sacados.
+export const buildLotWarehouseDetail = (
+  overrides: Partial<Schemas['LotWarehouseDetail']> = {},
+): Schemas['LotWarehouseDetail'] => ({
+  entry_date: '2026-10-30',
+  warehouse_name: 'Bodega principal',
+  location: 'Estante 3',
+  g1_entered_kg: '250.0',
+  g2_entered_kg: '55.2',
+  g1_available_kg: '245.0',
+  g2_available_kg: '55.2',
   ...overrides,
 });
 
@@ -669,6 +786,7 @@ export const buildLotBrief = (
   },
   drying: null,
   quality: null,
+  warehouse: null,
   ...overrides,
 });
 
