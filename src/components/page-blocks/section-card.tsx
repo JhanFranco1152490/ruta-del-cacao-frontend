@@ -2,10 +2,12 @@ import { cn } from 'cn';
 import type { ReactNode } from 'react';
 
 import { type ModuleAccent, accentStyle } from './accent';
+import { SectionItem, type SectionPick } from './section-item';
 
 // Un bloque de contenido: tarjeta blanca con un filete del acento arriba, su título,
 // un contador y sus acciones. El filete se recorta con las esquinas (no es un borde), así que
-// tiene el mismo grosor de punta a punta.
+// tiene el mismo grosor de punta a punta. Con `pick` la sección es una de varias que se eligen de una
+// lista: como `item` es su renglón en ella y como `panel` es esta tarjeta, solo si es la elegida.
 export function SectionCard({
   title,
   count,
@@ -14,6 +16,7 @@ export function SectionCard({
   className,
   children,
   id,
+  pick,
 }: {
   title: string;
   count?: number;
@@ -22,7 +25,12 @@ export function SectionCard({
   className?: string;
   children: ReactNode;
   id?: string;
+  pick?: SectionPick;
 }) {
+  if (pick?.as === 'item') {
+    return <SectionItem accent={accent} pick={pick} title={title} />;
+  }
+  if (pick?.as === 'panel' && !pick.selected) return null;
   const headingId = id ? `${id}-titulo` : undefined;
   return (
     <section

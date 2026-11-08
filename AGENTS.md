@@ -242,12 +242,22 @@ src/
   el lote con esa copia (`lotFromCopy`), con su aviso. La copia no guarda el código de socio ni quién
   conformó el lote: el origen dice **Productor —** y no se muestra **Conformado por…**. Esa función es
   la única que busca en las copias de poscosecha: el secado suma la suya en `COPIES`. La ficha no
-  importa de los procesos: recibe sus secciones con `renderSections(lot)`, que pinta junto al
-  origen (a su derecha en pantallas anchas, antes que él en celular, donde lo que se viene a hacer
-  es la etapa) y que la página (`lot-detail-from-query.tsx`) llena en el orden del proceso. La ficha
-  es ancha (`wide`) porque las etapas traen tablas: encabezado `bosque` con el código en pedazos
-  (`LotCodeSegments`, dentro del título con `titleVisual`), franja de cifras, indicador de etapas
-  (`lot-stages.ts`) y el origen en una `SectionCard`. **El «⋯» de cada fila de la lista** ofrece las
+  importa de los procesos: recibe sus secciones con `renderSections(lot, picker)` y la página
+  (`lot-detail-from-query.tsx`) las llena en el orden del proceso. La ficha es una **lista de etapas a un
+  lado y la elegida al otro** (`lot-process-layout.tsx`): a la izquierda el origen, la lista (Fermentación,
+  Secado y Calidad, cada una con su resumen y si está **Hecha**, **Actual** o **Pendiente**) y «Volver»
+  con las acciones de la ficha (`DetailFooter stacked`), pegados bajo la cabecera de la app y con su
+  propio desplazamiento si no caben en la pantalla; a la derecha la etapa elegida con todo el ancho,
+  porque trae tablas. En celular el orden es el de la tarea: la lista, la etapa y, al final, el origen y
+  «Volver». Cada sección se monta **dos veces**, como renglón y como panel (`SectionCard` con
+  `pick={picker.of(id)}`; `components/page-blocks/section-item.tsx`), y arma su propio resumen con lo que
+  ella lee (`fermentationSummary`, `dryingSummary`, `qualitySummary`); sin `pick` es una tarjeta normal.
+  Qué etapa se muestra lo decide `useStagePicker` (`stage-picker.ts`): empieza en la del estado del lote
+  (`currentStage`; un lote Seco o posterior abre **Calidad**, porque lo que falta es evaluarlo y el secado
+  ya quedó en su resumen), elegir otra cambia las dos presentaciones a la vez, y si el lote cambia de etapa
+  se muestra la nueva. El título del origen (`LotOrigin`) va en tinta negra, no en el color del módulo. La
+  ficha es ancha (`wide`): encabezado `bosque` con el código en pedazos (`LotCodeSegments`, dentro del
+  título con `titleVisual`), franja de cifras, indicador de etapas (`lot-stages.ts`) y, debajo, la lista y la etapa. **El «⋯» de cada fila de la lista** ofrece las
   acciones de la etapa del lote: cada módulo del proceso exporta las suyas (`lot-actions.ts`, p. ej.
   `fermentationLotActions` y `dryingLotActions`) y la página (`app/(app)/lotes/lot-list.tsx`) las junta; cada opción es
   un enlace a la pantalla donde se hace, nunca un formulario dentro de Lotes. Registrar un volteo va
@@ -287,7 +297,7 @@ src/
   una lectura nunca cargó por falta de red.
 
 - **Fermentación (`features/fermentation/`).** `/fermentacion` es la lista de trabajo del día: dos
-  pestañas (**En fermentación** y, con `manage_fermentation`, **Listos para fermentar**), la finca en la
+  pestañas (con `manage_fermentation`, **Listos para fermentar** y a su derecha **En fermentación**, que es la que abre por defecto: van en el orden del proceso), la finca en la
   URL (`use-fermentation-filters.ts`) y las cifras. Las fermentaciones en curso se leen todas, sin
   paginar y con copia (`fermentation`, o `fermentation:producer:{id}` para la cuenta técnica); la finca
   se filtra en el dispositivo. Los listos son `GET /api/lots?status=generated`, todas las páginas y
@@ -333,7 +343,7 @@ src/
     lee con la misma copia de la lista y lo que escribe en línea se deshabilita.
 
 - **Secado (`features/drying/`).** `/secado` es la lista de trabajo del día y sigue la forma de
-  Fermentación: dos pestañas (**En secado** y, con `manage_drying`, **Listos para secar**), la finca en
+  Fermentación: dos pestañas (con `manage_drying`, **Listos para secar** y a su derecha **En secado**, que es la que abre por defecto), la finca en
   la URL (`use-drying-filters.ts`), las cifras (incluye las bitácoras de hoy que faltan) y la lectura
   con copia (`drying`, o `drying:producer:{id}`); los listos son `GET /api/lots?status=fermented`, solo
   en línea. **Lo que comparte con Fermentación vive en `lib/` y `components/`, no se copia:**

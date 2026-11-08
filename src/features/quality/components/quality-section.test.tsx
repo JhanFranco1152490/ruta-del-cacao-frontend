@@ -1,8 +1,10 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
+import type { SectionPickControl } from '@/components/page-blocks/section-item';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   buildLotQuality,
@@ -49,13 +51,17 @@ const lot = (
   ...overrides,
 });
 
-function renderSection(section: QualitySectionLot, permissions = ALL) {
+function renderSection(
+  section: QualitySectionLot,
+  permissions = ALL,
+  pick?: SectionPickControl,
+) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: `quality-section-${crypto.randomUUID()}`, permissions }),
   );
-  return renderWithProviders(<QualitySection lot={section} />, {
+  return renderWithProviders(<QualitySection lot={section} pick={pick} />, {
     queryClient,
   });
 }
@@ -158,5 +164,19 @@ describe('QualitySection', () => {
     expect(
       await screen.findByText('Lote descartado el 31 oct. Motivo: Moho.'),
     ).toBeVisible();
+  });
+
+  it('shows its summary as an item of the stage list and selects itself when pressed', async () => {
+    const onSelect = vi.fn();
+    renderSection(
+      lot({ status: 'evaluated', quality: evaluatedSummary }),
+      ALL,
+      { as: 'item', selected: false, onSelect, stage: 'current' },
+    );
+
+    const item = await screen.findByRole('button', { name: /Calidad/ });
+    expect(item).toHaveTextContent('Evaluado · 85,0 % bien fermentados');
+    await userEvent.click(item);
+    expect(onSelect).toHaveBeenCalledOnce();
   });
 });
