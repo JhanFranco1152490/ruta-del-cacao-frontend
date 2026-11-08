@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ErrorState } from '@/components/error-state';
 import { LoadingBlock } from '@/components/loading-block';
 import { SectionCard } from '@/components/page-blocks/section-card';
+import type { SectionPickControl } from '@/components/page-blocks/section-item';
 import { Button } from '@/components/ui/button';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
@@ -15,6 +16,7 @@ import { notify } from '@/lib/notify';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useFermentation } from '../api';
+import { fermentationSummary } from '../fermentation-summary';
 import { turnRows } from '../turn-rows';
 import { useQueuedTurns } from '../use-turn-queue';
 import { FermentationFacts } from './fermentation-facts';
@@ -34,14 +36,20 @@ export type SectionLot = StartLot & {
 function StartSection({
   lot,
   facilitiesHref,
+  pick,
 }: {
   lot: SectionLot;
   facilitiesHref?: string;
+  pick?: SectionPickControl;
 }) {
   const online = useHasConnection();
   const [starting, setStarting] = useState(false);
   return (
-    <SectionCard accent="cobre" title="Fermentación">
+    <SectionCard
+      accent="cobre"
+      pick={pick && { ...pick, summary: 'Listo para fermentar' }}
+      title="Fermentación"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground">
           {online
@@ -78,10 +86,13 @@ function StartSection({
 export function FermentationSection({
   lot,
   facilitiesHref,
+  pick,
 }: {
   lot: SectionLot;
   // La infraestructura de la finca del lote; falta si la cuenta no puede consultarla.
   facilitiesHref?: string;
+  // Con él la sección se pliega y deja su resumen; sin él se ve siempre abierta.
+  pick?: SectionPickControl;
 }) {
   const { data: user } = useSession();
   const online = useHasConnection();
@@ -93,7 +104,7 @@ export function FermentationSection({
 
   if (generated) {
     return canManage ? (
-      <StartSection facilitiesHref={facilitiesHref} lot={lot} />
+      <StartSection pick={pick} facilitiesHref={facilitiesHref} lot={lot} />
     ) : null;
   }
   if (read.isError && isNotFound(read.error)) return null;
@@ -151,7 +162,18 @@ export function FermentationSection({
   };
 
   return (
-    <SectionCard accent="cobre" title="Fermentación">
+    <SectionCard
+      accent="cobre"
+      pick={
+        pick && {
+          ...pick,
+          summary: read.data
+            ? fermentationSummary(read.data.data)
+            : 'Cargando la fermentación…',
+        }
+      }
+      title="Fermentación"
+    >
       {body()}
     </SectionCard>
   );

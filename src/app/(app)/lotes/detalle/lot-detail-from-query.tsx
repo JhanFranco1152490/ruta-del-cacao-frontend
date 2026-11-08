@@ -40,7 +40,7 @@ export function LotDetailFromQuery() {
       key={lotId}
       lotId={lotId}
       // El proceso del lote en su orden: fermentación, secado y calidad.
-      renderSections={(lot) => {
+      renderSections={(lot, picker) => {
         const { farm } = lot.harvest.plot;
         const facilitiesHref = canSeeFacilities
           ? `${FACILITIES_PATH}?${new URLSearchParams({ finca: farm.id })}`
@@ -55,11 +55,17 @@ export function LotDetailFromQuery() {
         return (
           <>
             <FermentationSection
+              pick={picker.of('fermentation')}
               facilitiesHref={facilitiesHref}
               lot={section}
             />
-            <DryingSection facilitiesHref={facilitiesHref} lot={section} />
+            <DryingSection
+              pick={picker.of('drying')}
+              facilitiesHref={facilitiesHref}
+              lot={section}
+            />
             <QualitySection
+              pick={picker.of('quality')}
               lot={{
                 ...section,
                 quality: lot.quality,

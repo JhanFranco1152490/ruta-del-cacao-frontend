@@ -491,6 +491,21 @@ describe('FermentationScreen', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('puts the lots ready to ferment first and still opens on the lots in fermentation', async () => {
+    renderScreen();
+
+    expect(await cards()).toHaveLength(2);
+    const tabs = screen
+      .getAllByRole('button', {
+        name: /^(Listos para fermentar|En fermentación)$/,
+      })
+      .map((tab) => tab.textContent);
+    expect(tabs).toEqual(['Listos para fermentar', 'En fermentación']);
+    expect(
+      screen.getByRole('button', { name: 'En fermentación' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('shows the saved copy without a connection, and leaves the lots ready for later', async () => {
     await getOfflineDb(userId).cache.put({
       key: 'fermentation',

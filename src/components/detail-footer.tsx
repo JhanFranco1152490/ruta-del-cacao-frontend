@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -7,16 +8,24 @@ import { buttonVariants } from '@/components/ui/button';
 // El pie de una ficha: «Volver» a la izquierda y las acciones de la ficha, si tiene, a la derecha,
 // en el orden en que llegan. La ruta de arriba no se lee como un botón para quien usa poco la web;
 // Volver sí, y está donde termina lo que se estaba leyendo. En celular las acciones van primero y
-// Volver al final, a todo el ancho.
+// Volver al final, a todo el ancho. Con `stacked` queda en una columna a cualquier ancho, para una
+// ficha que lo pone en una columna angosta bajo su contenido en vez de en una fila propia.
 export function DetailFooter({
   backHref,
   children,
+  stacked = false,
 }: {
   backHref: string;
   children?: ReactNode;
+  stacked?: boolean;
 }) {
   return (
-    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className={cn(
+        'flex flex-col-reverse gap-3',
+        !stacked && 'sm:flex-row sm:items-center sm:justify-between',
+      )}
+    >
       <Link
         className={buttonVariants({
           size: 'office',
@@ -28,7 +37,12 @@ export function DetailFooter({
         <ArrowLeft aria-hidden="true" className="size-4" /> Volver
       </Link>
       {children && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
+        <div
+          className={cn(
+            'flex flex-col gap-3',
+            !stacked && 'sm:flex-row sm:flex-wrap sm:justify-end',
+          )}
+        >
           {children}
         </div>
       )}
