@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ErrorState } from '@/components/error-state';
 import { LoadingBlock } from '@/components/loading-block';
 import { SectionCard } from '@/components/page-blocks/section-card';
+import type { SectionPickControl } from '@/components/page-blocks/section-item';
 import { Button } from '@/components/ui/button';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
@@ -15,6 +16,7 @@ import { notify } from '@/lib/notify';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { useDrying } from '../api';
+import { dryingSummary } from '../drying-summary';
 import { logRows } from '../log-rows';
 import { useQueuedLogs } from '../use-log-queue';
 import { DryingFacts } from './drying-facts';
@@ -31,14 +33,20 @@ export type SectionLot = StartLot & {
 function StartSection({
   lot,
   facilitiesHref,
+  pick,
 }: {
   lot: SectionLot;
   facilitiesHref?: string;
+  pick?: SectionPickControl;
 }) {
   const online = useHasConnection();
   const [starting, setStarting] = useState(false);
   return (
-    <SectionCard accent="cobre" title="Secado">
+    <SectionCard
+      accent="cobre"
+      pick={pick && { ...pick, summary: 'Listo para secar' }}
+      title="Secado"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground">
           {online
@@ -74,10 +82,13 @@ function StartSection({
 export function DryingSection({
   lot,
   facilitiesHref,
+  pick,
 }: {
   lot: SectionLot;
   // La infraestructura de la finca del lote; falta si la cuenta no puede consultarla.
   facilitiesHref?: string;
+  // Con él la sección se pliega y deja su resumen; sin él se ve siempre abierta.
+  pick?: SectionPickControl;
 }) {
   const { data: user } = useSession();
   const online = useHasConnection();
@@ -94,7 +105,7 @@ export function DryingSection({
   if (beforeDrying) return null;
   if (fermented) {
     return canManage ? (
-      <StartSection facilitiesHref={facilitiesHref} lot={lot} />
+      <StartSection pick={pick} facilitiesHref={facilitiesHref} lot={lot} />
     ) : null;
   }
   if (read.isError && isNotFound(read.error)) return null;
@@ -143,7 +154,18 @@ export function DryingSection({
   };
 
   return (
-    <SectionCard accent="cobre" title="Secado">
+    <SectionCard
+      accent="cobre"
+      pick={
+        pick && {
+          ...pick,
+          summary: read.data
+            ? dryingSummary(read.data.data)
+            : 'Cargando el secado…',
+        }
+      }
+      title="Secado"
+    >
       {body()}
     </SectionCard>
   );

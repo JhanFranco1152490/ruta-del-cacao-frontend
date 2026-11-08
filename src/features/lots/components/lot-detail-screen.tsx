@@ -38,7 +38,9 @@ import { LotDeleteDialog } from './lot-delete-dialog';
 import { harvestAgeText } from '../lot-age';
 import { LotCodeSegments } from './lot-code-segments';
 import { LotOrigin } from './lot-origin';
+import { LotProcessLayout } from './lot-process-layout';
 import { LotStages } from './lot-stages';
+import type { StagePicker } from '../stage-picker';
 import { LotStatusBadge } from '@/components/lot-status-badge';
 import { pageContainerClass } from '@/components/page-container';
 import { LoadingBlock } from '@/components/loading-block';
@@ -65,7 +67,7 @@ export function LotDetailScreen({
   harvestHref?: (lot: Lot) => string;
   historyHref?: (lot: Lot) => string;
   // Lo que va después del origen, en el orden del proceso.
-  renderSections?: (lot: Lot) => ReactNode;
+  renderSections?: (lot: Lot, picker: StagePicker) => ReactNode;
 }) {
   const { data: user } = useSession();
   const read = useLot(lotId, user?.id);
@@ -173,23 +175,22 @@ export function LotDetailScreen({
         />
       </StatStrip>
       <LotStages status={lot.status} />
-      {/* En pantallas anchas el origen queda a un lado y la etapa que se trabaja ocupa el resto; en
-          celular la etapa va primero, que es lo que se viene a hacer. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:items-start">
-        <div className="space-y-4 max-lg:order-2">
+      <LotProcessLayout
+        footer={
+          <DetailFooter backHref={origin ?? LOTS_PATH} stacked>
+            {canDelete && <LotDeleteDialog lot={lot} />}
+          </DetailFooter>
+        }
+        lot={lot}
+        origin={
           <LotOrigin
             harvestHref={harvestHref?.(lot)}
             historyHref={historyHref?.(lot)}
             lot={lot}
           />
-        </div>
-        <div className="min-w-0 space-y-4 max-lg:order-1">
-          {renderSections?.(lot)}
-        </div>
-      </div>
-      <DetailFooter backHref={origin ?? LOTS_PATH}>
-        {canDelete && <LotDeleteDialog lot={lot} />}
-      </DetailFooter>
+        }
+        renderSections={renderSections}
+      />
     </div>
   );
 }

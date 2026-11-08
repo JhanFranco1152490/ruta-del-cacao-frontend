@@ -16,9 +16,11 @@ import { DryingBody } from './drying-body';
 import { DryingSummary } from './drying-summary';
 import { StartReadyLot } from './start-ready-lot';
 
+// En el orden del proceso: primero lo que espera y luego lo que está en secado, que es la que abre
+// por defecto (`use-drying-filters.ts`).
 const DRYING_VIEW_OPTIONS = [
-  { value: 'en-secado', label: 'En secado' },
   { value: 'listos', label: 'Listos para secar' },
+  { value: 'en-secado', label: 'En secado' },
 ] as const;
 
 // Secado: el trabajo del día de quien seca. La ficha del lote es de otro dominio: su ruta la
