@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import type { OnUrlUpdateFunction } from 'nuqs/adapters/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
@@ -10,6 +10,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { buildBuyer, buildSession } from '@/test/factories';
 import { apiUrl, buyersHandler } from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
+import { stubWideScreen } from '@/test/screen-size';
 import { server } from '@/test/server';
 
 vi.mock(
@@ -67,6 +68,8 @@ beforeEach(() => {
   requests = [];
   server.use(buyersHandler(buyers, requests));
 });
+
+afterEach(() => vi.unstubAllGlobals());
 
 function renderScreen({
   searchParams = '',
@@ -249,12 +252,86 @@ describe('BuyersScreen', () => {
     ).toHaveLength(0);
   });
 
-  it('highlights the buyer of the address', async () => {
+  it('highlights the buyer of the address on a wide screen, without a sheet', async () => {
+    stubWideScreen();
     renderScreen({ searchParams: '?comprador=b2' });
 
     await table();
     expect(rows()[1]).toHaveAttribute('data-state', 'selected');
     expect(rows()[0]).not.toHaveAttribute('data-state');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  describe('on a phone', () => {
+    it('opens the sheet of a buyer touching its card, with its data', async () => {
+      const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+      renderScreen({ onUrlUpdate });
+
+      await userEvent.click(
+        await screen.findByRole('button', {
+          name: 'Ver Chocolates del Oriente S.A.S.',
+        }),
+      );
+
+      const sheet = await screen.findByRole('dialog', {
+        name: 'Chocolates del Oriente S.A.S.',
+      });
+      expect(sheet).toHaveTextContent('NIT 900000001');
+      expect(sheet).toHaveTextContent('Industria chocolatera');
+      expect(sheet).toHaveTextContent('Persona de Ejemplo');
+      expect(sheet).toHaveTextContent('3000000001 · compras@example.com');
+      expect(sheet).toHaveTextContent('Activo');
+      expect(onUrlUpdate.mock.lastCall?.[0].queryString).toBe('?comprador=b1');
+    });
+
+    it('opens the buyer of the address even when the filters hide it', async () => {
+      renderScreen({ searchParams: '?comprador=b4' });
+
+      expect(
+        await screen.findByRole('dialog', { name: 'Cooperativa del Valle' }),
+      ).toHaveTextContent('Inactivo');
+    });
+
+    it('shows the actions in the sheet, delete disabled with its reason', async () => {
+      renderScreen({ permissions: PRODUCER, searchParams: '?comprador=b3' });
+
+      const sheet = await screen.findByRole('dialog', {
+        name: 'Ábaco Exportaciones',
+      });
+      expect(
+        within(sheet).getByRole('button', { name: 'Editar' }),
+      ).toBeEnabled();
+      expect(
+        within(sheet).getByRole('button', { name: 'Desactivar' }),
+      ).toBeEnabled();
+      expect(
+        within(sheet).getByRole('button', { name: 'Eliminar' }),
+      ).toBeDisabled();
+      expect(sheet).toHaveTextContent(
+        'No se puede eliminar: tiene ventas registradas.',
+      );
+    });
+
+    it('closes the sheet and forgets the buyer in the URL', async () => {
+      const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+      renderScreen({ searchParams: '?comprador=b1', onUrlUpdate });
+
+      await screen.findByRole('dialog', {
+        name: 'Chocolates del Oriente S.A.S.',
+      });
+      await userEvent.keyboard('{Escape}');
+
+      await waitFor(() =>
+        expect(onUrlUpdate.mock.lastCall?.[0].queryString).toBe(''),
+      );
+    });
+
+    it('ignores a buyer of the address that is not in the directory', async () => {
+      renderScreen({ searchParams: '?comprador=zzz' });
+
+      await table();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   it('shows the copy of the device without a connection, with writing disabled', async () => {

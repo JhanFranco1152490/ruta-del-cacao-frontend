@@ -1,5 +1,7 @@
+'use client';
+
 import { ChevronRight } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 
 import {
   COMPACT_TABLE_CLASS,
@@ -21,6 +23,8 @@ import type { Buyer } from '../api';
 import { contactMeansText, documentText } from '../buyer-format';
 import { buyerTypeLabel } from '../buyer-types';
 
+const rowId = (id: string) => `comprador-${id}`;
+
 // En celular cada fila es una tarjeta: el nombre y su estado arriba, el documento y el tipo debajo
 // y el contacto al final. Tocarla abre la hoja del comprador, con sus acciones; en escritorio la
 // fila elegida se resalta y las acciones van al final.
@@ -38,6 +42,14 @@ export function BuyerTable({
   onSelect: (id: string) => void;
   renderActions: (buyer: Buyer) => ReactNode;
 }) {
+  // Quien llega con un comprador en la dirección («Ver el comprador») lo encuentra a la vista.
+  useEffect(() => {
+    if (!selectedId) return;
+    document
+      .getElementById(rowId(selectedId))
+      ?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedId]);
+
   return (
     <Table aria-label="Compradores" className={COMPACT_TABLE_CLASS}>
       <TableHeader>
@@ -56,7 +68,7 @@ export function BuyerTable({
         {buyers.map((buyer) => (
           <TableRow
             data-state={buyer.id === selectedId ? 'selected' : undefined}
-            id={`comprador-${buyer.id}`}
+            id={rowId(buyer.id)}
             key={buyer.id}
           >
             <TableCell className="max-md:order-1 max-md:col-span-1!">

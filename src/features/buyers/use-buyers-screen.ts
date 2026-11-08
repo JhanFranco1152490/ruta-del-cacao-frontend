@@ -41,6 +41,9 @@ export function useBuyersScreen() {
     read,
     all,
     rows,
+    // Se busca entre todos: el comprador de la URL se abre aunque los filtros lo escondan de la
+    // lista. Uno que no está (de otro productor, o eliminado) se ignora.
+    selected: all.find(({ id }) => id === filters.buyer) ?? null,
     summary: summarizeBuyers(searched, rows),
     savedAt,
     // Con la copia del dispositivo nada se escribe: lo que se cambie no llegaría al servidor.

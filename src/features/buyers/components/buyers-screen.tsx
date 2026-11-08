@@ -7,6 +7,7 @@ import { OfflineCopyNotice } from '@/components/offline-copy-notice';
 import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
 
 import type { Buyer } from '../api';
 import { type BuyerActionKind, buyerActions } from '../buyer-actions';
@@ -16,6 +17,8 @@ import { useBuyersScreen } from '../use-buyers-screen';
 import { BuyerFiltersBar } from './buyer-filters-bar';
 import { BuyerListStates } from './buyer-list-states';
 import { BuyerRowActions } from './buyer-row-actions';
+import { BuyerSheet } from './buyer-sheet';
+import { BuyerSheetActions } from './buyer-sheet-actions';
 import { BuyerSummaryStrip } from './buyer-summary-strip';
 import { BuyerTable } from './buyer-table';
 
@@ -26,8 +29,12 @@ export type PendingBuyerAction =
 // dispositivo, y se registra y cambia solo en línea.
 export function BuyersScreen() {
   const screen = useBuyersScreen();
-  const { filters, read, rows, offline, savedAt, permissions } = screen;
+  const { filters, read, rows, selected, offline, savedAt, permissions } =
+    screen;
+  const isDesktop = useIsDesktop();
   const [pending, setPending] = useState<PendingBuyerAction>();
+  const actionsOf = (buyer: Buyer) =>
+    buyerActions(buyer, permissions, !offline);
 
   const register = screen.canAdd && (
     <Button
@@ -75,11 +82,7 @@ export function BuyersScreen() {
             buyers={rows}
             onSelect={(id) => filters.showBuyer(id)}
             renderActions={(buyer) => {
-              const { actions, inMenu } = buyerActions(
-                buyer,
-                permissions,
-                !offline,
-              );
+              const { actions, inMenu } = actionsOf(buyer);
               return (
                 <BuyerRowActions
                   actions={actions}
@@ -94,6 +97,20 @@ export function BuyersScreen() {
           />
         </BuyerListStates>
       </section>
+      {/* La hoja queda abierta debajo del diálogo de la acción que se elija en ella. */}
+      {selected && !isDesktop && (
+        <BuyerSheet
+          actions={
+            <BuyerSheetActions
+              actions={actionsOf(selected).actions}
+              onAction={(kind) => setPending({ kind, buyer: selected })}
+            />
+          }
+          buyer={selected}
+          onClose={() => filters.showBuyer(null)}
+          showProducer={screen.showProducer}
+        />
+      )}
     </div>
   );
 }
