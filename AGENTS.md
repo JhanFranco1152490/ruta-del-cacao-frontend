@@ -140,7 +140,8 @@ src/
     abrir…» con el camino de vuelta), `SyncRejectedNotice` y `syncFailureText` (lo que el servidor
     rechazó de la cola), `OfflineCopyNotice` («Sin conexión: estás viendo la copia del…», con lo que
     no se puede hacer así), `CollapsibleGroupList` con `groupInOrder` (listas en grupos plegables),
-    `mapPlaceholder` (el mapa mientras carga o si no cargó);
+    `mapPlaceholder` (el mapa mientras carga o si no cargó), `LotViewLink` (el ojo a la ficha de un
+    lote, que con `disabledReason` queda deshabilitado y dice por qué);
   - API: `apiPath` (ruta con su consulta, sin los vacíos) e `isNotFound` (404);
   - cola sin conexión: `rejectionConflict` y `VALIDATION_ERROR_CODE` en `lib/offline/adapters.ts`.
 - **Un dominio no importa de la carpeta de otro.** Cuando una pantalla junta dos (el detalle de

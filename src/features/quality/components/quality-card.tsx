@@ -2,6 +2,7 @@ import { farmLabel } from '@/lib/format/place-label';
 import type { QualityAction } from '@/lib/paths/quality';
 
 import { LotStatusBadge } from '@/components/lot-status-badge';
+import { LotViewLink } from '@/components/lot-view-link';
 
 import type { LotQuality } from '../api';
 import {
@@ -14,7 +15,6 @@ import {
   evaluationFacts,
 } from '../quality-card-facts';
 import type { QualityActionOffer } from '../quality-actions';
-import { LotViewLink } from './lot-view-link';
 import { QualityCardActions } from './quality-card-actions';
 import { QualityGradeBar } from './quality-grade-bar';
 import { QualityFacts } from './quality-facts';
