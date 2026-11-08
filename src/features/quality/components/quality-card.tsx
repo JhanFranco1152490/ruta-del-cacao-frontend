@@ -34,7 +34,9 @@ export function QualityCard({
   onAction: (lot: LotQuality, action: QualityAction) => void;
 }) {
   const status = lot.lot.status;
-  const closed = status === 'classified' || status === 'discarded';
+  // Cerrado por lo que decidió calidad y no por el estado: un clasificado sigue cerrado al pasar a
+  // En bodega o a cualquier estado posterior.
+  const closed = lot.classification !== null || lot.discard !== null;
   const evaluatedBy = evaluatedByLine(lot);
   const discard = discardLine(lot);
   const closedBy = closedByLine(lot);

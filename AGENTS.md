@@ -372,7 +372,9 @@ src/
 
 - **Calidad (`features/quality/`).** `/calidad` (precargada, solo con `quality.evaluate_lot`) es la
   lista de trabajo de quien evalúa el grano seco: tres pestañas en la URL (`?vista=`: **Por evaluar**,
-  los Seco; **Evaluados**; **Cerrados**, los Clasificado y Descartado), la finca y la búsqueda por
+  los Seco; **Evaluados**; **Cerrados**, los Clasificado y Descartado, y también los que ya pasaron
+  a En bodega: la tarjeta decide «cerrado» por la clasificación o el descarte, no por el estado), la
+  finca y la búsqueda por
   código (`use-quality-filters.ts`), las cifras (`GET /api/quality/summary`) y la paginación del
   servidor, de a 20. **Se registra solo en línea; se consulta sin conexión:** la primera página de
   cada pestaña con sus filtros y las cifras se guardan en `cache` (`readThroughCache`); sin
