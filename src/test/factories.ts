@@ -591,6 +591,32 @@ export const buildFacility = (
   ...overrides,
 });
 
+// Nombre, documento y contacto inventados: un comprador puede ser una persona natural.
+export const buildBuyer = (
+  overrides: Partial<Schemas['Buyer']> = {},
+): Schemas['Buyer'] => ({
+  id: 'b1',
+  producer: {
+    id: 'p1',
+    member_code: '000123',
+    first_name: 'Productora',
+    last_name: 'De Ejemplo',
+  },
+  name: 'Chocolates del Oriente S.A.S.',
+  document_type: 'NIT',
+  identity_document: '900000001',
+  buyer_type: 'chocolate_industry',
+  contact_name: 'Persona de Ejemplo',
+  phone: '3000000001',
+  email: 'compras@example.com',
+  is_active: true,
+  has_records: false,
+  version: 1,
+  created_at: '2026-10-23T14:00:00Z',
+  updated_at: '2026-10-23T14:00:00Z',
+  ...overrides,
+});
+
 export const buildCollector = (
   overrides: Partial<Schemas['CollectorOption']> = {},
 ): Schemas['CollectorOption'] => ({

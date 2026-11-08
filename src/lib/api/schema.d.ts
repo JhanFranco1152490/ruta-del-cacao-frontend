@@ -323,6 +323,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/buyers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El directorio completo de compradores del productor de la sesión, activos e inactivos, ordenado por nombre y sin paginar: la búsqueda y los filtros corren en el dispositivo. No depende de las fincas de quien consulta. */
+        get: operations["buyers_list"];
+        put?: never;
+        /** @description Registra un comprador en el directorio del productor de la sesión. `producer_id` solo lo envía la cuenta técnica, y para ella es obligatorio. Pide un teléfono o un correo. Si ya hay uno con el mismo tipo y número de documento, 409 `duplicate_document` con el existente en `existing`. */
+        post: operations["buyers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/buyers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["buyers_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina un comprador creado por error. Requiere `expected_version` en la URL. Si algún registro lo usa (sus ventas), 409 `buyer_has_records`: se desactiva en su lugar. El historial del comprador se conserva. */
+        delete: operations["buyers_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Edición parcial, incluida la activación o desactivación con `is_active`. Todo se puede cambiar, también el documento. Requiere `expected_version`; si el comprador cambió, 409 `stale_version` con el vigente en `current`. El resultado debe seguir teniendo un teléfono o un correo. */
+        patch: operations["buyers_partial_update"];
+        trace?: never;
+    };
     "/api/cacao-varieties": {
         parameters: {
             query?: never;
@@ -1827,6 +1863,65 @@ export interface components {
         };
         /** @enum {unknown} */
         BlankEnum: "";
+        Buyer: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly producer: components["schemas"]["BuyerProducer"];
+            readonly name: string;
+            readonly document_type: components["schemas"]["DocumentTypeEnum"];
+            readonly identity_document: string;
+            readonly buyer_type: components["schemas"]["BuyerTypeEnum"];
+            readonly contact_name: string | null;
+            readonly phone: string | null;
+            /** Format: email */
+            readonly email: string | null;
+            readonly is_active: boolean;
+            readonly has_records: boolean;
+            readonly version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        BuyerConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["Buyer"];
+            existing?: components["schemas"]["ExistingBuyer"];
+        };
+        BuyerCreateRequest: {
+            name: string;
+            document_type: components["schemas"]["DocumentTypeEnum"];
+            identity_document: string;
+            buyer_type: components["schemas"]["BuyerTypeEnum"];
+            contact_name?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            /** Format: uuid */
+            producer_id?: string;
+        };
+        BuyerList: {
+            results: components["schemas"]["Buyer"][];
+        };
+        BuyerProducer: {
+            /** Format: uuid */
+            id: string;
+            member_code: string;
+            first_name: string;
+            last_name: string;
+        };
+        /**
+         * @description * `chocolate_industry` - Industria chocolatera
+         *     * `exporter` - Exportador
+         *     * `intermediary` - Intermediario o acopiador
+         *     * `cooperative` - Cooperativa o asociación
+         *     * `artisan_processor` - Transformador artesanal
+         * @enum {string}
+         */
+        BuyerTypeEnum: "chocolate_industry" | "exporter" | "intermediary" | "cooperative" | "artisan_processor";
         CacaoVariety: {
             /** Format: uuid */
             readonly id: string;
@@ -2344,6 +2439,12 @@ export interface components {
             file: string;
             /** Format: date-time */
             captured_at?: string | null;
+        };
+        ExistingBuyer: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_active: boolean;
         };
         ExistingFacility: {
             /** Format: uuid */
@@ -3309,6 +3410,17 @@ export interface components {
             package_size?: string | null;
             is_active?: boolean;
             expected_version: number;
+        };
+        PatchedBuyerUpdateRequest: {
+            name?: string;
+            document_type?: components["schemas"]["DocumentTypeEnum"];
+            identity_document?: string;
+            buyer_type?: components["schemas"]["BuyerTypeEnum"];
+            contact_name?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            is_active?: boolean;
+            expected_version?: number;
         };
         PatchedCacaoVarietyUpdateRequest: {
             name?: string;
@@ -5624,6 +5736,288 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    buyers_list: {
+        parameters: {
+            query?: {
+                /** @description Solo la cuenta técnica: el productor cuyo directorio se quiere ver. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    buyers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuyerCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Buyer"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    buyers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Buyer"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    buyers_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` del comprador que se leyó. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerConflictError"];
+                };
+            };
+        };
+    };
+    buyers_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBuyerUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Buyer"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerConflictError"];
                 };
             };
         };

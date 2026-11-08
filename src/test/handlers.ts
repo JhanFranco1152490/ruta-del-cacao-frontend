@@ -254,6 +254,43 @@ export const facilitiesHandler = (
     return HttpResponse.json({ results });
   });
 
+// Responde el directorio de compradores de un productor, sin paginar, y guarda las búsquedas
+// recibidas.
+export const buyersHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/buyers'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// Registrar, editar (también activar y desactivar) o eliminar un comprador: responde `response`
+// (un HttpResponse para los errores) o el comprador con 201/200 (204 al eliminar), y guarda los
+// cuerpos recibidos (la URL al eliminar, que lleva `expected_version`).
+export const buyerWriteHandler = (
+  action: 'create' | 'update' | 'delete',
+  response: JsonBodyType | Response = null,
+  bodies: unknown[] = [],
+) => {
+  if (action === 'delete') {
+    return http.delete(apiUrl('/api/buyers/:id'), ({ request }) => {
+      bodies.push(new URL(request.url).searchParams);
+      if (response instanceof Response) return response;
+      return new HttpResponse(null, { status: 204 });
+    });
+  }
+  const method = action === 'create' ? http.post : http.patch;
+  const path = action === 'create' ? '/api/buyers' : '/api/buyers/:id';
+  return method(apiUrl(path), async ({ request }) => {
+    bodies.push(await request.json());
+    if (response instanceof Response) return response;
+    return HttpResponse.json(response, {
+      status: action === 'create' ? 201 : 200,
+    });
+  });
+};
+
 export const municipalitiesHandler = (results = buildMunicipalities()) =>
   http.get(apiUrl('/api/catalogs/municipalities'), () =>
     HttpResponse.json({ results }),

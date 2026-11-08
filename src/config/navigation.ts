@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   FlaskConical,
+  Handshake,
   LandPlot,
   Leaf,
   MapPinned,
@@ -138,6 +139,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: SlidersHorizontal,
     permission: PERMISSIONS.PARAMETERS_VIEW,
   },
+  // Lo que sigue al cacao en bodega: a quién se le vende. El directorio es de todo el productor, no
+  // de una finca. Se registra con conexión y se consulta sin ella, con la copia del dispositivo.
+  {
+    href: '/compradores',
+    label: 'Compradores',
+    group: 'sales',
+    icon: Handshake,
+    permission: PERMISSIONS.BUYERS_VIEW,
+  },
   {
     href: '/variedades',
     label: 'Variedades de cacao',
@@ -177,6 +187,7 @@ export const NAV_GROUP_LABELS: Record<NavGroupKey, string> = {
   farm: 'Finca',
   agriculture: 'Manejo agrícola',
   postharvest: 'Cosecha y poscosecha',
+  sales: 'Comercialización',
   catalogs: 'Catálogos',
 };
 
