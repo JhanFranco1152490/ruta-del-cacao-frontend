@@ -247,16 +247,16 @@ src/
   importa de los procesos: recibe sus secciones con `renderSections(lot, picker)` y la página
   (`lot-detail-from-query.tsx`) las llena en el orden del proceso. La ficha es una **lista de etapas a un
   lado y la elegida al otro** (`lot-process-layout.tsx`): a la izquierda el origen, la lista (Fermentación,
-  Secado y Calidad, cada una con su resumen y si está **Hecha**, **Actual** o **Pendiente**) y «Volver»
+  Secado, Calidad y Bodega, cada una con su resumen y si está **Hecha**, **Actual** o **Pendiente**) y «Volver»
   con las acciones de la ficha (`DetailFooter stacked`), pegados bajo la cabecera de la app y con su
   propio desplazamiento si no caben en la pantalla; a la derecha la etapa elegida con todo el ancho,
   porque trae tablas. En celular el orden es el de la tarea: la lista, la etapa y, al final, el origen y
   «Volver». Cada sección se monta **dos veces**, como renglón y como panel (`SectionCard` con
   `pick={picker.of(id)}`; `components/page-blocks/section-item.tsx`), y arma su propio resumen con lo que
-  ella lee (`fermentationSummary`, `dryingSummary`, `qualitySummary`); sin `pick` es una tarjeta normal.
+  ella lee (`fermentationSummary`, `dryingSummary`, `qualitySummary`, `warehouseSummary`); sin `pick` es una tarjeta normal.
   Qué etapa se muestra lo decide `useStagePicker` (`stage-picker.ts`): empieza en la del estado del lote
-  (`currentStage`; un lote Seco o posterior abre **Calidad**, porque lo que falta es evaluarlo y el secado
-  ya quedó en su resumen), elegir otra cambia las dos presentaciones a la vez, y si el lote cambia de etapa
+  (`currentStage`; un lote Seco, Evaluado o Descartado abre **Calidad**, porque lo que falta es evaluarlo o
+  clasificarlo y el secado ya quedó en su resumen; uno Clasificado o En bodega abre **Bodega**), elegir otra cambia las dos presentaciones a la vez, y si el lote cambia de etapa
   se muestra la nueva. El título del origen (`LotOrigin`) va en tinta negra, no en el color del módulo. La
   ficha es ancha (`wide`): encabezado `bosque` con el código en pedazos (`LotCodeSegments`, dentro del
   título con `titleVisual`), franja de cifras, indicador de etapas (`lot-stages.ts`) y, debajo, la lista y la etapa. **El «⋯» de cada fila de la lista** ofrece las

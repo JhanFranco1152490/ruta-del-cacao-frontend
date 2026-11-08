@@ -4,6 +4,7 @@ import { PackageMinus, PackagePlus, PencilLine } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
+import type { SectionPickControl } from '@/components/page-blocks/section-item';
 import {
   KeyValue,
   KeyValues,
@@ -26,6 +27,7 @@ import {
   warehousePermissionsOf,
 } from '../warehouse-actions';
 import { warehouseSectionView } from '../warehouse-section-view';
+import { warehouseSummary } from '../warehouse-summary';
 import { StockExitHistory } from './stock-exit-history';
 import { WarehouseActionDialog } from './warehouse-action-dialog';
 
@@ -78,7 +80,13 @@ function SectionActions({
 // La sección Bodega de la ficha de un lote, después de Calidad, desde que el lote está Clasificado.
 // Lo que trae el lote lo ve cualquiera; quien consulta existencias ve además quién ingresó, las
 // salidas y las acciones, que abren su formulario aquí mismo.
-export function WarehouseSection({ lot }: { lot: WarehouseSectionLot }) {
+export function WarehouseSection({
+  lot,
+  pick,
+}: {
+  lot: WarehouseSectionLot;
+  pick?: SectionPickControl;
+}) {
   const { data: user } = useSession();
   const online = useHasConnection();
   const can = warehousePermissionsOf(user);
@@ -87,6 +95,7 @@ export function WarehouseSection({ lot }: { lot: WarehouseSectionLot }) {
   const full = useLotStock(lot.id, reachesWarehouse && can.view && online);
   const [request, setRequest] = useState<DialogRequest>();
   if (!reachesWarehouse) return null;
+  const picked = pick && { ...pick, summary: warehouseSummary(lot.warehouse) };
 
   const view = lot.warehouse
     ? warehouseSectionView(lot.warehouse, full.data)
@@ -113,7 +122,7 @@ export function WarehouseSection({ lot }: { lot: WarehouseSectionLot }) {
 
   if (!view) {
     return (
-      <SectionCard accent="cobre" title="Bodega">
+      <SectionCard accent="cobre" pick={picked} title="Bodega">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-muted-foreground">Pendiente de ingreso.</p>
           {actions}
@@ -124,7 +133,7 @@ export function WarehouseSection({ lot }: { lot: WarehouseSectionLot }) {
   }
 
   return (
-    <SectionCard accent="cobre" title="Bodega">
+    <SectionCard accent="cobre" pick={picked} title="Bodega">
       <div className="space-y-4">
         <KeyValues>
           {view.entry.map(({ label, value }) => (

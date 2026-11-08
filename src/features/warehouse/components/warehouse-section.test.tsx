@@ -1,7 +1,8 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { SectionPickControl } from '@/components/page-blocks/section-item';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { LotStatus } from '@/lib/lot-status';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -74,6 +75,7 @@ function renderSection(
   status: LotStatus,
   warehouse: LotWarehouseDetail | null,
   permissions = MANAGER,
+  pick?: SectionPickControl,
 ) {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -81,7 +83,7 @@ function renderSection(
     buildSession({ id: userId, permissions }),
   );
   return renderWithProviders(
-    <WarehouseSection lot={{ id: 'l1', status, warehouse }} />,
+    <WarehouseSection lot={{ id: 'l1', status, warehouse }} pick={pick} />,
     { queryClient },
   );
 }
@@ -191,5 +193,33 @@ describe('WarehouseSection', () => {
       within(card).queryByRole('list', { name: 'Salidas del lote' }),
     ).not.toBeInTheDocument();
     expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+  });
+  it('is a line of the stage list that says where the lot is', async () => {
+    const onSelect = vi.fn();
+    renderSection('in_warehouse', buildLotWarehouseDetail(), MANAGER, {
+      as: 'item',
+      selected: false,
+      onSelect,
+      stage: 'current',
+    });
+
+    const item = await screen.findByRole('button', { name: /Bodega/ });
+    expect(item).toHaveTextContent('En bodega · Bodega principal');
+    expect(screen.queryByRole('region', { name: 'Bodega' })).toBeNull();
+    await userEvent.click(item);
+    expect(onSelect).toHaveBeenCalledOnce();
+  });
+
+  it('says in the list that a classified lot waits for its entry', async () => {
+    renderSection('classified', null, MANAGER, {
+      as: 'item',
+      selected: true,
+      onSelect: vi.fn(),
+      stage: 'current',
+    });
+
+    expect(
+      await screen.findByRole('button', { name: /Bodega/ }),
+    ).toHaveTextContent('Pendiente de ingreso');
   });
 });

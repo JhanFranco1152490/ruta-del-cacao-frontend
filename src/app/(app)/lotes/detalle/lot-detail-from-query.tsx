@@ -40,7 +40,7 @@ export function LotDetailFromQuery() {
       }
       key={lotId}
       lotId={lotId}
-      // El proceso del lote en su orden: fermentación, secado y calidad.
+      // El proceso del lote en su orden: fermentación, secado, calidad y bodega.
       renderSections={(lot, picker) => {
         const { farm } = lot.harvest.plot;
         const facilitiesHref = canSeeFacilities
@@ -74,6 +74,7 @@ export function LotDetailFromQuery() {
               }}
             />
             <WarehouseSection
+              pick={picker.of('warehouse')}
               lot={{ id: lot.id, status: lot.status, warehouse: lot.warehouse }}
             />
           </>

@@ -9,16 +9,23 @@ import type {
 } from '@/components/page-blocks/section-item';
 import type { LotStatus } from '@/lib/lot-status';
 
-export type LotStageId = 'fermentation' | 'drying' | 'quality';
+export type LotStageId = 'fermentation' | 'drying' | 'quality' | 'warehouse';
 
-const STAGE_ORDER: LotStageId[] = ['fermentation', 'drying', 'quality'];
+const STAGE_ORDER: LotStageId[] = [
+  'fermentation',
+  'drying',
+  'quality',
+  'warehouse',
+];
 
 // La etapa que se trabaja según el estado del lote: la que se muestra al llegar a su ficha. Un lote
-// Fermentado ya espera su secado, y uno Seco en adelante se mira por su calidad: lo que falta es
-// evaluarlo, y el secado ya quedó en su resumen.
+// Fermentado ya espera su secado, uno Seco, Evaluado o Descartado se mira por su calidad (lo que falta
+// es evaluarlo o clasificarlo, y el secado ya quedó en su resumen) y uno Clasificado en adelante por
+// su bodega: lo que falta es ingresarlo, o lo que sale de ella.
 export function currentStage(status: LotStatus): LotStageId {
   if (status === 'generated' || status === 'fermenting') return 'fermentation';
   if (status === 'fermented' || status === 'drying') return 'drying';
+  if (status === 'classified' || status === 'in_warehouse') return 'warehouse';
   return 'quality';
 }
 
