@@ -16,9 +16,11 @@ import { FermentationBody } from './fermentation-body';
 import { FermentationSummary } from './fermentation-summary';
 import { StartReadyLot } from './start-ready-lot';
 
+// En el orden del proceso: primero lo que espera y luego lo que está en fermentación, que es la que
+// abre por defecto (`use-fermentation-filters.ts`).
 const FERMENTATION_VIEW_OPTIONS = [
-  { value: 'en-curso', label: 'En fermentación' },
   { value: 'listos', label: 'Listos para fermentar' },
+  { value: 'en-curso', label: 'En fermentación' },
 ] as const;
 
 // Fermentación: el trabajo del día de quien fermenta. La ficha del lote es de otro dominio: su ruta

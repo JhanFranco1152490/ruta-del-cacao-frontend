@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import { EditorLink } from '@/components/editor-link';
 import { SectionCard } from '@/components/page-blocks/section-card';
+import type { SectionPickControl } from '@/components/page-blocks/section-item';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
@@ -19,6 +20,7 @@ import {
   qualityPermissionsOf,
 } from '../quality-actions';
 import { qualitySectionView } from '../quality-section-view';
+import { qualitySummary } from '../quality-summary';
 import {
   ClassificationBlock,
   EvaluationBlock,
@@ -81,13 +83,23 @@ function SectionActions({ offers }: { offers: readonly LinkedOffer[] }) {
 // La sección Calidad de la ficha de un lote, después del secado, desde que el lote está Seco. Lo
 // que trae el lote lo ve cualquiera; quien puede evaluar ve además quién evaluó o clasificó, las
 // observaciones y las acciones.
-export function QualitySection({ lot }: { lot: QualitySectionLot }) {
+export function QualitySection({
+  lot,
+  pick,
+}: {
+  lot: QualitySectionLot;
+  pick?: SectionPickControl;
+}) {
   const { data: user } = useSession();
   const online = useHasConnection();
   const can = qualityPermissionsOf(user);
   const reachesQuality = lot.status === 'dried' || lot.quality !== null;
   const full = useQualityLot(lot.id, reachesQuality && can.evaluate && online);
   if (!reachesQuality) return null;
+  const picked = pick && {
+    ...pick,
+    summary: qualitySummary(lot.status, lot.quality),
+  };
 
   const offers: LinkedOffer[] = can.evaluate
     ? qualityActions({ status: lot.status, online, can }).map((offer) => ({
@@ -98,7 +110,7 @@ export function QualitySection({ lot }: { lot: QualitySectionLot }) {
 
   if (!lot.quality) {
     return (
-      <SectionCard accent="cobre" title="Calidad">
+      <SectionCard accent="cobre" pick={picked} title="Calidad">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-muted-foreground">Pendiente de evaluación.</p>
           <SectionActions offers={offers} />
@@ -109,7 +121,7 @@ export function QualitySection({ lot }: { lot: QualitySectionLot }) {
 
   const view = qualitySectionView(lot.quality, full.data, lot.dryWeightKg);
   return (
-    <SectionCard accent="cobre" title="Calidad">
+    <SectionCard accent="cobre" pick={picked} title="Calidad">
       <div className="space-y-4">
         {view.discardedNotice && (
           <p

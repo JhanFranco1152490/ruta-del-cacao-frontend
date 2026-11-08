@@ -22,6 +22,8 @@ vi.mock(
   async () => (await import('@/test/router')).navigation,
 );
 
+import { SectionCard } from '@/components/page-blocks/section-card';
+
 import { LotDetailScreen } from './lot-detail-screen';
 
 const ALL = [PERMISSIONS.LOTS_VIEW, PERMISSIONS.LOTS_DELETE];
@@ -143,14 +145,62 @@ describe('LotDetailScreen', () => {
   // origen.
   it('shows the sections that other modules give it, next to the origin', async () => {
     renderScreen(ALL, {
-      renderSections: (lot) => (
-        <section aria-label="Fermentación">Sección de {lot.code}</section>
+      renderSections: (lot, picker) => (
+        <SectionCard
+          accent="cobre"
+          pick={picker.of('fermentation')}
+          title="Fermentación"
+        >
+          Sección de {lot.code}
+        </SectionCard>
       ),
     });
 
     const section = await screen.findByRole('region', { name: 'Fermentación' });
     expect(section).toHaveTextContent('Sección de 000123-F02-P05-261014-1');
     expect(screen.getByRole('region', { name: 'Origen' })).toBeInTheDocument();
+  });
+
+  it('lists the stages and shows only the chosen one, starting with the stage of the lot', async () => {
+    serve(buildLot({ status: 'fermenting' }));
+    renderScreen(ALL, {
+      renderSections: (_lot, picker) => (
+        <>
+          <SectionCard
+            accent="cobre"
+            pick={{ ...picker.of('fermentation'), summary: 'C-01' }}
+            title="Fermentación"
+          >
+            Datos de fermentación
+          </SectionCard>
+          <SectionCard
+            accent="cobre"
+            pick={{ ...picker.of('drying'), summary: 'M-01' }}
+            title="Secado"
+          >
+            Datos de secado
+          </SectionCard>
+        </>
+      ),
+    });
+
+    const list = await screen.findByRole('navigation', {
+      name: 'Etapas del lote',
+    });
+    const fermentation = within(list).getByRole('button', {
+      name: /Fermentación/,
+    });
+    const drying = within(list).getByRole('button', { name: /Secado/ });
+    expect(fermentation).toHaveAttribute('aria-current', 'true');
+    expect(fermentation).toHaveTextContent('C-01');
+    expect(screen.getByText('Datos de fermentación')).toBeInTheDocument();
+    expect(screen.queryByText('Datos de secado')).toBeNull();
+
+    await userEvent.click(drying);
+
+    expect(drying).toHaveAttribute('aria-current', 'true');
+    expect(screen.getByText('Datos de secado')).toBeInTheDocument();
+    expect(screen.queryByText('Datos de fermentación')).toBeNull();
   });
 
   it('offers to go back to where the lot was formed', async () => {
@@ -263,10 +313,14 @@ describe('LotDetailScreen', () => {
     });
     server.use(http.get(apiUrl('/api/lots/l1'), () => HttpResponse.error()));
     renderScreen(ALL, {
-      renderSections: (lot) => (
-        <section aria-label="Fermentación">
+      renderSections: (lot, picker) => (
+        <SectionCard
+          accent="cobre"
+          pick={picker.of('fermentation')}
+          title="Fermentación"
+        >
           {lot.fermentation?.facility}
-        </section>
+        </SectionCard>
       ),
     });
 
