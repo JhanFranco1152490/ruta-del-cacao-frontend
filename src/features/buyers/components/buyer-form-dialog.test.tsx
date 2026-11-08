@@ -33,27 +33,36 @@ beforeEach(() => {
 });
 
 function renderDialog({
+  buyer,
   known = [oriente, ceiba],
   chooseProducer = false,
   producer = null,
 }: {
+  buyer?: Buyer;
   known?: Buyer[];
   chooseProducer?: boolean;
   producer?: string | null;
 } = {}) {
   const onSaved = vi.fn();
+  const onClose = vi.fn();
   const onShowExisting = vi.fn();
   renderWithProviders(
     <BuyerFormDialog
+      buyer={buyer}
       chooseProducer={chooseProducer}
       known={known}
-      onClose={vi.fn()}
+      onClose={onClose}
       onSaved={onSaved}
       onShowExisting={onShowExisting}
       producer={producer}
     />,
   );
-  return { onSaved, onShowExisting, dialog: screen.getByRole('dialog') };
+  return {
+    onSaved,
+    onClose,
+    onShowExisting,
+    dialog: screen.getByRole('dialog'),
+  };
 }
 
 // Pegar en vez de teclear: un solo evento por campo, para que un formulario de siete campos no
@@ -328,5 +337,182 @@ describe('BuyerFormDialog, for the technical account', () => {
       expect(onSaved).toHaveBeenCalledWith('Comprador registrado'),
     );
     expect(bodies[0]).toMatchObject({ producer_id: 'p9' });
+  });
+});
+
+describe('BuyerFormDialog, editing', () => {
+  const editing = buildBuyer({
+    id: 'b1',
+    name: 'Chocolates del Oriente S.A.S.',
+    document_type: 'NIT',
+    identity_document: '900000001',
+    buyer_type: 'chocolate_industry',
+    contact_name: null,
+    phone: '3000000001',
+    email: null,
+    version: 4,
+  });
+
+  const replace = async (label: string, text: string) => {
+    const field = screen.getByLabelText(label);
+    await userEvent.clear(field);
+    if (!text) return;
+    await userEvent.click(field);
+    await userEvent.paste(text);
+  };
+
+  it('opens with the current data and sends only what changed, with the version read', async () => {
+    server.use(csrfHandler, buyerWriteHandler('update', editing, bodies));
+    const { onSaved, dialog } = renderDialog({ buyer: editing });
+
+    expect(dialog).toHaveTextContent('Editar comprador');
+    expect(screen.getByLabelText('Nombre')).toHaveValue(
+      'Chocolates del Oriente S.A.S.',
+    );
+    expect(screen.getByLabelText('Número de documento')).toHaveValue(
+      '900000001',
+    );
+    await replace('Número de documento', '900000011');
+    await userEvent.selectOptions(
+      screen.getByLabelText('Tipo de cliente'),
+      'exporter',
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    await waitFor(() =>
+      expect(onSaved).toHaveBeenCalledWith('Comprador actualizado'),
+    );
+    expect(bodies).toEqual([
+      {
+        identity_document: '900000011',
+        buyer_type: 'exporter',
+        expected_version: 4,
+      },
+    ]);
+  });
+
+  it('closes without sending or announcing when nothing really changed', async () => {
+    const { onSaved } = renderDialog({ buyer: editing });
+
+    await replace('Nombre', ' Chocolates del Oriente S.A.S. ');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(null));
+    expect(bodies).toEqual([]);
+  });
+
+  it('does not save when a required field is emptied, or the only contact is removed', async () => {
+    const { onSaved, dialog } = renderDialog({ buyer: editing });
+
+    await replace('Nombre', '');
+    await replace('Teléfono', '');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    expect(
+      await within(dialog).findByText('Complete los datos obligatorios'),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('Campo obligatorio')).toBeInTheDocument();
+    expect(
+      within(dialog).getAllByText('Escribe un teléfono o un correo.'),
+    ).toHaveLength(2);
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('does not take the document of another buyer', async () => {
+    renderDialog({ buyer: editing, known: [editing, ceiba] });
+
+    await userEvent.selectOptions(
+      screen.getByLabelText('Tipo de documento'),
+      'CC',
+    );
+    await replace('Número de documento', '1000000002');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    expect(
+      await screen.findByText(
+        'Ya tienes registrado este documento: Acopio La Ceiba, que está inactivo.',
+      ),
+    ).toBeInTheDocument();
+    expect(bodies).toEqual([]);
+  });
+
+  it('loads the current data when another person changed the buyer meanwhile', async () => {
+    const current = { ...editing, name: 'Chocolates del Oriente', version: 5 };
+    server.use(
+      csrfHandler,
+      buyerWriteHandler(
+        'update',
+        HttpResponse.json(
+          {
+            detail: 'Cambió.',
+            code: 'stale_version',
+            fields: {},
+            current,
+          },
+          { status: 409 },
+        ),
+        bodies,
+      ),
+    );
+    renderDialog({ buyer: editing });
+
+    await replace('Persona de contacto', 'Persona de Ejemplo');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' }),
+    );
+
+    expect(
+      await screen.findByText(
+        'Otra persona cambió este comprador. Revisa los datos actuales antes de guardar.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Nombre')).toHaveValue(
+      'Chocolates del Oriente',
+    );
+    expect(screen.getByLabelText('Persona de contacto')).toHaveValue('');
+  });
+
+  it('closes at once when cancelled without changes', async () => {
+    const { onClose } = renderDialog({ buyer: editing });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('asks before discarding changes, and keeps them on request', async () => {
+    const { onClose } = renderDialog({ buyer: editing });
+
+    await replace('Nombre', 'Otro nombre');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    const confirm = await screen.findByRole('dialog', {
+      name: '¿Descartar los cambios?',
+    });
+    await userEvent.click(
+      within(confirm).getByRole('button', { name: 'Seguir editando' }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: '¿Descartar los cambios?' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Otro nombre');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Descartar cambios' }),
+    );
+    expect(onClose).toHaveBeenCalled();
+    expect(bodies).toEqual([]);
   });
 });

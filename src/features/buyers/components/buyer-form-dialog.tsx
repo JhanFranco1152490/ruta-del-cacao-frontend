@@ -101,6 +101,8 @@ export function BuyerFormDialog({
     <FormDialog
       contentClassName="max-sm:h-dvh max-sm:max-w-none max-sm:rounded-none sm:max-w-lg"
       description={buyer ? undefined : BUYER_FORM_HINT}
+      // Al editar, cancelar con cambios pregunta antes de perderlos.
+      dirty={!!buyer && form.formState.isDirty}
       error={submission.summary}
       isSaving={isSaving}
       onClose={onClose}
