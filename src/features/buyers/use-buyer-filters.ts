@@ -57,5 +57,9 @@ export function useBuyerFilters() {
       setParams({ producer, buyer: null }),
     clear: () => setParams({ search: null, type: null, status: null }),
     showBuyer: (buyer: string | null) => setParams({ buyer }),
+    // «Ver el comprador» desde un aviso de repetido: los filtros podrían esconderlo (inactivo, otro
+    // tipo), así que se quitan para que su fila quede a la vista.
+    revealBuyer: (buyer: string) =>
+      setParams({ buyer, search: null, type: null, status: 'all' }),
   };
 }

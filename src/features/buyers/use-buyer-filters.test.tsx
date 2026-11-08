@@ -105,6 +105,18 @@ describe('useBuyerFilters', () => {
     expect(lastQuery(onUrlUpdate)).toBe('?productor=p2');
   });
 
+  it('reveals a buyer clearing the filters that could hide it', async () => {
+    const { result, onUrlUpdate } = setup(
+      '?productor=p1&buscar=x&tipo=exporter',
+    );
+
+    await act(() => result.current.revealBuyer('b4'));
+
+    expect(lastQuery(onUrlUpdate)).toBe(
+      '?productor=p1&comprador=b4&estado=all',
+    );
+  });
+
   it('opens and closes a buyer', async () => {
     const { result, onUrlUpdate } = setup();
 

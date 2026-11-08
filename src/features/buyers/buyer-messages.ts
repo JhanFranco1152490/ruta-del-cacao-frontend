@@ -1,3 +1,5 @@
+import { endSentence } from '@/lib/format/sentence';
+
 export const BUYER_CREATED_MESSAGE = 'Comprador registrado';
 export const BUYER_UPDATED_MESSAGE = 'Comprador actualizado';
 export const BUYER_DEACTIVATED_MESSAGE = 'Comprador desactivado';
@@ -23,10 +25,10 @@ export const SIMILAR_NAME_MESSAGE =
   'Ya tienes un comprador llamado así, con otro documento.';
 
 // El servidor no repite el nombre en su mensaje: la interfaz lo arma con el que ya tiene el
-// documento, que es del mismo productor.
+// documento, que es del mismo productor. Muchas razones sociales ya terminan en punto («S.A.S.»).
 export const duplicateDocumentMessage = (name: string, isActive: boolean) =>
   isActive
-    ? `Ya tienes registrado este documento: ${name}.`
+    ? `Ya tienes registrado este documento: ${endSentence(name)}`
     : `Ya tienes registrado este documento: ${name}, que está inactivo.`;
 
 export const deactivateTitle = (name: string) => `¿Desactivar a ${name}?`;

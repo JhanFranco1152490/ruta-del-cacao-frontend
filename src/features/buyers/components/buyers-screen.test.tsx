@@ -8,7 +8,12 @@ import { queryKeys } from '@/lib/api/query-keys';
 import { getOfflineDb } from '@/lib/offline/db';
 import { PERMISSIONS } from '@/lib/permissions';
 import { buildBuyer, buildSession } from '@/test/factories';
-import { apiUrl, buyersHandler } from '@/test/handlers';
+import {
+  apiUrl,
+  buyersHandler,
+  buyerWriteHandler,
+  csrfHandler,
+} from '@/test/handlers';
 import { createTestQueryClient, renderWithProviders } from '@/test/render';
 import { stubWideScreen } from '@/test/screen-size';
 import { server } from '@/test/server';
@@ -184,6 +189,46 @@ describe('BuyersScreen', () => {
 
     await table();
     expect(rows()).toHaveLength(3);
+  });
+
+  it('registers a buyer from the header, closes the form and announces it', async () => {
+    const bodies: unknown[] = [];
+    server.use(
+      csrfHandler,
+      buyerWriteHandler('create', buildBuyer({ id: 'b9' }), bodies),
+    );
+    renderScreen();
+
+    await table();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Registrar comprador' }),
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Registrar comprador',
+    });
+    for (const [label, text] of [
+      ['Nombre', 'Cacao Andino S.A.S.'],
+      ['Número de documento', '900000009'],
+      ['Correo', 'compras@example.com'],
+    ]) {
+      await userEvent.click(within(dialog).getByLabelText(label));
+      await userEvent.paste(text);
+    }
+    await userEvent.selectOptions(
+      within(dialog).getByLabelText('Tipo de cliente'),
+      'exporter',
+    );
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Guardar' }),
+    );
+
+    expect(await screen.findByText('Comprador registrado')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Registrar comprador' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(bodies).toHaveLength(1);
   });
 
   it('invites to register the first buyer when the directory is empty', async () => {

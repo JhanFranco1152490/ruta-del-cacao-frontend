@@ -8,12 +8,14 @@ import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
+import { notify } from '@/lib/notify';
 
 import type { Buyer } from '../api';
-import { type BuyerActionKind, buyerActions } from '../buyer-actions';
+import { buyerActions } from '../buyer-actions';
 import { buyerCountText } from '../buyer-format';
 import { BUYER_NEEDS_CONNECTION } from '../buyer-messages';
 import { useBuyersScreen } from '../use-buyers-screen';
+import { BuyerDialogs, type PendingBuyerAction } from './buyer-dialogs';
 import { BuyerFiltersBar } from './buyer-filters-bar';
 import { BuyerListStates } from './buyer-list-states';
 import { BuyerRowActions } from './buyer-row-actions';
@@ -21,9 +23,6 @@ import { BuyerSheet } from './buyer-sheet';
 import { BuyerSheetActions } from './buyer-sheet-actions';
 import { BuyerSummaryStrip } from './buyer-summary-strip';
 import { BuyerTable } from './buyer-table';
-
-export type PendingBuyerAction =
-  { kind: 'create' } | { kind: BuyerActionKind; buyer: Buyer };
 
 // El directorio de compradores del productor: se consulta también sin conexión, con la copia del
 // dispositivo, y se registra y cambia solo en línea.
@@ -111,6 +110,21 @@ export function BuyersScreen() {
           showProducer={screen.showProducer}
         />
       )}
+      <BuyerDialogs
+        chooseProducer={screen.superuser}
+        known={screen.all}
+        onClose={() => setPending(undefined)}
+        onSaved={(message) => {
+          setPending(undefined);
+          if (message) notify.success(message);
+        }}
+        onShowExisting={(id) => {
+          setPending(undefined);
+          filters.revealBuyer(id);
+        }}
+        pending={pending}
+        producer={screen.producer}
+      />
     </div>
   );
 }
