@@ -463,10 +463,14 @@ src/
     su motivo). Las bodegas se registran, editan, activan, desactivan y eliminan (la nunca usada) en
     la pestaña Bodegas.
   - **La sección de la ficha del lote** (`warehouse-section.tsx`), después de Calidad, se arma con el
-    campo `warehouse` del lote para cualquiera que lo vea, y con `GET /api/stock/{id}` (que pide
-    `view_stock`) suma quién ingresó o corrigió, el historial de salidas (la anulada, tachada) y las
-    acciones, que abren su diálogo ahí mismo. La ilustración de los vacíos es propia
-    (`WarehouseShelves`).
+    campo `warehouse` del lote para cualquiera que lo vea (dónde está el cacao y desde cuándo, con
+    **Mover** al lado, y lo que queda de cada calibre en cifras grandes), y con `GET /api/stock/{id}`
+    (que pide `view_stock`) suma el **libro de movimientos** (`warehouse-ledger.ts`,
+    `warehouse-ledger-table.tsx`): del ingreso a lo último, una línea por ingreso, cambio de lugar y
+    salida con lo que movió en G1 y G2 (verde entra, rojo sale, sin cifra si solo cambió de lugar) y el
+    saldo al final. La salida anulada sigue en él, tachada y con quién la anuló y por qué, y **Anular**
+    va en la línea de la salida. Registrar salida y corregir el ingreso abren su diálogo ahí mismo. La
+    ilustración de los vacíos es propia (`WarehouseShelves`).
 
 - **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un
   formulario de página (sin banner, `narrow`) con los 21 valores con los que se evalúan el secado y

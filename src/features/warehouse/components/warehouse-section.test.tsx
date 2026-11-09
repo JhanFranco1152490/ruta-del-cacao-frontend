@@ -115,22 +115,25 @@ describe('WarehouseSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the entry, who made it, what is left and the exits', async () => {
+  it('shows where the cacao is, what is left and the ledger of the lot', async () => {
     renderSection('in_warehouse', buildLotWarehouseDetail());
 
     const card = await section();
-    expect(card).toHaveTextContent('Fecha de ingreso30 de octubre');
-    expect(card).toHaveTextContent('UbicaciónEstante 3');
-    expect(
-      await within(card).findByText('Ingresado por Cuenta de prueba el 30 oct'),
-    ).toBeInTheDocument();
+    expect(card).toHaveTextContent('Bodega principal · Estante 3');
+    expect(card).toHaveTextContent('Desde el 30 de octubre');
     expect(
       within(card).getByRole('list', { name: 'Existencias del lote' }),
-    ).toHaveTextContent('G1: 245,0 de 250,0 kg');
+    ).toHaveTextContent('245,0 kgG1 disponible de 250,0');
 
-    const exits = within(card).getByRole('list', { name: 'Salidas del lote' });
-    const [sample, voided] = within(exits).getAllByRole('listitem');
-    expect(sample).toHaveTextContent('5,0 kg de G1 · Muestra');
+    const ledger = await within(card).findByRole('table', {
+      name: 'Movimientos del lote',
+    });
+    const [, entry, sample, voided, balance] =
+      within(ledger).getAllByRole('row');
+    expect(entry).toHaveTextContent('IngresoCuenta de prueba · Estante 3');
+    expect(entry).toHaveTextContent('+250,0+55,2');
+    expect(sample).toHaveTextContent('Muestra');
+    expect(sample).toHaveTextContent('−5,0');
     expect(
       within(sample).getByRole('button', { name: /^Anular la salida/ }),
     ).toBeInTheDocument();
@@ -138,20 +141,22 @@ describe('WarehouseSection', () => {
       'Anulada por Ana Pérez el 1 nov: No salió',
     );
     expect(within(voided).queryByRole('button')).not.toBeInTheDocument();
+    expect(balance).toHaveTextContent('Saldo245,055,2');
   });
 
-  it('lists the moves of the cacao, and offers to move it', async () => {
+  it('lists the moves of the cacao in the ledger, and offers to move it', async () => {
     server.use(lotStockHandler({ ...STOCK, moves: [buildStockMove()] }));
     renderSection('in_warehouse', buildLotWarehouseDetail());
 
     const card = await section();
-    const moves = await within(card).findByRole('list', {
+    const ledger = await within(card).findByRole('table', {
       name: 'Movimientos del lote',
     });
-    expect(moves).toHaveTextContent(
-      'Bodega principal · Estante 3 → Bodega principal · Estante 9',
-    );
-    expect(moves).toHaveTextContent('Movido por Cuenta de prueba el 2 nov');
+    expect(
+      await within(ledger).findByText(
+        'Estante 3 → Estante 9 · Cuenta de prueba',
+      ),
+    ).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: 'Mover' })).toBeEnabled();
   });
 
@@ -171,7 +176,7 @@ describe('WarehouseSection', () => {
     renderSection('in_warehouse', buildLotWarehouseDetail());
 
     const card = await section();
-    await within(card).findByText('Ingresado por Cuenta de prueba el 30 oct');
+    await within(card).findByRole('table', { name: 'Movimientos del lote' });
     expect(
       within(card).getByRole('button', { name: 'Registrar salida' }),
     ).toBeInTheDocument();
@@ -189,7 +194,7 @@ describe('WarehouseSection', () => {
     const balances = within(await section()).getByRole('list', {
       name: 'Existencias del lote',
     });
-    expect(balances).toHaveTextContent('G2: 0,0 de 55,2 kg');
+    expect(balances).toHaveTextContent('0,0 kgG2 disponible de 55,2');
     expect(within(balances).getByText('Agotado')).toBeInTheDocument();
   });
 
@@ -214,11 +219,10 @@ describe('WarehouseSection', () => {
     ]);
 
     const card = await section();
-    expect(card).toHaveTextContent('Bodega principal');
-    expect(card).toHaveTextContent('G1: 245,0 de 250,0 kg');
-    expect(card).not.toHaveTextContent('Ingresado por');
+    expect(card).toHaveTextContent('Bodega principal · Estante 3');
+    expect(card).toHaveTextContent('245,0 kg');
     expect(
-      within(card).queryByRole('list', { name: 'Salidas del lote' }),
+      within(card).queryByRole('table', { name: 'Movimientos del lote' }),
     ).not.toBeInTheDocument();
     expect(within(card).queryByRole('button')).not.toBeInTheDocument();
   });

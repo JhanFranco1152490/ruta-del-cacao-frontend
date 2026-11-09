@@ -5,15 +5,11 @@ import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import type { SectionPickControl } from '@/components/page-blocks/section-item';
-import {
-  KeyValue,
-  KeyValues,
-  SectionCard,
-} from '@/components/page-blocks/section-card';
-import { StatusBadge } from '@/components/status-badge';
+import { SectionCard } from '@/components/page-blocks/section-card';
 import { Button } from '@/components/ui/button';
 import { useHasConnection } from '@/hooks/use-has-connection';
 import { useSession } from '@/hooks/use-session';
+import { todayInBogota } from '@/lib/format/dates';
 import type { LotStatus } from '@/lib/lot-status';
 
 import type { LotWarehouseDetail } from '../api';
@@ -28,8 +24,9 @@ import {
 } from '../warehouse-actions';
 import { warehouseSectionView } from '../warehouse-section-view';
 import { warehouseSummary } from '../warehouse-summary';
-import { StockExitHistory } from './stock-exit-history';
 import { WarehouseActionDialog } from './warehouse-action-dialog';
+import { WarehouseLedgerTable } from './warehouse-ledger-table';
+import { BalanceFigures, WarehousePlaceBand } from './warehouse-place-band';
 
 export type WarehouseSectionLot = {
   id: string;
@@ -99,7 +96,7 @@ export function WarehouseSection({
   const picked = pick && { ...pick, summary: warehouseSummary(lot.warehouse) };
 
   const view = lot.warehouse
-    ? warehouseSectionView(lot.warehouse, full.data)
+    ? warehouseSectionView(lot.warehouse, full.data, todayInBogota())
     : null;
   const offers = lotStockActions({
     status: lot.status,
@@ -108,12 +105,9 @@ export function WarehouseSection({
     online,
     can,
   });
-  const actions = (
-    <SectionActions
-      offers={offers}
-      onAction={(action) => setRequest({ action, lotId: lot.id })}
-    />
-  );
+  const onAction = (action: LotStockAction) =>
+    setRequest({ action, lotId: lot.id });
+  const actions = <SectionActions offers={offers} onAction={onAction} />;
   const dialog = request && (
     <WarehouseActionDialog
       onClose={() => setRequest(undefined)}
@@ -133,62 +127,42 @@ export function WarehouseSection({
     );
   }
 
+  const move = offers.find(({ action }) => action === 'mover');
+  const others = offers.filter(({ action }) => action !== 'mover');
   return (
     <SectionCard accent="cobre" pick={picked} title="Bodega">
       <div className="space-y-4">
-        <KeyValues>
-          {view.entry.map(({ label, value }) => (
-            <KeyValue key={label} label={label}>
-              {value}
-            </KeyValue>
-          ))}
-        </KeyValues>
-        {(view.enteredBy || view.correctedBy) && (
-          <div className="space-y-0.5 text-sm text-muted-foreground">
-            {view.enteredBy && <p>{view.enteredBy}</p>}
-            {view.correctedBy && <p>{view.correctedBy}</p>}
-          </div>
+        <WarehousePlaceBand
+          action={
+            move && (
+              <Button
+                disabled={move.disabledReason !== null}
+                onClick={() => setRequest({ action: 'mover', lotId: lot.id })}
+                size="office"
+                title={move.disabledReason ?? undefined}
+                variant="action"
+              >
+                <MoveRight aria-hidden="true" className="size-4" /> {move.label}
+              </Button>
+            )
+          }
+          place={view.place}
+          since={view.since}
+        />
+        <BalanceFigures balances={view.balances} />
+        {view.ledger && (
+          <WarehouseLedgerTable
+            ledger={view.ledger}
+            onVoid={(exit) =>
+              setRequest({ action: 'anular', lotId: lot.id, exitId: exit.id })
+            }
+            voidOfferOf={(exit) => exitVoidOffer(exit, online, can)}
+          />
         )}
-        <h3 className="font-bold text-selva">Existencias</h3>
-        <ul aria-label="Existencias del lote" className="space-y-1">
-          {view.balances.map((balance) => (
-            <li
-              className="flex flex-wrap items-center gap-2 tabular-nums"
-              key={balance.grade}
-            >
-              {balance.text}
-              {balance.depleted && (
-                <StatusBadge tone="warn">Agotado</StatusBadge>
-              )}
-            </li>
-          ))}
-        </ul>
-        {view.exits && (
-          <>
-            <h3 className="font-bold text-selva">Salidas</h3>
-            <StockExitHistory
-              lines={view.exits}
-              onVoid={(exit) =>
-                setRequest({ action: 'anular', lotId: lot.id, exitId: exit.id })
-              }
-              voidOfferOf={(exit) => exitVoidOffer(exit, online, can)}
-            />
-          </>
+        {view.correctedBy && (
+          <p className="text-sm text-muted-foreground">{view.correctedBy}</p>
         )}
-        {view.moves && view.moves.length > 0 && (
-          <>
-            <h3 className="font-bold text-selva">Movimientos</h3>
-            <ul aria-label="Movimientos del lote" className="space-y-2">
-              {view.moves.map((move) => (
-                <li key={move.id}>
-                  <p className="font-bold">{move.route}</p>
-                  <p className="text-sm text-muted-foreground">{move.detail}</p>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {actions}
+        <SectionActions offers={others} onAction={onAction} />
       </div>
       {dialog}
     </SectionCard>

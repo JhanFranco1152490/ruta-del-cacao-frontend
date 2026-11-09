@@ -4,121 +4,92 @@ import {
   buildLotStock,
   buildLotWarehouseDetail,
   buildStockEntry,
-  buildStockExit,
-  buildStockMove,
 } from '@/test/factories';
 
 import { warehouseSectionView } from './warehouse-section-view';
 
 const SUMMARY = buildLotWarehouseDetail();
-const FULL = buildLotStock({
-  lot: {
-    id: 'l1',
-    code: '000123-F02-P05-261014-1',
-    status: 'in_warehouse',
-    version: 11,
-  },
-  entry: buildStockEntry({
-    corrected_at: '2026-10-31T09:00:00-05:00',
-    corrected_by: { id: 'u2', full_name: 'Ana Pérez' },
-  }),
-  exits: [
-    buildStockExit(),
-    buildStockExit({
-      id: 'e2',
-      grade: 'g2',
-      quantity_kg: '1.5',
-      reason: 'other',
-      detail: 'Regalo a un cliente',
-      voided: {
-        voided_at: '2026-11-01T08:00:00-05:00',
-        voided_by: { id: 'u2', full_name: 'Ana Pérez' },
-        reason: 'No salió',
-      },
-      can_void: false,
-    }),
-  ],
-});
+const TODAY = '2026-11-02';
 
 describe('warehouseSectionView', () => {
-  it('reads the entry from what the lot brings, for anyone who sees it', () => {
-    const view = warehouseSectionView(SUMMARY, undefined);
+  it('says where the cacao is and since when, for anyone who sees the lot', () => {
+    const view = warehouseSectionView(SUMMARY, undefined, TODAY);
 
-    expect(view.entry).toEqual([
-      { label: 'Fecha de ingreso', value: '30 de octubre' },
-      { label: 'Bodega', value: 'Bodega principal' },
-      { label: 'Ubicación', value: 'Estante 3' },
-      { label: 'G1 ingresado', value: '250,0 kg' },
-      { label: 'G2 ingresado', value: '55,2 kg' },
-    ]);
-    expect(view.enteredBy).toBeNull();
-    expect(view.exits).toBeNull();
+    expect(view.place).toBe('Bodega principal · Estante 3');
+    expect(view.since).toBe('Desde el 30 de octubre · 3 días en bodega');
+    expect(view.ledger).toBeNull();
+    expect(view.correctedBy).toBeNull();
+  });
+
+  it('names a place without a location', () => {
+    const view = warehouseSectionView(
+      buildLotWarehouseDetail({ location: '' }),
+      undefined,
+      TODAY,
+    );
+
+    expect(view.place).toBe('Bodega principal · Sin ubicación');
+  });
+
+  it('counts the days in the warehouse, in the singular and on the day itself', () => {
+    expect(warehouseSectionView(SUMMARY, undefined, '2026-10-31').since).toBe(
+      'Desde el 30 de octubre · 1 día en bodega',
+    );
+    expect(warehouseSectionView(SUMMARY, undefined, '2026-10-30').since).toBe(
+      'Desde el 30 de octubre',
+    );
   });
 
   it('says what is left of each grade, and which one ran out', () => {
     const view = warehouseSectionView(
       buildLotWarehouseDetail({ g2_available_kg: '0.0' }),
       undefined,
+      TODAY,
     );
 
     expect(view.balances).toEqual([
-      { grade: 'g1', text: 'G1: 245,0 de 250,0 kg', depleted: false },
-      { grade: 'g2', text: 'G2: 0,0 de 55,2 kg', depleted: true },
-    ]);
-  });
-
-  it('leaves out a grade that entered with no kilos', () => {
-    const view = warehouseSectionView(
-      buildLotWarehouseDetail({ g2_entered_kg: '0.0', g2_available_kg: '0.0' }),
-      undefined,
-    );
-
-    expect(view.balances.map(({ grade }) => grade)).toEqual(['g1']);
-  });
-
-  it('adds who entered, who corrected and the exits with their void', () => {
-    const view = warehouseSectionView(SUMMARY, FULL);
-
-    expect(view.enteredBy).toBe('Ingresado por Cuenta de prueba el 30 oct');
-    expect(view.correctedBy).toBe('Corregido por Ana Pérez el 31 oct');
-    expect(
-      view.exits?.map(({ title, detail, voided }) => [title, detail, voided]),
-    ).toEqual([
-      [
-        '5,0 kg de G1 · Muestra',
-        '31 de octubre · Registrada por Cuenta de prueba el 31 oct',
-        null,
-      ],
-      [
-        '1,5 kg de G2 · Regalo a un cliente',
-        '31 de octubre · Registrada por Cuenta de prueba el 31 oct',
-        'Anulada por Ana Pérez el 1 nov: No salió',
-      ],
-    ]);
-  });
-  it('lists the moves with where the cacao came from and went to', () => {
-    const full = {
-      ...FULL,
-      moves: [
-        buildStockMove({
-          to_warehouse: { id: 'w2', name: 'Anexo' },
-          to_location: '',
-        }),
-      ],
-    };
-
-    const view = warehouseSectionView(SUMMARY, full);
-
-    expect(view.moves).toEqual([
       {
-        id: 'm1',
-        route: 'Bodega principal · Estante 3 → Anexo · Sin ubicación',
-        detail: 'Movido por Cuenta de prueba el 2 nov',
+        grade: 'g1',
+        kilos: '245,0 kg',
+        caption: 'G1 disponible de 250,0',
+        depleted: false,
+      },
+      {
+        grade: 'g2',
+        kilos: '0,0 kg',
+        caption: 'G2 disponible de 55,2',
+        depleted: true,
       },
     ]);
   });
 
-  it('has no moves to show without the full detail', () => {
-    expect(warehouseSectionView(SUMMARY, undefined).moves).toBeNull();
+  it('leaves out a grade that entered with no kilos, also from the balance row', () => {
+    const view = warehouseSectionView(
+      buildLotWarehouseDetail({ g2_entered_kg: '0.0', g2_available_kg: '0.0' }),
+      buildLotStock({ entry: buildStockEntry() }),
+      TODAY,
+    );
+
+    expect(view.balances.map(({ grade }) => grade)).toEqual(['g1']);
+    expect(view.ledger?.balance.g1.text).toBe('245,0');
+    expect(view.ledger?.balance.g2.text).toBe('—');
+  });
+
+  it('adds the ledger and who corrected the entry with the full detail', () => {
+    const full = buildLotStock({
+      entry: buildStockEntry({
+        corrected_at: '2026-10-31T09:00:00-05:00',
+        corrected_by: { id: 'u2', full_name: 'Ana Pérez' },
+      }),
+    });
+
+    const view = warehouseSectionView(SUMMARY, full, TODAY);
+
+    expect(view.correctedBy).toBe('Corregido por Ana Pérez el 31 oct');
+    expect(view.ledger?.rows.map(({ kind }) => kind)).toEqual(['entry']);
+    expect(view.ledger?.balance).toEqual({
+      g1: { text: '245,0', tone: 'none' },
+      g2: { text: '55,2', tone: 'none' },
+    });
   });
 });
