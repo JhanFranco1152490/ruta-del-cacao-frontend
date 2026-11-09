@@ -37,5 +37,11 @@ export const DEACTIVATE_TEXT =
 export const activateTitle = (name: string) => `¿Activar a ${name}?`;
 export const ACTIVATE_TEXT = 'Volverá a ofrecerse al registrar ventas.';
 export const deleteTitle = (name: string) => `¿Eliminar a ${name}?`;
+// La advertencia de eliminar va en dos partes: qué se pierde y, con el ícono de advertencia, que no
+// se deshace y qué conviene en su lugar.
 export const DELETE_TEXT =
-  'Se borrarán sus datos y ya no podrás consultar su historial de cambios. Esta acción no se puede deshacer. Si solo dejó de comprarte, mejor desactívalo.';
+  'Se borrarán sus datos y ya no podrás consultar su historial de cambios.';
+export const DELETE_WARNING =
+  'Esta acción no se puede deshacer. Si solo dejó de comprarte, mejor desactívalo.';
+export const STALE_CHANGE_MESSAGE =
+  'Otra persona cambió este comprador mientras tanto. Cierra y revisa sus datos actuales antes de intentarlo de nuevo.';

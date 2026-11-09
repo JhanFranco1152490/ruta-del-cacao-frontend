@@ -283,6 +283,28 @@ describe('BuyersScreen', () => {
     ).not.toHaveAttribute('aria-disabled', 'true');
   });
 
+  it('deletes a buyer created by mistake from its menu and announces it', async () => {
+    const deletes: unknown[] = [];
+    server.use(csrfHandler, buyerWriteHandler('delete', null, deletes));
+    renderScreen({ permissions: PRODUCER });
+
+    await table();
+    await userEvent.click(
+      within(rows()[1]).getByRole('button', {
+        name: 'Más acciones de acopio la ceiba',
+      }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: 'Eliminar' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Eliminar comprador' }),
+    );
+
+    expect(await screen.findByText('Comprador eliminado')).toBeInTheDocument();
+    expect(deletes).toHaveLength(1);
+  });
+
   it('offers nothing to whoever only reads', async () => {
     renderScreen({ permissions: [VIEW] });
 

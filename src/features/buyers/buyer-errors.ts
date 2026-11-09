@@ -1,6 +1,7 @@
-import { isApiError } from '@/lib/api/errors';
+import { getErrorMessage, isApiError } from '@/lib/api/errors';
 
 import type { Buyer, ExistingBuyer } from './api';
+import { STALE_CHANGE_MESSAGE } from './buyer-messages';
 
 export const BUYER_ERROR = {
   duplicateDocument: 'duplicate_document',
@@ -31,3 +32,10 @@ export const isBuyerWithRecords = (error: unknown) =>
 
 export const isProducerInactive = (error: unknown) =>
   isApiError(error) && error.code === BUYER_ERROR.producerInactive;
+
+// Por qué no se activó, desactivó o eliminó. Con una versión vieja la lista ya se está volviendo a
+// leer: basta cerrar para ver lo vigente.
+export const buyerChangeErrorMessage = (error: unknown, fallback: string) =>
+  isApiError(error) && error.code === BUYER_ERROR.staleVersion
+    ? STALE_CHANGE_MESSAGE
+    : getErrorMessage(error, fallback);

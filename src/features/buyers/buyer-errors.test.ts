@@ -4,6 +4,7 @@ import { ApiError } from '@/lib/api/errors';
 import { buildBuyer } from '@/test/factories';
 
 import {
+  buyerChangeErrorMessage,
   currentBuyerOf,
   duplicateBuyerOf,
   isBuyerWithRecords,
@@ -47,5 +48,24 @@ describe('isBuyerWithRecords and isProducerInactive', () => {
     expect(isBuyerWithRecords(apiError(409, 'buyer_has_records'))).toBe(true);
     expect(isBuyerWithRecords(apiError(409, 'stale_version'))).toBe(false);
     expect(isProducerInactive(apiError(422, 'producer_inactive'))).toBe(true);
+  });
+});
+
+describe('buyerChangeErrorMessage', () => {
+  it('asks to review the current data after a stale version', () => {
+    expect(
+      buyerChangeErrorMessage(apiError(409, 'stale_version'), 'Falló.'),
+    ).toBe(
+      'Otra persona cambió este comprador mientras tanto. Cierra y revisa sus datos actuales antes de intentarlo de nuevo.',
+    );
+  });
+
+  it('uses the message of the server, or the fallback without one', () => {
+    expect(
+      buyerChangeErrorMessage(apiError(403, 'permission_denied'), 'Falló.'),
+    ).toBe('Error de prueba.');
+    expect(buyerChangeErrorMessage(new TypeError('sin red'), 'Falló.')).toBe(
+      'Falló.',
+    );
   });
 });

@@ -2,7 +2,9 @@
 
 import type { Buyer } from '../api';
 import type { BuyerActionKind } from '../buyer-actions';
+import { BuyerDeleteDialog } from './buyer-delete-dialog';
 import { BuyerFormDialog } from './buyer-form-dialog';
+import { BuyerStatusDialog } from './buyer-status-dialog';
 
 export type PendingBuyerAction =
   { kind: 'create' } | { kind: BuyerActionKind; buyer: Buyer };
@@ -42,7 +44,22 @@ export function BuyerDialogs({
           producer={producer}
         />
       );
-    default:
-      return null;
+    case 'activate':
+    case 'deactivate':
+      return (
+        <BuyerStatusDialog
+          buyer={pending.buyer}
+          onClose={onClose}
+          onDone={onSaved}
+        />
+      );
+    case 'delete':
+      return (
+        <BuyerDeleteDialog
+          buyer={pending.buyer}
+          onClose={onClose}
+          onDone={onSaved}
+        />
+      );
   }
 }
