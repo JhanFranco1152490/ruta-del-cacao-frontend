@@ -4,9 +4,10 @@ import type { EntryCorrection, EntryInput, LotStock, StockEntry } from './api';
 import { entryDateIssue } from './warehouse-dates';
 
 export const LOCATION_MAX_LENGTH = 60;
+// Lo que se lee donde el ingreso no tiene ubicación.
+export const NO_LOCATION_TEXT = 'Sin ubicación';
 // Los mismos textos que el servidor.
 export const WAREHOUSE_REQUIRED_MESSAGE = 'Elija la bodega';
-export const LOCATION_REQUIRED_MESSAGE = 'Indique la ubicación física';
 
 export type EntryFormInput = {
   entry_date: string;
@@ -26,10 +27,10 @@ export const createEntryFormSchema = (context: {
       if (message) issues.addIssue({ code: 'custom', message });
     }),
     warehouse_id: z.string().min(1, WAREHOUSE_REQUIRED_MESSAGE),
+    // Opcional: sin ella el lote queda sin ubicación dentro de la bodega.
     location: z
       .string()
       .trim()
-      .min(1, LOCATION_REQUIRED_MESSAGE)
       .max(LOCATION_MAX_LENGTH, `Máximo ${LOCATION_MAX_LENGTH} caracteres.`),
   });
 

@@ -7,9 +7,11 @@ import { SelectField } from '@/components/select-field';
 import { TextField } from '@/components/text-field';
 import { Button } from '@/components/ui/button';
 import type { WarehouseView } from '@/lib/paths/warehouse';
+import { Plus } from 'lucide-react';
 
 import type { Grade } from '../api';
 import { GRADE_LABELS } from '../exit-quantity';
+import { OFFLINE_WAREHOUSE_REASON } from '../warehouse-actions';
 import { STOCK_ORDER_OPTIONS } from '../stock-order-options';
 import type { StockOrdering } from '../use-warehouse-filters';
 import type { WarehouseScreenState } from '../use-warehouse-screen';
@@ -25,8 +27,11 @@ const VIEW_LABELS: Record<WarehouseView, string> = {
 // escritorio se ordena desde la cabecera de la tabla).
 export function WarehouseFiltersBar({
   screen,
+  onCreate,
 }: {
   screen: WarehouseScreenState;
+  // Registrar una bodega: se ofrece en la fila de filtros de la pestaña Bodegas.
+  onCreate: () => void;
 }) {
   const { filters, view } = screen;
   const stock = filters.stockFilters;
@@ -69,16 +74,30 @@ export function WarehouseFiltersBar({
         )
       }
       trailing={
-        filters.hasFilters && (
-          <Button
-            className="h-10"
-            onClick={() => void filters.clear()}
-            size="office"
-            variant="ghost"
-          >
-            Limpiar filtros
-          </Button>
-        )
+        <>
+          {filters.hasFilters && (
+            <Button
+              className="h-10"
+              onClick={() => void filters.clear()}
+              size="office"
+              variant="ghost"
+            >
+              Limpiar filtros
+            </Button>
+          )}
+          {view === 'bodegas' && screen.can.manage && (
+            <Button
+              className="h-10 max-sm:order-first max-sm:w-full sm:ml-auto"
+              disabled={screen.offline}
+              onClick={onCreate}
+              size="office"
+              title={screen.offline ? OFFLINE_WAREHOUSE_REASON : undefined}
+            >
+              <Plus aria-hidden="true" className="size-4" />
+              Nueva bodega
+            </Button>
+          )}
+        </>
       }
     >
       {screen.farmOptions.length > 1 && (

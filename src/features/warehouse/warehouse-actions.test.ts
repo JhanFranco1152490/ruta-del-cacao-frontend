@@ -56,8 +56,8 @@ describe('warehousePermissionsOf', () => {
 describe('warehouseViews', () => {
   it('shows the lots to store only to whom can store them', () => {
     expect(warehouseViews(ALL)).toEqual([
-      'existencias',
       'por-ingresar',
+      'existencias',
       'bodegas',
     ]);
     expect(warehouseViews(VIEW_ONLY)).toEqual(['existencias', 'bodegas']);

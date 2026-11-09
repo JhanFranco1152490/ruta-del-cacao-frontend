@@ -28,6 +28,7 @@ export function WarehouseScreen({
   const screen = useWarehouseScreen();
   const { filters } = screen;
   const [request, setRequest] = useState<DialogRequest>();
+  const [creating, setCreating] = useState(false);
   useRequestFromLink({
     pending: filters.pendingAction,
     online: !screen.offline,
@@ -56,7 +57,10 @@ export function WarehouseScreen({
       {!screen.needsProducer && (
         <>
           <WarehouseSummary summary={screen.summary.data?.data} />
-          <WarehouseFiltersBar screen={screen} />
+          <WarehouseFiltersBar
+            onCreate={() => setCreating(true)}
+            screen={screen}
+          />
         </>
       )}
       {screen.listLoaded && screen.offline && (
@@ -75,7 +79,13 @@ export function WarehouseScreen({
           screen={screen}
         />
       )}
-      {screen.view === 'bodegas' && <WarehousesBody screen={screen} />}
+      {screen.view === 'bodegas' && (
+        <WarehousesBody
+          creating={creating}
+          onCreateClosed={() => setCreating(false)}
+          screen={screen}
+        />
+      )}
       {request && (
         <WarehouseActionDialog
           onClose={() => setRequest(undefined)}

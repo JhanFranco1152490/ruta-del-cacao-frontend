@@ -22,8 +22,8 @@ export function EntryLocationField({
     <>
       <TextField
         autoComplete="off"
-        hint="Dentro de la bodega, como «Estante 3» o «Zona A»."
-        label="Ubicación"
+        hint="Dentro de la bodega, como «Estante 3» o «Zona A». Déjala vacía si no aplica."
+        label="Ubicación (opcional)"
         list={listId}
         maxLength={LOCATION_MAX_LENGTH}
         {...field}

@@ -18,6 +18,7 @@ import { farmLabel } from '@/lib/format/place-label';
 
 import type { StockRow } from '../api';
 import type { DialogRequest } from '../dialog-request';
+import { NO_LOCATION_TEXT } from '../entry-form';
 import { GRADE_LABELS, kilosText } from '../exit-quantity';
 import type { Offer } from '../warehouse-actions';
 import { LotEyeLink } from './lot-eye-link';
@@ -82,7 +83,7 @@ export function StockTable({
             <TableCell className="whitespace-normal max-md:order-3 max-md:col-span-1!">
               {row.warehouse.name}
               <span className="block text-sm text-muted-foreground">
-                {row.location}
+                {row.location || NO_LOCATION_TEXT}
               </span>
             </TableCell>
             <TableCell className="max-md:order-5 max-md:text-muted-foreground">

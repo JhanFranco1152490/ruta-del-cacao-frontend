@@ -426,9 +426,11 @@ src/
 
 - **Bodega (`features/warehouse/`).** `/bodega` (precargada, solo con `warehouse.view_stock`) es la
   lista de trabajo de quien ingresa y saca el cacao seco clasificado: tres pestañas en la URL
-  (`?vista=`: **Existencias**, una fila por lote y calibre con kilos; **Por ingresar**, los lotes
-  Clasificado, que solo ve quien tiene `register_entry`; **Bodegas**, las de cada finca), filtros de
-  finca, bodega, calibre, ubicación y código, y el orden de la tabla (`use-warehouse-filters.ts`). Las
+  (`?vista=`, en el orden del proceso: **Por ingresar**, los lotes Clasificado, que solo ve quien tiene
+  `register_entry`; **Existencias**, una fila por lote y calibre con kilos, que es la que abre por
+  defecto; **Bodegas**, las de cada finca, con su «Nueva bodega» en la fila de filtros), filtros de
+  finca, bodega, calibre, ubicación y código, y el orden de la tabla (`use-warehouse-filters.ts`). La
+  ubicación al ingresar es opcional: sin ella se lee «Sin ubicación». Las
   cifras de G1 y G2 (`GET /api/stock/summary`) siguen los filtros de las existencias. **Se registra
   solo en línea; se consulta sin conexión:** la primera página de cada pestaña con sus filtros (y su
   orden) y las cifras se guardan en `cache`; sin conexión no se pagina, las acciones se ven

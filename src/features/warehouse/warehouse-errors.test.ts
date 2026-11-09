@@ -84,14 +84,14 @@ describe('warehouseFailureOf', () => {
     expect(
       warehouseFailureOf(
         rejection(400, 'validation_error', {
-          fields: { location: ['Indique la ubicación física'] },
+          fields: { location: ['Máximo 60 caracteres.'] },
         }),
         'entry',
       ),
     ).toEqual({
       kind: 'field',
       field: 'location',
-      message: 'Indique la ubicación física',
+      message: 'Máximo 60 caracteres.',
     });
   });
 

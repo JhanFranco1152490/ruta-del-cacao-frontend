@@ -106,7 +106,7 @@ describe('EntryDialog', () => {
     );
     expect(warehouseRequests[0].toString()).toBe('farm=f1&active=true');
     await userEvent.type(
-      within(dialog).getByRole('combobox', { name: 'Ubicación' }),
+      within(dialog).getByRole('combobox', { name: 'Ubicación (opcional)' }),
       'Estante 3',
     );
     await userEvent.click(
@@ -125,7 +125,33 @@ describe('EntryDialog', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('marks the missing location and a future date, and saves nothing', async () => {
+  it('stores the lot without a location when none is written', async () => {
+    const bodies: unknown[] = [];
+    server.use(stockWriteHandler('entry', IN_WAREHOUSE, bodies));
+    renderDialog({ action: 'ingresar', lotId: 'l1' });
+
+    const dialog = await entryDialog();
+    await waitFor(() =>
+      expect(
+        within(dialog).getByRole('combobox', { name: 'Bodega' }),
+      ).toHaveValue('w1'),
+    );
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Ingresar a bodega' }),
+    );
+
+    expect(await screen.findByText('Ingreso registrado.')).toBeInTheDocument();
+    expect(bodies).toEqual([
+      {
+        expected_lot_version: 10,
+        entry_date: todayInBogota(),
+        warehouse_id: 'w1',
+        location: '',
+      },
+    ]);
+  });
+
+  it('marks a future date and saves nothing', async () => {
     const bodies: unknown[] = [];
     server.use(stockWriteHandler('entry', IN_WAREHOUSE, bodies));
     renderDialog({ action: 'ingresar', lotId: 'l1' });
@@ -139,10 +165,7 @@ describe('EntryDialog', () => {
     );
 
     expect(
-      await within(dialog).findByText('Indique la ubicación física'),
-    ).toBeInTheDocument();
-    expect(
-      within(dialog).getByText('La fecha no puede ser futura'),
+      await within(dialog).findByText('La fecha no puede ser futura'),
     ).toBeInTheDocument();
     expect(bodies).toEqual([]);
   });
@@ -174,7 +197,7 @@ describe('EntryDialog', () => {
 
     const dialog = await entryDialog();
     await userEvent.type(
-      within(dialog).getByRole('combobox', { name: 'Ubicación' }),
+      within(dialog).getByRole('combobox', { name: 'Ubicación (opcional)' }),
       'Estante 3',
     );
     await userEvent.click(
@@ -213,7 +236,7 @@ describe('EntryDialog', () => {
       name: /^Corregir ingreso ·/,
     });
     const location = within(dialog).getByRole('combobox', {
-      name: 'Ubicación',
+      name: 'Ubicación (opcional)',
     });
     expect(location).toHaveValue('Estante 3');
     await userEvent.clear(location);

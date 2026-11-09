@@ -50,10 +50,11 @@ const offer = <A extends string>(
   disabledReason: online ? null : OFFLINE_WAREHOUSE_REASON,
 });
 
-// Las pestañas que ve la cuenta: los lotes por ingresar solo los lee quien puede ingresarlos.
+// Las pestañas que ve la cuenta, en el orden del proceso (lo que espera ingreso, lo que hay, las
+// bodegas): los lotes por ingresar solo los lee quien puede ingresarlos.
 export const warehouseViews = (can: WarehousePermissions): WarehouseView[] =>
   can.entry
-    ? ['existencias', 'por-ingresar', 'bodegas']
+    ? ['por-ingresar', 'existencias', 'bodegas']
     : ['existencias', 'bodegas'];
 
 // La pestaña que se muestra: la de la dirección si la cuenta la ve, o Existencias.

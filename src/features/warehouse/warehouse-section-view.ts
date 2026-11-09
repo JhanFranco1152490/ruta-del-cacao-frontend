@@ -2,6 +2,7 @@ import { formatDayMonth, formatShortDayMonth } from '@/lib/format/dates';
 import { toTenths } from '@/lib/format/tenths';
 
 import type { Grade, LotStock, LotWarehouseDetail, StockExit } from './api';
+import { NO_LOCATION_TEXT } from './entry-form';
 import { GRADE_LABELS, kilosText } from './exit-quantity';
 import { exitReasonText } from './exit-reasons';
 
@@ -74,7 +75,10 @@ export function warehouseSectionView(
     entry: [
       { label: 'Fecha de ingreso', value: formatDayMonth(summary.entry_date) },
       { label: 'Bodega', value: summary.warehouse_name },
-      { label: 'Ubicación', value: summary.location },
+      {
+        label: 'Ubicación',
+        value: summary.location || NO_LOCATION_TEXT,
+      },
       {
         label: 'G1 ingresado',
         value: `${kilosText(summary.g1_entered_kg)} kg`,

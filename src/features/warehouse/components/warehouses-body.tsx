@@ -1,18 +1,15 @@
 'use client';
 
-import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { WarehouseShelves } from '@/components/illustrations/warehouse-shelves';
 import { Pagination } from '@/components/pagination';
-import { Button } from '@/components/ui/button';
 import { notify } from '@/lib/notify';
 
 import type { Warehouse } from '../api';
 import type { WarehouseScreenState } from '../use-warehouse-screen';
 import {
-  OFFLINE_WAREHOUSE_REASON,
   type WarehouseItemAction,
   warehouseItemActions,
 } from '../warehouse-actions';
@@ -31,11 +28,26 @@ type OpenDialog =
 
 // La pestaña Bodegas: las de las fincas de la cuenta (o de la finca elegida), con lo que se puede
 // hacer con cada una. Quien solo consulta ve la lista sin acciones.
-export function WarehousesBody({ screen }: { screen: WarehouseScreenState }) {
+export function WarehousesBody({
+  screen,
+  creating,
+  onCreateClosed,
+}: {
+  screen: WarehouseScreenState;
+  // El alta se pide desde el botón de la fila de filtros, que es de la pantalla: aquí solo se abre su
+  // formulario.
+  creating: boolean;
+  onCreateClosed: () => void;
+}) {
   const { filters, can } = screen;
   const online = !screen.offline;
-  const [open, setOpen] = useState<OpenDialog>();
-  const close = () => setOpen(undefined);
+  const [editing, setOpen] = useState<OpenDialog>();
+  const open: OpenDialog | undefined =
+    editing ?? (creating ? { kind: 'form' } : undefined);
+  const close = () => {
+    setOpen(undefined);
+    onCreateClosed();
+  };
   const done = (message: string) => {
     close();
     notify.success(message);
@@ -46,17 +58,6 @@ export function WarehousesBody({ screen }: { screen: WarehouseScreenState }) {
         ? { kind: 'form', warehouse }
         : { kind: 'confirm', warehouse, change: action },
     );
-  const create = can.manage && (
-    <Button
-      disabled={!online}
-      onClick={() => setOpen({ kind: 'form' })}
-      size="office"
-      title={online ? undefined : OFFLINE_WAREHOUSE_REASON}
-    >
-      <Plus aria-hidden="true" className="size-4" />
-      Nueva bodega
-    </Button>
-  );
   // Con una finca elegida (o una sola), el vacío habla de ella.
   const oneFarm =
     !!filters.warehouseFilters.farm || screen.farmOptions.length === 1;
@@ -72,7 +73,6 @@ export function WarehousesBody({ screen }: { screen: WarehouseScreenState }) {
         {(page) =>
           page.results.length === 0 ? (
             <EmptyState
-              action={create || undefined}
               illustration={WarehouseShelves}
               title={
                 oneFarm
@@ -82,7 +82,6 @@ export function WarehousesBody({ screen }: { screen: WarehouseScreenState }) {
             />
           ) : (
             <div className="space-y-4">
-              {create && <div className="flex justify-end">{create}</div>}
               <ul
                 aria-label="Bodegas"
                 className="motion-stagger grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"

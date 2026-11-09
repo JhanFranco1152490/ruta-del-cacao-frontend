@@ -6,7 +6,6 @@ import { buildLotStock, buildStockEntry } from '@/test/factories';
 import {
   createEntryFormSchema,
   entryFormOf,
-  LOCATION_REQUIRED_MESSAGE,
   toEntryCorrection,
   toEntryRequest,
   WAREHOUSE_REQUIRED_MESSAGE,
@@ -41,13 +40,21 @@ describe('createEntryFormSchema', () => {
     ).toBeUndefined();
   });
 
-  it('marks each missing field with its message', () => {
+  it('marks each missing required field with its message', () => {
     expect(
-      issuesOf({ entry_date: '', warehouse_id: '', location: ' ' }),
+      issuesOf({ entry_date: '', warehouse_id: '', location: '' }),
     ).toEqual([
       ['entry_date', REQUIRED_FIELD_MESSAGE],
       ['warehouse_id', WAREHOUSE_REQUIRED_MESSAGE],
-      ['location', LOCATION_REQUIRED_MESSAGE],
+    ]);
+  });
+
+  it('does not ask for the location, and refuses one that is too long', () => {
+    const base = { entry_date: '2026-10-31', warehouse_id: 'w1' };
+
+    expect(issuesOf({ ...base, location: '   ' })).toBeUndefined();
+    expect(issuesOf({ ...base, location: 'x'.repeat(61) })).toEqual([
+      ['location', 'Máximo 60 caracteres.'],
     ]);
   });
 

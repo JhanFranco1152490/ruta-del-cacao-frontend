@@ -269,6 +269,17 @@ describe('WarehousesBody', () => {
     );
   });
 
+  it('offers the new warehouse in the filter row, beside the tabs', async () => {
+    renderTab();
+
+    await card('Bodega principal');
+    const tabs = screen.getByLabelText('Vista de bodega');
+    const row = tabs.parentElement?.parentElement as HTMLElement;
+    expect(
+      within(row).getByRole('button', { name: 'Nueva bodega' }),
+    ).toBeInTheDocument();
+  });
+
   it('says when the farm has no warehouses yet, with the way to register one', async () => {
     server.use(warehousesHandler([]));
     renderTab({ searchParams: '?vista=bodegas&finca=f1' });

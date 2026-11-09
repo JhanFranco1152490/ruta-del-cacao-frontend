@@ -2482,6 +2482,7 @@ export interface components {
             entry_date: string;
             /** Format: uuid */
             warehouse_id: string;
+            /** @default  */
             location: string;
         };
         EntryMoistureError: {
