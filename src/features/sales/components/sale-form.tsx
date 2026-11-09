@@ -2,12 +2,18 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useMemo } from 'react';
-import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import {
+  FormProvider,
+  type Resolver,
+  useForm,
+  useWatch,
+} from 'react-hook-form';
 
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { buttonVariants } from '@/components/ui/button';
 
+import { useFarmStock } from '../queries';
+import { type StockOption, stockOptions } from '../sale-line-options';
 import {
   createSaleFormSchema,
   emptySaleForm,
@@ -16,21 +22,43 @@ import {
 } from '../sale-schema';
 import type { SaleFormScreenState } from '../use-sale-form-screen';
 import { SaleHeaderFields } from './sale-header-fields';
+import { SaleLinesSection } from './sale-lines-section';
+
+type SaleFormContext = { options: readonly StockOption[]; today: string };
+
+const resolver: Resolver<SaleFormInput, SaleFormContext> = (
+  values,
+  context,
+  options,
+) =>
+  zodResolver(
+    createSaleFormSchema({
+      today: context?.today ?? '',
+      options: context?.options ?? [],
+    }),
+  )(values, context, options);
 
 // El formulario de una venta: el encabezado y, desde ahí, las líneas de la finca elegida.
 export function SaleForm({ screen }: { screen: SaleFormScreenState }) {
-  const resolver = useMemo(
-    () =>
-      zodResolver(createSaleFormSchema({ today: screen.today, options: [] })),
-    [screen.today],
-  );
-  const form = useForm<SaleFormInput>({
+  // Los kilos y la fecha se revisan contra las existencias de la finca, que dependen de la finca
+  // elegida en este mismo formulario: el contexto las lee al validar, ya con las de este render.
+  let options: StockOption[] = [];
+  const form = useForm<SaleFormInput, SaleFormContext>({
     resolver,
+    context: {
+      today: screen.today,
+      get options() {
+        return options;
+      },
+    },
     defaultValues: emptySaleForm({
       today: screen.today,
       farmId: screen.initialFarmId,
     }),
   });
+  const farmId = useWatch({ control: form.control, name: 'farm_id' });
+  const stock = useFarmStock(farmId);
+  options = stockOptions(stock.data ?? []);
   const lines = useWatch({ control: form.control, name: 'lines' });
   const hasLines = lines.some(
     (line) => line.stock || line.quantity_kg.trim() || line.price_per_kg.trim(),
@@ -52,6 +80,12 @@ export function SaleForm({ screen }: { screen: SaleFormScreenState }) {
           hasLines={hasLines}
           onFarmChange={changeFarm}
           screen={screen}
+        />
+        <SaleLinesSection
+          disabled={false}
+          farmChosen={!!farmId}
+          options={options}
+          stock={stock}
         />
         <MobileActionBar>
           <Link
