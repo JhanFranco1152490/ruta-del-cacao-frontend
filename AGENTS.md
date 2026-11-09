@@ -98,7 +98,7 @@ src/
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
                        health, notifications, harvests, lots, fermentation, drying, quality,
-                       facilities, postharvest-parameters, users y
+                       facilities, postharvest-parameters, buyers, users y
                        roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
@@ -132,7 +132,9 @@ src/
 - **Piezas comunes antes que copiar** (se usan en vez de escribir lo mismo a mano):
   - formularios: `FormDialog` (diálogo siempre abierto que no se cierra mientras guarda) y
     `FormDialogForm` (el formulario dentro de un diálogo con su botón), con `submitDisabled` cuando
-    todavía no hay nada que guardar (faltan las opciones que el formulario necesita); `CatalogItemDialog` con
+    todavía no hay nada que guardar (faltan las opciones que el formulario necesita) y `dirty` cuando
+    hay cambios sin guardar (cerrarlo de cualquier forma pregunta «¿Descartar los cambios?»);
+    `StatusChangeDialog` con `focusCancel` para lo que no se deshace (el foco empieza en Cancelar); `CatalogItemDialog` con
     `useCatalogItemForm` para los catálogos de la asociación; `SaveConfirmDialog` para confirmar lo
     que no se corrige después; `InlineError` (error de una línea) y `FormMessage` (en caja);
     `serverErrorSummary` para lo que el servidor rechaza y no cae en un campo;
@@ -438,6 +440,41 @@ src/
     (`postharvest-parameters`, o `postharvest-parameters:producer:{id}` para la cuenta técnica): sin
     conexión, o con permiso solo de consulta, los valores se ven como datos
     (`parameters-readonly.tsx`). La cuenta técnica elige el productor con `?productor=`.
+
+- **Compradores (`features/buyers/`).** `/compradores` (precargada, solo con `buyers.view_buyer`) es el
+  directorio de compradores de **todo el productor**, no de una finca, en el grupo nuevo
+  **Comercialización** del menú (`group: 'sales'`), donde se sumarán las ventas. Es un catálogo
+  (`PageHeader` `claro`, acento cobre) con su ilustración, `BuyerScale` (una báscula con un costal y
+  un recibo), que también usarán las ventas.
+  - **Lectura completa con copia** (`queries.ts`, `useBuyers`): `GET /api/buyers` trae activos e
+    inactivos sin paginar, y se guarda en `cache` (`buyers`, o `buyers:producer:{id}` para la cuenta
+    técnica con un productor elegido; sin elegirlo ve los de todos con la columna **Productor**). La
+    búsqueda (nombre, persona de contacto o documento), el tipo, el estado (**Activos** por
+    defecto), el orden por nombre y las cifras corren en el dispositivo (`buyer-filters.ts`,
+    `buyer-summary.ts`), con o sin conexión. Los filtros van en la URL (`use-buyer-filters.ts`:
+    `?buscar=`, `?tipo=`, `?estado=`, `?productor=`, `?comprador=`).
+  - **Escribir es solo en línea** (`mutations.ts`): registrar, editar, activar, desactivar y
+    eliminar invalidan `buyers.all`, y volver a leer renueva la copia. Sin conexión se deshabilitan
+    con su motivo.
+  - **Las reglas son funciones puras con su test:** el formulario (`buyer-schema.ts`, con el
+    documento de `lib/validation/identity-document.ts` y el teléfono de `lib/validation/phone.ts`,
+    los mismos del productor, y «Escribe un teléfono o un correo.» en los dos campos si faltan
+    ambos), el cuerpo del `POST` y del `PATCH` (`buyer-form-values.ts`: solo lo que cambió; sin
+    cambios no se envía nada), qué acciones se ofrecen (`buyer-actions.ts`: dos botones o el «⋯»
+    desde la tercera, **Eliminar** siempre visible y deshabilitado con «No se puede eliminar: tiene
+    ventas registradas.» si `has_records`), el documento y el nombre repetidos contra la copia
+    (`buyer-duplicates.ts`; el nombre se compara con `normalizeBuyerName`, que además de
+    `normalizeCatalogName` quita los puntos: «S.A.S.» y «SAS» son el mismo) y los errores
+    (`buyer-errors.ts`). Los tipos de cliente y sus etiquetas viven en `buyer-types.ts`.
+  - **El formulario** (`buyer-form-dialog.tsx` y su envío en `use-buyer-submit.ts`): el documento
+    repetido se avisa antes de enviar si está en la copia y, si no, con el `409
+    duplicate_document`, con `DuplicateNotice` (**Ver el comprador**, que quita los filtros que lo
+    esconden con `revealBuyer`, o **Activarlo**); el nombre parecido solo avisa. `stale_version`
+    carga lo vigente. Al editar usa `dirty` de `FormDialog`. La cuenta técnica elige el productor.
+  - **Estado y eliminar:** `buyer-status-dialog.tsx` y `buyer-delete-dialog.tsx`, con el foco en
+    Cancelar al eliminar; ante `409 buyer_has_records` el diálogo ofrece desactivar.
+  - **En celular** tocar la tarjeta abre una hoja con sus datos y acciones (`buyer-sheet.tsx`); en
+    escritorio `?comprador=` resalta la fila y la lleva a la vista.
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
