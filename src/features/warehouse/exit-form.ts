@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 
 import type { ExitInput, Grade } from './api';
-import { type ExitableGrade, exitQuantityIssue } from './exit-quantity';
+import { stockQuantityIssue } from '@/lib/stock-quantity';
+import { type ExitableGrade } from './exit-quantity';
 import {
   DETAIL_MAX_LENGTH,
   exitDetailIssue,
@@ -50,7 +51,7 @@ export const createExitFormSchema = (context: {
       const available =
         context.grades.find(({ grade }) => grade === values.grade)
           ?.availableTenths ?? Number.POSITIVE_INFINITY;
-      const quantity = exitQuantityIssue(values.quantity_kg, available);
+      const quantity = stockQuantityIssue(values.quantity_kg, available);
       if (quantity) add('quantity_kg', quantity);
       const detail = exitDetailIssue(values.reason, values.detail);
       if (detail) add('detail', detail);

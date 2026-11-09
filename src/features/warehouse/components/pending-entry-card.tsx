@@ -8,7 +8,7 @@ import { farmLabel } from '@/lib/format/place-label';
 
 import type { PendingEntry } from '../api';
 import type { DialogRequest } from '../dialog-request';
-import { kilosText } from '../exit-quantity';
+import { kilosText } from '@/lib/stock-quantity';
 import type { Offer } from '../warehouse-actions';
 import { LotEyeLink } from './lot-eye-link';
 

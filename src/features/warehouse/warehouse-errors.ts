@@ -3,7 +3,7 @@ import { isLotStatus, lotStatusLabel } from '@/lib/lot-status';
 import { VALIDATION_ERROR_CODE } from '@/lib/offline/adapters';
 
 import { WAREHOUSE_ERROR } from './api';
-import { exceedsAvailableMessage } from './exit-quantity';
+import { exceedsAvailableMessage } from '@/lib/stock-quantity';
 
 export type WarehouseForm =
   'warehouse' | 'entry' | 'move' | 'exit' | 'void' | 'delete';

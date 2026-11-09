@@ -21,7 +21,7 @@ import { farmLabel } from '@/lib/format/place-label';
 import type { StockRow } from '../api';
 import type { DialogRequest } from '../dialog-request';
 import { NO_LOCATION_TEXT } from '../entry-form';
-import { GRADE_LABELS, kilosText } from '../exit-quantity';
+import { GRADE_LABELS, kilosText } from '@/lib/stock-quantity';
 import type { Offer } from '../warehouse-actions';
 import { LotEyeLink } from './lot-eye-link';
 

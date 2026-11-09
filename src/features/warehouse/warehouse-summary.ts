@@ -1,5 +1,5 @@
 import type { LotWarehouseDetail } from './api';
-import { GRADE_LABELS, kilosText } from './exit-quantity';
+import { GRADE_LABELS, kilosText } from '@/lib/stock-quantity';
 
 // La línea de la etapa en la lista: lo que falta ingresar, o dónde está el lote y lo que queda de
 // cada calibre que entró.

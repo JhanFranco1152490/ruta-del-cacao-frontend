@@ -1,7 +1,7 @@
 import { SummaryStrip, SummaryValue } from '@/components/summary-strip';
 
 import type { ExitSummary } from '../api';
-import { kilosText } from '../exit-quantity';
+import { kilosText } from '@/lib/stock-quantity';
 import { exitReasonText } from '../exit-reasons';
 
 // Los motivos que se nombran en la franja: los que más kilos sacaron.

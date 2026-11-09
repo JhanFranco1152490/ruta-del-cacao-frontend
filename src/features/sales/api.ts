@@ -17,14 +17,19 @@ export type BuyerOption = Schemas['BuyerOption'];
 // El 409: `current` llega con `stale_version`.
 export type SaleConflictError = Schemas['SaleConflictError'];
 
-// Los errores de una línea llegan sin índice en `fields.lines`; los que dependen del momento
-// (`stock_insufficient`, `lot_invalid_status` y el lote de otra finca) dicen además cuál es con
-// `line`, desde 0. El esquema no los describe porque son claves extra junto a `code`.
-export type SaleLineError = {
-  detail: string;
-  code: string;
-  fields?: Record<string, string[]>;
-  line?: number;
-  available_kg?: string;
-  current_status?: string;
-};
+// Una existencia de la finca (un lote y un calibre), de donde sale cada línea de la venta.
+export type FarmStockRow = Schemas['StockRow'];
+export type FarmStockPage = Schemas['PaginatedStockRowList'];
+
+// Los códigos con los que el servidor rechaza una escritura de ventas.
+export const SALE_ERROR = {
+  stockInsufficient: 'stock_insufficient',
+  lotInvalidStatus: 'lot_invalid_status',
+  notFound: 'not_found',
+  buyerInactive: 'buyer_inactive',
+  farmInactive: 'farm_inactive',
+  saleVoided: 'sale_voided',
+  staleVersion: 'stale_version',
+  invoiceTooLarge: 'invoice_too_large',
+  invoiceFormat: 'invoice_format_not_allowed',
+} as const;

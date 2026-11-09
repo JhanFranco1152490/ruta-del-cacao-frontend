@@ -9,7 +9,7 @@ import { isEmail } from '@/lib/validation/is-email';
 import { REQUIRED_FIELD_MESSAGE } from '@/lib/validation/messages';
 import { optionalPhoneSchema } from '@/lib/validation/phone';
 
-import { BUYER_TYPES } from './buyer-types';
+import { BUYER_TYPES } from '@/lib/buyer-types';
 
 export const BUYER_NAME_MIN_LENGTH = 2;
 export const BUYER_NAME_MAX_LENGTH = 120;
