@@ -9,6 +9,10 @@ export const OFFLINE_INVOICE_REASON = 'Ver el soporte necesita conexión.';
 export const saleRegistered = (code: string) => `Venta ${code} registrada.`;
 export const invoiceNotAttached = (code: string) =>
   `Venta ${code} registrada, pero no se pudo adjuntar el soporte. Adjúntalo desde la venta.`;
+// El servidor rechazó la venta por algo que cambió entretanto (lo disponible, el comprador): el
+// motivo va en su campo o en su línea.
+export const SALE_NOT_REGISTERED =
+  'No se registró la venta: revisa lo marcado.';
 export const saleVoided = (code: string) => `Venta ${code} anulada.`;
 export const INVOICE_ATTACHED = 'Soporte adjuntado.';
 export const INVOICE_REMOVED = 'Soporte quitado.';

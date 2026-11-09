@@ -9,8 +9,9 @@ import {
   useWatch,
 } from 'react-hook-form';
 
+import { FormMessage } from '@/components/form-message';
 import { MobileActionBar } from '@/components/mobile-action-bar';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 
 import { useFarmStock } from '../queries';
 import { type StockOption, stockOptions } from '../sale-line-options';
@@ -21,7 +22,9 @@ import {
   type SaleFormInput,
 } from '../sale-schema';
 import type { SaleFormScreenState } from '../use-sale-form-screen';
+import { useSaleSubmit } from '../use-sale-submit';
 import { SaleHeaderFields } from './sale-header-fields';
+import { SaleInvoiceField } from './sale-invoice-field';
 import { SaleLinesSection } from './sale-lines-section';
 
 type SaleFormContext = { options: readonly StockOption[]; today: string };
@@ -59,6 +62,12 @@ export function SaleForm({ screen }: { screen: SaleFormScreenState }) {
   const farmId = useWatch({ control: form.control, name: 'farm_id' });
   const stock = useFarmStock(farmId);
   options = stockOptions(stock.data ?? []);
+  const submit = useSaleSubmit({
+    options,
+    setError: form.setError,
+    returnPath: screen.returnPath,
+  });
+  const saving = submit.isSaving;
   const lines = useWatch({ control: form.control, name: 'lines' });
   const hasLines = lines.some(
     (line) => line.stock || line.quantity_kg.trim() || line.price_per_kg.trim(),
@@ -74,20 +83,37 @@ export function SaleForm({ screen }: { screen: SaleFormScreenState }) {
 
   return (
     <FormProvider {...form}>
-      <form className="space-y-6" noValidate>
+      <form
+        className="space-y-6"
+        noValidate
+        onSubmit={(event) =>
+          void form.handleSubmit(submit.onValid, submit.onInvalid)(event)
+        }
+      >
+        <FormMessage>{submit.formError}</FormMessage>
         <SaleHeaderFields
-          disabled={false}
+          disabled={saving}
           hasLines={hasLines}
           onFarmChange={changeFarm}
           screen={screen}
         />
         <SaleLinesSection
-          disabled={false}
+          disabled={saving}
           farmChosen={!!farmId}
           options={options}
           stock={stock}
         />
+        <SaleInvoiceField
+          disabled={saving}
+          error={submit.invoiceError}
+          file={submit.invoice}
+          onChoose={submit.chooseInvoice}
+          onRemove={submit.removeInvoice}
+        />
         <MobileActionBar>
+          <Button disabled={saving} size="office" type="submit">
+            {saving ? 'Guardando…' : 'Guardar venta'}
+          </Button>
           <Link
             className={buttonVariants({ size: 'office', variant: 'outline' })}
             href={screen.returnPath}

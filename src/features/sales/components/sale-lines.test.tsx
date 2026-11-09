@@ -48,6 +48,17 @@ beforeEach(() => {
   );
 });
 
+// Pega el texto en vez de teclearlo letra por letra: con la suite en paralelo, teclear varios campos
+// pasaba del tiempo de espera.
+async function typeInto(
+  user: ReturnType<typeof userEvent.setup>,
+  field: HTMLElement,
+  text: string,
+) {
+  await user.click(field);
+  await user.paste(text);
+}
+
 function renderScreen() {
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
@@ -60,8 +71,14 @@ function renderScreen() {
   return renderWithProviders(<SaleFormScreen />, { queryClient });
 }
 
+// La línea aparece después de leer las fincas y las existencias; la primera prueba del archivo monta
+// la pantalla en frío y, con la máquina cargada, el segundo de espera por defecto no alcanza.
 const lineOf = (position: number) =>
-  screen.findByRole('listitem', { name: `Línea ${position}` });
+  screen.findByRole(
+    'listitem',
+    { name: `Línea ${position}` },
+    { timeout: 3000 },
+  );
 
 async function chooseStock(
   user: ReturnType<typeof userEvent.setup>,
@@ -107,8 +124,12 @@ describe('the lines of a sale', () => {
 
     const first = await lineOf(1);
     await chooseStock(user, first, /· G1/);
-    await user.type(within(first).getByLabelText('Kilos'), '12,5');
-    await user.type(within(first).getByLabelText('Precio por kilo'), '17999');
+    await typeInto(user, within(first).getByLabelText('Kilos'), '12,5');
+    await typeInto(
+      user,
+      within(first).getByLabelText('Precio por kilo'),
+      '17999',
+    );
 
     expect(
       within(first).getByRole('status', { name: 'Subtotal de la línea 1' }),
@@ -156,8 +177,12 @@ describe('the lines of a sale', () => {
 
     const first = await lineOf(1);
     await chooseStock(user, first, /· G1/);
-    await user.type(within(first).getByLabelText('Kilos'), '10');
-    await user.type(within(first).getByLabelText('Precio por kilo'), '18500');
+    await typeInto(user, within(first).getByLabelText('Kilos'), '10');
+    await typeInto(
+      user,
+      within(first).getByLabelText('Precio por kilo'),
+      '18500',
+    );
     await user.click(
       within(first).getByRole('button', { name: 'Quitar la línea 1' }),
     );
@@ -189,7 +214,7 @@ describe('the lines of a sale', () => {
     renderScreen();
 
     const first = await lineOf(1);
-    await user.type(within(first).getByLabelText('Kilos'), '10');
+    await typeInto(user, within(first).getByLabelText('Kilos'), '10');
     await user.click(screen.getByRole('combobox', { name: 'Finca' }));
     await user.click(await screen.findByRole('option', { name: /El Diviso/ }));
 
@@ -209,7 +234,7 @@ describe('the lines of a sale', () => {
     renderScreen();
 
     const first = await lineOf(1);
-    await user.type(within(first).getByLabelText('Kilos'), '10');
+    await typeInto(user, within(first).getByLabelText('Kilos'), '10');
     await user.click(screen.getByRole('combobox', { name: 'Finca' }));
     await user.click(await screen.findByRole('option', { name: /El Diviso/ }));
     const dialog = await screen.findByRole('dialog');
