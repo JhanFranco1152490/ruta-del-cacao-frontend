@@ -1,6 +1,6 @@
 'use client';
 
-import { Package, Receipt } from 'lucide-react';
+import { Layers, Package, Receipt } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 import { Breadcrumb } from '@/components/breadcrumb';
@@ -32,6 +32,9 @@ import { SaleInvoiceSection } from './sale-invoice-section';
 import { SaleLinesTable } from './sale-lines-table';
 import { SaleStatusBadge } from './sale-status-badge';
 import { SaleVoidAction } from './sale-void-action';
+
+const lineCountText = (count: number) =>
+  count === 1 ? 'en 1 línea' : `en ${count} líneas`;
 
 // La ficha de una venta: sus cifras, sus líneas y sus datos. Se consulta también sin conexión con la
 // copia de la última vez que se abrió; cambiarla necesita conexión.
@@ -106,6 +109,12 @@ export function SaleDetailScreen() {
           icon={Package}
           label="Kg de G2"
           value={kilosText(sale.g2_kg)}
+        />
+        <StatCell
+          icon={Layers}
+          label="Lotes"
+          note={lineCountText(sale.lines.length)}
+          value={String(new Set(sale.lines.map(({ lot }) => lot.id)).size)}
         />
       </StatStrip>
       <SectionCard accent="cobre" count={sale.lines.length} title="Líneas">

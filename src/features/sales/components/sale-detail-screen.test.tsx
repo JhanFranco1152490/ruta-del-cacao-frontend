@@ -64,6 +64,8 @@ describe('SaleDetailScreen', () => {
     expect(figures).toHaveTextContent('Valor total$ 3.375.000');
     expect(figures).toHaveTextContent('Kg de G1150,0');
     expect(figures).toHaveTextContent('Kg de G240,0');
+    // Las dos líneas son del mismo lote.
+    expect(figures).toHaveTextContent('Lotes1en 2 líneas');
   });
 
   it('lists each line with its price and subtotal, and the total', async () => {

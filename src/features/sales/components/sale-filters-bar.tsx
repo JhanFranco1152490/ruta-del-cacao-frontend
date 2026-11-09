@@ -41,13 +41,14 @@ export function SaleFiltersBar({ screen }: { screen: SalesScreenState }) {
           placeholder="Número de venta"
           type="search"
           value={filters.searchInput}
-          wrapperClassName="min-w-0 flex-1 sm:w-56 sm:flex-none"
+          wrapperClassName="min-w-0 flex-1 sm:w-44 sm:flex-none"
         />
       }
       trailing={
         filters.hasFilters && (
+          // En celular va al final, a todo el ancho: en la fila del buscador lo aplastaba.
           <Button
-            className="h-10"
+            className="h-10 max-sm:order-last max-sm:w-full"
             onClick={() => void filters.clear()}
             size="office"
             variant="ghost"
@@ -59,7 +60,7 @@ export function SaleFiltersBar({ screen }: { screen: SalesScreenState }) {
     >
       <SearchSelect
         allLabel="Todos los compradores"
-        className="w-full sm:w-64"
+        className="w-full sm:w-56"
         compact
         label="Comprador"
         onChange={(option) => void filters.setBuyer(option?.id ?? null)}
@@ -69,7 +70,7 @@ export function SaleFiltersBar({ screen }: { screen: SalesScreenState }) {
       {screen.farmOptions.length > 1 && (
         <SearchSelect
           allLabel="Todas las fincas"
-          className="w-full sm:w-56"
+          className="w-full sm:w-48"
           compact
           label="Finca"
           onChange={(option) => void filters.setFarm(option?.id ?? null)}
@@ -84,7 +85,7 @@ export function SaleFiltersBar({ screen }: { screen: SalesScreenState }) {
           void filters.setStatus(event.target.value as SaleStatusFilter)
         }
         value={filters.status}
-        wrapperClassName="w-full sm:w-40"
+        wrapperClassName="w-full sm:w-36"
       >
         {SALE_STATUS_FILTERS.map((status) => (
           <option key={status} value={status}>
