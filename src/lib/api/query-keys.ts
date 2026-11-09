@@ -42,6 +42,19 @@ export type ExitFilters = {
   page: number;
 };
 
+// Los filtros de la pantalla Ventas que cambian lo que se pide. El periodo (yyyy-MM-dd, días
+// incluidos) es obligatorio; `status` en `null` trae registradas y anuladas.
+export type SaleFilters = {
+  producer: string | null;
+  from: string;
+  to: string;
+  farm: string | null;
+  buyer: string | null;
+  status: 'registered' | 'voided' | null;
+  search: string;
+  page: number;
+};
+
 export type PendingEntryFilters = {
   producer: string | null;
   farm: string | null;
@@ -272,6 +285,21 @@ export const queryKeys = {
     // productor; las demás cuentas ven el suyo y pasan `null`.
     list: (producer: string | null) =>
       ['buyers', 'list', producer ?? ''] as const,
+  },
+  sales: {
+    // Lo que invalida registrar o anular una venta y cambiar su soporte: cambian la lista, la franja
+    // y la ficha a la vez.
+    all: () => ['sales'] as const,
+    // Una página de ventas con sus filtros. La primera tiene copia en el dispositivo.
+    list: (filters: SaleFilters) => ['sales', 'list', filters] as const,
+    // Las cifras de la franja: solo cuentan las registradas, así que no llevan estado ni página.
+    summary: (filters: Omit<SaleFilters, 'status' | 'page'>) =>
+      ['sales', 'summary', filters] as const,
+    detail: (id: string) => ['sales', 'detail', id] as const,
+    // Lo que usa el formulario, solo con conexión: los compradores activos y lo que hay en bodega.
+    buyerOptions: (producer: string | null) =>
+      ['sales', 'buyer-options', producer ?? ''] as const,
+    farmStock: (farmId: string) => ['sales', 'farm-stock', farmId] as const,
   },
   parameters: {
     // Lo que invalida guardar o restablecer los parámetros. La cuenta técnica elige el productor;

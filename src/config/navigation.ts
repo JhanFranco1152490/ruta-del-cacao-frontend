@@ -9,6 +9,7 @@ import {
   Leaf,
   MapPinned,
   Package,
+  Receipt,
   ShieldCheck,
   ShieldPlus,
   SlidersHorizontal,
@@ -157,6 +158,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     group: 'sales',
     icon: Handshake,
     permission: PERMISSIONS.BUYERS_VIEW,
+  },
+  // Cada venta saca de bodega el cacao de una finca, así que un empleado solo ve las de sus fincas.
+  // Se registra y se anula con conexión; la lista y la ficha se consultan con la copia.
+  {
+    href: '/ventas',
+    label: 'Ventas',
+    group: 'sales',
+    icon: Receipt,
+    permission: PERMISSIONS.SALES_VIEW,
   },
   {
     href: '/variedades',

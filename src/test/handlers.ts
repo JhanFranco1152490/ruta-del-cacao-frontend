@@ -10,6 +10,7 @@ import {
   buildClosedSummary,
   buildQualitySummary,
   buildExitSummary,
+  buildSaleSummary,
   buildStockSummary,
 } from './factories';
 
@@ -369,6 +370,83 @@ export const facilitiesHandler = (
     requests.push(new URL(request.url).searchParams);
     return HttpResponse.json({ results });
   });
+
+// Una página de ventas; guarda las búsquedas recibidas (llevan el periodo y los filtros).
+export const salesHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/sales'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(buildPage(results));
+  });
+
+export const saleSummaryHandler = (
+  summary: JsonBodyType = buildSaleSummary(),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/sales/summary'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(summary);
+  });
+
+export const buyerOptionsHandler = (
+  results: unknown[] = [],
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/sales/buyer-options'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json({ results });
+  });
+
+// `/api/sales/:id` también calza con las rutas fijas de ventas: esas siguen a su propio handler.
+const SALE_FIXED_PATHS = ['summary', 'buyer-options'];
+
+export const saleHandler = (sale: JsonBodyType | Response) =>
+  http.get(apiUrl('/api/sales/:id'), ({ params }) => {
+    if (SALE_FIXED_PATHS.includes(String(params.id))) return undefined;
+    if (sale instanceof Response) return sale;
+    return HttpResponse.json(sale);
+  });
+
+// Registrar (201) o anular (200) una venta: responde `response` (un HttpResponse para los errores)
+// o la venta, y guarda los cuerpos recibidos.
+export const saleWriteHandler = (
+  action: 'create' | 'void',
+  response: JsonBodyType | Response,
+  bodies: unknown[] = [],
+) => {
+  const path = action === 'create' ? '/api/sales' : '/api/sales/:id/void';
+  return http.post(apiUrl(path), async ({ request }) => {
+    bodies.push(await request.json());
+    if (response instanceof Response) return response;
+    return HttpResponse.json(response, {
+      status: action === 'create' ? 201 : 200,
+    });
+  });
+};
+
+// Adjuntar o reemplazar (`PUT`, multipart, responde la venta) y quitar (`DELETE`, 204) el soporte.
+// Guarda el archivo recibido al adjuntar.
+export const saleInvoiceHandler = (
+  action: 'attach' | 'remove',
+  response: JsonBodyType | Response = null,
+  files: File[] = [],
+) => {
+  if (action === 'remove') {
+    return http.delete(apiUrl('/api/sales/:id/invoice'), () =>
+      response instanceof Response
+        ? response
+        : new HttpResponse(null, { status: 204 }),
+    );
+  }
+  return http.put(apiUrl('/api/sales/:id/invoice'), async ({ request }) => {
+    const file = (await request.formData()).get('file');
+    if (file instanceof File) files.push(file);
+    if (response instanceof Response) return response;
+    return HttpResponse.json(response);
+  });
+};
 
 // Responde el directorio de compradores de un productor, sin paginar, y guarda las búsquedas
 // recibidas.
