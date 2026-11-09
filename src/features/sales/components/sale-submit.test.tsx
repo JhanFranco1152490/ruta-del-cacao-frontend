@@ -18,7 +18,6 @@ import {
   buyerOptionsHandler,
   csrfHandler,
   farmsHandler,
-  saleInvoiceHandler,
   saleWriteHandler,
   stockListHandler,
 } from '@/test/handlers';
@@ -31,6 +30,13 @@ vi.mock(
   async () => (await import('@/test/router')).navigation,
 );
 
+// En jsdom, `fetch` no envía un `FormData`: la subida del soporte se reemplaza aquí y se prueba de
+// verdad en el entorno `node` (`mutations-files.test.ts`).
+vi.mock('../invoice-api', () => ({ putInvoice: vi.fn() }));
+
+import { ApiError } from '@/lib/api/errors';
+
+import { putInvoice } from '../invoice-api';
 import { SaleFormScreen } from './sale-form-screen';
 
 const ORIGIN = '/ventas?mes=2026-11';
@@ -52,6 +58,7 @@ beforeEach(() => {
   router.push.mockClear();
   vi.spyOn(notify, 'success').mockImplementation(() => '');
   vi.spyOn(notify, 'warning').mockImplementation(() => '');
+  vi.mocked(putInvoice).mockReset();
   server.use(
     csrfHandler,
     farmsHandler([buildFarm({ id: 'f1', code: 'F02', name: 'La Esperanza' })]),
@@ -124,8 +131,8 @@ const pdf = (size = 300 * 1024) => {
 };
 
 describe('saving a sale', () => {
-  // Llena el formulario completo (dos listas, una línea y el envío): con la suite en paralelo pasa
-  // a veces de los 5 s por defecto.
+  // Las que llenan el formulario completo (dos listas, una línea y el envío) llevan 10 s: con la
+  // suite en paralelo pasan a veces de los 5 s por defecto.
   it('registers the sale, goes back and announces it', async () => {
     const user = userEvent.setup();
     renderScreen();
@@ -282,20 +289,29 @@ describe('saving a sale', () => {
     expect(screen.queryByText('factura.pdf')).not.toBeInTheDocument();
   });
 
+  it('uploads the invoice right after the sale', async () => {
+    const user = userEvent.setup();
+    vi.mocked(putInvoice).mockResolvedValue(buildSale({ version: 2 }));
+    renderScreen();
+
+    await fillSale(user);
+    await user.upload(screen.getByLabelText('Archivo del soporte'), pdf());
+    await save(user);
+
+    await waitFor(() =>
+      expect(notify.success).toHaveBeenCalledWith('Venta V-0001 registrada.'),
+    );
+    expect(putInvoice).toHaveBeenCalledWith('s1', expect.any(File));
+  }, 10_000);
+
   it('keeps the sale and warns when the invoice could not be attached', async () => {
     const user = userEvent.setup();
-    server.use(
-      saleInvoiceHandler(
-        'attach',
-        HttpResponse.json(
-          {
-            detail: 'Solo se permiten PDF, JPG o PNG.',
-            code: 'invoice_format_not_allowed',
-            fields: {},
-          },
-          { status: 415 },
-        ),
-      ),
+    vi.mocked(putInvoice).mockRejectedValue(
+      new ApiError(415, {
+        detail: 'Solo se permiten PDF, JPG o PNG.',
+        code: 'invoice_format_not_allowed',
+        fields: {},
+      }),
     );
     renderScreen();
 
@@ -311,5 +327,5 @@ describe('saving a sale', () => {
       }),
     );
     expect(notify.success).not.toHaveBeenCalled();
-  });
+  }, 10_000);
 });

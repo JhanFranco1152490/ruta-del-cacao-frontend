@@ -14,7 +14,8 @@ import {
 import { server } from '@/test/server';
 
 import type { SaleCreateRequest } from './api';
-import { putInvoice, registerSale } from './mutations';
+import { putInvoice } from './invoice-api';
+import { registerSale } from './mutations';
 
 const REQUEST: SaleCreateRequest = {
   farm_id: 'f1',

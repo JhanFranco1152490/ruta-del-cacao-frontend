@@ -4,6 +4,7 @@ import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 
 import type { Sale, SaleCreateRequest, SaleVoidRequest } from './api';
+import { putInvoice } from './invoice-api';
 
 // Registrar o anular una venta mueve existencias: se vuelven a leer Ventas, Bodega y Lotes (la
 // sección Bodega de la ficha de cada lote), y con ellos sus copias en el dispositivo. Cambiar el
@@ -32,17 +33,6 @@ function useSaleWrite<TBody, TResult>(
 
 const salePath = (id: string, rest = '') =>
   `/api/sales/${encodeURIComponent(id)}${rest}`;
-
-// El archivo viaja como formulario de varias partes: en base64 dentro de un JSON pesaría un tercio
-// más.
-export function putInvoice(saleId: string, file: File) {
-  const form = new FormData();
-  form.set('file', file, file.name);
-  return apiFetch<Sale>(salePath(saleId, '/invoice'), {
-    method: 'PUT',
-    body: form,
-  });
-}
 
 export type RegisteredSale = {
   sale: Sale;

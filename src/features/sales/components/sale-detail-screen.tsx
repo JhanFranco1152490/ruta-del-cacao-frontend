@@ -28,6 +28,7 @@ import { salePermissionsOf } from '../sale-actions';
 import { OFFLINE_SALES_REASON } from '../sale-messages';
 import { SALES_PATH } from '../sale-paths';
 import { SaleFacts } from './sale-facts';
+import { SaleInvoiceSection } from './sale-invoice-section';
 import { SaleLinesTable } from './sale-lines-table';
 import { SaleStatusBadge } from './sale-status-badge';
 
@@ -116,6 +117,7 @@ export function SaleDetailScreen() {
           sale={sale}
         />
       </SectionCard>
+      <SaleInvoiceSection can={can} online={!fromCopy} sale={sale} />
       <DetailFooter backHref={backHref} />
     </div>
   );
