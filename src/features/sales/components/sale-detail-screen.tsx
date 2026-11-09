@@ -24,13 +24,14 @@ import { lotDetailPath } from '@/lib/paths/lots';
 import { kilosText } from '@/lib/stock-quantity';
 
 import { useSale } from '../queries';
-import { salePermissionsOf } from '../sale-actions';
+import { saleOffers, salePermissionsOf } from '../sale-actions';
 import { OFFLINE_SALES_REASON } from '../sale-messages';
 import { SALES_PATH } from '../sale-paths';
 import { SaleFacts } from './sale-facts';
 import { SaleInvoiceSection } from './sale-invoice-section';
 import { SaleLinesTable } from './sale-lines-table';
 import { SaleStatusBadge } from './sale-status-badge';
+import { SaleVoidAction } from './sale-void-action';
 
 // La ficha de una venta: sus cifras, sus líneas y sus datos. Se consulta también sin conexión con la
 // copia de la última vez que se abrió; cambiarla necesita conexión.
@@ -67,6 +68,9 @@ export function SaleDetailScreen() {
 
   const { data: sale, savedAt } = read.data;
   const fromCopy = !online || savedAt !== undefined;
+  const voidOffer = saleOffers(sale, can, !fromCopy).find(
+    ({ action }) => action === 'void',
+  );
 
   return (
     <div className={pageContainerClass('wide', 'space-y-4')}>
@@ -118,7 +122,9 @@ export function SaleDetailScreen() {
         />
       </SectionCard>
       <SaleInvoiceSection can={can} online={!fromCopy} sale={sale} />
-      <DetailFooter backHref={backHref} />
+      <DetailFooter backHref={backHref}>
+        {voidOffer && <SaleVoidAction offer={voidOffer} sale={sale} />}
+      </DetailFooter>
     </div>
   );
 }
