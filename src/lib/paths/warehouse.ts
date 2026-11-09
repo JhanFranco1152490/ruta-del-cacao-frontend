@@ -3,6 +3,7 @@ export const WAREHOUSE_PATH = '/bodega';
 export const WAREHOUSE_VIEWS = [
   'existencias',
   'por-ingresar',
+  'salidas',
   'bodegas',
 ] as const;
 export type WarehouseView = (typeof WAREHOUSE_VIEWS)[number];

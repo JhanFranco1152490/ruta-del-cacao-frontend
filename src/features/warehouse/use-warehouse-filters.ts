@@ -10,6 +10,7 @@ import { useCallback } from 'react';
 
 import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import type {
+  ExitFilters,
   PendingEntryFilters,
   StockFilters,
   WarehouseFilters,
@@ -17,6 +18,8 @@ import type {
 import { WAREHOUSE_ACTIONS, WAREHOUSE_VIEWS } from '@/lib/paths/warehouse';
 
 import type { Grade } from './api';
+import { MANUAL_EXIT_REASONS } from './exit-reasons';
+import { periodError } from './exit-period';
 import type { StockSummaryFilters } from './queries';
 import {
   resolveWarehouseView,
@@ -40,6 +43,9 @@ export const STOCK_ORDERINGS = STOCK_ORDER_FIELDS.flatMap((field) => [
 export type StockOrdering = (typeof STOCK_ORDERINGS)[number];
 
 const GRADES = ['g1', 'g2'] as const satisfies readonly Grade[];
+// Venta la genera la venta, pero sus salidas también se consultan.
+const REASONS = [...MANUAL_EXIT_REASONS, 'sale'] as const;
+const STATES = ['active', 'voided'] as const;
 
 // Una pestaña, un calibre, un orden o una acción malformados (?vista=todas, ?calibre=g3) cuentan
 // como la pestaña por defecto y como ningún filtro.
@@ -51,6 +57,10 @@ const parsers = {
   location: parseAsString.withDefault(''),
   search: parseAsString.withDefault(''),
   ordering: parseAsStringLiteral(STOCK_ORDERINGS),
+  reason: parseAsStringLiteral(REASONS),
+  state: parseAsStringLiteral(STATES),
+  from: parseAsString,
+  to: parseAsString,
   producer: parseAsString,
   page: parseAsInteger.withDefault(1),
   // Los enlaces desde Lotes: el lote y el formulario que se abre al llegar.
@@ -67,6 +77,10 @@ const urlKeys = {
   location: 'ubicacion',
   search: 'buscar',
   ordering: 'orden',
+  reason: 'motivo',
+  state: 'estado',
+  from: 'desde',
+  to: 'hasta',
   producer: 'productor',
   page: 'pagina',
   lot: 'lote',
@@ -109,6 +123,23 @@ export function useWarehouseFilters(can: WarehousePermissions) {
     search: summaryFilters.search,
     page,
   };
+  // Un periodo al revés no se pregunta al servidor: se dice en el campo y la lista sigue como estaba.
+  const invalidPeriod = periodError(params.from, params.to);
+  const exitSummaryFilters = {
+    producer,
+    farm,
+    warehouse: summaryFilters.warehouse,
+    grade: params.grade,
+    reason: params.reason,
+    from: invalidPeriod ? null : params.from || null,
+    to: invalidPeriod ? null : params.to || null,
+    search: summaryFilters.search,
+  };
+  const exitFilters: ExitFilters = {
+    ...exitSummaryFilters,
+    state: params.state,
+    page,
+  };
   const warehouseFilters: WarehouseFilters = {
     producer,
     farm,
@@ -122,12 +153,26 @@ export function useWarehouseFilters(can: WarehousePermissions) {
     summaryFilters,
     pendingFilters,
     warehouseFilters,
+    exitFilters,
+    exitSummaryFilters,
+    // Lo que se ve de los filtros de las salidas, aunque el periodo esté al revés.
+    exitInputs: {
+      reason: params.reason,
+      state: params.state,
+      from: params.from,
+      to: params.to,
+    },
+    periodError: invalidPeriod,
     hasFilters:
       !!summaryFilters.farm ||
       !!summaryFilters.warehouse ||
       !!summaryFilters.grade ||
       !!summaryFilters.location ||
-      !!summaryFilters.search,
+      !!summaryFilters.search ||
+      !!params.reason ||
+      !!params.state ||
+      !!params.from ||
+      !!params.to,
     ...search,
     locationInput: location.searchInput,
     setLocationInput: location.setSearchInput,
@@ -148,6 +193,13 @@ export function useWarehouseFilters(can: WarehousePermissions) {
     setGrade: (value: Grade | null) => setParams({ grade: value, page: 1 }),
     setOrdering: (value: StockOrdering | null) =>
       setParams({ ordering: value, page: 1 }),
+    setReason: (value: (typeof REASONS)[number] | null) =>
+      setParams({ reason: value, page: 1 }),
+    setState: (value: (typeof STATES)[number] | null) =>
+      setParams({ state: value, page: 1 }),
+    setFrom: (value: string | null) =>
+      setParams({ from: value || null, page: 1 }),
+    setTo: (value: string | null) => setParams({ to: value || null, page: 1 }),
     setPage: (value: number) => setParams({ page: value }),
     // La finca elegida era de otro productor.
     setProducer: (value: string | null) =>
@@ -165,6 +217,10 @@ export function useWarehouseFilters(can: WarehousePermissions) {
         grade: null,
         location: null,
         search: null,
+        reason: null,
+        state: null,
+        from: null,
+        to: null,
         page: 1,
       }),
   };

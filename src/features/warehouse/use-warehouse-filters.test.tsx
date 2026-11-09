@@ -150,4 +150,60 @@ describe('useWarehouseFilters', () => {
       expect(lastUrl(onUrlUpdate)).toBe('?vista=bodegas&productor=p1'),
     );
   });
+  it('reads the filters of the exits from the address, in Spanish', async () => {
+    const { result } = await setup(
+      '?vista=salidas&motivo=sample&estado=voided&desde=2026-10-01&hasta=2026-10-31&calibre=g2&buscar=L-2',
+    );
+
+    expect(result.current.view).toBe('salidas');
+    expect(result.current.exitFilters).toEqual({
+      producer: null,
+      farm: null,
+      warehouse: null,
+      grade: 'g2',
+      reason: 'sample',
+      state: 'voided',
+      from: '2026-10-01',
+      to: '2026-10-31',
+      search: 'L-2',
+      page: 1,
+    });
+    expect(result.current.exitSummaryFilters).not.toHaveProperty('state');
+    expect(result.current.hasFilters).toBe(true);
+  });
+
+  it('leaves the period out of what it asks when it is backwards', async () => {
+    const { result } = await setup(
+      '?vista=salidas&desde=2026-11-05&hasta=2026-11-01',
+    );
+
+    expect(result.current.periodError).toBe(
+      'La fecha final no puede ser anterior a la inicial.',
+    );
+    expect(result.current.exitFilters.from).toBeNull();
+    expect(result.current.exitFilters.to).toBeNull();
+    expect(result.current.exitInputs.from).toBe('2026-11-05');
+  });
+
+  it('ignores a reason or a state it does not know', async () => {
+    const { result } = await setup('?vista=salidas&motivo=robo&estado=todas');
+
+    expect(result.current.exitFilters.reason).toBeNull();
+    expect(result.current.exitFilters.state).toBeNull();
+  });
+
+  it('goes back to the first page when the reason or the period change, and clears them all', async () => {
+    const { result, onUrlUpdate } = await setup('?vista=salidas&pagina=3');
+
+    act(() => void result.current.setReason('shrinkage'));
+    await waitFor(() =>
+      expect(lastUrl(onUrlUpdate)).toBe('?vista=salidas&motivo=shrinkage'),
+    );
+    act(() => void result.current.setFrom('2026-10-01'));
+    await waitFor(() =>
+      expect(lastUrl(onUrlUpdate)).toContain('desde=2026-10-01'),
+    );
+    act(() => void result.current.clear());
+    await waitFor(() => expect(lastUrl(onUrlUpdate)).toBe('?vista=salidas'));
+  });
 });

@@ -5,6 +5,7 @@ import {
   buildLotWarehouseDetail,
   buildStockEntry,
   buildStockExit,
+  buildStockMove,
 } from '@/test/factories';
 
 import { warehouseSectionView } from './warehouse-section-view';
@@ -94,5 +95,30 @@ describe('warehouseSectionView', () => {
         'Anulada por Ana Pérez el 1 nov: No salió',
       ],
     ]);
+  });
+  it('lists the moves with where the cacao came from and went to', () => {
+    const full = {
+      ...FULL,
+      moves: [
+        buildStockMove({
+          to_warehouse: { id: 'w2', name: 'Anexo' },
+          to_location: '',
+        }),
+      ],
+    };
+
+    const view = warehouseSectionView(SUMMARY, full);
+
+    expect(view.moves).toEqual([
+      {
+        id: 'm1',
+        route: 'Bodega principal · Estante 3 → Anexo · Sin ubicación',
+        detail: 'Movido por Cuenta de prueba el 2 nov',
+      },
+    ]);
+  });
+
+  it('has no moves to show without the full detail', () => {
+    expect(warehouseSectionView(SUMMARY, undefined).moves).toBeNull();
   });
 });

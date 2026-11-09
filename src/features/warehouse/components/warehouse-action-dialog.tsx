@@ -13,6 +13,7 @@ import { warehousePermissionsOf } from '../warehouse-actions';
 import { NO_CHANGES } from '../warehouse-form';
 import { EntryDialog } from './entry-dialog';
 import { ExitDialog } from './exit-dialog';
+import { MoveDialog } from './move-dialog';
 import { VoidExitDialog } from './void-exit-dialog';
 
 export const LOT_UNAVAILABLE_MESSAGE =
@@ -78,6 +79,17 @@ export function WarehouseActionDialog({
           correcting={request.action === 'corregir'}
           // Con la versión leída: si cambia, el formulario se vuelve a armar con lo vigente.
           key={`${stock.data.lot.version}-${stock.data.entry?.version ?? 0}`}
+          onClose={onClose}
+          onSaved={saved}
+          onStale={stale}
+          onStatusChanged={statusChanged}
+          stock={stock.data}
+        />
+      );
+    case 'mover':
+      return (
+        <MoveDialog
+          key={`${stock.data.entry?.version ?? 0}`}
           onClose={onClose}
           onSaved={saved}
           onStale={stale}

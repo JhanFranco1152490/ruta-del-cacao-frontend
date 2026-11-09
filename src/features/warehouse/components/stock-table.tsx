@@ -1,10 +1,12 @@
 'use client';
 
-import { PackageMinus } from 'lucide-react';
+import { MoveRight, PackageMinus } from 'lucide-react';
 
+import { ActionsMenu } from '@/components/actions-menu';
 import { COMPACT_TABLE_CLASS } from '@/components/compact-table-class';
 import { SortableTableHead } from '@/components/sortable-table-head';
 import { Button } from '@/components/ui/button';
+import { MenuItem } from '@/components/ui/menu';
 import {
   Table,
   TableBody,
@@ -31,6 +33,7 @@ export function StockTable({
   ordering,
   onSort,
   exitOffer,
+  moveOffer,
   lotHref,
   onAction,
 }: {
@@ -39,6 +42,8 @@ export function StockTable({
   onSort: (ordering: string) => void;
   // Registrar una salida, si la cuenta puede; igual para todas las filas.
   exitOffer: Offer<'salida'> | null;
+  // Mover el cacao de lugar, si la cuenta puede; va en el «⋯» de cada fila.
+  moveOffer: Offer<'mover'> | null;
   // La ficha del lote, solo si la cuenta puede verla.
   lotHref: ((id: string) => string) | null;
   onAction: (request: DialogRequest) => void;
@@ -94,6 +99,7 @@ export function StockTable({
               <StockRowActions
                 exitOffer={exitOffer}
                 lotHref={lotHref}
+                moveOffer={moveOffer}
                 onAction={onAction}
                 row={row}
               />
@@ -108,11 +114,13 @@ export function StockTable({
 function StockRowActions({
   row,
   exitOffer,
+  moveOffer,
   lotHref,
   onAction,
 }: {
   row: StockRow;
   exitOffer: Offer<'salida'> | null;
+  moveOffer: Offer<'mover'> | null;
   lotHref: ((id: string) => string) | null;
   onAction: (request: DialogRequest) => void;
 }) {
@@ -135,6 +143,17 @@ function StockRowActions({
           <PackageMinus aria-hidden="true" className="size-4" />
           Registrar salida
         </Button>
+      )}
+      {moveOffer && (
+        <ActionsMenu label={`Más acciones del lote ${code}`}>
+          <MenuItem
+            disabled={moveOffer.disabledReason !== null}
+            onClick={() => onAction({ action: 'mover', lotId: row.lot.id })}
+          >
+            <MoveRight aria-hidden="true" className="size-4" />
+            {moveOffer.label}
+          </MenuItem>
+        </ActionsMenu>
       )}
       {lotHref && <LotEyeLink code={code} href={lotHref(row.lot.id)} />}
     </div>

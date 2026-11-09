@@ -95,6 +95,24 @@ describe('warehouseFailureOf', () => {
     });
   });
 
+  it('puts a move to the same place in the warehouse field and says when nothing is left', () => {
+    expect(
+      warehouseFailureOf(
+        rejection(400, 'stock_move_unchanged', {
+          fields: { warehouse_id: ['El cacao ya está ahí.'] },
+        }),
+        'move',
+      ),
+    ).toEqual({
+      kind: 'field',
+      field: 'warehouse_id',
+      message: 'El cacao ya está ahí.',
+    });
+    expect(
+      warehouseFailureOf(rejection(409, 'lot_without_stock'), 'move').kind,
+    ).toBe('status');
+  });
+
   it('reloads on a stale version and offers to deactivate a used warehouse', () => {
     expect(
       warehouseFailureOf(rejection(409, 'stale_version'), 'entry').kind,

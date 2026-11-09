@@ -1561,6 +1561,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stock/{id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Mueve el cacao de un lote En bodega a otra bodega de su finca o a otra ubicación, en cualquier momento y con las existencias que tenga. Deja de dónde venía. Requiere `expected_version` del ingreso; si cambió, 409 `stale_version`. Sin cacao en bodega, 409 `lot_without_stock`; al mismo lugar, 400 `stock_move_unchanged`. */
+        post: operations["stock_move_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/exits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las salidas de cacao de las fincas que la cuenta alcanza, la más reciente primero, con las anuladas (`voided`) incluidas salvo que `state` pida solo las vigentes o solo las anuladas. `warehouse` es la bodega donde está hoy el cacao del lote; `date_from` y `date_to` acotan la fecha de la salida, ambas incluidas. */
+        get: operations["stock_exits_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/exits/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lo que salió con los mismos filtros de la lista de salidas (menos `state`): el total de salidas y de kilos vigentes, y los de cada motivo, de los que más kilos sacaron a los que menos. Lo anulado no cuenta. */
+        get: operations["stock_exits_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stock/locations": {
         parameters: {
             query?: never;
@@ -2551,7 +2602,7 @@ export interface components {
          * @description * `shrinkage` - Merma
          *     * `sample` - Muestra
          *     * `reprocessing` - Reproceso
-         *     * `transfer` - Traslado
+         *     * `transfer` - Traslado fuera de la finca
          *     * `other` - Otro
          * @enum {string}
          */
@@ -2565,6 +2616,18 @@ export interface components {
             reason: components["schemas"]["ExitCreateReasonEnum"];
             /** @default  */
             detail: string;
+        };
+        ExitReasonTotal: {
+            reason: components["schemas"]["StockExitReasonEnum"];
+            exits: number;
+            /** Format: decimal */
+            quantity_kg: string;
+        };
+        ExitSummary: {
+            exits: number;
+            /** Format: decimal */
+            quantity_kg: string;
+            by_reason: components["schemas"]["ExitReasonTotal"][];
         };
         ExitVoidRequest: {
             reason: string;
@@ -3149,6 +3212,7 @@ export interface components {
             entry: components["schemas"]["StockEntry"] | null;
             balances: components["schemas"]["StockBalance"][];
             exits: components["schemas"]["StockExit"][];
+            moves: components["schemas"]["StockMove"][];
         };
         LotSummary: {
             results: components["schemas"]["LotStatusTotal"][];
@@ -3186,6 +3250,13 @@ export interface components {
             detections?: components["schemas"]["DetectionWriteRequest"][];
             /** Format: date-time */
             captured_at?: string | null;
+        };
+        MoveCreateRequest: {
+            expected_version: number;
+            /** Format: uuid */
+            warehouse_id: string;
+            /** @default  */
+            location: string;
         };
         Municipality: {
             code: string;
@@ -3511,6 +3582,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Role"][];
+        };
+        PaginatedStockExitRowList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["StockExitRow"][];
         };
         PaginatedStockRowList: {
             /** @example 123 */
@@ -4500,12 +4586,33 @@ export interface components {
          * @description * `shrinkage` - Merma
          *     * `sample` - Muestra
          *     * `reprocessing` - Reproceso
-         *     * `transfer` - Traslado
+         *     * `transfer` - Traslado fuera de la finca
          *     * `other` - Otro
          *     * `sale` - Venta
          * @enum {string}
          */
         StockExitReasonEnum: "shrinkage" | "sample" | "reprocessing" | "transfer" | "other" | "sale";
+        StockExitRow: {
+            /** Format: uuid */
+            id: string;
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            /** Format: date */
+            exit_date: string;
+            reason: components["schemas"]["StockExitReasonEnum"];
+            detail: string;
+            /** Format: date-time */
+            created_at: string;
+            created_by: components["schemas"]["StockPerson"];
+            readonly voided: {
+                [key: string]: unknown;
+            } | null;
+            readonly can_void: boolean;
+            lot: components["schemas"]["StockLotRef"];
+            farm: components["schemas"]["StockFarm"];
+            warehouse: components["schemas"]["StockWarehouseRef"];
+        };
         StockFarm: {
             /** Format: uuid */
             id: string;
@@ -4540,6 +4647,17 @@ export interface components {
             /** Format: uuid */
             id: string;
             code: string;
+        };
+        StockMove: {
+            /** Format: uuid */
+            id: string;
+            from_warehouse: components["schemas"]["StockWarehouseRef"];
+            from_location: string;
+            to_warehouse: components["schemas"]["StockWarehouseRef"];
+            to_location: string;
+            /** Format: date-time */
+            moved_at: string;
+            moved_by: components["schemas"]["StockPerson"];
         };
         StockPerson: {
             /** Format: uuid */
@@ -12122,6 +12240,210 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockConflictError"];
+                };
+            };
+        };
+    };
+    stock_move_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotStock"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockConflictError"];
+                };
+            };
+        };
+    };
+    stock_exits_list: {
+        parameters: {
+            query?: {
+                date_from?: string;
+                date_to?: string;
+                farm?: string;
+                /**
+                 * @description * `g1` - G1
+                 *     * `g2` - G2
+                 */
+                grade?: "g1" | "g2";
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /**
+                 * @description * `shrinkage` - Merma
+                 *     * `sample` - Muestra
+                 *     * `reprocessing` - Reproceso
+                 *     * `transfer` - Traslado fuera de la finca
+                 *     * `other` - Otro
+                 *     * `sale` - Venta
+                 */
+                reason?: "shrinkage" | "sample" | "reprocessing" | "transfer" | "other" | "sale";
+                search?: string;
+                /**
+                 * @description * `active` - active
+                 *     * `voided` - voided
+                 */
+                state?: "active" | "voided";
+                warehouse?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStockExitRowList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stock_exits_summary_retrieve: {
+        parameters: {
+            query?: {
+                date_from?: string;
+                date_to?: string;
+                farm?: string;
+                /**
+                 * @description * `g1` - G1
+                 *     * `g2` - G2
+                 */
+                grade?: "g1" | "g2";
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /**
+                 * @description * `shrinkage` - Merma
+                 *     * `sample` - Muestra
+                 *     * `reprocessing` - Reproceso
+                 *     * `transfer` - Traslado fuera de la finca
+                 *     * `other` - Otro
+                 *     * `sale` - Venta
+                 */
+                reason?: "shrinkage" | "sample" | "reprocessing" | "transfer" | "other" | "sale";
+                search?: string;
+                warehouse?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExitSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

@@ -9,6 +9,7 @@ import {
   buildProfile,
   buildClosedSummary,
   buildQualitySummary,
+  buildExitSummary,
   buildStockSummary,
 } from './factories';
 
@@ -255,6 +256,7 @@ const warehousePageHandler =
     });
 
 export const stockListHandler = warehousePageHandler('/api/stock');
+export const exitListHandler = warehousePageHandler('/api/stock/exits');
 export const pendingEntryHandler = warehousePageHandler(
   '/api/stock/pending-entry',
 );
@@ -265,6 +267,15 @@ export const stockSummaryHandler = (
   requests: URLSearchParams[] = [],
 ) =>
   http.get(apiUrl('/api/stock/summary'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return HttpResponse.json(summary);
+  });
+
+export const exitSummaryHandler = (
+  summary: JsonBodyType = buildExitSummary(),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/stock/exits/summary'), ({ request }) => {
     requests.push(new URL(request.url).searchParams);
     return HttpResponse.json(summary);
   });
@@ -280,7 +291,7 @@ export const stockLocationsHandler = (
 
 // `/api/stock/:id` también calza con las rutas fijas de existencias: esas siguen a su propio
 // handler.
-const STOCK_FIXED_PATHS = ['summary', 'locations', 'pending-entry'];
+const STOCK_FIXED_PATHS = ['summary', 'locations', 'pending-entry', 'exits'];
 
 export const lotStockHandler = (stock: JsonBodyType) =>
   http.get(apiUrl('/api/stock/:id'), ({ params }) => {
@@ -298,6 +309,7 @@ const STOCK_WRITES = {
     status: 200,
   },
   exit: { method: http.post, path: '/api/stock/:id/exits', status: 201 },
+  move: { method: http.post, path: '/api/stock/:id/move', status: 201 },
   void: {
     method: http.post,
     path: '/api/stock/:id/exits/:exitId/void',

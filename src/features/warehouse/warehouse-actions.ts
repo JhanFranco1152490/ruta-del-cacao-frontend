@@ -54,8 +54,8 @@ const offer = <A extends string>(
 // bodegas): los lotes por ingresar solo los lee quien puede ingresarlos.
 export const warehouseViews = (can: WarehousePermissions): WarehouseView[] =>
   can.entry
-    ? ['por-ingresar', 'existencias', 'bodegas']
-    : ['existencias', 'bodegas'];
+    ? ['por-ingresar', 'existencias', 'salidas', 'bodegas']
+    : ['existencias', 'salidas', 'bodegas'];
 
 // La pestaña que se muestra: la de la dirección si la cuenta la ve, o Existencias.
 export const resolveWarehouseView = (
@@ -66,7 +66,7 @@ export const resolveWarehouseView = (
     ? requested
     : 'existencias';
 
-export type LotStockAction = 'ingresar' | 'salida' | 'corregir';
+export type LotStockAction = 'ingresar' | 'salida' | 'mover' | 'corregir';
 
 // Lo que se puede hacer con el cacao de un lote: el Clasificado se ingresa; del que está En bodega
 // se registra una salida si le queda algo, y el ingreso se corrige mientras nada haya salido.
@@ -89,6 +89,7 @@ export function lotStockActions({
   if (status !== 'in_warehouse') return [];
   const allowed: [LotStockAction, string, boolean][] = [
     ['salida', 'Registrar salida', can.exit && hasStock],
+    ['mover', 'Mover', can.entry && hasStock],
     ['corregir', 'Corregir ingreso', can.entry && canCorrect],
   ];
   return allowed
@@ -111,6 +112,13 @@ export const stockExitOffer = (
   can: WarehousePermissions,
 ): Offer<'salida'> | null =>
   can.exit ? offer('salida', 'Registrar salida', online) : null;
+
+// Mover el cacao desde una fila de existencias: toda fila es de un lote En bodega con kilos.
+export const stockMoveOffer = (
+  online: boolean,
+  can: WarehousePermissions,
+): Offer<'mover'> | null =>
+  can.entry ? offer('mover', 'Mover', online) : null;
 
 // Anular una salida: solo una manual que sigue vigente, y con el permiso de registrar salidas.
 export const exitVoidOffer = (

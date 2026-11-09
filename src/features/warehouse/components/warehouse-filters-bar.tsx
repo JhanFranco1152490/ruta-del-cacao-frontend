@@ -11,6 +11,7 @@ import { Plus } from 'lucide-react';
 
 import type { Grade } from '../api';
 import { GRADE_LABELS } from '../exit-quantity';
+import { EXIT_REASON_LABELS } from '../exit-reasons';
 import { OFFLINE_WAREHOUSE_REASON } from '../warehouse-actions';
 import { STOCK_ORDER_OPTIONS } from '../stock-order-options';
 import type { StockOrdering } from '../use-warehouse-filters';
@@ -19,6 +20,7 @@ import type { WarehouseScreenState } from '../use-warehouse-screen';
 const VIEW_LABELS: Record<WarehouseView, string> = {
   existencias: 'Existencias',
   'por-ingresar': 'Por ingresar',
+  salidas: 'Salidas',
   bodegas: 'Bodegas',
 };
 
@@ -36,12 +38,23 @@ export function WarehouseFiltersBar({
   const { filters, view } = screen;
   const stock = filters.stockFilters;
   const onStock = view === 'existencias';
+  const onExits = view === 'salidas';
+  const exitInputs = filters.exitInputs;
   const activeCount = onStock
     ? [stock.farm, stock.warehouse, stock.grade, stock.location].filter(Boolean)
         .length
-    : stock.farm
-      ? 1
-      : 0;
+    : onExits
+      ? [
+          stock.farm,
+          stock.warehouse,
+          stock.grade,
+          exitInputs.reason,
+          exitInputs.state,
+          exitInputs.from || exitInputs.to,
+        ].filter(Boolean).length
+      : stock.farm
+        ? 1
+        : 0;
   return (
     <FilterRow
       activeCount={activeCount}
@@ -112,6 +125,7 @@ export function WarehouseFiltersBar({
         />
       )}
       {onStock && <StockFilters screen={screen} />}
+      {onExits && <ExitFilters screen={screen} />}
     </FilterRow>
   );
 }
@@ -178,6 +192,109 @@ function StockFilters({ screen }: { screen: WarehouseScreenState }) {
           </option>
         ))}
       </SelectField>
+    </>
+  );
+}
+
+const STATE_LABELS = { active: 'Vigentes', voided: 'Anuladas' } as const;
+
+// Solo en Salidas: bodega, calibre, motivo, estado y el periodo de la fecha de la salida, con los
+// días incluidos.
+function ExitFilters({ screen }: { screen: WarehouseScreenState }) {
+  const { filters } = screen;
+  const { reason, state, from, to } = filters.exitInputs;
+  return (
+    <>
+      <SelectField
+        hideLabel
+        label="Bodega"
+        onChange={(event) =>
+          void filters.setWarehouse(event.target.value || null)
+        }
+        value={filters.exitFilters.warehouse ?? ''}
+        wrapperClassName="w-full sm:w-52"
+      >
+        <option value="">Todas las bodegas</option>
+        {screen.warehouseOptions.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField
+        hideLabel
+        label="Calibre"
+        onChange={(event) =>
+          void filters.setGrade((event.target.value || null) as Grade | null)
+        }
+        value={filters.exitFilters.grade ?? ''}
+        wrapperClassName="w-full sm:w-36"
+      >
+        <option value="">Todos los calibres</option>
+        {(['g1', 'g2'] as const).map((grade) => (
+          <option key={grade} value={grade}>
+            {GRADE_LABELS[grade]}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField
+        hideLabel
+        label="Motivo"
+        onChange={(event) =>
+          void filters.setReason((event.target.value || null) as typeof reason)
+        }
+        value={reason ?? ''}
+        wrapperClassName="w-full sm:w-44"
+      >
+        <option value="">Todos los motivos</option>
+        {Object.entries(EXIT_REASON_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField
+        hideLabel
+        label="Estado"
+        onChange={(event) =>
+          void filters.setState((event.target.value || null) as typeof state)
+        }
+        value={state ?? ''}
+        wrapperClassName="w-full sm:w-40"
+      >
+        <option value="">Todos los estados</option>
+        {Object.entries(STATE_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </SelectField>
+      <div className="flex w-full items-start gap-2 sm:w-auto">
+        <TextField
+          className="h-10 text-sm"
+          error={filters.periodError ?? undefined}
+          hideLabel
+          label="Salidas desde"
+          onChange={(event) => void filters.setFrom(event.target.value)}
+          title="Salidas desde"
+          type="date"
+          value={from ?? ''}
+          wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+        />
+        <span aria-hidden="true" className="pt-2">
+          –
+        </span>
+        <TextField
+          className="h-10 text-sm"
+          hideLabel
+          label="Salidas hasta"
+          onChange={(event) => void filters.setTo(event.target.value)}
+          title="Salidas hasta"
+          type="date"
+          value={to ?? ''}
+          wrapperClassName="min-w-0 flex-1 sm:w-40 sm:flex-none"
+        />
+      </div>
     </>
   );
 }

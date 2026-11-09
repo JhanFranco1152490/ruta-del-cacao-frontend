@@ -1,6 +1,10 @@
 import { HttpResponse } from 'msw';
 
-import type { LotStock, StockExit } from '@/features/warehouse/api';
+import type {
+  LotStock,
+  StockExit,
+  StockExitRow,
+} from '@/features/warehouse/api';
 import type { components } from '@/lib/api/schema';
 
 type Schemas = components['schemas'];
@@ -500,6 +504,7 @@ export const buildLotStock = (overrides: Partial<LotStock> = {}): LotStock => ({
   entry: null,
   balances: [],
   exits: [],
+  moves: [],
   ...overrides,
 });
 
@@ -535,6 +540,43 @@ export const buildStockExit = (
   created_by: { id: 'u1', full_name: 'Cuenta de prueba' },
   voided: null,
   can_void: true,
+  ...overrides,
+});
+
+// Un cambio de lugar, de «Estante 3» a «Estante 9» dentro de la Bodega principal.
+export const buildStockMove = (
+  overrides: Partial<Schemas['StockMove']> = {},
+): Schemas['StockMove'] => ({
+  id: 'm1',
+  from_warehouse: { id: 'w1', name: 'Bodega principal' },
+  from_location: 'Estante 3',
+  to_warehouse: { id: 'w1', name: 'Bodega principal' },
+  to_location: 'Estante 9',
+  moved_at: '2026-11-02T08:30:00-05:00',
+  moved_by: { id: 'u1', full_name: 'Cuenta de prueba' },
+  ...overrides,
+});
+
+// Una fila de la pestaña Salidas: la muestra de 5,0 kg de G1 de `buildStockExit`, con su lote.
+export const buildStockExitRow = (
+  overrides: Partial<StockExitRow> = {},
+): StockExitRow => ({
+  ...buildStockExit(),
+  lot: { id: 'l1', code: '000123-F02-P05-261014-1' },
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+  warehouse: { id: 'w1', name: 'Bodega principal' },
+  ...overrides,
+});
+
+export const buildExitSummary = (
+  overrides: Partial<Schemas['ExitSummary']> = {},
+): Schemas['ExitSummary'] => ({
+  exits: 2,
+  quantity_kg: '25.0',
+  by_reason: [
+    { reason: 'shrinkage', exits: 1, quantity_kg: '20.0' },
+    { reason: 'sample', exits: 1, quantity_kg: '5.0' },
+  ],
   ...overrides,
 });
 

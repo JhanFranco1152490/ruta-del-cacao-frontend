@@ -12,6 +12,7 @@ import {
   buildSession,
   buildStockEntry,
   buildStockExit,
+  buildStockMove,
   buildWarehouse,
 } from '@/test/factories';
 import {
@@ -137,6 +138,33 @@ describe('WarehouseSection', () => {
       'Anulada por Ana Pérez el 1 nov: No salió',
     );
     expect(within(voided).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('lists the moves of the cacao, and offers to move it', async () => {
+    server.use(lotStockHandler({ ...STOCK, moves: [buildStockMove()] }));
+    renderSection('in_warehouse', buildLotWarehouseDetail());
+
+    const card = await section();
+    const moves = await within(card).findByRole('list', {
+      name: 'Movimientos del lote',
+    });
+    expect(moves).toHaveTextContent(
+      'Bodega principal · Estante 3 → Bodega principal · Estante 9',
+    );
+    expect(moves).toHaveTextContent('Movido por Cuenta de prueba el 2 nov');
+    expect(within(card).getByRole('button', { name: 'Mover' })).toBeEnabled();
+  });
+
+  it('opens the move right here', async () => {
+    renderSection('in_warehouse', buildLotWarehouseDetail());
+
+    await userEvent.click(
+      within(await section()).getByRole('button', { name: 'Mover' }),
+    );
+
+    expect(
+      await screen.findByRole('dialog', { name: /^Mover ·/ }),
+    ).toBeInTheDocument();
   });
 
   it('takes out, but does not correct the entry once cacao left', async () => {

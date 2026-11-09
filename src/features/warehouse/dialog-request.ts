@@ -23,7 +23,10 @@ export const EXIT_GONE_MESSAGE = 'Esa salida ya no se puede anular.';
 const allowedBy = (
   action: DialogRequest['action'],
   can: WarehousePermissions,
-) => (action === 'ingresar' || action === 'corregir' ? can.entry : can.exit);
+) =>
+  action === 'ingresar' || action === 'corregir' || action === 'mover'
+    ? can.entry
+    : can.exit;
 
 // Por qué la acción ya no aplica al lote leído, o `null` si aplica. Entre que se pidió y se leyó
 // el lote, otra persona pudo ingresarlo, sacar todo o anular la salida.
@@ -35,6 +38,11 @@ function stateIssue(stock: LotStock, request: DialogRequest): string | null {
     case 'corregir':
       if (status !== 'in_warehouse') return lotStatusMessage(status);
       return stock.entry?.can_correct ? null : ENTRY_MOVED_MESSAGE;
+    case 'mover':
+      if (status !== 'in_warehouse') return lotStatusMessage(status);
+      return exitableGrades(stock.balances).length > 0
+        ? null
+        : NO_STOCK_MESSAGE;
     case 'salida':
       if (status !== 'in_warehouse') return lotStatusMessage(status);
       return exitableGrades(stock.balances).length > 0

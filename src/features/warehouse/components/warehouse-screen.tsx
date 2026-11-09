@@ -11,6 +11,8 @@ import type { DialogRequest } from '../dialog-request';
 import { useRequestFromLink } from '../use-request-from-link';
 import { useWarehouseScreen } from '../use-warehouse-screen';
 import { OFFLINE_WAREHOUSE_REASON } from '../warehouse-actions';
+import { ExitBody } from './exit-body';
+import { ExitSummaryStrip } from './exit-summary';
 import { PendingEntryBody } from './pending-entry-body';
 import { StockBody } from './stock-body';
 import { WarehouseActionDialog } from './warehouse-action-dialog';
@@ -56,7 +58,11 @@ export function WarehouseScreen({
       )}
       {!screen.needsProducer && (
         <>
-          <WarehouseSummary summary={screen.summary.data?.data} />
+          {screen.view === 'salidas' ? (
+            <ExitSummaryStrip summary={screen.exitSummary.data?.data} />
+          ) : (
+            <WarehouseSummary summary={screen.summary.data?.data} />
+          )}
           <WarehouseFiltersBar
             onCreate={() => setCreating(true)}
             screen={screen}
@@ -78,6 +84,9 @@ export function WarehouseScreen({
           onAction={setRequest}
           screen={screen}
         />
+      )}
+      {screen.view === 'salidas' && (
+        <ExitBody lotHref={lotHref} screen={screen} />
       )}
       {screen.view === 'bodegas' && (
         <WarehousesBody

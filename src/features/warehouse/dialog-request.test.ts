@@ -44,6 +44,28 @@ describe('requestOutcome', () => {
     ).toEqual({ open: false, message: 'El lote ya está en bodega.' });
   });
 
+  it('moves the cacao of a lot in the warehouse, at any time and only with kilos', () => {
+    const request = { action: 'mover', lotId: 'l1' } as const;
+    expect(requestOutcome(IN_WAREHOUSE, request, ALL)).toEqual({ open: true });
+    expect(
+      requestOutcome(
+        { ...IN_WAREHOUSE, balances: [{ grade: 'g1', quantity_kg: '0.0' }] },
+        request,
+        ALL,
+      ),
+    ).toEqual({ open: false, message: NO_STOCK_MESSAGE });
+    expect(requestOutcome(CLASSIFIED, request, ALL)).toEqual({
+      open: false,
+      message: 'El lote ya está clasificado.',
+    });
+    expect(
+      requestOutcome(IN_WAREHOUSE, request, { ...ALL, entry: false }),
+    ).toEqual({
+      open: false,
+      message: NO_PERMISSION_MESSAGE,
+    });
+  });
+
   it('corrects the entry only while nothing left', () => {
     const request = { action: 'corregir', lotId: 'l1' } as const;
     expect(requestOutcome(IN_WAREHOUSE, request, ALL)).toEqual({ open: true });

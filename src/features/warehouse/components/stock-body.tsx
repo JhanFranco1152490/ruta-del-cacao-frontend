@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import type { DialogRequest } from '../dialog-request';
 import type { StockOrdering } from '../use-warehouse-filters';
 import type { WarehouseScreenState } from '../use-warehouse-screen';
-import { stockExitOffer } from '../warehouse-actions';
+import { stockExitOffer, stockMoveOffer } from '../warehouse-actions';
 import { StockTable } from './stock-table';
 import { WarehouseListGate } from './warehouse-list-gate';
 
@@ -27,6 +27,7 @@ export function StockBody({
 }) {
   const { filters } = screen;
   const exitOffer = stockExitOffer(!screen.offline, screen.can);
+  const moveOffer = stockMoveOffer(!screen.offline, screen.can);
   return (
     <WarehouseListGate
       errorMessage="No fue posible cargar las existencias."
@@ -45,6 +46,7 @@ export function StockBody({
             <StockTable
               exitOffer={exitOffer}
               lotHref={screen.can.viewLot ? lotHref : null}
+              moveOffer={moveOffer}
               onAction={onAction}
               onSort={(next) => void filters.setOrdering(next as StockOrdering)}
               ordering={screen.ordering}

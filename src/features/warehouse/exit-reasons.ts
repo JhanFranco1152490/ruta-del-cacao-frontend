@@ -6,7 +6,7 @@ export const EXIT_REASON_LABELS: Record<ExitReason, string> = {
   shrinkage: 'Merma',
   sample: 'Muestra',
   reprocessing: 'Reproceso',
-  transfer: 'Traslado',
+  transfer: 'Traslado fuera de la finca',
   other: 'Otro (con detalle)',
   sale: 'Venta',
 };

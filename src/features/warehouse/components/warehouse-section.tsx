@@ -1,6 +1,6 @@
 'use client';
 
-import { PackageMinus, PackagePlus, PencilLine } from 'lucide-react';
+import { MoveRight, PackageMinus, PackagePlus, PencilLine } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
@@ -40,6 +40,7 @@ export type WarehouseSectionLot = {
 const ICONS: Record<LotStockAction, LucideIcon> = {
   ingresar: PackagePlus,
   salida: PackageMinus,
+  mover: MoveRight,
   corregir: PencilLine,
 };
 
@@ -172,6 +173,19 @@ export function WarehouseSection({
               }
               voidOfferOf={(exit) => exitVoidOffer(exit, online, can)}
             />
+          </>
+        )}
+        {view.moves && view.moves.length > 0 && (
+          <>
+            <h3 className="font-bold text-selva">Movimientos</h3>
+            <ul aria-label="Movimientos del lote" className="space-y-2">
+              {view.moves.map((move) => (
+                <li key={move.id}>
+                  <p className="font-bold">{move.route}</p>
+                  <p className="text-sm text-muted-foreground">{move.detail}</p>
+                </li>
+              ))}
+            </ul>
           </>
         )}
         {actions}

@@ -1,7 +1,13 @@
 import { formatDayMonth, formatShortDayMonth } from '@/lib/format/dates';
 import { toTenths } from '@/lib/format/tenths';
 
-import type { Grade, LotStock, LotWarehouseDetail, StockExit } from './api';
+import type {
+  Grade,
+  LotStock,
+  LotWarehouseDetail,
+  StockExit,
+  StockMove,
+} from './api';
 import { NO_LOCATION_TEXT } from './entry-form';
 import { GRADE_LABELS, kilosText } from './exit-quantity';
 import { exitReasonText } from './exit-reasons';
@@ -25,6 +31,14 @@ export type ExitLine = {
   voided: string | null;
 };
 
+export type MoveLine = {
+  id: string;
+  // «Bodega principal · Estante 1 → Anexo · Zona B».
+  route: string;
+  // «2 de noviembre · Movido por Ana el 2 nov».
+  detail: string;
+};
+
 export type WarehouseSectionView = {
   entry: Fact[];
   balances: BalanceLine[];
@@ -32,7 +46,18 @@ export type WarehouseSectionView = {
   enteredBy: string | null;
   correctedBy: string | null;
   exits: ExitLine[] | null;
+  // Los cambios de lugar, el más reciente primero: solo con el detalle completo.
+  moves: MoveLine[] | null;
 };
+
+export const placeText = (warehouse: string, location: string) =>
+  [warehouse, location || NO_LOCATION_TEXT].join(' · ');
+
+const moveLine = (move: StockMove): MoveLine => ({
+  id: move.id,
+  route: `${placeText(move.from_warehouse.name, move.from_location)} → ${placeText(move.to_warehouse.name, move.to_location)}`,
+  detail: `Movido por ${move.moved_by.full_name} el ${formatShortDayMonth(move.moved_at)}`,
+});
 
 const GRADES = ['g1', 'g2'] as const;
 
@@ -97,5 +122,6 @@ export function warehouseSectionView(
         ? `Corregido por ${entry.corrected_by.full_name} el ${formatShortDayMonth(entry.corrected_at)}`
         : null,
     exits: full ? full.exits.map(exitLine) : null,
+    moves: full ? full.moves.map(moveLine) : null,
   };
 }

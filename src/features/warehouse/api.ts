@@ -34,6 +34,17 @@ export type LotStock = Omit<Schemas['LotStock'], 'exits'> & {
   exits: StockExit[];
 };
 
+export type StockMove = Schemas['StockMove'];
+export type StockExitRow = Omit<Schemas['StockExitRow'], 'voided'> & {
+  voided: StockExitVoid | null;
+};
+export type StockExitPage = Omit<
+  Schemas['PaginatedStockExitRowList'],
+  'results'
+> & { results: StockExitRow[] };
+export type ExitSummary = Schemas['ExitSummary'];
+export type MoveInput = Schemas['MoveCreateRequest'];
+
 export type EntryInput = Schemas['EntryCreateRequest'];
 export type EntryCorrection = Schemas['PatchedEntryUpdateRequest'];
 export type ExitInput = Schemas['ExitCreateRequest'];
@@ -53,5 +64,7 @@ export const WAREHOUSE_ERROR = {
   stockInsufficient: 'stock_insufficient',
   exitAlreadyVoided: 'exit_already_voided',
   exitNotVoidable: 'exit_not_voidable',
+  withoutStock: 'lot_without_stock',
+  moveUnchanged: 'stock_move_unchanged',
   staleVersion: 'stale_version',
 } as const;

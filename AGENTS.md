@@ -428,7 +428,10 @@ src/
   lista de trabajo de quien ingresa y saca el cacao seco clasificado: tres pestañas en la URL
   (`?vista=`, en el orden del proceso: **Por ingresar**, los lotes Clasificado, que solo ve quien tiene
   `register_entry`; **Existencias**, una fila por lote y calibre con kilos, que es la que abre por
-  defecto; **Bodegas**, las de cada finca, con su «Nueva bodega» en la fila de filtros), filtros de
+  defecto; **Salidas**, todas las salidas de cacao con su motivo (las anuladas, tachadas), con la franja
+  de kilos que salieron por motivo, filtros de bodega, calibre, motivo, estado y periodo
+  (`?motivo=&estado=&desde=&hasta=`) y solo consulta; **Bodegas**, las de cada finca, con su «Nueva
+  bodega» en la fila de filtros), filtros de
   finca, bodega, calibre, ubicación y código, y el orden de la tabla (`use-warehouse-filters.ts`). La
   ubicación al ingresar es opcional: sin ella se lee «Sin ubicación». Las
   cifras de G1 y G2 (`GET /api/stock/summary`) siguen los filtros de las existencias. **Se registra
@@ -445,6 +448,11 @@ src/
     `lot_invalid_status` y los que dicen que la acción ya no aplica cierran el diálogo, avisan y
     refrescan; `stock_insufficient` pone lo disponible del servidor en la cantidad;
     `warehouse_has_records` ofrece desactivar) y lo que muestra la ficha (`warehouse-section-view.ts`).
+  - **Mover el cacao** (`move-form.ts`, `MoveDialog`, `POST /api/stock/{id}/move`): cambiar la bodega
+    o la ubicación de un lote En bodega **en cualquier momento** (a diferencia de corregir el ingreso,
+    que es solo para enmendar un error con el lote intacto). Está en el «⋯» de cada fila de Existencias
+    y en la sección de la ficha, que lista los **Movimientos** (de dónde venía, a dónde fue, quién y
+    cuándo). «Traslado» como motivo de salida es solo el cacao que sale de la finca.
   - **Los formularios los abre `WarehouseActionDialog`**, desde una fila, una tarjeta, la ficha o
     `?lote=&accion=` (`ingresar`, `salida`, que llegan desde Lotes): lee el lote
     (`GET /api/stock/{id}`) y abre el diálogo si la acción todavía aplica (`dialog-request.ts`), o

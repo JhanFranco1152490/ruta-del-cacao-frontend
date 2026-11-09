@@ -5,7 +5,8 @@ import { VALIDATION_ERROR_CODE } from '@/lib/offline/adapters';
 import { WAREHOUSE_ERROR } from './api';
 import { exceedsAvailableMessage } from './exit-quantity';
 
-export type WarehouseForm = 'warehouse' | 'entry' | 'exit' | 'void' | 'delete';
+export type WarehouseForm =
+  'warehouse' | 'entry' | 'move' | 'exit' | 'void' | 'delete';
 
 // El rechazo de una escritura de bodega:
 // - `field`: un dato que va en su campo (con lo disponible, si la cantidad lo superó);
@@ -24,6 +25,7 @@ export type WarehouseFailure =
 const FIELDS: Record<WarehouseForm, readonly string[]> = {
   warehouse: ['farm_id', 'name'],
   entry: ['entry_date', 'warehouse_id', 'location'],
+  move: ['warehouse_id', 'location'],
   exit: ['grade', 'quantity_kg', 'exit_date', 'reason', 'detail'],
   void: ['reason'],
   delete: [],
@@ -42,6 +44,7 @@ export function lotStatusMessage(currentStatus: unknown) {
 const NO_LONGER_APPLIES: readonly string[] = [
   WAREHOUSE_ERROR.nothingToStore,
   WAREHOUSE_ERROR.entryHasMovements,
+  WAREHOUSE_ERROR.withoutStock,
   WAREHOUSE_ERROR.exitAlreadyVoided,
   WAREHOUSE_ERROR.exitNotVoidable,
 ];
@@ -51,6 +54,7 @@ const WAREHOUSE_FIELD: readonly string[] = [
   WAREHOUSE_ERROR.nameTaken,
   WAREHOUSE_ERROR.inactive,
   WAREHOUSE_ERROR.farmMismatch,
+  WAREHOUSE_ERROR.moveUnchanged,
 ];
 
 function insufficientFailure(available: unknown): WarehouseFailure {

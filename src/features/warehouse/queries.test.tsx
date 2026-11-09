@@ -4,15 +4,19 @@ import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import type { StockFilters } from '@/lib/api/query-keys';
+import type { ExitFilters, StockFilters } from '@/lib/api/query-keys';
 import {
+  buildExitSummary,
   buildLotStock,
+  buildStockExitRow,
   buildPendingEntry,
   buildStockRow,
   buildWarehouse,
 } from '@/test/factories';
 import {
   apiUrl,
+  exitListHandler,
+  exitSummaryHandler,
   lotStockHandler,
   pendingEntryHandler,
   stockListHandler,
@@ -24,7 +28,10 @@ import { createTestQueryClient } from '@/test/render';
 import { server } from '@/test/server';
 
 import {
+  type ExitSummaryFilters,
   type StockSummaryFilters,
+  useExits,
+  useExitSummary,
   useLotStock,
   usePendingEntry,
   useStock,
@@ -120,6 +127,102 @@ describe('useStockSummary', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(requests[0].toString()).toBe('farm=f1');
     expect(result.current.data?.data.g1_kg).toBe('250.0');
+  });
+});
+
+const NO_EXIT_FILTERS: ExitFilters = {
+  producer: null,
+  farm: null,
+  warehouse: null,
+  grade: null,
+  reason: null,
+  state: null,
+  from: null,
+  to: null,
+  search: '',
+  page: 1,
+};
+
+describe('useExits', () => {
+  it('asks for the exits with its filters, leaving out what is empty', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(exitListHandler([buildStockExitRow()], requests));
+
+    const { result } = render(() =>
+      useExits(
+        newUser(),
+        {
+          ...NO_EXIT_FILTERS,
+          reason: 'sample',
+          state: 'active',
+          from: '2026-10-01',
+          to: '2026-10-31',
+          search: ' L-2 ',
+          page: 2,
+        },
+        true,
+      ),
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(requests[0].toString()).toBe(
+      'reason=sample&date_from=2026-10-01&date_to=2026-10-31&search=L-2&state=active&page=2',
+    );
+  });
+
+  it('does not ask while the tab is not the one shown', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(exitListHandler([], requests));
+
+    render(() => useExits(newUser(), NO_EXIT_FILTERS, false));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(requests).toEqual([]);
+  });
+
+  it('shows the copy of the first page without a network', async () => {
+    const user = newUser();
+    server.use(exitListHandler([buildStockExitRow()]));
+    const first = render(() => useExits(user, NO_EXIT_FILTERS, true));
+    await waitFor(() => expect(first.result.current.isSuccess).toBe(true));
+
+    server.use(
+      http.get(apiUrl('/api/stock/exits'), () => HttpResponse.error()),
+    );
+    const second = render(() => useExits(user, NO_EXIT_FILTERS, true));
+
+    await waitFor(() => expect(second.result.current.isSuccess).toBe(true));
+    expect(second.result.current.data?.savedAt).toBeDefined();
+  });
+});
+
+describe('useExitSummary', () => {
+  const NO_SUMMARY: ExitSummaryFilters = {
+    producer: null,
+    farm: null,
+    warehouse: null,
+    grade: null,
+    reason: null,
+    from: null,
+    to: null,
+    search: '',
+  };
+
+  it('asks for the totals with the same filters, without state or page', async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(exitSummaryHandler(buildExitSummary(), requests));
+
+    const { result } = render(() =>
+      useExitSummary(
+        newUser(),
+        { ...NO_SUMMARY, farm: 'f1', grade: 'g1' },
+        true,
+      ),
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(requests[0].toString()).toBe('farm=f1&grade=g1');
+    expect(result.current.data?.data.quantity_kg).toBe('25.0');
   });
 });
 

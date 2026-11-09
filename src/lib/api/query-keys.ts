@@ -27,6 +27,21 @@ export type StockFilters = {
   page: number;
 };
 
+// Los filtros de la pestaña Salidas. `from` y `to` son el periodo de la fecha de la salida; `state`
+// es `active` (vigentes), `voided` (anuladas) o `null` (las dos).
+export type ExitFilters = {
+  producer: string | null;
+  farm: string | null;
+  warehouse: string | null;
+  grade: 'g1' | 'g2' | null;
+  reason: string | null;
+  state: 'active' | 'voided' | null;
+  from: string | null;
+  to: string | null;
+  search: string;
+  page: number;
+};
+
 export type PendingEntryFilters = {
   producer: string | null;
   farm: string | null;
@@ -225,6 +240,11 @@ export const queryKeys = {
     // Los totales de la franja, con los filtros de las existencias menos el orden y la página.
     summary: (filters: Omit<StockFilters, 'ordering' | 'page'>) =>
       ['warehouse', 'summary', filters] as const,
+    // Una página de salidas con sus filtros; la primera tiene copia en el dispositivo.
+    exits: (filters: ExitFilters) => ['warehouse', 'exits', filters] as const,
+    // Lo que salió por motivo, con los filtros de las salidas menos el estado y la página.
+    exitSummary: (filters: Omit<ExitFilters, 'state' | 'page'>) =>
+      ['warehouse', 'exit-summary', filters] as const,
     pending: (filters: PendingEntryFilters) =>
       ['warehouse', 'pending', filters] as const,
     warehouses: (filters: WarehouseFilters) =>

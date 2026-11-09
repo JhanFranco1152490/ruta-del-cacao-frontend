@@ -8,6 +8,8 @@ import { resolveFarmFilter } from '@/lib/farm-filter';
 import { farmLabel } from '@/lib/format/place-label';
 
 import {
+  useExits,
+  useExitSummary,
   usePendingEntry,
   useStock,
   useStockSummary,
@@ -41,6 +43,12 @@ export function useWarehouseScreen() {
     filters.stockFilters,
   );
   const summary = useStockSummary(userId, filters.summaryFilters);
+  const exits = useExits(userId, filters.exitFilters, view === 'salidas');
+  const exitSummary = useExitSummary(
+    userId,
+    filters.exitSummaryFilters,
+    view === 'salidas',
+  );
   const pending = usePendingEntry(
     userId,
     filters.pendingFilters,
@@ -77,6 +85,7 @@ export function useWarehouseScreen() {
   const list = {
     existencias: stock,
     'por-ingresar': pending,
+    salidas: exits,
     bodegas: warehouses,
   }[view];
   const savedAt = list.data?.savedAt;
@@ -92,6 +101,8 @@ export function useWarehouseScreen() {
     stock,
     summary,
     pending,
+    exits,
+    exitSummary,
     warehouses,
     offline: !hasConnection || savedAt !== undefined,
     // Hay algo que mostrar en la pestaña: el aviso de la copia solo va sobre una lista.

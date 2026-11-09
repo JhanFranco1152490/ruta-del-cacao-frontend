@@ -145,7 +145,7 @@ describe('ExitDialog', () => {
       'Merma',
       'Muestra',
       'Reproceso',
-      'Traslado',
+      'Traslado fuera de la finca',
       'Otro (con detalle)',
     ]);
   });

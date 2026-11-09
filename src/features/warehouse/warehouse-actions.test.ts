@@ -8,6 +8,7 @@ import {
   lotStockActions,
   OFFLINE_WAREHOUSE_REASON,
   pendingEntryOffer,
+  stockMoveOffer,
   resolveWarehouseView,
   stockExitOffer,
   type WarehousePermissions,
@@ -58,9 +59,14 @@ describe('warehouseViews', () => {
     expect(warehouseViews(ALL)).toEqual([
       'por-ingresar',
       'existencias',
+      'salidas',
       'bodegas',
     ]);
-    expect(warehouseViews(VIEW_ONLY)).toEqual(['existencias', 'bodegas']);
+    expect(warehouseViews(VIEW_ONLY)).toEqual([
+      'existencias',
+      'salidas',
+      'bodegas',
+    ]);
   });
 
   it('falls back to the stock when the address asks for a tab not shown', () => {
@@ -91,19 +97,29 @@ describe('lotStockActions', () => {
     expect(offered('classified', { can: VIEW_ONLY })).toEqual([]);
   });
 
-  it('takes out and corrects a lot in the warehouse', () => {
+  it('takes out, moves and corrects a lot in the warehouse', () => {
     expect(labels(offered('in_warehouse'))).toEqual([
       'Registrar salida',
+      'Mover',
       'Corregir ingreso',
     ]);
   });
 
-  it('does not correct once cacao left, nor take out of an empty lot', () => {
+  it('does not correct once cacao left, nor take out or move an empty lot', () => {
     expect(labels(offered('in_warehouse', { canCorrect: false }))).toEqual([
       'Registrar salida',
+      'Mover',
     ]);
     expect(labels(offered('in_warehouse', { hasStock: false }))).toEqual([
       'Corregir ingreso',
+    ]);
+  });
+
+  it('moves only with the permission to enter', () => {
+    const exitOnly = { ...ALL, entry: false };
+
+    expect(labels(offered('in_warehouse', { can: exitOnly }))).toEqual([
+      'Registrar salida',
     ]);
   });
 
@@ -118,7 +134,11 @@ describe('lotStockActions', () => {
       offered('in_warehouse', { online: false }).map(
         ({ disabledReason }) => disabledReason,
       ),
-    ).toEqual([OFFLINE_WAREHOUSE_REASON, OFFLINE_WAREHOUSE_REASON]);
+    ).toEqual([
+      OFFLINE_WAREHOUSE_REASON,
+      OFFLINE_WAREHOUSE_REASON,
+      OFFLINE_WAREHOUSE_REASON,
+    ]);
   });
 });
 
@@ -126,6 +146,16 @@ describe('pendingEntryOffer', () => {
   it('offers the entry of a classified lot only with the permission', () => {
     expect(pendingEntryOffer(true, ALL)?.label).toBe('Ingresar a bodega');
     expect(pendingEntryOffer(true, VIEW_ONLY)).toBeNull();
+  });
+});
+
+describe('stockMoveOffer', () => {
+  it('offers moving a stock row only with the permission to enter', () => {
+    expect(stockMoveOffer(true, ALL)?.label).toBe('Mover');
+    expect(stockMoveOffer(true, { ...ALL, entry: false })).toBeNull();
+    expect(stockMoveOffer(false, ALL)?.disabledReason).toBe(
+      OFFLINE_WAREHOUSE_REASON,
+    );
   });
 });
 

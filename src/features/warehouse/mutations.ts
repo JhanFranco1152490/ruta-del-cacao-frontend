@@ -9,6 +9,7 @@ import type {
   ExitInput,
   ExitVoidInput,
   LotStock,
+  MoveInput,
   Warehouse,
   WarehouseInput,
   WarehouseUpdate,
@@ -87,4 +88,9 @@ export const useVoidExit = (lotId: string) =>
       stockPath(lotId, `/exits/${encodeURIComponent(exitId)}/void`),
       { method: 'POST', body },
     ),
+  );
+
+export const useMoveStock = (lotId: string) =>
+  useWarehouseWrite((body: MoveInput) =>
+    apiFetch<LotStock>(stockPath(lotId, '/move'), { method: 'POST', body }),
   );

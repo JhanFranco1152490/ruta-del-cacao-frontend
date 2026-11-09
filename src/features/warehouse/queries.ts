@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { apiPath } from '@/lib/api/path';
 import {
+  type ExitFilters,
   type PendingEntryFilters,
   queryKeys,
   type StockFilters,
@@ -11,7 +12,9 @@ import {
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
 
 import type {
+  ExitSummary,
   LotStock,
+  StockExitPage,
   PendingEntryPage,
   StockPage,
   StockSummary,
@@ -27,6 +30,24 @@ const stockQuery = (filters: StockSummaryFilters) => ({
   grade: filters.grade,
   location: filters.location.trim(),
   search: filters.search.trim(),
+});
+
+export type ExitSummaryFilters = Omit<ExitFilters, 'state' | 'page'>;
+
+const exitSummaryQuery = (filters: ExitSummaryFilters) => ({
+  producer: filters.producer,
+  farm: filters.farm,
+  warehouse: filters.warehouse,
+  grade: filters.grade,
+  reason: filters.reason,
+  date_from: filters.from,
+  date_to: filters.to,
+  search: filters.search.trim(),
+});
+
+const exitQuery = (filters: Omit<ExitFilters, 'page'>) => ({
+  ...exitSummaryQuery(filters),
+  state: filters.state,
 });
 
 const pendingQuery = (filters: Omit<PendingEntryFilters, 'page'>) => ({
@@ -50,6 +71,12 @@ export const stockCacheKey = (filters: Omit<StockFilters, 'page'>) =>
 
 export const stockSummaryCacheKey = (filters: StockSummaryFilters) =>
   `warehouse:summary:${apiPath('', stockQuery(filters))}`;
+
+export const exitsCacheKey = (filters: Omit<ExitFilters, 'page'>) =>
+  `warehouse:exits:${apiPath('', exitQuery(filters))}`;
+
+export const exitSummaryCacheKey = (filters: ExitSummaryFilters) =>
+  `warehouse:exit-summary:${apiPath('', exitSummaryQuery(filters))}`;
 
 export const pendingEntryCacheKey = (
   filters: Omit<PendingEntryFilters, 'page'>,
@@ -106,6 +133,49 @@ export const useStockSummary = (
         ),
       ),
     enabled: !!userId,
+    networkMode: 'offlineFirst',
+    placeholderData: keepPreviousData,
+  });
+
+// Las salidas de cacao de todos los lotes, la más reciente primero, con las anuladas.
+export const useExits = (
+  userId: string | undefined,
+  filters: ExitFilters,
+  enabled: boolean,
+) =>
+  useQuery({
+    queryKey: queryKeys.warehouse.exits(filters),
+    queryFn: ({ signal }) =>
+      firstPageWithCopy(userId!, exitsCacheKey(filters), filters.page, () =>
+        apiFetch<StockExitPage>(
+          apiPath('/api/stock/exits', {
+            ...exitQuery(filters),
+            page: pageOf(filters.page),
+          }),
+          { signal },
+        ),
+      ),
+    enabled: enabled && !!userId,
+    networkMode: 'offlineFirst',
+    placeholderData: keepPreviousData,
+  });
+
+// Lo que salió con esos filtros, en total y por motivo, sin contar lo anulado.
+export const useExitSummary = (
+  userId: string | undefined,
+  filters: ExitSummaryFilters,
+  enabled: boolean,
+) =>
+  useQuery({
+    queryKey: queryKeys.warehouse.exitSummary(filters),
+    queryFn: ({ signal }) =>
+      readThroughCache(userId!, exitSummaryCacheKey(filters), () =>
+        apiFetch<ExitSummary>(
+          apiPath('/api/stock/exits/summary', exitSummaryQuery(filters)),
+          { signal },
+        ),
+      ),
+    enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
     placeholderData: keepPreviousData,
   });
