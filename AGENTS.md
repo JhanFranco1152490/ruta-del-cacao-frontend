@@ -98,7 +98,7 @@ src/
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
                        health, notifications, harvests, lots, fermentation, drying, quality,
-                       facilities, postharvest-parameters, buyers, users y
+                       facilities, postharvest-parameters, buyers, sales, users y
                        roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
@@ -187,7 +187,14 @@ src/
   calidad, bodega y lotes en `lib/paths/`, como las de actividades, insumos y productores (cada dominio las reexporta
   desde su `*-paths.ts`, así que dentro del dominio se siguen importando de ahí). El dominio dueño
   los usa desde ahí. Desde bodega: los kilos sumados y comparados en décimas enteras
-  (`lib/format/tenths.ts`), que usan también Calidad.
+  (`lib/format/tenths.ts`), que usan también Calidad. Desde ventas: la cantidad que sale de bodega
+  contra lo disponible, con su mensaje, los calibres y los kilos con un decimal
+  (`lib/stock-quantity.ts`, que usan Bodega y Ventas); los tipos de cliente (`lib/buyer-types.ts`, de
+  Compradores y Ventas); los pesos enteros con punto de miles (`lib/format/pesos.ts`,
+  `formatPesos`, que usarán los reportes); el tope de 5 MB de un archivo
+  (`lib/files/upload-limits.ts`, de las fotos de evidencia y del soporte de una venta); y las rutas
+  de Compradores en `lib/paths/buyers.ts`. `parseAsMonth` (`hooks/use-month-param.ts`) sirve a una
+  lista que guarda el mes con otros filtros en un solo `useQueryStates`, como Ventas.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
   en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
@@ -497,9 +504,8 @@ src/
 
 - **Compradores (`features/buyers/`).** `/compradores` (precargada, solo con `buyers.view_buyer`) es el
   directorio de compradores de **todo el productor**, no de una finca, en el grupo nuevo
-  **Comercialización** del menú (`group: 'sales'`), donde se sumarán las ventas. Es un catálogo
-  (`PageHeader` `claro`, acento cobre) con su ilustración, `BuyerScale` (una báscula con un costal y
-  un recibo), que también usarán las ventas.
+  **Comercialización** del menú (`group: 'sales'`), con Ventas. Es un catálogo (`PageHeader`
+  `claro`, acento cobre) con su ilustración, `BuyerScale` (una báscula con un costal y un recibo).
   - **Lectura completa con copia** (`queries.ts`, `useBuyers`): `GET /api/buyers` trae activos e
     inactivos sin paginar, y se guarda en `cache` (`buyers`, o `buyers:producer:{id}` para la cuenta
     técnica con un productor elegido; sin elegirlo ve los de todos con la columna **Productor**). La
@@ -519,7 +525,7 @@ src/
     ventas registradas.» si `has_records`), el documento y el nombre repetidos contra la copia
     (`buyer-duplicates.ts`; el nombre se compara con `normalizeBuyerName`, que además de
     `normalizeCatalogName` quita los puntos: «S.A.S.» y «SAS» son el mismo) y los errores
-    (`buyer-errors.ts`). Los tipos de cliente y sus etiquetas viven en `buyer-types.ts`.
+    (`buyer-errors.ts`). Los tipos de cliente y sus etiquetas viven en `lib/buyer-types.ts`.
   - **El formulario** (`buyer-form-dialog.tsx` y su envío en `use-buyer-submit.ts`): el documento
     repetido se avisa antes de enviar si está en la copia y, si no, con el `409
     duplicate_document`, con `DuplicateNotice` (**Ver el comprador**, que quita los filtros que lo
@@ -536,6 +542,45 @@ src/
     servidor de compradores no tiene, así que enmascarar sería un cambio de los dos repos.
   - **Los botones de una fila** son de icono con `aria-label` (con texto, la tabla no cabe a 1280 px
     con dos acciones); cada medio de contacto va en su línea por la misma razón.
+
+- **Ventas (`features/sales/`).** `/ventas` (precargada, con `sales.view_sale`) son las ventas de
+  cacao seco de las fincas que alcanza la cuenta, en **Comercialización** después de Compradores
+  (icono `Receipt`). Lista de trabajo diario (`PageHeader` `selva`, acento cobre) con su ilustración,
+  `SaleReceipt` (un recibo largo con un costal abierto al pie). Una venta es de **una finca**, a un
+  comprador activo, con 1 a 20 líneas de lote y calibre, y no se edita ni se borra: se anula.
+  - **Lista por mes con copia** (`queries.ts`, `use-sales-screen.ts`): `GET /api/sales` es paginado y
+    se guarda la primera página de cada consulta (`sales:list:{consulta}`, con el productor dentro);
+    las cifras de la franja salen de `GET /api/sales/summary` (solo registradas), también con copia.
+    El mes y los filtros van en un solo `useQueryStates` (`use-sale-filters.ts`: `?mes=`, `?finca=`,
+    `?comprador=`, `?estado=` con `registered` por defecto, `?buscar=`, `?productor=`, `?pagina=`):
+    cambiar de mes o de filtro vuelve a la página 1 en una sola escritura. Toda la fila abre la ficha
+    (el número es un enlace estirado).
+  - **Registrar es una página** (`/ventas/registrar`, solo en línea, `sale-form.tsx` con
+    `FormProvider`): encabezado (`sale-header-fields.tsx`: productor para la cuenta técnica, finca
+    activa, comprador de `GET /api/sales/buyer-options`, fecha y observaciones), líneas con
+    `useFieldArray` (`sale-lines-section.tsx`) sobre **todas** las existencias de la finca
+    (`useFarmStock`: `page_size=100` y todas las páginas), el total en vivo (`sale-totals.tsx`) y el
+    soporte opcional. Las existencias llegan al esquema (`sale-schema.ts`) por el `context` de
+    `useForm`, con un getter que lee las del render: dependen de la finca, que sale del mismo
+    formulario. Cambiar de finca con líneas escritas pregunta antes.
+  - **Montos sin flotantes** (`sale-amounts.ts`): kilos en décimas por precio entero, redondeado al
+    peso con la mitad hacia arriba, igual que el servidor. El precio acepta «18.500» como 18500
+    (`sale-price.ts`); una coma o un punto que no va cada tres cifras son decimales y se rechazan.
+  - **El envío** (`use-sale-submit.ts`): primero la venta y, si hay archivo, su soporte
+    (`registerSale`); si el soporte falla, la venta queda y el aviso es de advertencia con **Ver
+    venta**. Los rechazos del servidor van a su línea por `line` (`sale-errors.ts`); registrar, anular
+    y el soporte invalidan Ventas, Bodega y Lotes también al fallar, así lo disponible se vuelve a leer.
+  - **La ficha** (`/ventas/detalle?id=`, con copia en `sales:detail:{id}`): `DetailHero` `bosque` con
+    el estado, cifras, líneas, datos (sin el documento del comprador: la venta no lo trae), el soporte
+    (`sale-invoice-section.tsx`: **Ver**, **Reemplazar**, **Quitar** o **Adjuntar soporte**) y
+    **Anular venta** en el pie (`void-sale-dialog.tsx`, `FormDialog` `destructive` con el motivo).
+    Sin conexión o con la copia, sin enlaces al lote ni al comprador y las acciones deshabilitadas.
+  - **El soporte** se revisa en el dispositivo (`invoice-file.ts`: PDF, JPG o PNG hasta 5 MB) y no se
+    reduce. **Ver** (`open-invoice.ts`) abre la pestaña al tocar, descarga con `apiFetchBlob` y la
+    llena con un `blob:` (la sesión va en una cookie hacia la API: un enlace directo no serviría).
+    `putInvoice` vive en `invoice-api.ts` para que las pruebas de pantalla lo reemplacen: en jsdom
+    `fetch` no envía un `FormData`, y la subida de verdad se prueba en `mutations-files.test.ts`
+    (entorno `node`).
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
