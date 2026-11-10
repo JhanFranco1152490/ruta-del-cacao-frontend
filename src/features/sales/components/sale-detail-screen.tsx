@@ -14,6 +14,7 @@ import { SectionCard } from '@/components/page-blocks/section-card';
 import { StatCell, StatStrip } from '@/components/page-blocks/stat-strip';
 import { PageNotice } from '@/components/page-notice';
 import { useHasConnection } from '@/hooks/use-has-connection';
+import { usePrintDocument } from '@/hooks/use-print-document';
 import { useSession } from '@/hooks/use-session';
 import { isNotFound } from '@/lib/api/errors';
 import { formatLongDate } from '@/lib/format/dates';
@@ -30,6 +31,8 @@ import { SALES_PATH } from '../sale-paths';
 import { SaleFacts } from './sale-facts';
 import { SaleInvoiceSection } from './sale-invoice-section';
 import { SaleLinesTable } from './sale-lines-table';
+import { SalePrintAction } from './sale-print-action';
+import { SaleReceiptDocument } from './sale-receipt-document';
 import { SaleStatusBadge } from './sale-status-badge';
 import { SaleVoidAction } from './sale-void-action';
 
@@ -45,6 +48,7 @@ export function SaleDetailScreen() {
   const online = useHasConnection();
   const can = salePermissionsOf(user);
   const read = useSale(user?.id, id);
+  const printer = usePrintDocument();
   // Volver lleva a la pantalla desde la que se abrió, con sus filtros, o a la lista.
   const backHref = readOrigin(params) ?? SALES_PATH;
 
@@ -76,64 +80,69 @@ export function SaleDetailScreen() {
   );
 
   return (
-    <div className={pageContainerClass('wide', 'space-y-4')}>
-      <Breadcrumb
-        items={[{ label: 'Ventas', href: backHref }, { label: sale.code }]}
-      />
-      <DetailHero
-        accent="cobre"
-        chips={<SaleStatusBadge status={sale.status} />}
-        description={`${formatLongDate(sale.sale_date)} · ${sale.buyer.name}`}
-        eyebrow="Venta"
-        title={`Venta ${sale.code}`}
-        tone="bosque"
-      />
-      {fromCopy && (
-        <OfflineCopyNotice
-          consequence={OFFLINE_SALES_REASON}
-          savedAt={savedAt}
+    <>
+      {/* Al imprimir solo sale el comprobante: la ficha de pantalla se oculta. */}
+      <div className={pageContainerClass('wide', 'space-y-4 print:hidden')}>
+        <Breadcrumb
+          items={[{ label: 'Ventas', href: backHref }, { label: sale.code }]}
         />
-      )}
-      <StatStrip accent="cobre" label="Cifras de la venta">
-        <StatCell
-          icon={Receipt}
-          label="Valor total"
-          value={formatPesos(sale.total)}
+        <DetailHero
+          accent="cobre"
+          chips={<SaleStatusBadge status={sale.status} />}
+          description={`${formatLongDate(sale.sale_date)} · ${sale.buyer.name}`}
+          eyebrow="Venta"
+          title={`Venta ${sale.code}`}
+          tone="bosque"
         />
-        <StatCell
-          icon={Package}
-          label="Kg de G1"
-          value={kilosText(sale.g1_kg)}
-        />
-        <StatCell
-          icon={Package}
-          label="Kg de G2"
-          value={kilosText(sale.g2_kg)}
-        />
-        <StatCell
-          icon={Layers}
-          label="Lotes"
-          note={lineCountText(sale.lines.length)}
-          value={String(new Set(sale.lines.map(({ lot }) => lot.id)).size)}
-        />
-      </StatStrip>
-      <SectionCard accent="cobre" count={sale.lines.length} title="Líneas">
-        <SaleLinesTable
-          lines={sale.lines}
-          lotHref={can.viewLot && !fromCopy ? lotDetailPath : null}
-          total={sale.total}
-        />
-      </SectionCard>
-      <SectionCard accent="cobre" title="Datos">
-        <SaleFacts
-          buyerHref={can.viewBuyer && !fromCopy ? buyerPath : null}
-          sale={sale}
-        />
-      </SectionCard>
-      <SaleInvoiceSection can={can} online={!fromCopy} sale={sale} />
-      <DetailFooter backHref={backHref}>
-        {voidOffer && <SaleVoidAction offer={voidOffer} sale={sale} />}
-      </DetailFooter>
-    </div>
+        {fromCopy && (
+          <OfflineCopyNotice
+            consequence={OFFLINE_SALES_REASON}
+            savedAt={savedAt}
+          />
+        )}
+        <StatStrip accent="cobre" label="Cifras de la venta">
+          <StatCell
+            icon={Receipt}
+            label="Valor total"
+            value={formatPesos(sale.total)}
+          />
+          <StatCell
+            icon={Package}
+            label="Kg de G1"
+            value={kilosText(sale.g1_kg)}
+          />
+          <StatCell
+            icon={Package}
+            label="Kg de G2"
+            value={kilosText(sale.g2_kg)}
+          />
+          <StatCell
+            icon={Layers}
+            label="Lotes"
+            note={lineCountText(sale.lines.length)}
+            value={String(new Set(sale.lines.map(({ lot }) => lot.id)).size)}
+          />
+        </StatStrip>
+        <SectionCard accent="cobre" count={sale.lines.length} title="Líneas">
+          <SaleLinesTable
+            lines={sale.lines}
+            lotHref={can.viewLot && !fromCopy ? lotDetailPath : null}
+            total={sale.total}
+          />
+        </SectionCard>
+        <SectionCard accent="cobre" title="Datos">
+          <SaleFacts
+            buyerHref={can.viewBuyer && !fromCopy ? buyerPath : null}
+            sale={sale}
+          />
+        </SectionCard>
+        <SaleInvoiceSection can={can} online={!fromCopy} sale={sale} />
+        <DetailFooter backHref={backHref}>
+          <SalePrintAction onPrint={printer.print} />
+          {voidOffer && <SaleVoidAction offer={voidOffer} sale={sale} />}
+        </DetailFooter>
+      </div>
+      {printer.printing && <SaleReceiptDocument sale={sale} />}
+    </>
   );
 }

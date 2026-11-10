@@ -13,7 +13,7 @@ export function ToastViewport({
   return (
     <ToastPrimitive.Viewport
       className={cn(
-        'fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[100] flex flex-col gap-2 outline-none sm:inset-x-auto sm:right-4 sm:w-96',
+        'fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[100] flex flex-col gap-2 outline-none sm:inset-x-auto sm:right-4 sm:w-96 print:hidden',
         className,
       )}
       data-slot="toast-viewport"

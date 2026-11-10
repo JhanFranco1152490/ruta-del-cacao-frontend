@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -183,5 +183,103 @@ describe('SaleDetailScreen', () => {
         name: 'Necesitas conexión para ver esta venta.',
       }),
     ).toBeInTheDocument();
+  });
+
+  describe('the receipt', () => {
+    const print = () =>
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Imprimir comprobante' }),
+      );
+    const receipt = () =>
+      screen.getByRole('article', { name: 'Comprobante de la venta V-0001' });
+
+    it('is drawn only when printing, with what the sale registered', async () => {
+      const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+      renderScreen();
+      await sectionOf('Líneas');
+      expect(
+        screen.queryByRole('article', { name: /Comprobante/ }),
+      ).not.toBeInTheDocument();
+
+      print();
+
+      expect(printSpy).toHaveBeenCalledTimes(1);
+      const document = receipt();
+      expect(document).toHaveTextContent('Comprobante de venta');
+      expect(document).toHaveTextContent('V-0001');
+      expect(document).toHaveTextContent('F02 · La Esperanza');
+      expect(document).toHaveTextContent('Chocolates del Oriente S.A.S.');
+      expect(document).toHaveTextContent('000123-F02-P05-261014-1');
+      expect(document).toHaveTextContent('150,0 kg');
+      expect(document).toHaveTextContent('$ 3.375.000');
+      expect(document).toHaveTextContent('G1 150,0 kg · G2 40,0 kg');
+    });
+
+    it('says it is not an electronic invoice', async () => {
+      vi.spyOn(window, 'print').mockImplementation(() => {});
+      renderScreen();
+      await sectionOf('Líneas');
+
+      print();
+
+      expect(receipt()).toHaveTextContent('No es una factura electrónica');
+    });
+
+    it('marks a voided sale and says why', async () => {
+      vi.spyOn(window, 'print').mockImplementation(() => {});
+      server.use(
+        saleHandler(
+          buildSale({
+            status: 'voided',
+            voided: {
+              voided_at: '2026-11-21T14:00:00Z',
+              voided_by: { id: 'u2', full_name: 'Persona Productora' },
+              reason: 'El comprador no recogió el cacao.',
+            },
+          }),
+        ),
+      );
+      renderScreen();
+      await sectionOf('Líneas');
+
+      print();
+
+      expect(receipt()).toHaveTextContent('Venta anulada');
+      expect(receipt()).toHaveTextContent('El comprador no recogió el cacao.');
+    });
+
+    it('stops drawing it when the printing is over', async () => {
+      vi.spyOn(window, 'print').mockImplementation(() => {});
+      renderScreen();
+      await sectionOf('Líneas');
+      print();
+      expect(receipt()).toBeInTheDocument();
+
+      fireEvent(window, new Event('afterprint'));
+
+      expect(
+        screen.queryByRole('article', { name: /Comprobante/ }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('can be printed from the copy without a connection', async () => {
+      const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+      await getOfflineDb(userId).cache.put({
+        key: saleDetailCacheKey('s1'),
+        value: buildSale(),
+        fetchedAt: 1_760_000_000_000,
+      });
+      server.use(
+        http.get(apiUrl('/api/sales/:id'), () => HttpResponse.error()),
+      );
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      renderScreen();
+      await screen.findByText(/Sin conexión: estás viendo la copia del/);
+
+      print();
+
+      expect(printSpy).toHaveBeenCalledTimes(1);
+      expect(receipt()).toHaveTextContent('$ 3.375.000');
+    });
   });
 });
