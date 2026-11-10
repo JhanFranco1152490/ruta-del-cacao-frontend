@@ -19,6 +19,7 @@ const DEMO_ACCOUNTS = [
   { role: 'Productor', email: 'productor@example.com' },
   { role: 'Capataz de La Esperanza', email: 'capataz@example.com' },
   { role: 'Operario de El Mirador', email: 'operario@example.com' },
+  { role: 'Encargado de calidad', email: 'calidad@example.com' },
   { role: 'Comercializador', email: 'comercializador@example.com' },
 ] as const;
 
