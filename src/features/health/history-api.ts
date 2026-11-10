@@ -1,9 +1,10 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { readThroughCache } from '@/lib/offline/cached-read';
+import { keepPreviousWhileOnline } from '@/lib/offline/keep-previous-while-online';
 
 import type { HistoryQuery } from './history-filters';
 
@@ -47,5 +48,5 @@ export const useHealthHistory = (
       ),
     enabled: !!userId && query !== null,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
