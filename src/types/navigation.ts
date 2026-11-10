@@ -13,7 +13,7 @@ export type NavChild = {
 
 // Los grupos del menú, por tarea. Una entrada sin grupo queda suelta, arriba.
 export type NavGroupKey =
-  'admin' | 'farm' | 'agriculture' | 'postharvest' | 'catalogs';
+  'admin' | 'farm' | 'agriculture' | 'postharvest' | 'sales' | 'catalogs';
 
 export type NavItem = {
   href: string;

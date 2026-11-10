@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 import { DOCUMENT_TYPES } from '@/lib/document-types';
 import { todayInBogota } from '@/lib/format/dates';
+import {
+  IDENTITY_DOCUMENT_MESSAGE,
+  IDENTITY_DOCUMENT_PATTERN,
+} from '@/lib/validation/identity-document';
 import { isEmail } from '@/lib/validation/is-email';
 import { optionalPhoneSchema } from '@/lib/validation/phone';
 
@@ -12,7 +16,7 @@ export const producerFormSchema = z.object({
   identity_document: z
     .string()
     .trim()
-    .regex(/^[0-9]{6,15}$/, 'Ingresa solo números, entre 6 y 15 dígitos.'),
+    .regex(IDENTITY_DOCUMENT_PATTERN, IDENTITY_DOCUMENT_MESSAGE),
   first_name: z.string().trim().min(1, 'Ingresa los nombres.').max(100),
   last_name: z.string().trim().min(1, 'Ingresa los apellidos.').max(100),
   // En el formulario los opcionales vacíos son '' y se envían como null.

@@ -52,4 +52,10 @@ describe('isFieldPermission', () => {
     );
     expect(isFieldPermission(PERMISSIONS.USERS_VIEW)).toBe(false);
   });
+
+  // Un comprador le compra al productor, no a una finca.
+  it('leaves out the buyers, which belong to the whole producer', () => {
+    expect(isFieldPermission(PERMISSIONS.BUYERS_VIEW)).toBe(false);
+    expect(isFieldPermission(PERMISSIONS.BUYERS_DELETE)).toBe(false);
+  });
 });

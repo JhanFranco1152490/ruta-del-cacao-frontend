@@ -255,6 +255,7 @@ describe('LoginForm', () => {
     expect(banner).toHaveTextContent('productor@example.com');
     expect(banner).toHaveTextContent('capataz@example.com');
     expect(banner).toHaveTextContent('operario@example.com');
+    expect(banner).toHaveTextContent('comercializador@example.com');
     expect(banner).toHaveTextContent('CacaoDemo2026');
   });
 
