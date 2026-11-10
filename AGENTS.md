@@ -548,7 +548,9 @@ src/
   (icono `Receipt`). Lista de trabajo diario (`PageHeader` `selva`, acento cobre) con su ilustración,
   `SaleReceipt` (un recibo largo con un costal abierto al pie). Una venta es de **una finca**, a un
   comprador activo, con 1 a 20 líneas de lote y calibre, y no se edita ni se borra: se anula.
-  - **Lista por mes con copia** (`queries.ts`, `use-sales-screen.ts`): `GET /api/sales` es paginado y
+  - **Lista por mes con copia** (`queries.ts`, `use-sales-screen.ts`; sin conexión, al cambiar de mes
+    o de filtro no se muestra lo de la consulta anterior que `keepPreviousData` deja a la vista:
+    `isStalePlaceholder`, `lib/offline/paused-read.ts`): `GET /api/sales` es paginado y
     se guarda la primera página de cada consulta (`sales:list:{consulta}`, con el productor dentro);
     las cifras de la franja salen de `GET /api/sales/summary` (solo registradas), también con copia.
     El mes y los filtros van en un solo `useQueryStates` (`use-sale-filters.ts`: `?mes=`, `?finca=`,
@@ -556,13 +558,24 @@ src/
     cambiar de mes o de filtro vuelve a la página 1 en una sola escritura. Toda la fila abre la ficha
     (el número es un enlace estirado).
   - **Registrar es una página** (`/ventas/registrar`, solo en línea, `sale-form.tsx` con
-    `FormProvider`): encabezado (`sale-header-fields.tsx`: productor para la cuenta técnica, finca
-    activa, comprador de `GET /api/sales/buyer-options`, fecha y observaciones), líneas con
-    `useFieldArray` (`sale-lines-section.tsx`) sobre **todas** las existencias de la finca
-    (`useFarmStock`: `page_size=100` y todas las páginas), el total en vivo (`sale-totals.tsx`) y el
-    soporte opcional. Las existencias llegan al esquema (`sale-schema.ts`) por el `context` de
-    `useForm`, con un getter que lee las del render: dependen de la finca, que sale del mismo
-    formulario. Cambiar de finca con líneas escritas pregunta antes.
+    `FormProvider`) en dos columnas desde `lg`: a la izquierda el encabezado (`sale-header-fields.tsx`:
+    productor para la cuenta técnica, finca activa, comprador de `GET /api/sales/buyer-options`, fecha y
+    observaciones) y las líneas con `useFieldArray` (`sale-lines-section.tsx`) sobre **todas** las
+    existencias de la finca (`useFarmStock`: `page_size=100` y todas las páginas); a la derecha, fijos
+    mientras se recorren las líneas, el resumen con el total en vivo (`sale-totals.tsx`), el soporte
+    opcional y los botones. En celular todo va en una columna, con los botones fijos al pie. Las
+    existencias llegan al esquema (`sale-schema.ts`) por el `context` de `useForm`, con un getter que
+    lee las del render: dependen de la finca, que sale del mismo formulario. Cambiar de finca con
+    líneas escritas pregunta antes.
+  - **Al elegir un lote, los kilos se llenan con todo lo disponible** (`fullQuantityText`): lo común
+    es vender el lote completo y solo se baja si se vende menos; elegir otro lote vuelve a llenarlos.
+  - **Registrar un comprador sin salir del formulario.** Con `buyers.add_buyer`, el botón **Registrar
+    comprador** abre el diálogo de Compradores (`NewBuyerDialog`) que la página de `app/` entrega como
+    `renderNewBuyer` (Ventas no importa de Compradores). Al terminar, el comprador recién registrado,
+    uno inactivo que se activó o el que ya existía con ese documento («Elegir este comprador») queda
+    elegido tras volver a leer la lista. **El diálogo va dentro de un `<div onSubmit>` que corta la
+    propagación:** su formulario está en un portal, pero sus eventos suben por el árbol de React hasta
+    el `<form>` de la venta, y sin esto guardar el comprador enviaría también la venta.
   - **Montos sin flotantes** (`sale-amounts.ts`): kilos en décimas por precio entero, redondeado al
     peso con la mitad hacia arriba, igual que el servidor. El precio acepta «18.500» como 18500
     (`sale-price.ts`); una coma o un punto que no va cada tres cifras son decimales y se rechazan.
@@ -575,6 +588,11 @@ src/
     (`sale-invoice-section.tsx`: **Ver**, **Reemplazar**, **Quitar** o **Adjuntar soporte**) y
     **Anular venta** en el pie (`void-sale-dialog.tsx`, `FormDialog` `destructive` con el motivo).
     Sin conexión o con la copia, sin enlaces al lote ni al comprador y las acciones deshabilitadas.
+    **Imprimir comprobante** (`sale-print-action.tsx`) sirve también con la copia: dibuja el
+    comprobante (`sale-receipt-document.tsx`, un resumen de la venta con su nota de que no es una
+    factura electrónica) solo mientras imprime (`hooks/use-print-document.ts`) y abre el diálogo del
+    navegador, donde también se guarda como PDF. La ficha de pantalla, la cabecera, el menú y los
+    avisos llevan `print:hidden`, así que en el papel solo sale el comprobante.
   - **El soporte** se revisa en el dispositivo (`invoice-file.ts`: PDF, JPG o PNG hasta 5 MB) y no se
     reduce. **Ver** (`open-invoice.ts`) abre la pestaña al tocar, descarga con `apiFetchBlob` y la
     llena con un `blob:` (la sesión va en una cookie hacia la API: un enlace directo no serviría).
