@@ -161,7 +161,10 @@ describe('EvidenceSection', () => {
       kind: 'monitoring',
       label: 'P03 · 19 de octubre',
     });
-    expect(await screen.findAllByText('Pendiente de enviar')).toHaveLength(2);
+    // `findAllBy` resuelve con la primera; la cantidad se espera aparte, que bajo carga llega después.
+    await waitFor(() =>
+      expect(screen.getAllByText('Pendiente de enviar')).toHaveLength(2),
+    );
   });
 
   it('says why a file was not attached', async () => {
