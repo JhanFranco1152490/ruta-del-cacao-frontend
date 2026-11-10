@@ -475,6 +475,13 @@ src/
     Cancelar al eliminar; ante `409 buyer_has_records` el diálogo ofrece desactivar.
   - **En celular** tocar la tarjeta abre una hoja con sus datos y acciones (`buyer-sheet.tsx`); en
     escritorio `?comprador=` resalta la fila y la lleva a la vista.
+  - **El documento y el contacto se ven completos, sin `MaskedValue`**, a diferencia de productores y
+    cuentas. Es el directorio del propio productor y de su Comercializador: el documento es lo que
+    identifica a un comprador y lo que distingue a dos que se llaman igual al elegirlo en una venta,
+    y `•••• 0101` lo impediría. Además revelar exige una acción registrada en la bitácora que el
+    servidor de compradores no tiene, así que enmascarar sería un cambio de los dos repos.
+  - **Los botones de una fila** son de icono con `aria-label` (con texto, la tabla no cabe a 1280 px
+    con dos acciones); cada medio de contacto va en su línea por la misma razón.
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
