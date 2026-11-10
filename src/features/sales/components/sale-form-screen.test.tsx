@@ -1,5 +1,6 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '@/lib/api/query-keys';
@@ -15,6 +16,7 @@ vi.mock(
   async () => (await import('@/test/router')).navigation,
 );
 
+import type { RenderNewBuyer } from '../sale-new-buyer';
 import { SaleFormScreen } from './sale-form-screen';
 
 const ESPERANZA = buildFarm({ id: 'f1', code: 'F02', name: 'La Esperanza' });
@@ -58,14 +60,23 @@ function renderScreen({
   permissions = SELLER,
   superuser = false,
   search = '',
-}: { permissions?: string[]; superuser?: boolean; search?: string } = {}) {
+  renderNewBuyer,
+}: {
+  permissions?: string[];
+  superuser?: boolean;
+  search?: string;
+  renderNewBuyer?: RenderNewBuyer;
+} = {}) {
   mockLocation.search = search;
   const queryClient = createTestQueryClient();
   queryClient.setQueryData(
     queryKeys.session(),
     buildSession({ id: userId, permissions, is_superuser: superuser }),
   );
-  return renderWithProviders(<SaleFormScreen />, { queryClient });
+  return renderWithProviders(
+    <SaleFormScreen renderNewBuyer={renderNewBuyer} />,
+    { queryClient },
+  );
 }
 
 describe('SaleFormScreen', () => {
@@ -194,5 +205,142 @@ describe('SaleFormScreen', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Comprador' })).toBeDisabled();
     await waitFor(() => expect(buyerRequests).toEqual([]));
+  });
+
+  describe('registering a buyer from the form', () => {
+    const NEW_BUYER = buildBuyerOption({
+      id: 'b9',
+      name: 'Cacao Andino S.A.S.',
+      buyer_type: 'exporter',
+    });
+    // Un diálogo de mentira: la página de `app/` entrega el de verdad.
+    const renderNewBuyer: RenderNewBuyer = ({
+      producer,
+      chooseProducer,
+      existingLabel,
+      onClose,
+      onDone,
+    }) => (
+      <div role="dialog" aria-label="Registrar comprador">
+        <p>{`productor: ${producer ?? 'propio'}, elige: ${chooseProducer}`}</p>
+        <p>{existingLabel}</p>
+        <button onClick={() => onDone('b9')} type="button">
+          Guardar comprador
+        </button>
+        <button onClick={onClose} type="button">
+          Cerrar
+        </button>
+      </div>
+    );
+    const BUYER_ADDER = [...SELLER, PERMISSIONS.BUYERS_ADD];
+
+    it('offers to register a buyer to whoever can', async () => {
+      renderScreen({ permissions: BUYER_ADDER, renderNewBuyer });
+
+      expect(
+        await screen.findByRole('button', { name: 'Registrar comprador' }),
+      ).toBeEnabled();
+    });
+
+    it('does not offer it without the permission to register buyers', async () => {
+      renderScreen({ renderNewBuyer });
+
+      await screen.findByRole('combobox', { name: 'Comprador' });
+      expect(
+        screen.queryByRole('button', { name: 'Registrar comprador' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('chooses the buyer that was registered, reading the list again', async () => {
+      const user = userEvent.setup();
+      renderScreen({ permissions: BUYER_ADDER, renderNewBuyer });
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Registrar comprador' }),
+      );
+      server.use(
+        buyerOptionsHandler([buildBuyerOption(), NEW_BUYER], buyerRequests),
+      );
+      const before = buyerRequests.length;
+      await user.click(
+        within(await screen.findByRole('dialog')).getByRole('button', {
+          name: 'Guardar comprador',
+        }),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByRole('combobox', { name: 'Comprador' })).toHaveValue(
+          'Cacao Andino S.A.S.',
+        ),
+      );
+      expect(buyerRequests.length).toBeGreaterThan(before);
+    });
+
+    it('does not submit the sale when the buyer form is submitted', async () => {
+      const user = userEvent.setup();
+      const saved: string[] = [];
+      // Como el de verdad: un formulario propio dibujado en un portal, fuera del de la venta.
+      const inPortal: RenderNewBuyer = ({ onDone }) =>
+        createPortal(
+          <form
+            aria-label="Formulario del comprador"
+            onSubmit={(event) => {
+              event.preventDefault();
+              saved.push('comprador');
+              onDone('b9');
+            }}
+          >
+            <button type="submit">Guardar</button>
+          </form>,
+          document.body,
+        );
+      renderScreen({ permissions: BUYER_ADDER, renderNewBuyer: inPortal });
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Registrar comprador' }),
+      );
+      await user.click(
+        within(
+          await screen.findByRole('form', { name: 'Formulario del comprador' }),
+        ).getByRole('button', { name: 'Guardar' }),
+      );
+
+      expect(saved).toEqual(['comprador']);
+      expect(
+        screen.queryByText('Complete los datos obligatorios'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('closes the dialog without choosing anything when it is cancelled', async () => {
+      const user = userEvent.setup();
+      renderScreen({ permissions: BUYER_ADDER, renderNewBuyer });
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Registrar comprador' }),
+      );
+      await user.click(
+        within(await screen.findByRole('dialog')).getByRole('button', {
+          name: 'Cerrar',
+        }),
+      );
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: 'Comprador' })).toHaveValue(
+        '',
+      );
+    });
+
+    it('waits for the technical account to choose the producer', async () => {
+      renderScreen({
+        permissions: BUYER_ADDER,
+        superuser: true,
+        renderNewBuyer,
+      });
+      await screen.findByRole('heading', { name: 'Registrar venta' });
+
+      expect(
+        screen.getByRole('button', { name: 'Registrar comprador' }),
+      ).toBeDisabled();
+    });
   });
 });

@@ -49,7 +49,8 @@ export function useBuyerSubmit({
   form: UseFormReturn<BuyerFormInput, unknown, BuyerFormValues>;
   // Los del mismo productor, para adelantarse al documento repetido.
   known: readonly Buyer[];
-  onSaved: (message: string | null) => void;
+  // El comprador que quedó guardado, para quien lo necesita enseguida (elegirlo en una venta).
+  onSaved: (message: string | null, saved?: Buyer) => void;
 }) {
   const create = useCreateBuyer();
   const update = useUpdateBuyer();
@@ -105,11 +106,14 @@ export function useBuyerSubmit({
         const changes = toUpdateRequest(values, current);
         // Sin cambios no hay nada que guardar ni que avisar.
         if (!changes) return onSaved(null);
-        await update.mutateAsync({ id: current.id, body: changes });
-        onSaved(BUYER_UPDATED_MESSAGE);
+        const updated = await update.mutateAsync({
+          id: current.id,
+          body: changes,
+        });
+        onSaved(BUYER_UPDATED_MESSAGE, updated);
       } else {
-        await create.mutateAsync(toCreateRequest(values));
-        onSaved(BUYER_CREATED_MESSAGE);
+        const created = await create.mutateAsync(toCreateRequest(values));
+        onSaved(BUYER_CREATED_MESSAGE, created);
       }
     } catch (error) {
       showError(error);
@@ -120,11 +124,11 @@ export function useBuyerSubmit({
   const activate = async (target: Buyer) => {
     setSummary(undefined);
     try {
-      await update.mutateAsync({
+      const activated = await update.mutateAsync({
         id: target.id,
         body: { is_active: true, expected_version: target.version },
       });
-      onSaved(BUYER_ACTIVATED_MESSAGE);
+      onSaved(BUYER_ACTIVATED_MESSAGE, activated);
       return true;
     } catch (error) {
       setSummary(

@@ -102,7 +102,10 @@ describe('BuyerFormDialog, registering', () => {
     await save();
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith('Comprador registrado'),
+      expect(onSaved).toHaveBeenCalledWith(
+        'Comprador registrado',
+        expect.objectContaining({ id: expect.any(String) }),
+      ),
     );
     expect(bodies).toEqual([
       {
@@ -192,7 +195,10 @@ describe('BuyerFormDialog, registering', () => {
     await save();
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith('Comprador registrado'),
+      expect(onSaved).toHaveBeenCalledWith(
+        'Comprador registrado',
+        expect.objectContaining({ id: expect.any(String) }),
+      ),
     );
   });
 
@@ -226,7 +232,10 @@ describe('BuyerFormDialog, registering', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Activarlo' }));
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith('Comprador activado'),
+      expect(onSaved).toHaveBeenCalledWith(
+        'Comprador activado',
+        expect.objectContaining({ id: expect.any(String) }),
+      ),
     );
     expect(bodies).toEqual([{ is_active: true, expected_version: 3 }]);
     expect(onShowExisting).toHaveBeenCalledWith('b2');
@@ -252,7 +261,10 @@ describe('BuyerFormDialog, registering', () => {
     await save();
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith('Comprador registrado'),
+      expect(onSaved).toHaveBeenCalledWith(
+        'Comprador registrado',
+        expect.objectContaining({ id: expect.any(String) }),
+      ),
     );
   });
 
@@ -334,7 +346,10 @@ describe('BuyerFormDialog, for the technical account', () => {
     await save();
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith('Comprador registrado'),
+      expect(onSaved).toHaveBeenCalledWith(
+        'Comprador registrado',
+        expect.objectContaining({ id: expect.any(String) }),
+      ),
     );
     expect(bodies[0]).toMatchObject({ producer_id: 'p9' });
   });
@@ -382,7 +397,10 @@ describe('BuyerFormDialog, editing', () => {
     );
 
     await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith('Comprador actualizado'),
+      expect(onSaved).toHaveBeenCalledWith(
+        'Comprador actualizado',
+        expect.objectContaining({ id: expect.any(String) }),
+      ),
     );
     expect(bodies).toEqual([
       {

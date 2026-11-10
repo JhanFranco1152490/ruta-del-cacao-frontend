@@ -9,13 +9,19 @@ import { PageHeader } from '@/components/page-header';
 import { PageNotice } from '@/components/page-notice';
 
 import { OFFLINE_SALES_REASON } from '../sale-messages';
+import type { RenderNewBuyer } from '../sale-new-buyer';
 import { SALES_PATH } from '../sale-paths';
 import { useSaleFormScreen } from '../use-sale-form-screen';
 import { SaleForm } from './sale-form';
 
 // Registrar una venta: una página y no un diálogo, porque lleva una lista de líneas. Solo con
 // conexión: vender depende de lo que hay en bodega en ese momento.
-export function SaleFormScreen() {
+export function SaleFormScreen({
+  renderNewBuyer,
+}: {
+  // Registrar un comprador sin salir del formulario; sin ella, se ofrece ir a Compradores.
+  renderNewBuyer?: RenderNewBuyer;
+}) {
   const screen = useSaleFormScreen();
 
   if (!screen.online) {
@@ -37,20 +43,28 @@ export function SaleFormScreen() {
         ]}
       />
       <PageHeader eyebrow="Comercialización" title="Registrar venta" />
-      <SaleFormBody screen={screen} />
+      <SaleFormBody renderNewBuyer={renderNewBuyer} screen={screen} />
     </div>
   );
 }
 
 function SaleFormBody({
   screen,
+  renderNewBuyer,
 }: {
   screen: ReturnType<typeof useSaleFormScreen>;
+  renderNewBuyer?: RenderNewBuyer;
 }) {
   const { farms } = screen;
   if (screen.needsProducer) {
     // El productor se elige en el formulario: sin él, la finca y el comprador esperan.
-    return <SaleForm key="sin-productor" screen={screen} />;
+    return (
+      <SaleForm
+        key="sin-productor"
+        renderNewBuyer={renderNewBuyer}
+        screen={screen}
+      />
+    );
   }
   if (farms.isPending) {
     return <LoadingBlock label="Cargando las fincas" shapes={['h-64']} />;
@@ -69,5 +83,11 @@ function SaleFormBody({
     );
   }
   // Otro productor, otras fincas y otros compradores: el formulario empieza de nuevo.
-  return <SaleForm key={screen.producer ?? 'propio'} screen={screen} />;
+  return (
+    <SaleForm
+      key={screen.producer ?? 'propio'}
+      renderNewBuyer={renderNewBuyer}
+      screen={screen}
+    />
+  );
 }

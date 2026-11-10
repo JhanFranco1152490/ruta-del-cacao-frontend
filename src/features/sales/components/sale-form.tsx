@@ -14,6 +14,7 @@ import { MobileActionBar } from '@/components/mobile-action-bar';
 import { Button, buttonVariants } from '@/components/ui/button';
 
 import { useFarmStock } from '../queries';
+import type { RenderNewBuyer } from '../sale-new-buyer';
 import { type StockOption, stockOptions } from '../sale-line-options';
 import {
   createSaleFormSchema,
@@ -42,7 +43,13 @@ const resolver: Resolver<SaleFormInput, SaleFormContext> = (
   )(values, context, options);
 
 // El formulario de una venta: el encabezado y, desde ahí, las líneas de la finca elegida.
-export function SaleForm({ screen }: { screen: SaleFormScreenState }) {
+export function SaleForm({
+  screen,
+  renderNewBuyer,
+}: {
+  screen: SaleFormScreenState;
+  renderNewBuyer?: RenderNewBuyer;
+}) {
   // Los kilos y la fecha se revisan contra las existencias de la finca, que dependen de la finca
   // elegida en este mismo formulario: el contexto las lee al validar, ya con las de este render.
   let options: StockOption[] = [];
@@ -95,6 +102,7 @@ export function SaleForm({ screen }: { screen: SaleFormScreenState }) {
           disabled={saving}
           hasLines={hasLines}
           onFarmChange={changeFarm}
+          renderNewBuyer={renderNewBuyer}
           screen={screen}
         />
         <SaleLinesSection
