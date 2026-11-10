@@ -33,6 +33,7 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/bodega',
   '/infraestructura',
   '/parametros-poscosecha',
+  '/compradores',
   '/sanidad',
   '/sanidad/monitoreo',
   '/usuarios',

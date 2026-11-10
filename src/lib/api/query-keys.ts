@@ -264,6 +264,15 @@ export const queryKeys = {
     list: (producer: string | null) =>
       ['facilities', 'list', producer ?? ''] as const,
   },
+  buyers: {
+    // Lo que invalida registrar, editar, activar, desactivar o eliminar un comprador.
+    all: () => ['buyers'] as const,
+    // El directorio completo de un productor, sin paginar y con copia en el dispositivo: la
+    // búsqueda, los filtros y el orden se aplican en el dispositivo. La cuenta técnica elige el
+    // productor; las demás cuentas ven el suyo y pasan `null`.
+    list: (producer: string | null) =>
+      ['buyers', 'list', producer ?? ''] as const,
+  },
   parameters: {
     // Lo que invalida guardar o restablecer los parámetros. La cuenta técnica elige el productor;
     // las demás cuentas ven el suyo y pasan `null`.

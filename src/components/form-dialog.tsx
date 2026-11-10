@@ -1,6 +1,13 @@
-import type { FormEventHandler, ReactNode } from 'react';
+'use client';
+
+import { Undo2 } from 'lucide-react';
+import { type FormEventHandler, type ReactNode, useState } from 'react';
 
 import { InlineError } from '@/components/form-message';
+import {
+  type StatusChangeAction,
+  StatusChangeDialog,
+} from '@/components/status-change-dialog';
 import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import {
@@ -72,20 +79,37 @@ export function FormDialogForm({
   );
 }
 
+const DISCARD_CHANGES: StatusChangeAction = {
+  trigger: 'Descartar',
+  title: '¿Descartar los cambios?',
+  description: 'Lo que cambiaste no se guardará.',
+  confirm: 'Descartar cambios',
+  pending: 'Descartando…',
+  cancel: 'Seguir editando',
+  Icon: Undo2,
+  variant: 'destructive',
+};
+
 // Un diálogo que ya está abierto mientras se monta y se cierra con `onClose`, salvo mientras
-// guarda.
+// guarda. Con `dirty` (hay cambios sin guardar), cerrarlo de cualquier forma (Cancelar, la X,
+// Escape, tocar fuera o «atrás») pregunta antes de descartarlos.
 export function FormDialog({
   onClose,
   contentClassName = 'sm:max-w-lg',
+  dirty = false,
   ...form
 }: FormDialogFormProps & {
   onClose: () => void;
   contentClassName?: string;
+  dirty?: boolean;
 }) {
+  const [confirming, setConfirming] = useState(false);
   return (
     <Dialog
       onOpenChange={(open) => {
-        if (!open && !form.isSaving) onClose();
+        if (open || form.isSaving) return;
+        if (dirty) setConfirming(true);
+        else onClose();
       }}
       open
     >
@@ -94,6 +118,13 @@ export function FormDialog({
         showCloseButton={!form.isSaving}
       >
         <FormDialogForm {...form} />
+        <StatusChangeDialog
+          action={DISCARD_CHANGES}
+          isPending={false}
+          onConfirm={onClose}
+          onOpenChange={setConfirming}
+          open={confirming}
+        />
       </DialogContent>
     </Dialog>
   );

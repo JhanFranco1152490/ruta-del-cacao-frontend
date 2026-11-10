@@ -1,7 +1,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -46,6 +46,9 @@ type StatusChangeDialogProps = {
   triggerClassName?: string;
   // El estilo del botón, si no es el de la acción (un botón de fila, de contorno).
   triggerVariant?: 'default' | 'outline' | 'destructive';
+  // El foco empieza en Cancelar: para lo que no se deshace, así un toque o un Enter de más no lo
+  // confirma.
+  focusCancel?: boolean;
 };
 
 // Confirmación de activar o desactivar: mientras la petición está en curso no se puede cerrar
@@ -62,7 +65,9 @@ export function StatusChangeDialog({
   triggerSize = 'default',
   triggerClassName = 'h-11',
   triggerVariant,
+  focusCancel = false,
 }: StatusChangeDialogProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       {trigger && (
@@ -79,7 +84,10 @@ export function StatusChangeDialog({
           {trigger.trigger}
         </DialogTrigger>
       )}
-      <DialogContent showCloseButton={!isPending}>
+      <DialogContent
+        initialFocus={focusCancel ? cancelRef : undefined}
+        showCloseButton={!isPending}
+      >
         <DialogHeader>
           <DialogTitle>{action.title}</DialogTitle>
           <DialogDescription>{action.description}</DialogDescription>
@@ -89,6 +97,7 @@ export function StatusChangeDialog({
         <DialogFooter>
           <DialogClose
             disabled={isPending}
+            ref={cancelRef}
             render={<Button variant="outline" />}
           >
             {action.cancel ?? 'Cancelar'}
