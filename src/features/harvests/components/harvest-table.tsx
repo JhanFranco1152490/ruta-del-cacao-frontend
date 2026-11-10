@@ -96,7 +96,7 @@ export function HarvestTable({
       <TableBody>
         {rows.map((row) => (
           <TableRow key={row.id}>
-            <TableCell className="first-letter:uppercase max-md:order-3 max-md:col-span-1! max-md:text-muted-foreground">
+            <TableCell className="max-w-40 whitespace-normal first-letter:uppercase max-md:order-3 max-md:col-span-1! max-md:text-muted-foreground">
               {formatWeekdayDate(row.date)}
             </TableCell>
             <TableCell className="max-w-64 font-bold break-words whitespace-normal max-md:order-1 max-md:col-span-1! max-md:text-base! max-md:text-foreground">
@@ -113,7 +113,7 @@ export function HarvestTable({
             <TableCell className="text-right font-bold tabular-nums max-md:order-2 max-md:col-span-1! max-md:justify-self-end">
               {formatDecimal(row.weightKg, 1)} kg
             </TableCell>
-            <TableCell className="max-md:order-5 max-md:text-muted-foreground">
+            <TableCell className="max-w-44 break-words whitespace-normal max-md:order-5 max-md:text-muted-foreground">
               {row.collector ?? '—'}
             </TableCell>
             <TableCell className="max-md:order-6">
