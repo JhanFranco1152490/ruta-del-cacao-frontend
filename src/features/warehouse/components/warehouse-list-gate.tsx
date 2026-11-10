@@ -2,10 +2,9 @@
 
 import type { ReactNode } from 'react';
 
-import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { LoadingBlock } from '@/components/loading-block';
+import { NeverLoadedState } from '@/components/never-loaded-state';
 import type { CachedRead } from '@/lib/offline/cached-read';
 import { isNeverLoaded } from '@/lib/offline/paused-read';
 
@@ -41,12 +40,7 @@ export function WarehouseListGate<T>({
     );
   }
   if (isNeverLoaded(query)) {
-    return (
-      <EmptyState
-        illustration={OfflineCloud}
-        title="Necesitas conexión una vez para cargar la bodega."
-      />
-    );
+    return <NeverLoadedState subject="la bodega" />;
   }
   if (query.isPending) {
     return <LoadingBlock label={loadingLabel} shapes={['h-40']} />;

@@ -1,9 +1,10 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { apiPath } from '@/lib/api/path';
 import { queryKeys, type SaleFilters } from '@/lib/api/query-keys';
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
+import { keepPreviousWhileOnline } from '@/lib/offline/keep-previous-while-online';
 
 import type {
   BuyerOption,
@@ -61,7 +62,7 @@ export const useSales = (userId: string | undefined, filters: SaleFilters) =>
     },
     enabled: !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Las cifras de la franja, con los filtros de la lista menos el estado: solo cuentan las
@@ -81,7 +82,7 @@ export const useSalesSummary = (
       ),
     enabled: !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Una venta con sus líneas. Con copia: una ficha que ya se abrió se consulta sin conexión.

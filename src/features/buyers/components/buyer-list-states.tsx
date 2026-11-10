@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { BuyerScale } from '@/components/illustrations/buyer-scale';
-import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { LoadingBlock } from '@/components/loading-block';
+import { NeverLoadedState } from '@/components/never-loaded-state';
 import { Button } from '@/components/ui/button';
 
 import type { BuyersScreenState } from '../use-buyers-screen';
@@ -23,10 +23,9 @@ export function BuyerListStates({
   const { read, all, rows, neverLoaded, filters } = screen;
   if (neverLoaded) {
     return (
-      <EmptyState
+      <NeverLoadedState
         description="Cuando tengas conexión, abre esta pantalla una vez y quedarán guardados para consultarlos sin conexión."
-        illustration={OfflineCloud}
-        title="Necesitas conexión una vez para cargar los compradores."
+        subject="los compradores"
       />
     );
   }

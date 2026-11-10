@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { apiPath } from '@/lib/api/path';
@@ -10,6 +10,7 @@ import {
   type WarehouseFilters,
 } from '@/lib/api/query-keys';
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
+import { keepPreviousWhileOnline } from '@/lib/offline/keep-previous-while-online';
 
 import type {
   ExitSummary,
@@ -115,7 +116,7 @@ export const useStock = (userId: string | undefined, filters: StockFilters) =>
       ),
     enabled: !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Los totales de G1 y G2 y los lotes con existencias, con los mismos filtros, sin paginar.
@@ -134,7 +135,7 @@ export const useStockSummary = (
       ),
     enabled: !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Las salidas de cacao de todos los lotes, la más reciente primero, con las anuladas.
@@ -157,7 +158,7 @@ export const useExits = (
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Lo que salió con esos filtros, en total y por motivo, sin contar lo anulado.
@@ -177,7 +178,7 @@ export const useExitSummary = (
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Los lotes Clasificado por ingresar. El servidor los da solo a quien puede ingresarlos.
@@ -204,7 +205,7 @@ export const usePendingEntry = (
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Las bodegas de las fincas que la cuenta alcanza (o de una sola), con copia de la primera página.
@@ -231,7 +232,7 @@ export const useWarehouses = (
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Las ubicaciones con existencias de una bodega, para sugerirlas al ingresar. Solo con conexión:

@@ -7,10 +7,10 @@ import { useProducerSummary } from '@/lib/api/producer-options';
 import { buyerTypeLabel } from '@/lib/buyer-types';
 import { resolveFarmFilter } from '@/lib/farm-filter';
 import { farmLabel } from '@/lib/format/place-label';
+import { isNeverLoaded } from '@/lib/offline/paused-read';
 
 import type { SaleListItem } from './api';
 import { registerOffer, salePermissionsOf } from './sale-actions';
-import { salesRead } from './sales-read';
 import { useBuyerOptions, useSales, useSalesSummary } from './queries';
 import { useSaleFilters } from './use-sale-filters';
 
@@ -66,10 +66,11 @@ export function useSalesScreen() {
     label: farmLabel(farm),
     name: farm.name,
   }));
-  const read = salesRead(sales, summary, hasConnection);
-  const rows = read.page?.results ?? [];
+  const page = sales.data?.data;
+  const rows = page?.results ?? [];
   const buyerOptions = buyerFilterOptions(activeBuyers.data ?? [], rows);
-  const offline = !hasConnection || read.savedAt !== undefined;
+  const savedAt = sales.data?.savedAt;
+  const offline = !hasConnection || savedAt !== undefined;
 
   return {
     filters,
@@ -79,13 +80,12 @@ export function useSalesScreen() {
     selectedProducer,
     needsProducer,
     sales,
-    summaryData: read.summary,
+    summary,
     rows,
-    total: read.page?.count ?? 0,
-    savedAt: read.savedAt,
+    total: page?.count ?? 0,
+    savedAt,
     offline,
-    loading: read.loading,
-    neverLoaded: read.neverLoaded,
+    neverLoaded: isNeverLoaded(sales),
     farmOptions,
     farm: resolveFarmFilter(farmOptions, filters.filters.farm),
     buyerOptions,

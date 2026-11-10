@@ -5,8 +5,8 @@ import type { ReactNode } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { CutTest } from '@/components/illustrations/cut-test';
-import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { LoadingBlock } from '@/components/loading-block';
+import { NeverLoadedState } from '@/components/never-loaded-state';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import { formatMonthYear } from '@/lib/format/dates';
@@ -92,12 +92,7 @@ export function QualityBody({
     );
   }
   if (isNeverLoaded(list)) {
-    return (
-      <EmptyState
-        illustration={OfflineCloud}
-        title="Necesitas conexión una vez para cargar los lotes de calidad."
-      />
-    );
+    return <NeverLoadedState subject="los lotes de calidad" />;
   }
   if (list.isPending) {
     return <LoadingBlock label="Cargando lotes" shapes={['h-40']} />;

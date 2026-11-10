@@ -18,11 +18,3 @@ export const isNeverLoaded = (query: {
 }) =>
   isPausedWithoutData(query) ||
   (query.isError && isNetworkFailure(query.error));
-
-// Una lista que cambió de periodo o de filtro y, sin red, solo tiene a la vista los datos de la
-// consulta anterior (`keepPreviousData`). Eso no es lo que se pidió: mostrarlo pondría las ventas de
-// otro mes bajo el nombre de este. Se trata como una lectura que todavía no llegó.
-export const isStalePlaceholder = (
-  query: { isPlaceholderData: boolean },
-  hasConnection: boolean,
-) => query.isPlaceholderData && !hasConnection;

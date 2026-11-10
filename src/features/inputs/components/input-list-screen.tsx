@@ -6,7 +6,6 @@ import { type ReactNode, useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { InputSupplies } from '@/components/illustrations/input-supplies';
-import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { notify } from '@/lib/notify';
@@ -22,6 +21,7 @@ import type { InputActionKind } from './input-row-actions';
 import { InputTable } from './input-table';
 import { pageContainerClass } from '@/components/page-container';
 import { LoadingBlock } from '@/components/loading-block';
+import { NeverLoadedState } from '@/components/never-loaded-state';
 
 export type FarmChoices = {
   // `undefined` mientras se cargan o si no se pudieron leer.
@@ -204,10 +204,9 @@ function InputCatalogStates({
   } = list;
   if (neverLoaded) {
     return (
-      <EmptyState
+      <NeverLoadedState
         description="Cuando tengas conexión, abre esta pantalla una vez y quedarán guardados para consultarlos sin conexión."
-        illustration={OfflineCloud}
-        title="Necesitas conexión una vez para cargar los insumos."
+        subject="los insumos"
       />
     );
   }

@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { SaleReceipt } from '@/components/illustrations/sale-receipt';
 import { LoadingBlock } from '@/components/loading-block';
+import { NeverLoadedState } from '@/components/never-loaded-state';
 import { Button } from '@/components/ui/button';
 import { formatMonthYear } from '@/lib/format/dates';
 
@@ -32,14 +32,13 @@ export function SaleListStates({
   }
   if (screen.neverLoaded) {
     return (
-      <EmptyState
+      <NeverLoadedState
         description="Cuando tengas conexión, abre esta pantalla una vez y quedarán guardadas para consultarlas sin conexión."
-        illustration={OfflineCloud}
-        title="Necesitas conexión una vez para cargar las ventas."
+        subject="las ventas"
       />
     );
   }
-  if (screen.loading) {
+  if (sales.isPending) {
     return <LoadingBlock label="Cargando ventas" shapes={['h-64']} />;
   }
   if (!sales.data) {
