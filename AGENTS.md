@@ -142,7 +142,8 @@ src/
     abrir…» con el camino de vuelta), `SyncRejectedNotice` y `syncFailureText` (lo que el servidor
     rechazó de la cola), `OfflineCopyNotice` («Sin conexión: estás viendo la copia del…», con lo que
     no se puede hacer así), `CollapsibleGroupList` con `groupInOrder` (listas en grupos plegables),
-    `mapPlaceholder` (el mapa mientras carga o si no cargó), `LotViewLink` (el ojo a la ficha de un
+    `NeverLoadedState` (la lista que nunca se cargó y no tiene copia: «Necesitas conexión una vez para
+    cargar …»), `mapPlaceholder` (el mapa mientras carga o si no cargó), `LotViewLink` (el ojo a la ficha de un
     lote, que con `disabledReason` queda deshabilitado y dice por qué);
   - API: `apiPath` (ruta con su consulta, sin los vacíos) e `isNotFound` (404);
   - cola sin conexión: `rejectionConflict` y `VALIDATION_ERROR_CODE` en `lib/offline/adapters.ts`.
@@ -549,8 +550,7 @@ src/
   `SaleReceipt` (un recibo largo con un costal abierto al pie). Una venta es de **una finca**, a un
   comprador activo, con 1 a 20 líneas de lote y calibre, y no se edita ni se borra: se anula.
   - **Lista por mes con copia** (`queries.ts`, `use-sales-screen.ts`; sin conexión, al cambiar de mes
-    o de filtro no se muestra lo de la consulta anterior que `keepPreviousData` deja a la vista:
-    `isStalePlaceholder`, `lib/offline/paused-read.ts`): `GET /api/sales` es paginado y
+    o de filtro no se muestra lo de la consulta anterior: `keepPreviousWhileOnline`, ver más abajo): `GET /api/sales` es paginado y
     se guarda la primera página de cada consulta (`sales:list:{consulta}`, con el productor dentro);
     las cifras de la franja salen de `GET /api/sales/summary` (solo registradas), también con copia.
     El mes y los filtros van en un solo `useQueryStates` (`use-sale-filters.ts`: `?mes=`, `?finca=`,
@@ -818,6 +818,12 @@ src/
 
 ### Avisos y volver al origen al guardar
 
+- **Una lista con copia en el dispositivo que cambia de periodo, pestaña o filtro** usa
+  `placeholderData: keepPreviousWhileOnline` (`lib/offline/keep-previous-while-online.ts`) y no
+  `keepPreviousData`: con red sigue a la vista la lista anterior mientras llega la nueva, pero sin red la
+  consulta nueva queda en pausa y lo anterior se vería como si fuera lo pedido (las ventas de otro mes
+  bajo el nombre del nuevo). Sin datos de relleno, la pantalla espera la copia de lo que se pidió o
+  pide conexión una vez (`isNeverLoaded`).
 - **Lo que terminó bien se avisa con `notify`** (`lib/notify.ts`): `notify.success('Finca actualizada')`,
   y `info`, `warning` o `error`. Se puede llamar desde cualquier archivo; el `Toaster`
   (`components/toaster.tsx`, montado en `app/providers.tsx`) los pinta con el Toast de Base UI. Duran
