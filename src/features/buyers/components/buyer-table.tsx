@@ -20,7 +20,7 @@ import {
 import { producerLabelOf } from '@/lib/format/producer';
 
 import type { Buyer } from '../api';
-import { contactMeansText, documentText } from '../buyer-format';
+import { documentText } from '../buyer-format';
 import { buyerTypeLabel } from '../buyer-types';
 
 const rowId = (id: string) => `comprador-${id}`;
@@ -95,9 +95,16 @@ export function BuyerTable({
             </TableCell>
             <TableCell className="max-md:order-4">
               {buyer.contact_name && <p>{buyer.contact_name}</p>}
-              <p className="text-sm text-muted-foreground">
-                {contactMeansText(buyer)}
-              </p>
+              {/* Cada medio en su línea: unidos, el correo ensanchaba la columna y la tabla se
+                  desplazaba de lado a 1280 px, dejando las acciones fuera de la vista. */}
+              {buyer.phone && (
+                <p className="text-sm text-muted-foreground tabular-nums">
+                  {buyer.phone}
+                </p>
+              )}
+              {buyer.email && (
+                <p className="text-sm text-muted-foreground">{buyer.email}</p>
+              )}
             </TableCell>
             <TableCell className="max-md:order-2 max-md:col-span-1! max-md:justify-self-end">
               <StatusBadge tone={buyer.is_active ? 'ok' : 'warn'}>

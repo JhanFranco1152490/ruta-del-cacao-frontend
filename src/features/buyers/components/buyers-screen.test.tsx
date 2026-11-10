@@ -132,7 +132,11 @@ describe('BuyersScreen', () => {
     expect(oriente).toHaveTextContent('NIT 900000001');
     expect(oriente).toHaveTextContent('Industria chocolatera');
     expect(oriente).toHaveTextContent('Persona de Ejemplo');
-    expect(oriente).toHaveTextContent('3000000001 · compras@example.com');
+    // El teléfono y el correo van en líneas separadas: unidos ensanchaban la tabla a 1280 px.
+    expect(within(oriente).getByText('3000000001')).toBeInTheDocument();
+    expect(
+      within(oriente).getByText('compras@example.com'),
+    ).toBeInTheDocument();
     expect(oriente).toHaveTextContent('Activo');
     expect(rows()[1]).toHaveTextContent('CC 1000000002');
   });

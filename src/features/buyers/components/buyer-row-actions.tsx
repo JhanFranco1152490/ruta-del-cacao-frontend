@@ -7,8 +7,9 @@ import { MenuItem } from '@/components/ui/menu';
 import type { BuyerAction, BuyerActionKind } from '../buyer-actions';
 import { BUYER_ACTION_INFO } from './buyer-action-info';
 
-// Con dos acciones, dos botones; desde la tercera, el menú «⋯». Una acción deshabilitada se ve y
-// dice por qué (sin conexión, o un comprador con ventas que no se puede eliminar).
+// Con dos acciones, dos botones de icono (con texto la tabla no cabe a 1280 px); desde la tercera,
+// el menú «⋯». Una acción deshabilitada se ve y dice por qué (sin conexión, o un comprador con
+// ventas que no se puede eliminar).
 export function BuyerRowActions({
   name,
   actions,
@@ -31,12 +32,13 @@ export function BuyerRowActions({
               aria-label={`${label} ${name}`}
               disabled={Boolean(disabledReason)}
               key={kind}
+              className="px-3"
               onClick={() => onAction(kind)}
               size="office"
-              title={disabledReason}
+              title={disabledReason ?? label}
               variant="action"
             >
-              <Icon aria-hidden="true" /> {label}
+              <Icon aria-hidden="true" />
             </Button>
           );
         })}
