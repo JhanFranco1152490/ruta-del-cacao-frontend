@@ -14,6 +14,49 @@ export type QualityClosedFilters = {
   to: string | null;
 };
 
+// Los filtros de la pestaña Existencias de Bodega que cambian lo que se pide. `ordering` es el de la
+// API (`lot`, `-entry_date`…); `null` deja el orden por defecto.
+export type StockFilters = {
+  producer: string | null;
+  farm: string | null;
+  warehouse: string | null;
+  grade: 'g1' | 'g2' | null;
+  location: string;
+  search: string;
+  ordering: string | null;
+  page: number;
+};
+
+// Los filtros de la pestaña Salidas. `from` y `to` son el periodo de la fecha de la salida; `state`
+// es `active` (vigentes), `voided` (anuladas) o `null` (las dos).
+export type ExitFilters = {
+  producer: string | null;
+  farm: string | null;
+  warehouse: string | null;
+  grade: 'g1' | 'g2' | null;
+  reason: string | null;
+  state: 'active' | 'voided' | null;
+  from: string | null;
+  to: string | null;
+  search: string;
+  page: number;
+};
+
+export type PendingEntryFilters = {
+  producer: string | null;
+  farm: string | null;
+  search: string;
+  page: number;
+};
+
+// `active` en `true` trae solo las bodegas que reciben ingresos; `null`, todas.
+export type WarehouseFilters = {
+  producer: string | null;
+  farm: string | null;
+  active: boolean | null;
+  page: number;
+};
+
 export const queryKeys = {
   accounts: {
     all: () => ['accounts'] as const,
@@ -187,6 +230,30 @@ export const queryKeys = {
     ) => ['quality', 'closed-summary', filters, closed] as const,
     // La calidad de un lote seco o posterior, con quién evaluó o clasificó: solo con conexión.
     detail: (lotId: string) => ['quality', 'detail', lotId] as const,
+  },
+  warehouse: {
+    // Lo que invalida cualquier escritura de bodega: una bodega, un ingreso, una salida o su
+    // anulación cambian las existencias, los totales y lo que queda por ingresar a la vez.
+    all: () => ['warehouse'] as const,
+    // Una página de existencias con sus filtros y su orden. La primera tiene copia en el dispositivo.
+    stock: (filters: StockFilters) => ['warehouse', 'stock', filters] as const,
+    // Los totales de la franja, con los filtros de las existencias menos el orden y la página.
+    summary: (filters: Omit<StockFilters, 'ordering' | 'page'>) =>
+      ['warehouse', 'summary', filters] as const,
+    // Una página de salidas con sus filtros; la primera tiene copia en el dispositivo.
+    exits: (filters: ExitFilters) => ['warehouse', 'exits', filters] as const,
+    // Lo que salió por motivo, con los filtros de las salidas menos el estado y la página.
+    exitSummary: (filters: Omit<ExitFilters, 'state' | 'page'>) =>
+      ['warehouse', 'exit-summary', filters] as const,
+    pending: (filters: PendingEntryFilters) =>
+      ['warehouse', 'pending', filters] as const,
+    warehouses: (filters: WarehouseFilters) =>
+      ['warehouse', 'warehouses', filters] as const,
+    // Las ubicaciones con existencias de una bodega, para sugerirlas al ingresar: solo con conexión.
+    locations: (warehouseId: string) =>
+      ['warehouse', 'locations', warehouseId] as const,
+    // El ingreso, las existencias y las salidas de un lote: solo con conexión.
+    lot: (lotId: string) => ['warehouse', 'lot', lotId] as const,
   },
   facilities: {
     // Lo que invalida registrar, editar, activar, desactivar o eliminar un cajón o una marquesina.

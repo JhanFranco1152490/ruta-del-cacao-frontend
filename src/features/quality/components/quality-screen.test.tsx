@@ -245,6 +245,23 @@ describe('QualityScreen', () => {
     ).toHaveAttribute('href', expect.stringMatching(/id=l4/));
   });
 
+  it('keeps a classified lot that entered the warehouse as closed, with its status', async () => {
+    server.use(
+      qualityListHandler([
+        lotOf('l3', 'in_warehouse', {
+          evaluation: buildQualityEvaluation(),
+          classification: buildQualityClassification({ g1_kg: '50.0' }),
+        }),
+      ]),
+    );
+    renderScreen({ searchParams: '?vista=cerrados' });
+
+    const [card] = await cards('Lotes cerrados en octubre de 2026');
+    expect(card).toHaveTextContent('En bodega');
+    expect(card).toHaveTextContent('G150,0 kg');
+    expect(within(card).queryAllByRole('button')).toHaveLength(0);
+  });
+
   it('writes the tab in the URL and sends the filters', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
     renderScreen({ searchParams: '?finca=f1&buscar=F02', onUrlUpdate });

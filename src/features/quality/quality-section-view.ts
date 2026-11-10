@@ -5,7 +5,7 @@ import { formatFixedDecimal } from '@/lib/format/decimal';
 import type { LotQuality, LotQualityDetail } from './api';
 
 import { type BarTone, evaluatedByLine, type Fact } from './quality-card-facts';
-import { fromTenths, sumTenths, toTenths } from './tenths';
+import { fromTenths, sumTenths, toTenths } from '@/lib/format/tenths';
 
 const percent = (value: string | number) => `${formatFixedDecimal(value, 1)} %`;
 

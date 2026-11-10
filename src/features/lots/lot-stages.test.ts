@@ -14,18 +14,35 @@ describe('lotStages', () => {
       ['dried', 'upcoming'],
       ['evaluated', 'upcoming'],
       ['classified', 'upcoming'],
+      ['in_warehouse', 'upcoming'],
     ]);
   });
 
-  it('leaves the quality stages after the dry lot', () => {
+  it('leaves the quality and warehouse stages after the dry lot', () => {
     const states = lotStages('dried').map(({ state }) => state);
 
     expect(states.slice(0, 4)).toEqual(['done', 'done', 'done', 'done']);
-    expect(states.slice(4)).toEqual(['current', 'upcoming', 'upcoming']);
+    expect(states.slice(4)).toEqual([
+      'current',
+      'upcoming',
+      'upcoming',
+      'upcoming',
+    ]);
   });
 
-  it('has nothing left once the lot is classified', () => {
-    expect(lotStages('classified').at(-1)?.state).toBe('current');
+  it('leaves only the warehouse once the lot is classified', () => {
+    expect(
+      lotStages('classified')
+        .slice(-2)
+        .map(({ status, state }) => [status, state]),
+    ).toEqual([
+      ['classified', 'current'],
+      ['in_warehouse', 'upcoming'],
+    ]);
+  });
+
+  it('has nothing left once the lot is in the warehouse', () => {
+    expect(lotStages('in_warehouse').at(-1)?.state).toBe('current');
   });
 
   it('names each stage like the status badge does', () => {
@@ -55,7 +72,8 @@ describe('lotStages of a discarded lot', () => {
 
 describe('stagePosition', () => {
   it('counts the stage from one', () => {
-    expect(stagePosition('generated')).toEqual({ position: 1, total: 7 });
-    expect(stagePosition('drying')).toEqual({ position: 4, total: 7 });
+    expect(stagePosition('generated')).toEqual({ position: 1, total: 8 });
+    expect(stagePosition('drying')).toEqual({ position: 4, total: 8 });
+    expect(stagePosition('in_warehouse')).toEqual({ position: 8, total: 8 });
   });
 });

@@ -1,7 +1,7 @@
 import { formatFixedDecimal } from '@/lib/format/decimal';
 import { MAX_PERCENT } from '@/lib/validation/percent';
 
-import { fromTenths, sumTenths } from './tenths';
+import { fromTenths, sumTenths } from '@/lib/format/tenths';
 
 export const SUM_EXCEEDS_MESSAGE = 'La suma no puede pasar de 100 %';
 

@@ -37,6 +37,8 @@ describe('isFieldPermission', () => {
     expect(isFieldPermission(PERMISSIONS.DRYING_LOG)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.QUALITY_EVALUATE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.QUALITY_DISCARD)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.WAREHOUSE_VIEW_STOCK)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.WAREHOUSE_MANAGE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.DRYING_MANAGE)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FACILITIES_VIEW)).toBe(true);
     expect(isFieldPermission(PERMISSIONS.FACILITIES_DELETE)).toBe(true);
