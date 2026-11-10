@@ -39,6 +39,7 @@ describe('priceIssue', () => {
   it('asks for whole pesos when it has decimals', () => {
     expect(priceIssue('18500,5')).toBe(PRICE_NOT_WHOLE_MESSAGE);
     expect(priceIssue('18.5')).toBe(PRICE_NOT_WHOLE_MESSAGE);
+    expect(priceIssue('18.500,50')).toBe(PRICE_NOT_WHOLE_MESSAGE);
   });
 
   it('asks to check a price out of range or not a number', () => {

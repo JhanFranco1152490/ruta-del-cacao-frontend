@@ -10,7 +10,8 @@ export const PRICE_OUT_OF_RANGE_MESSAGE = 'Revisa el precio por kilo.';
 // que no va cada tres cifras («18.5»), son decimales, y el precio va en pesos enteros.
 const WHOLE = /^\d+$/;
 const WITH_THOUSANDS = /^\d{1,3}(\.\d{3})+$/;
-const WITH_DECIMALS = /^\d+[.,]\d+$/;
+// Con decimales, también si traen el punto de los miles antes («18.500,50»).
+const WITH_DECIMALS = /^\d+(\.\d{3})*[.,]\d+$/;
 
 // El precio escrito como número de pesos, o `null` si no es un entero.
 export function parsePrice(text: string): number | null {
