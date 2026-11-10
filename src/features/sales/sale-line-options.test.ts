@@ -4,6 +4,7 @@ import { buildStockRow } from '@/test/factories';
 
 import {
   findStockOption,
+  fullQuantityText,
   optionsForLine,
   stockKey,
   stockOptions,
@@ -71,5 +72,15 @@ describe('findStockOption', () => {
     const options = stockOptions(rows);
     expect(findStockOption(options, stockKey('la', 'g2'))?.grade).toBe('g2');
     expect(findStockOption(options, 'gone:g1')).toBeUndefined();
+  });
+});
+
+describe('fullQuantityText', () => {
+  it('writes everything that is available, with one decimal', () => {
+    const [first, second] = stockOptions(rows);
+
+    expect(fullQuantityText(first)).toBe('80,0');
+    expect(fullQuantityText(second)).toBe('245,0');
+    expect(fullQuantityText({ availableTenths: 552 })).toBe('55,2');
   });
 });

@@ -9,7 +9,11 @@ import { Button } from '@/components/ui/button';
 import { formatPesos } from '@/lib/format/pesos';
 
 import { lineSubtotal } from '../sale-amounts';
-import { findStockOption, type StockOption } from '../sale-line-options';
+import {
+  findStockOption,
+  fullQuantityText,
+  type StockOption,
+} from '../sale-line-options';
 import type { SaleFormInput } from '../sale-schema';
 
 // Una línea de la venta: un lote y un calibre de la finca, sus kilos y su precio por kilo, y el
@@ -33,7 +37,8 @@ export function SaleLineFields({
   const {
     control,
     register,
-    formState: { errors },
+    setValue,
+    formState: { errors, isSubmitted },
   } = useFormContext<SaleFormInput>();
   const line = useWatch({ control, name: `lines.${index}` });
   const lineErrors = errors.lines?.[index];
@@ -58,7 +63,18 @@ export function SaleLineFields({
             error={lineErrors?.stock?.message}
             label="Lote y calibre"
             onBlur={field.onBlur}
-            onChange={(option) => field.onChange(option?.id ?? '')}
+            onChange={(option) => {
+              field.onChange(option?.id ?? '');
+              // Elegir otro lote cambia lo disponible: los kilos vuelven a ser todos los que hay.
+              const picked = option && findStockOption(options, option.id);
+              if (picked) {
+                setValue(
+                  `lines.${index}.quantity_kg`,
+                  fullQuantityText(picked),
+                  { shouldValidate: isSubmitted },
+                );
+              }
+            }}
             options={offered.map((option) => ({
               id: option.value,
               label: option.label,

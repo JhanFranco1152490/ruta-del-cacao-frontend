@@ -55,6 +55,7 @@ async function typeInto(
   field: HTMLElement,
   text: string,
 ) {
+  await user.clear(field);
   await user.click(field);
   await user.paste(text);
 }
@@ -138,6 +139,39 @@ describe('the lines of a sale', () => {
       'Valor total: $ 224.988',
     );
     expect(screen.getByText(/G1 12,5 kg · G2 0,0 kg/)).toBeInTheDocument();
+  });
+
+  it('fills the kilos with everything that is available when a lot is chosen', async () => {
+    const user = userEvent.setup();
+    renderScreen();
+
+    const first = await lineOf(1);
+    expect(within(first).getByLabelText('Kilos')).toHaveValue('');
+    await chooseStock(user, first, /· G1/);
+
+    expect(within(first).getByLabelText('Kilos')).toHaveValue('245,0');
+    await typeInto(
+      user,
+      within(first).getByLabelText('Precio por kilo'),
+      '18500',
+    );
+    expect(
+      within(first).getByRole('status', { name: 'Subtotal de la línea 1' }),
+    ).toHaveTextContent('$ 4.532.500');
+  });
+
+  it('lets lower the kilos and fills them again when the lot changes', async () => {
+    const user = userEvent.setup();
+    renderScreen();
+
+    const first = await lineOf(1);
+    await chooseStock(user, first, /· G1/);
+    await typeInto(user, within(first).getByLabelText('Kilos'), '100');
+    expect(within(first).getByLabelText('Kilos')).toHaveValue('100');
+
+    await chooseStock(user, first, /· G2/);
+
+    expect(within(first).getByLabelText('Kilos')).toHaveValue('55,2');
   });
 
   it('does not offer a lot and grade already in another line', async () => {

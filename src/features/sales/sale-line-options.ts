@@ -1,5 +1,10 @@
-import { toTenths } from '@/lib/format/tenths';
-import { availableText, GRADE_LABELS, type Grade } from '@/lib/stock-quantity';
+import { fromTenths, toTenths } from '@/lib/format/tenths';
+import {
+  availableText,
+  GRADE_LABELS,
+  type Grade,
+  kilosText,
+} from '@/lib/stock-quantity';
 
 import type { FarmStockRow } from './api';
 
@@ -57,3 +62,9 @@ export const findStockOption = (
   options: readonly StockOption[],
   value: string,
 ) => options.find((option) => option.value === value);
+
+// Los kilos con que empieza una línea al elegir su existencia: todo lo disponible, que es lo más
+// común (se vende el lote completo) y solo hay que bajarlo si se vende menos.
+export const fullQuantityText = (
+  option: Pick<StockOption, 'availableTenths'>,
+) => kilosText(fromTenths(option.availableTenths));

@@ -78,6 +78,7 @@ async function typeInto(
   field: HTMLElement,
   text: string,
 ) {
+  await user.clear(field);
   await user.click(field);
   await user.paste(text);
 }
