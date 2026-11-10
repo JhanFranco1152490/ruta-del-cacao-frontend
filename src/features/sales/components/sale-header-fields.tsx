@@ -29,7 +29,8 @@ const CHANGE_FARM = {
   variant: 'default' as const,
 };
 
-// De quién y a quién se vende, y cuándo. La finca decide de qué existencias salen las líneas:
+// De quién y a quién se vende, y cuándo. La finca y la fecha van en la primera fila y el comprador en
+// la segunda, con su botón para registrar uno nuevo a la derecha. La finca decide de qué existencias salen las líneas:
 // cambiarla con líneas escritas las quita, y se pregunta antes.
 export function SaleHeaderFields({
   screen,
@@ -96,11 +97,6 @@ export function SaleHeaderFields({
             )
           }
         />
-        <SaleBuyerField
-          disabled={disabled}
-          renderNewBuyer={renderNewBuyer}
-          screen={screen}
-        />
         <TextField
           disabled={disabled}
           error={errors.sale_date?.message}
@@ -108,6 +104,11 @@ export function SaleHeaderFields({
           max={screen.today}
           type="date"
           {...register('sale_date')}
+        />
+        <SaleBuyerField
+          disabled={disabled}
+          renderNewBuyer={renderNewBuyer}
+          screen={screen}
         />
         <TextAreaField
           disabled={disabled}

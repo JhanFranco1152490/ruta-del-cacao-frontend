@@ -15,7 +15,8 @@ import type { SaleFormInput } from '../sale-schema';
 import type { SaleFormScreenState } from '../use-sale-form-screen';
 
 // A quién se vende: los compradores activos del productor y, con permiso, registrar uno nuevo sin
-// salir del formulario.
+// salir del formulario. Son dos celdas de la cuadrícula del encabezado: el campo y, a su derecha, el
+// botón a la altura del campo (en celular, debajo de él).
 export function SaleBuyerField({
   screen,
   renderNewBuyer,
@@ -43,49 +44,52 @@ export function SaleBuyerField({
   };
 
   return (
-    <div>
-      <Controller
-        control={control}
-        name="buyer_id"
-        render={({ field }) => (
-          <SearchSelect
-            disabled={disabled || screen.needsProducer || noBuyers}
-            error={errors.buyer_id?.message}
-            label="Comprador"
-            onBlur={field.onBlur}
-            onChange={(option) => field.onChange(option?.id ?? '')}
-            options={buyerOptions}
-            placeholder="Elige a quién le vendes"
-            value={buyerOptions.find(({ id }) => id === field.value) ?? null}
-          />
-        )}
-      />
-      {noBuyers && (
-        <p className="mt-2 text-sm font-bold text-warn" role="status">
-          {NO_ACTIVE_BUYERS}{' '}
-          {screen.can.addBuyer && !renderNewBuyer && (
-            <Link className="underline" href={BUYERS_PATH}>
-              Registrar comprador
-            </Link>
+    <>
+      <div>
+        <Controller
+          control={control}
+          name="buyer_id"
+          render={({ field }) => (
+            <SearchSelect
+              disabled={disabled || screen.needsProducer || noBuyers}
+              error={errors.buyer_id?.message}
+              label="Comprador"
+              onBlur={field.onBlur}
+              onChange={(option) => field.onChange(option?.id ?? '')}
+              options={buyerOptions}
+              placeholder="Elige a quién le vendes"
+              value={buyerOptions.find(({ id }) => id === field.value) ?? null}
+            />
           )}
-        </p>
-      )}
+        />
+        {noBuyers && (
+          <p className="mt-2 text-sm font-bold text-warn" role="status">
+            {NO_ACTIVE_BUYERS}{' '}
+            {screen.can.addBuyer && !renderNewBuyer && (
+              <Link className="underline" href={BUYERS_PATH}>
+                Registrar comprador
+              </Link>
+            )}
+          </p>
+        )}
+      </div>
       {canRegister && (
-        <Button
-          className="mt-1 -ml-4"
-          disabled={disabled || screen.needsProducer}
-          onClick={() => setRegistering(true)}
-          size="office"
-          type="button"
-          variant="ghost"
-        >
-          <Plus aria-hidden="true" className="size-4" /> Registrar comprador
-        </Button>
+        <div className="sm:mt-7">
+          <Button
+            disabled={disabled || screen.needsProducer}
+            onClick={() => setRegistering(true)}
+            size="office"
+            type="button"
+            variant="outline"
+          >
+            <Plus aria-hidden="true" className="size-4" /> Registrar comprador
+          </Button>
+        </div>
       )}
       {registering && (
         // El diálogo se dibuja en un portal, pero sus eventos suben por el árbol de React hasta el
         // formulario de la venta: sin esto, guardar el comprador enviaría también la venta.
-        <div onSubmit={(event) => event.stopPropagation()}>
+        <div className="contents" onSubmit={(event) => event.stopPropagation()}>
           {renderNewBuyer?.({
             producer: screen.producer,
             chooseProducer: screen.superuser,
@@ -95,6 +99,6 @@ export function SaleBuyerField({
           })}
         </div>
       )}
-    </div>
+    </>
   );
 }
