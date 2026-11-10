@@ -3,7 +3,7 @@ import type { components } from '@/lib/api/schema';
 type Schemas = components['schemas'];
 
 export type Buyer = Schemas['Buyer'];
-export type BuyerType = Schemas['BuyerTypeEnum'];
+export type { BuyerType } from '@/lib/buyer-types';
 export type BuyerCreateRequest = Schemas['BuyerCreateRequest'];
 export type BuyerUpdateRequest = Schemas['PatchedBuyerUpdateRequest'];
 export type BuyerList = Schemas['BuyerList'];

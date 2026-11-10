@@ -4,7 +4,7 @@ import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs';
 
 import type { BuyerType } from './api';
 import type { BuyerFilters, BuyerStatusFilter } from './buyer-filters';
-import { BUYER_TYPES } from './buyer-types';
+import { BUYER_TYPES } from '@/lib/buyer-types';
 
 const STATUSES = [
   'active',

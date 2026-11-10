@@ -58,4 +58,11 @@ describe('isFieldPermission', () => {
     expect(isFieldPermission(PERMISSIONS.BUYERS_VIEW)).toBe(false);
     expect(isFieldPermission(PERMISSIONS.BUYERS_DELETE)).toBe(false);
   });
+
+  // Una venta saca el cacao de una finca: quien vende necesita una.
+  it('counts the sales, which belong to one farm', () => {
+    expect(isFieldPermission(PERMISSIONS.SALES_VIEW)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.SALES_ADD)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.SALES_VOID)).toBe(true);
+  });
 });

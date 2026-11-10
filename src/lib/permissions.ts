@@ -49,6 +49,9 @@ export const PERMISSIONS = {
   BUYERS_ADD: 'buyers.add_buyer',
   BUYERS_CHANGE: 'buyers.change_buyer',
   BUYERS_DELETE: 'buyers.delete_buyer',
+  SALES_VIEW: 'sales.view_sale',
+  SALES_ADD: 'sales.add_sale',
+  SALES_VOID: 'sales.void_sale',
   HEALTH_MANAGE_PEST_DISEASE: 'health.manage_pestdisease',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',
@@ -77,6 +80,7 @@ const FIELD_AREAS = [
   'quality.',
   'warehouse.',
   'facilities.',
+  'sales.',
 ];
 export const isFieldPermission = (code: string) =>
   code !== PERMISSIONS.CROPS_MANAGE_VARIETIES &&

@@ -1511,6 +1511,111 @@ export interface paths {
         patch: operations["roles_partial_update"];
         trace?: never;
     };
+    "/api/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las ventas del periodo, `from` y `to` incluidos, de hasta 366 días, de las fincas que la cuenta alcanza; de la más reciente a la más antigua. Sin sus líneas: con los kilos de G1 y G2 y el total. `status` es `registered` o `voided` (sin él, las dos), y `search` busca por el número (`V-0012`, `12`). */
+        get: operations["sales_list"];
+        put?: never;
+        /** @description Registra la venta de los lotes En bodega de una finca a un comprador activo del mismo productor. Cada línea (lote y calibre, sin repetir) saca sus kilos de la bodega con motivo Venta, en la misma transacción: si una pide más de lo que hay, 400 `stock_insufficient` con `line` (desde 0) y `available_kg`, y no queda nada. Un lote de otra finca es 404 y uno que no está En bodega, 409 `lot_invalid_status`, los dos con `line`. El subtotal de cada línea es kilos por precio, redondeado al peso; el número (`V-0012`) lo asigna el servidor. */
+        post: operations["sales_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Una venta con sus líneas, su soporte y, si se anuló, quién y por qué. */
+        get: operations["sales_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/{id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El soporte de la factura, después de revisar que quien lo pide alcance la venta. Nunca hay una dirección pública. Sin soporte, 404. */
+        get: operations["sales_invoice_retrieve"];
+        /** @description Adjunta o reemplaza el soporte de la factura, en `multipart/form-data`: un PDF, JPG o PNG (revisado por el contenido) de hasta 5 MB. Errores propios: 409 `sale_voided`, 413 `invoice_too_large` y 415 `invoice_format_not_allowed`. */
+        put: operations["sales_invoice_update"];
+        post?: never;
+        /** @description Quita el soporte de la factura. Sin soporte, 204 igual. Una venta anulada lo conserva: 409 `sale_voided`. */
+        delete: operations["sales_invoice_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Anula la venta con su motivo: los kilos de cada línea vuelven a la bodega y sus salidas quedan anuladas, en la misma transacción. Requiere `expected_version`; si la venta cambió, 409 `stale_version` con la vigente en `current`. Una venta anulada no se vuelve a anular (409 `sale_voided`) ni se reactiva. */
+        post: operations["sales_void_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/buyer-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los compradores activos a los que se les puede vender, para el formulario: solo su nombre y su tipo. La cuenta técnica nombra el productor. */
+        get: operations["sales_buyer_options_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las cifras de la pantalla: el valor vendido, los kilos de G1 y G2 y cuántas ventas, con los mismos filtros de la lista. Solo cuentan las ventas registradas. */
+        get: operations["sales_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stock": {
         parameters: {
             query?: never;
@@ -2129,6 +2234,15 @@ export interface components {
         };
         BuyerList: {
             results: components["schemas"]["Buyer"][];
+        };
+        BuyerOption: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            buyer_type: string;
+        };
+        BuyerOptionList: {
+            results: components["schemas"]["BuyerOption"][];
         };
         BuyerProducer: {
             /** Format: uuid */
@@ -3159,6 +3273,10 @@ export interface components {
          * @enum {string}
          */
         InputTypeEnum: "fertilizer" | "organic_fertilizer" | "fungicide" | "insecticide" | "other";
+        InvoiceUploadRequest: {
+            /** Format: binary */
+            file: string;
+        };
         Location: {
             /** Format: decimal */
             latitude: string;
@@ -3683,6 +3801,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Role"][];
+        };
+        PaginatedSaleListItemList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["SaleListItem"][];
         };
         PaginatedStockExitRowList: {
             /** @example 123 */
@@ -4532,6 +4665,141 @@ export interface components {
             member_code: string;
             first_name: string;
             last_name: string;
+        };
+        Sale: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            farm: components["schemas"]["SaleFarm"];
+            buyer: components["schemas"]["SaleBuyer"];
+            /** Format: date */
+            sale_date: string;
+            notes: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            total: number;
+            readonly invoice: components["schemas"]["SaleInvoice"] | null;
+            status: components["schemas"]["SaleStatusEnum"];
+            /** Format: date-time */
+            created_at: string;
+            created_by: components["schemas"]["SalePerson"];
+            readonly voided: components["schemas"]["SaleVoid"] | null;
+            version: number;
+            lines: components["schemas"]["SaleLine"][];
+        };
+        SaleBuyer: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            buyer_type: string;
+            is_active: boolean;
+        };
+        SaleConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["Sale"];
+        };
+        SaleCreateRequest: {
+            /** Format: uuid */
+            farm_id: string;
+            /** Format: uuid */
+            buyer_id: string;
+            /** Format: date */
+            sale_date: string;
+            notes?: string;
+            lines: components["schemas"]["SaleLineRequestRequest"][];
+        };
+        SaleFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        SaleInvoice: {
+            file_name: string;
+            content_type: string;
+            size: number;
+            /** Format: date-time */
+            uploaded_at: string;
+        };
+        SaleLine: {
+            /** Format: uuid */
+            id: string;
+            lot: components["schemas"]["SaleLot"];
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            price_per_kg: number;
+            subtotal: number;
+        };
+        SaleLineRequestRequest: {
+            /** Format: uuid */
+            lot_id: string;
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            price_per_kg: number;
+        };
+        SaleListItem: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            farm: components["schemas"]["SaleFarm"];
+            buyer: components["schemas"]["SaleBuyer"];
+            /** Format: date */
+            sale_date: string;
+            notes: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            total: number;
+            readonly invoice: components["schemas"]["SaleInvoice"] | null;
+            status: components["schemas"]["SaleStatusEnum"];
+            /** Format: date-time */
+            created_at: string;
+            created_by: components["schemas"]["SalePerson"];
+            readonly voided: components["schemas"]["SaleVoid"] | null;
+            version: number;
+        };
+        SaleLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+        };
+        SalePerson: {
+            /** Format: uuid */
+            id: string;
+            readonly full_name: string;
+        };
+        /**
+         * @description * `registered` - Registrada
+         *     * `voided` - Anulada
+         * @enum {string}
+         */
+        SaleStatusEnum: "registered" | "voided";
+        SaleSummary: {
+            total: number;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            sales: number;
+        };
+        SaleVoid: {
+            /** Format: date-time */
+            voided_at: string;
+            voided_by: components["schemas"]["SalePerson"];
+            reason: string;
+        };
+        SaleVoidRequestRequest: {
+            expected_version: number;
+            reason: string;
         };
         /**
          * @description * `zigzag` - Zig-zag
@@ -12251,6 +12519,524 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_list: {
+        parameters: {
+            query: {
+                buyer?: string;
+                farm?: string;
+                from: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+                /**
+                 * @description * `registered` - Registrada
+                 *     * `voided` - Anulada
+                 */
+                status?: "registered" | "voided";
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSaleListItemList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaleCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sale"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sale"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_invoice_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "image/jpeg": string;
+                    "image/png": string;
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_invoice_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["InvoiceUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sale"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_invoice_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_void_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaleVoidRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sale"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleConflictError"];
+                };
+            };
+        };
+    };
+    sales_buyer_options_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerOptionList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sales_summary_retrieve: {
+        parameters: {
+            query: {
+                buyer?: string;
+                farm?: string;
+                from: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

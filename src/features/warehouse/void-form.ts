@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import type { StockExit } from './api';
-import { GRADE_LABELS, kilosText } from './exit-quantity';
+import { GRADE_LABELS, kilosText } from '@/lib/stock-quantity';
 import { DETAIL_MAX_LENGTH } from './exit-reasons';
 
 // El mismo texto que el servidor.

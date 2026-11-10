@@ -10,7 +10,7 @@ import type { WarehouseView } from '@/lib/paths/warehouse';
 import { Plus } from 'lucide-react';
 
 import type { Grade } from '../api';
-import { GRADE_LABELS } from '../exit-quantity';
+import { GRADE_LABELS } from '@/lib/stock-quantity';
 import { EXIT_REASON_LABELS } from '../exit-reasons';
 import { OFFLINE_WAREHOUSE_REASON } from '../warehouse-actions';
 import { STOCK_ORDER_OPTIONS } from '../stock-order-options';

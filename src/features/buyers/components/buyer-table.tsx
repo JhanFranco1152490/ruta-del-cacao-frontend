@@ -21,7 +21,7 @@ import { producerLabelOf } from '@/lib/format/producer';
 
 import type { Buyer } from '../api';
 import { documentText } from '../buyer-format';
-import { buyerTypeLabel } from '../buyer-types';
+import { buyerTypeLabel } from '@/lib/buyer-types';
 
 const rowId = (id: string) => `comprador-${id}`;
 

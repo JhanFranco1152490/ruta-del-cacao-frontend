@@ -19,7 +19,7 @@ import {
   toEntryCorrection,
   toEntryRequest,
 } from '../entry-form';
-import { kilosText } from '../exit-quantity';
+import { kilosText } from '@/lib/stock-quantity';
 import { useCorrectEntry, useRegisterEntry } from '../mutations';
 import { useEntryWarehouses } from '../use-entry-warehouses';
 import { NO_CHANGES } from '../warehouse-form';

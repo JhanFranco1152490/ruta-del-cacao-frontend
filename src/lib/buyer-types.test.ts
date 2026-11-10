@@ -18,6 +18,10 @@ describe('buyerTypeLabel', () => {
   it('names a type', () => {
     expect(buyerTypeLabel('intermediary')).toBe('Intermediario o acopiador');
   });
+
+  it('shows a type it does not know as it came', () => {
+    expect(buyerTypeLabel('wholesaler')).toBe('wholesaler');
+  });
 });
 
 describe('isBuyerType', () => {

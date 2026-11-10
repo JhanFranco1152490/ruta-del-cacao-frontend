@@ -18,7 +18,7 @@ import {
   type BuyerFormInput,
   type BuyerFormValues,
 } from '../buyer-schema';
-import { BUYER_TYPE_OPTIONS } from '../buyer-types';
+import { BUYER_TYPE_OPTIONS } from '@/lib/buyer-types';
 
 // Los siete campos de un comprador. Debajo del nombre y del documento caben los avisos de repetido
 // (`nameNotice`, `documentNotice`); tipo y número de documento, y teléfono y correo, van en una fila

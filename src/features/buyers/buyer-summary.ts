@@ -1,5 +1,5 @@
 import type { Buyer, BuyerType } from './api';
-import { BUYER_TYPES } from './buyer-types';
+import { BUYER_TYPES } from '@/lib/buyer-types';
 
 export type BuyerSummary = {
   active: number;

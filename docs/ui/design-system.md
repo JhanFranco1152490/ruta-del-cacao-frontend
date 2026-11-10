@@ -323,7 +323,7 @@ a una app que se usa en celulares modestos y sin conexión. Las utilidades está
   entre un grupo y otro.
 - **Menú de navegación por grupos:** las entradas (`NAV_ITEMS`) llevan un `group`: Administración
   (Productores, Usuarios, Roles y permisos), Finca, Manejo agrícola, Cosecha y poscosecha,
-  Comercialización (Compradores y, después, las ventas) y Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,
+  Comercialización (Compradores y Ventas) y Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,
   Administración va primero (empieza con Productores); para el productor, que solo ve Usuarios y
   Roles, va al final. Los encabezados solo se dibujan si la persona ve entradas de dos o más grupos;
   con uno el menú queda plano, y una entrada sin grupo va suelta arriba. Cada grupo se pliega con su

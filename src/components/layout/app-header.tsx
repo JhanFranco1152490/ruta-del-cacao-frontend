@@ -20,7 +20,7 @@ export function AppHeader({
     // perderse de vista al desplazarse. z-40: sobre el contenido (los mapas se aíslan, ver
     // globals.css) y bajo los diálogos y menús (z-50). Sobre el verde el anillo de foco cobre no
     // se distingue: dentro del encabezado va en oro.
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-selva [&_*:focus-visible]:!outline-oro">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-selva print:hidden [&_*:focus-visible]:!outline-oro">
       <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-8">
         <div className="flex min-w-0 items-center gap-3 text-selva">
           {mobileNav}
