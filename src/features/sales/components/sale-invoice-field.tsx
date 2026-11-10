@@ -25,8 +25,8 @@ export function SaleInvoiceField({
   onRemove: () => void;
 }) {
   return (
-    <FormSection title="Soporte de la factura (opcional)">
-      <div className="mt-4 space-y-3">
+    <FormSection compact title="Soporte de la factura (opcional)">
+      <div className="space-y-3">
         {file ? (
           <InvoiceFileSummary name={file.name} size={file.size}>
             <Button

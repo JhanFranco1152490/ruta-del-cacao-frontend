@@ -10,12 +10,18 @@ import {
 } from 'react-hook-form';
 
 import { FormMessage } from '@/components/form-message';
+import { FormSection } from '@/components/form-section';
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { Button, buttonVariants } from '@/components/ui/button';
 
 import { useFarmStock } from '../queries';
+import { saleTotals } from '../sale-amounts';
 import type { RenderNewBuyer } from '../sale-new-buyer';
-import { type StockOption, stockOptions } from '../sale-line-options';
+import {
+  findStockOption,
+  type StockOption,
+  stockOptions,
+} from '../sale-line-options';
 import {
   createSaleFormSchema,
   emptySaleForm,
@@ -27,6 +33,7 @@ import { useSaleSubmit } from '../use-sale-submit';
 import { SaleHeaderFields } from './sale-header-fields';
 import { SaleInvoiceField } from './sale-invoice-field';
 import { SaleLinesSection } from './sale-lines-section';
+import { SaleTotals } from './sale-totals';
 
 type SaleFormContext = { options: readonly StockOption[]; today: string };
 
@@ -80,6 +87,14 @@ export function SaleForm({
     (line) => line.stock || line.quantity_kg.trim() || line.price_per_kg.trim(),
   );
 
+  const totals = saleTotals(
+    lines.map((line) => ({
+      grade: findStockOption(options, line.stock)?.grade ?? null,
+      quantity_kg: line.quantity_kg,
+      price_per_kg: line.price_per_kg,
+    })),
+  );
+
   // Otra finca, otras existencias: las líneas de la anterior se quitan.
   const changeFarm = (farmId: string) => {
     form.setValue('farm_id', farmId, {
@@ -91,44 +106,62 @@ export function SaleForm({
   return (
     <FormProvider {...form}>
       <form
-        className="space-y-6"
+        className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start"
         noValidate
         onSubmit={(event) =>
           void form.handleSubmit(submit.onValid, submit.onInvalid)(event)
         }
       >
-        <FormMessage>{submit.formError}</FormMessage>
-        <SaleHeaderFields
-          disabled={saving}
-          hasLines={hasLines}
-          onFarmChange={changeFarm}
-          renderNewBuyer={renderNewBuyer}
-          screen={screen}
-        />
-        <SaleLinesSection
-          disabled={saving}
-          farmChosen={!!farmId}
-          options={options}
-          stock={stock}
-        />
-        <SaleInvoiceField
-          disabled={saving}
-          error={submit.invoiceError}
-          file={submit.invoice}
-          onChoose={submit.chooseInvoice}
-          onRemove={submit.removeInvoice}
-        />
-        <MobileActionBar>
-          <Button disabled={saving} size="office" type="submit">
-            {saving ? 'Guardando…' : 'Guardar venta'}
-          </Button>
-          <Link
-            className={buttonVariants({ size: 'office', variant: 'outline' })}
-            href={screen.returnPath}
-          >
-            Cancelar
-          </Link>
-        </MobileActionBar>
+        <div className="min-w-0 space-y-6">
+          <FormMessage>{submit.formError}</FormMessage>
+          <SaleHeaderFields
+            disabled={saving}
+            hasLines={hasLines}
+            onFarmChange={changeFarm}
+            renderNewBuyer={renderNewBuyer}
+            screen={screen}
+          />
+          <SaleLinesSection
+            disabled={saving}
+            farmChosen={!!farmId}
+            options={options}
+            stock={stock}
+          />
+        </div>
+        {/* El resumen, el soporte y los botones van juntos: en escritorio se quedan a la vista
+            mientras se recorren las líneas; en celular van debajo de ellas, con los botones fijos. */}
+        <aside className="min-w-0 space-y-6 lg:sticky lg:top-20">
+          <FormSection compact title="Resumen">
+            <SaleTotals {...totals} />
+          </FormSection>
+          <SaleInvoiceField
+            disabled={saving}
+            error={submit.invoiceError}
+            file={submit.invoice}
+            onChoose={submit.chooseInvoice}
+            onRemove={submit.removeInvoice}
+          />
+          <MobileActionBar>
+            <Button
+              className="lg:w-full"
+              disabled={saving}
+              size="office"
+              type="submit"
+            >
+              {saving ? 'Guardando…' : 'Guardar venta'}
+            </Button>
+            <Link
+              className={buttonVariants({
+                size: 'office',
+                variant: 'outline',
+                className: 'lg:w-full',
+              })}
+              href={screen.returnPath}
+            >
+              Cancelar
+            </Link>
+          </MobileActionBar>
+        </aside>
       </form>
     </FormProvider>
   );

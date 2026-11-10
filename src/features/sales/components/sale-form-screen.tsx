@@ -35,7 +35,7 @@ export function SaleFormScreen({
   }
 
   return (
-    <div className={pageContainerClass('narrow', 'space-y-6')}>
+    <div className={pageContainerClass('wide', 'space-y-6')}>
       <Breadcrumb
         items={[
           { label: 'Ventas', href: screen.returnPath || SALES_PATH },

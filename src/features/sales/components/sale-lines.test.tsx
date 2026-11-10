@@ -135,10 +135,11 @@ describe('the lines of a sale', () => {
     expect(
       within(first).getByRole('status', { name: 'Subtotal de la línea 1' }),
     ).toHaveTextContent('$ 224.988');
-    expect(screen.getByText(/Valor total:/)).toHaveTextContent(
-      'Valor total: $ 224.988',
-    );
-    expect(screen.getByText(/G1 12,5 kg · G2 0,0 kg/)).toBeInTheDocument();
+    const total = screen.getByRole('status', { name: 'Valor de la venta' });
+    expect(total).toHaveTextContent('Valor total$ 224.988');
+    expect(total).toHaveTextContent('Kg de G112,5');
+    expect(total).toHaveTextContent('Kg de G20,0');
+    expect(total).toHaveTextContent('1 línea con valor');
   });
 
   it('fills the kilos with everything that is available when a lot is chosen', async () => {
@@ -224,9 +225,9 @@ describe('the lines of a sale', () => {
     expect(
       screen.queryByRole('listitem', { name: 'Línea 1' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText(/Valor total:/)).toHaveTextContent(
-      'Valor total: $ 0',
-    );
+    expect(
+      screen.getByRole('status', { name: 'Valor de la venta' }),
+    ).toHaveTextContent('Valor total$ 0');
   });
 
   it('says when the farm has nothing in the warehouse', async () => {

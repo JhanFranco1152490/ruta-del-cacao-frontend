@@ -34,7 +34,12 @@ describe('saleTotals', () => {
         { grade: 'g2', quantity_kg: '40', price_per_kg: '15.000' },
         { grade: 'g1', quantity_kg: '0,1', price_per_kg: '18500' },
       ]),
-    ).toEqual({ total: 3376850, g1Tenths: 1501, g2Tenths: 400 });
+    ).toEqual({
+      total: 3376850,
+      g1Tenths: 1501,
+      g2Tenths: 400,
+      lineCount: 3,
+    });
   });
 
   it('leaves out a line that is not complete', () => {
@@ -43,6 +48,6 @@ describe('saleTotals', () => {
         { grade: 'g1', quantity_kg: '150', price_per_kg: '' },
         { grade: null, quantity_kg: '', price_per_kg: '' },
       ]),
-    ).toEqual({ total: 0, g1Tenths: 0, g2Tenths: 0 });
+    ).toEqual({ total: 0, g1Tenths: 0, g2Tenths: 0, lineCount: 0 });
   });
 });

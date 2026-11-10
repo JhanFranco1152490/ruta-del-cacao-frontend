@@ -2,29 +2,47 @@ import { formatPesos } from '@/lib/format/pesos';
 import { fromTenths } from '@/lib/format/tenths';
 import { kilosText } from '@/lib/stock-quantity';
 
-// El valor total y los kilos de cada calibre de lo escrito, que cambian al escribir. Va debajo de
-// las líneas y no pegado sobre la barra de guardar: a 360 px pegado tapaba los kilos y el precio de
-// la línea que se estaba escribiendo.
+// El valor total y los kilos de cada calibre de lo escrito, que cambian al escribir. Va en el
+// resumen de la venta: a un lado en escritorio y, en celular, debajo de las líneas y no pegado sobre
+// la barra de guardar, que a 360 px tapaba los kilos y el precio de la línea que se estaba escribiendo.
 export function SaleTotals({
   total,
   g1Tenths,
   g2Tenths,
+  lineCount,
 }: {
   total: number;
   g1Tenths: number;
   g2Tenths: number;
+  // Cuántas líneas ya cuentan (las que tienen kilos y precio).
+  lineCount: number;
 }) {
   return (
     <div
-      aria-live="polite"
-      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-lg bg-[var(--cobre-tint)] px-4 py-3"
+      aria-label="Valor de la venta"
+      className="rounded-lg bg-[var(--cobre-tint)] p-4"
+      role="status"
     >
-      <p className="text-lg font-bold text-selva">
-        Valor total: <span className="tabular-nums">{formatPesos(total)}</span>
+      <p className="text-sm font-bold text-selva">Valor total</p>
+      <p className="font-serif text-3xl text-selva tabular-nums">
+        {formatPesos(total)}
       </p>
-      <p className="text-sm text-muted-foreground tabular-nums">
-        G1 {kilosText(fromTenths(g1Tenths))} kg · G2{' '}
-        {kilosText(fromTenths(g2Tenths))} kg
+      <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <dt className="text-muted-foreground">Kg de G1</dt>
+          <dd className="font-bold tabular-nums">
+            {kilosText(fromTenths(g1Tenths))}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Kg de G2</dt>
+          <dd className="font-bold tabular-nums">
+            {kilosText(fromTenths(g2Tenths))}
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-3 text-sm text-muted-foreground">
+        {lineCount === 1 ? '1 línea' : `${lineCount} líneas`} con valor
       </p>
     </div>
   );

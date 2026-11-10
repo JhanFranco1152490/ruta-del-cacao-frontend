@@ -17,8 +17,8 @@ import {
 import type { SaleFormInput } from '../sale-schema';
 
 // Una línea de la venta: un lote y un calibre de la finca, sus kilos y su precio por kilo, y el
-// subtotal que sale de ellos. En celular es una tarjeta con el lote arriba y los kilos y el precio en
-// dos columnas.
+// subtotal que sale de ellos. El lote ocupa la fila de arriba, que es la que necesita ancho (su
+// código es largo); debajo van los kilos, el precio y el subtotal con quitar.
 export function SaleLineFields({
   index,
   offered,
@@ -51,14 +51,14 @@ export function SaleLineFields({
   return (
     <li
       aria-label={`Línea ${position}`}
-      className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg border border-border p-4 sm:grid-cols-[minmax(0,1fr)_8rem_9rem_auto]"
+      className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg border border-border p-4 sm:grid-cols-[9rem_10rem_minmax(0,1fr)]"
     >
       <Controller
         control={control}
         name={`lines.${index}.stock`}
         render={({ field }) => (
           <SearchSelect
-            className="col-span-2 sm:col-span-1"
+            className="col-span-2 sm:col-span-3"
             disabled={disabled}
             error={lineErrors?.stock?.message}
             label="Lote y calibre"
@@ -101,7 +101,7 @@ export function SaleLineFields({
         placeholder="$"
         {...register(`lines.${index}.price_per_kg`)}
       />
-      <div className="col-span-2 flex items-end justify-between gap-3 sm:col-span-1 sm:flex-col sm:items-end sm:justify-start">
+      <div className="col-span-2 flex items-end justify-between gap-3 sm:col-span-1">
         <p className="text-sm">
           <span className="text-muted-foreground">Subtotal </span>
           <output

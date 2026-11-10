@@ -25,15 +25,23 @@ export function lineSubtotal(
   return Math.round((tenths * price) / 10);
 }
 
-// El valor total y los kilos de cada calibre de lo escrito. Una línea incompleta no suma.
+// El valor total, los kilos de cada calibre y cuántas líneas cuentan de lo escrito. Una línea
+// incompleta no suma.
 export function saleTotals(lines: readonly LineAmounts[]) {
   let total = 0;
+  let counted = 0;
   const tenths: Record<Grade, number> = { g1: 0, g2: 0 };
   for (const line of lines) {
     const subtotal = lineSubtotal(line.quantity_kg, line.price_per_kg);
     if (subtotal === null) continue;
     total += subtotal;
+    counted += 1;
     if (line.grade) tenths[line.grade] += toTenths(line.quantity_kg) ?? 0;
   }
-  return { total, g1Tenths: tenths.g1, g2Tenths: tenths.g2 };
+  return {
+    total,
+    g1Tenths: tenths.g1,
+    g2Tenths: tenths.g2,
+    lineCount: counted,
+  };
 }

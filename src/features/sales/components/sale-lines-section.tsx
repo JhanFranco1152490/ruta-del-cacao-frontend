@@ -8,17 +8,11 @@ import { InlineError } from '@/components/form-message';
 import { LoadingBlock } from '@/components/loading-block';
 import { Button } from '@/components/ui/button';
 
-import { saleTotals } from '../sale-amounts';
 import { MAX_SALE_LINES } from '../sale-limits';
-import {
-  findStockOption,
-  optionsForLine,
-  type StockOption,
-} from '../sale-line-options';
+import { optionsForLine, type StockOption } from '../sale-line-options';
 import { NO_STOCK_TO_SELL } from '../sale-messages';
 import { emptySaleLine, type SaleFormInput } from '../sale-schema';
 import { SaleLineFields } from './sale-line-fields';
-import { SaleTotals } from './sale-totals';
 
 type StockRead = {
   isPending: boolean;
@@ -26,7 +20,7 @@ type StockRead = {
   refetch: () => unknown;
 };
 
-// Los lotes que se venden, de lo que hay en bodega en la finca elegida, y el total de la venta.
+// Los lotes que se venden, de lo que hay en bodega en la finca elegida.
 export function SaleLinesSection({
   farmChosen,
   stock,
@@ -46,13 +40,6 @@ export function SaleLinesSection({
   const { fields, append, remove } = useFieldArray({ control, name: 'lines' });
   const lines = useWatch({ control, name: 'lines' });
   const chosen = lines.map(({ stock: value }) => value);
-  const totals = saleTotals(
-    lines.map((line) => ({
-      grade: findStockOption(options, line.stock)?.grade ?? null,
-      quantity_kg: line.quantity_kg,
-      price_per_kg: line.price_per_kg,
-    })),
-  );
   const linesError = errors.lines?.root?.message ?? errors.lines?.message;
   // Cada línea toma una existencia distinta: con todas tomadas no hay qué agregar.
   const canAdd =
@@ -85,7 +72,6 @@ export function SaleLinesSection({
             <Plus aria-hidden="true" className="size-4" /> Agregar línea
           </Button>
         </LinesBody>
-        <SaleTotals {...totals} />
       </div>
     </FormSection>
   );
