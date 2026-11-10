@@ -6,7 +6,7 @@ las reglas de trabajo están en `AGENTS.md`.
 
 ## Qué hace hoy
 
-### Sprint 3 (26/10 – 15/11/2026)
+### Sprint 3 (26/10 – 10/11/2026)
 
 - **Fermentación y secado:** listas de trabajo del día con la línea de tiempo de cada lote, volteos y
   bitácora diaria también sin conexión, y finalizar con el rendimiento.
