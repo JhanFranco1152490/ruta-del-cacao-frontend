@@ -6,6 +6,21 @@ las reglas de trabajo están en `AGENTS.md`.
 
 ## Qué hace hoy
 
+### Sprint 3 (26/10 – 15/11/2026)
+
+- **Fermentación y secado:** listas de trabajo del día con la línea de tiempo de cada lote, volteos y
+  bitácora diaria también sin conexión, y finalizar con el rendimiento.
+- **Parámetros de poscosecha:** los valores con los que se evalúan el secado y la fermentación, con su
+  línea base.
+- **Alertas de poscosecha:** avisos de registros pendientes y desvíos de temperatura, pH y humedad, en
+  la campana y como push.
+- **Calidad:** evaluar el grano de un lote seco, clasificarlo por calibre o descartarlo.
+- **Bodega:** ingresar lotes clasificados, existencias, salidas con motivo, mover el cacao y bodegas
+  de cada finca. La ficha del lote muestra sus etapas de la fermentación a la bodega.
+- **Compradores y ventas:** directorio de compradores; registrar una venta (el comprador se puede
+  registrar sin salir de ella), adjuntar su soporte, imprimir un comprobante y anularla. Se consultan
+  también sin conexión.
+
 ### Sprint 2 (05/10 – 22/10/2026)
 
 - **Insumos e inventario:** catálogo de insumos de cada productor y sus existencias por finca
@@ -138,13 +153,14 @@ dispositivo y se envía solo al volver la red.
 
 ## Cuentas de demostración
 
-La pantalla de inicio de sesión tiene un menú plegable, «Cuentas de demostración», con cuatro
+La pantalla de inicio de sesión tiene un menú plegable, «Cuentas de demostración», con seis
 cuentas públicas: el **Administrador de la asociación**, un **Productor**, el **Capataz de La
-Esperanza** y un **Operario de El Mirador**, cada una con un botón que llena el formulario. Existen
-para que quien evalúa la aplicación entre sin pedir una cuenta, y solo funcionan donde el backend
-corrió su comando `seed_demo_data`, que las crea con los mismos correos y contraseña. Los datos que
-las acompañan (productores, fincas, parcelas, fichas y, en La Esperanza, insumos, infraestructura,
-labores, monitoreos, cosechas y lotes) son inventados.
+Esperanza**, un **Operario de El Mirador**, un **Encargado de calidad** y un **Comercializador**, cada
+una con un botón que llena el formulario. Existen para que quien evalúa la aplicación entre sin pedir
+una cuenta, y solo funcionan donde el backend corrió su comando `seed_demo_data`, que las crea con los
+mismos correos y contraseña. Los datos que las acompañan (productores, fincas, parcelas, fichas y, en
+La Esperanza, insumos, infraestructura, labores, monitoreos, cosechas, lotes en cada estado,
+compradores y ventas) son inventados.
 
 Los correos y la contraseña están en `src/features/auth/components/demo-accounts.tsx`; si
 cambian en el backend, cambian ahí. El banner se retira (ese archivo y su uso en
