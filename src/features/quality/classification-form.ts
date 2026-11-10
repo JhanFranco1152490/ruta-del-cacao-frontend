@@ -15,7 +15,7 @@ import {
   discardReasonField,
   discardReasonIssue,
 } from './discard-reasons';
-import { fromTenths, sumTenths, toTenths } from './tenths';
+import { fromTenths, sumTenths, toTenths } from '@/lib/format/tenths';
 
 export const NEGATIVE_KILOS_MESSAGE = 'No puede ser negativo.';
 

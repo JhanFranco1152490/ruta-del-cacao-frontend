@@ -12,6 +12,7 @@ describe('lot-status', () => {
       'Seco',
       'Evaluado',
       'Clasificado',
+      'En bodega',
     ]);
   });
 

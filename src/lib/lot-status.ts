@@ -1,5 +1,6 @@
 import {
   Ban,
+  Boxes,
   CheckCircle2,
   ClipboardCheck,
   FlaskConical,
@@ -17,9 +18,9 @@ export type LotStatus = components['schemas']['LotStatusEnum'];
 
 type LotStatusInfo = { label: string; tone: Tone; Icon: LucideIcon };
 
-// La cadena del lote, en el orden en que avanza. Lotes, fermentación, secado y calidad la leen de
-// aquí para que un estado se llame igual en todas las pantallas. Después de Evaluado se bifurca:
-// Clasificado o Descartado.
+// La cadena del lote, en el orden en que avanza. Lotes, fermentación, secado, calidad y bodega la
+// leen de aquí para que un estado se llame igual en todas las pantallas. Después de Evaluado se
+// bifurca: Clasificado (y luego En bodega) o Descartado.
 export const LOT_STATUSES: Record<LotStatus, LotStatusInfo> = {
   generated: { label: 'Generado', tone: 'info', Icon: Package },
   fermenting: { label: 'En fermentación', tone: 'warn', Icon: Thermometer },
@@ -28,6 +29,7 @@ export const LOT_STATUSES: Record<LotStatus, LotStatusInfo> = {
   dried: { label: 'Seco', tone: 'ok', Icon: CheckCircle2 },
   evaluated: { label: 'Evaluado', tone: 'info', Icon: ClipboardCheck },
   classified: { label: 'Clasificado', tone: 'ok', Icon: Medal },
+  in_warehouse: { label: 'En bodega', tone: 'ok', Icon: Boxes },
   discarded: { label: 'Descartado', tone: 'err', Icon: Ban },
 };
 

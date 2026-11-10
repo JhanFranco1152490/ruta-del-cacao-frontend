@@ -245,6 +245,46 @@ describe('quality query keys', () => {
   });
 });
 
+describe('warehouse query keys', () => {
+  const stock = {
+    producer: null,
+    farm: null,
+    warehouse: null,
+    grade: null,
+    location: '',
+    search: '',
+    ordering: null,
+    page: 1,
+  };
+  const pending = { producer: null, farm: null, search: '', page: 1 };
+  const warehouses = { producer: null, farm: null, active: null, page: 1 };
+
+  it('hangs every read from the key that writes invalidate', () => {
+    const k = queryKeys.warehouse;
+    const summary = { ...stock, ordering: undefined, page: undefined };
+    expect(startsWith(k.stock(stock), k.all())).toBe(true);
+    expect(startsWith(k.summary(summary), k.all())).toBe(true);
+    expect(startsWith(k.pending(pending), k.all())).toBe(true);
+    expect(startsWith(k.warehouses(warehouses), k.all())).toBe(true);
+    expect(startsWith(k.locations('w1'), k.all())).toBe(true);
+    expect(startsWith(k.lot('l1'), k.all())).toBe(true);
+  });
+
+  it('keeps each filter, each order, each warehouse and each lot apart', () => {
+    const k = queryKeys.warehouse;
+    expect(k.stock(stock)).not.toEqual(k.stock({ ...stock, grade: 'g2' }));
+    expect(k.stock(stock)).not.toEqual(
+      k.stock({ ...stock, ordering: '-quantity' }),
+    );
+    expect(k.pending(pending)).not.toEqual(k.pending({ ...pending, page: 2 }));
+    expect(k.warehouses(warehouses)).not.toEqual(
+      k.warehouses({ ...warehouses, active: true }),
+    );
+    expect(k.locations('w1')).not.toEqual(k.locations('w2'));
+    expect(k.lot('l1')).not.toEqual(k.lot('l2'));
+  });
+});
+
 describe('post-harvest facility query keys', () => {
   it('hangs the list from the key that writes invalidate', () => {
     const all = queryKeys.facilities.all();

@@ -40,7 +40,7 @@ export function lotStages(current: LotStatus): LotStage[] {
   );
 }
 
-// «Etapa 2 de 7»: para pantallas angostas, donde las etiquetas no caben.
+// «Etapa 2 de 8»: para pantallas angostas, donde las etiquetas no caben.
 export const stagePosition = (current: LotStatus) => {
   const stages = lotStages(current);
   return {

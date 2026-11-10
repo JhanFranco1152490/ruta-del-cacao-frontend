@@ -1,4 +1,5 @@
 import {
+  Boxes,
   Bug,
   CalendarDays,
   ClipboardCheck,
@@ -119,6 +120,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     group: 'postharvest',
     icon: ClipboardCheck,
     permission: PERMISSIONS.QUALITY_EVALUATE,
+  },
+  // El cacao seco clasificado: ingresarlo, ver cuánto hay de cada calibre y registrar lo que sale.
+  // Los movimientos son con conexión; las existencias se consultan sin ella, con la copia.
+  {
+    href: '/bodega',
+    label: 'Bodega',
+    group: 'postharvest',
+    icon: Boxes,
+    permission: PERMISSIONS.WAREHOUSE_VIEW_STOCK,
   },
   // Los cajones y marquesinas donde los lotes fermentan y se secan: lo que se prepara para el
   // proceso, por eso va al final del grupo. Se consulta sin conexión.

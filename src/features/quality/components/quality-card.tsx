@@ -2,6 +2,7 @@ import { farmLabel } from '@/lib/format/place-label';
 import type { QualityAction } from '@/lib/paths/quality';
 
 import { LotStatusBadge } from '@/components/lot-status-badge';
+import { LotViewLink } from '@/components/lot-view-link';
 
 import type { LotQuality } from '../api';
 import {
@@ -14,7 +15,6 @@ import {
   evaluationFacts,
 } from '../quality-card-facts';
 import type { QualityActionOffer } from '../quality-actions';
-import { LotViewLink } from './lot-view-link';
 import { QualityCardActions } from './quality-card-actions';
 import { QualityGradeBar } from './quality-grade-bar';
 import { QualityFacts } from './quality-facts';
@@ -34,7 +34,9 @@ export function QualityCard({
   onAction: (lot: LotQuality, action: QualityAction) => void;
 }) {
   const status = lot.lot.status;
-  const closed = status === 'classified' || status === 'discarded';
+  // Cerrado por lo que decidió calidad y no por el estado: un clasificado sigue cerrado al pasar a
+  // En bodega o a cualquier estado posterior.
+  const closed = lot.classification !== null || lot.discard !== null;
   const evaluatedBy = evaluatedByLine(lot);
   const discard = discardLine(lot);
   const closedBy = closedByLine(lot);

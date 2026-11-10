@@ -13,7 +13,8 @@ describe('currentStage', () => {
     ['drying', 'drying'],
     ['dried', 'quality'],
     ['evaluated', 'quality'],
-    ['classified', 'quality'],
+    ['classified', 'warehouse'],
+    ['in_warehouse', 'warehouse'],
     ['discarded', 'quality'],
   ] as const)('shows %s on %s', (status, stage) => {
     expect(currentStage(status)).toBe(stage);
@@ -26,6 +27,16 @@ describe('stageOf', () => {
     expect(stageOf('drying', 'drying')).toBe('current');
     expect(stageOf('quality', 'drying')).toBe('pending');
   });
+
+  it('keeps quality done and warehouse current once the lot is classified', () => {
+    expect(stageOf('quality', 'classified')).toBe('done');
+    expect(stageOf('warehouse', 'classified')).toBe('current');
+  });
+
+  it('leaves warehouse pending while the lot is still in quality', () => {
+    expect(stageOf('quality', 'evaluated')).toBe('current');
+    expect(stageOf('warehouse', 'evaluated')).toBe('pending');
+  });
 });
 
 describe('useStagePicker', () => {
@@ -35,6 +46,7 @@ describe('useStagePicker', () => {
     expect(result.current.items.of('fermentation').selected).toBe(true);
     expect(result.current.items.of('drying').selected).toBe(false);
     expect(result.current.items.of('quality').selected).toBe(false);
+    expect(result.current.items.of('warehouse').selected).toBe(false);
   });
 
   it('gives the item and the panel of a stage the same selection', () => {
@@ -58,6 +70,16 @@ describe('useStagePicker', () => {
 
     expect(result.current.panels.of('drying').selected).toBe(true);
     expect(result.current.items.of('quality').selected).toBe(false);
+  });
+
+  it('opens a classified lot on its warehouse stage', () => {
+    const { result } = renderHook(() => useStagePicker('classified'));
+
+    expect(result.current.items.of('warehouse')).toMatchObject({
+      selected: true,
+      stage: 'current',
+    });
+    expect(result.current.items.of('quality').stage).toBe('done');
   });
 
   it('moves to the new stage when the lot changes status', () => {
