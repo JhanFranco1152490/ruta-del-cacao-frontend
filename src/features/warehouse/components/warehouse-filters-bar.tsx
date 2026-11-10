@@ -158,7 +158,7 @@ function StockFilters({ screen }: { screen: WarehouseScreenState }) {
           void filters.setGrade((event.target.value || null) as Grade | null)
         }
         value={stock.grade ?? ''}
-        wrapperClassName="w-full sm:w-36"
+        wrapperClassName="w-full sm:w-44"
       >
         <option value="">Todos los calibres</option>
         {(['g1', 'g2'] as const).map((grade) => (
@@ -228,7 +228,7 @@ function ExitFilters({ screen }: { screen: WarehouseScreenState }) {
           void filters.setGrade((event.target.value || null) as Grade | null)
         }
         value={filters.exitFilters.grade ?? ''}
-        wrapperClassName="w-full sm:w-36"
+        wrapperClassName="w-full sm:w-44"
       >
         <option value="">Todos los calibres</option>
         {(['g1', 'g2'] as const).map((grade) => (
