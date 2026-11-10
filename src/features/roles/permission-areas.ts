@@ -4,9 +4,9 @@ import type { PermissionItem } from './api';
 
 // Las secciones del catálogo de permisos, en el orden en que se trabaja: primero lo de la asociación
 // (productores), luego lo del campo (fincas, sus parcelas, la ficha de cada parcela, los insumos, las
-// actividades, la sanidad, las cosechas, los lotes, la fermentación, el secado, la calidad y la
-// infraestructura), después la comercialización (compradores) y al final la administración
-// (cuentas y roles). El servidor manda el área como una clave interna ("farms",
+// actividades, la sanidad, las cosechas, los lotes, la fermentación, el secado, la calidad, la
+// bodega y la infraestructura), después la comercialización (compradores) y al final la
+// administración (cuentas y roles). El servidor manda el área como una clave interna ("farms",
 // "crops"); aquí se le da nombre. Un área que no está aquí va después de las conocidas, por su clave.
 const AREAS = [
   { area: 'producers', label: 'Productores' },
@@ -21,6 +21,7 @@ const AREAS = [
   { area: 'fermentation', label: 'Fermentación' },
   { area: 'drying', label: 'Secado' },
   { area: 'quality', label: 'Calidad' },
+  { area: 'warehouse', label: 'Bodega' },
   { area: 'facilities', label: 'Infraestructura' },
   { area: 'postharvest_parameters', label: 'Parámetros de poscosecha' },
   { area: 'buyers', label: 'Compradores' },

@@ -4,13 +4,13 @@ import { Ban, ClipboardCheck, Medal, PencilLine } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { ActionsMenu } from '@/components/actions-menu';
+import { LotViewLink } from '@/components/lot-view-link';
 import { Button } from '@/components/ui/button';
 import { MenuItem } from '@/components/ui/menu';
 import type { QualityAction } from '@/lib/paths/quality';
 
 import type { LotQuality } from '../api';
 import type { QualityActionOffer } from '../quality-actions';
-import { LotViewLink } from './lot-view-link';
 
 const ICONS: Record<QualityAction, LucideIcon> = {
   evaluar: ClipboardCheck,

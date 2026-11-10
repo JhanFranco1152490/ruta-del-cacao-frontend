@@ -30,6 +30,7 @@ export const OFFLINE_PRECACHE_ROUTES = [
   '/secado',
   '/secado/bitacora',
   '/calidad',
+  '/bodega',
   '/infraestructura',
   '/parametros-poscosecha',
   '/compradores',

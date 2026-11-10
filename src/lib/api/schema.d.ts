@@ -1511,6 +1511,194 @@ export interface paths {
         patch: operations["roles_partial_update"];
         trace?: never;
     };
+    "/api/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las existencias disponibles de las fincas que la cuenta alcanza, una fila por lote y calibre con más de 0 kg. Los filtros se combinan; `location` y `search` buscan una parte del texto sin distinguir mayúsculas. `ordering` es uno de `lot`, `grade`, `quantity`, `location` o `entry_date`, con `-` para el orden inverso; por defecto, el ingreso más reciente. */
+        get: operations["stock_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El ingreso, las existencias por calibre y las salidas de un lote Clasificado o En bodega. Un lote en otro estado es 404. */
+        get: operations["stock_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/{id}/entry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Ingresa un lote Clasificado a una bodega de su finca, con la fecha y la ubicación. Los kilos de G1 y de G2 son los de su clasificación. El lote pasa a En bodega. Requiere `expected_lot_version`; en otro estado, 409 `lot_invalid_status` con `current_status`. Un lote sin kilos que ingresar, 409 `lot_nothing_to_store`. */
+        post: operations["stock_entry_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Corrige la fecha, la bodega o la ubicación de un ingreso, y las existencias con él. Los kilos no se corrigen. Solo mientras no haya salido nada del lote: con una salida en vigor, 409 `entry_has_movements`. Requiere `expected_version` del ingreso; si cambió, 409 `stale_version` con el lote vigente en `current`. */
+        patch: operations["stock_entry_partial_update"];
+        trace?: never;
+    };
+    "/api/stock/{id}/exits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registra la salida de un calibre de un lote En bodega, con su fecha y su motivo (Venta no se elige: la genera la venta). La cantidad no puede superar lo disponible del calibre: si no, 400 `stock_insufficient` con `available_kg`. La salida queda a nombre de quien la registra. En otro estado, 409 `lot_invalid_status`. */
+        post: operations["stock_exits_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/{id}/exits/{exit_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Anula una salida manual: los kilos vuelven a la existencia y la salida queda en el historial con quién la anuló y por qué. Una salida ya anulada es 409 `exit_already_voided`; una por venta, 409 `exit_not_voidable`. */
+        post: operations["stock_exits_void_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/{id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Mueve el cacao de un lote En bodega a otra bodega de su finca o a otra ubicación, en cualquier momento y con las existencias que tenga. Deja de dónde venía. Requiere `expected_version` del ingreso; si cambió, 409 `stale_version`. Sin cacao en bodega, 409 `lot_without_stock`; al mismo lugar, 400 `stock_move_unchanged`. */
+        post: operations["stock_move_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/exits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las salidas de cacao de las fincas que la cuenta alcanza, la más reciente primero, con las anuladas (`voided`) incluidas salvo que `state` pida solo las vigentes o solo las anuladas. `warehouse` es la bodega donde está hoy el cacao del lote; `date_from` y `date_to` acotan la fecha de la salida, ambas incluidas. */
+        get: operations["stock_exits_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/exits/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lo que salió con los mismos filtros de la lista de salidas (menos `state`): el total de salidas y de kilos vigentes, y los de cada motivo, de los que más kilos sacaron a los que menos. Lo anulado no cuenta. */
+        get: operations["stock_exits_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las ubicaciones con existencias en una bodega, sin repetir y en orden alfabético: alimentan el filtro y las sugerencias del formulario de ingreso. */
+        get: operations["stock_locations_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/pending-entry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los lotes Clasificado por ingresar a bodega, del que se clasificó primero. Un lote sin kilos de G1 ni de G2 no aparece. */
+        get: operations["stock_pending_entry_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Los totales de la pantalla: los kilos disponibles de G1 y de G2 y cuántos lotes tienen existencias, entre las filas que cumplen los mismos filtros de la lista. */
+        get: operations["stock_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -1589,6 +1777,42 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["users_status_partial_update"];
+        trace?: never;
+    };
+    "/api/warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Las bodegas de las fincas que la cuenta alcanza, paginadas, por finca y nombre. `search` busca una parte del nombre sin distinguir mayúsculas, tildes ni espacios. */
+        get: operations["warehouses_list"];
+        put?: never;
+        /** @description Registra una bodega en una finca que la cuenta alcanza; queda activa. Si ya hay una con el mismo nombre en la finca, 409 `warehouse_name_taken` con la existente en `existing`. Una finca inactiva, 422 `farm_inactive`. */
+        post: operations["warehouses_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["warehouses_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Elimina una bodega registrada por error. Requiere `expected_version` en la URL. Si ya recibió un ingreso, 409 `warehouse_has_records` (se desactiva en su lugar). Su historial se conserva. */
+        delete: operations["warehouses_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Cambia el nombre o activa y desactiva la bodega. Requiere `expected_version`; si la bodega cambió, 409 `stale_version` con la vigente en `current`. La finca no se edita. Una bodega desactivada no recibe ingresos, pero lo que tiene sigue consultándose y admite salidas. */
+        patch: operations["warehouses_partial_update"];
         trace?: never;
     };
 }
@@ -2398,6 +2622,15 @@ export interface components {
             id: string;
             number: number;
         };
+        EntryCreateRequest: {
+            expected_lot_version: number;
+            /** Format: date */
+            entry_date: string;
+            /** Format: uuid */
+            warehouse_id: string;
+            /** @default  */
+            location: string;
+        };
         EntryMoistureError: {
             detail: string;
             code: string;
@@ -2459,6 +2692,46 @@ export interface components {
             name: string;
             input_type: components["schemas"]["InputTypeEnum"];
             is_active: boolean;
+        };
+        ExistingWarehouse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_active: boolean;
+        };
+        /**
+         * @description * `shrinkage` - Merma
+         *     * `sample` - Muestra
+         *     * `reprocessing` - Reproceso
+         *     * `transfer` - Traslado fuera de la finca
+         *     * `other` - Otro
+         * @enum {string}
+         */
+        ExitCreateReasonEnum: "shrinkage" | "sample" | "reprocessing" | "transfer" | "other";
+        ExitCreateRequest: {
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            /** Format: date */
+            exit_date: string;
+            reason: components["schemas"]["ExitCreateReasonEnum"];
+            /** @default  */
+            detail: string;
+        };
+        ExitReasonTotal: {
+            reason: components["schemas"]["StockExitReasonEnum"];
+            exits: number;
+            /** Format: decimal */
+            quantity_kg: string;
+        };
+        ExitSummary: {
+            exits: number;
+            /** Format: decimal */
+            quantity_kg: string;
+            by_reason: components["schemas"]["ExitReasonTotal"][];
+        };
+        ExitVoidRequest: {
+            reason: string;
         };
         FacilityFarm: {
             /** Format: uuid */
@@ -2924,6 +3197,7 @@ export interface components {
             readonly fermentation: components["schemas"]["LotFermentation"] | null;
             readonly drying: components["schemas"]["LotDrying"] | null;
             readonly quality: components["schemas"]["LotQualityDetail"] | null;
+            readonly warehouse: components["schemas"]["LotWarehouseDetail"] | null;
         };
         LotBrief: {
             /** Format: uuid */
@@ -2934,6 +3208,7 @@ export interface components {
             readonly fermentation: components["schemas"]["LotFermentation"] | null;
             readonly drying: components["schemas"]["LotDrying"] | null;
             readonly quality: components["schemas"]["LotQualityDetail"] | null;
+            readonly warehouse: components["schemas"]["LotWarehouseDetail"] | null;
         };
         LotConflictError: {
             detail: string;
@@ -3020,18 +3295,42 @@ export interface components {
          *     * `dried` - Seco
          *     * `evaluated` - Evaluado
          *     * `classified` - Clasificado
+         *     * `in_warehouse` - En bodega
          *     * `discarded` - Descartado
          * @enum {string}
          */
-        LotStatusEnum: "generated" | "fermenting" | "fermented" | "drying" | "dried" | "evaluated" | "classified" | "discarded";
+        LotStatusEnum: "generated" | "fermenting" | "fermented" | "drying" | "dried" | "evaluated" | "classified" | "in_warehouse" | "discarded";
         LotStatusTotal: {
             status: components["schemas"]["LotStatusEnum"];
             count: number;
             /** Format: decimal */
             green_weight_kg: string;
         };
+        LotStock: {
+            lot: components["schemas"]["StockLot"];
+            farm: components["schemas"]["StockFarm"];
+            classified: components["schemas"]["StockClassified"];
+            entry: components["schemas"]["StockEntry"] | null;
+            balances: components["schemas"]["StockBalance"][];
+            exits: components["schemas"]["StockExit"][];
+            moves: components["schemas"]["StockMove"][];
+        };
         LotSummary: {
             results: components["schemas"]["LotStatusTotal"][];
+        };
+        LotWarehouseDetail: {
+            /** Format: date */
+            entry_date: string;
+            warehouse_name: string;
+            location: string;
+            /** Format: decimal */
+            g1_entered_kg: string;
+            /** Format: decimal */
+            g2_entered_kg: string;
+            /** Format: decimal */
+            g1_available_kg: string;
+            /** Format: decimal */
+            g2_available_kg: string;
         };
         /**
          * @description * `conventional` - Convencional
@@ -3052,6 +3351,13 @@ export interface components {
             detections?: components["schemas"]["DetectionWriteRequest"][];
             /** Format: date-time */
             captured_at?: string | null;
+        };
+        MoveCreateRequest: {
+            expected_version: number;
+            /** Format: uuid */
+            warehouse_id: string;
+            /** @default  */
+            location: string;
         };
         Municipality: {
             code: string;
@@ -3299,6 +3605,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Notification"][];
         };
+        PaginatedPendingEntryList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["PendingEntry"][];
+        };
         PaginatedPlotCharacterizationEventList: {
             /** @example 123 */
             count: number;
@@ -3362,6 +3683,51 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Role"][];
+        };
+        PaginatedStockExitRowList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["StockExitRow"][];
+        };
+        PaginatedStockRowList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["StockRow"][];
+        };
+        PaginatedWarehouseList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Warehouse"][];
         };
         ParametersAuthor: {
             /** Format: uuid */
@@ -3454,6 +3820,14 @@ export interface components {
             /** Format: uuid */
             responsible_id?: string;
             confirm_entry_moisture?: boolean;
+            expected_version?: number;
+        };
+        PatchedEntryUpdateRequest: {
+            /** Format: date */
+            entry_date?: string;
+            /** Format: uuid */
+            warehouse_id?: string;
+            location?: string;
             expected_version?: number;
         };
         PatchedEvaluationUpdateRequest: {
@@ -3559,6 +3933,21 @@ export interface components {
             description?: string;
             permission_codes?: string[];
             farm_scope?: components["schemas"]["FarmScopeEnum"];
+        };
+        PatchedWarehouseUpdateRequest: {
+            name?: string;
+            is_active?: boolean;
+            expected_version?: number;
+        };
+        PendingEntry: {
+            lot: components["schemas"]["StockLotRef"];
+            farm: components["schemas"]["StockFarm"];
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: date-time */
+            classified_at: string;
         };
         Permission: {
             code: string;
@@ -4247,6 +4636,169 @@ export interface components {
          * @enum {string}
          */
         StatusEnum: "active" | "inactive";
+        StockBalance: {
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+        };
+        StockClassified: {
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: date-time */
+            classified_at: string;
+        };
+        StockConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["LotStock"];
+            current_status?: string;
+        };
+        StockEntry: {
+            /** Format: date */
+            entry_date: string;
+            warehouse: components["schemas"]["StockWarehouseRef"];
+            location: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: date-time */
+            entered_at: string;
+            entered_by: components["schemas"]["StockPerson"];
+            /** Format: date-time */
+            corrected_at: string | null;
+            corrected_by: components["schemas"]["StockPerson"] | null;
+            readonly can_correct: boolean;
+            version: number;
+        };
+        StockExit: {
+            /** Format: uuid */
+            id: string;
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            /** Format: date */
+            exit_date: string;
+            reason: components["schemas"]["StockExitReasonEnum"];
+            detail: string;
+            /** Format: date-time */
+            created_at: string;
+            created_by: components["schemas"]["StockPerson"];
+            readonly voided: {
+                [key: string]: unknown;
+            } | null;
+            readonly can_void: boolean;
+        };
+        /**
+         * @description * `shrinkage` - Merma
+         *     * `sample` - Muestra
+         *     * `reprocessing` - Reproceso
+         *     * `transfer` - Traslado fuera de la finca
+         *     * `other` - Otro
+         *     * `sale` - Venta
+         * @enum {string}
+         */
+        StockExitReasonEnum: "shrinkage" | "sample" | "reprocessing" | "transfer" | "other" | "sale";
+        StockExitRow: {
+            /** Format: uuid */
+            id: string;
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            /** Format: date */
+            exit_date: string;
+            reason: components["schemas"]["StockExitReasonEnum"];
+            detail: string;
+            /** Format: date-time */
+            created_at: string;
+            created_by: components["schemas"]["StockPerson"];
+            readonly voided: {
+                [key: string]: unknown;
+            } | null;
+            readonly can_void: boolean;
+            lot: components["schemas"]["StockLotRef"];
+            farm: components["schemas"]["StockFarm"];
+            warehouse: components["schemas"]["StockWarehouseRef"];
+        };
+        StockFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        /**
+         * @description * `g1` - G1
+         *     * `g2` - G2
+         * @enum {string}
+         */
+        StockGradeEnum: "g1" | "g2";
+        StockInsufficientError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            available_kg?: string;
+        };
+        StockLocations: {
+            results: string[];
+        };
+        StockLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+            version: number;
+        };
+        StockLotRef: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+        };
+        StockMove: {
+            /** Format: uuid */
+            id: string;
+            from_warehouse: components["schemas"]["StockWarehouseRef"];
+            from_location: string;
+            to_warehouse: components["schemas"]["StockWarehouseRef"];
+            to_location: string;
+            /** Format: date-time */
+            moved_at: string;
+            moved_by: components["schemas"]["StockPerson"];
+        };
+        StockPerson: {
+            /** Format: uuid */
+            id: string;
+            readonly full_name: string;
+        };
+        StockRow: {
+            lot: components["schemas"]["StockLotRef"];
+            farm: components["schemas"]["StockFarm"];
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            warehouse: components["schemas"]["StockWarehouseRef"];
+            location: string;
+            /** Format: date */
+            entry_date: string;
+        };
+        StockSummary: {
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            lots: number;
+        };
+        StockWarehouseRef: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
         TerritoryReference: {
             id: string;
             name: string;
@@ -4360,6 +4912,35 @@ export interface components {
             code: string;
             name: string | null;
             farm: components["schemas"]["WaitingFarm"];
+        };
+        Warehouse: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly farm: components["schemas"]["WarehouseFarm"];
+            readonly name: string;
+            readonly is_active: boolean;
+            readonly in_use: boolean;
+            readonly version: number;
+        };
+        WarehouseConflictError: {
+            detail: string;
+            code: string;
+            fields: {
+                [key: string]: string[];
+            };
+            current?: components["schemas"]["Warehouse"];
+            existing?: components["schemas"]["ExistingWarehouse"];
+        };
+        WarehouseCreateRequest: {
+            /** Format: uuid */
+            farm_id: string;
+            name: string;
+        };
+        WarehouseFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
         };
     };
     responses: never;
@@ -8417,9 +8998,10 @@ export interface operations {
                  *     * `dried` - Seco
                  *     * `evaluated` - Evaluado
                  *     * `classified` - Clasificado
+                 *     * `in_warehouse` - En bodega
                  *     * `discarded` - Descartado
                  */
-                status?: "generated" | "fermenting" | "fermented" | "drying" | "dried" | "evaluated" | "classified" | "discarded";
+                status?: "generated" | "fermenting" | "fermented" | "drying" | "dried" | "evaluated" | "classified" | "in_warehouse" | "discarded";
                 to?: string;
                 variety?: string;
             };
@@ -11678,6 +12260,740 @@ export interface operations {
             };
         };
     };
+    stock_list: {
+        parameters: {
+            query?: {
+                farm?: string;
+                /**
+                 * @description * `g1` - G1
+                 *     * `g2` - G2
+                 */
+                grade?: "g1" | "g2";
+                location?: string;
+                /**
+                 * @description * `lot` - lot
+                 *     * `grade` - grade
+                 *     * `quantity` - quantity
+                 *     * `location` - location
+                 *     * `entry_date` - entry_date
+                 *     * `-lot` - -lot
+                 *     * `-grade` - -grade
+                 *     * `-quantity` - -quantity
+                 *     * `-location` - -location
+                 *     * `-entry_date` - -entry_date
+                 */
+                ordering?: "lot" | "grade" | "quantity" | "location" | "entry_date" | "-lot" | "-grade" | "-quantity" | "-location" | "-entry_date";
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+                warehouse?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStockRowList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stock_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotStock"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stock_entry_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotStock"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockConflictError"];
+                };
+            };
+        };
+    };
+    stock_entry_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEntryUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotStock"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockConflictError"];
+                };
+            };
+        };
+    };
+    stock_exits_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExitCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotStock"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockInsufficientError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockConflictError"];
+                };
+            };
+        };
+    };
+    stock_exits_void_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exit_id: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExitVoidRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotStock"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockConflictError"];
+                };
+            };
+        };
+    };
+    stock_move_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotStock"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockConflictError"];
+                };
+            };
+        };
+    };
+    stock_exits_list: {
+        parameters: {
+            query?: {
+                date_from?: string;
+                date_to?: string;
+                farm?: string;
+                /**
+                 * @description * `g1` - G1
+                 *     * `g2` - G2
+                 */
+                grade?: "g1" | "g2";
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /**
+                 * @description * `shrinkage` - Merma
+                 *     * `sample` - Muestra
+                 *     * `reprocessing` - Reproceso
+                 *     * `transfer` - Traslado fuera de la finca
+                 *     * `other` - Otro
+                 *     * `sale` - Venta
+                 */
+                reason?: "shrinkage" | "sample" | "reprocessing" | "transfer" | "other" | "sale";
+                search?: string;
+                /**
+                 * @description * `active` - active
+                 *     * `voided` - voided
+                 */
+                state?: "active" | "voided";
+                warehouse?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStockExitRowList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stock_exits_summary_retrieve: {
+        parameters: {
+            query?: {
+                date_from?: string;
+                date_to?: string;
+                farm?: string;
+                /**
+                 * @description * `g1` - G1
+                 *     * `g2` - G2
+                 */
+                grade?: "g1" | "g2";
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                /**
+                 * @description * `shrinkage` - Merma
+                 *     * `sample` - Muestra
+                 *     * `reprocessing` - Reproceso
+                 *     * `transfer` - Traslado fuera de la finca
+                 *     * `other` - Otro
+                 *     * `sale` - Venta
+                 */
+                reason?: "shrinkage" | "sample" | "reprocessing" | "transfer" | "other" | "sale";
+                search?: string;
+                warehouse?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExitSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stock_locations_retrieve: {
+        parameters: {
+            query: {
+                warehouse: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockLocations"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stock_pending_entry_list: {
+        parameters: {
+            query?: {
+                farm?: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPendingEntryList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    stock_summary_retrieve: {
+        parameters: {
+            query?: {
+                farm?: string;
+                /**
+                 * @description * `g1` - G1
+                 *     * `g2` - G2
+                 */
+                grade?: "g1" | "g2";
+                location?: string;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+                warehouse?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     users_list: {
         parameters: {
             query?: {
@@ -12137,6 +13453,303 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    warehouses_list: {
+        parameters: {
+            query?: {
+                active?: boolean;
+                farm?: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica. */
+                producer?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedWarehouseList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    warehouses_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarehouseConflictError"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    warehouses_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    warehouses_destroy: {
+        parameters: {
+            query: {
+                /** @description La `version` leída. */
+                expected_version: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarehouseConflictError"];
+                };
+            };
+        };
+    };
+    warehouses_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedWarehouseUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarehouseConflictError"];
                 };
             };
         };

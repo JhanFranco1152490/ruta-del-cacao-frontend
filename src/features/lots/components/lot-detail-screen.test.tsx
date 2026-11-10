@@ -118,7 +118,7 @@ describe('LotDetailScreen', () => {
     expect(
       within(stages).getByRole('listitem', { current: 'step' }),
     ).toHaveTextContent('En fermentación');
-    expect(within(stages).getAllByRole('listitem')).toHaveLength(7);
+    expect(within(stages).getAllByRole('listitem')).toHaveLength(8);
   });
 
   it('ends the stages of a discarded lot in Descartado', async () => {

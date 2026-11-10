@@ -35,6 +35,10 @@ export const PERMISSIONS = {
   QUALITY_EVALUATE: 'quality.evaluate_lot',
   QUALITY_CLASSIFY: 'quality.classify_lot',
   QUALITY_DISCARD: 'quality.discard_lot',
+  WAREHOUSE_VIEW_STOCK: 'warehouse.view_stock',
+  WAREHOUSE_REGISTER_ENTRY: 'warehouse.register_entry',
+  WAREHOUSE_REGISTER_EXIT: 'warehouse.register_exit',
+  WAREHOUSE_MANAGE: 'warehouse.manage_warehouse',
   FACILITIES_VIEW: 'facilities.view_postharvestfacility',
   FACILITIES_ADD: 'facilities.add_postharvestfacility',
   FACILITIES_CHANGE: 'facilities.change_postharvestfacility',
@@ -71,6 +75,7 @@ const FIELD_AREAS = [
   'fermentation.',
   'drying.',
   'quality.',
+  'warehouse.',
   'facilities.',
 ];
 export const isFieldPermission = (code: string) =>

@@ -133,6 +133,7 @@ export function lotFromCopy(copied: CopiedProcess): Lot {
           }
         : null,
     quality: null,
+    warehouse: null,
   };
 }
 

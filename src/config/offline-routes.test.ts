@@ -69,6 +69,10 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/calidad');
   });
 
+  it('saves the warehouse screen, read from the device copy', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/bodega');
+  });
+
   it('saves the drying work list and its field screen', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toEqual(
       expect.arrayContaining(['/secado', '/secado/bitacora']),

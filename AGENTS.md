@@ -124,7 +124,7 @@ src/
 - Componentes en **tres niveles**: (1) `components/ui/`, primitivas de shadcn/ui con las
   variantes del sistema de diseño, sin conocer el dominio; (2) `components/`, piezas
   compartidas con el aspecto de la app (`TextField`, `TextAreaField`, `SelectField`, `PasswordField`,
-  `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `pageContainerClass`, `SummaryStrip`, `Pagination`, `EmptyState`, `ErrorState`,
+  `FormField`, `SearchSelect`, `SubmitButton`, `PageHeader`, `pageContainerClass`, `SummaryStrip`, `SortableTableHead`, `Pagination`, `EmptyState`, `ErrorState`,
   `MaskedValue`, la sección de insumos utilizados de `input-usage/`, el descarte de la bandeja
   `sync-tray/queue-discard-dialog.tsx`...) que solo reciben props y no conocen la API; (3)
   `features/<dominio>/components/`, pantallas (`*-screen.tsx`) y piezas de un dominio: la
@@ -142,7 +142,8 @@ src/
     abrir…» con el camino de vuelta), `SyncRejectedNotice` y `syncFailureText` (lo que el servidor
     rechazó de la cola), `OfflineCopyNotice` («Sin conexión: estás viendo la copia del…», con lo que
     no se puede hacer así), `CollapsibleGroupList` con `groupInOrder` (listas en grupos plegables),
-    `mapPlaceholder` (el mapa mientras carga o si no cargó);
+    `mapPlaceholder` (el mapa mientras carga o si no cargó), `LotViewLink` (el ojo a la ficha de un
+    lote, que con `disabledReason` queda deshabilitado y dice por qué);
   - API: `apiPath` (ruta con su consulta, sin los vacíos) e `isNotFound` (404);
   - cola sin conexión: `rejectionConflict` y `VALIDATION_ERROR_CODE` en `lib/offline/adapters.ts`.
 - **Un dominio no importa de la carpeta de otro.** Cuando una pantalla junta dos (el detalle de
@@ -183,9 +184,10 @@ src/
   de poscosecha: `lib/postharvest/` (el nombre de cada aviso en `alert-kinds.ts`, el texto de los
   desvíos al guardar en `deviation-notice-text.ts`, las mediciones con decimales fijos en
   `measure-text.ts` y el día de secado en `drying-day.ts`) y las rutas de fermentación, secado,
-  calidad y lotes en `lib/paths/`, como las de actividades, insumos y productores (cada dominio las reexporta
+  calidad, bodega y lotes en `lib/paths/`, como las de actividades, insumos y productores (cada dominio las reexporta
   desde su `*-paths.ts`, así que dentro del dominio se siguen importando de ahí). El dominio dueño
-  los usa desde ahí.
+  los usa desde ahí. Desde bodega: los kilos sumados y comparados en décimas enteras
+  (`lib/format/tenths.ts`), que usan también Calidad.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
   en la bandeja (`queue-view.tsx`). Retrasada y vencida no vienen guardadas: se calculan en el
@@ -247,16 +249,16 @@ src/
   importa de los procesos: recibe sus secciones con `renderSections(lot, picker)` y la página
   (`lot-detail-from-query.tsx`) las llena en el orden del proceso. La ficha es una **lista de etapas a un
   lado y la elegida al otro** (`lot-process-layout.tsx`): a la izquierda el origen, la lista (Fermentación,
-  Secado y Calidad, cada una con su resumen y si está **Hecha**, **Actual** o **Pendiente**) y «Volver»
+  Secado, Calidad y Bodega, cada una con su resumen y si está **Hecha**, **Actual** o **Pendiente**) y «Volver»
   con las acciones de la ficha (`DetailFooter stacked`), pegados bajo la cabecera de la app y con su
   propio desplazamiento si no caben en la pantalla; a la derecha la etapa elegida con todo el ancho,
   porque trae tablas. En celular el orden es el de la tarea: la lista, la etapa y, al final, el origen y
   «Volver». Cada sección se monta **dos veces**, como renglón y como panel (`SectionCard` con
   `pick={picker.of(id)}`; `components/page-blocks/section-item.tsx`), y arma su propio resumen con lo que
-  ella lee (`fermentationSummary`, `dryingSummary`, `qualitySummary`); sin `pick` es una tarjeta normal.
+  ella lee (`fermentationSummary`, `dryingSummary`, `qualitySummary`, `warehouseSummary`); sin `pick` es una tarjeta normal.
   Qué etapa se muestra lo decide `useStagePicker` (`stage-picker.ts`): empieza en la del estado del lote
-  (`currentStage`; un lote Seco o posterior abre **Calidad**, porque lo que falta es evaluarlo y el secado
-  ya quedó en su resumen), elegir otra cambia las dos presentaciones a la vez, y si el lote cambia de etapa
+  (`currentStage`; un lote Seco, Evaluado o Descartado abre **Calidad**, porque lo que falta es evaluarlo o
+  clasificarlo y el secado ya quedó en su resumen; uno Clasificado o En bodega abre **Bodega**), elegir otra cambia las dos presentaciones a la vez, y si el lote cambia de etapa
   se muestra la nueva. El título del origen (`LotOrigin`) va en tinta negra, no en el color del módulo. La
   ficha es ancha (`wide`): encabezado `bosque` con el código en pedazos (`LotCodeSegments`, dentro del
   título con `titleVisual`), franja de cifras, indicador de etapas (`lot-stages.ts`) y, debajo, la lista y la etapa. **El «⋯» de cada fila de la lista** ofrece las
@@ -264,11 +266,13 @@ src/
   `fermentationLotActions` y `dryingLotActions`) y la página (`app/(app)/lotes/lot-list.tsx`) las junta; cada opción es
   un enlace a la pantalla donde se hace, nunca un formulario dentro de Lotes. Registrar un volteo va
   directo a su pantalla de campo; iniciar y finalizar abren su formulario al llegar a Fermentación
-  (`?iniciar=` y `?finalizar=`), y evaluar, clasificar y descartar, al llegar a Calidad
-  (`?lote=&accion=`). **El botón de la cabecera** sigue al estado elegido
+  (`?iniciar=` y `?finalizar=`), evaluar, clasificar y descartar, al llegar a Calidad
+  (`?lote=&accion=`), e ingresar a bodega un Clasificado, al llegar a Bodega (`?lote=&accion=ingresar`).
+  **El botón de la cabecera** sigue al estado elegido
   (`fermentationStageAction` y `dryingStageAction`: Generado → «Iniciar fermentación», En
   fermentación → «Ir a Fermentación», Fermentado → «Iniciar secado», En secado → «Ir a Secado», Seco y
-  Evaluado → «Ir a Calidad» (`qualityStageAction`); con
+  Evaluado → «Ir a Calidad» (`qualityStageAction`), Clasificado y En bodega → «Ir a Bodega»
+  (`warehouseStageAction`); con
   otro estado o sin el permiso, «Cosechas sin lote» queda como principal) y «Cosechas sin lote» pasa a
   secundario cuando hay uno. La tarjeta de un lote Seco dice su rendimiento. **Conformar** también
   funciona sin conexión: el lote nace en el dispositivo con su `id` (`form-lot-dialog.tsx` lo genera
@@ -381,7 +385,9 @@ src/
 
 - **Calidad (`features/quality/`).** `/calidad` (precargada, solo con `quality.evaluate_lot`) es la
   lista de trabajo de quien evalúa el grano seco: tres pestañas en la URL (`?vista=`: **Por evaluar**,
-  los Seco; **Evaluados**; **Cerrados**, los Clasificado y Descartado), la finca y la búsqueda por
+  los Seco; **Evaluados**; **Cerrados**, los Clasificado y Descartado, y también los que ya pasaron
+  a En bodega: la tarjeta decide «cerrado» por la clasificación o el descarte, no por el estado), la
+  finca y la búsqueda por
   código (`use-quality-filters.ts`), las cifras (`GET /api/quality/summary`) y la paginación del
   servidor, de a 20. **Se registra solo en línea; se consulta sin conexión:** la primera página de
   cada pestaña con sus filtros y las cifras se guardan en `cache` (`readThroughCache`); sin
@@ -391,8 +397,8 @@ src/
   - **Las reglas que comparten pantalla y servidor son funciones puras:** la suma de los tres
     porcentajes hasta 100 (`evaluation-sum.ts`), lo repartido contra el peso seco
     (`classification-form.ts`) y cuándo se piden el motivo y el detalle de un descarte
-    (`discard-reasons.ts`). Kilos y porcentajes se suman en **décimas enteras** (`tenths.ts`), no
-    con flotantes. Qué acciones se ofrecen (`quality-actions.ts`: Seco → Evaluar; Evaluado →
+    (`discard-reasons.ts`). Kilos y porcentajes se suman en **décimas enteras**
+    (`lib/format/tenths.ts`, que comparte con Bodega), no con flotantes. Qué acciones se ofrecen (`quality-actions.ts`: Seco → Evaluar; Evaluado →
     Clasificar, Corregir evaluación y Descartar lote, cada una con su permiso) y la traducción de
     los errores del servidor (`quality-errors.ts`: `lot_invalid_status` cierra el formulario, avisa
     y refresca; `stale_version` carga lo vigente de `current`; `quality_sum_exceeds_100` va en
@@ -419,6 +425,54 @@ src/
     evaluación en barras (`quality-section-parts.tsx`) y dice quién evaluó y, si se corrigió, quién
     corrigió. Los motivos de descarte viven en
     `lib/discard-reasons.ts`, porque también los usan las notificaciones.
+
+- **Bodega (`features/warehouse/`).** `/bodega` (precargada, solo con `warehouse.view_stock`) es la
+  lista de trabajo de quien ingresa y saca el cacao seco clasificado: tres pestañas en la URL
+  (`?vista=`, en el orden del proceso: **Por ingresar**, los lotes Clasificado, que solo ve quien tiene
+  `register_entry`; **Existencias**, una fila por lote y calibre con kilos, que es la que abre por
+  defecto; **Salidas**, todas las salidas de cacao con su motivo (las anuladas, tachadas), con la franja
+  de kilos que salieron por motivo, filtros de bodega, calibre, motivo, estado y periodo
+  (`?motivo=&estado=&desde=&hasta=`) y solo consulta; **Bodegas**, las de cada finca, con su «Nueva
+  bodega» en la fila de filtros), filtros de
+  finca, bodega, calibre, ubicación y código, y el orden de la tabla (`use-warehouse-filters.ts`). La
+  ubicación al ingresar es opcional: sin ella se lee «Sin ubicación». Las
+  cifras de G1 y G2 (`GET /api/stock/summary`) siguen los filtros de las existencias. **Se registra
+  solo en línea; se consulta sin conexión:** la primera página de cada pestaña con sus filtros (y su
+  orden) y las cifras se guardan en `cache`; sin conexión no se pagina, las acciones se ven
+  deshabilitadas con su motivo y el ojo a la ficha también (la ficha no guarda copia de los lotes de
+  bodega). Las lecturas están en `queries.ts`, las escrituras en `mutations.ts` (todas vuelven a leer
+  Bodega y Lotes) y los tipos en `api.ts`. El estado **En bodega** cierra `LOT_STATUS_ORDER`.
+  - **Reglas puras, con los mismos textos que el servidor:** las fechas del ingreso y de la salida
+    (`warehouse-dates.ts`), la cantidad contra lo disponible en décimas (`exit-quantity.ts`), los
+    motivos sin «Venta» y el detalle de «Otro» (`exit-reasons.ts`), los esquemas de cada formulario
+    (`entry-form.ts`, `exit-form.ts`, `void-form.ts`, `warehouse-form.ts`), qué acciones y pestañas
+    ve cada cuenta (`warehouse-actions.ts`), los errores del servidor (`warehouse-errors.ts`:
+    `lot_invalid_status` y los que dicen que la acción ya no aplica cierran el diálogo, avisan y
+    refrescan; `stock_insufficient` pone lo disponible del servidor en la cantidad;
+    `warehouse_has_records` ofrece desactivar) y lo que muestra la ficha (`warehouse-section-view.ts`).
+  - **Mover el cacao** (`move-form.ts`, `MoveDialog`, `POST /api/stock/{id}/move`): cambiar la bodega
+    o la ubicación de un lote En bodega **en cualquier momento** (a diferencia de corregir el ingreso,
+    que es solo para enmendar un error con el lote intacto). Está en el «⋯» de cada fila de Existencias
+    y en la sección de la ficha, que lista los **Movimientos** (de dónde venía, a dónde fue, quién y
+    cuándo). «Traslado» como motivo de salida es solo el cacao que sale de la finca.
+  - **Los formularios los abre `WarehouseActionDialog`**, desde una fila, una tarjeta, la ficha o
+    `?lote=&accion=` (`ingresar`, `salida`, que llegan desde Lotes): lee el lote
+    (`GET /api/stock/{id}`) y abre el diálogo si la acción todavía aplica (`dialog-request.ts`), o
+    dice por qué no. Ingresar y corregir (`entry-dialog.tsx`: los kilos de la clasificación como
+    referencia, la bodega elegida si hay una sola activa y las ubicaciones ya usadas como
+    sugerencia), registrar una salida (`exit-dialog.tsx`: lo disponible al lado del calibre y la
+    cantidad comparada mientras se escribe) y anular (`void-exit-dialog.tsx`, botón de peligro con
+    su motivo). Las bodegas se registran, editan, activan, desactivan y eliminan (la nunca usada) en
+    la pestaña Bodegas.
+  - **La sección de la ficha del lote** (`warehouse-section.tsx`), después de Calidad, se arma con el
+    campo `warehouse` del lote para cualquiera que lo vea (dónde está el cacao y desde cuándo, con
+    **Mover** al lado, y lo que queda de cada calibre en cifras grandes), y con `GET /api/stock/{id}`
+    (que pide `view_stock`) suma el **libro de movimientos** (`warehouse-ledger.ts`,
+    `warehouse-ledger-table.tsx`): del ingreso a lo último, una línea por ingreso, cambio de lugar y
+    salida con lo que movió en G1 y G2 (verde entra, rojo sale, sin cifra si solo cambió de lugar) y el
+    saldo al final. La salida anulada sigue en él, tachada y con quién la anuló y por qué, y **Anular**
+    va en la línea de la salida. Registrar salida y corregir el ingreso abren su diálogo ahí mismo. La
+    ilustración de los vacíos es propia (`WarehouseShelves`).
 
 - **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un
   formulario de página (sin banner, `narrow`) con los 21 valores con los que se evalúan el secado y
@@ -870,7 +924,9 @@ referencia en `docs/ui/ref/*.html`.
   la variante `action` (borde y texto `--selva` sobre blanco), que se distingue del fondo. La fila de
   filtros es `FilterRow` (buscador siempre visible, el resto detrás de «Filtros» en celular) y una
   tabla pasa a tarjetas compactas en celular con `COMPACT_TABLE_CLASS` (sin «etiqueta: valor» por
-  línea; el botón de ver cubre la tarjeta con `ROW_LINK_CLASS`). Los mapas de solo consulta ofrecen
+  línea; el botón de ver cubre la tarjeta con `ROW_LINK_CLASS`). Una columna por la que se ordena
+  usa `SortableTableHead` (`aria-sort` y flecha), con el orden en la URL (`?orden=`, el `ordering`
+  de la API); en celular, donde la cabecera no se ve, el orden se elige con un select tras «Filtros». Los mapas de solo consulta ofrecen
   pantalla completa (`MapFrame expandable`); los editores no, porque sus botones quedarían tapados.
   Una tarjeta con menos de 400 px de contenido (`useNarrowContainer`, mide la tarjeta y no la
   pantalla) deja solo el «⋯» con todo adentro; lo que sume otro dominio entra al menú por
