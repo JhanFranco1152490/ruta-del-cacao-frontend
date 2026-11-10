@@ -81,9 +81,9 @@ export function SalesScreen() {
         </div>
       </div>
       {!screen.needsProducer && (
-        <SaleSummaryStrip summary={screen.summary.data?.data} />
+        <SaleSummaryStrip summary={screen.summaryData} />
       )}
-      {screen.sales.isSuccess && screen.offline && (
+      {screen.sales.isSuccess && screen.offline && !screen.neverLoaded && (
         <OfflineCopyNotice
           consequence={OFFLINE_SALES_REASON}
           savedAt={screen.savedAt}

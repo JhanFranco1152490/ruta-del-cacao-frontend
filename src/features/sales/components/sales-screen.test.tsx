@@ -1,3 +1,4 @@
+import { onlineManager } from '@tanstack/react-query';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
@@ -252,6 +253,55 @@ describe('SalesScreen', () => {
         name: 'Necesitas conexión una vez para cargar las ventas.',
       }),
     ).toBeInTheDocument();
+  });
+
+  it('does not show the sales of another month while it has no connection', async () => {
+    const user = userEvent.setup();
+    const queryClient = createTestQueryClient();
+    // Como en la app, donde una lectura que falla se reintenta: sin red el reintento queda en pausa
+    // y lo único a la vista serían los datos del mes anterior.
+    queryClient.setDefaultOptions({
+      queries: { retry: 1, retryDelay: 0, gcTime: Infinity },
+    });
+    queryClient.setQueryData(
+      queryKeys.session(),
+      buildSession({ id: userId, permissions: ALL }),
+    );
+    const view = renderWithProviders(<SalesScreen />, {
+      queryClient,
+      searchParams: NOVEMBER,
+    });
+    expect(await saleRows()).toHaveLength(2);
+    const strip = await screen.findByRole('region', {
+      name: 'Resumen de ventas',
+    });
+    await waitFor(() => expect(strip).toHaveTextContent('$ 3.375.000'));
+
+    server.use(
+      http.get(apiUrl('/api/sales'), () => HttpResponse.error()),
+      http.get(apiUrl('/api/sales/summary'), () => HttpResponse.error()),
+    );
+    onlineManager.setOnline(false);
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    window.dispatchEvent(new Event('offline'));
+    try {
+      await user.click(screen.getByRole('button', { name: 'Mes anterior' }));
+
+      expect(
+        await screen.findByRole('heading', {
+          name: 'Necesitas conexión una vez para cargar las ventas.',
+        }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('table', { name: 'Ventas' })).toBeNull();
+      expect(screen.queryByText(/estás viendo la copia/)).toBeNull();
+      expect(strip).not.toHaveTextContent('$ 3.375.000');
+    } finally {
+      // Sin la pantalla montada ni lecturas en pausa, volver la conexión no reanuda nada que nadie
+      // espera (su fallo quedaría como un error sin capturar).
+      view.unmount();
+      await queryClient.cancelQueries();
+      onlineManager.setOnline(true);
+    }
   });
 
   it('asks the technical account to choose a producer first', async () => {

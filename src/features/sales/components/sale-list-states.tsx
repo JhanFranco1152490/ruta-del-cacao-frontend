@@ -39,7 +39,7 @@ export function SaleListStates({
       />
     );
   }
-  if (sales.isPending) {
+  if (screen.loading) {
     return <LoadingBlock label="Cargando ventas" shapes={['h-64']} />;
   }
   if (!sales.data) {
