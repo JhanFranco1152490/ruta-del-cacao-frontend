@@ -1,9 +1,4 @@
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiFetch } from '@/lib/api/client';
 import { apiPath } from '@/lib/api/path';
@@ -14,6 +9,7 @@ import {
 } from '@/lib/api/query-keys';
 import type { components } from '@/lib/api/schema';
 import { type CachedRead, readThroughCache } from '@/lib/offline/cached-read';
+import { keepPreviousWhileOnline } from '@/lib/offline/keep-previous-while-online';
 
 type Schemas = components['schemas'];
 
@@ -121,7 +117,7 @@ export const useQualityLots = (
           ),
     enabled: !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // Lo que dejó el periodo de cierre: lotes clasificados y descartados, kilos de G1 y G2 y kilos que
@@ -148,7 +144,7 @@ export const useClosedSummary = (
       ),
     enabled: enabled && !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 };
 
@@ -169,7 +165,7 @@ export const useQualitySummary = (
       ),
     enabled: !!userId,
     networkMode: 'offlineFirst',
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousWhileOnline,
   });
 
 // La calidad completa de un lote, con quién evaluó, corrigió o clasificó y las observaciones. El
