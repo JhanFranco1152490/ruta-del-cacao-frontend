@@ -101,6 +101,7 @@ describe('NAV_ITEMS', () => {
       '/infraestructura',
       '/parametros-poscosecha',
       '/compradores',
+      '/ventas',
       '/variedades',
       '/plagas-enfermedades',
       '/usuarios',
@@ -126,6 +127,7 @@ describe('NAV_ITEMS', () => {
       'postharvest',
       'postharvest',
       'postharvest',
+      'sales',
       'sales',
       'catalogs',
       'catalogs',
@@ -162,6 +164,7 @@ describe('NAV_ITEMS', () => {
       PERMISSIONS.PARAMETERS_VIEW,
     );
     expect(byHref['/compradores'].permission).toBe(PERMISSIONS.BUYERS_VIEW);
+    expect(byHref['/ventas'].permission).toBe(PERMISSIONS.SALES_VIEW);
     expect(byHref['/actividades'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/sanidad'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);

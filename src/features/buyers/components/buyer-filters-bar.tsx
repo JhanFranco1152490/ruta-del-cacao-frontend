@@ -9,7 +9,7 @@ import { useProducerSummary } from '@/lib/api/producer-options';
 
 import type { BuyerType } from '../api';
 import type { BuyerFilters, BuyerStatusFilter } from '../buyer-filters';
-import { BUYER_TYPE_OPTIONS } from '../buyer-types';
+import { BUYER_TYPE_OPTIONS } from '@/lib/buyer-types';
 
 // Una sola fila sin etiquetas visibles; en celular, el buscador y «Filtros». El productor (solo la
 // cuenta técnica) va antes que los atributos.

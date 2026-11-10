@@ -2,14 +2,15 @@
 // en campo es corta y la cola sin conexión no llena el teléfono. Una foto reducida a 1600 px sigue
 // mostrando la mancha en la mazorca y pesa unos cientos de KB.
 
+import { MAX_UPLOAD_BYTES, TOO_LARGE_MESSAGE } from '@/lib/files/upload-limits';
+
 export const MAX_PHOTO_SIDE = 1600;
-export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+export const MAX_PHOTO_BYTES = MAX_UPLOAD_BYTES;
 const JPEG_QUALITY = 0.85;
 const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/png']);
 
 export const FORMAT_NOT_ALLOWED_MESSAGE =
   'Formato no permitido. Puedes adjuntar fotos JPG o PNG';
-export const TOO_LARGE_MESSAGE = 'El archivo supera el tamaño máximo de 5 MB';
 export const NOT_PREPARED_MESSAGE =
   'No fue posible preparar la foto en este teléfono. Inténtalo con otra.';
 

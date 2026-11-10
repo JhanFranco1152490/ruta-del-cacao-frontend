@@ -6,7 +6,7 @@ import {
 import { toTenths } from '@/lib/format/tenths';
 
 import type { Grade, LotStock, LotWarehouseDetail } from './api';
-import { GRADE_LABELS, kilosText } from './exit-quantity';
+import { GRADE_LABELS, kilosText } from '@/lib/stock-quantity';
 import {
   type LedgerCell,
   type LedgerRow,

@@ -2,7 +2,7 @@ import { formatShortDate, formatShortDayMonth } from '@/lib/format/dates';
 
 import type { Grade, LotStock, StockExit, StockMove } from './api';
 import { NO_LOCATION_TEXT } from './entry-form';
-import { kilosText } from './exit-quantity';
+import { kilosText } from '@/lib/stock-quantity';
 import { exitReasonText } from './exit-reasons';
 
 export type LedgerCell = { text: string; tone: 'in' | 'out' | 'none' };

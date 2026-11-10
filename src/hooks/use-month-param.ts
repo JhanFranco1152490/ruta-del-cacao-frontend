@@ -5,7 +5,8 @@ import { createParser, useQueryState } from 'nuqs';
 import { isIsoMonth, shiftMonth, todayInBogota } from '@/lib/format/dates';
 
 // Un mes malformado en la URL (?mes=zzz, ?mes=2026-13) cae al mes actual en vez de romper la lista.
-const parseAsMonth = createParser({
+// Lo usa también una lista que guarda el mes junto con otros filtros, en un solo estado de la URL.
+export const parseAsMonth = createParser({
   parse: (value) => (isIsoMonth(value) ? value : null),
   serialize: (value: string) => value,
 });

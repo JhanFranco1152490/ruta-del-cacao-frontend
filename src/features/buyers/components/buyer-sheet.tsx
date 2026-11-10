@@ -15,7 +15,7 @@ import { producerLabelOf } from '@/lib/format/producer';
 
 import type { Buyer } from '../api';
 import { contactMeansText, documentText } from '../buyer-format';
-import { buyerTypeLabel } from '../buyer-types';
+import { buyerTypeLabel } from '@/lib/buyer-types';
 
 // En celular, tocar la tarjeta de un comprador abre esta hoja con sus datos y sus acciones. No hay
 // pantalla de detalle: el comprador tiene pocos datos y todos caben aquí.

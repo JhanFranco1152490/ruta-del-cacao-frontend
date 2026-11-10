@@ -38,6 +38,7 @@ export function BuyerFormDialog({
   onClose,
   onSaved,
   onShowExisting,
+  showExistingLabel = 'Ver el comprador',
 }: {
   buyer?: Buyer;
   // El directorio que se ve, para avisar de un nombre o un documento repetido antes de enviar.
@@ -47,8 +48,10 @@ export function BuyerFormDialog({
   // Solo la cuenta técnica elige de qué productor es el comprador nuevo.
   chooseProducer: boolean;
   onClose: () => void;
-  onSaved: (message: string | null) => void;
+  onSaved: (message: string | null, saved?: Buyer) => void;
   onShowExisting: (id: string) => void;
+  // Lo que dice el botón del aviso de documento repetido que lleva al comprador que ya existe.
+  showExistingLabel?: string;
 }) {
   const askProducer = chooseProducer && !buyer;
   const form = useForm<BuyerFormInput, unknown, BuyerFormValues>({
@@ -135,7 +138,7 @@ export function BuyerFormDialog({
               inactiveText="Puedes activarlo en vez de registrarlo de nuevo."
               onActivate={() => void activateExisting(existing)}
               onShow={() => onShowExisting(existing.id)}
-              showLabel="Ver el comprador"
+              showLabel={showExistingLabel}
             />
           )
         }

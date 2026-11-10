@@ -16,7 +16,7 @@ import { formatAbbreviatedDate } from '@/lib/format/dates';
 import { farmLabel } from '@/lib/format/place-label';
 
 import type { StockExitRow } from '../api';
-import { GRADE_LABELS, kilosText } from '../exit-quantity';
+import { GRADE_LABELS, kilosText } from '@/lib/stock-quantity';
 import { exitReasonText } from '../exit-reasons';
 import { LotEyeLink } from './lot-eye-link';
 

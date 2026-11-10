@@ -776,6 +776,82 @@ export const buildBuyer = (
   ...overrides,
 });
 
+export const buildSaleLine = (
+  overrides: Partial<Schemas['SaleLine']> = {},
+): Schemas['SaleLine'] => ({
+  id: 'sl1',
+  lot: { id: 'l1', code: '000123-F02-P05-261014-1' },
+  grade: 'g1',
+  quantity_kg: '150.0',
+  price_per_kg: 18500,
+  subtotal: 2775000,
+  ...overrides,
+});
+
+// Una venta registrada de La Esperanza, sin soporte, como llega en la lista (sin sus líneas).
+export const buildSaleListItem = (
+  overrides: Partial<Schemas['SaleListItem']> = {},
+): Schemas['SaleListItem'] => ({
+  id: 's1',
+  code: 'V-0001',
+  farm: { id: 'f1', code: 'F02', name: 'La Esperanza' },
+  buyer: {
+    id: 'b1',
+    name: 'Chocolates del Oriente S.A.S.',
+    buyer_type: 'chocolate_industry',
+    is_active: true,
+  },
+  sale_date: '2026-11-20',
+  notes: '',
+  g1_kg: '150.0',
+  g2_kg: '40.0',
+  total: 3375000,
+  invoice: null,
+  status: 'registered',
+  created_at: '2026-11-20T15:11:40Z',
+  created_by: { id: 'u1', full_name: 'Persona Comercializadora' },
+  voided: null,
+  version: 1,
+  ...overrides,
+});
+
+// La misma venta en su ficha, con una línea de G1 y una de G2 que suman sus kilos y su total.
+export const buildSale = (
+  overrides: Partial<Schemas['Sale']> = {},
+): Schemas['Sale'] => ({
+  ...buildSaleListItem(),
+  lines: [
+    buildSaleLine(),
+    buildSaleLine({
+      id: 'sl2',
+      grade: 'g2',
+      quantity_kg: '40.0',
+      price_per_kg: 15000,
+      subtotal: 600000,
+    }),
+  ],
+  ...overrides,
+});
+
+export const buildSaleSummary = (
+  overrides: Partial<Schemas['SaleSummary']> = {},
+): Schemas['SaleSummary'] => ({
+  total: 3375000,
+  g1_kg: '150.0',
+  g2_kg: '40.0',
+  sales: 1,
+  ...overrides,
+});
+
+export const buildBuyerOption = (
+  overrides: Partial<Schemas['BuyerOption']> = {},
+): Schemas['BuyerOption'] => ({
+  id: 'b1',
+  name: 'Chocolates del Oriente S.A.S.',
+  buyer_type: 'chocolate_industry',
+  ...overrides,
+});
+
 export const buildCollector = (
   overrides: Partial<Schemas['CollectorOption']> = {},
 ): Schemas['CollectorOption'] => ({

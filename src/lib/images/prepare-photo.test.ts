@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { TOO_LARGE_MESSAGE } from '@/lib/files/upload-limits';
+
 import {
   fitWithin,
   FORMAT_NOT_ALLOWED_MESSAGE,
@@ -7,7 +9,6 @@ import {
   NOT_PREPARED_MESSAGE,
   preparePhoto,
   type PhotoCodec,
-  TOO_LARGE_MESSAGE,
 } from './prepare-photo';
 
 describe('fitWithin', () => {

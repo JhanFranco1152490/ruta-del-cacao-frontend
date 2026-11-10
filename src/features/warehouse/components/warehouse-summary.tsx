@@ -1,7 +1,7 @@
 import { SummaryStrip, SummaryValue } from '@/components/summary-strip';
 
 import type { StockSummary } from '../api';
-import { kilosText } from '../exit-quantity';
+import { kilosText } from '@/lib/stock-quantity';
 
 // Cuánto hay en bodega con los filtros de las existencias puestos. Mientras llega, o si falla, queda
 // en «—».

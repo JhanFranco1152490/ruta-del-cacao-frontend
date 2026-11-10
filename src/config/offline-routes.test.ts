@@ -83,6 +83,13 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).toContain('/compradores');
   });
 
+  // Registrar una venta necesita conexión, así que su formulario no se guarda.
+  it('saves the sale list and detail, but not the sale form', () => {
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/ventas');
+    expect(OFFLINE_PRECACHE_ROUTES).toContain('/ventas/detalle');
+    expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/ventas/registrar');
+  });
+
   it('no longer saves the page of the retired section', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/mi-productor');
   });

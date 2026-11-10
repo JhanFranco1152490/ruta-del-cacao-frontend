@@ -56,13 +56,14 @@ async function toApiError(response: Response) {
   return unexpectedResponse(response.status);
 }
 
-// Lo que espera quien pide: casi siempre JSON; el archivo de una foto llega tal cual.
+// Lo que espera quien pide: casi siempre JSON; un archivo (una foto, el soporte de una venta) llega
+// tal cual.
 type ResponseKind = 'json' | 'blob';
 
 const ACCEPT: Record<ResponseKind, string> = {
   json: 'application/json',
-  // Los errores de ese endpoint siguen llegando en JSON.
-  blob: 'image/*, application/json',
+  // Los errores de esos endpoints siguen llegando en JSON.
+  blob: 'image/*, application/pdf, application/json',
 };
 
 // Una foto viaja como formulario de varias partes: el navegador arma el cuerpo y su tipo, con el

@@ -19,11 +19,8 @@ import {
   exitFormOf,
   toExitRequest,
 } from '../exit-form';
-import {
-  availableText,
-  exceedsAvailableMessage,
-  exitableGrades,
-} from '../exit-quantity';
+import { availableText, exceedsAvailableMessage } from '@/lib/stock-quantity';
+import { exitableGrades } from '../exit-quantity';
 import {
   DETAIL_MAX_LENGTH,
   EXIT_REASON_OPTIONS,
