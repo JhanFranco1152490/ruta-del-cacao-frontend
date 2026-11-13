@@ -168,6 +168,7 @@ En Next.js, con `next/font/google`, expuestas como `--font-serif` y `--font-sans
 | `StatStrip` / `StatCell` | Las cifras de un detalle: franja blanca de celdas pegadas, con ícono en el tinte del acento y una barra opcional | Ficha del productor, detalle de finca |
 | `Tooltip` (`components/ui/tooltip.tsx`) | Un recuadro pequeño con un dato extra al pasar el mouse o enfocar. El que lo dispara es focalizable (`tabIndex={0}`) y lleva su `aria-label`: el dato nunca vive solo en el recuadro, porque en el celular no hay mouse | Línea de tiempo de la fermentación y días del secado |
 | `SectionCard` / `KeyValues` | Sección con filete del acento, título y contador; datos en dos niveles (`single`: una columna, para una tarjeta angosta). Con `pick` es una de varias que se eligen de una lista: como renglón (`SectionItem`: título, si está Hecha, Actual o Pendiente y su resumen, con el filete del acento a la izquierda si es la elegida) o como panel con su contenido; así se arma la ficha del lote | Detalles, Sanidad, ficha del lote |
+| `BarList` / `ColumnChart` / `ShareBar` (`components/charts/`) | Gráficos en CSS y SVG, sin librería. `BarList`: una barra por fila a la escala de la mayor, con el valor escrito. `ColumnChart`: columnas por mes y serie, con una tabla para el lector de pantalla y el dato de cada mes en su tooltip. `ShareBar`: un total repartido (G1, G2, descarte) con cada parte escrita. El color nunca es lo único que dice algo: el valor y el nombre van en texto. Los colores por tipo de cifra están en `indicator-charts.ts` | Indicadores |
 | `SectionLabel` | Etiqueta cobre en versalitas | Todas |
 | `MapFrame` | El recuadro del mapa con sus controles encima, arriba a la derecha (mapa base, ocultar, ir a la finca, ir a mi ubicación), una leyenda opcional abajo a la izquierda y la franja «Mapa oculto» cuando se oculta. Los cuatro paneles de mapa lo usan | Todos los mapas |
 | `MapPanel` | Mapa con controles propios, capas, escala y lectura de coordenadas | Finca, parcela |
@@ -217,6 +218,7 @@ poscosecha cobre, calidad azul). Nunca emojis.
   | `PodVarieties` (tres mazorcas) | Variedades |
   | `FarmerHat` (sombrero con rama) | Productores, usuarios y roles |
   | `AllDone` (visto bueno con brote) | Nada pendiente, notificaciones al día |
+  | `IndicatorBars` (tablero con tres barras y una mata) | Indicadores |
   | `OfflineCloud` (nube tachada) | Todo «necesitas conexión» |
 
 - Una ilustración nueva usa la misma paleta (`--hoja`, `--selva-2`, `--amarillo-mazorca`,
