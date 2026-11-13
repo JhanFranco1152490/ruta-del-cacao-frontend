@@ -3,18 +3,17 @@
 import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs';
 
 import type { IndicatorFilters } from '@/lib/api/query-keys';
-
 import {
-  DEFAULT_INDICATOR_PERIOD,
-  INDICATOR_PERIODS,
-  indicatorPeriodBounds,
-} from './indicator-period';
+  DEFAULT_PERIOD_PRESET,
+  PERIOD_PRESETS,
+  presetBounds,
+} from '@/lib/period-presets';
 
 // El periodo, el panel, la finca y el productor viven en la URL: se comparten y el botón atrás los
 // respeta. Un periodo malformado (?periodo=zzz) cae al de siempre, que no se escribe.
 const parsers = {
-  period: parseAsStringLiteral(INDICATOR_PERIODS).withDefault(
-    DEFAULT_INDICATOR_PERIOD,
+  period: parseAsStringLiteral(PERIOD_PRESETS).withDefault(
+    DEFAULT_PERIOD_PRESET,
   ),
   view: parseAsString,
   farm: parseAsString,
@@ -33,7 +32,7 @@ export function useIndicatorFilters() {
     urlKeys,
     clearOnDefault: true,
   });
-  const { from, to } = indicatorPeriodBounds(params.period);
+  const { from, to } = presetBounds(params.period);
   const filters: IndicatorFilters = {
     producer: params.producer || null,
     from,
@@ -44,7 +43,7 @@ export function useIndicatorFilters() {
     filters,
     period: params.period,
     requestedView: params.view,
-    setPeriod: (period: (typeof INDICATOR_PERIODS)[number]) =>
+    setPeriod: (period: (typeof PERIOD_PRESETS)[number]) =>
       setParams({ period }),
     // Cada panel tiene sus propios filtros: cambiar de panel deja la finca y el productor del otro.
     setView: (view: string) => setParams({ view, farm: null, producer: null }),

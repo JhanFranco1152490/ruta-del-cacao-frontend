@@ -2,14 +2,21 @@
 
 import { useSession } from '@/hooks/use-session';
 import { useProducerSummary } from '@/lib/api/producer-options';
-
 import {
-  type IndicatorView,
-  availableIndicatorViews,
-  resolveIndicatorView,
-} from './indicator-view';
+  type AudienceView,
+  availableViews,
+  resolveView,
+} from '@/lib/audience-view';
+import { PERMISSIONS } from '@/lib/permissions';
+
 import { useAssociationIndicators, useProducerIndicators } from './queries';
 import { useIndicatorFilters } from './use-indicator-filters';
+
+// El panel del productor lo tiene su gente y el de la asociación, su administrador.
+const INDICATOR_PERMISSIONS = {
+  producer: PERMISSIONS.INDICATORS_VIEW_PRODUCER,
+  association: PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+};
 
 export type IndicatorsScreenState = ReturnType<typeof useIndicatorsScreen>;
 
@@ -18,11 +25,8 @@ export type IndicatorsScreenState = ReturnType<typeof useIndicatorsScreen>;
 export function useIndicatorsScreen() {
   const { data: user, isPending: sessionPending } = useSession();
   const filters = useIndicatorFilters();
-  const views = availableIndicatorViews(user);
-  const view: IndicatorView | null = resolveIndicatorView(
-    views,
-    filters.requestedView,
-  );
+  const views = availableViews(user, INDICATOR_PERMISSIONS);
+  const view: AudienceView | null = resolveView(views, filters.requestedView);
   const superuser = user?.is_superuser === true;
   // La cuenta técnica elige de qué productor ve el panel; las demás ven el suyo.
   const needsProducer =

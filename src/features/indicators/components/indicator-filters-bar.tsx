@@ -3,9 +3,9 @@
 import { FarmFilter } from '@/components/farm-filter';
 import { ProducerFilter } from '@/components/producer-filter';
 import { SegmentedControl } from '@/components/segmented-control';
+import { AUDIENCE_VIEW_OPTIONS, type AudienceView } from '@/lib/audience-view';
+import { PERIOD_PRESET_OPTIONS } from '@/lib/period-presets';
 
-import { INDICATOR_PERIOD_OPTIONS } from '../indicator-period';
-import { INDICATOR_VIEW_OPTIONS, type IndicatorView } from '../indicator-view';
 import type { IndicatorsScreenState } from '../use-indicators-screen';
 
 // Los filtros en el orden de las demás pantallas: el panel (solo la cuenta técnica tiene los dos),
@@ -28,8 +28,8 @@ export function IndicatorFiltersBar({
             compact
             label="Panel"
             onChange={filters.setView}
-            options={INDICATOR_VIEW_OPTIONS.filter(({ value }) =>
-              screen.views.includes(value as IndicatorView),
+            options={AUDIENCE_VIEW_OPTIONS.filter(({ value }) =>
+              screen.views.includes(value as AudienceView),
             )}
             value={view}
           />
@@ -64,7 +64,7 @@ export function IndicatorFiltersBar({
           fullWidth
           label="Periodo"
           onChange={filters.setPeriod}
-          options={INDICATOR_PERIOD_OPTIONS}
+          options={PERIOD_PRESET_OPTIONS}
           value={filters.period}
         />
       </div>
