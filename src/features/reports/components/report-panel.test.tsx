@@ -1,4 +1,6 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -8,8 +10,31 @@ import {
   buildReportColumn,
   buildReportTotal,
 } from '@/test/factories';
+import { createTestQueryClient } from '@/test/render';
 
 import { ReportPanel } from './report-panel';
+
+const BASE = {
+  view: 'producer',
+  filters: {
+    type: 'production',
+    from: '2026-01-01',
+    to: '2026-03-31',
+    producer: null,
+    municipality: null,
+    farm: 'f1',
+    plot: null,
+    lot: null,
+  },
+} as const;
+
+// La exportación pide su consulta: el panel necesita el cliente de consultas.
+const renderPanel = (panel: ReactElement) =>
+  render(
+    <QueryClientProvider client={createTestQueryClient()}>
+      {panel}
+    </QueryClientProvider>,
+  );
 
 const headers = () =>
   screen.getAllByRole('columnheader').map((header) => header.textContent);
@@ -21,7 +46,7 @@ const cells = (row: number) =>
 
 describe('ReportPanel', () => {
   it('says what the report is, with which filters and when', () => {
-    render(<ReportPanel report={buildReport()} />);
+    renderPanel(<ReportPanel {...BASE} report={buildReport()} />);
 
     const report = screen.getByRole('region', { name: 'Producción' });
     expect(report).toHaveTextContent(
@@ -33,7 +58,7 @@ describe('ReportPanel', () => {
   });
 
   it('shows the totals as the server sends them', () => {
-    render(<ReportPanel report={buildReport()} />);
+    renderPanel(<ReportPanel {...BASE} report={buildReport()} />);
 
     const totals = screen.getByRole('region', { name: 'Totales del reporte' });
     expect(totals).toHaveTextContent('Cosechas2');
@@ -43,8 +68,9 @@ describe('ReportPanel', () => {
 
   // La tabla no conoce los tipos: un tipo que no existe hoy se dibuja igual.
   it('draws any report from its columns, with the figures to the right', () => {
-    render(
+    renderPanel(
       <ReportPanel
+        {...BASE}
         report={buildReport({
           type: 'fertilization',
           title: 'Abonos',
@@ -78,14 +104,15 @@ describe('ReportPanel', () => {
 
   // Una etapa que no ha ocurrido no es un cero.
   it('shows a dash where there is no value', () => {
-    render(<ReportPanel report={buildReport()} />);
+    renderPanel(<ReportPanel {...BASE} report={buildReport()} />);
 
     expect(cells(2)).toContain('Lote—');
   });
 
   it('joins the columns that go together in one cell', () => {
-    render(
+    renderPanel(
       <ReportPanel
+        {...BASE}
         report={buildReport({
           type: 'traceability',
           title: 'Trazabilidad',
@@ -131,7 +158,7 @@ describe('ReportPanel', () => {
 
   // CA-02 de HU-47: nada por parcela ni por lote.
   it('shows the association one farm per row', () => {
-    render(<ReportPanel report={buildAssociationReport()} />);
+    renderPanel(<ReportPanel {...BASE} report={buildAssociationReport()} />);
 
     expect(headers()).toEqual([
       'Finca',
@@ -151,8 +178,9 @@ describe('ReportPanel', () => {
   it('says there are no results instead of an empty table, and offers to clear', async () => {
     const user = userEvent.setup();
     const onClear = vi.fn();
-    render(
+    renderPanel(
       <ReportPanel
+        {...BASE}
         onClear={onClear}
         report={buildReport({
           rows: [],
@@ -174,7 +202,7 @@ describe('ReportPanel', () => {
   });
 
   it('offers nothing to clear when no filter is set', () => {
-    render(<ReportPanel report={buildReport({ rows: [] })} />);
+    renderPanel(<ReportPanel {...BASE} report={buildReport({ rows: [] })} />);
 
     expect(
       screen.queryByRole('button', { name: 'Limpiar filtros' }),

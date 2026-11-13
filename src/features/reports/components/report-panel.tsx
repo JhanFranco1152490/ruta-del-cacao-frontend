@@ -3,8 +3,11 @@ import { useId } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { ReportSheets } from '@/components/illustrations/report-sheets';
 import { Button } from '@/components/ui/button';
+import type { ReportFilters } from '@/lib/api/query-keys';
+import type { AudienceView } from '@/lib/audience-view';
 
 import type { Report } from '../api';
+import { ReportExportMenu } from './report-export-menu';
 import { ReportHeading } from './report-heading';
 import { ReportTable } from './report-table';
 import { ReportTotals } from './report-totals';
@@ -13,9 +16,14 @@ import { ReportTotals } from './report-totals';
 // (CA-03 de HU-48): lo dice, y se puede volver a empezar.
 export function ReportPanel({
   report,
+  view,
+  filters,
   onClear,
 }: {
   report: Report;
+  view: AudienceView;
+  // Los filtros con que se pidió el reporte: la descarga trae lo mismo que la tabla.
+  filters: ReportFilters;
   // Solo con algún filtro puesto: sin ninguno no hay nada que limpiar.
   onClear?: () => void;
 }) {
@@ -23,7 +31,13 @@ export function ReportPanel({
   const empty = report.rows.length === 0;
   return (
     <section aria-labelledby={titleId} className="motion-rise space-y-4">
-      <ReportHeading report={report} titleId={titleId} />
+      <ReportHeading
+        actions={
+          <ReportExportMenu filters={filters} report={report} view={view} />
+        }
+        report={report}
+        titleId={titleId}
+      />
       {empty ? (
         <div className="rounded-lg bg-card shadow-card">
           <EmptyState

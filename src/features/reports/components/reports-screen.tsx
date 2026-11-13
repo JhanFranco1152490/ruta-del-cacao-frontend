@@ -32,12 +32,14 @@ export function ReportsScreen() {
       <ReportStates screen={screen}>
         {(report) => (
           <ReportPanel
+            filters={screen.query}
             onClear={
               screen.filters.hasFilters
                 ? () => void screen.filters.clear()
                 : undefined
             }
             report={report}
+            view={screen.view}
           />
         )}
       </ReportStates>

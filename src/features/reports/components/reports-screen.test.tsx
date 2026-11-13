@@ -174,6 +174,14 @@ describe('ReportsScreen del productor', () => {
     expect(report).toHaveTextContent(
       'Generado el 31/03/2026 a las 10:15 por Ana Ejemplo',
     );
+    expect(
+      within(report).getByRole('table', {
+        name: 'Filas del reporte de Producción',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(report).getByRole('button', { name: 'Exportar' }),
+    ).toBeEnabled();
     expect(Object.fromEntries(producerRequests[0])).toEqual({
       type: 'production',
       from: '2026-01-01',
