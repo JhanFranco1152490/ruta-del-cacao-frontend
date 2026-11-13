@@ -30,7 +30,16 @@ export function ReportsScreen() {
       />
       {screen.types.length > 0 && <ReportFiltersBar screen={screen} />}
       <ReportStates screen={screen}>
-        {(report) => <ReportPanel report={report} />}
+        {(report) => (
+          <ReportPanel
+            onClear={
+              screen.filters.hasFilters
+                ? () => void screen.filters.clear()
+                : undefined
+            }
+            report={report}
+          />
+        )}
       </ReportStates>
     </div>
   );
