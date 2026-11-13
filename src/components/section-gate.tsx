@@ -7,7 +7,7 @@ import { OnlineOnly } from '@/components/online-only';
 import { PageNotice } from '@/components/page-notice';
 import { navItemForPath } from '@/config/navigation';
 import { useSession } from '@/hooks/use-session';
-import { hasPermission } from '@/lib/permissions';
+import { hasAnyPermission } from '@/lib/permissions';
 import type { NavItem } from '@/types/navigation';
 
 // Cada sección del menú exige su permiso también al entrar escribiendo la dirección, y avisa si
@@ -25,7 +25,7 @@ export function SectionGate({
   const { data: user } = useSession();
   const section = navItemForPath(items, pathname);
   if (!section) return children;
-  if (section.permission && !hasPermission(user, section.permission)) {
+  if (section.permission && !hasAnyPermission(user, section.permission)) {
     return (
       <PageNotice
         title="No tienes permiso para ver esta sección"

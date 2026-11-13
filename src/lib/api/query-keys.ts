@@ -55,6 +55,15 @@ export type SaleFilters = {
   page: number;
 };
 
+// Lo que cambia las cifras de un panel de indicadores: el periodo (yyyy-MM-dd, días incluidos), la
+// finca (solo el del productor) y, para la cuenta técnica, el productor.
+export type IndicatorFilters = {
+  producer: string | null;
+  from: string;
+  to: string;
+  farm: string | null;
+};
+
 export type PendingEntryFilters = {
   producer: string | null;
   farm: string | null;
@@ -300,6 +309,14 @@ export const queryKeys = {
     buyerOptions: (producer: string | null) =>
       ['sales', 'buyer-options', producer ?? ''] as const,
     farmStock: (farmId: string) => ['sales', 'farm-stock', farmId] as const,
+  },
+  indicators: {
+    // Los paneles se calculan al consultar y no tienen copia en el dispositivo.
+    all: () => ['indicators'] as const,
+    producer: (filters: IndicatorFilters) =>
+      ['indicators', 'producer', filters] as const,
+    association: (filters: Pick<IndicatorFilters, 'from' | 'to'>) =>
+      ['indicators', 'association', filters] as const,
   },
   parameters: {
     // Lo que invalida guardar o restablecer los parámetros. La cuenta técnica elige el productor;
