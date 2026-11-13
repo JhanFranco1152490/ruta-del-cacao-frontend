@@ -8,12 +8,13 @@ import { apiError, sessionExpired as expired } from '@/test/factories';
 import { apiUrl } from '@/test/handlers';
 import { server } from '@/test/server';
 
-import { apiFetch, apiFetchBlob } from './client';
+import { apiFetch, apiFetchBlob, apiFetchFile } from './client';
 import { ApiError } from './errors';
 
 const REFRESH = apiUrl('/api/auth/refresh');
 const EVIDENCE = apiUrl('/api/agricultural-activities/a1/evidence');
 const EVIDENCE_FILE = apiUrl('/api/evidence/e1/file');
+const REPORT_FILE = apiUrl('/api/reports/producer/export');
 
 describe('apiFetch with form data', () => {
   it('sends the form as multipart with the CSRF token, not as JSON', async () => {
@@ -106,5 +107,77 @@ describe('apiFetchBlob', () => {
       status: 404,
       code: 'not_found',
     });
+  });
+});
+
+describe('apiFetchFile', () => {
+  it('returns the file with the name the server gives it', async () => {
+    let accept: string | null = null;
+    server.use(
+      http.get(REPORT_FILE, ({ request }) => {
+        accept = request.headers.get('accept');
+        return new HttpResponse('a,b', {
+          headers: {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition':
+              'attachment; filename="reporte-produccion-2026-11-13.csv"',
+          },
+        });
+      }),
+    );
+
+    const file = await apiFetchFile('/api/reports/producer/export?file=csv');
+
+    expect(file.fileName).toBe('reporte-produccion-2026-11-13.csv');
+    expect(await file.blob.text()).toBe('a,b');
+    expect(accept).toContain('text/csv');
+    expect(accept).toContain(
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    expect(accept).toContain('application/json');
+  });
+
+  it('reads a name written with its encoding', async () => {
+    server.use(
+      http.get(
+        REPORT_FILE,
+        () =>
+          new HttpResponse('x', {
+            headers: {
+              'Content-Disposition':
+                "attachment; filename*=UTF-8''reporte-producci%C3%B3n.pdf",
+            },
+          }),
+      ),
+    );
+
+    const file = await apiFetchFile('/api/reports/producer/export');
+
+    expect(file.fileName).toBe('reporte-producción.pdf');
+  });
+
+  // Desde otro origen el navegador oculta el encabezado si la API no lo expone.
+  it('says there is no name when the header does not arrive', async () => {
+    server.use(http.get(REPORT_FILE, () => new HttpResponse('x')));
+
+    const file = await apiFetchFile('/api/reports/producer/export');
+
+    expect(file.fileName).toBeNull();
+  });
+
+  it('turns an error of the export into an ApiError, not a file', async () => {
+    server.use(
+      http.get(REPORT_FILE, () =>
+        apiError(
+          400,
+          'report_empty',
+          'El reporte no tiene resultados para exportar.',
+        ),
+      ),
+    );
+
+    await expect(
+      apiFetchFile('/api/reports/producer/export'),
+    ).rejects.toMatchObject({ status: 400, code: 'report_empty' });
   });
 });

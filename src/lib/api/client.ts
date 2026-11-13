@@ -57,14 +57,33 @@ async function toApiError(response: Response) {
 }
 
 // Lo que espera quien pide: casi siempre JSON; un archivo (una foto, el soporte de una venta) llega
-// tal cual.
-type ResponseKind = 'json' | 'blob';
+// tal cual, y una descarga (un reporte exportado), con el nombre que le pone el servidor.
+type ResponseKind = 'json' | 'blob' | 'file';
 
 const ACCEPT: Record<ResponseKind, string> = {
   json: 'application/json',
   // Los errores de esos endpoints siguen llegando en JSON.
   blob: 'image/*, application/pdf, application/json',
+  file: [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/csv',
+    'application/json',
+  ].join(', '),
 };
+
+export type DownloadedFile = { blob: Blob; fileName: string | null };
+
+// El nombre de `Content-Disposition: attachment; filename="reporte.pdf"`. Desde otro origen el
+// navegador solo deja leer ese encabezado si la API lo expone: sin él llega `null` y quien descarga
+// pone el nombre.
+function fileNameOf(response: Response) {
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
+  if (encoded) return decodeURIComponent(encoded[1]);
+  const plain = /filename="?([^";]+)"?/i.exec(disposition);
+  return plain ? plain[1] : null;
+}
 
 // Una foto viaja como formulario de varias partes: el navegador arma el cuerpo y su tipo, con el
 // separador de las partes, así que aquí no se pone ninguno.
@@ -97,6 +116,13 @@ async function request<T>(
 
   if (!response.ok) throw await toApiError(response);
   if (kind === 'blob') return (await response.blob()) as T;
+  if (kind === 'file') {
+    const file: DownloadedFile = {
+      blob: await response.blob(),
+      fileName: fileNameOf(response),
+    };
+    return file as T;
+  }
   if (response.status === 204) return undefined as T;
   const text = await response.text();
   if (!text) return undefined as T;
@@ -169,3 +195,7 @@ export const apiFetch = <T>(path: string, init: ApiRequestInit = {}) =>
 // No se pide con <img src>: así vale la renovación y se puede guardar una copia en el dispositivo.
 export const apiFetchBlob = (path: string, init: ApiRequestInit = {}) =>
   send<Blob>(path, init, 'blob');
+
+// Un archivo para guardar en el dispositivo, con el nombre que manda el servidor si llega.
+export const apiFetchFile = (path: string, init: ApiRequestInit = {}) =>
+  send<DownloadedFile>(path, init, 'file');
