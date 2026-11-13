@@ -34,3 +34,17 @@ export function presetBounds(
   const firstMonth = shiftMonth(today.slice(0, 7), -MONTHS_BACK[preset]);
   return { from: monthBounds(firstMonth).from, to: today };
 }
+
+// El atajo que coincide con las fechas puestas, para marcarlo; con fechas escritas a mano, ninguno.
+export function matchingPreset(
+  from: string | null,
+  to: string | null,
+  today: string = todayInBogota(),
+): PeriodPreset | null {
+  return (
+    PERIOD_PRESETS.find((preset) => {
+      const bounds = presetBounds(preset, today);
+      return bounds.from === from && bounds.to === to;
+    }) ?? null
+  );
+}

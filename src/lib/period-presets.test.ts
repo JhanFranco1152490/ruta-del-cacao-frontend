@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { daysBetween } from '@/lib/format/dates';
 
-import { PERIOD_PRESETS, presetBounds } from './period-presets';
+import { matchingPreset, PERIOD_PRESETS, presetBounds } from './period-presets';
 
 describe('presetBounds', () => {
   it('el año va del 1 de enero a hoy', () => {
@@ -34,4 +34,18 @@ describe('presetBounds', () => {
       }
     },
   );
+});
+
+describe('matchingPreset', () => {
+  it('names the shortcut whose dates are set', () => {
+    expect(matchingPreset('2026-01-01', '2026-11-13', '2026-11-13')).toBe(
+      'year',
+    );
+    expect(matchingPreset('2026-09-01', '2026-11-13', '2026-11-13')).toBe('3m');
+  });
+
+  it('names none for dates written by hand', () => {
+    expect(matchingPreset('2026-02-01', '2026-11-13', '2026-11-13')).toBeNull();
+    expect(matchingPreset(null, null, '2026-11-13')).toBeNull();
+  });
 });
