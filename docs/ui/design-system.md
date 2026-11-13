@@ -219,6 +219,7 @@ poscosecha cobre, calidad azul). Nunca emojis.
   | `FarmerHat` (sombrero con rama) | Productores, usuarios y roles |
   | `AllDone` (visto bueno con brote) | Nada pendiente, notificaciones al día |
   | `IndicatorBars` (tablero con tres barras y una mata) | Indicadores |
+  | `ReportSheets` (hoja de cálculo con una columna en cobre, otra detrás y una mazorca) | Reportes |
   | `OfflineCloud` (nube tachada) | Todo «necesitas conexión» |
 
 - Una ilustración nueva usa la misma paleta (`--hoja`, `--selva-2`, `--amarillo-mazorca`,
