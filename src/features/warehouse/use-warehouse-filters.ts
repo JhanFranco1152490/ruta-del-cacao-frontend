@@ -16,10 +16,10 @@ import type {
   WarehouseFilters,
 } from '@/lib/api/query-keys';
 import { WAREHOUSE_ACTIONS, WAREHOUSE_VIEWS } from '@/lib/paths/warehouse';
+import { periodError } from '@/lib/period';
 
 import type { Grade } from './api';
 import { MANUAL_EXIT_REASONS } from './exit-reasons';
-import { periodError } from './exit-period';
 import type { StockSummaryFilters } from './queries';
 import {
   resolveWarehouseView,

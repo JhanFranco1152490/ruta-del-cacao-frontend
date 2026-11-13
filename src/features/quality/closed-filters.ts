@@ -1,13 +1,8 @@
 import type { QualityClosedFilters } from '@/lib/api/query-keys';
+import { periodError } from '@/lib/period';
 
-export const PERIOD_ERROR_MESSAGE =
-  'La fecha final no puede ser anterior a la inicial.';
-
-// Un periodo al revés no se pregunta al servidor: se dice en el campo y la lista sigue como estaba.
-export const periodError = (from: string | null, to: string | null) =>
-  from && to && from > to ? PERIOD_ERROR_MESSAGE : null;
-
-// Lo que se pregunta al servidor en la pestaña Cerrados, con el periodo solo si es válido.
+// Lo que se pregunta al servidor en la pestaña Cerrados, con el periodo solo si es válido: uno al
+// revés se dice en el campo y la lista sigue como estaba.
 export function effectiveClosedFilters(
   closed: QualityClosedFilters,
 ): QualityClosedFilters {
