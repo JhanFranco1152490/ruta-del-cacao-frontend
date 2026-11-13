@@ -58,6 +58,30 @@ describe('visibleNavItems', () => {
     expect(visibleNavItems(indicators, [PERMISSIONS.SALES_VIEW])).toEqual([]);
   });
 
+  // Igual que Indicadores: cada vista de los reportes tiene su permiso, y van juntos en el grupo.
+  it('shows the reports with either report permission, after the indicators', () => {
+    const reports = NAV_ITEMS.filter((item) => item.href === '/reportes');
+
+    for (const permission of [
+      PERMISSIONS.REPORTS_VIEW_PRODUCER,
+      PERMISSIONS.REPORTS_VIEW_ASSOCIATION,
+    ]) {
+      expect(visibleNavItems(reports, [permission])).toHaveLength(1);
+    }
+    expect(
+      visibleNavItems(reports, [PERMISSIONS.INDICATORS_VIEW_PRODUCER]),
+    ).toEqual([]);
+    expect(reports[0]).toMatchObject({
+      group: 'follow-up',
+      needsConnection: true,
+    });
+    const followUp = NAV_ITEMS.filter(({ group }) => group === 'follow-up');
+    expect(followUp.map(({ href }) => href)).toEqual([
+      '/indicadores',
+      '/reportes',
+    ]);
+  });
+
   it('handles an empty list of entries', () => {
     expect(visibleNavItems([], [PERMISSIONS.PRODUCERS_VIEW])).toEqual([]);
   });
@@ -116,6 +140,7 @@ describe('NAV_ITEMS', () => {
       '/compradores',
       '/ventas',
       '/indicadores',
+      '/reportes',
       '/variedades',
       '/plagas-enfermedades',
       '/usuarios',
@@ -143,6 +168,7 @@ describe('NAV_ITEMS', () => {
       'postharvest',
       'sales',
       'sales',
+      'follow-up',
       'follow-up',
       'catalogs',
       'catalogs',
@@ -184,6 +210,10 @@ describe('NAV_ITEMS', () => {
       PERMISSIONS.INDICATORS_VIEW_PRODUCER,
       PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
     ]);
+    expect(byHref['/reportes'].permission).toEqual([
+      PERMISSIONS.REPORTS_VIEW_PRODUCER,
+      PERMISSIONS.REPORTS_VIEW_ASSOCIATION,
+    ]);
     expect(byHref['/actividades'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/sanidad'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
@@ -198,6 +228,7 @@ describe('NAV_ITEMS', () => {
       '/sanidad',
       '/lotes',
       '/indicadores',
+      '/reportes',
       '/variedades',
       '/plagas-enfermedades',
       '/usuarios',

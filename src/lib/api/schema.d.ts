@@ -1513,6 +1513,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/association": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Un reporte de la asociación, una fila por finca: `production`, `quality` o `sales`, con las mismas cifras del panel de la asociación. Salen todas las fincas de los filtros, también en 0, salvo las inactivas o de productores inactivos sin cifras; sin ninguna cifra, sin filas. Nada por parcela, por lote, de existencias ni en pesos. `municipality` es un código de Norte de Santander; `producer` y `farm`, 404 si no existen o no coinciden. */
+        get: operations["reports_association_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/association/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Un reporte de la asociación, una fila por finca: `production`, `quality` o `sales`, con las mismas cifras del panel de la asociación. Salen todas las fincas de los filtros, también en 0, salvo las inactivas o de productores inactivos sin cifras; sin ninguna cifra, sin filas. Nada por parcela, por lote, de existencias ni en pesos. `municipality` es un código de Norte de Santander; `producer` y `farm`, 404 si no existen o no coinciden. Como archivo (`file`: `pdf`, `xlsx` o `csv`), con el tipo de reporte, los filtros y la fecha de generación. Sin filas: `report_empty`. El PDF admite hasta 2.000 filas (`report_too_large`); Excel y CSV, las del reporte. */
+        get: operations["reports_association_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/producer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Un reporte de la unidad productiva, una fila por registro: `production` (cosechas), `quality` (lotes clasificados o descartados en el periodo), `inventory` (existencias de hoy, sin periodo), `sales` (líneas de las ventas registradas, con precio) o `traceability` (un lote por fila, de la cosecha a la venta). Cada tipo pide además el permiso de consulta de su módulo. `from` y `to` incluidos, hasta 366 días; `farm`, `plot` y `lot` acotan (404 si no están en el alcance) y `producer` solo lo usa la cuenta técnica. Las columnas describen las filas: kg y porcentajes como texto, pesos y conteos como enteros. Más de 5.000 filas: `report_too_large`. */
+        get: operations["reports_producer_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/producer/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Un reporte de la unidad productiva, una fila por registro: `production` (cosechas), `quality` (lotes clasificados o descartados en el periodo), `inventory` (existencias de hoy, sin periodo), `sales` (líneas de las ventas registradas, con precio) o `traceability` (un lote por fila, de la cosecha a la venta). Cada tipo pide además el permiso de consulta de su módulo. `from` y `to` incluidos, hasta 366 días; `farm`, `plot` y `lot` acotan (404 si no están en el alcance) y `producer` solo lo usa la cuenta técnica. Las columnas describen las filas: kg y porcentajes como texto, pesos y conteos como enteros. Más de 5.000 filas: `report_too_large`. Como archivo (`file`: `pdf`, `xlsx` o `csv`), con el tipo de reporte, los filtros y la fecha de generación. Sin filas: `report_empty`. El PDF admite hasta 2.000 filas (`report_too_large`); Excel y CSV, las del reporte. */
+        get: operations["reports_producer_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles": {
         parameters: {
             query?: never;
@@ -4828,6 +4896,46 @@ export interface components {
             /** Format: uuid */
             id: string;
             full_name: string;
+        };
+        Report: {
+            type: string;
+            title: string;
+            /** Format: date-time */
+            generated_at: string;
+            generated_by: string;
+            filters: components["schemas"]["ReportFilter"][];
+            columns: components["schemas"]["ReportColumn"][];
+            readonly rows: {
+                [key: string]: (string | number) | null;
+            }[];
+            totals: components["schemas"]["ReportTotal"][];
+        };
+        /**
+         * @description * `text` - text
+         *     * `date` - date
+         *     * `kg` - kg
+         *     * `pct` - pct
+         *     * `money` - money
+         *     * `count` - count
+         * @enum {string}
+         */
+        ReportCellKindEnum: "text" | "date" | "kg" | "pct" | "money" | "count";
+        ReportColumn: {
+            key: string;
+            label: string;
+            kind: components["schemas"]["ReportCellKindEnum"];
+        };
+        ReportFilter: {
+            key: string;
+            label: string;
+            text: string;
+            id: string | null;
+        };
+        ReportTotal: {
+            key: string;
+            label: string;
+            kind: components["schemas"]["ReportCellKindEnum"];
+            readonly value: (string | number) | null;
         };
         Role: {
             /** Format: uuid */
@@ -12555,6 +12663,280 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    reports_association_retrieve: {
+        parameters: {
+            query: {
+                farm?: string;
+                from?: string;
+                municipality?: string;
+                producer?: string;
+                to?: string;
+                /**
+                 * @description * `production` - production
+                 *     * `quality` - quality
+                 *     * `sales` - sales
+                 */
+                type: "production" | "quality" | "sales";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    reports_association_export_retrieve: {
+        parameters: {
+            query: {
+                farm?: string;
+                /**
+                 * @description * `pdf` - pdf
+                 *     * `xlsx` - xlsx
+                 *     * `csv` - csv
+                 */
+                file: "pdf" | "xlsx" | "csv";
+                from?: string;
+                municipality?: string;
+                producer?: string;
+                to?: string;
+                /**
+                 * @description * `production` - production
+                 *     * `quality` - quality
+                 *     * `sales` - sales
+                 */
+                type: "production" | "quality" | "sales";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                    "application/pdf": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    reports_producer_retrieve: {
+        parameters: {
+            query: {
+                farm?: string;
+                from?: string;
+                lot?: string;
+                plot?: string;
+                producer?: string;
+                to?: string;
+                /**
+                 * @description * `production` - production
+                 *     * `quality` - quality
+                 *     * `inventory` - inventory
+                 *     * `sales` - sales
+                 *     * `traceability` - traceability
+                 */
+                type: "production" | "quality" | "inventory" | "sales" | "traceability";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    reports_producer_export_retrieve: {
+        parameters: {
+            query: {
+                farm?: string;
+                /**
+                 * @description * `pdf` - pdf
+                 *     * `xlsx` - xlsx
+                 *     * `csv` - csv
+                 */
+                file: "pdf" | "xlsx" | "csv";
+                from?: string;
+                lot?: string;
+                plot?: string;
+                producer?: string;
+                to?: string;
+                /**
+                 * @description * `production` - production
+                 *     * `quality` - quality
+                 *     * `inventory` - inventory
+                 *     * `sales` - sales
+                 *     * `traceability` - traceability
+                 */
+                type: "production" | "quality" | "inventory" | "sales" | "traceability";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                    "application/pdf": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

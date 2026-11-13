@@ -64,6 +64,19 @@ export type IndicatorFilters = {
   farm: string | null;
 };
 
+// Lo que se pide para un reporte. Lo que no aplica a su vista o a su tipo va en `null`: el periodo
+// en el inventario, la parcela y el lote en la asociación, el municipio en el productor.
+export type ReportFilters = {
+  type: string;
+  from: string | null;
+  to: string | null;
+  producer: string | null;
+  municipality: string | null;
+  farm: string | null;
+  plot: string | null;
+  lot: string | null;
+};
+
 export type PendingEntryFilters = {
   producer: string | null;
   farm: string | null;
@@ -317,6 +330,14 @@ export const queryKeys = {
       ['indicators', 'producer', filters] as const,
     association: (filters: Pick<IndicatorFilters, 'from' | 'to'>) =>
       ['indicators', 'association', filters] as const,
+  },
+  reports: {
+    // Se calculan al pedirlos y no tienen copia en el dispositivo.
+    all: () => ['reports'] as const,
+    producer: (filters: ReportFilters) =>
+      ['reports', 'producer', filters] as const,
+    association: (filters: ReportFilters) =>
+      ['reports', 'association', filters] as const,
   },
   parameters: {
     // Lo que invalida guardar o restablecer los parámetros. La cuenta técnica elige el productor;

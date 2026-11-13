@@ -1142,3 +1142,142 @@ export const buildAssociationIndicators = (
   ],
   ...overrides,
 });
+
+// Los reportes, con nombres y cifras inventados. El del productor es de producción, como el ejemplo
+// de la API: dos cosechas, una con lote seco y otra sin lote todavía.
+export const buildReportColumn = (
+  overrides: Partial<Schemas['ReportColumn']> = {},
+): Schemas['ReportColumn'] => ({
+  key: 'green_kg',
+  label: 'Kg en baba',
+  kind: 'kg',
+  ...overrides,
+});
+
+export const buildReportTotal = (
+  overrides: Partial<Schemas['ReportTotal']> = {},
+): Schemas['ReportTotal'] => ({
+  key: 'green_kg',
+  label: 'Kg en baba',
+  kind: 'kg',
+  value: '150.0',
+  ...overrides,
+});
+
+export const buildReport = (
+  overrides: Partial<Schemas['Report']> = {},
+): Schemas['Report'] => ({
+  type: 'production',
+  title: 'Producción',
+  generated_at: '2026-03-31T10:15:00-05:00',
+  generated_by: 'Ana Ejemplo',
+  filters: [
+    {
+      key: 'period',
+      label: 'Periodo',
+      text: '01/01/2026 – 31/03/2026',
+      id: null,
+    },
+    { key: 'farm', label: 'Finca', text: 'F01 · La Esperanza', id: 'f1' },
+  ],
+  columns: [
+    buildReportColumn({ key: 'harvest_date', label: 'Fecha', kind: 'date' }),
+    buildReportColumn({ key: 'plot', label: 'Parcela', kind: 'text' }),
+    buildReportColumn(),
+    buildReportColumn({ key: 'lot_code', label: 'Lote', kind: 'text' }),
+    buildReportColumn({ key: 'dry_kg', label: 'Kg seco', kind: 'kg' }),
+    buildReportColumn({
+      key: 'yield_pct',
+      label: 'Rendimiento %',
+      kind: 'pct',
+    }),
+  ],
+  rows: [
+    {
+      harvest_date: '2026-02-03',
+      plot: 'P01 · Lote del río',
+      green_kg: '120.0',
+      lot_code: '000001-F01-P01-260203-1',
+      dry_kg: '40.5',
+      yield_pct: '33.8',
+    },
+    {
+      harvest_date: '2026-02-04',
+      plot: 'P02 · Lote alto',
+      green_kg: '30.0',
+      lot_code: null,
+      dry_kg: null,
+      yield_pct: null,
+    },
+  ],
+  totals: [
+    buildReportTotal({
+      key: 'harvests',
+      label: 'Cosechas',
+      kind: 'count',
+      value: 2,
+    }),
+    buildReportTotal(),
+    buildReportTotal({
+      key: 'dry_kg',
+      label: 'Kg seco',
+      value: '40.5',
+    }),
+  ],
+  ...overrides,
+});
+
+// El de la asociación: una fila por finca, también la que no vendió nada.
+export const buildAssociationReport = (
+  overrides: Partial<Schemas['Report']> = {},
+): Schemas['Report'] =>
+  buildReport({
+    type: 'sales',
+    title: 'Comercialización',
+    filters: [
+      {
+        key: 'period',
+        label: 'Periodo',
+        text: '01/01/2026 – 31/03/2026',
+        id: null,
+      },
+    ],
+    columns: [
+      buildReportColumn({ key: 'farm', label: 'Finca', kind: 'text' }),
+      buildReportColumn({
+        key: 'municipality',
+        label: 'Municipio',
+        kind: 'text',
+      }),
+      buildReportColumn({ key: 'producer', label: 'Productor', kind: 'text' }),
+      buildReportColumn({ key: 'sold_kg', label: 'Kg vendidos', kind: 'kg' }),
+    ],
+    rows: [
+      {
+        farm: 'F01 · La Esperanza',
+        municipality: 'Cúcuta',
+        producer: 'PROD-000001 · Ana Ejemplo',
+        sold_kg: '260.0',
+      },
+      {
+        farm: 'F02 · Villa Rosa',
+        municipality: 'Tibú',
+        producer: 'PROD-000002 · Luis Prueba',
+        sold_kg: '0.0',
+      },
+    ],
+    totals: [
+      buildReportTotal({
+        key: 'sales',
+        label: 'Ventas',
+        kind: 'count',
+        value: 3,
+      }),
+      buildReportTotal({
+        key: 'sold_kg',
+        label: 'Kg vendidos',
+        value: '260.0',
+      }),
+    ],
+    ...overrides,
+  });

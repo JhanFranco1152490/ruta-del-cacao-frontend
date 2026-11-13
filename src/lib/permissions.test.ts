@@ -89,6 +89,13 @@ describe('isFieldPermission', () => {
     );
   });
 
+  // Igual que los indicadores: el reporte del productor es de sus fincas y el de la asociación,
+  // de todas.
+  it('counts the producer reports but not the association ones', () => {
+    expect(isFieldPermission(PERMISSIONS.REPORTS_VIEW_PRODUCER)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.REPORTS_VIEW_ASSOCIATION)).toBe(false);
+  });
+
   // Un comprador le compra al productor, no a una finca.
   it('leaves out the buyers, which belong to the whole producer', () => {
     expect(isFieldPermission(PERMISSIONS.BUYERS_VIEW)).toBe(false);
