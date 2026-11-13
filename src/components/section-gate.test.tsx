@@ -27,6 +27,15 @@ const items: NavItem[] = [
     icon: Sprout,
     permission: PERMISSIONS.FARMS_VIEW,
   },
+  {
+    href: '/indicadores',
+    label: 'Indicadores',
+    icon: Sprout,
+    permission: [
+      PERMISSIONS.INDICATORS_VIEW_PRODUCER,
+      PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+    ],
+  },
 ];
 
 function renderAt(path: string, permissions: string[]) {
@@ -60,6 +69,20 @@ describe('SectionGate', () => {
       screen.getByText('No tienes permiso para ver esta sección'),
     ).toBeInTheDocument();
     expect(screen.queryByText('Contenido')).not.toBeInTheDocument();
+  });
+
+  it('opens a section that accepts several permissions with any one of them', () => {
+    renderAt('/indicadores', [PERMISSIONS.INDICATORS_VIEW_ASSOCIATION]);
+
+    expect(screen.getByText('Contenido')).toBeInTheDocument();
+  });
+
+  it('explains instead of showing a section that accepts several permissions to someone with none', () => {
+    renderAt('/indicadores', [PERMISSIONS.FARMS_VIEW]);
+
+    expect(
+      screen.getByText('No tienes permiso para ver esta sección'),
+    ).toBeInTheDocument();
   });
 
   it('says an office section needs a connection when there is none', () => {

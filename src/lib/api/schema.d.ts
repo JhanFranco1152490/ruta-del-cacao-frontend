@@ -776,6 +776,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/indicators/association": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El panel de la asociación en el periodo, `from` y `to` incluidos, de hasta 366 días: por finca, los kg en baba y seco, G1, G2 y descarte de lo clasificado o descartado, y los kg vendidos sin las ventas anuladas, con sus totales y los meses. Solo las fincas con alguna cifra en el periodo, de la que más produjo a la que menos. Nada por parcela, por lote ni de existencias. */
+        get: operations["indicators_association_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/indicators/producer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El panel de la unidad productiva en el periodo, `from` y `to` incluidos, de hasta 366 días: kg en baba y seco por parcela, por hectárea (con el área declarada) y por mes; G1, G2 y descarte de lo clasificado o descartado en el periodo; las existencias de hoy, sin periodo; y los kg vendidos, sin las ventas anuladas. Un empleado ve solo las fincas que trabaja. `farm` acota a una finca (404 si no la alcanza) y `producer` solo lo usa la cuenta técnica. Sin divisor, los porcentajes y los kg por hectárea son nulos. */
+        get: operations["indicators_producer_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/input-movements": {
         parameters: {
             query?: never;
@@ -2190,6 +2224,73 @@ export interface components {
             all_farms: boolean;
             assignable: boolean;
         };
+        AssociationFarm: {
+            /** Format: decimal */
+            classified_kg: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discard_kg: string;
+            /** Format: decimal */
+            g1_pct: string | null;
+            /** Format: decimal */
+            g2_pct: string | null;
+            /** Format: decimal */
+            discard_pct: string | null;
+            /** Format: uuid */
+            farm_id: string;
+            farm_code: string;
+            farm_name: string;
+            municipality_code: string;
+            producer: components["schemas"]["FarmProducer"];
+            /** Format: decimal */
+            green_kg: string;
+            /** Format: decimal */
+            dry_kg: string;
+            /** Format: decimal */
+            sold_kg: string;
+        };
+        AssociationIndicators: {
+            period: components["schemas"]["IndicatorPeriod"];
+            totals: components["schemas"]["AssociationTotals"];
+            months: components["schemas"]["AssociationMonth"][];
+            farms: components["schemas"]["AssociationFarm"][];
+        };
+        AssociationMonth: {
+            month: string;
+            /** Format: decimal */
+            green_kg: string;
+            /** Format: decimal */
+            dry_kg: string;
+            /** Format: decimal */
+            sold_kg: string;
+        };
+        AssociationTotals: {
+            /** Format: decimal */
+            classified_kg: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discard_kg: string;
+            /** Format: decimal */
+            g1_pct: string | null;
+            /** Format: decimal */
+            g2_pct: string | null;
+            /** Format: decimal */
+            discard_pct: string | null;
+            producers: number;
+            farms: number;
+            /** Format: decimal */
+            green_kg: string;
+            /** Format: decimal */
+            dry_kg: string;
+            /** Format: decimal */
+            sold_kg: string;
+        };
         /** @enum {unknown} */
         BlankEnum: "";
         Buyer: {
@@ -2938,6 +3039,16 @@ export interface components {
          * @enum {string}
          */
         FarmScopeEnum: "all" | "one" | "many";
+        FarmStock: {
+            /** Format: uuid */
+            farm_id: string;
+            farm_code: string;
+            farm_name: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+        };
         FermentationBox: {
             /** Format: uuid */
             id: string;
@@ -3192,6 +3303,12 @@ export interface components {
             id: string;
             name: string;
             is_active: boolean;
+        };
+        IndicatorPeriod: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
         };
         InputMovement: {
             /** Format: uuid */
@@ -4265,6 +4382,27 @@ export interface components {
             is_active: boolean;
             producer: components["schemas"]["FarmProducer"];
         };
+        PlotProduction: {
+            /** Format: uuid */
+            plot_id: string;
+            plot_code: string;
+            plot_name: string;
+            /** Format: uuid */
+            farm_id: string;
+            farm_code: string;
+            farm_name: string;
+            is_active: boolean;
+            /** Format: decimal */
+            area_hectares: string;
+            /** Format: decimal */
+            green_kg: string;
+            /** Format: decimal */
+            dry_kg: string;
+            /** Format: decimal */
+            green_kg_per_hectare: string | null;
+            /** Format: decimal */
+            dry_kg_per_hectare: string | null;
+        };
         PlotRuleError: {
             detail: string;
             code: string;
@@ -4460,6 +4598,22 @@ export interface components {
             readonly updated_at: string;
             readonly account: components["schemas"]["ProducerAccount"] | null;
         };
+        ProducerIndicators: {
+            period: components["schemas"]["IndicatorPeriod"];
+            production: components["schemas"]["ProducerProduction"];
+            quality: components["schemas"]["ProducerQuality"];
+            inventory: components["schemas"]["ProducerInventory"];
+            sales: components["schemas"]["ProducerSales"];
+        };
+        ProducerInventory: {
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            total_kg: string;
+            farms: components["schemas"]["FarmStock"][];
+        };
         ProducerList: {
             /** Format: uuid */
             readonly id: string;
@@ -4470,6 +4624,40 @@ export interface components {
             readonly last_name: string;
             readonly municipality_code: string;
             readonly status: components["schemas"]["StatusEnum"];
+        };
+        ProducerProduction: {
+            /** Format: decimal */
+            green_kg: string;
+            /** Format: decimal */
+            dry_kg: string;
+            /** Format: decimal */
+            green_kg_not_dried: string;
+            /** Format: decimal */
+            area_hectares: string;
+            /** Format: decimal */
+            green_kg_per_hectare: string | null;
+            /** Format: decimal */
+            dry_kg_per_hectare: string | null;
+            plots: components["schemas"]["PlotProduction"][];
+            months: components["schemas"]["ProductionMonth"][];
+        };
+        ProducerQuality: {
+            /** Format: decimal */
+            classified_kg: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discard_kg: string;
+            /** Format: decimal */
+            g1_pct: string | null;
+            /** Format: decimal */
+            g2_pct: string | null;
+            /** Format: decimal */
+            discard_pct: string | null;
+            lots_classified: number;
+            lots_discarded: number;
         };
         ProducerRequest: {
             document_type: components["schemas"]["DocumentTypeEnum"];
@@ -4482,6 +4670,23 @@ export interface components {
             municipality_code: string;
             /** Format: date */
             joined_on: string;
+        };
+        ProducerSales: {
+            /** Format: decimal */
+            sold_kg: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            sales: number;
+            months: components["schemas"]["SalesMonth"][];
+        };
+        ProductionMonth: {
+            month: string;
+            /** Format: decimal */
+            green_kg: string;
+            /** Format: decimal */
+            dry_kg: string;
         };
         Profile: {
             /** Format: email */
@@ -4800,6 +5005,11 @@ export interface components {
         SaleVoidRequestRequest: {
             expected_version: number;
             reason: string;
+        };
+        SalesMonth: {
+            month: string;
+            /** Format: decimal */
+            sold_kg: string;
         };
         /**
          * @description * `zigzag` - Zig-zag
@@ -9053,6 +9263,108 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    indicators_association_retrieve: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssociationIndicators"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    indicators_producer_retrieve: {
+        parameters: {
+            query: {
+                farm?: string;
+                from: string;
+                producer?: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProducerIndicators"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

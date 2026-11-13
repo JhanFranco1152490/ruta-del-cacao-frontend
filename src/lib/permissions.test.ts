@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { PERMISSIONS, hasPermission, isFieldPermission } from './permissions';
+import {
+  PERMISSIONS,
+  hasAnyPermission,
+  hasPermission,
+  isFieldPermission,
+} from './permissions';
 
 describe('hasPermission', () => {
   it('is true when the user has the permission', () => {
@@ -22,6 +27,28 @@ describe('hasPermission', () => {
 
   it('is false when the session carries no permission list', () => {
     expect(hasPermission({}, PERMISSIONS.PRODUCERS_VIEW)).toBe(false);
+  });
+});
+
+describe('hasAnyPermission', () => {
+  const user = { permissions: [PERMISSIONS.INDICATORS_VIEW_ASSOCIATION] };
+
+  it('is true when the user has one of them', () => {
+    expect(
+      hasAnyPermission(user, [
+        PERMISSIONS.INDICATORS_VIEW_PRODUCER,
+        PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+      ]),
+    ).toBe(true);
+  });
+
+  it('is false when the user has none, or no session', () => {
+    expect(hasAnyPermission(user, [PERMISSIONS.INDICATORS_VIEW_PRODUCER])).toBe(
+      false,
+    );
+    expect(
+      hasAnyPermission(undefined, PERMISSIONS.INDICATORS_VIEW_PRODUCER),
+    ).toBe(false);
   });
 });
 
@@ -51,6 +78,15 @@ describe('isFieldPermission', () => {
       false,
     );
     expect(isFieldPermission(PERMISSIONS.USERS_VIEW)).toBe(false);
+  });
+
+  // El del productor cuelga de sus fincas; el de la asociación consolida las de todos y sus
+  // cuentas no llevan finca: de lo contrario el administrador vería el aviso de «sin finca».
+  it('counts the producer indicators but not the association ones', () => {
+    expect(isFieldPermission(PERMISSIONS.INDICATORS_VIEW_PRODUCER)).toBe(true);
+    expect(isFieldPermission(PERMISSIONS.INDICATORS_VIEW_ASSOCIATION)).toBe(
+      false,
+    );
   });
 
   // Un comprador le compra al productor, no a una finca.
