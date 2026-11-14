@@ -156,7 +156,7 @@ describe('ReportPanel', () => {
     ]);
   });
 
-  // CA-02 de HU-47: nada por parcela ni por lote.
+  // Nada por parcela ni por lote.
   it('shows the association one farm per row', () => {
     renderPanel(<ReportPanel {...BASE} report={buildAssociationReport()} />);
 
@@ -174,7 +174,7 @@ describe('ReportPanel', () => {
     ]);
   });
 
-  // CA-03 de HU-48 y EX-3 de CU-34.
+  // Sin filas no se dibuja una tabla vacía.
   it('says there are no results instead of an empty table, and offers to clear', async () => {
     const user = userEvent.setup();
     const onClear = vi.fn();

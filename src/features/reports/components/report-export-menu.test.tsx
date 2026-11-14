@@ -69,7 +69,7 @@ describe('ReportExportMenu', () => {
     ).toEqual(['PDF', 'Excel', 'CSV']);
   });
 
-  // CA-02 de HU-48: el archivo trae lo mismo que la pantalla.
+  // El archivo trae lo mismo que la pantalla.
   it('downloads the report it shows, with its filters and the chosen format', async () => {
     renderMenu();
 
@@ -138,7 +138,7 @@ describe('ReportExportMenu', () => {
     );
   });
 
-  // CA-03 de HU-48: sin filas no hay archivo.
+  // Sin filas no hay archivo.
   it('is disabled when the report has no rows', () => {
     renderMenu(buildReport({ rows: [] }));
 

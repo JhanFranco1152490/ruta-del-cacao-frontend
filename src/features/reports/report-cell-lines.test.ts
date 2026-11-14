@@ -29,7 +29,7 @@ describe('cellLines', () => {
     ]);
   });
 
-  // FA-2 de CU-35: el lote en proceso muestra lo que lleva.
+  // El lote en proceso muestra lo que lleva.
   it('leaves out what has not happened yet', () => {
     expect(
       cellLines(DRYING, {

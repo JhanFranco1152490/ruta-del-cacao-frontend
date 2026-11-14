@@ -131,7 +131,6 @@ describe('ReportsScreen del productor', () => {
     ).toBeNull();
   });
 
-  // CA-02 de HU-46.
   it('pide el tipo de reporte antes de generar', async () => {
     const user = userEvent.setup();
     renderScreen();
@@ -144,7 +143,6 @@ describe('ReportsScreen del productor', () => {
     expect(producerRequests).toEqual([]);
   });
 
-  // CA-03 de HU-46.
   it('no genera con la fecha final antes de la inicial', async () => {
     const user = userEvent.setup();
     renderScreen({

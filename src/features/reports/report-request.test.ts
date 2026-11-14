@@ -21,14 +21,13 @@ const VALUES: ReportFilterValues & { type: 'production' } = {
 };
 
 describe('validateReportRequest', () => {
-  // CA-02 de HU-46: sin tipo no se genera nada.
+  // Sin tipo no se genera nada.
   it('asks for the report type first', () => {
     expect(validateReportRequest({ ...VALUES, type: null })).toEqual({
       type: TYPE_REQUIRED_MESSAGE,
     });
   });
 
-  // CA-03 de HU-46 y CA-04 de HU-47.
   it('rejects a period that ends before it starts', () => {
     expect(
       validateReportRequest({
@@ -76,7 +75,7 @@ describe('reportQuery', () => {
     );
   });
 
-  // CA-02 de HU-47: nada por parcela ni por lote.
+  // Nada por parcela ni por lote.
   it('sends the association its filters and nothing by plot or lot', () => {
     expect(reportQuery('association', VALUES, { superuser: false })).toEqual({
       type: 'production',

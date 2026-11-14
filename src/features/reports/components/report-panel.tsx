@@ -12,8 +12,8 @@ import { ReportHeading } from './report-heading';
 import { ReportTable } from './report-table';
 import { ReportTotals } from './report-totals';
 
-// El reporte generado: su encabezado, los totales y la tabla. Sin filas no hay reporte que leer
-// (CA-03 de HU-48): lo dice, y se puede volver a empezar.
+// El reporte generado: su encabezado, los totales y la tabla. Sin filas no hay reporte que leer:
+// lo dice, y se puede volver a empezar.
 export function ReportPanel({
   report,
   view,
