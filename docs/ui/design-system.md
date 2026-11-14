@@ -311,6 +311,12 @@ a una app que se usa en celulares modestos y sin conexión. Las utilidades está
   con las horas desde el inicio) y las acciones de una fila son botones de solo icono con
   `aria-label`. Si aun así no cabe, la pantalla pasa a `wide` o se quita una columna; el
   desplazamiento horizontal no es una solución, porque deja las acciones fuera de la vista.
+- **Una tabla armada desde las columnas del servidor** (Reportes): el `kind` de cada columna dice
+  cómo se escribe el valor (fecha `dd/MM/yyyy`, kg, %, pesos, cantidad) y si va a la derecha; las
+  cifras, con `tabular-nums`. Las columnas que se leen juntas (lote y estado, finca y parcela, cada
+  etapa de un lote) se unen en una celda de varias líneas; ahí cada cifra lleva su etiqueta y lo que
+  no ha ocurrido no ocupa línea. Una celda sin valor es una raya «—», nunca un cero. En celular, una
+  tarjeta por fila con la etiqueta encima de cada valor. Los totales van arriba en una franja.
 - **El código de un lote** se muestra partido en sus pedazos, cada uno con su nombre y lo que dice
   hoy (`LotCodeSegments`): productor, finca, parcela, cosecha y consecutivo. Reemplaza al párrafo
   «Cómo se lee este código». El título sigue diciendo el código completo al lector de pantalla.
@@ -326,7 +332,7 @@ a una app que se usa en celulares modestos y sin conexión. Las utilidades está
   entre un grupo y otro.
 - **Menú de navegación por grupos:** las entradas (`NAV_ITEMS`) llevan un `group`: Administración
   (Productores, Usuarios, Roles y permisos), Finca, Manejo agrícola, Cosecha y poscosecha,
-  Comercialización (Compradores y Ventas) y Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,
+  Comercialización (Compradores y Ventas), Seguimiento (Indicadores y Reportes) y Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,
   Administración va primero (empieza con Productores); para el productor, que solo ve Usuarios y
   Roles, va al final. Los encabezados solo se dibujan si la persona ve entradas de dos o más grupos;
   con uno el menú queda plano, y una entrada sin grupo va suelta arriba. Cada grupo se pliega con su

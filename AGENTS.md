@@ -145,6 +145,11 @@ src/
     `NeverLoadedState` (la lista que nunca se cargó y no tiene copia: «Necesitas conexión una vez para
     cargar …»), `mapPlaceholder` (el mapa mientras carga o si no cargó), `LotViewLink` (el ojo a la ficha de un
     lote, que con `disabledReason` queda deshabilitado y dice por qué);
+  - filtros: `DateRangeFilter` (las dos fechas de un periodo en una fila de filtros, de 40 px, con el
+    error del periodo debajo de la primera), `chosenOption` (la opción de un filtro puesto que no
+    está entre las ofrecidas, para mostrarla igual) y `SegmentedControl` con `value={null}` cuando lo
+    elegido no es ninguna de sus opciones (un periodo escrito a mano). Hoy los usa Reportes; Calidad,
+    Sanidad, Lotes y Cosechas siguen con su copia hasta un PR aparte;
   - API: `apiPath` (ruta con su consulta, sin los vacíos) e `isNotFound` (404);
   - cola sin conexión: `rejectionConflict` y `VALIDATION_ERROR_CODE` en `lib/offline/adapters.ts`.
 - **Un dominio no importa de la carpeta de otro.** Cuando una pantalla junta dos (el detalle de
@@ -192,9 +197,17 @@ src/
   contra lo disponible, con su mensaje, los calibres y los kilos con un decimal
   (`lib/stock-quantity.ts`, que usan Bodega y Ventas); los tipos de cliente (`lib/buyer-types.ts`, de
   Compradores y Ventas); los pesos enteros con punto de miles (`lib/format/pesos.ts`,
-  `formatPesos`, que usarán los reportes); el tope de 5 MB de un archivo
+  `formatPesos`, que usan también los reportes); el tope de 5 MB de un archivo
   (`lib/files/upload-limits.ts`, de las fotos de evidencia y del soporte de una venta); y las rutas
-  de Compradores en `lib/paths/buyers.ts`. `parseAsMonth` (`hooks/use-month-param.ts`) sirve a una
+  de Compradores en `lib/paths/buyers.ts`. Desde reportes: la vista del productor o de la asociación
+  y cuál abre (`lib/audience-view.ts`: `availableViews`, `resolveView`, antes de Indicadores); los
+  atajos de periodo que terminan hoy (`lib/period-presets.ts`: `presetBounds`, `matchingPreset`,
+  antes de Indicadores); el periodo al revés (`lib/period.ts`: `periodError`, antes copiado en
+  Bodega y Calidad); guardar en el dispositivo un archivo descargado (`lib/files/save-file.ts`:
+  `saveFile` y `temporaryObjectUrl`, que usa también la factura de Ventas); el buscador de lotes de
+  un filtro (`lib/api/lot-options.ts`: `useLotSearch`, de 20 en 20); y las fechas en números
+  (`formatNumericDate`, `formatNumericDateTime` en `lib/format/dates.ts`: `03/02/2026`, como en los
+  archivos exportados, porque un reporte puede abarcar dos años). `parseAsMonth` (`hooks/use-month-param.ts`) sirve a una
   lista que guarda el mes con otros filtros en un solo `useQueryStates`, como Ventas.
 - **Actividades (`features/activities/`).** Programar, editar y eliminar son en línea; la
   realización pasa siempre por la cola (`completion-queue.ts`, `sync-adapter.ts`) y tiene su vista
@@ -614,9 +627,9 @@ src/
     cambiar el periodo o la finca, sigue mostrando lo anterior hasta que llega lo nuevo, salvo el del
     productor de otra cuenta (`placeholderData` compara el productor).
   - **Filtros en la URL** (`use-indicator-filters.ts`): `?periodo=` (`year` abre, `12m`, `6m`, `3m`;
-    siempre terminan hoy y caben en los 366 días del servidor, `indicator-period.ts`), `?vista=`,
+    siempre terminan hoy y caben en los 366 días del servidor, `lib/period-presets.ts`), `?vista=`,
     `?finca=` (solo en el del productor) y `?productor=` (cuenta técnica). `use-indicators-screen.ts`
-    decide el panel (`indicator-view.ts`) y pide solo el suyo.
+    decide el panel (`lib/audience-view.ts`, que comparte con Reportes) y pide solo el suyo.
   - **Gráficos propios en CSS y SVG**, sin librería (`components/charts/`): `BarList` (una barra por
     fila con el valor escrito, a la escala de la mayor), `ColumnChart` (columnas por mes y serie, con
     la misma información en una tabla para el lector de pantalla y en el tooltip de cada mes) y
@@ -628,6 +641,53 @@ src/
   - **Sin cifras** (`hasProducerFigures`, `hasAssociationFigures`) el panel es un estado vacío con
     `IndicatorBars`. El de la asociación no pide ni dibuja nada por parcela, por lote ni de
     existencias; el porcentaje sin total es una raya y no «0 %».
+
+- **Reportes (`features/reports/`).** `/reportes` (grupo **Seguimiento**, después de Indicadores,
+  con conexión: `needsConnection`) genera un reporte en tabla y lo descarga en PDF, Excel o CSV. Las
+  vistas son las de Indicadores (`lib/audience-view.ts`): la del productor con
+  `reports.view_producer_reports` (`GET /api/reports/producer`) y la de la asociación con
+  `reports.view_association_reports` (`GET /api/reports/association`); la cuenta técnica tiene las
+  dos, abre la de la asociación y en la del productor filtra por productor. La entrada del menú y
+  la página aceptan cualquiera de los dos permisos.
+  - **Tipos según los permisos** (`report-types.ts`): el productor tiene Producción, Calidad,
+    Inventario, Comercialización y Trazabilidad, y cada uno pide además el permiso de ver su módulo
+    (cosechas, lotes, existencias de bodega, ventas, lotes), para no ver aquí lo que no se ve allá;
+    sin ninguno, «No tienes reportes disponibles.». La asociación tiene Producción, Calidad y
+    Comercialización, una finca por fila, sin parcela, lote ni existencias.
+  - **Nada se guarda.** El servidor arma el reporte al pedirlo y `useReport` lo pide de nuevo cada
+    vez (`staleTime: 0`): un reporte que reaparece trae los datos de ese momento. Para conservar una
+    foto está **Exportar**. No hay historial ni se recuerda el último reporte al volver por el menú.
+  - **Filtros en la URL** (`use-report-filters.ts`): `?vista=`, `?tipo=`, `?desde=`, `?hasta=`,
+    `?productor=` (cuenta técnica), `?municipio=` (asociación), `?finca=`, `?parcela=` y `?lote=`
+    (productor; el lote solo con permiso de ver lotes, porque se busca en esa lista). El periodo
+    abre en este año sin escribirse en la URL; el inventario no lleva periodo («Existencias a hoy»).
+    Elegir un lugar limpia los que dependen de él (productor → finca, parcela y lote; finca →
+    parcela y lote; parcela → lote). **Limpiar filtros** deja la vista y el tipo.
+  - **Generar es explícito.** El reporte se pide solo con `?generar=1`, que pone **Generar** y que
+    trae un enlace compartido. Cambiar cualquier filtro quita `generar`, así que lo que se ve
+    corresponde siempre a los filtros de arriba (`report-content.ts`). Sin tipo o con el periodo al
+    revés no se pregunta al servidor (`report-request.ts`); lo que el servidor rechaza se dice en el
+    filtro que lo causó o, si no es de ninguno, en un aviso con su texto (`report-errors.ts`).
+  - **La tabla no conoce los tipos**: se arma con `columns[]` del servidor, y el `kind` de cada
+    columna (`text`, `date`, `kg`, `pct`, `money`, `count`) dice cómo se escribe el valor y si va a
+    la derecha (`report-cells.ts`). Un reporte ancho no cabe a 1280 px (la trazabilidad trae 20
+    columnas, la calidad 13): `report-column-groups.ts` une en una celda de varias líneas las
+    columnas que van juntas, por su clave y solo si vienen todas las del grupo (lote y estado, finca
+    y parcela, cada etapa del lote, G1, G2 y descarte con su porcentaje). Dentro de una celda, una
+    cifra lleva la etiqueta de su columna y lo que no ha ocurrido no ocupa línea; sola, una raya
+    (`report-cell-lines.ts`). En celular cada fila es una tarjeta. Los totales van en una franja,
+    con el porcentaje bajo sus kilos (`report-total-items.ts`).
+  - **Encabezado como el del archivo** (`report-header.ts`): el título, los filtros con sus nombres
+    («Periodo: 01/01/2026 – 31/03/2026 · Finca: F02 · La Esperanza») y quién lo generó y cuándo.
+    Sin filas, «No hay resultados para estos filtros.» con **Limpiar filtros** y la ilustración
+    `ReportSheets`, en vez de una tabla vacía.
+  - **Exportar** (`report-export-menu.tsx`, `exportReport` en `queries.ts`): un menú con PDF, Excel y CSV que
+    pide `/export` con los mismos filtros del reporte que se ve, por `apiFetchFile`, y lo guarda con
+    `saveFile`. El nombre es el del servidor o, si no llega, `reportFileName` con su misma regla
+    (`reporte-produccion-2026-11-13.pdf`, `reporte-asociacion-…` para la asociación). Mientras
+    descarga dice «Exportando…» y no se puede pedir otro; sin filas está deshabilitado. Un rechazo
+    (el PDF admite menos filas que Excel y CSV) sale en un aviso con el texto del servidor. La
+    descarga de verdad se prueba en `export-report.test.ts` (entorno `node`).
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
@@ -788,7 +848,10 @@ src/
 - **Archivos.** Con un `FormData` en el cuerpo, `apiFetch` no lo convierte a JSON ni pone
   `Content-Type` (el navegador pone el suyo, con el separador de las partes): así se sube una foto,
   la única petición de la API que no es JSON. `apiFetchBlob(path)` devuelve un archivo con la misma
-  sesión, renovación y errores.
+  sesión, renovación y errores. `apiFetchFile(path)` devuelve además el nombre que le pone el
+  servidor (`{ blob, fileName }`, de `Content-Disposition`, primero `filename*=UTF-8''…`); llega
+  `null` si no viene, y quien descarga pone uno propio. El navegador solo deja leer ese encabezado
+  porque el backend lo expone (`CORS_EXPOSE_HEADERS`).
 - **Errores.** Todo error de la API tiene la forma `{ detail, code, fields }` y llega como
   `ApiError` (`status`, `code`, `fields`, y `detail` como mensaje). Una respuesta sin esa
   forma se convierte en `ApiError` con el código `unexpected_response`. La lógica decide
