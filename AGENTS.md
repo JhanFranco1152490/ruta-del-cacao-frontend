@@ -620,8 +620,12 @@ src/
     elige la cuenta técnica. `use-indicators-screen.ts` decide el panel (`indicator-view.ts`) y pide
     solo el suyo. Los controles de cada sección (agrupar, qué kilos, qué calidad) son del dispositivo y
     no van a la URL.
-  - **Secciones plegables.** Todas las secciones de los dos paneles son `SectionCard collapsible`: el
-    título es un botón con `aria-expanded` que esconde su contenido y sus controles. Abren abiertas.
+  - **Macrosecciones y secciones plegables.** Bajo las cifras (y las frases del productor), cada panel
+    se ve en tres macrosecciones, de una en una (`?seccion=`, `indicator-sections.ts`; una que no es
+    del panel o no existe abre la primera): el del productor, **Producción**, **Calidad** y **Bodega y
+    ventas**; el de la asociación, **Fincas**, **Calidad** y **Por mes**. Dentro, cada sección es un
+    `SectionCard collapsible`: el título es un botón con `aria-expanded` que esconde su contenido y sus
+    controles; abren abiertas.
   - **El panel del productor** (`producer-panel.tsx`): cuatro cifras, lo que hay que atender en frases
     (`indicator-insights.ts`; cada regla calla si no tiene de qué hablar y una parcela sin cosecha no
     «rinde 0 %»), la cadena del cacao de izquierda a derecha (`Funnel`, `indicator-funnel.ts`), las

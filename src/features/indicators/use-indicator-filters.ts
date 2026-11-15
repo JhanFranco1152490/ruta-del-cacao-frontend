@@ -17,6 +17,7 @@ const parsers = {
     DEFAULT_INDICATOR_PERIOD,
   ),
   view: parseAsString,
+  section: parseAsString,
   farm: parseAsString,
   producer: parseAsString,
 };
@@ -24,6 +25,7 @@ const parsers = {
 const urlKeys = {
   period: 'periodo',
   view: 'vista',
+  section: 'seccion',
   farm: 'finca',
   producer: 'productor',
 };
@@ -44,10 +46,13 @@ export function useIndicatorFilters() {
     filters,
     period: params.period,
     requestedView: params.view,
+    requestedSection: params.section,
     setPeriod: (period: (typeof INDICATOR_PERIODS)[number]) =>
       setParams({ period }),
     // Cada panel tiene sus propios filtros: cambiar de panel deja la finca y el productor del otro.
-    setView: (view: string) => setParams({ view, farm: null, producer: null }),
+    setView: (view: string) =>
+      setParams({ view, section: null, farm: null, producer: null }),
+    setSection: (section: string) => setParams({ section }),
     setFarm: (farm: string | null) => setParams({ farm }),
     // La finca elegida era del productor anterior.
     setProducer: (producer: string | null) =>

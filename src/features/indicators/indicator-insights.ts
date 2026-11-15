@@ -1,9 +1,21 @@
 import type { PlotProduction, ProducerIndicators } from './api';
 import { formatDecimal } from '@/lib/format/decimal';
 import { formatKg } from './indicator-format';
+import type { ProducerSection } from './indicator-sections';
 import { plotLabel } from '@/lib/format/place-label';
 
-export type Insight = { key: string; tone: 'warn' | 'ok'; text: string };
+// Cada frase es de la macrosección cuyo asunto cuenta: se ve donde se está mirando eso.
+export type Insight = {
+  key: string;
+  section: ProducerSection;
+  tone: 'warn' | 'ok';
+  text: string;
+};
+
+export const insightsOfSection = (
+  insights: readonly Insight[],
+  section: ProducerSection,
+) => insights.filter((insight) => insight.section === section);
 
 // Cuánto menos que el promedio tiene que rendir una parcela para señalarla.
 const LOW_YIELD_SHARE = 0.7;
@@ -45,6 +57,7 @@ export function producerInsights(data: ProducerIndicators): Insight[] {
   if (Number(production.green_kg_not_dried) > 0) {
     insights.push({
       key: 'not-dried',
+      section: 'production',
       tone: 'warn',
       text: `${formatKg(production.green_kg_not_dried)} cosechados siguen sin secar.`,
     });
@@ -53,6 +66,7 @@ export function producerInsights(data: ProducerIndicators): Insight[] {
   if (low) {
     insights.push({
       key: 'low-yield',
+      section: 'production',
       tone: 'warn',
       text: `${plotLabel({ code: low.plot.plot_code, name: low.plot.plot_name })} rinde ${low.belowPercent} % menos por hectárea que el promedio de tus parcelas.`,
     });
@@ -63,11 +77,13 @@ export function producerInsights(data: ProducerIndicators): Insight[] {
       discard >= HIGH_DISCARD_PCT
         ? {
             key: 'discard',
+            section: 'quality',
             tone: 'warn',
             text: `El descarte es de ${formatDecimal(discard, 1)} % de lo clasificado.`,
           }
         : {
             key: 'discard',
+            section: 'quality',
             tone: 'ok',
             text: `El descarte es de solo ${formatDecimal(discard, 1)} % de lo clasificado.`,
           },
@@ -76,6 +92,7 @@ export function producerInsights(data: ProducerIndicators): Insight[] {
   if (Number(inventory.total_kg) === 0 && Number(data.sales.sold_kg) > 0) {
     insights.push({
       key: 'empty-stock',
+      section: 'stock-sales',
       tone: 'ok',
       text: 'Lo clasificado ya se vendió: no queda cacao en bodega.',
     });

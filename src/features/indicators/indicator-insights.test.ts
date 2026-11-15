@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { buildProducerIndicators } from '@/test/factories';
 
-import { lowestYieldPlot, producerInsights } from './indicator-insights';
+import {
+  insightsOfSection,
+  lowestYieldPlot,
+  producerInsights,
+} from './indicator-insights';
 
 const BASE = buildProducerIndicators();
 const plot = (overrides: Partial<(typeof BASE.production.plots)[number]>) => ({
@@ -103,5 +107,19 @@ describe('producerInsights', () => {
     });
 
     expect(producerInsights(quiet)).toEqual([]);
+  });
+});
+
+describe('insightsOfSection', () => {
+  it('deja a cada macrosección sus frases', () => {
+    const insights = producerInsights(buildProducerIndicators());
+
+    expect(
+      insightsOfSection(insights, 'production').map(({ key }) => key),
+    ).toEqual(['not-dried']);
+    expect(
+      insightsOfSection(insights, 'quality').map(({ key }) => key),
+    ).toEqual(['discard']);
+    expect(insightsOfSection(insights, 'stock-sales')).toEqual([]);
   });
 });

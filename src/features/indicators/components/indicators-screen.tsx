@@ -7,6 +7,7 @@ import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
 
 import { hasAssociationFigures, hasProducerFigures } from '../indicator-charts';
+import { resolveIndicatorSection } from '../indicator-sections';
 import { useIndicatorsScreen } from '../use-indicators-screen';
 import { AssociationPanel } from './association-panel';
 import { IndicatorFiltersBar } from './indicator-filters-bar';
@@ -54,7 +55,16 @@ export function IndicatorsScreen() {
           hasFigures={hasProducerFigures}
           query={screen.producer}
         >
-          {(data) => <ProducerPanel data={data} />}
+          {(data) => (
+            <ProducerPanel
+              data={data}
+              onSection={screen.filters.setSection}
+              section={resolveIndicatorSection(
+                'producer',
+                screen.filters.requestedSection,
+              )}
+            />
+          )}
         </IndicatorPanelStates>
       )}
       {view === 'association' && (
@@ -64,7 +74,16 @@ export function IndicatorsScreen() {
           hasFigures={hasAssociationFigures}
           query={screen.association}
         >
-          {(data) => <AssociationPanel data={data} />}
+          {(data) => (
+            <AssociationPanel
+              data={data}
+              onSection={screen.filters.setSection}
+              section={resolveIndicatorSection(
+                'association',
+                screen.filters.requestedSection,
+              )}
+            />
+          )}
         </IndicatorPanelStates>
       )}
     </div>

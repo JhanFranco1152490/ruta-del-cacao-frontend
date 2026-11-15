@@ -84,13 +84,31 @@ describe('IndicatorsScreen del productor', () => {
     expect(summary).toHaveTextContent('Kg vendidos210 kg2 ventas');
   });
 
-  it('dibuja las parcelas, las variedades, la calidad, las existencias y las ventas', async () => {
+  it('abre en Producción: las parcelas y el mes a mes, y nada de las otras secciones', async () => {
     renderScreen();
 
     const plots = await screen.findByRole('table', { name: 'Parcelas' });
     expect(plots).toHaveTextContent('F01 · P01 · Lote del río');
     expect(plots).toHaveTextContent('620 kg');
     expect(plots).toHaveTextContent('248 kg/ha');
+    expect(
+      screen.getByRole('table', { name: 'Kilos cosechados y secos por mes' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('table', { name: 'Variedades de cacao' }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('list', { name: 'Existencias por calibre' }),
+    ).toBeNull();
+  });
+
+  it('Calidad trae las variedades y el reparto de lo clasificado', async () => {
+    const user = userEvent.setup();
+    renderScreen();
+
+    await screen.findByRole('table', { name: 'Parcelas' });
+    await user.click(screen.getByRole('button', { name: 'Calidad' }));
+
     const varieties = screen.getByRole('table', {
       name: 'Variedades de cacao',
     });
@@ -102,27 +120,70 @@ describe('IndicatorsScreen del productor', () => {
         name: /^Calidad de lo clasificado: G1 76,3 %/,
       }),
     ).toBeVisible();
+    expect(screen.queryByRole('table', { name: 'Parcelas' })).toBeNull();
+  });
+
+  it('Bodega y ventas trae las existencias y las ventas del mes', async () => {
+    const user = userEvent.setup();
+    renderScreen();
+
+    await screen.findByRole('table', { name: 'Parcelas' });
+    await user.click(screen.getByRole('button', { name: 'Bodega y ventas' }));
+
     expect(
       screen.getByRole('list', { name: 'Existencias por calibre' }),
     ).toHaveTextContent('G1120 kg');
     expect(
       screen.getByRole('table', { name: 'Kilos vendidos por mes' }),
     ).toBeInTheDocument();
+  });
+
+  it('la macrosección va en la dirección y las cifras de arriba siguen', async () => {
+    renderScreen({ searchParams: '?seccion=stock-sales' });
+
     expect(
-      screen.getByRole('table', { name: 'Kilos cosechados y secos por mes' }),
+      await screen.findByRole('list', { name: 'Existencias por calibre' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Resumen del periodo' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Bodega y ventas' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('una macrosección que no es de este panel abre la primera', async () => {
+    renderScreen({ searchParams: '?seccion=farms' });
+
+    expect(
+      await screen.findByRole('table', { name: 'Parcelas' }),
     ).toBeInTheDocument();
   });
 
-  it('cuenta lo que hay que atender y la cadena del cacao', async () => {
+  it('cada macrosección muestra sus frases de atención', async () => {
+    const user = userEvent.setup();
     renderScreen();
 
     const insights = await screen.findByRole('list', {
       name: 'Para tener en cuenta',
     });
     expect(insights).toHaveTextContent('220 kg cosechados siguen sin secar');
+    expect(insights).not.toHaveTextContent('descarte');
     expect(
       screen.getByRole('heading', { name: 'Del árbol a la venta' }),
     ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Calidad' }));
+
+    expect(
+      screen.getByRole('list', { name: 'Para tener en cuenta' }),
+    ).toHaveTextContent('El descarte es de solo 5,3 %');
+
+    await user.click(screen.getByRole('button', { name: 'Bodega y ventas' }));
+
+    expect(
+      screen.queryByRole('list', { name: 'Para tener en cuenta' }),
+    ).toBeNull();
   });
 
   it('pliega una sección desde su título', async () => {
@@ -289,14 +350,36 @@ describe('IndicatorsScreen de la asociación', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('lista las variedades de cacao con sus kilos', async () => {
+  it('Calidad lista las variedades con sus kilos y la calidad de la asociación', async () => {
+    const user = userEvent.setup();
     renderScreen({ permissions: ASSOCIATION });
 
-    const varieties = await screen.findByRole('table', {
+    await screen.findByRole('table', { name: 'Fincas' });
+    await user.click(screen.getByRole('button', { name: 'Calidad' }));
+
+    const varieties = screen.getByRole('table', {
       name: 'Variedades de cacao',
     });
     expect(varieties).toHaveTextContent('CCN-51');
     expect(varieties).toHaveTextContent('600 kg');
+    expect(
+      screen.getByRole('img', { name: /^Calidad de lo clasificado/ }),
+    ).toBeVisible();
+    expect(screen.queryByRole('table', { name: 'Fincas' })).toBeNull();
+  });
+
+  it('Por mes trae la producción y las ventas mes a mes', async () => {
+    const user = userEvent.setup();
+    renderScreen({ permissions: ASSOCIATION });
+
+    await screen.findByRole('table', { name: 'Fincas' });
+    await user.click(screen.getByRole('button', { name: 'Por mes' }));
+
+    expect(
+      screen.getByRole('table', {
+        name: 'Kilos cosechados, secos y vendidos por mes',
+      }),
+    ).toBeInTheDocument();
   });
 
   it('manda el productor elegido para acotar todo el panel', async () => {
