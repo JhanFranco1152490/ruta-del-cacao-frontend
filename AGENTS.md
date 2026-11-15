@@ -600,6 +600,60 @@ src/
     `fetch` no envía un `FormData`, y la subida de verdad se prueba en `mutations-files.test.ts`
     (entorno `node`).
 
+- **Indicadores (`features/indicators/`).** `/indicadores` (grupo **Seguimiento** del menú, con
+  conexión) abre el panel que le toca a la cuenta: el de su unidad productiva con
+  `indicators.view_producer_indicators` (`GET /api/indicators/producer`) o el de la asociación con
+  `indicators.view_association_indicators` (`GET /api/indicators/association`). La entrada del menú
+  acepta cualquiera de los dos permisos (`NavItem.permission` puede ser una lista: basta con uno;
+  `hasAnyPermission`). La cuenta técnica tiene los dos: abre el de la asociación y `?vista=producer`
+  cambia al del productor, donde elige un productor antes de pedir las cifras (sin él, el servidor
+  mezclaría las fincas de todos). Un permiso de la asociación nunca cuenta como de campo
+  (`isFieldPermission`): su cuenta no lleva finca.
+  - **Sin copia en el dispositivo:** los paneles se calculan al consultar. `queries.ts` los pide de
+    nuevo cada vez que se entra (una cosecha o una venta recién registradas tienen que verse) y, al
+    cambiar el periodo o la finca, sigue mostrando lo anterior hasta que llega lo nuevo, salvo el del
+    productor de otra cuenta (`placeholderData` compara el productor).
+  - **Filtros en la URL** (`use-indicator-filters.ts`): `?periodo=` (`year` abre, `12m`, `6m`, `3m`;
+    siempre terminan hoy y caben en los 366 días del servidor, `indicator-period.ts`), `?vista=`,
+    `?finca=` (solo en el del productor) y `?productor=`: en el panel de la asociación acota todo el
+    panel a un productor (`ProducerFilter`; sin elegir ve a todos) y en el del productor solo lo
+    elige la cuenta técnica. `use-indicators-screen.ts` decide el panel (`indicator-view.ts`) y pide
+    solo el suyo. Los controles de cada sección (agrupar, qué kilos, qué calidad) son del dispositivo y
+    no van a la URL.
+  - **Macrosecciones y secciones plegables.** Bajo las cifras (y las frases del productor), cada panel
+    se ve en tres macrosecciones, de una en una (`?seccion=`, `indicator-sections.ts`; una que no es
+    del panel o no existe abre la primera): el del productor, **Producción**, **Calidad** y **Bodega y
+    ventas**; el de la asociación, **Fincas**, **Calidad** y **Por mes**. Dentro, cada sección es un
+    `SectionCard collapsible`: el título es un botón con `aria-expanded` que esconde su contenido y sus
+    controles; abren abiertas.
+  - **El panel del productor** (`producer-panel.tsx`): cuatro cifras, lo que hay que atender en frases
+    (`indicator-insights.ts`; cada regla calla si no tiene de qué hablar y una parcela sin cosecha no
+    «rinde 0 %»), la cadena del cacao de izquierda a derecha (`Funnel`, `indicator-funnel.ts`), las
+    parcelas en una tabla con la mejor y la más baja marcadas (`plot-rows.ts`), las variedades, el
+    mes a mes, la calidad, las existencias y las ventas.
+  - **El panel de la asociación** (`association-panel.tsx`): las **fincas** en una tabla de quien más
+    produjo a quien menos, con un control **Agrupar** que las suma por productor
+    (`indicator-groups.ts`, en décimas enteras como el servidor); **Kilos y calidad** en un plano
+    (`ScatterChart`, `indicator-scatter.ts`) donde cada finca o cada **variedad** es un punto, con tres
+    controles (qué se compara, qué kilos en x, qué porcentaje de calidad en y; una variedad no tiene
+    ventas, así que «Vendido» no se ofrece); las variedades, la calidad y el mes a mes.
+  - **Variedades** (`VarietiesSection`): los dos paneles traen `varieties` (kg en baba y secos y calidad
+    por variedad de cacao, de las cosechas de las fincas que cuenta el panel). Una variedad sin
+    clasificar dice «Sin clasificar» y no «0 %».
+  - **Gráficos propios en CSS y SVG**, sin librería (`components/charts/`): `BarList` (una barra por
+    fila con el valor escrito, a la escala de la mayor), `ColumnChart` (columnas por mes y serie, con
+    la misma información en una tabla para el lector de pantalla y en el tooltip de cada mes),
+    `ShareBar` (un total repartido en partes con cada parte escrita), `Funnel` (columnas por paso de
+    una cadena, con el valor escrito) y `ScatterChart` (puntos en un plano con las líneas del
+    promedio y una tabla equivalente). Lo que se dibuja sale de funciones puras con test; los colores
+    por tipo de cifra (baba, seco, vendido, G1, G2, descarte) están en `indicator-charts.ts` para que
+    sean los mismos en todas partes. Una librería de gráficos (Recharts, visx) se descartó: las formas
+    son simples, y los gráficos propios pesan menos, siguen los tokens del sistema y llevan su texto
+    accesible sin más trabajo.
+  - **Sin cifras** (`hasProducerFigures`, `hasAssociationFigures`) el panel es un estado vacío con
+    `IndicatorBars`. El de la asociación no pide ni dibuja nada por parcela, por lote ni de
+    existencias; el porcentaje sin total es una raya y no «0 %».
+
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni
   actividades de sanidad. La página de `/actividades` (`calendar-with-health.tsx`) es la que los une y

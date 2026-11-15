@@ -52,6 +52,8 @@ export const PERMISSIONS = {
   SALES_VIEW: 'sales.view_sale',
   SALES_ADD: 'sales.add_sale',
   SALES_VOID: 'sales.void_sale',
+  INDICATORS_VIEW_PRODUCER: 'indicators.view_producer_indicators',
+  INDICATORS_VIEW_ASSOCIATION: 'indicators.view_association_indicators',
   HEALTH_MANAGE_PEST_DISEASE: 'health.manage_pestdisease',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',
@@ -81,9 +83,12 @@ const FIELD_AREAS = [
   'warehouse.',
   'facilities.',
   'sales.',
+  'indicators.',
 ];
+// Los que no son de campo, porque son de la asociación y sus cuentas no llevan finca.
 export const isFieldPermission = (code: string) =>
   code !== PERMISSIONS.CROPS_MANAGE_VARIETIES &&
+  code !== PERMISSIONS.INDICATORS_VIEW_ASSOCIATION &&
   FIELD_AREAS.some((area) => code.startsWith(area));
 
 // Solo decide qué mostrar: el servidor autoriza cada acción. Acepta el usuario ausente porque
@@ -93,4 +98,13 @@ export function hasPermission(
   code: Permission,
 ): boolean {
   return user?.permissions?.includes(code) ?? false;
+}
+
+// Para lo que se abre con cualquiera de varios permisos (los indicadores: el del productor o el de la
+// asociación).
+export function hasAnyPermission(
+  user: { permissions?: readonly string[] } | null | undefined,
+  required: Permission | readonly Permission[],
+): boolean {
+  return [required].flat().some((code) => hasPermission(user, code));
 }

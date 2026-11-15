@@ -2,6 +2,7 @@ import {
   Boxes,
   Bug,
   CalendarDays,
+  ChartColumn,
   ClipboardCheck,
   FlaskConical,
   Handshake,
@@ -168,6 +169,18 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Receipt,
     permission: PERMISSIONS.SALES_VIEW,
   },
+  // Las cifras de todo lo anterior, calculadas al consultar: solo con conexión.
+  {
+    href: '/indicadores',
+    label: 'Indicadores',
+    group: 'follow-up',
+    icon: ChartColumn,
+    permission: [
+      PERMISSIONS.INDICATORS_VIEW_PRODUCER,
+      PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+    ],
+    needsConnection: true,
+  },
   {
     href: '/variedades',
     label: 'Variedades de cacao',
@@ -208,6 +221,7 @@ export const NAV_GROUP_LABELS: Record<NavGroupKey, string> = {
   agriculture: 'Manejo agrícola',
   postharvest: 'Cosecha y poscosecha',
   sales: 'Comercialización',
+  'follow-up': 'Seguimiento',
   catalogs: 'Catálogos',
 };
 
@@ -242,8 +256,9 @@ export function visibleNavItems(
   // Quien tiene un productor propio ve solo lo suyo, y el menú lo nombra así.
   { ownProducer = false } = {},
 ): NavItem[] {
-  const allowed = (permission?: string) =>
-    !permission || !!permissions?.includes(permission);
+  const allowed = (permission?: string | readonly string[]) =>
+    !permission ||
+    [permission].flat().some((code) => !!permissions?.includes(code));
   return items
     .filter(({ permission }) => allowed(permission))
     .map((item) => {

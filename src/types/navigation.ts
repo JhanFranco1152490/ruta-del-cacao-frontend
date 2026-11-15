@@ -13,7 +13,13 @@ export type NavChild = {
 
 // Los grupos del menú, por tarea. Una entrada sin grupo queda suelta, arriba.
 export type NavGroupKey =
-  'admin' | 'farm' | 'agriculture' | 'postharvest' | 'sales' | 'catalogs';
+  | 'admin'
+  | 'farm'
+  | 'agriculture'
+  | 'postharvest'
+  | 'sales'
+  | 'follow-up'
+  | 'catalogs';
 
 export type NavItem = {
   href: string;
@@ -28,8 +34,8 @@ export type NavItem = {
   // Rutas de la sección que no empiezan por `href`: las pantallas de una tarea que viven bajo
   // otra sección (registrar una parcela vive bajo /fincas, por ejemplo).
   routes?: readonly string[];
-  // Sin permiso, la entrada es para cualquier persona autenticada.
-  permission?: Permission;
+  // Sin permiso, la entrada es para cualquier persona autenticada. Con varios, basta con uno.
+  permission?: Permission | readonly Permission[];
   // Sección de oficina: sus datos solo están en el servidor, así que sin conexión avisa en vez
   // de fallar.
   needsConnection?: boolean;

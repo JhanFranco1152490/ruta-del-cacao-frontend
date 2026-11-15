@@ -10,6 +10,8 @@ import {
   buildClosedSummary,
   buildQualitySummary,
   buildExitSummary,
+  buildAssociationIndicators,
+  buildProducerIndicators,
   buildSaleSummary,
   buildStockSummary,
 } from './factories';
@@ -388,6 +390,28 @@ export const saleSummaryHandler = (
   http.get(apiUrl('/api/sales/summary'), ({ request }) => {
     requests.push(new URL(request.url).searchParams);
     return HttpResponse.json(summary);
+  });
+
+export const producerIndicatorsHandler = (
+  indicators: JsonBodyType | Response = buildProducerIndicators(),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/indicators/producer'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return indicators instanceof Response
+      ? indicators.clone()
+      : HttpResponse.json(indicators);
+  });
+
+export const associationIndicatorsHandler = (
+  indicators: JsonBodyType | Response = buildAssociationIndicators(),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/indicators/association'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return indicators instanceof Response
+      ? indicators.clone()
+      : HttpResponse.json(indicators);
   });
 
 export const buyerOptionsHandler = (

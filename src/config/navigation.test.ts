@@ -45,6 +45,19 @@ describe('visibleNavItems', () => {
     expect(items.map((item) => item.href)).toEqual(['/protegida', '/abierta']);
   });
 
+  // Los indicadores los abre el permiso del productor o el de la asociación, cada uno de su panel.
+  it('keeps an entry that asks for several permissions when the user has any of them', () => {
+    const indicators = NAV_ITEMS.filter((item) => item.href === '/indicadores');
+
+    for (const permission of [
+      PERMISSIONS.INDICATORS_VIEW_PRODUCER,
+      PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+    ]) {
+      expect(visibleNavItems(indicators, [permission])).toHaveLength(1);
+    }
+    expect(visibleNavItems(indicators, [PERMISSIONS.SALES_VIEW])).toEqual([]);
+  });
+
   it('handles an empty list of entries', () => {
     expect(visibleNavItems([], [PERMISSIONS.PRODUCERS_VIEW])).toEqual([]);
   });
@@ -102,6 +115,7 @@ describe('NAV_ITEMS', () => {
       '/parametros-poscosecha',
       '/compradores',
       '/ventas',
+      '/indicadores',
       '/variedades',
       '/plagas-enfermedades',
       '/usuarios',
@@ -129,6 +143,7 @@ describe('NAV_ITEMS', () => {
       'postharvest',
       'sales',
       'sales',
+      'follow-up',
       'catalogs',
       'catalogs',
       'admin',
@@ -165,6 +180,10 @@ describe('NAV_ITEMS', () => {
     );
     expect(byHref['/compradores'].permission).toBe(PERMISSIONS.BUYERS_VIEW);
     expect(byHref['/ventas'].permission).toBe(PERMISSIONS.SALES_VIEW);
+    expect(byHref['/indicadores'].permission).toEqual([
+      PERMISSIONS.INDICATORS_VIEW_PRODUCER,
+      PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+    ]);
     expect(byHref['/actividades'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/sanidad'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
@@ -178,6 +197,7 @@ describe('NAV_ITEMS', () => {
       '/productores',
       '/sanidad',
       '/lotes',
+      '/indicadores',
       '/variedades',
       '/plagas-enfermedades',
       '/usuarios',
