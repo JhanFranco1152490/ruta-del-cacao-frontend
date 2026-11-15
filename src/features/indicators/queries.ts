@@ -45,7 +45,7 @@ export const useProducerIndicators = (
   });
 
 export const useAssociationIndicators = (
-  filters: Pick<IndicatorFilters, 'from' | 'to'>,
+  filters: Pick<IndicatorFilters, 'from' | 'to' | 'producer'>,
   enabled: boolean,
 ) =>
   useQuery({
@@ -55,6 +55,7 @@ export const useAssociationIndicators = (
         apiPath('/api/indicators/association', {
           from: filters.from,
           to: filters.to,
+          producer: filters.producer,
         }),
         { signal },
       ),

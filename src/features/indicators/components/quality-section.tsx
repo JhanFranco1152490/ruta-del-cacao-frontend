@@ -16,7 +16,7 @@ export function QualitySection({
 }) {
   const hasQuality = Number(quality.classified_kg) > 0;
   return (
-    <SectionCard accent="cobre" title="Calidad">
+    <SectionCard accent="cobre" collapsible title="Calidad">
       {hasQuality ? (
         <div className="space-y-3">
           <ShareBar

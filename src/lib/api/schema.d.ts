@@ -783,7 +783,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description El panel de la asociación en el periodo, `from` y `to` incluidos, de hasta 366 días: por finca, los kg en baba y seco, G1, G2 y descarte de lo clasificado o descartado, y los kg vendidos sin las ventas anuladas, con sus totales y los meses. Solo las fincas con alguna cifra en el periodo, de la que más produjo a la que menos. Nada por parcela, por lote ni de existencias. */
+        /** @description El panel de la asociación en el periodo, `from` y `to` incluidos, de hasta 366 días: por finca, los kg en baba y seco, G1, G2 y descarte de lo clasificado o descartado, y los kg vendidos sin las ventas anuladas, con sus totales y los meses. Solo las fincas con alguna cifra en el periodo, de la que más produjo a la que menos, y por variedad de cacao. `producer` acota a un productor. Nada por parcela, por lote ni de existencias. */
         get: operations["indicators_association_retrieve"];
         put?: never;
         post?: never;
@@ -800,7 +800,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description El panel de la unidad productiva en el periodo, `from` y `to` incluidos, de hasta 366 días: kg en baba y seco por parcela, por hectárea (con el área declarada) y por mes; G1, G2 y descarte de lo clasificado o descartado en el periodo; las existencias de hoy, sin periodo; y los kg vendidos, sin las ventas anuladas. Un empleado ve solo las fincas que trabaja. `farm` acota a una finca (404 si no la alcanza) y `producer` solo lo usa la cuenta técnica. Sin divisor, los porcentajes y los kg por hectárea son nulos. */
+        /** @description El panel de la unidad productiva en el periodo, `from` y `to` incluidos, de hasta 366 días: kg en baba y seco por parcela, por hectárea (con el área declarada) y por mes; G1, G2 y descarte de lo clasificado o descartado en el periodo, también por variedad de cacao; las existencias de hoy, sin periodo; y los kg vendidos, sin las ventas anuladas. Un empleado ve solo las fincas que trabaja. `farm` acota a una finca (404 si no la alcanza) y `producer` solo lo usa la cuenta técnica. Sin divisor, los porcentajes y los kg por hectárea son nulos. */
         get: operations["indicators_producer_retrieve"];
         put?: never;
         post?: never;
@@ -2257,6 +2257,7 @@ export interface components {
             totals: components["schemas"]["AssociationTotals"];
             months: components["schemas"]["AssociationMonth"][];
             farms: components["schemas"]["AssociationFarm"][];
+            varieties: components["schemas"]["VarietyFigures"][];
         };
         AssociationMonth: {
             month: string;
@@ -4602,6 +4603,7 @@ export interface components {
             period: components["schemas"]["IndicatorPeriod"];
             production: components["schemas"]["ProducerProduction"];
             quality: components["schemas"]["ProducerQuality"];
+            varieties: components["schemas"]["VarietyFigures"][];
             inventory: components["schemas"]["ProducerInventory"];
             sales: components["schemas"]["ProducerSales"];
         };
@@ -5325,6 +5327,29 @@ export interface components {
             input_id: string;
             /** Format: decimal */
             quantity: string;
+        };
+        VarietyFigures: {
+            /** Format: decimal */
+            classified_kg: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discard_kg: string;
+            /** Format: decimal */
+            g1_pct: string | null;
+            /** Format: decimal */
+            g2_pct: string | null;
+            /** Format: decimal */
+            discard_pct: string | null;
+            /** Format: uuid */
+            variety_id: string;
+            variety_name: string;
+            /** Format: decimal */
+            green_kg: string;
+            /** Format: decimal */
+            dry_kg: string;
         };
         VarietyRef: {
             /** Format: uuid */
@@ -9276,6 +9301,7 @@ export interface operations {
         parameters: {
             query: {
                 from: string;
+                producer?: string;
                 to: string;
             };
             header?: never;

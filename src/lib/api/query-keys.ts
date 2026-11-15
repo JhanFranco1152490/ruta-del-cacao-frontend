@@ -56,7 +56,8 @@ export type SaleFilters = {
 };
 
 // Lo que cambia las cifras de un panel de indicadores: el periodo (yyyy-MM-dd, días incluidos), la
-// finca (solo el del productor) y, para la cuenta técnica, el productor.
+// finca (solo el del productor) y el productor: la cuenta técnica elige de quién es el panel del
+// productor, y la asociación acota su panel a un productor.
 export type IndicatorFilters = {
   producer: string | null;
   from: string;
@@ -315,8 +316,9 @@ export const queryKeys = {
     all: () => ['indicators'] as const,
     producer: (filters: IndicatorFilters) =>
       ['indicators', 'producer', filters] as const,
-    association: (filters: Pick<IndicatorFilters, 'from' | 'to'>) =>
-      ['indicators', 'association', filters] as const,
+    association: (
+      filters: Pick<IndicatorFilters, 'from' | 'to' | 'producer'>,
+    ) => ['indicators', 'association', filters] as const,
   },
   parameters: {
     // Lo que invalida guardar o restablecer los parámetros. La cuenta técnica elige el productor;

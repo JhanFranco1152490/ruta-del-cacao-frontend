@@ -27,14 +27,17 @@ export function useIndicatorsScreen() {
   // La cuenta técnica elige de qué productor ve el panel; las demás ven el suyo.
   const needsProducer =
     superuser && view === 'producer' && !filters.filters.producer;
-  const producerId = superuser ? filters.filters.producer : null;
+  // En el panel del productor solo la cuenta técnica elige de quién es; en el de la asociación, quien
+  // lo ve acota a un productor, y sin elegir ve a todos.
+  const producerId =
+    view === 'association' || superuser ? filters.filters.producer : null;
 
   const query = {
     ...filters.filters,
     producer: producerId,
   };
   const producer = useProducerIndicators(
-    query,
+    { ...query, producer: superuser ? producerId : null },
     view === 'producer' && !needsProducer,
   );
   const association = useAssociationIndicators(query, view === 'association');

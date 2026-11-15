@@ -14,7 +14,7 @@ export function SalesSection({
   sales: ProducerIndicators['sales'];
 }) {
   return (
-    <SectionCard accent="cobre" title="Ventas">
+    <SectionCard accent="cobre" collapsible title="Ventas">
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
           {sales.sales === 0

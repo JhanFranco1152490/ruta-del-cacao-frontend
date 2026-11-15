@@ -14,7 +14,7 @@ export function StockSection({
 }) {
   const hasStock = Number(inventory.total_kg) > 0;
   return (
-    <SectionCard accent="cobre" title="Existencias en bodega">
+    <SectionCard accent="cobre" collapsible title="Existencias en bodega">
       {hasStock ? (
         <div className="space-y-5">
           <p className="text-sm text-muted-foreground">

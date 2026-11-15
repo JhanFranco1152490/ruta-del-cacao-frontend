@@ -1,22 +1,15 @@
 import type { BarRow } from '@/components/charts/bar-list';
 import type { ColumnGroup } from '@/components/charts/column-chart';
 import type { ShareSegment } from '@/components/charts/share-bar';
-import { farmLabel, plotLabel } from '@/lib/format/place-label';
+import { farmLabel } from '@/lib/format/place-label';
 
 import type {
-  AssociationFarm,
   AssociationIndicators,
   FarmStock,
-  PlotProduction,
   ProducerIndicators,
   QualitySplit,
 } from './api';
-import {
-  formatKg,
-  formatKgPerHectare,
-  formatShare,
-  monthTick,
-} from './indicator-format';
+import { formatKg, formatShare, monthTick } from './indicator-format';
 import { formatMonthYear } from '@/lib/format/dates';
 
 // De qué se dibujan los kilos de un panel. Los colores van por tipo de cifra y no por gráfico, para
@@ -32,42 +25,6 @@ export const GRADE_COLORS = {
   g2: 'var(--amarillo-mazorca)',
   discard: 'var(--err)',
 } as const;
-
-export type ProductionMetric = 'green' | 'dry';
-
-export const PRODUCTION_METRIC_OPTIONS: readonly {
-  value: ProductionMetric;
-  label: string;
-}[] = [
-  { value: 'green', label: 'En baba' },
-  { value: 'dry', label: 'Seco' },
-];
-
-// Una barra por parcela con los kilos de lo que se mide y, debajo, el rendimiento por hectárea y el
-// área declarada. El servidor ya las manda por finca y por código.
-export function plotBars(
-  plots: readonly PlotProduction[],
-  metric: ProductionMetric,
-): BarRow[] {
-  return plots.map((plot) => {
-    const kg = metric === 'green' ? plot.green_kg : plot.dry_kg;
-    const perHectare =
-      metric === 'green' ? plot.green_kg_per_hectare : plot.dry_kg_per_hectare;
-    return {
-      key: plot.plot_id,
-      label: `${farmLabel({ code: plot.farm_code })} · ${plotLabel({ code: plot.plot_code, name: plot.plot_name })}`,
-      value: Number(kg),
-      valueLabel: formatKg(kg),
-      detail: [
-        formatKgPerHectare(perHectare),
-        `${Number(plot.area_hectares).toLocaleString('es')} ha`,
-        plot.is_active ? null : 'Parcela inactiva',
-      ]
-        .filter(Boolean)
-        .join(' · '),
-    };
-  });
-}
 
 type MonthRow = { month: string } & Record<string, string>;
 
@@ -132,42 +89,6 @@ export function farmStockBars(farms: readonly FarmStock[]): BarRow[] {
       value: total,
       valueLabel: formatKg(total.toFixed(1)),
       detail: `G1 ${formatKg(farm.g1_kg)} · G2 ${formatKg(farm.g2_kg)}`,
-    };
-  });
-}
-
-export type AssociationMetric = 'green' | 'dry' | 'sold';
-
-export const ASSOCIATION_METRIC_OPTIONS: readonly {
-  value: AssociationMetric;
-  label: string;
-}[] = [
-  { value: 'green', label: 'En baba' },
-  { value: 'dry', label: 'Seco' },
-  { value: 'sold', label: 'Vendido' },
-];
-
-const FARM_KG = {
-  green: 'green_kg',
-  dry: 'dry_kg',
-  sold: 'sold_kg',
-} as const;
-
-// Una barra por finca con los kilos de lo que se mide y, debajo, de quién es y dónde queda. El
-// servidor ya las manda de la que más produjo a la que menos.
-export function associationFarmBars(
-  farms: readonly AssociationFarm[],
-  metric: AssociationMetric,
-  municipalityName: (code: string) => string,
-): BarRow[] {
-  return farms.map((farm) => {
-    const kg = farm[FARM_KG[metric]];
-    return {
-      key: farm.farm_id,
-      label: farmLabel({ code: farm.farm_code, name: farm.farm_name }),
-      value: Number(kg),
-      valueLabel: formatKg(kg),
-      detail: `${farm.producer.first_name} ${farm.producer.last_name} · ${municipalityName(farm.municipality_code)}`,
     };
   });
 }
