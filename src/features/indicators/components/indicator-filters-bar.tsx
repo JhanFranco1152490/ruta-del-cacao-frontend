@@ -9,7 +9,8 @@ import { PERIOD_PRESET_OPTIONS } from '@/lib/period-presets';
 import type { IndicatorsScreenState } from '../use-indicators-screen';
 
 // Los filtros en el orden de las demás pantallas: el panel (solo la cuenta técnica tiene los dos),
-// el productor (también solo ella), la finca (solo en el del productor) y, a la derecha, el periodo.
+// el productor (en el de la asociación acota todo el panel; en el del productor solo lo elige la
+// cuenta técnica), la finca (solo en el del productor) y, a la derecha, el periodo.
 export function IndicatorFiltersBar({
   screen,
 }: {
@@ -34,7 +35,8 @@ export function IndicatorFiltersBar({
             value={view}
           />
         )}
-        {screen.superuser && view === 'producer' && (
+        {((screen.superuser && view === 'producer') ||
+          view === 'association') && (
           <ProducerFilter
             className="w-full sm:w-72"
             compact
@@ -58,7 +60,7 @@ export function IndicatorFiltersBar({
           />
         )}
       </div>
-      <div className="max-sm:w-full">
+      <div className="flex flex-wrap items-center gap-3 max-sm:w-full">
         <SegmentedControl
           compact
           fullWidth

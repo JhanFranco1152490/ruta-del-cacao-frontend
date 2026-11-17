@@ -1,5 +1,6 @@
 import { cn } from 'cn';
-import type { ReactNode } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { type ReactNode, useId, useState } from 'react';
 
 import { type ModuleAccent, accentStyle } from './accent';
 import { SectionItem, type SectionPick } from './section-item';
@@ -17,6 +18,8 @@ export function SectionCard({
   children,
   id,
   pick,
+  collapsible = false,
+  defaultOpen = true,
 }: {
   title: string;
   count?: number;
@@ -26,12 +29,29 @@ export function SectionCard({
   children: ReactNode;
   id?: string;
   pick?: SectionPick;
+  // La persona puede plegarla desde su título: lo que no mira ahora no ocupa pantalla. Abre abierta
+  // salvo que se diga lo contrario; al plegarla también se esconden sus acciones, que son del contenido.
+  collapsible?: boolean;
+  defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const bodyId = useId();
   if (pick?.as === 'item') {
     return <SectionItem accent={accent} pick={pick} title={title} />;
   }
   if (pick?.as === 'panel' && !pick.selected) return null;
   const headingId = id ? `${id}-titulo` : undefined;
+  const expanded = !collapsible || open;
+  const heading = (
+    <>
+      {title}
+      {count !== undefined && (
+        <span className="rounded-full border border-border bg-muted px-2 font-sans text-xs font-bold text-muted-foreground">
+          {count}
+        </span>
+      )}
+    </>
+  );
   return (
     <section
       aria-labelledby={headingId}
@@ -42,21 +62,46 @@ export function SectionCard({
       )}
       style={accentStyle(accent)}
     >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div
+        className={cn(
+          'flex flex-wrap items-center justify-between gap-x-3 gap-y-2',
+          expanded && 'mb-3',
+        )}
+      >
         <h2
-          className="flex items-center gap-2 font-sans text-base font-extrabold text-selva"
+          className="font-sans text-base font-extrabold text-selva"
           id={headingId}
         >
-          {title}
-          {count !== undefined && (
-            <span className="rounded-full border border-border bg-muted px-2 font-sans text-xs font-bold text-muted-foreground">
-              {count}
-            </span>
+          {collapsible ? (
+            <button
+              aria-controls={bodyId}
+              aria-expanded={open}
+              className="-my-1 flex items-center gap-2 rounded-md py-1 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-cobre"
+              onClick={() => setOpen((value) => !value)}
+              type="button"
+            >
+              {heading}
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  'size-4 shrink-0 transition-transform',
+                  !open && '-rotate-90',
+                )}
+              />
+            </button>
+          ) : (
+            <span className="flex items-center gap-2">{heading}</span>
           )}
         </h2>
-        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+        {actions && (
+          <div className="flex flex-wrap gap-2" hidden={!expanded}>
+            {actions}
+          </div>
+        )}
       </div>
-      {children}
+      <div hidden={!expanded} id={bodyId}>
+        {children}
+      </div>
     </section>
   );
 }

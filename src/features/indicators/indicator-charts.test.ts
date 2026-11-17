@@ -6,53 +6,16 @@ import {
 } from '@/test/factories';
 
 import {
-  associationFarmBars,
   farmStockBars,
   hasAssociationFigures,
   hasProducerFigures,
   monthGroups,
-  plotBars,
   qualitySegments,
   stockBars,
 } from './indicator-charts';
 
 const PRODUCER = buildProducerIndicators();
 const ASSOCIATION = buildAssociationIndicators();
-
-describe('plotBars', () => {
-  it('pone una barra por parcela con sus kilos y su rendimiento por hectárea', () => {
-    const [river] = plotBars(PRODUCER.production.plots, 'green');
-
-    expect(river).toMatchObject({
-      label: 'F01 · P01 · Lote del río',
-      value: 620,
-      valueLabel: '620 kg',
-      detail: '248 kg/ha · 2,5 ha',
-    });
-  });
-
-  it('cambia de kilos en baba a secos', () => {
-    const [river] = plotBars(PRODUCER.production.plots, 'dry');
-
-    expect(river).toMatchObject({ value: 136, detail: '54,4 kg/ha · 2,5 ha' });
-  });
-
-  it('dice cuando una parcela está inactiva y nombra la que no tiene nombre por su código', () => {
-    const [, inactive] = plotBars(PRODUCER.production.plots, 'green');
-
-    expect(inactive.label).toBe('F02 · P01');
-    expect(inactive.detail).toContain('Parcela inactiva');
-  });
-
-  it('un rendimiento sin área es una raya, no cero', () => {
-    const [row] = plotBars(
-      [{ ...PRODUCER.production.plots[0], green_kg_per_hectare: null }],
-      'green',
-    );
-
-    expect(row.detail).toMatch(/^— · /);
-  });
-});
 
 describe('monthGroups', () => {
   it('da un grupo por mes con los kilos como número y el año en el primero', () => {
@@ -120,23 +83,6 @@ describe('existencias', () => {
       valueLabel: '155 kg',
       detail: 'G1 120 kg · G2 35 kg',
     });
-  });
-});
-
-describe('associationFarmBars', () => {
-  it('nombra la finca, su productor y su municipio, y mide lo elegido', () => {
-    const rows = associationFarmBars(
-      ASSOCIATION.farms,
-      'sold',
-      (code) => `Municipio ${code}`,
-    );
-
-    expect(rows[0]).toMatchObject({
-      label: 'F01 · La Esperanza',
-      value: 210,
-      detail: 'Ana Ejemplo · Municipio 54001',
-    });
-    expect(rows[1].value).toBe(50);
   });
 });
 

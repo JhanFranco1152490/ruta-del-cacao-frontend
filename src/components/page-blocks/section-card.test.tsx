@@ -101,3 +101,60 @@ describe('SectionCard picked from a list', () => {
     );
   });
 });
+
+describe('collapsible SectionCard', () => {
+  it('starts open and hides the content and the actions when collapsed', async () => {
+    const user = userEvent.setup();
+    render(
+      <SectionCard
+        accent="cobre"
+        actions={<button type="button">Acción</button>}
+        collapsible
+        title="Calidad"
+      >
+        Contenido
+      </SectionCard>,
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Calidad' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Contenido')).toBeVisible();
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Contenido')).not.toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Acción', hidden: true }),
+    ).not.toBeVisible();
+  });
+
+  it('can start collapsed', () => {
+    render(
+      <SectionCard
+        accent="cobre"
+        collapsible
+        defaultOpen={false}
+        title="Ventas"
+      >
+        Contenido
+      </SectionCard>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Ventas' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByText('Contenido')).not.toBeVisible();
+  });
+
+  it('is a plain card without the prop', () => {
+    render(
+      <SectionCard accent="cobre" title="Fincas">
+        Contenido
+      </SectionCard>,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Fincas' })).toBeNull();
+  });
+});
