@@ -65,13 +65,15 @@ export function SummaryValue({
   title,
   value,
   detail,
+  className,
 }: {
   title: string;
   value: string;
   detail?: string;
+  className?: string;
 }) {
   return (
-    <SummaryItem title={title}>
+    <SummaryItem className={className} title={title}>
       <p className="text-xl font-bold text-selva tabular-nums sm:text-2xl">
         {value}
       </p>

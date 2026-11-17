@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildReportTotal } from '@/test/factories';
 
-import { totalItems } from './report-total-items';
+import { lastItemSpan, totalItems } from './report-total-items';
 
 describe('totalItems', () => {
   it('writes each total with its unit', () => {
@@ -90,5 +90,21 @@ describe('totalItems', () => {
       ['0,0 kg', '—'],
       ['33,8 %', undefined],
     ]);
+  });
+});
+
+describe('lastItemSpan', () => {
+  it('lets the last figure fill what is left of its row', () => {
+    expect(lastItemSpan(6, 4)).toBe(3);
+    expect(lastItemSpan(5, 4)).toBe(4);
+    expect(lastItemSpan(7, 4)).toBe(2);
+    expect(lastItemSpan(2, 3)).toBe(2);
+    expect(lastItemSpan(1, 3)).toBe(3);
+  });
+
+  it('does not stretch it when the row is full', () => {
+    expect(lastItemSpan(4, 4)).toBe(1);
+    expect(lastItemSpan(8, 4)).toBe(1);
+    expect(lastItemSpan(3, 3)).toBe(1);
   });
 });

@@ -31,3 +31,10 @@ export function totalItems(totals: readonly ReportTotal[]): ReportTotalItem[] {
       };
     });
 }
+
+// Cuántas columnas ocupa la última cifra para que la franja no deje un hueco vacío cuando las
+// cifras no llenan la última fila (seis cifras en cuatro columnas).
+export function lastItemSpan(count: number, columns: number): number {
+  const remainder = count % columns;
+  return remainder === 0 ? 1 : columns - remainder + 1;
+}
