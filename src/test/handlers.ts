@@ -11,7 +11,9 @@ import {
   buildQualitySummary,
   buildExitSummary,
   buildAssociationIndicators,
+  buildAssociationReport,
   buildProducerIndicators,
+  buildReport,
   buildSaleSummary,
   buildStockSummary,
 } from './factories';
@@ -412,6 +414,53 @@ export const associationIndicatorsHandler = (
     return indicators instanceof Response
       ? indicators.clone()
       : HttpResponse.json(indicators);
+  });
+
+// Un reporte de cada vista, o la respuesta que se le pase (un error, por ejemplo).
+const reportHandler =
+  (path: string, fallback: () => JsonBodyType) =>
+  (
+    report: JsonBodyType | Response = fallback(),
+    requests: URLSearchParams[] = [],
+  ) =>
+    http.get(apiUrl(path), ({ request }) => {
+      requests.push(new URL(request.url).searchParams);
+      return report instanceof Response
+        ? report.clone()
+        : HttpResponse.json(report);
+    });
+
+export const producerReportHandler = reportHandler(
+  '/api/reports/producer',
+  buildReport,
+);
+
+export const associationReportHandler = reportHandler(
+  '/api/reports/association',
+  buildAssociationReport,
+);
+
+// La descarga de un reporte: un archivo con su nombre, como lo manda el servidor.
+export const reportFileHandler = (
+  audience: 'producer' | 'association',
+  file:
+    Response | { body?: string; fileName?: string; contentType?: string } = {},
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl(`/api/reports/${audience}/export`), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    if (file instanceof Response) return file.clone();
+    const {
+      body = 'Reporte de Producción',
+      fileName = 'reporte-produccion-2026-03-31.csv',
+      contentType = 'text/csv; charset=utf-8',
+    } = file;
+    return new HttpResponse(body, {
+      headers: {
+        'Content-Type': contentType,
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+      },
+    });
   });
 
 export const buyerOptionsHandler = (

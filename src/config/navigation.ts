@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChartColumn,
   ClipboardCheck,
+  FileSpreadsheet,
   FlaskConical,
   Handshake,
   LandPlot,
@@ -178,6 +179,19 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: [
       PERMISSIONS.INDICATORS_VIEW_PRODUCER,
       PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+    ],
+    needsConnection: true,
+  },
+  // Las mismas cifras, una fila por registro o por finca, para revisarlas o descargarlas. También se
+  // calculan al consultar.
+  {
+    href: '/reportes',
+    label: 'Reportes',
+    group: 'follow-up',
+    icon: FileSpreadsheet,
+    permission: [
+      PERMISSIONS.REPORTS_VIEW_PRODUCER,
+      PERMISSIONS.REPORTS_VIEW_ASSOCIATION,
     ],
     needsConnection: true,
   },

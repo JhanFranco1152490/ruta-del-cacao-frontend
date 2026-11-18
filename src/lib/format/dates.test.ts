@@ -9,6 +9,8 @@ import {
   formatShortDayMonth,
   formatLongDate,
   formatMonthYear,
+  formatNumericDate,
+  formatNumericDateTime,
   formatShortDateTime,
   formatTime,
   formatTimestamp,
@@ -358,5 +360,23 @@ describe('formatShortDateTime', () => {
   it('shows the day, the short month and the hour of Bogota', () => {
     expect(formatShortDateTime('2026-10-17T13:00:00Z')).toBe('17 oct. 08:00');
     expect(formatShortDateTime('2026-10-18T02:30:00Z')).toBe('17 oct. 21:30');
+  });
+});
+
+describe('formatNumericDate', () => {
+  it('writes the day, the month and the year in numbers', () => {
+    expect(formatNumericDate('2026-02-03')).toBe('03/02/2026');
+  });
+});
+
+describe('formatNumericDateTime', () => {
+  // Pasada la medianoche UTC todavía es el día anterior en Bogotá.
+  it('uses the Bogotá date and time', () => {
+    expect(formatNumericDateTime('2026-11-13T03:15:00Z')).toBe(
+      '12/11/2026 a las 22:15',
+    );
+    expect(formatNumericDateTime('2026-11-13T10:15:00-05:00')).toBe(
+      '13/11/2026 a las 10:15',
+    );
   });
 });

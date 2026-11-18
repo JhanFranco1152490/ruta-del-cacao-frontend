@@ -183,3 +183,12 @@ export const fromBogotaLocal = (localDateTime: string) =>
 // El día, el mes abreviado y la hora de Bogotá de un momento exacto: "17 oct. 08:00".
 export const formatShortDateTime = (isoDateTime: string) =>
   `${formatShortDayMonth(isoDateTime)}. ${formatTime(isoDateTime)}`;
+
+// El día, el mes y el año en números (yyyy-MM-dd → «03/02/2026»), como en los archivos que se
+// exportan: un reporte puede abarcar dos años y «3 feb» no diría de cuál.
+export const formatNumericDate = (isoDate: string) =>
+  format(parseISO(isoDate), 'dd/MM/yyyy');
+
+// Lo mismo de un momento exacto, con la hora de Bogotá: «03/02/2026 a las 10:15».
+export const formatNumericDateTime = (isoDateTime: string) =>
+  format(parseISO(isoDateTime), "dd/MM/yyyy 'a las' HH:mm", { in: BOGOTA });

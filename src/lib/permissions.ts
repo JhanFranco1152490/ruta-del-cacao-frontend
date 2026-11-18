@@ -54,6 +54,8 @@ export const PERMISSIONS = {
   SALES_VOID: 'sales.void_sale',
   INDICATORS_VIEW_PRODUCER: 'indicators.view_producer_indicators',
   INDICATORS_VIEW_ASSOCIATION: 'indicators.view_association_indicators',
+  REPORTS_VIEW_PRODUCER: 'reports.view_producer_reports',
+  REPORTS_VIEW_ASSOCIATION: 'reports.view_association_reports',
   HEALTH_MANAGE_PEST_DISEASE: 'health.manage_pestdisease',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',
@@ -84,11 +86,16 @@ const FIELD_AREAS = [
   'facilities.',
   'sales.',
   'indicators.',
+  'reports.',
 ];
 // Los que no son de campo, porque son de la asociación y sus cuentas no llevan finca.
+const ASSOCIATION_PERMISSIONS: readonly string[] = [
+  PERMISSIONS.CROPS_MANAGE_VARIETIES,
+  PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+  PERMISSIONS.REPORTS_VIEW_ASSOCIATION,
+];
 export const isFieldPermission = (code: string) =>
-  code !== PERMISSIONS.CROPS_MANAGE_VARIETIES &&
-  code !== PERMISSIONS.INDICATORS_VIEW_ASSOCIATION &&
+  !ASSOCIATION_PERMISSIONS.includes(code) &&
   FIELD_AREAS.some((area) => code.startsWith(area));
 
 // Solo decide qué mostrar: el servidor autoriza cada acción. Acepta el usuario ausente porque

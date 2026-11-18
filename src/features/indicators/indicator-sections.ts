@@ -1,4 +1,4 @@
-import type { IndicatorView } from './indicator-view';
+import type { AudienceView as IndicatorView } from '@/lib/audience-view';
 
 // Las macrosecciones de cada panel, que se ven de una en una bajo las cifras. La primera abre.
 export const INDICATOR_SECTIONS = {

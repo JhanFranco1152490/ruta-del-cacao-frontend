@@ -14,13 +14,10 @@ import type {
   QualityFilters,
 } from '@/lib/api/query-keys';
 import { QUALITY_ACTIONS } from '@/lib/paths/quality';
+import { periodError } from '@/lib/period';
 
 import { NO_CLOSED_FILTERS, type QualityApiView } from './api';
-import {
-  effectiveClosedFilters,
-  hasClosedFilters,
-  periodError,
-} from './closed-filters';
+import { effectiveClosedFilters, hasClosedFilters } from './closed-filters';
 
 export const QUALITY_VIEWS = ['por-evaluar', 'evaluados', 'cerrados'] as const;
 export type QualityView = (typeof QUALITY_VIEWS)[number];

@@ -1,7 +1,8 @@
 import { cn } from 'cn';
 
 // Pocas opciones excluyentes como botones juntos, con la elegida marcada (p. ej. el mapa base o
-// la vista del mapa).
+// la vista del mapa). Sin ninguna marcada (`null`) cuando lo elegido no es una de ellas: un periodo
+// escrito a mano no es ninguno de sus atajos.
 export function SegmentedControl<T extends string>({
   label,
   options,
@@ -12,7 +13,7 @@ export function SegmentedControl<T extends string>({
 }: {
   label: string;
   options: readonly { value: T; label: string }[];
-  value: T;
+  value: T | null;
   onChange: (value: T) => void;
   // Más bajo y apretado, para las barras de herramientas donde cada fila cuenta.
   compact?: boolean;

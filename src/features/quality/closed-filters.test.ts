@@ -1,20 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  effectiveClosedFilters,
-  hasClosedFilters,
-  PERIOD_ERROR_MESSAGE,
-  periodError,
-} from './closed-filters';
+import { effectiveClosedFilters, hasClosedFilters } from './closed-filters';
 
 describe('closed filters', () => {
-  it('flags a period that ends before it starts', () => {
-    expect(periodError('2026-11-05', '2026-11-04')).toBe(PERIOD_ERROR_MESSAGE);
-    expect(periodError('2026-11-05', '2026-11-05')).toBeNull();
-    expect(periodError('2026-11-05', null)).toBeNull();
-    expect(periodError(null, '2026-11-04')).toBeNull();
-  });
-
   it('drops a reversed period but keeps the result', () => {
     expect(
       effectiveClosedFilters({

@@ -84,4 +84,19 @@ describe('SegmentedControl', () => {
       'max-sm:flex-1',
     );
   });
+
+  it('marks no option when the value is none of them', () => {
+    render(
+      <SegmentedControl
+        label="Opciones"
+        onChange={vi.fn()}
+        options={OPTIONS}
+        value={null}
+      />,
+    );
+
+    for (const option of screen.getAllByRole('button')) {
+      expect(option).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
 });
