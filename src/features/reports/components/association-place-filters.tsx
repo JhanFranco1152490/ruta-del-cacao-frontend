@@ -29,7 +29,7 @@ export function AssociationPlaceFilters({
         value={values.municipality}
       />
       <ProducerFilter
-        className="w-full sm:w-60"
+        className="w-full sm:w-52"
         compact
         onClear={() => void filters.setProducer(null)}
         onSelect={(id) => void filters.setProducer(id)}
@@ -38,7 +38,7 @@ export function AssociationPlaceFilters({
         selected={screen.selectedProducer}
       />
       <FarmFilter
-        className="w-full sm:w-56"
+        className="w-full sm:w-48"
         compact
         farm={values.farm ?? undefined}
         hideLabel

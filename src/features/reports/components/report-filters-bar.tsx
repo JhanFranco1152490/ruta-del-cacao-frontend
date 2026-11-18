@@ -16,7 +16,8 @@ import { ReportPeriodFilter } from './report-period-filter';
 
 // Arriba, la vista (solo la cuenta técnica tiene las dos) y los atajos del periodo; debajo, en el
 // orden de las demás pantallas, el tipo de reporte (a la vista también en celular), el lugar y las
-// fechas, y al final Generar.
+// fechas, y al final, a la derecha, Generar. Los filtros son angostos para que todo quepa en una
+// fila en pantallas anchas; en 1280 px las fechas bajan con el botón.
 export function ReportFiltersBar({ screen }: { screen: ReportsScreenState }) {
   const { filters, view, type, fieldErrors } = screen;
   const withoutPeriod = isWithoutPeriod(type);
@@ -79,7 +80,7 @@ export function ReportFiltersBar({ screen }: { screen: ReportsScreenState }) {
             onChange={(event) => void filters.setType(event.target.value)}
             placeholder="Tipo de reporte"
             value={type ?? ''}
-            wrapperClassName="w-full sm:w-52"
+            wrapperClassName="w-full sm:w-44"
           >
             {screen.types.map((option) => (
               <option key={option} value={option}>
@@ -90,7 +91,7 @@ export function ReportFiltersBar({ screen }: { screen: ReportsScreenState }) {
         }
         trailing={
           <Button
-            className="h-10 max-sm:w-full"
+            className="h-10 max-sm:w-full sm:ml-auto"
             onClick={screen.generate}
             size="office"
             type="button"

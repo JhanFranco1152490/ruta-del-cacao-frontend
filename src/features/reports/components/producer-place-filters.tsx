@@ -49,7 +49,7 @@ export function ProducerPlaceFilters({
     <>
       {superuser && (
         <ProducerFilter
-          className="w-full sm:w-60"
+          className="w-full sm:w-52"
           compact
           onClear={() => void filters.setProducer(null)}
           onSelect={(id) => void filters.setProducer(id)}
@@ -59,7 +59,7 @@ export function ProducerPlaceFilters({
         />
       )}
       <FarmFilter
-        className="w-full sm:w-56"
+        className="w-full sm:w-48"
         compact
         farm={values.farm ?? undefined}
         hideLabel
@@ -80,7 +80,7 @@ export function ProducerPlaceFilters({
       {screen.canFilterLot && (
         <SearchSelect
           allLabel="Todos los lotes"
-          className="w-full sm:w-56"
+          className="w-full sm:w-52"
           compact
           label="Lote"
           onChange={(option) => void filters.setLot(option?.id ?? null)}
