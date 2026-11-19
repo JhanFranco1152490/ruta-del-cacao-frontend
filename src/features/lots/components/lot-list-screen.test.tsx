@@ -384,6 +384,74 @@ describe('LotListScreen', () => {
     expect(await screen.findByText('Aún no hay lotes')).toBeInTheDocument();
   });
 
+  describe('the lots of a farm or a plot', () => {
+    it('asks for the lots of the chosen farm and says when each was formed', async () => {
+      renderScreen({ searchParams: '?finca=f1' });
+
+      const [row] = within(await table())
+        .getAllByRole('row')
+        .slice(1);
+      expect(requests[0].get('farm')).toBe('f1');
+      expect(requests[0].has('plot')).toBe(false);
+      expect(row).toHaveTextContent('000123-F02-P05-261014-1');
+      expect(row).toHaveTextContent('P05 · Lote del río');
+      expect(row).toHaveTextContent('Conformado el 14 oct.');
+      expect(row).toHaveTextContent('Generado');
+    });
+
+    it('asks only for the lots of the chosen plot of that farm', async () => {
+      renderScreen({ searchParams: '?finca=f1&parcela=p1' });
+      await table();
+
+      expect(requests[0].get('farm')).toBe('f1');
+      expect(requests[0].get('plot')).toBe('p1');
+    });
+
+    it('says the farm has no lots', async () => {
+      server.use(lotsHandler([], requests));
+      renderScreen({ searchParams: '?finca=f1' });
+
+      expect(
+        await screen.findByText('No hay lotes asociados a esta finca.'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByRole('button', { name: 'Limpiar filtros' }).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it('says the plot has no lots', async () => {
+      server.use(lotsHandler([], requests));
+      renderScreen({ searchParams: '?finca=f1&parcela=p1' });
+
+      expect(
+        await screen.findByText('No hay lotes asociados a esta parcela.'),
+      ).toBeInTheDocument();
+    });
+
+    it('keeps the search message when other filters are set too', async () => {
+      server.use(lotsHandler([], requests));
+      renderScreen({ searchParams: '?finca=f1&buscar=zzz' });
+
+      expect(
+        await screen.findByText('No se encontraron lotes'),
+      ).toBeInTheDocument();
+    });
+
+    it('opens the history of each lot remembering the list', async () => {
+      renderScreen({ searchParams: '?finca=f1' });
+      await table();
+
+      expect(
+        screen.getByRole('link', {
+          name: 'Ver la historia del lote 000123-F02-P05-261014-1',
+        }),
+      ).toHaveAttribute(
+        'href',
+        expect.stringMatching(/^\/lotes\/historia\?id=l1&origen=/),
+      );
+    });
+  });
+
   it('shows an error of the api', async () => {
     server.use(
       http.get(apiUrl('/api/lots'), () => apiError(500, 'server_error')),
