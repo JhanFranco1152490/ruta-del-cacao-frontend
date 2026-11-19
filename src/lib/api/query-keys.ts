@@ -205,6 +205,8 @@ export const queryKeys = {
     // Cuántos lotes y kilos hay en cada estado, con los filtros de la lista menos el estado.
     summary: (query: object) => ['lots', 'summary', query] as const,
     detail: (id: string) => ['lots', 'detail', id] as const,
+    // La historia de un lote: solo con conexión, sin copia local.
+    history: (id: string) => ['lots', 'history', id] as const,
     // El buscador por código de un filtro (los reportes), solo con conexión.
     search: (query: object) => ['lots', 'search', query] as const,
   },

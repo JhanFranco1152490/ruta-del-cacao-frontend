@@ -880,6 +880,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lots/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La historia del lote: la cosecha y el origen, el conformado y cada etapa que pasó (fermentación, secado, evaluación, clasificación o descarte, ingreso, cambios de lugar, salidas y ventas), de la más antigua a la más reciente, y su estado actual. Cada etapa trae sus datos bajo la clave de su `kind`. Lo anulado sigue en la historia, marcado; las salidas por venta van en su venta. Sin precios. Un lote que no existe o que la cuenta no alcanza responde el mismo 404. */
+        get: operations["lots_history_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lots/summary": {
         parameters: {
             query?: never;
@@ -2483,6 +2500,25 @@ export interface components {
             /** @default  */
             discard_detail: string;
         };
+        ClassificationStage: {
+            classified_by: string;
+            /** Format: decimal */
+            dry_weight_kg: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: decimal */
+            discard_kg: string;
+            /** Format: decimal */
+            g1_pct: string | null;
+            /** Format: decimal */
+            g2_pct: string | null;
+            /** Format: decimal */
+            discard_pct: string | null;
+            discard_reason: (components["schemas"]["QualityDiscardReasonEnum"] | components["schemas"]["NullEnum"]) | null;
+            discard_detail: string;
+        };
         ClassificationSumError: {
             detail: string;
             code: string;
@@ -2661,6 +2697,13 @@ export interface components {
             /** @default  */
             detail: string;
         };
+        DiscardStage: {
+            discarded_by: string;
+            /** Format: decimal */
+            quantity_kg: string;
+            reason: components["schemas"]["QualityDiscardReasonEnum"];
+            detail: string;
+        };
         DismissedCount: {
             dismissed: number;
         };
@@ -2801,6 +2844,16 @@ export interface components {
             version: number;
             alerts: components["schemas"]["Deviation"][];
         };
+        DryingLogStage: {
+            day_number: number;
+            /** Format: date */
+            log_date: string;
+            /** Format: decimal */
+            moisture_pct: string;
+            /** Format: decimal */
+            sun_hours: string;
+            weather: components["schemas"]["DryingWeatherEnum"];
+        };
         DryingLot: {
             /** Format: uuid */
             id: string;
@@ -2859,6 +2912,29 @@ export interface components {
             dry_weight_kg: string;
             /** Format: decimal */
             yield_pct: string;
+        };
+        DryingStage: {
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string | null;
+            days: number;
+            facility: string;
+            responsible: string;
+            /** Format: decimal */
+            entry_moisture_pct: string;
+            log_count: number;
+            /** Format: decimal */
+            last_moisture_pct: string | null;
+            /** Format: decimal */
+            total_sun_hours: string;
+            /** Format: decimal */
+            final_moisture_pct: string | null;
+            /** Format: decimal */
+            dry_weight_kg: string | null;
+            /** Format: decimal */
+            yield_pct: string | null;
+            logs: components["schemas"]["DryingLogStage"][];
         };
         DryingStartOptionPerson: {
             /** Format: uuid */
@@ -2933,6 +3009,17 @@ export interface components {
             other_defects_pct: string;
             /** @default  */
             notes: string;
+        };
+        EvaluationStage: {
+            evaluated_by: string;
+            /** Format: decimal */
+            well_fermented_pct: string;
+            /** Format: decimal */
+            moldy_pct: string;
+            /** Format: decimal */
+            other_defects_pct: string;
+            /** Format: date-time */
+            corrected_at: string | null;
         };
         Evidence: {
             /** Format: uuid */
@@ -3205,6 +3292,27 @@ export interface components {
             turn_count: number;
             notes: string;
         };
+        FermentationStage: {
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string | null;
+            days: number;
+            facility: string;
+            responsible: string;
+            turn_count: number;
+            /** Format: decimal */
+            temperature_min_c: string | null;
+            /** Format: decimal */
+            temperature_max_c: string | null;
+            /** Format: decimal */
+            ph_min: string | null;
+            /** Format: decimal */
+            ph_max: string | null;
+            /** Format: date-time */
+            last_turn_at: string | null;
+            turns: components["schemas"]["FermentationTurnStage"][];
+        };
         FermentationStartRequest: {
             /** Format: uuid */
             lot_id: string;
@@ -3262,6 +3370,14 @@ export interface components {
             recorded_by: components["schemas"]["HarvestRecorder"];
             version: number;
             alerts: components["schemas"]["Deviation"][];
+        };
+        FermentationTurnStage: {
+            /** Format: date-time */
+            turned_at: string;
+            /** Format: decimal */
+            temperature_c: string;
+            /** Format: decimal */
+            ph: string;
         };
         Harvest: {
             /** Format: uuid */
@@ -3366,6 +3482,15 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        HarvestStage: {
+            /** Format: uuid */
+            harvest_id: string;
+            variety: string;
+            characterization_version: number;
+            collector: string;
+            /** Format: decimal */
+            green_weight_kg: string;
         };
         HarvestVariety: {
             /** Format: uuid */
@@ -3529,6 +3654,9 @@ export interface components {
             /** Format: uuid */
             harvest_id: string;
         };
+        LotCreatedStage: {
+            created_by: string | null;
+        };
         LotDrying: {
             /** Format: date-time */
             started_at: string;
@@ -3554,6 +3682,248 @@ export interface components {
             ended_at: string | null;
             facility: string;
         };
+        LotHistory: {
+            lot: components["schemas"]["LotHistoryLot"];
+            origin: components["schemas"]["LotHistoryOrigin"];
+            stages: components["schemas"]["LotHistoryStage"][];
+            current: components["schemas"]["LotHistoryCurrent"];
+        };
+        LotHistoryClassificationStage: {
+            classification: components["schemas"]["ClassificationStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "classification";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `classification` - classification
+         * @enum {string}
+         */
+        LotHistoryClassificationStageKindEnum: "classification";
+        LotHistoryCurrent: {
+            status: components["schemas"]["LotStatusEnum"];
+            /** Format: decimal */
+            g1_available_kg: string | null;
+            /** Format: decimal */
+            g2_available_kg: string | null;
+            /** Format: decimal */
+            sold_kg: string | null;
+        };
+        LotHistoryDiscardStage: {
+            discard: components["schemas"]["DiscardStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "discard";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `discard` - discard
+         * @enum {string}
+         */
+        LotHistoryDiscardStageKindEnum: "discard";
+        LotHistoryDryingStage: {
+            drying: components["schemas"]["DryingStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "drying";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `drying` - drying
+         * @enum {string}
+         */
+        LotHistoryDryingStageKindEnum: "drying";
+        LotHistoryEvaluationStage: {
+            evaluation: components["schemas"]["EvaluationStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "evaluation";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `evaluation` - evaluation
+         * @enum {string}
+         */
+        LotHistoryEvaluationStageKindEnum: "evaluation";
+        LotHistoryFarm: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            readonly municipality: string;
+        };
+        LotHistoryFermentationStage: {
+            fermentation: components["schemas"]["FermentationStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "fermentation";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `fermentation` - fermentation
+         * @enum {string}
+         */
+        LotHistoryFermentationStageKindEnum: "fermentation";
+        LotHistoryHarvest: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            harvest_date: string;
+        };
+        LotHistoryHarvestStage: {
+            harvest: components["schemas"]["HarvestStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "harvest";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `harvest` - harvest
+         * @enum {string}
+         */
+        LotHistoryHarvestStageKindEnum: "harvest";
+        LotHistoryLot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            status: components["schemas"]["LotStatusEnum"];
+            /** Format: date-time */
+            created_at: string;
+        };
+        LotHistoryLotCreatedStage: {
+            lot_created: components["schemas"]["LotCreatedStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "lot_created";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `lot_created` - lot_created
+         * @enum {string}
+         */
+        LotHistoryLotCreatedStageKindEnum: "lot_created";
+        LotHistoryOrigin: {
+            producer: components["schemas"]["LotHistoryProducer"];
+            farm: components["schemas"]["LotHistoryFarm"];
+            plot: components["schemas"]["LotHistoryPlot"];
+            harvest: components["schemas"]["LotHistoryHarvest"];
+        };
+        LotHistoryPlot: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        LotHistoryProducer: {
+            /** Format: uuid */
+            id: string;
+            member_code: string;
+            readonly full_name: string;
+        };
+        LotHistorySaleStage: {
+            sale: components["schemas"]["SaleStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "sale";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `sale` - sale
+         * @enum {string}
+         */
+        LotHistorySaleStageKindEnum: "sale";
+        LotHistoryStage: components["schemas"]["LotHistoryHarvestStage"] | components["schemas"]["LotHistoryLotCreatedStage"] | components["schemas"]["LotHistoryFermentationStage"] | components["schemas"]["LotHistoryDryingStage"] | components["schemas"]["LotHistoryEvaluationStage"] | components["schemas"]["LotHistoryClassificationStage"] | components["schemas"]["LotHistoryDiscardStage"] | components["schemas"]["LotHistoryStockEntryStage"] | components["schemas"]["LotHistoryStockMoveStage"] | components["schemas"]["LotHistoryStockExitStage"] | components["schemas"]["LotHistorySaleStage"];
+        LotHistoryStockEntryStage: {
+            stock_entry: components["schemas"]["StockEntryStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "stock_entry";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `stock_entry` - stock_entry
+         * @enum {string}
+         */
+        LotHistoryStockEntryStageKindEnum: "stock_entry";
+        LotHistoryStockExitStage: {
+            stock_exit: components["schemas"]["StockExitStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "stock_exit";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `stock_exit` - stock_exit
+         * @enum {string}
+         */
+        LotHistoryStockExitStageKindEnum: "stock_exit";
+        LotHistoryStockMoveStage: {
+            stock_move: components["schemas"]["StockMoveStage"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "stock_move";
+            /** Format: date */
+            occurred_on: string;
+            /** Format: date-time */
+            occurred_at: string | null;
+        };
+        /**
+         * @description * `stock_move` - stock_move
+         * @enum {string}
+         */
+        LotHistoryStockMoveStageKindEnum: "stock_move";
         LotProducer: {
             /** Format: uuid */
             id: string;
@@ -5060,6 +5430,11 @@ export interface components {
             quantity_kg: string;
             price_per_kg: number;
         };
+        SaleLineStage: {
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+        };
         SaleListItem: {
             /** Format: uuid */
             id: string;
@@ -5091,6 +5466,16 @@ export interface components {
             /** Format: uuid */
             id: string;
             readonly full_name: string;
+        };
+        SaleStage: {
+            /** Format: uuid */
+            sale_id: string;
+            number: string;
+            buyer: string;
+            lines: components["schemas"]["SaleLineStage"][];
+            /** Format: date-time */
+            voided_at: string | null;
+            void_reason: string | null;
         };
         /**
          * @description * `registered` - Registrada
@@ -5264,6 +5649,17 @@ export interface components {
             readonly can_correct: boolean;
             version: number;
         };
+        StockEntryStage: {
+            entered_by: string;
+            warehouse: string;
+            location: string;
+            /** Format: decimal */
+            g1_kg: string;
+            /** Format: decimal */
+            g2_kg: string;
+            /** Format: date-time */
+            corrected_at: string | null;
+        };
         StockExit: {
             /** Format: uuid */
             id: string;
@@ -5313,6 +5709,18 @@ export interface components {
             farm: components["schemas"]["StockFarm"];
             warehouse: components["schemas"]["StockWarehouseRef"];
         };
+        StockExitStage: {
+            created_by: string;
+            grade: components["schemas"]["StockGradeEnum"];
+            /** Format: decimal */
+            quantity_kg: string;
+            reason: components["schemas"]["StockExitReasonEnum"];
+            detail: string;
+            /** Format: date-time */
+            voided_at: string | null;
+            voided_by: string | null;
+            void_reason: string | null;
+        };
         StockFarm: {
             /** Format: uuid */
             id: string;
@@ -5358,6 +5766,13 @@ export interface components {
             /** Format: date-time */
             moved_at: string;
             moved_by: components["schemas"]["StockPerson"];
+        };
+        StockMoveStage: {
+            moved_by: string;
+            from_warehouse: string;
+            from_location: string;
+            to_warehouse: string;
+            to_location: string;
         };
         StockPerson: {
             /** Format: uuid */
@@ -9942,6 +10357,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LotConflictError"];
+                };
+            };
+        };
+    };
+    lots_history_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotHistory"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

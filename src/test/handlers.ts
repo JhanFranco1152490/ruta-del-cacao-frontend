@@ -171,6 +171,19 @@ export const lotsHandler = (
     return HttpResponse.json(buildPage(results));
   });
 
+// Responde la historia de un lote (o el error que se pase) y guarda los ids pedidos.
+export const lotHistoryHandler = (
+  response: JsonBodyType | Response,
+  requested: string[] = [],
+) =>
+  http.get(apiUrl('/api/lots/:id/history'), ({ params }) => {
+    requested.push(String(params.id));
+    // Una copia por petición: el cuerpo de un Response se lee una sola vez.
+    return response instanceof Response
+      ? response.clone()
+      : HttpResponse.json(response);
+  });
+
 // Responde el recuento de lotes por estado y guarda las búsquedas recibidas.
 export const lotSummaryHandler = (
   results: unknown[] = [],
