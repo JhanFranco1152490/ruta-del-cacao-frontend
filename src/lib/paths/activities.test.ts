@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ACTIVITIES_PATH,
   PENDING_ACTIVITIES_PATH,
+  plotActivitiesPath,
   SCHEDULE_MONITORING,
   SCHEDULE_PARAM,
   scheduleMonitoringPath,
@@ -31,5 +32,13 @@ describe('scheduleMonitoringPath', () => {
 describe('PENDING_ACTIVITIES_PATH', () => {
   it('opens the calendar on its pending view', () => {
     expect(PENDING_ACTIVITIES_PATH).toBe(`${ACTIVITIES_PATH}?vista=pendientes`);
+  });
+});
+
+describe('plotActivitiesPath', () => {
+  it('opens the calendar filtered by the farm and the plot', () => {
+    expect(plotActivitiesPath({ farm: 'f1', plot: 'p1' })).toBe(
+      '/actividades?finca=f1&parcela=p1',
+    );
   });
 });
