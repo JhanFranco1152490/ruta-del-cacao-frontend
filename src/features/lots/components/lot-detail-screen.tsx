@@ -1,11 +1,20 @@
 'use client';
 
-import { CalendarDays, Copy, MapPin, Scale, Sprout } from 'lucide-react';
+import { cn } from 'cn';
+import {
+  CalendarDays,
+  Copy,
+  History,
+  MapPin,
+  Scale,
+  Sprout,
+} from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/breadcrumb';
 import { DetailFooter } from '@/components/detail-footer';
+import { EditorLink } from '@/components/editor-link';
 import { ErrorState } from '@/components/error-state';
 import { OfflineCloud } from '@/components/illustrations/offline-cloud';
 import { OfflineCopyNotice } from '@/components/offline-copy-notice';
@@ -15,7 +24,7 @@ import {
   HERO_SECONDARY_CLASS,
 } from '@/components/page-blocks/detail-hero';
 import { StatCell, StatStrip } from '@/components/page-blocks/stat-strip';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { useSession } from '@/hooks/use-session';
 import { isNotFound } from '@/lib/api/errors';
 import {
@@ -33,7 +42,7 @@ import { isNeverLoaded } from '@/lib/offline/paused-read';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Lot, useLot } from '../api';
-import { LOTS_PATH } from '../lot-paths';
+import { LOTS_PATH, lotHistoryPath } from '../lot-paths';
 import { LotDeleteDialog } from './lot-delete-dialog';
 import { harvestAgeText } from '../lot-age';
 import { LotCodeSegments } from './lot-code-segments';
@@ -119,14 +128,28 @@ export function LotDetailScreen({
       <DetailHero
         accent="cobre"
         actions={
-          <Button
-            className={HERO_SECONDARY_CLASS}
-            onClick={() => void copyCode(lot.code)}
-            size="office"
-            variant="outline"
-          >
-            <Copy aria-hidden="true" className="size-4" /> Copiar código
-          </Button>
+          <>
+            {/* La historia se lee solo con conexión: con la copia del dispositivo no se ofrece. */}
+            {!fromCopy && (
+              <EditorLink
+                className={cn(
+                  buttonVariants({ size: 'office', variant: 'outline' }),
+                  HERO_SECONDARY_CLASS,
+                )}
+                href={lotHistoryPath(lot.id)}
+              >
+                <History aria-hidden="true" className="size-4" /> Ver historia
+              </EditorLink>
+            )}
+            <Button
+              className={HERO_SECONDARY_CLASS}
+              onClick={() => void copyCode(lot.code)}
+              size="office"
+              variant="outline"
+            >
+              <Copy aria-hidden="true" className="size-4" /> Copiar código
+            </Button>
+          </>
         }
         chips={<LotStatusBadge status={lot.status} />}
         // La copia de poscosecha no guarda quién conformó el lote ni cuándo.
