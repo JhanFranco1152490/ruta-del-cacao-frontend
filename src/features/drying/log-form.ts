@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import type { components } from '@/lib/api/schema';
+import { WEATHER_LABELS } from '@/lib/drying-weather';
 import { formatTime, fromBogotaLocal } from '@/lib/format/dates';
 import { formatFixedDecimal } from '@/lib/format/decimal';
 import { minuteOf } from '@/lib/format/hours';
@@ -35,12 +36,10 @@ export const FREQUENCY_REQUIRED_MESSAGE =
 export const BEFORE_START_MESSAGE =
   'No puede ser anterior al inicio del secado.';
 
-export const WEATHERS: readonly { value: Weather; label: string }[] = [
-  { value: 'sunny', label: 'Soleado' },
-  { value: 'partly_cloudy', label: 'Parcialmente nublado' },
-  { value: 'cloudy', label: 'Nublado' },
-  { value: 'rainy', label: 'Lluvioso' },
-];
+// Las opciones de la bitácora, en el orden de las etiquetas: de más sol a lluvia.
+export const WEATHERS: readonly { value: Weather; label: string }[] = (
+  Object.entries(WEATHER_LABELS) as [Weather, string][]
+).map(([value, label]) => ({ value, label }));
 
 // La hora de la medición es la de un campo de fecha y hora (yyyy-MM-ddTHH:mm), en la hora de
 // Bogotá. Los números van como texto, como los escribe quien registra.

@@ -11,7 +11,7 @@ import { Plus } from 'lucide-react';
 
 import type { Grade } from '../api';
 import { GRADE_LABELS } from '@/lib/stock-quantity';
-import { EXIT_REASON_LABELS } from '../exit-reasons';
+import { EXIT_REASON_LABELS } from '@/lib/exit-reasons';
 import { OFFLINE_WAREHOUSE_REASON } from '../warehouse-actions';
 import { STOCK_ORDER_OPTIONS } from '../stock-order-options';
 import type { StockOrdering } from '../use-warehouse-filters';

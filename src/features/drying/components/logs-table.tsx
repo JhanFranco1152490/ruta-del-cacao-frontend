@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/table';
 import { formatShortDate } from '@/lib/format/dates';
 import { formatFixedDecimal } from '@/lib/format/decimal';
+import { WEATHER_LABELS } from '@/lib/drying-weather';
 
 import { logCorrectionPath } from '../drying-paths';
-import { WEATHERS } from '../log-form';
 import type { LogRow } from '../log-rows';
 import { LogDeleteDialog } from './log-delete-dialog';
 
@@ -27,7 +27,7 @@ import { LogDeleteDialog } from './log-delete-dialog';
 const ICON_BUTTON_CLASS = 'h-10 md:w-10 md:px-0';
 
 const weatherLabel = (row: LogRow) =>
-  WEATHERS.find(({ value }) => value === row.weather)?.label ?? '—';
+  row.weather ? WEATHER_LABELS[row.weather] : '—';
 
 // «6,0 h al sol» y, si hubo, «2,0 h a la sombra».
 function SunShade({ row }: { row: LogRow }) {

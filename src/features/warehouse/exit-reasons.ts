@@ -1,15 +1,4 @@
-import type { ExitReason } from './api';
-
-// Los motivos de una salida, como se leen en el formulario y en el historial del lote. Venta está
-// para leer las salidas que genera una venta, pero nunca se elige a mano.
-export const EXIT_REASON_LABELS: Record<ExitReason, string> = {
-  shrinkage: 'Merma',
-  sample: 'Muestra',
-  reprocessing: 'Reproceso',
-  transfer: 'Traslado fuera de la finca',
-  other: 'Otro (con detalle)',
-  sale: 'Venta',
-};
+import { EXIT_REASON_LABELS, type ExitReason } from '@/lib/exit-reasons';
 
 export type ManualExitReason = Exclude<ExitReason, 'sale'>;
 
@@ -35,9 +24,3 @@ export const needsDetail = (reason: string) => reason === 'other';
 // Con Otro el detalle es lo único que dice por qué sale el cacao; con los demás es opcional.
 export const exitDetailIssue = (reason: string, detail: string) =>
   needsDetail(reason) && !detail.trim() ? DETAIL_REQUIRED_MESSAGE : null;
-
-// El motivo como se lee en el historial: con Otro, lo que se escribió.
-export function exitReasonText(reason: ExitReason, detail = '') {
-  if (reason === 'other') return detail.trim() || 'Otro';
-  return EXIT_REASON_LABELS[reason];
-}
