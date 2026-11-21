@@ -6,7 +6,7 @@ import { kilosText } from '@/lib/stock-quantity';
 import type { StageOf } from '../../api';
 import { HistoryEntry } from './history-entry';
 
-// La cosecha de la que nació el lote. La finca y la parcela ya están en la franja de origen.
+// La cosecha de la que nació el lote. La finca y la parcela ya están en el panel de origen.
 export function HarvestStage({
   stage,
   footer,

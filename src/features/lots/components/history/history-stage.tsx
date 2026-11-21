@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { LotHistoryStage } from '../../api';
 import { ClassificationStage } from './classification-stage';
 import { DiscardStage } from './discard-stage';
+import { HistoryPositionContext } from './history-anchor';
 import { DryingStage } from './drying-stage';
 import { EvaluationStage } from './evaluation-stage';
 import { FermentationStage } from './fermentation-stage';
@@ -16,6 +17,24 @@ import { StockMoveStage } from './stock-move-stage';
 // La entrada de cada etapa según su tipo. La cosecha lleva al pie los enlaces a lo que es de la
 // parcela (sanidad, actividades) y a la cosecha misma.
 export function HistoryStage({
+  stage,
+  anchorId,
+  active,
+  harvestFooter,
+}: {
+  stage: LotHistoryStage;
+  anchorId: string;
+  active: boolean;
+  harvestFooter?: ReactNode;
+}) {
+  return (
+    <HistoryPositionContext.Provider value={{ anchorId, active }}>
+      <StageEntry harvestFooter={harvestFooter} stage={stage} />
+    </HistoryPositionContext.Provider>
+  );
+}
+
+function StageEntry({
   stage,
   harvestFooter,
 }: {

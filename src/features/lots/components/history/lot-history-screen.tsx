@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import { CalendarDays, FileText, Home, MapPin, Scale } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 import { Breadcrumb } from '@/components/breadcrumb';
@@ -15,25 +15,21 @@ import {
   DetailHero,
   HERO_SECONDARY_CLASS,
 } from '@/components/page-blocks/detail-hero';
-import { StatCell, StatStrip } from '@/components/page-blocks/stat-strip';
 import { pageContainerClass } from '@/components/page-container';
 import { PageNotice } from '@/components/page-notice';
 import { LotStatusBadge } from '@/components/lot-status-badge';
 import { buttonVariants } from '@/components/ui/button';
 import { isNotFound } from '@/lib/api/errors';
-import { formatLongDate } from '@/lib/format/dates';
-import { farmLabel, plotLabel } from '@/lib/format/place-label';
 import { readOrigin } from '@/lib/navigation/origin';
 import { isNeverLoaded } from '@/lib/offline/paused-read';
-import { kilosText } from '@/lib/stock-quantity';
 
 import { type LotHistory, useLotHistory } from '../../api';
-import { harvestGreenKg, type OriginLinks } from '../../history/origin-links';
+import type { OriginLinks } from '../../history/origin-links';
 import { LOTS_PATH, lotDetailPath } from '../../lot-paths';
 import { LotCodeSegments } from '../lot-code-segments';
-import { CurrentStateEntry } from './current-state-entry';
-import { HistoryStage } from './history-stage';
-import { OriginLinksRow } from './origin-links-row';
+import { CurrentStateCard } from './current-state-card';
+import { HistoryTimeline } from './history-timeline';
+import { OriginCard } from './origin-card';
 
 // La historia de un lote: de la cosecha a hoy, una entrada por etapa en el orden que da el
 // servidor, y al final su estado actual. Solo con conexión: junta lo que guardan seis módulos y no
@@ -72,7 +68,7 @@ export function LotHistoryScreen({
   if (!read.data) {
     return (
       <LoadingBlock
-        className={pageContainerClass('narrow', 'space-y-4')}
+        className={pageContainerClass('wide', 'space-y-4')}
         label="Cargando la historia del lote"
         shapes={['h-24', 'h-20', 'h-64']}
       />
@@ -82,10 +78,9 @@ export function LotHistoryScreen({
   const history = read.data;
   const { lot, origin: source } = history;
   const detailHref = lotDetailPath(lot.id);
-  const greenKg = harvestGreenKg(history);
 
   return (
-    <div className={pageContainerClass('narrow', 'space-y-4')}>
+    <div className={pageContainerClass('wide', 'space-y-4')}>
       <Breadcrumb
         items={[
           { label: 'Lotes', href: LOTS_PATH },
@@ -119,45 +114,27 @@ export function LotHistoryScreen({
         }
         tone="bosque"
       />
-      <StatStrip accent="cobre" label="Origen del lote">
-        <StatCell
-          icon={Home}
-          label="Finca"
-          note={source.farm.municipality}
-          value={farmLabel(source.farm)}
-        />
-        <StatCell
-          icon={MapPin}
-          label="Parcela"
-          value={plotLabel(source.plot)}
-        />
-        <StatCell
-          icon={CalendarDays}
-          label="Cosecha"
-          value={formatLongDate(source.harvest.harvest_date)}
-        />
-        <StatCell
-          icon={Scale}
-          label="Cacao en baba"
-          value={greenKg ? `${kilosText(greenKg)} kg` : '—'}
-        />
-      </StatStrip>
-      <ol
-        aria-label="Etapas del lote"
-        className="motion-stagger space-y-4"
-        style={accentStyle('cobre')}
-      >
-        {history.stages.map((stage, index) => (
-          <HistoryStage
-            harvestFooter={
-              originLinks && <OriginLinksRow links={originLinks(history)} />
-            }
-            key={`${stage.kind}-${index}`}
-            stage={stage}
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
+        <aside
+          className="max-lg:contents lg:sticky lg:top-20 lg:col-start-1 lg:row-start-1 lg:-m-1 lg:flex lg:max-h-[calc(100dvh-6rem)] lg:flex-col lg:gap-4 lg:p-1"
+          style={accentStyle('cobre')}
+        >
+          <CurrentStateCard
+            className="max-lg:order-3 lg:shrink-0"
+            current={history.current}
           />
-        ))}
-        <CurrentStateEntry current={history.current} />
-      </ol>
+          <OriginCard
+            className="max-lg:order-1 lg:shrink-0"
+            history={history}
+          />
+        </aside>
+        <div
+          className="min-w-0 max-lg:order-2 lg:col-start-2 lg:row-start-1"
+          style={accentStyle('cobre')}
+        >
+          <HistoryTimeline history={history} originLinks={originLinks} />
+        </div>
+      </div>
       <DetailFooter backHref={origin ?? detailHref} />
     </div>
   );

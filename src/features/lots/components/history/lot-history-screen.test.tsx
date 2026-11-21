@@ -1,4 +1,5 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -74,13 +75,83 @@ describe('LotHistoryScreen', () => {
       'Cambio de lugar',
       'Salida de bodega: Muestra',
       'Venta V-0012',
-      'Estado actual',
     ]);
     expect(
-      screen.getByRole('listitem', { name: 'Estado actual' }),
+      screen.getByRole('region', { name: 'Estado actual' }),
     ).toHaveTextContent(
       'Estado actual: En bodega · 12,5 kg de G1 y 7,5 kg de G2 disponibles · 20,0 kg vendidos',
     );
+  });
+
+  it('marks the stage being read as the page scrolls', async () => {
+    server.use(lotHistoryHandler(buildLotHistory()));
+    renderScreen();
+    await screen.findByRole('listitem', { name: 'Venta V-0012' });
+
+    // Las primeras etapas ya subieron por encima de la línea de lectura; la tercera aún no.
+    const tops: Record<string, number> = {
+      'etapa-0': -900,
+      'etapa-1': -500,
+      'etapa-2': 400,
+    };
+    for (const [id, top] of Object.entries(tops)) {
+      vi.spyOn(
+        document.getElementById(id) as HTMLElement,
+        'getBoundingClientRect',
+      ).mockReturnValue({ top } as DOMRect);
+    }
+    for (let index = 3; index < 10; index += 1) {
+      vi.spyOn(
+        document.getElementById(`etapa-${index}`) as HTMLElement,
+        'getBoundingClientRect',
+      ).mockReturnValue({ top: 1200 } as DOMRect);
+    }
+    fireEvent.scroll(window);
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Lote conformado' }),
+      ).toHaveAttribute('aria-current', 'step'),
+    );
+    expect(
+      screen.getByRole('button', { name: 'Venta V-0012' }),
+    ).not.toHaveAttribute('aria-current');
+  });
+
+  it('keeps the stage that was clicked marked until the page is scrolled again', async () => {
+    server.use(lotHistoryHandler(buildLotHistory()));
+    renderScreen();
+    await screen.findByRole('listitem', { name: 'Venta V-0012' });
+    // jsdom no desplaza; el clic llama a `scrollIntoView` de la entrada.
+    Element.prototype.scrollIntoView = vi.fn();
+    // Con estas posiciones, leyendo la página se marcaría «Lote conformado».
+    for (let index = 0; index < 10; index += 1) {
+      vi.spyOn(
+        document.getElementById(`etapa-${index}`) as HTMLElement,
+        'getBoundingClientRect',
+      ).mockReturnValue({
+        top: index < 2 ? -300 + index * 100 : 900,
+      } as DOMRect);
+    }
+    const sale = screen.getByRole('button', { name: 'Venta V-0012' });
+
+    await userEvent.click(sale);
+    expect(sale).toHaveAttribute('aria-current', 'step');
+
+    // El desplazamiento que provoca el propio clic no cambia lo marcado.
+    fireEvent.scroll(window);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(sale).toHaveAttribute('aria-current', 'step');
+
+    // Al desplazar la persona, vuelve a marcarse la que se lee.
+    fireEvent.wheel(window);
+    fireEvent.scroll(window);
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Lote conformado' }),
+      ).toHaveAttribute('aria-current', 'step'),
+    );
+    expect(sale).not.toHaveAttribute('aria-current');
   });
 
   it('shows a lot still in process up to today, with its current stage', async () => {
@@ -105,14 +176,9 @@ describe('LotHistoryScreen', () => {
     renderScreen();
 
     expect(
-      await screen.findByRole('listitem', { name: 'Estado actual' }),
+      await screen.findByRole('region', { name: 'Estado actual' }),
     ).toHaveTextContent('Estado actual: En fermentación');
-    expect(stages()).toEqual([
-      'Cosecha',
-      'Lote conformado',
-      'Fermentación',
-      'Estado actual',
-    ]);
+    expect(stages()).toEqual(['Cosecha', 'Lote conformado', 'Fermentación']);
     expect(
       screen.getByRole('listitem', { name: 'Fermentación' }),
     ).toHaveTextContent('en curso');
@@ -143,7 +209,7 @@ describe('LotHistoryScreen', () => {
       await screen.findByText('Lote descartado: Moho · 45,0 kg'),
     ).toBeVisible();
     expect(
-      screen.getByRole('listitem', { name: 'Estado actual' }),
+      screen.getByRole('region', { name: 'Estado actual' }),
     ).toHaveTextContent('Estado actual: Descartado');
   });
 
