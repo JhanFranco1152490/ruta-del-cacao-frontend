@@ -17,7 +17,7 @@ import { farmLabel } from '@/lib/format/place-label';
 
 import type { StockExitRow } from '../api';
 import { GRADE_LABELS, kilosText } from '@/lib/stock-quantity';
-import { exitReasonText } from '../exit-reasons';
+import { exitReasonText } from '@/lib/exit-reasons';
 import { LotEyeLink } from './lot-eye-link';
 
 // Todas las salidas de cacao, la más reciente primero. Una anulada sigue en la lista, tachada y con

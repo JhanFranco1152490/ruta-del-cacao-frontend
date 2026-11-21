@@ -1,1 +1,1 @@
-export { LOTS_PATH, lotDetailPath } from '@/lib/paths/lots';
+export { LOTS_PATH, lotDetailPath, lotHistoryPath } from '@/lib/paths/lots';

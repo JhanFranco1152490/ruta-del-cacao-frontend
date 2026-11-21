@@ -342,6 +342,21 @@ describe('LotDetailScreen', () => {
     expect(
       screen.getByRole('region', { name: 'Fermentación' }),
     ).toHaveTextContent('C-01');
+    // La historia se lee solo con conexión.
+    expect(
+      screen.queryByRole('link', { name: 'Ver historia' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens the history of the lot remembering the detail', async () => {
+    renderScreen();
+
+    expect(
+      await screen.findByRole('link', { name: 'Ver historia' }),
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/lotes\/historia\?id=l1&origen=/),
+    );
   });
 
   it('asks for a connection for a lot that is in no copy', async () => {

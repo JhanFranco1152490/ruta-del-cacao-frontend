@@ -153,6 +153,28 @@ export const useLot = (id: string, userId: string | undefined) =>
     networkMode: 'offlineFirst',
   });
 
+export type LotHistory = Schemas['LotHistory'];
+export type LotHistoryStage = LotHistory['stages'][number];
+export type LotHistoryKind = LotHistoryStage['kind'];
+// Una etapa de la historia ya estrechada por su tipo, con sus datos bajo la clave de su `kind`.
+export type StageOf<K extends LotHistoryKind> = Extract<
+  LotHistoryStage,
+  { kind: K }
+>;
+
+// La historia junta lo que guardan seis módulos y se arma al pedirla: no tiene copia en el
+// dispositivo y se vuelve a pedir cada vez que se abre, para que una venta o una salida recién
+// registradas se vean.
+export const useLotHistory = (id: string) =>
+  useQuery({
+    queryKey: queryKeys.lots.history(id),
+    queryFn: ({ signal }) =>
+      apiFetch<LotHistory>(`/api/lots/${id}/history`, { signal }),
+    enabled: !!id,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
 // La versión leída va en la URL: un DELETE con cuerpo no tiene significado definido en HTTP.
 export const deleteLot = (id: string, expectedVersion: number) => {
   const query: LotDeleteQuery = { expected_version: expectedVersion };

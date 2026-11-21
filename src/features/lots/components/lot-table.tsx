@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import { ChevronRight, Eye } from 'lucide-react';
+import { ChevronRight, Eye, History } from 'lucide-react';
 
 import {
   COMPACT_TABLE_CLASS,
@@ -16,14 +16,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDecimal, formatFixedDecimal } from '@/lib/format/decimal';
-import { formatAbbreviatedDate } from '@/lib/format/dates';
+import { dateInBogota, formatAbbreviatedDate } from '@/lib/format/dates';
 import { farmLabel, plotLabel } from '@/lib/format/place-label';
 import type { LotAction } from '@/lib/lot-actions';
 
 import type { Lot } from '../api';
-import { lotDetailPath } from '../lot-paths';
+import { lotDetailPath, lotHistoryPath } from '../lot-paths';
 import { LotActionsMenu } from './lot-actions-menu';
 import { LotStatusBadge } from '@/components/lot-status-badge';
+
+// Un botón de icono cuadrado en escritorio; en celular cada uno se acomoda en la tarjeta.
+const ICON_BUTTON_CLASS = 'md:w-10 md:px-0';
 
 // Los lotes de una página: una tabla en escritorio y tarjetas compactas en celular. El código va
 // completo, como se imprime en el costal. En celular, cuatro líneas con los datos alineados en dos
@@ -52,70 +55,96 @@ export function LotTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {lots.map((lot) => (
-          <TableRow key={lot.id}>
-            <TableCell className="font-mono font-bold break-all whitespace-normal max-md:order-1 max-md:text-base! max-md:text-foreground">
-              {lot.code}
-            </TableCell>
-            <TableCell className="max-md:order-3 max-md:col-span-1! max-md:text-muted-foreground">
-              {formatAbbreviatedDate(lot.harvest.harvest_date)}
-            </TableCell>
-            <TableCell className="max-w-64 break-words whitespace-normal max-md:order-2">
-              {plotLabel(lot.harvest.plot)}
-              <span className="block text-sm text-muted-foreground">
-                {farmLabel(lot.harvest.plot.farm)}
-              </span>
-            </TableCell>
-            <TableCell className="max-md:order-5 max-md:col-span-1! max-md:text-muted-foreground">
-              {lot.harvest.variety.name}
-            </TableCell>
-            <TableCell className="text-right font-bold tabular-nums max-md:order-4 max-md:col-span-1! max-md:justify-self-end">
-              {formatDecimal(lot.green_weight_kg, 1)} kg
-            </TableCell>
-            <TableCell className="max-md:order-6 max-md:col-span-1! max-md:justify-self-end">
-              <LotStatusBadge status={lot.status} />
-              {/* Dónde fermenta: lo que se busca al recorrer los cajones. */}
-              {lot.fermentation && !lot.fermentation.ended_at && (
+        {lots.map((lot) => {
+          const actions = lotActions?.(lot) ?? [];
+          return (
+            <TableRow key={lot.id}>
+              {/* En celular el código deja sitio a los dos botones de arriba a la derecha. */}
+              <TableCell className="font-mono font-bold break-all whitespace-normal max-md:order-1 max-md:pr-20 max-md:text-base! max-md:text-foreground">
+                {lot.code}
+              </TableCell>
+              <TableCell className="max-md:order-3 max-md:col-span-1! max-md:text-muted-foreground">
+                {formatAbbreviatedDate(lot.harvest.harvest_date)}
+                {/* Cuándo se conformó: puede ser días después de la cosecha. En la misma celda para
+                  que la tabla no se ensanche. */}
                 <span className="block text-sm text-muted-foreground">
-                  En {lot.fermentation.facility}
+                  Conformado el{' '}
+                  {formatAbbreviatedDate(dateInBogota(lot.created_at))}
                 </span>
-              )}
-              {/* Lo que dio el secado: lo primero que se busca de un lote Seco. */}
-              {lot.drying?.yield_pct && (
+              </TableCell>
+              <TableCell className="max-w-64 break-words whitespace-normal max-md:order-2">
+                {plotLabel(lot.harvest.plot)}
                 <span className="block text-sm text-muted-foreground">
-                  Rendimiento {formatFixedDecimal(lot.drying.yield_pct, 1)} %
+                  {farmLabel(lot.harvest.plot.farm)}
                 </span>
-              )}
-            </TableCell>
-            <TableCell className="max-md:order-7">
-              <div className="flex items-center justify-end gap-2">
-                <EditorLink
-                  aria-label={`Ver el lote ${lot.code}`}
-                  className={cn(
-                    buttonVariants({ size: 'office', variant: 'action' }),
-                    ROW_LINK_CLASS,
-                  )}
-                  href={lotDetailPath(lot.id)}
-                >
-                  <Eye aria-hidden="true" className="size-4 max-md:hidden" />
-                  <span className="max-md:sr-only">Ver</span>
-                  <ChevronRight aria-hidden="true" className="md:hidden" />
-                </EditorLink>
-                {/* En celular la tarjeta entera es el enlace: el menú queda arriba a la derecha,
-                    por encima de él. */}
-                <LotActionsMenu
-                  actions={lotActions?.(lot) ?? []}
-                  className="max-md:absolute max-md:top-1.5 max-md:right-1.5 max-md:z-10 max-md:h-9"
-                  code={lot.code}
-                  // Sin acciones en esta etapa, el hueco del «⋯» se conserva: así el «Ver» de
-                  // todas las filas queda alineado.
-                  placeholderClassName="max-md:hidden"
-                  reserveSpace={lotActions !== undefined}
-                />
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+              </TableCell>
+              <TableCell className="max-md:order-5 max-md:col-span-1! max-md:text-muted-foreground">
+                {lot.harvest.variety.name}
+              </TableCell>
+              <TableCell className="text-right font-bold tabular-nums max-md:order-4 max-md:col-span-1! max-md:justify-self-end">
+                {formatDecimal(lot.green_weight_kg, 1)} kg
+              </TableCell>
+              <TableCell className="max-md:order-6 max-md:col-span-1! max-md:justify-self-end">
+                <LotStatusBadge status={lot.status} />
+                {/* Dónde fermenta: lo que se busca al recorrer los cajones. */}
+                {lot.fermentation && !lot.fermentation.ended_at && (
+                  <span className="block text-sm text-muted-foreground">
+                    En {lot.fermentation.facility}
+                  </span>
+                )}
+                {/* Lo que dio el secado: lo primero que se busca de un lote Seco. */}
+                {lot.drying?.yield_pct && (
+                  <span className="block text-sm text-muted-foreground">
+                    Rendimiento {formatFixedDecimal(lot.drying.yield_pct, 1)} %
+                  </span>
+                )}
+              </TableCell>
+              <TableCell className="max-md:order-7">
+                <div className="flex items-center justify-end gap-2">
+                  {/* De icono los dos: con texto, la tabla no cabía a 1280 px con la columna de
+                    acciones. */}
+                  <EditorLink
+                    aria-label={`Ver el lote ${lot.code}`}
+                    className={cn(
+                      buttonVariants({ size: 'office', variant: 'action' }),
+                      ICON_BUTTON_CLASS,
+                      ROW_LINK_CLASS,
+                    )}
+                    href={lotDetailPath(lot.id)}
+                  >
+                    <Eye aria-hidden="true" className="size-4 max-md:hidden" />
+                    <ChevronRight aria-hidden="true" className="md:hidden" />
+                  </EditorLink>
+                  {/* En celular la tarjeta entera es el enlace a la ficha: la historia y el menú
+                    quedan arriba a la derecha, por encima de él. */}
+                  <EditorLink
+                    aria-label={`Ver la historia del lote ${lot.code}`}
+                    className={cn(
+                      buttonVariants({ size: 'office', variant: 'action' }),
+                      ICON_BUTTON_CLASS,
+                      'max-md:absolute max-md:top-1.5 max-md:z-10 max-md:h-9 max-md:w-9',
+                      actions.length > 0
+                        ? 'max-md:right-12'
+                        : 'max-md:right-1.5',
+                    )}
+                    href={lotHistoryPath(lot.id)}
+                  >
+                    <History aria-hidden="true" className="size-4" />
+                  </EditorLink>
+                  <LotActionsMenu
+                    actions={actions}
+                    className="max-md:absolute max-md:top-1.5 max-md:right-1.5 max-md:z-10 max-md:h-9"
+                    code={lot.code}
+                    // Sin acciones en esta etapa, el hueco del «⋯» se conserva: así el «Ver» de
+                    // todas las filas queda alineado.
+                    placeholderClassName="max-md:hidden"
+                    reserveSpace={lotActions !== undefined}
+                  />
+                </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

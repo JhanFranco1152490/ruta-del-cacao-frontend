@@ -22,3 +22,13 @@ export function scheduleMonitoringPath({
 
 // El calendario en su vista de pendientes: todo lo que sigue sin registrar, por viejo que sea.
 export const PENDING_ACTIVITIES_PATH = `${ACTIVITIES_PATH}?vista=pendientes`;
+
+// El calendario filtrado por una parcela (y su finca, que el filtro de parcela necesita elegida).
+export const plotActivitiesPath = ({
+  farm,
+  plot,
+}: {
+  farm: string;
+  plot: string;
+}) =>
+  `${ACTIVITIES_PATH}?${new URLSearchParams({ finca: farm, parcela: plot })}`;

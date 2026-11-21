@@ -18,6 +18,7 @@ import type { LotStatus } from '@/lib/lot-status';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 import { type Lot, LOT_PAGE_SIZE, useLots, useLotSummary } from '../api';
+import { lotEmptyState } from '../lot-empty-state';
 import { useLotFilters } from '../use-lot-filters';
 import { LotFiltersBar } from './lot-filters-bar';
 import { LotStatusCards } from './lot-status-cards';
@@ -103,7 +104,8 @@ export function LotListScreen({
         </>
       );
     }
-    return filters.hasFilters ? (
+    const empty = lotEmptyState(filters.query);
+    return empty.kind === 'filtered' ? (
       <EmptyState
         action={
           <Button
@@ -115,14 +117,14 @@ export function LotListScreen({
           </Button>
         }
         illustration={BeanSack}
-        title="No se encontraron lotes"
+        title={empty.title}
       />
     ) : (
       <EmptyState
         action={formLot}
         description="Un lote se conforma con una cosecha registrada y recibe ahí su código de trazabilidad."
         illustration={BeanSack}
-        title="Aún no hay lotes"
+        title={empty.title}
       />
     );
   };
