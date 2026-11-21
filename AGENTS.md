@@ -306,6 +306,23 @@ src/
   eliminada (`404`) van a la bandeja solo con «Descartar». La lista es paginada, y sus tarjetas de
   estado (`lot-status-cards.tsx`) cuentan lotes y kilos con `GET /api/lots/summary`, que sigue a los
   demás filtros pero no al estado.
+  **La historia del lote** (`/lotes/historia?id=`, `components/history/`) se abre desde el botón de
+  icono **Historia** de cada fila de la lista (que también dice «Conformado el …») y desde **Ver
+  historia** en la ficha, que no se ofrece con la copia del dispositivo: es solo en línea
+  (`useLotHistory`, `GET /api/lots/{id}/history`) y sin red la pantalla lo dice. Es ancha (`wide`): a
+  la izquierda, fijos bajo la cabecera, el estado actual y el origen (`CurrentStateCard`,
+  `OriginCard`); a la derecha la línea de tiempo, con una entrada por etapa en el orden que da el
+  servidor (`HistoryStage` elige la pieza por `kind`; `HistoryEntry` pone el ícono, la línea que une
+  las etapas, la fecha y la tarjeta, y reparte sus datos en tres columnas cuando la tarjeta es ancha,
+  con una *container query*). Sobre ella va una fila fija de íconos (`HistoryIndex`) que salta a cada
+  etapa y marca la que se lee (`useActiveStage` y la regla pura `activeStageIndex`: la línea de lectura
+  baja con el desplazamiento para que las últimas etapas se marquen una a una, y la etapa pulsada
+  queda marcada hasta que la persona vuelve a desplazar). La pantalla no ordena ni suma: los textos
+  son reglas puras con su test en `features/lots/history/`. Lo anulado sigue con la insignia
+  **Anulada**, y no hay precios. Los enlaces del origen (cosecha, sanidad, actividades) los arma la
+  página (`lotes/historia/lot-history-from-query.tsx`), cada uno con su permiso, porque `lots` no
+  importa de otros dominios; por lo mismo, las etiquetas de los motivos de salida y del clima viven en
+  `lib/exit-reasons.ts` y `lib/drying-weather.ts`, que usan Bodega, Secado y la historia.
 
 - **Infraestructura (`features/facilities/`).** Los cajones de fermentación y las marquesinas de
   secado, de una finca a la vez: `use-facility-farm.ts` decide si se pregunta la finca, si se entra
