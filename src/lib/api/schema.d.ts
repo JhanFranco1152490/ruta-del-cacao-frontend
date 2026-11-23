@@ -897,6 +897,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lots/{id}/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Genera el código QR del lote: un token aleatorio y la dirección pública de su trazabilidad, que es lo que el QR lleva. Solo un lote Clasificado o En bodega; en otro estado, 409 `lot_not_classified` con `current_status`. Uno por lote: si ya tiene, 409 `lot_qr_already_exists` (el existente viene en `qr` del lote). Sin cuerpo. */
+        post: operations["lots_qr_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lots/summary": {
         parameters: {
             query?: never;
@@ -1408,6 +1425,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["producers_status_partial_update"];
+        trace?: never;
+    };
+    "/api/public/lots/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La trazabilidad pública del lote que abre su código QR, sin sesión: la finca, el municipio y la variedad de origen, la fecha de cada etapa y su calidad. Nunca trae precios, compradores, kilos ni personas. Un token que no existe o no tiene la forma de uno responde el mismo 404. Límite de consultas por IP (429). */
+        get: operations["public_lot_traceability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/quality": {
@@ -3618,6 +3652,7 @@ export interface components {
             /** Format: decimal */
             green_weight_kg: string;
             readonly created_by: components["schemas"]["HarvestRecorder"] | null;
+            readonly qr: components["schemas"]["LotQr"] | null;
             version: number;
             /** Format: date-time */
             created_at: string;
@@ -3928,6 +3963,12 @@ export interface components {
             /** Format: uuid */
             id: string;
             member_code: string;
+        };
+        LotQr: {
+            token: string;
+            readonly public_url: string;
+            /** Format: date-time */
+            created_at: string;
         };
         LotQuality: {
             lot: components["schemas"]["QualityLot"];
@@ -5154,6 +5195,63 @@ export interface components {
          * @enum {string}
          */
         PropagationEnum: "grafted" | "seed";
+        PublicDatedStage: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "harvest" | "evaluation" | "classification" | "stock_entry";
+            /** Format: date */
+            date: string;
+        };
+        /**
+         * @description * `harvest` - harvest
+         *     * `evaluation` - evaluation
+         *     * `classification` - classification
+         *     * `stock_entry` - stock_entry
+         * @enum {string}
+         */
+        PublicDatedStageKindEnum: "harvest" | "evaluation" | "classification" | "stock_entry";
+        PublicLotStage: components["schemas"]["PublicDatedStage"] | components["schemas"]["PublicSpanStage"];
+        PublicLotTraceability: {
+            origin: components["schemas"]["PublicOrigin"];
+            stages: components["schemas"]["PublicLotStage"][];
+            quality: components["schemas"]["PublicQuality"];
+        };
+        PublicOrigin: {
+            farm: string;
+            municipality: string;
+            department: string;
+            variety: string;
+        };
+        PublicQuality: {
+            /** Format: decimal */
+            well_fermented_pct: string;
+            /** Format: decimal */
+            g1_pct: string | null;
+            /** Format: decimal */
+            g2_pct: string | null;
+            /** Format: decimal */
+            discard_pct: string | null;
+        };
+        PublicSpanStage: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "fermentation" | "drying";
+            /** Format: date */
+            started_on: string;
+            /** Format: date */
+            ended_on: string | null;
+            days: number;
+        };
+        /**
+         * @description * `fermentation` - fermentation
+         *     * `drying` - drying
+         * @enum {string}
+         */
+        PublicSpanStageKindEnum: "fermentation" | "drying";
         PushConfig: {
             public_key: string | null;
         };
@@ -10406,6 +10504,59 @@ export interface operations {
             };
         };
     };
+    lots_qr_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotQr"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     lots_summary_retrieve: {
         parameters: {
             query?: {
@@ -12673,6 +12824,43 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    public_lot_traceability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicLotTraceability"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

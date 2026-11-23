@@ -4,6 +4,8 @@ import {
   addMonths,
   differenceInCalendarDays,
   format,
+  isSameMonth,
+  isSameYear,
   isValid,
   lastDayOfMonth,
   parseISO,
@@ -40,6 +42,21 @@ export const formatLongDate = (isoDate: string) =>
 // El día y el mes de una fecha sin hora (yyyy-MM-dd), sin el año: "19 de octubre".
 export const formatDayMonth = (isoDate: string) =>
   format(parseISO(isoDate), "d 'de' MMMM", { locale: es });
+
+// Un periodo de días sin hora (yyyy-MM-dd): «del 15 al 21 de marzo»; cruzando de mes, «del 28 de
+// marzo al 2 de abril»; cruzando de año se dicen los dos años; de un solo día, «el 15 de marzo».
+export function formatDayRange(startIso: string, endIso: string) {
+  const start = parseISO(startIso);
+  const end = parseISO(endIso);
+  if (startIso === endIso) return `el ${formatDayMonth(startIso)}`;
+  if (!isSameYear(start, end)) {
+    return `del ${formatLongDate(startIso)} al ${formatLongDate(endIso)}`;
+  }
+  if (!isSameMonth(start, end)) {
+    return `del ${formatDayMonth(startIso)} al ${formatDayMonth(endIso)}`;
+  }
+  return `del ${format(start, 'd')} al ${formatDayMonth(endIso)}`;
+}
 
 // El día y el mes abreviado de un momento exacto (ISO con zona), con la hora de Bogotá: "19 oct".
 export const formatShortDayMonth = (isoDateTime: string) =>

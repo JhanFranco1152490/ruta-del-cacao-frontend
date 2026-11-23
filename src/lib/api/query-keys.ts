@@ -209,6 +209,12 @@ export const queryKeys = {
     history: (id: string) => ['lots', 'history', id] as const,
     // El buscador por código de un filtro (los reportes), solo con conexión.
     search: (query: object) => ['lots', 'search', query] as const,
+    // El dibujo del código QR de un lote: sale de su dirección, sin pedir nada al servidor.
+    qrImage: (url: string) => ['lots', 'qr-image', url] as const,
+  },
+  // La trazabilidad pública de un lote, la que abre su código QR: no necesita sesión.
+  traceability: {
+    detail: (token: string) => ['traceability', token] as const,
   },
   fermentation: {
     // Lo que invalida iniciar, corregir el inicio, finalizar o cambiar un volteo.

@@ -171,6 +171,7 @@ cambian en el backend, cambian ahí. El banner se retira (ese archivo y su uso e
 | Variable              | Uso                                                                  |
 | --------------------- | -------------------------------------------------------------------- |
 | `NEXT_PUBLIC_API_URL` | URL base del backend (sin barra final). Se incrusta al compilar.     |
+| `NEXT_PUBLIC_ASSOCIATION_NAME` | Nombre de la asociación en el pie de la página pública de trazabilidad. Se incrusta al compilar; sin valor, un nombre genérico. |
 
 `NEXT_PUBLIC_API_URL` es **obligatoria en producción**: `pnpm build` falla si no está
 definida, para no publicar una app que apunte a `localhost`. Para comprobar el build en

@@ -4,6 +4,7 @@ import {
   dateInBogota,
   daysBetween,
   formatDayMonth,
+  formatDayRange,
   formatAbbreviatedDate,
   formatShortDate,
   formatShortDayMonth,
@@ -378,5 +379,29 @@ describe('formatNumericDateTime', () => {
     expect(formatNumericDateTime('2026-11-13T10:15:00-05:00')).toBe(
       '13/11/2026 a las 10:15',
     );
+  });
+});
+
+describe('formatDayRange', () => {
+  it('says the month once when both days are in it', () => {
+    expect(formatDayRange('2026-03-15', '2026-03-21')).toBe(
+      'del 15 al 21 de marzo',
+    );
+  });
+
+  it('says both months when the range crosses one', () => {
+    expect(formatDayRange('2026-03-28', '2026-04-02')).toBe(
+      'del 28 de marzo al 2 de abril',
+    );
+  });
+
+  it('says both years when the range crosses the new year', () => {
+    expect(formatDayRange('2026-12-30', '2027-01-02')).toBe(
+      'del 30 de diciembre de 2026 al 2 de enero de 2027',
+    );
+  });
+
+  it('says the day alone when it starts and ends the same day', () => {
+    expect(formatDayRange('2026-03-15', '2026-03-15')).toBe('el 15 de marzo');
   });
 });

@@ -28,6 +28,7 @@ export const PERMISSIONS = {
   LOTS_VIEW: 'lots.view_lot',
   LOTS_ADD: 'lots.add_lot',
   LOTS_DELETE: 'lots.delete_lot',
+  LOTS_GENERATE_QR: 'lots.add_lotqrcode',
   FERMENTATION_LOG_TURNS: 'fermentation.log_turns',
   FERMENTATION_MANAGE: 'fermentation.manage_fermentation',
   DRYING_LOG: 'drying.log_drying',

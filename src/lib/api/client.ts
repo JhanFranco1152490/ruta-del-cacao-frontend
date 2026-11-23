@@ -110,7 +110,7 @@ async function request<T>(
     method,
     headers,
     body: body === undefined || form ? body : JSON.stringify(body),
-    credentials: 'include',
+    credentials: rest.credentials ?? 'include',
     cache: 'no-store',
   });
 
@@ -199,3 +199,9 @@ export const apiFetchBlob = (path: string, init: ApiRequestInit = {}) =>
 // Un archivo para guardar en el dispositivo, con el nombre que manda el servidor si llega.
 export const apiFetchFile = (path: string, init: ApiRequestInit = {}) =>
   send<DownloadedFile>(path, init, 'file');
+
+// Una ruta pública del API (la trazabilidad que abre un QR): no manda cookies ni pide el token CSRF
+// y nunca intenta renovar la sesión, porque quien la abre no tiene cuenta y un 401 no debe llevarlo
+// al inicio de sesión. Solo para lecturas (GET).
+export const apiFetchPublic = <T>(path: string, init: ApiRequestInit = {}) =>
+  request<T>(path, { ...init, credentials: 'omit' }, 'json');
