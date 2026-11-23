@@ -98,4 +98,12 @@ describe('OFFLINE_PRECACHE_ROUTES', () => {
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/iniciar-sesion');
     expect(OFFLINE_PRECACHE_ROUTES).not.toContain('/panel');
   });
+
+  it('does not save the public traceability of a lot: its code travels in the path and it needs a connection', () => {
+    expect(
+      OFFLINE_PRECACHE_ROUTES.filter((route) =>
+        route.startsWith('/trazabilidad'),
+      ),
+    ).toEqual([]);
+  });
 });

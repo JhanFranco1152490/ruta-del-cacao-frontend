@@ -219,6 +219,7 @@ poscosecha cobre, calidad azul). Nunca emojis.
   | `FarmerHat` (sombrero con rama) | Productores, usuarios y roles |
   | `AllDone` (visto bueno con brote) | Nada pendiente, notificaciones al día |
   | `IndicatorBars` (tablero con tres barras y una mata) | Indicadores |
+  | `LotQrTag` (etiqueta de saco con su código QR y una lupa) | Trazabilidad pública, código que no existe |
   | `ReportSheets` (hoja de cálculo con una columna en cobre, otra detrás y una mazorca) | Reportes |
   | `OfflineCloud` (nube tachada) | Todo «necesitas conexión» |
 

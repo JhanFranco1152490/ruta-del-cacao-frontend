@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -52,6 +52,8 @@ describe('PointsMapPanel', () => {
       name: 'Mapa de mis fincas',
     });
     const frame = () => document.querySelector('[data-slot="map-frame"]');
+    // El mapa se carga de forma diferida: la región aparece antes que su marco.
+    await waitFor(() => expect(frame()).not.toBeNull());
     expect(region).toContainElement(frame() as HTMLElement);
     expect(frame()).not.toHaveAttribute('data-expanded');
 

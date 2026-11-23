@@ -18,6 +18,7 @@ import {
 type Schemas = components['schemas'];
 export type Lot = Schemas['Lot'];
 export type LotPage = Schemas['PaginatedLotList'];
+export type LotQr = Schemas['LotQr'];
 export type LotQuery = Omit<
   NonNullable<operations['lots_list']['parameters']['query']>,
   'page_size'
@@ -31,6 +32,8 @@ export const LOT_ERROR = {
   idConflict: 'lot_id_conflict',
   invalidStatus: 'lot_invalid_status',
   staleVersion: 'stale_version',
+  notClassified: 'lot_not_classified',
+  qrAlreadyExists: 'lot_qr_already_exists',
 } as const;
 
 // El `id` lo genera el dispositivo: un reintento sobre la misma cosecha devuelve el lote ya creado
@@ -134,6 +137,7 @@ export function lotFromCopy(copied: CopiedProcess): Lot {
         : null,
     quality: null,
     warehouse: null,
+    qr: null,
   };
 }
 
@@ -201,5 +205,21 @@ export function useDeleteLot() {
         queryClient.invalidateQueries({ queryKey: queryKeys.harvests.all() }),
         queryClient.invalidateQueries({ queryKey: queryKeys.lots.all() }),
       ]),
+  });
+}
+
+export const postLotQr = (id: string) =>
+  apiFetch<LotQr>(`/api/lots/${id}/qr`, { method: 'POST' });
+
+// El token lo crea el servidor, así que generar el código es solo en línea. Bien o mal se vuelve a
+// leer el lote: un 409 dice que otra persona ya lo generó o que el lote cambió de estado, y la ficha
+// debe mostrar lo vigente.
+export function useGenerateLotQr(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: () => postLotQr(id),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.lots.all() }),
   });
 }

@@ -390,9 +390,56 @@ export const buildLot = (
     drying: null,
     quality: null,
     warehouse: null,
+    qr: null,
     ...overrides,
   };
 };
+
+export const buildLotQr = (
+  overrides: Partial<Schemas['LotQr']> = {},
+): Schemas['LotQr'] => ({
+  token: 'Xq3k9Lm2Pz7tRw1a',
+  public_url: 'https://app.example.com/trazabilidad/Xq3k9Lm2Pz7tRw1a',
+  created_at: '2026-11-21T14:15:00Z',
+  ...overrides,
+});
+
+// La trazabilidad pública de un lote En bodega de La Esperanza, con las seis etapas.
+export const buildPublicTraceability = (
+  overrides: Partial<Schemas['PublicLotTraceability']> = {},
+): Schemas['PublicLotTraceability'] => ({
+  origin: {
+    farm: 'La Esperanza',
+    municipality: 'Arboledas',
+    department: 'Norte de Santander',
+    variety: 'CCN-51',
+  },
+  stages: [
+    { kind: 'harvest', date: '2026-03-14' },
+    {
+      kind: 'fermentation',
+      started_on: '2026-03-15',
+      ended_on: '2026-03-21',
+      days: 6,
+    },
+    {
+      kind: 'drying',
+      started_on: '2026-03-21',
+      ended_on: '2026-03-29',
+      days: 8,
+    },
+    { kind: 'evaluation', date: '2026-04-01' },
+    { kind: 'classification', date: '2026-04-02' },
+    { kind: 'stock_entry', date: '2026-04-03' },
+  ],
+  quality: {
+    well_fermented_pct: '82.0',
+    g1_pct: '72.2',
+    g2_pct: '17.8',
+    discard_pct: '10.0',
+  },
+  ...overrides,
+});
 
 // Un lote Seco de La Esperanza esperando su evaluación: 62,5 kg secos al 7,0 %.
 export const buildLotQuality = (

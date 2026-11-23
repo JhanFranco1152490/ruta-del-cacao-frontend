@@ -88,6 +88,10 @@ src/
   app/                 rutas y layouts, delgados: solo montan una pantalla de features/
     (auth)/            sin sesión: /iniciar-sesion, /recuperar-contrasena,
                        /restablecer-contrasena, /activar-cuenta
+    (public)/          sin sesión y fuera del marco de la app (sin cabecera, menú, campana ni
+                       bandeja): /trazabilidad/[token], la página que abre el código QR de un
+                       lote. Lleva el código en la ruta y no en `?id=` porque no se abre sin
+                       conexión; no entra a `OFFLINE_PRECACHE_ROUTES`
     (app)/             con sesión (lo garantiza SessionGuard en su layout): / (puerta de
                        entrada: lleva a la primera sección permitida), /productores,
                        /fincas, /actividades, /sanidad, /plagas-enfermedades, /cosechas, /lotes,
@@ -511,6 +515,23 @@ src/
     saldo al final. La salida anulada sigue en él, tachada y con quién la anuló y por qué, y **Anular**
     va en la línea de la salida. Registrar salida y corregir el ingreso abren su diálogo ahí mismo. La
     ilustración de los vacíos es propia (`WarehouseShelves`).
+  - **Código QR y trazabilidad pública** (`lots/qr/` y `lots/components/traceability/`). El botón
+    **Código QR** de la ficha lo decide `qrAction(lot, canGenerate)` (`generate`, `view` o `none`):
+    un lote Clasificado o En bodega sin código y con `lots.add_lotqrcode` ofrece generarlo, y cualquiera
+    que lea el lote ve y descarga el que ya existe. El diálogo dice qué será público **antes** de
+    generar; generar es solo en línea (el token lo crea el servidor, `POST /api/lots/{id}/qr`) y un
+    `409 lot_qr_already_exists` no es un fallo: avisa y la ficha recargada muestra el existente. El
+    dibujo sale de la librería `qrcode` en el navegador (se carga con `import()` al abrir el diálogo),
+    con corrección de errores Q y margen de 4 módulos; se baja en PNG de 1024 px o en SVG
+    (`qr-{código del lote}.png|svg`), también sin conexión. La página pública pide
+    `GET /api/public/lots/{token}` con `apiFetchPublic` **desde el navegador**: el límite del backend
+    es por IP, y pedirlo desde el servidor de Next haría que todos los consumidores compartieran la
+    IP del servidor. Abre con la variedad y el origen como titular («CCN-51 de Tibú», con la línea
+    botánica en oro), una frase que dice la finca y cuándo se cosechó y se guardó, y cuatro cifras
+    (días de fermentación y de secado, % bien fermentados y % de G1; siempre cuatro, con un guion si
+    falta una); sigue el recorrido y la calidad en una barra apilada que no muestra lo que es cero. Todo
+    en lenguaje para quien no conoce la app (`traceability-text.ts`), el nombre de la asociación (`ASSOCIATION_NAME`, de `NEXT_PUBLIC_ASSOCIATION_NAME`) y
+    `noindex`; un código inventado o mal formado dice lo mismo (`LotQrTag` es su ilustración).
 
 - **Parámetros de poscosecha (`features/postharvest-parameters/`).** `/parametros-poscosecha` es un
   formulario de página (sin banner, `narrow`) con los 21 valores con los que se evalúan el secado y
@@ -894,6 +915,9 @@ src/
   servidor (`{ blob, fileName }`, de `Content-Disposition`, primero `filename*=UTF-8''…`); llega
   `null` si no viene, y quien descarga pone uno propio. El navegador solo deja leer ese encabezado
   porque el backend lo expone (`CORS_EXPOSE_HEADERS`).
+- **Rutas públicas.** `apiFetchPublic(path)` es para lo que se lee sin cuenta (hoy la trazabilidad de
+  un lote): no manda cookies (`credentials: 'omit'`), no pide el token CSRF y no intenta renovar la
+  sesión, así que un 401 no lleva a nadie al inicio de sesión. Solo GET.
 - **Errores.** Todo error de la API tiene la forma `{ detail, code, fields }` y llega como
   `ApiError` (`status`, `code`, `fields`, y `detail` como mensaje). Una respuesta sin esa
   forma se convierte en `ApiError` con el código `unexpected_response`. La lógica decide
@@ -915,6 +939,9 @@ src/
   de los hooks (`fetchProducers`, `fetchProducer`...) y reciben el `signal`; los hooks
   (`useProducers`, `useUpdateProducer`...) los envuelven con `useQuery`/`useMutation`. Las
   query keys salen solo de `lib/api/query-keys.ts`.
+- **`NEXT_PUBLIC_ASSOCIATION_NAME`** es el nombre de la asociación que firma el pie de la página pública de
+  trazabilidad; se incrusta al compilar y, sin valor, cae a un nombre genérico (no rompe el build). Debe
+  estar definida en cada despliegue antes de imprimir QR reales.
 - **`NEXT_PUBLIC_API_URL`** es la URL del backend y se incrusta al compilar. En desarrollo y
   pruebas cae a `http://localhost:8000`; **en producción es obligatoria** y `pnpm build`
   falla sin ella (`lib/env.ts`).
