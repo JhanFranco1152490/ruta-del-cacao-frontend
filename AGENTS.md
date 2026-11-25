@@ -102,8 +102,8 @@ src/
     providers.tsx      QueryClientProvider + NuqsAdapter
   features/<dominio>/  un dominio (hoy auth, producers, farms, plots, crops, inputs, activities,
                        health, notifications, harvests, lots, fermentation, drying, quality,
-                       facilities, postharvest-parameters, buyers, sales, users y
-                       roles): api.ts, schemas.ts, hooks propios
+                       facilities, postharvest-parameters, buyers, sales, indicators,
+                       reports, audit-log, users y roles): api.ts, schemas.ts, hooks propios
                        y reglas puras en la raíz, y components/ (pantallas y piezas de ese dominio).
                        La raíz nunca importa de components/: un tipo o una regla que comparten
                        los dos vive en la raíz
@@ -751,6 +751,39 @@ src/
     descarga dice «Exportando…» y no se puede pedir otro; sin filas está deshabilitado. Un rechazo
     (el PDF admite menos filas que Excel y CSV) sale en un aviso con el texto del servidor. La
     descarga de verdad se prueba en `export-report.test.ts` (entorno `node`).
+
+- **Bitácora de cambios (`features/audit-log/`).** `/bitacora` (grupo **Seguimiento**, después de
+  Reportes, con conexión: `needsConnection`) muestra las modificaciones de la unidad productiva, de la
+  más reciente a la más antigua, con quién las hizo, cuándo, el registro y el valor anterior y el
+  nuevo de cada campo. Pide `audit.view_audit_log`, que **no se delega**: solo lo tienen el rol
+  Productor y la cuenta técnica (el editor de roles lo muestra en su área sin dejar concederlo), y no
+  es de campo (`isFieldPermission`): abarca todas las fincas. Es de solo lectura: ninguna fila abre ni
+  cambia nada.
+  - **Sin copia en el dispositivo** (`queries.ts`): `GET /api/audit-log` se pide de nuevo cada vez que
+    se entra, paginado de a 20; `GET /api/audit-log/options` (las cuentas del productor, también las
+    inactivas, y los tipos de registro) dura 5 minutos. Al cambiar de página o de filtro sigue a la
+    vista lo anterior, salvo que sea de otro productor (la cuenta técnica).
+  - **Filtros en la URL** (`use-audit-filters.ts`): `?usuario=`, `?tipo=`, `?desde=`, `?hasta=`,
+    `?pagina=` y `?productor=` (cuenta técnica, que debe elegirlo antes de que se pida nada). Todo es
+    opcional: sin filtros, toda la bitácora. Cambiar un filtro vuelve a la página 1; cambiar el
+    productor quita el usuario; **Limpiar filtros** deja el productor. El periodo al revés se dice en
+    el campo y no se pregunta (`audit-request.ts`); un usuario o un tipo de un enlace viejo que el
+    servidor rechaza se dice en el vacío, con **Limpiar filtros** (`audit-errors.ts`).
+  - **Cómo se escribe un cambio** (`audit-change-line.ts`, `audit-values.ts`): «Etiqueta: anterior →
+    nuevo», el anterior en `<del>` tachado y tenue y el nuevo en `<ins>` firme; el lector de pantalla
+    oye «antes …, ahora …». Si es alta o eliminación se decide **por campo** (sin valor antes: solo el
+    nuevo; sin valor después: solo el anterior tachado), no por la acción, porque cada módulo nombra
+    las suyas a su manera. `hidden` nunca muestra valores: **modificado** (un dato personal, el
+    polígono de una parcela) o **modificado (valor no registrado)** (lo guardado antes de que el
+    historial tuviera valores). Los números conservan los decimales que manda el servidor
+    (`formatFixedDecimal`: «125,0», «1,20»), las fechas llevan el año y `bool` es **Sí** / **No**.
+    `before` y `after` son JSON sin tipo en el esquema: `api.ts` los declara `AuditValue`.
+  - **La tabla** (`audit-table.tsx`) tiene cuatro columnas para caber a 1280 px: fecha con el usuario
+    (o **Cuenta eliminada**), registro con su tipo y la insignia **Eliminado**, acción y cambios. Una
+    fila muestra tres cambios y **Ver N cambios más** despliega el resto (con cuatro se ven los
+    cuatro, `visible-changes.ts`). En celular, una tarjeta por fila con la acción de título. La
+    ilustración de los vacíos es `ChangeLedger`. Los 17 tipos de registro están en
+    `audit-record-types.ts`, que hace fallar el tipado si el servidor suma uno.
 
 - **Sanidad (`features/health/`).** El monitoreo y el control fitosanitario **son actividades**:
   sanidad guarda lo suyo (resultado, detecciones, controles, fotos) y no importa de actividades, ni

@@ -319,6 +319,11 @@ a una app que se usa en celulares modestos y sin conexión. Las utilidades está
   etapa de un lote) se unen en una celda de varias líneas; ahí cada cifra lleva su etiqueta y lo que
   no ha ocurrido no ocupa línea. Una celda sin valor es una raya «—», nunca un cero. En celular, una
   tarjeta por fila con la etiqueta encima de cada valor. Los totales van arriba en una franja.
+- **Un valor que cambió** (Bitácora de cambios): «Etiqueta: anterior → nuevo», con la etiqueta tenue,
+  el anterior tachado y tenue (`<del>`) y el nuevo en negrita (`<ins>`, sin subrayado). La diferencia
+  no depende del color: lo dicen el tachado y el peso, y el lector de pantalla oye «antes …, ahora …»
+  (la flecha es decorativa). Un valor que no se muestra dice **modificado** en cursiva, sin inventar
+  uno.
 - **El código de un lote** se muestra partido en sus pedazos, cada uno con su nombre y lo que dice
   hoy (`LotCodeSegments`): productor, finca, parcela, cosecha y consecutivo. Reemplaza al párrafo
   «Cómo se lee este código». El título sigue diciendo el código completo al lector de pantalla.
@@ -334,7 +339,7 @@ a una app que se usa en celulares modestos y sin conexión. Las utilidades está
   entre un grupo y otro.
 - **Menú de navegación por grupos:** las entradas (`NAV_ITEMS`) llevan un `group`: Administración
   (Productores, Usuarios, Roles y permisos), Finca, Manejo agrícola, Cosecha y poscosecha,
-  Comercialización (Compradores y Ventas), Seguimiento (Indicadores y Reportes) y Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,
+  Comercialización (Compradores y Ventas), Seguimiento (Indicadores, Reportes y Bitácora de cambios) y Catálogos. El grupo sale donde aparece la primera entrada que la persona ve: para la asociación,
   Administración va primero (empieza con Productores); para el productor, que solo ve Usuarios y
   Roles, va al final. Los encabezados solo se dibujan si la persona ve entradas de dos o más grupos;
   con uno el menú queda plano, y una entrada sin grupo va suelta arriba. Cada grupo se pliega con su
