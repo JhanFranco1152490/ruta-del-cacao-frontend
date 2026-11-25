@@ -221,6 +221,7 @@ poscosecha cobre, calidad azul). Nunca emojis.
   | `IndicatorBars` (tablero con tres barras y una mata) | Indicadores |
   | `LotQrTag` (etiqueta de saco con su código QR y una lupa) | Trazabilidad pública, código que no existe |
   | `ReportSheets` (hoja de cálculo con una columna en cobre, otra detrás y una mazorca) | Reportes |
+  | `ChangeLedger` (libreta abierta con un renglón tachado y el mismo resaltado en cobre, un lápiz y una ramita) | Bitácora de cambios |
   | `OfflineCloud` (nube tachada) | Todo «necesitas conexión» |
 
 - Una ilustración nueva usa la misma paleta (`--hoja`, `--selva-2`, `--amarillo-mazorca`,
