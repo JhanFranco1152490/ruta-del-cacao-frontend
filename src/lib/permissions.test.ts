@@ -96,6 +96,11 @@ describe('isFieldPermission', () => {
     expect(isFieldPermission(PERMISSIONS.REPORTS_VIEW_ASSOCIATION)).toBe(false);
   });
 
+  // La bitácora muestra lo de todas las fincas del productor, y solo el Productor la tiene.
+  it('leaves out the audit log, which belongs to the whole producer', () => {
+    expect(isFieldPermission(PERMISSIONS.AUDIT_VIEW)).toBe(false);
+  });
+
   // Un comprador le compra al productor, no a una finca.
   it('leaves out the buyers, which belong to the whole producer', () => {
     expect(isFieldPermission(PERMISSIONS.BUYERS_VIEW)).toBe(false);

@@ -83,6 +83,9 @@ describe('groupPermissionsByArea', () => {
       'postharvest_parameters',
       'buyers',
       'sales',
+      'indicators',
+      'reports',
+      'audit',
       'users',
       'roles',
     ];
