@@ -179,6 +179,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La bitácora de cambios de la unidad productiva, de lo más reciente a lo más antiguo, paginada: cada modificación con quién la hizo, cuándo, el registro afectado (también si ya se eliminó) y el valor anterior y el nuevo de cada campo. Un dato personal o lo que no se muestra como valor trae `hidden` y sin valores; lo guardado antes de que el historial los tuviera, `not_recorded`. `from` y `to` son fechas locales, opcionales; `actor` es una cuenta del productor (404 si no) y `record_type`, uno de los tipos de `/options`. Solo el Productor y la cuenta técnica. */
+        get: operations["audit_log_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit-log/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lo que se ofrece para filtrar la bitácora: las cuentas del productor, activas e inactivas, por nombre, y los tipos de registro con su etiqueta, en orden. */
+        get: operations["audit_log_options_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/activation/confirm": {
         parameters: {
             query?: never;
@@ -2411,6 +2445,89 @@ export interface components {
             /** Format: decimal */
             sold_kg: string;
         };
+        AuditActor: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+        };
+        AuditChange: {
+            field: string;
+            label: string;
+            kind: components["schemas"]["AuditValueKindEnum"];
+            before: unknown;
+            after: unknown;
+            hidden: (components["schemas"]["AuditHiddenReasonEnum"] | components["schemas"]["NullEnum"]) | null;
+        };
+        AuditEntry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            occurred_at: string;
+            readonly actor: components["schemas"]["AuditActor"] | null;
+            record_type: components["schemas"]["AuditRecordTypeEnum"];
+            readonly record_type_label: string;
+            record: components["schemas"]["AuditRecord"];
+            action: string;
+            action_label: string;
+            changes: components["schemas"]["AuditChange"][];
+        };
+        /**
+         * @description * `personal` - personal
+         *     * `not_recorded` - not_recorded
+         *     * `not_shown` - not_shown
+         * @enum {string}
+         */
+        AuditHiddenReasonEnum: "personal" | "not_recorded" | "not_shown";
+        AuditOptionActor: {
+            /** Format: uuid */
+            id: string;
+            full_name: string;
+            is_active: boolean;
+        };
+        AuditOptions: {
+            actors: components["schemas"]["AuditOptionActor"][];
+            record_types: components["schemas"]["AuditRecordTypeOption"][];
+        };
+        AuditRecord: {
+            /** Format: uuid */
+            id: string | null;
+            label: string;
+            deleted: boolean;
+        };
+        /**
+         * @description * `farm` - farm
+         *     * `plot` - plot
+         *     * `plot_characterization` - plot_characterization
+         *     * `input` - input
+         *     * `activity` - activity
+         *     * `harvest` - harvest
+         *     * `lot` - lot
+         *     * `facility` - facility
+         *     * `fermentation` - fermentation
+         *     * `drying` - drying
+         *     * `quality` - quality
+         *     * `stock` - stock
+         *     * `warehouse` - warehouse
+         *     * `buyer` - buyer
+         *     * `sale` - sale
+         *     * `account` - account
+         *     * `role` - role
+         * @enum {string}
+         */
+        AuditRecordTypeEnum: "farm" | "plot" | "plot_characterization" | "input" | "activity" | "harvest" | "lot" | "facility" | "fermentation" | "drying" | "quality" | "stock" | "warehouse" | "buyer" | "sale" | "account" | "role";
+        AuditRecordTypeOption: {
+            value: components["schemas"]["AuditRecordTypeEnum"];
+            label: string;
+        };
+        /**
+         * @description * `text` - text
+         *     * `number` - number
+         *     * `date` - date
+         *     * `datetime` - datetime
+         *     * `bool` - bool
+         * @enum {string}
+         */
+        AuditValueKindEnum: "text" | "number" | "date" | "datetime" | "bool";
         /** @enum {unknown} */
         BlankEnum: "";
         Buyer: {
@@ -4214,6 +4331,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["ActivityList"][];
+        };
+        PaginatedAuditEntryList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["AuditEntry"][];
         };
         PaginatedFarmList: {
             /** @example 123 */
@@ -7109,6 +7241,141 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    audit_log_list: {
+        parameters: {
+            query?: {
+                actor?: string;
+                from?: string;
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Solo para la cuenta técnica, y obligatorio para ella. */
+                producer?: string;
+                /**
+                 * @description * `farm` - farm
+                 *     * `plot` - plot
+                 *     * `plot_characterization` - plot_characterization
+                 *     * `input` - input
+                 *     * `activity` - activity
+                 *     * `harvest` - harvest
+                 *     * `lot` - lot
+                 *     * `facility` - facility
+                 *     * `fermentation` - fermentation
+                 *     * `drying` - drying
+                 *     * `quality` - quality
+                 *     * `stock` - stock
+                 *     * `warehouse` - warehouse
+                 *     * `buyer` - buyer
+                 *     * `sale` - sale
+                 *     * `account` - account
+                 *     * `role` - role
+                 */
+                record_type?: "farm" | "plot" | "plot_characterization" | "input" | "activity" | "harvest" | "lot" | "facility" | "fermentation" | "drying" | "quality" | "stock" | "warehouse" | "buyer" | "sale" | "account" | "role";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAuditEntryList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    audit_log_options_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Solo para la cuenta técnica, y obligatorio para ella. */
+                producer?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOptions"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

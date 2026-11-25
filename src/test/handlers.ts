@@ -12,6 +12,8 @@ import {
   buildExitSummary,
   buildAssociationIndicators,
   buildAssociationReport,
+  buildAuditEntries,
+  buildAuditOptions,
   buildProducerIndicators,
   buildReport,
   buildSaleSummary,
@@ -648,4 +650,25 @@ export const parametersHandler = (
   http.get(apiUrl('/api/postharvest-parameters'), ({ request }) => {
     requests.push(new URL(request.url).searchParams);
     return HttpResponse.json(parameters);
+  });
+
+// La bitácora y sus opciones, o la respuesta que se le pase (un error, por ejemplo).
+export const auditLogHandler = (
+  page: JsonBodyType | Response = buildPage(buildAuditEntries()),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/audit-log'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return page instanceof Response ? page.clone() : HttpResponse.json(page);
+  });
+
+export const auditOptionsHandler = (
+  options: JsonBodyType | Response = buildAuditOptions(),
+  requests: URLSearchParams[] = [],
+) =>
+  http.get(apiUrl('/api/audit-log/options'), ({ request }) => {
+    requests.push(new URL(request.url).searchParams);
+    return options instanceof Response
+      ? options.clone()
+      : HttpResponse.json(options);
   });

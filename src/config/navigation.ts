@@ -7,6 +7,7 @@ import {
   FileSpreadsheet,
   FlaskConical,
   Handshake,
+  History,
   LandPlot,
   Leaf,
   MapPinned,
@@ -193,6 +194,16 @@ export const NAV_ITEMS: readonly NavItem[] = [
       PERMISSIONS.REPORTS_VIEW_PRODUCER,
       PERMISSIONS.REPORTS_VIEW_ASSOCIATION,
     ],
+    needsConnection: true,
+  },
+  // Lo que cambió en la unidad productiva, quién lo hizo y cuándo. Solo la ve el Productor: el
+  // permiso no se delega. Se lee en línea, sin copia en el dispositivo.
+  {
+    href: '/bitacora',
+    label: 'Bitácora de cambios',
+    group: 'follow-up',
+    icon: History,
+    permission: PERMISSIONS.AUDIT_VIEW,
     needsConnection: true,
   },
   {

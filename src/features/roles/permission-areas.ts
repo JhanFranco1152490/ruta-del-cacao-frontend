@@ -29,6 +29,7 @@ const AREAS = [
   { area: 'sales', label: 'Ventas' },
   { area: 'indicators', label: 'Indicadores' },
   { area: 'reports', label: 'Reportes' },
+  { area: 'audit', label: 'Bitácora de cambios' },
   { area: 'users', label: 'Cuentas' },
   { area: 'roles', label: 'Roles' },
 ] as const;

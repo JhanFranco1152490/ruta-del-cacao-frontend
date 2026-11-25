@@ -78,6 +78,17 @@ export type ReportFilters = {
   lot: string | null;
 };
 
+// Lo que se pide de la bitácora. Lo que no se eligió va en `null`; `producer` solo lo usa la cuenta
+// técnica.
+export type AuditLogFilters = {
+  producer: string | null;
+  actor: string | null;
+  recordType: string | null;
+  from: string | null;
+  to: string | null;
+  page: number;
+};
+
 export type PendingEntryFilters = {
   producer: string | null;
   farm: string | null;
@@ -350,6 +361,13 @@ export const queryKeys = {
       ['reports', 'producer', filters] as const,
     association: (filters: ReportFilters) =>
       ['reports', 'association', filters] as const,
+  },
+  auditLog: {
+    // Se lee siempre en línea y no tiene copia en el dispositivo.
+    all: () => ['audit-log'] as const,
+    list: (filters: AuditLogFilters) => ['audit-log', 'list', filters] as const,
+    options: (producer: string | null) =>
+      ['audit-log', 'options', producer ?? ''] as const,
   },
   parameters: {
     // Lo que invalida guardar o restablecer los parámetros. La cuenta técnica elige el productor;

@@ -40,4 +40,27 @@ describe('RolePermissionPicker', () => {
     ]);
     expect(screen.queryByText('farms')).not.toBeInTheDocument();
   });
+
+  // El rol Productor trae la bitácora, que no se delega: se ve en su área, pero nadie la concede.
+  it('shows a permission that cannot be delegated without letting anyone grant it', () => {
+    render(
+      <RolePermissionPicker
+        catalog={[
+          { ...permission('audit.view_audit_log', 'audit'), delegable: false },
+        ]}
+        onChange={vi.fn()}
+        value={[]}
+      />,
+    );
+
+    expect(
+      screen.getByRole('group', { name: 'Bitácora de cambios' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('checkbox', { name: /audit\.view_audit_log/ }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    expect(
+      screen.getByText('No puedes conceder este permiso.'),
+    ).toBeInTheDocument();
+  });
 });

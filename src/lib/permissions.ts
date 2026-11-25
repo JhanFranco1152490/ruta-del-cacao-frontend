@@ -57,6 +57,7 @@ export const PERMISSIONS = {
   INDICATORS_VIEW_ASSOCIATION: 'indicators.view_association_indicators',
   REPORTS_VIEW_PRODUCER: 'reports.view_producer_reports',
   REPORTS_VIEW_ASSOCIATION: 'reports.view_association_reports',
+  AUDIT_VIEW: 'audit.view_audit_log',
   HEALTH_MANAGE_PEST_DISEASE: 'health.manage_pestdisease',
   USERS_VIEW: 'accounts.users_view',
   USERS_CREATE: 'accounts.users_create',

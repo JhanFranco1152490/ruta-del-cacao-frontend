@@ -79,7 +79,26 @@ describe('visibleNavItems', () => {
     expect(followUp.map(({ href }) => href)).toEqual([
       '/indicadores',
       '/reportes',
+      '/bitacora',
     ]);
+  });
+
+  // La bitácora es del Productor: ni un empleado ni la asociación tienen su permiso.
+  it('shows the audit log only with its own permission, at the end of the follow-up group', () => {
+    const auditLog = NAV_ITEMS.filter((item) => item.href === '/bitacora');
+
+    expect(visibleNavItems(auditLog, [PERMISSIONS.AUDIT_VIEW])).toHaveLength(1);
+    expect(
+      visibleNavItems(auditLog, [
+        PERMISSIONS.REPORTS_VIEW_PRODUCER,
+        PERMISSIONS.INDICATORS_VIEW_ASSOCIATION,
+      ]),
+    ).toEqual([]);
+    expect(auditLog[0]).toMatchObject({
+      label: 'Bitácora de cambios',
+      group: 'follow-up',
+      needsConnection: true,
+    });
   });
 
   it('handles an empty list of entries', () => {
@@ -141,6 +160,7 @@ describe('NAV_ITEMS', () => {
       '/ventas',
       '/indicadores',
       '/reportes',
+      '/bitacora',
       '/variedades',
       '/plagas-enfermedades',
       '/usuarios',
@@ -168,6 +188,7 @@ describe('NAV_ITEMS', () => {
       'postharvest',
       'sales',
       'sales',
+      'follow-up',
       'follow-up',
       'follow-up',
       'catalogs',
@@ -214,6 +235,7 @@ describe('NAV_ITEMS', () => {
       PERMISSIONS.REPORTS_VIEW_PRODUCER,
       PERMISSIONS.REPORTS_VIEW_ASSOCIATION,
     ]);
+    expect(byHref['/bitacora'].permission).toBe(PERMISSIONS.AUDIT_VIEW);
     expect(byHref['/actividades'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/sanidad'].permission).toBe(PERMISSIONS.ACTIVITIES_VIEW);
     expect(byHref['/roles'].permission).toBe(PERMISSIONS.ROLES_VIEW);
@@ -229,6 +251,7 @@ describe('NAV_ITEMS', () => {
       '/lotes',
       '/indicadores',
       '/reportes',
+      '/bitacora',
       '/variedades',
       '/plagas-enfermedades',
       '/usuarios',

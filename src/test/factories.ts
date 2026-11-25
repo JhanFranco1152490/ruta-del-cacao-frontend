@@ -1,5 +1,6 @@
 import { HttpResponse } from 'msw';
 
+import type { AuditChange, AuditEntry } from '@/features/audit-log/api';
 import type {
   LotStock,
   StockExit,
@@ -1384,3 +1385,181 @@ export const buildAssociationReport = (
     ],
     ...overrides,
   });
+
+// La bitácora, con nombres inventados. El evento de base es la corrección de una cosecha: el peso y
+// el recolector, ya traducido a su nombre.
+export const buildAuditChange = (
+  overrides: Partial<AuditChange> = {},
+): AuditChange => ({
+  field: 'green_weight_kg',
+  label: 'Peso en verde (kg)',
+  kind: 'number',
+  before: '120.5',
+  after: '125.0',
+  hidden: null,
+  ...overrides,
+});
+
+export const buildAuditEntry = (
+  overrides: Partial<AuditEntry> = {},
+): AuditEntry => ({
+  id: 'ev-1',
+  occurred_at: '2026-11-20T10:42:13-05:00',
+  actor: { id: 'acc-2', full_name: 'Luis Ejemplo' },
+  record_type: 'harvest',
+  record_type_label: 'Cosecha',
+  record: {
+    id: 'h-1',
+    label: 'Cosecha del 14/11/2026 · P01',
+    deleted: false,
+  },
+  action: 'updated',
+  action_label: 'Cosecha corregida',
+  changes: [
+    buildAuditChange(),
+    buildAuditChange({
+      field: 'collector_id',
+      label: 'Recolector',
+      kind: 'text',
+      before: 'Luis Ejemplo',
+      after: 'Ana Ejemplo',
+    }),
+  ],
+  ...overrides,
+});
+
+// Un evento de cada forma: una edición, un alta, una eliminación, un dato personal, lo guardado sin
+// valores, el polígono que no se muestra, una cuenta eliminada y un evento sin campos.
+export const buildAuditEntries = (): AuditEntry[] => [
+  buildAuditEntry(),
+  buildAuditEntry({
+    id: 'ev-2',
+    occurred_at: '2026-11-19T08:00:00-05:00',
+    record_type: 'warehouse',
+    record_type_label: 'Bodega',
+    record: { id: 'w-1', label: 'Bodega principal', deleted: false },
+    action: 'created',
+    action_label: 'Bodega creada',
+    changes: [
+      buildAuditChange({
+        field: 'name',
+        label: 'Nombre',
+        kind: 'text',
+        before: null,
+        after: 'Bodega principal',
+      }),
+    ],
+  }),
+  buildAuditEntry({
+    id: 'ev-3',
+    occurred_at: '2026-11-18T16:30:00-05:00',
+    record_type: 'input',
+    record_type_label: 'Insumo',
+    record: { id: 'i-1', label: 'Abono orgánico', deleted: true },
+    action: 'deleted',
+    action_label: 'Insumo eliminado',
+    changes: [
+      buildAuditChange({
+        field: 'name',
+        label: 'Nombre',
+        kind: 'text',
+        before: 'Abono orgánico',
+        after: null,
+      }),
+    ],
+  }),
+  buildAuditEntry({
+    id: 'ev-4',
+    occurred_at: '2026-11-17T09:15:00-05:00',
+    actor: { id: 'acc-1', full_name: 'Ana Ejemplo' },
+    record_type: 'buyer',
+    record_type_label: 'Comprador',
+    record: { id: 'b-1', label: 'Comercializadora Ejemplo', deleted: false },
+    action: 'updated',
+    action_label: 'Comprador actualizado',
+    changes: [
+      buildAuditChange({
+        field: 'phone',
+        label: 'Teléfono',
+        kind: 'text',
+        before: null,
+        after: null,
+        hidden: 'personal',
+      }),
+    ],
+  }),
+  buildAuditEntry({
+    id: 'ev-5',
+    occurred_at: '2026-10-02T11:00:00-05:00',
+    actor: { id: 'acc-1', full_name: 'Ana Ejemplo' },
+    record_type: 'farm',
+    record_type_label: 'Finca',
+    record: { id: 'f-1', label: 'F01 · La Esperanza', deleted: false },
+    action: 'updated',
+    action_label: 'Finca actualizada',
+    changes: [
+      buildAuditChange({
+        field: 'name',
+        label: 'Nombre',
+        kind: 'text',
+        before: null,
+        after: null,
+        hidden: 'not_recorded',
+      }),
+    ],
+  }),
+  buildAuditEntry({
+    id: 'ev-6',
+    occurred_at: '2026-10-01T15:20:00-05:00',
+    actor: null,
+    record_type: 'plot',
+    record_type_label: 'Parcela',
+    record: { id: 'p-1', label: 'P01 · Lote del río', deleted: false },
+    action: 'updated',
+    action_label: 'Parcela actualizada',
+    changes: [
+      buildAuditChange({
+        field: 'polygon',
+        label: 'Polígono',
+        kind: 'text',
+        before: null,
+        after: null,
+        hidden: 'not_shown',
+      }),
+      buildAuditChange({
+        field: 'area_ha',
+        label: 'Área (ha)',
+        before: '1.20',
+        after: '1.35',
+      }),
+    ],
+  }),
+  buildAuditEntry({
+    id: 'ev-7',
+    occurred_at: '2026-09-30T07:45:00-05:00',
+    actor: { id: 'acc-1', full_name: 'Ana Ejemplo' },
+    record_type: 'account',
+    record_type_label: 'Cuenta',
+    record: { id: 'acc-2', label: 'Luis Ejemplo', deleted: false },
+    action: 'activated',
+    action_label: 'Cuenta activada',
+    changes: [],
+  }),
+];
+
+export const buildAuditOptions = (
+  overrides: Partial<Schemas['AuditOptions']> = {},
+): Schemas['AuditOptions'] => ({
+  actors: [
+    { id: 'acc-1', full_name: 'Ana Ejemplo', is_active: true },
+    { id: 'acc-2', full_name: 'Luis Ejemplo', is_active: true },
+    { id: 'acc-3', full_name: 'Marta Ejemplo', is_active: false },
+  ],
+  record_types: [
+    { value: 'farm', label: 'Finca' },
+    { value: 'plot', label: 'Parcela' },
+    { value: 'harvest', label: 'Cosecha' },
+    { value: 'buyer', label: 'Comprador' },
+  ],
+  ...overrides,
+});
