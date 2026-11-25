@@ -2,12 +2,15 @@
 
 import { pageContainerClass } from '@/components/page-container';
 import { PageHeader } from '@/components/page-header';
+import { Pagination } from '@/components/pagination';
 import { ProducerFilter } from '@/components/producer-filter';
 
 import { changesCountLabel } from '../audit-filter-options';
+import { AUDIT_PAGE_SIZE } from '../audit-request';
 import { useAuditLogScreen } from '../use-audit-log-screen';
 import { AuditFiltersBar } from './audit-filters-bar';
 import { AuditLogStates } from './audit-log-states';
+import { AuditTable } from './audit-table';
 
 // La bitácora de cambios de la unidad productiva, de lo más reciente a lo más antiguo. Se lee en
 // línea, sin copia en el dispositivo: el menú la abre solo con conexión.
@@ -38,9 +41,19 @@ export function AuditLogScreen() {
         )}
         <AuditLogStates screen={screen}>
           {(page) => (
-            <p className="text-sm text-muted-foreground">
-              {changesCountLabel(page.count)}
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {changesCountLabel(page.count)}
+              </p>
+              <AuditTable entries={page.results} />
+              <Pagination
+                label="cambios"
+                onPageChange={(next) => void filters.setPage(next)}
+                page={filters.values.page}
+                pageSize={AUDIT_PAGE_SIZE}
+                total={page.count}
+              />
+            </div>
           )}
         </AuditLogStates>
       </section>
