@@ -1,5 +1,6 @@
 import { HttpResponse } from 'msw';
 
+import type { AuditChange, AuditEntry } from '@/features/audit-log/api';
 import type {
   LotStock,
   StockExit,
@@ -1388,8 +1389,8 @@ export const buildAssociationReport = (
 // La bitácora, con nombres inventados. El evento de base es la corrección de una cosecha: el peso y
 // el recolector, ya traducido a su nombre.
 export const buildAuditChange = (
-  overrides: Partial<Schemas['AuditChange']> = {},
-): Schemas['AuditChange'] => ({
+  overrides: Partial<AuditChange> = {},
+): AuditChange => ({
   field: 'green_weight_kg',
   label: 'Peso en verde (kg)',
   kind: 'number',
@@ -1400,8 +1401,8 @@ export const buildAuditChange = (
 });
 
 export const buildAuditEntry = (
-  overrides: Partial<Schemas['AuditEntry']> = {},
-): Schemas['AuditEntry'] => ({
+  overrides: Partial<AuditEntry> = {},
+): AuditEntry => ({
   id: 'ev-1',
   occurred_at: '2026-11-20T10:42:13-05:00',
   actor: { id: 'acc-2', full_name: 'Luis Ejemplo' },
@@ -1429,7 +1430,7 @@ export const buildAuditEntry = (
 
 // Un evento de cada forma: una edición, un alta, una eliminación, un dato personal, lo guardado sin
 // valores, el polígono que no se muestra, una cuenta eliminada y un evento sin campos.
-export const buildAuditEntries = (): Schemas['AuditEntry'][] => [
+export const buildAuditEntries = (): AuditEntry[] => [
   buildAuditEntry(),
   buildAuditEntry({
     id: 'ev-2',
